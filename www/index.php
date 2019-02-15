@@ -166,7 +166,7 @@ $loc = ParseLocations($locations);
             if (isset($_REQUEST['lighthouseThrottle']))
               echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
             if (isset($_REQUEST['warmup']))
-              echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
+              echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
