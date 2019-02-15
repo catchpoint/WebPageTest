@@ -291,6 +291,10 @@
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
             $test['minimalResults'] = array_key_exists('minimal', $_REQUEST) && $_REQUEST['minimal'] ? 1 : 0;
             $test['debug'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] ? 1 : 0;
+            if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
+              $test['warmup'] = min(intval($_REQUEST['warmup']), 3);
+              $test['shard_test'] = 0;
+            }
             if (isset($_REQUEST['medianMetric']))
               $test['medianMetric'] = $_REQUEST['medianMetric'];
             if (isset($_REQUEST['throttle_cpu']))
@@ -2239,6 +2243,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'heroElements', $test['heroElements']);
             if( isset($test['debug']) && $test['debug'] )
                 AddIniLine($testFile, 'debug', '1');
+            if( isset($test['warmup']) && $test['warmup'] )
+                AddIniLine($testFile, 'warmup', $test['warmup']);
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
                 AddIniLine($testFile, 'throttle_cpu', $test['throttle_cpu']);
             if( isset($test['dpr']) && $test['dpr'] > 0 )
