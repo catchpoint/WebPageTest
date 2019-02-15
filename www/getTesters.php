@@ -25,7 +25,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
   $refresh = 240;
-  $title = 'WebPagetest - Tester Status';
+  $title = 'WebPageTest - Tester Status';
   include 'admin_header.inc';
   echo "<table class=\"table\">\n";
   foreach( $locations as $name => &$location ) {
@@ -157,7 +157,7 @@ function GetAllTesters($include_sensitive = true) {
   }
 
   BuildLocations($loc);
-  
+
   $i = 1;
   while (isset($loc['locations'][$i])) {
     $group = &$loc[$loc['locations'][$i]];
@@ -175,7 +175,7 @@ function GetAllTesters($include_sensitive = true) {
 
     $i++;
   }
-  
+
   return $locations;
 }
 

@@ -184,7 +184,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -434,7 +434,7 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
                                             Save response bodies<br>
-                                            <small>For text resources</small>
+                                            <small>For text resources (HTML, CSS, etc.)</small>
                                         </label>
                                     </li>
                                     <li>
@@ -590,7 +590,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
                                         <label for="wprDesktop" class="auto_width">
-                                            Use Web Page Replay recorded Desktop Page<br>
+                                            Use Web Page Replay-recorded Desktop Page<br>
                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                         </label>
                                     </li>

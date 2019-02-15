@@ -7,7 +7,7 @@ require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
 require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
-$page_keywords = array('Domains','Webpagetest','Website Speed Test');
+$page_keywords = array('Domains','WebPageTest','Website Speed Test');
 $page_description = "Website domain breakdown$testLabel";
 
 $testInfo = TestInfo::fromFiles($testPath);
@@ -36,25 +36,25 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Domain Breakdown<?php echo $testLabel; ?></title>
+        <title>WebPageTest Domain Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
             td {
-                text-align:center; 
-                vertical-align:middle; 
+                text-align:center;
+                vertical-align:middle;
                 padding:1em;
             }
 
             div.bar {
-                height:12px; 
-                margin-top:auto; 
+                height:12px;
+                margin-top:auto;
                 margin-bottom:auto;
             }
 
             td.legend {
-                white-space:nowrap; 
-                text-align:left; 
-                vertical-align:top; 
+                white-space:nowrap;
+                text-align:left;
+                vertical-align:top;
                 padding:0;
             }
             h1 {
@@ -101,7 +101,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
               echo "</table>\n<br>\n";
             }
             ?>
-            <h1>Content breakdown by domain (First  View)</h1>
+            <h1>Content breakdown by domain (First View)</h1>
             <?php
               if ($isMultistep) {
                 $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -113,7 +113,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 
               if ($repeatViewResults) {
                 echo "<br><hr><br>\n";
-                echo "<h1>Content breakdown by domain (Repeat  View)</h1>\n";
+                echo "<h1>Content breakdown by domain (Repeat View)</h1>\n";
                 if ($isMultistep) {
                   $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
                   echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
@@ -123,7 +123,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 }
               }
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
         <a href="#top" id="back_to_top">Back to top</a>
@@ -142,7 +142,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
         ?>
         <script type="text/javascript">
-    
+
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(initJS);

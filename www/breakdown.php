@@ -10,8 +10,8 @@ require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
 require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
-$page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "Website content breakdown by mime type$testLabel";
+$page_keywords = array('Content Breakdown','MIME Types','WebPageTest','Website Speed Test','Page Speed');
+$page_description = "Website content breakdown by MIME type$testLabel";
 
 $testInfo = TestInfo::fromFiles($testPath);
 $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
@@ -24,25 +24,25 @@ if(!$testInfo->isFirstViewOnly()) {
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
+        <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
             td {
-                text-align:center; 
-                vertical-align:middle; 
+                text-align:center;
+                vertical-align:middle;
                 padding:1em;
             }
 
             div.bar {
-                height:12px; 
-                margin-top:auto; 
+                height:12px;
+                margin-top:auto;
                 margin-bottom:auto;
             }
 
             table.legend td {
-                white-space:nowrap; 
-                text-align:left; 
-                vertical-align:top; 
+                white-space:nowrap;
+                text-align:left;
+                vertical-align:top;
                 padding:0;
             }
 
@@ -50,7 +50,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 text-align: center;
                 font-size: 2.5em;
             }
-            
+
             h3 {
                 text-align: center;
             }
@@ -92,7 +92,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
-            <h1>Content breakdown by MIME type (First  View)</h1>
+            <h1>Content breakdown by MIME type (First View)</h1>
             <?php
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -106,7 +106,7 @@ if(!$testInfo->isFirstViewOnly()) {
             ?>
             <?php if ($repeatViewResults) { ?>
                 <br><hr><br>
-                <h1>Content breakdown by MIME type (Repeat  View)</h1>
+                <h1>Content breakdown by MIME type (Repeat View)</h1>
                 <?php
                     if ($isMultistep) {
                         $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
@@ -118,7 +118,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 ?>
             <?php } ?>
         </div>
-        
+
         <?php include('footer.inc'); ?>
         <a href="#top" id="back_to_top">Back to top</a>
 
@@ -136,7 +136,7 @@ if(!$testInfo->isFirstViewOnly()) {
         }
         ?>
         <script type="text/javascript">
-    
+
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(initJS);
@@ -199,16 +199,16 @@ if(!$testInfo->isFirstViewOnly()) {
 
             var viewRequests = new google.visualization.DataView(data);
             viewRequests.setColumns([0, 1]);
-            
+
             var tableRequests = new google.visualization.Table(parentNode.find('div.tableRequests')[0]);
             tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var viewBytes = new google.visualization.DataView(data);
             viewBytes.setColumns([0, 2, 3]);
-            
+
             var tableBytes = new google.visualization.Table(parentNode.find('div.tableBytes')[0]);
             tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-            
+
             var pieRequests = new google.visualization.PieChart(parentNode.find('div.pieRequests')[0]);
             google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
             pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests', colors: colors});

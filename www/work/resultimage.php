@@ -47,7 +47,7 @@ function getFileDestination($testRoot, $fileName) {
     return $testRoot . "/" . $fileName;
   }
 
-  // put each run of video data in it's own directory
+  // put each run of video data in its own directory
   $testPaths = TestPaths::fromUnderscoreFileName($testRoot, $fileName);
   // make sure video dir exists
   $videoDir = $testPaths->videoDir();
@@ -68,7 +68,7 @@ function isVideoFile($fileName) {
 
 /**
  * @param $testPaths TestPaths The TestPaths object corresponding created from the uploaded file
- * @return string  The destination path for the image file of this video
+ * @return string The destination path for the image file of this video
  */
 function getVideoFilePath($testPaths) {
   $baseName = $testPaths->getParsedBaseName();
@@ -87,4 +87,3 @@ function MoveUploadedFile($src, $dest) {
   @chmod($dest, 0666);
 }
 ?>
-

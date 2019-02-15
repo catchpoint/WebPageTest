@@ -14,7 +14,7 @@ $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
 $page_keywords = array('Screenshot','WebPageTest','Website Speed Test');
-$page_description = "Website performance test screenshots$testLabel.";
+$page_description = "Website performance-test screenshots$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
@@ -138,7 +138,7 @@ function printQuicklinks($testRunResults) {
         $class = ($i % 2 == 0) ? " class='even'" : "";
         echo '<tr' . $class . '>';
         echo '<th>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</th>';
-        echo '<td><a href="#step_' . $i . '">Screen Shots</a></td>';
+        echo '<td><a href="#step_' . $i . '">Screenshots</a></td>';
         echo '</tr>';
     }
     echo '</tbody>';
@@ -182,7 +182,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
+        echo '<img class="center" alt="Screenshot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
         echo '</a>';
     }
 
@@ -269,7 +269,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
 
                     echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . '</h2>';
                     echo '<div style="display: inline-block; position: relative">';
-                    echo '<img class="center" alt="Hero Element Screen Shot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
+                    echo '<img class="center" alt="Hero Element Screenshot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
                     echo <<<SVG
                     <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
                         <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />

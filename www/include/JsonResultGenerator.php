@@ -22,7 +22,7 @@ class JsonResultGenerator {
   /**
    * JsonResultGenerator constructor.
    * @param TestInfo $testInfo Information about the test
-   * @param string $urlStart Start for test related URLS
+   * @param string $urlStart Start for test-related URLS
    * @param FileHandler $fileHandler FileHandler to be used. Optional
    * @param array $infoFlags Array of WITHOUT_* and BASIC_* constants to define if some info should be left out. Optional
    * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
@@ -110,7 +110,7 @@ class JsonResultGenerator {
     $ret['successfulFVRuns'] = $testResults->countSuccessfulRuns(false);
     if (!$fvOnly)
       $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
-      
+
     // lighthouse
     if (!$this->hasInfoFlag(self::BASIC_INFO_ONLY)) {
       $lighthouse = $testResults->getLighthouseResult();
@@ -253,7 +253,7 @@ class JsonResultGenerator {
       $ret['PageSpeedScore'] = $testStepResult->getPageSpeedScore();
       $ret['PageSpeedData'] = $urlGenerator->getGZip($nameOnlyPaths->pageSpeedFile());
     }
-    
+
     $ret['pages'] = array();
     $ret['pages']['details'] = $urlGenerator->resultPage("details");
     $ret['pages']['checklist'] = $urlGenerator->resultPage("performance_optimization");

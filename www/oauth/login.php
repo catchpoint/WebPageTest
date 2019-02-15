@@ -40,8 +40,8 @@ if (!isset($_GET['code'])) {
       $user['id'] = $users[$user['email']]['id'];
     $users[$user['email']] = $user;
     gz_file_put_contents('./dat/users.dat', json_encode($users));
-    
-    // se if the user that logged in was an administrator
+
+    // see if the user that logged in was an administrator
     $admin_users = GetSetting('admin_users');
     if ($admin_users) {
       $admins = explode(',', $admin_users);
@@ -63,11 +63,10 @@ if (!isset($_GET['code'])) {
     }
     Unlock($lock);
   }
-  
+
   setcookie("google_id", $user['id'], time()+60*60*24*7*2, "/");
   setcookie("google_email", $user['email'], time()+60*60*24*7*2, "/");
   $redirect = isset($_COOKIE['page_before_google_oauth']) ? $_COOKIE['page_before_google_oauth'] : "$protocol://$host/";
   header('Location: ' . $redirect);
 }
 ?>
-

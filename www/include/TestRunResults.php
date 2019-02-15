@@ -269,7 +269,7 @@ class TestRunResults {
   }
 
   /**
-   * @return bool True if any step si optimization checked, false otherwise
+   * @return bool True if any step is  optimization-checked, false otherwise
    */
   public function isOptimizationChecked() {
     foreach ($this->stepResults as $stepResult) {

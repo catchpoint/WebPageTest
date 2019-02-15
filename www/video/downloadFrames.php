@@ -13,7 +13,7 @@ if( is_dir($dir) )
     $file = "$dir/video.zip";
     BuildVideoScript($testPath, $dir);
     ZipVideo($dir);
-    
+
     if( is_file($file) )
     {
         header('Content-disposition: attachment; filename=video.zip');
@@ -30,7 +30,7 @@ if( !$ok )
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Visual Comparison</title>
+        <title>WebPageTest - Visual Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
         <style type="text/css">
@@ -60,7 +60,7 @@ if( !$ok )
             include 'header.inc';
             ?>
             <h1>The video requested does not exist.</h1>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

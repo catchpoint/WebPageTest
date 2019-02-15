@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Running web page performance and optimization test...</title>
+        <title>WebPageTest - Running web page performance and optimization tests...</title>
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
-        <?php 
+        <?php
             $autoRefresh = true;
             $noanalytics = true;
-            $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
+            $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Running website performance test.";
             include ('head.inc');
         ?>
@@ -31,9 +31,9 @@
                 <p>
                 <?php
                     if ($settings['nolinks']) {
-                        echo "Url: $url<br>\n";
+                        echo "URL: $url<br>\n";
                     } else {
-                        echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
                     }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml(false);
@@ -74,10 +74,10 @@
                 echo "</td></table>\n";
             }
             ?>
-            <p>Your web page performance test has been submitted and is now being processed.  This page will automatically update with the test status as 
-            the test continues to run and when the test is complete the final results will be available here.</p>
+            <p>Your webpage-performance test has been submitted and is now being processed.  This page will automatically update with the test status as
+            the test continues to run.  When the test is complete the final results will be available here.</p>
             <p>You can either leave this page open in your browser until the test
-             is complete or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
+             is complete, or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
             <br>
             <?php } include('footer.inc'); ?>
         </div>
@@ -132,7 +132,7 @@
                           if (lastStatusCode == 100) {
                               interval = 1000;
                               if (response['data'] != undefined &&
-                                  !response.data['remote'] && 
+                                  !response.data['remote'] &&
                                   response.data['testsCompleted'] != undefined &&
                                   response.data['testsCompleted'] >= 1)
                                   reload = true;
@@ -168,12 +168,12 @@
 <?php
 /**
 * Load a tip
-* 
+*
 */
 function GetTip()
 {
     $tip = '';
-    
+
     $tips = glob('./tips_data/*.html',GLOB_NOSORT);
     $count = count($tips);
     if( $count > 0 )
@@ -182,7 +182,7 @@ function GetTip()
         $file = $tips[$pick];
         $tip = file_get_contents($file);
     }
-    
+
     return $tip;
 }
 ?>

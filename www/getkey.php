@@ -15,7 +15,7 @@ $page_description = "Register for a WebPageTest API key.";
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Get API Key</title>
+        <title>WebPageTest - Get API Key</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <style type="text/css">
@@ -74,7 +74,7 @@ function ValidateAPIRequest() {
 }
 
 /**
-* Generate a new API key request
+* Generate a new API-key request
 *
 */
 function NewAPIRequest() {
@@ -128,7 +128,7 @@ function SumbitRequest() {
     if (isset($_REQUEST['agree']) && $_REQUEST['agree']) {
       $email = trim($_REQUEST['email']);
       if (!preg_match('/[^@]+@[^\.]+\..+/', $email)) {
-        echo 'Please provide a valid email address';
+        echo 'Please provide a valid email address.';
       } elseif (BlockEmail($email)) {
         echo 'Sorry, registration is not permitted.  Please contact us for more information.';
       } elseif ($keyinfo = GetKeyInfo($email)) {
@@ -136,10 +136,10 @@ function SumbitRequest() {
       } elseif ($requestinfo = CreateRequest($email)) {
         EmailValidation($requestinfo);
       } else {
-        echo 'Internal error generating the API key request';
+        echo 'Internal error generating the API key request.';
       }
     } else {
-      echo 'Please agree to the terms and conditions';
+      echo 'Please agree to the terms and conditions.';
     }
   }
 }
@@ -205,7 +205,7 @@ function OpenRequestsDatabase() {
 }
 
 /**
-* Get existing API key info for the given email address
+* Get existing API-key info for the given email address
 *
 * @param mixed $email
 */
@@ -220,7 +220,7 @@ function GetKeyInfo($email) {
 }
 
 /**
-* Get existing request the given email address
+* Get existing request for the given email address
 *
 * @param mixed $email
 */
@@ -253,7 +253,7 @@ function CreateRequest($email) {
 }
 
 /**
-* Email the API key info to the requestor
+* Email the API-key info to the requestor
 *
 * @param mixed $info
 */
@@ -293,13 +293,13 @@ function EmailKeyInfo($info, $display) {
   }
   $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
   $url = "$protocol://{$_SERVER['HTTP_HOST']}/getLocations.php?f=html&k=$prefix";
-  $content .= "\nYou can see the current list of locations that are available for API testing here: $url.\n";
+  $content .= "\nThe list of current locations available for API testing here: $url.\n";
   if (count($locations)) {
     $content .= "\nThe following browser/location combinations are available:\n\n";
     foreach ($locations as $location)
       $content .= "$location\n";
   }
-  SendMessage($email, 'WebPagetest API Key', $content);
+  SendMessage($email, 'WebPageTest API Key', $content);
   if ($display)
     echo str_replace("\n", "<br>", $content);
   echo '<br><br>The API key details were also sent to ' . htmlspecialchars($email);
@@ -388,7 +388,7 @@ function CreateApiKey($request) {
 function SendMessage($to, $subject, $body) {
   global $settings;
 
-  // send the e-mail through an SMTP server?
+  // send the email through an SMTP server?
   if (array_key_exists('mailserver', $settings)) {
     require_once "Mail.php";
     $mailServerSettings = $settings['mailserver'];

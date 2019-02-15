@@ -89,7 +89,7 @@ if (array_key_exists('tests', $_REQUEST) && array_key_exists('benchmark', $_REQU
                 <label for="tests">Tests</label>
                 <br><br>
                 <p>
-                The tests data is a json array of objects with each object specifying a test result and the configuration it is tied to:<br>
+                The tests data is a JSON array of objects with each object specifying a test result and the configuration it is tied to:<br>
 <pre>
 [{"id":"xxxxxx_xx_xxxx",
   "url":"http:\/\/example.com",

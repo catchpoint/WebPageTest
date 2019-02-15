@@ -4,7 +4,7 @@ include 'common.inc';
 $loc = GetDefaultLocation();
 $tid= array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
 $run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
-$page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+$page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
 if (is_file(__DIR__ . '/../settings/profiles.ini'))
@@ -14,7 +14,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Visual Comparison</title>
+        <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
     <body>

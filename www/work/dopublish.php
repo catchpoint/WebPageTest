@@ -10,8 +10,8 @@ set_time_limit(300);
 if( isset($_FILES['file']) )
 {
   $fileName = $_FILES['file']['name'];
-  
-  // create a new test id
+
+  // create a new test ID
   $today = new DateTime("now", new DateTimeZone('America/New_York'));
   $id = $today->format('ymd_') . ShardKey(rand()) . md5(uniqid(rand(), true));
   $path = './' . GetTestPath($id);
@@ -19,7 +19,7 @@ if( isset($_FILES['file']) )
   // create the folder for the test results
   if( !is_dir($path) )
       mkdir($path, 0777, true);
-  
+
   // extract the zip file
   $zip = new ZipArchive();
   if ($zip->open($_FILES['file']['tmp_name']) === TRUE) {
@@ -27,11 +27,11 @@ if( isset($_FILES['file']) )
       $zip->extractTo($testPath);
       $zip->close();
   }
-      
+
   // make sure there are no risky files and that nothing is allowed execute permission
   SecureDir($path);
-  
-  // mark the test as piblished so we won't expose a resubmit
+
+  // mark the test as published so we won't expose a resubmit
   $lock = LockTest($id);
   if ($lock) {
     $testInfo = GetTestInfo($id);
@@ -45,7 +45,7 @@ if( isset($_FILES['file']) )
     }
     UnlockTest($lock);
   }
-  
+
   if (is_file("$path/testinfo.ini")) {
     $ini = file("$path/testinfo.ini");
     foreach ($ini as &$line) {
@@ -55,7 +55,7 @@ if( isset($_FILES['file']) )
     }
     file_put_contents("$path/testinfo.ini", implode('', $ini));
   }
-      
+
   echo $id;
 }
 

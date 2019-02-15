@@ -74,7 +74,7 @@ allowNonFQDN=0
 ; image quality (defaults to 30)
 ;iq=75
 
-;save png full-resolution screen shots
+;save png full-resolution screenshots
 ;pngss=1
 
 ;Uncomment to disable the force "3G Fast" throttling applied to lighthouse tests.
@@ -279,9 +279,8 @@ maxNavigateCount=20
 ;EC2.us-east-1.min=0
 ;EC2.us-east-1.max=1
 
-; Per-location Security Group and Subnet IDs to enable launching into VPCs 
-; (note that this will pin your instances to the availability zone associated with 
+; Per-location Security Group and Subnet IDs to enable launching into VPCs
+; (note that this will pin your instances to the availability zone associated with
 ; the subnet). This is required only if you do not have a default VPC.
 ;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
 ;EC2.us-west-2.subnetId=subnet-aaa0011bc1
-

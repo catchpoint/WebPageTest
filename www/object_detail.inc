@@ -89,12 +89,12 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
           if (!$has_secure_requests && isset($request['is_secure']) && $request['is_secure'])
               $has_secure_requests = true;
       }
-    
+
       if (!$cached && $use_raw_headers) {
         gz_file_put_contents($cache_file, json_encode($requests));
       }
     }
-    
+
     return $requests;
 }
 
@@ -155,7 +155,7 @@ function CalculateComponentTimes(&$pageData, &$requests) {
 }
 
 /**
-* Load the gzipped request file (tab deliminated).
+* Load the gzipped request file (tab-delimited).
 */
 function LoadRequests($request_file_name) {
     $requests = array();
@@ -305,7 +305,7 @@ function MergeDnsAndConnectionTimes($requests) {
 }
 
 /**
- * Compute consistent request time fields.
+ * Compute consistent request-time fields.
  *
  * Field keys:
  *   all      - Includes all activity (e.g. dns through download).
@@ -529,7 +529,7 @@ function GetBasePage(&$requests) {
 
 /**
 * Build the list of dependencies for each request
-* 
+*
 * @param mixed $requests
 */
 function BuildRequestDependencies(&$requests) {
@@ -539,13 +539,13 @@ function BuildRequestDependencies(&$requests) {
         $request['loaded_by'] = array();
         RequestLoadedBy($request['number'], $requests, $request['loaded_by']);
     }
-    
+
     return $dependencies;
 }
 
 /**
-* Figure out all of the resources loaded by the given resource
-* 
+* Figure out all of the resources loaded by the given requests
+*
 * @param mixed $index
 * @param mixed $requests
 * @param mixed $map
@@ -573,8 +573,8 @@ function RequestLoads($request_number, &$requests, &$entry) {
 }
 
 /**
-* Figure out all of the resources required to load the given resource
-* 
+* Figure out all of the resources required to load the given requests
+*
 * @param mixed $index
 * @param mixed $requests
 * @param mixed $map

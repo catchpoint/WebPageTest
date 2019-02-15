@@ -1,5 +1,7 @@
 <?php
-// Check the firefox nightly builds FTP server for an updated nightly build
+// Check the Firefox nightly builds FTP server for an updated nightly build
+// Mozilla's near-canonical version-info JSON library: https://product-details.mozilla.org/1.0/firefox_versions.json
+
 chdir(__DIR__);
 set_time_limit(3600);
 $remote_file = null;
@@ -22,7 +24,7 @@ if ($html) {
       }
     }
   }
-  
+
   if (isset($remote_file)) {
     // see if it is a new file
     $local_file = "nightly-$ver-$time.exe";
@@ -39,7 +41,7 @@ if ($html) {
             "version=$remote_file_ver.$remote_file_time\r\n" .
             "command=$local_file -ms\r\n" .
             "update=1\r\n");
-          
+
           // delete any nightlies more than a week old
           $files = glob("nightly-*");
           if ($files) {

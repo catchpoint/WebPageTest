@@ -15,7 +15,7 @@ class AccordionHtmlHelper {
    * Returns an accordion of a given snippetType for all steps of the run
    * @param string $namePrefix Name prefix of the anchor
    * @param string $snippetType Type of the snipper: "waterfall", "connection", "requestDetails", or "requestHeaders"
-   * @param string $jsInitCall Javascript function to call after init. Optional
+   * @param string $jsInitCall JavaScript function to call after init. Optional
    * @return string The HTML accordion
    */
   function createAccordion($namePrefix, $snippetType, $jsInitCall = "") {

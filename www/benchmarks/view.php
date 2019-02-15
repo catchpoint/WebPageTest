@@ -2,8 +2,8 @@
 chdir('..');
 include 'common.inc';
 require_once('./benchmarks/data.inc.php');
-$page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "WebPagetest benchmark details";
+$page_keywords = array('Benchmarks','WebPageTest','Website Speed Test','Page Speed');
+$page_description = "WebPageTest benchmark details";
 $aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
@@ -21,7 +21,7 @@ if (array_key_exists('f', $_REQUEST)) {
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Benchmark details</title>
+        <title>WebPageTest - Benchmark details</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -40,7 +40,7 @@ if (array_key_exists('f', $_REQUEST)) {
             $tab = 'Benchmarks';
             include 'header.inc';
             ?>
-            
+
             <div class="translucent">
             <?php
             if (isset($info) && array_key_exists('links', $info)) {
@@ -190,10 +190,10 @@ if (array_key_exists('f', $_REQUEST)) {
                     trailer = '';
                     if (compareTo === undefined)
                       trailer = ' to...';
-                    menu += '<a href="#" onclick="CompareTo(\'' + benchmark + '\',\'' 
-                            + config + '\',\'' 
-                            + location + '\',' 
-                            + time + ',\'' 
+                    menu += '<a href="#" onclick="CompareTo(\'' + benchmark + '\',\''
+                            + config + '\',\''
+                            + location + '\','
+                            + time + ',\''
                             + title + '\');return false;">' + title + trailer + '</a><br>';
                   }
                 }
@@ -203,49 +203,49 @@ if (array_key_exists('f', $_REQUEST)) {
             </script>
             <?php
 }
-            $metrics = array('docTime' => 'Load Time (onload)', 
+            $metrics = array('docTime' => 'Load Time (onload)',
                             'SpeedIndex' => 'Speed Index',
-                            'TTFB' => 'Time to First Byte', 
-                            'titleTime' => 'Time to Title', 
+                            'TTFB' => 'Time to First Byte',
+                            'titleTime' => 'Time to Title',
                             'basePageSSLTime' => 'Base Page SSL Time',
-                            'render' => 'Time to Start Render', 
-                            'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
-                            'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                            'render' => 'Time to Start Render',
+                            'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint',
+                            'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint',
                             'domContentLoadedEventStart' => 'DOM Content Loaded',
-                            'visualComplete' => 'Time to Visually Complete', 
-                            'visualComplete85' => 'Time to 85% Visually Complete', 
-                            'visualComplete90' => 'Time to 90% Visually Complete', 
-                            'visualComplete95' => 'Time to 95% Visually Complete', 
-                            'visualComplete99' => 'Time to 99% Visually Complete', 
+                            'visualComplete' => 'Time to Visually Complete',
+                            'visualComplete85' => 'Time to 85% Visually Complete',
+                            'visualComplete90' => 'Time to 90% Visually Complete',
+                            'visualComplete95' => 'Time to 95% Visually Complete',
+                            'visualComplete99' => 'Time to 99% Visually Complete',
                             'lastVisualChange' => 'Last Visual Change',
-                            'fullyLoaded' => 'Load Time (Fully Loaded)', 
-                            'TimeToInteractive' => 'Time to Interactive', 
+                            'fullyLoaded' => 'Load Time (Fully Loaded)',
+                            'TimeToInteractive' => 'Time to Interactive',
                             'server_rtt' => 'Estimated RTT to Server',
                             'docCPUms' => 'CPU Busy Time',
-                            'domElements' => 'Number of DOM Elements', 
-                            'connections' => 'Connections', 
-                            'requests' => 'Requests (Fully Loaded)', 
-                            'requestsDoc' => 'Requests (onload)', 
-                            'bytesInDoc' => 'Bytes In (KB - onload)', 
-                            'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
-                            'js_bytes' => 'Javascript Bytes (KB)', 
-                            'js_requests' => 'Javascript Requests', 
-                            'css_bytes' => 'CSS Bytes (KB)', 
-                            'css_requests' => 'CSS Requests', 
-                            'image_bytes' => 'Image Bytes (KB)', 
+                            'domElements' => 'Number of DOM Elements',
+                            'connections' => 'Connections',
+                            'requests' => 'Requests (Fully Loaded)',
+                            'requestsDoc' => 'Requests (onload)',
+                            'bytesInDoc' => 'Bytes In (KB - onload)',
+                            'bytesIn' => 'Bytes In (KB - Fully Loaded)',
+                            'js_bytes' => 'JavaScript Bytes (KB)',
+                            'js_requests' => 'JavaScript Requests',
+                            'css_bytes' => 'CSS Bytes (KB)',
+                            'css_requests' => 'CSS Requests',
+                            'image_bytes' => 'Image Bytes (KB)',
                             'image_requests' => 'Image Requests',
-                            'flash_bytes' => 'Flash Bytes (KB)', 
-                            'flash_requests' => 'Flash Requests', 
-			    'video_bytes' => 'Video Bytes (KB)', 
+                            'flash_bytes' => 'Flash Bytes (KB)',
+                            'flash_requests' => 'Flash Requests',
+                            'video_bytes' => 'Video Bytes (KB)',
                             'video_requests' => 'Video Requests',
-                            'html_bytes' => 'HTML Bytes (KB)', 
-                            'html_requests' => 'HTML Requests', 
-                            'text_bytes' => 'Text Bytes (KB)', 
+                            'html_bytes' => 'HTML Bytes (KB)',
+                            'html_requests' => 'HTML Requests',
+                            'text_bytes' => 'Text Bytes (KB)',
                             'text_requests' => 'Text Requests',
-                            'other_bytes' => 'Other Bytes (KB)', 
+                            'other_bytes' => 'Other Bytes (KB)',
                             'other_requests' => 'Other Requests',
                             'browser_version' => 'Browser Version');
-//                            'responses_404' => 'Not Found Responses (404)', 
+//                            'responses_404' => 'Not Found Responses (404)',
 //                            'responses_other' => 'Non-404 Error Responses');
             if (isset($info)) {
                 if (!$info['video']) {
@@ -279,7 +279,7 @@ if (array_key_exists('f', $_REQUEST)) {
 if (!isset($out_data)) {
             ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
@@ -293,7 +293,7 @@ if (!isset($out_data)) {
 
 /**
 * Display the charts for the given benchmark/metric
-* 
+*
 * @param mixed $benchmark
 */
 function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) {
@@ -373,5 +373,5 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
             echo "</script>\n";
         }
     }
-}    
+}
 ?>

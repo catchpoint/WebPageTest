@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Traceroute test result<?php echo $testLabel; ?></title>
+        <title>WebPageTest - Traceroute test result<?php echo $testLabel; ?></title>
         <?php
-            $gaTemplate = 'Traceroute Result'; 
-            $page_keywords = array('Traceroute','Webpagetest','Website Speed Test','Page Speed');
+            $gaTemplate = 'Traceroute Result';
+            $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Traceroute result.";
             include ('head.inc');
             require_once('testStatus.inc');
@@ -40,7 +40,7 @@
 <?php
 /**
 * Output the data table for the traceroute
-* 
+*
 * @param mixed $testPath
 * @param mixed $run
 */
@@ -77,7 +77,7 @@ function DisplayTraceroute( &$testPath, $run )
             array_key_exists('addr', $hops[-1]) &&
             strlen($hops[-1]['addr']))
             $addr = $hops[-1]['addr'];
-        
+
         $index = 0;
         foreach($hops as $hop => $data) {
             if( $hop > 0 ) {

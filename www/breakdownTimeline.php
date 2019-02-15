@@ -5,40 +5,40 @@ require_once('contentColors.inc');
 require_once('waterfall.inc');
 require_once('page_data.inc');
 
-$page_keywords = array('Timeline Breakdown','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "Chrome main thread processing breakdown$testLabel";
+$page_keywords = array('Timeline Breakdown','WebPageTest','Website Speed Test','Page Speed');
+$page_description = "Chrome main-thread processing breakdown$testLabel";
 
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
+        <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
             td {
-                text-align:left; 
+                text-align:left;
                 vertical-align:top;
                 padding:1em;
             }
 
             div.bar {
-                height:12px; 
-                margin-top:auto; 
+                height:12px;
+                margin-top:auto;
                 margin-bottom:auto;
             }
-            
+
             div.table {
               margin-left: auto;
               margin-right: auto;
             }
 
             td.legend {
-                white-space:nowrap; 
-                text-align:left; 
-                vertical-align:top; 
+                white-space:nowrap;
+                text-align:left;
+                vertical-align:top;
                 padding:0;
             }
-            
+
             th.header {
               font-weight: normal;
             }
@@ -119,11 +119,11 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
               }
             }
             ?>
-            
+
             <table align="center">
                 <tr>
                     <th class="header" colspan="2">
-                    <h2>Main thread processing breakdown</h2>
+                    <h2>Main-thread processing breakdown</h2>
                     Where the browser's main thread was busy, not including idle time waiting for resources <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
                     ?>.
@@ -147,8 +147,8 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                 </tr>
                 <tr>
                     <th class="header" colspan="2">
-                    <h2>Main thread time breakdown</h2>
-                    All of the main thread activity including idle (waiting for resources usually) <?php
+                    <h2>Main-thread time breakdown</h2>
+                    All of the main-thread activity including idle (waiting for resources usually) <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
                     ?>.
                     </th>
@@ -171,13 +171,13 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                 </tr>
             </table>
         </div>
-        
+
         <?php include('footer.inc'); ?>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="//www.google.com/jsapi"></script>
         <script type="text/javascript">
-    
+
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(drawTable);
@@ -225,7 +225,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             ?>
             var viewGroups = new google.visualization.DataView(groups);
             viewGroups.setColumns([0, 1]);
-            
+
             var tableGroups = new google.visualization.Table(document.getElementById('tableGroups'));
             tableGroups.draw(viewGroups, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
@@ -233,10 +233,10 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             google.visualization.events.addListener(pieGroups, 'ready', function(){markUserTime('aft.Groups Pie');});
             pieGroups.draw(viewGroups, {width: 450, height: 300, title: 'Processing Categories', colors: groupColors});
 
-            
+
             var viewEvents = new google.visualization.DataView(events);
             viewEvents.setColumns([0, 1]);
-            
+
             var tableEvents = new google.visualization.Table(document.getElementById('tableEvents'));
             tableEvents.draw(viewEvents, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
@@ -285,17 +285,17 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             ?>
             var viewGroupsIdle = new google.visualization.DataView(groupsIdle);
             viewGroupsIdle.setColumns([0, 1]);
-            
+
             var tableGroupsIdle = new google.visualization.Table(document.getElementById('tableGroupsIdle'));
             tableGroupsIdle.draw(viewGroupsIdle, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var pieGroupsIdle = new google.visualization.PieChart(document.getElementById('pieGroupsIdle'));
             pieGroupsIdle.draw(viewGroupsIdle, {width: 450, height: 300, title: 'Processing Categories', colors: groupColors});
 
-            
+
             var viewEventsIdle = new google.visualization.DataView(eventsIdle);
             viewEventsIdle.setColumns([0, 1]);
-            
+
             var tableEventsIdle = new google.visualization.Table(document.getElementById('tableEventsIdle'));
             tableEventsIdle.draw(viewEventsIdle, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 

@@ -14,7 +14,7 @@ $feeds['Recent Industry Blog Posts']['Gilly Barr'] = 'http://www.debuggerstepthr
 $feeds['Recent Industry Blog Posts']['Ilya Grigorik'] = 'http://feeds.igvita.com/igvita';
 $feeds['Recent Industry Blog Posts']['Will Chan'] = 'https://insouciant.org/atom.xml';
 
-$feeds['Recent Industry Blog Posts']['Yahoo Exceptional Performance'] = 'http://pipes.yahoo.com/pipes/pipe.run?_id=PKsaYeBk3RG_sHO91JzWFw&_render=rss';
+$feeds['Recent Industry Blog Posts']['Yahoo! Exceptional Performance'] = 'https://developer.yahoo.com/performance/rules.html';
 $feeds['Recent Industry Blog Posts']['Gomez'] = 'http://blog.gomez.com/feed/rss/';
 $feeds['Recent Industry Blog Posts']['Aptimize'] = 'http://www.aptimize.com/blog';
 $feeds['Recent Industry Blog Posts']['Web Performance Today'] = 'http://www.webperformancetoday.com/feed/';
@@ -31,7 +31,7 @@ $feeds['Recent Industry Blog Posts']['Neustar'] = 'https://www.neustar.biz/blog/
 $feeds['Recent Industry Blog Posts']['SpeedCurve'] = 'https://speedcurve.com/blog/rss/';
 
 $feeds['Recent Discussions'] = array();
-$feeds['Recent Discussions']['WebPagetest Forums'] = 'http://www.webpagetest.org/forums/syndication.php?limit=30';
+$feeds['Recent Discussions']['WebPageTest Forums'] = 'http://www.webpagetest.org/forums/syndication.php?limit=30';
 //$feeds['Recent Discussions']['Yahoo Exceptional Performance'] = 'http://rss.groups.yahoo.com/group/exceptional-performance/rss';
 $feeds['Recent Discussions']['Make The Web Faster Google Group'] = 'http://groups.google.com/group/make-the-web-faster/feed/atom_v1_0_msgs.xml';
 

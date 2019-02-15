@@ -3,8 +3,8 @@ set_time_limit(600);
 chdir('..');
 include 'common.inc';
 require_once('./benchmarks/data.inc.php');
-$page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "WebPagetest benchmark test comparison";
+$page_keywords = array('Benchmarks','WebPageTest','Website Speed Test','Page Speed');
+$page_description = "WebPageTest benchmark test comparison";
 $benchmarks = GetBenchmarks();
 $bmData = array();
 $count = 0;
@@ -84,46 +84,46 @@ if (array_key_exists('configs', $_REQUEST)) {
     $comparing .= strlen($comparing) ? ' to ' . $label : $label;
   }
 }
-$metrics = array('docTime' => 'Load Time (onload)', 
+$metrics = array('docTime' => 'Load Time (onload)',
                 'SpeedIndex' => 'Speed Index',
-                'TTFB' => 'Time to First Byte', 
+                'TTFB' => 'Time to First Byte',
                 'basePageSSLTime' => 'Base Page SSL Time',
-                'titleTime' => 'Time to Title', 
-                'render' => 'Time to Start Render', 
-                'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
-                'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                'titleTime' => 'Time to Title',
+                'render' => 'Time to Start Render',
+                'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint',
+                'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint',
                 'domContentLoadedEventStart' => 'DOM Content Loaded',
-                'visualComplete' => 'Time to Visually Complete', 
-                'visualComplete85' => 'Time to 85% Visually Complete', 
-                'visualComplete90' => 'Time to 90% Visually Complete', 
-                'visualComplete95' => 'Time to 95% Visually Complete', 
-                'visualComplete99' => 'Time to 99% Visually Complete', 
+                'visualComplete' => 'Time to Visually Complete',
+                'visualComplete85' => 'Time to 85% Visually Complete',
+                'visualComplete90' => 'Time to 90% Visually Complete',
+                'visualComplete95' => 'Time to 95% Visually Complete',
+                'visualComplete99' => 'Time to 99% Visually Complete',
                 'lastVisualChange' => 'Last Visual Change',
-                'fullyLoaded' => 'Load Time (Fully Loaded)', 
-                'TimeToInteractive' => 'Time to Interactive', 
+                'fullyLoaded' => 'Load Time (Fully Loaded)',
+                'TimeToInteractive' => 'Time to Interactive',
                 'server_rtt' => 'Estimated RTT to Server',
                 'docCPUms' => 'CPU Busy Time',
-                'domElements' => 'Number of DOM Elements', 
-                'connections' => 'Connections', 
-                'requests' => 'Requests (Fully Loaded)', 
-                'requestsDoc' => 'Requests (onload)', 
-                'bytesInDoc' => 'Bytes In (KB - onload)', 
-                'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
-                'js_bytes' => 'Javascript Bytes (KB)', 
-                'js_requests' => 'Javascript Requests', 
-                'css_bytes' => 'CSS Bytes (KB)', 
-                'css_requests' => 'CSS Requests', 
-                'image_bytes' => 'Image Bytes (KB)', 
+                'domElements' => 'Number of DOM Elements',
+                'connections' => 'Connections',
+                'requests' => 'Requests (Fully Loaded)',
+                'requestsDoc' => 'Requests (onload)',
+                'bytesInDoc' => 'Bytes In (KB - onload)',
+                'bytesIn' => 'Bytes In (KB - Fully Loaded)',
+                'js_bytes' => 'JavaScript Bytes (KB)',
+                'js_requests' => 'JavaScript Requests',
+                'css_bytes' => 'CSS Bytes (KB)',
+                'css_requests' => 'CSS Requests',
+                'image_bytes' => 'Image Bytes (KB)',
                 'image_requests' => 'Image Requests',
-                'flash_bytes' => 'Flash Bytes (KB)', 
-                'flash_requests' => 'Flash Requests', 
-                'html_bytes' => 'HTML Bytes (KB)', 
-                'html_requests' => 'HTML Requests', 
-                'text_bytes' => 'Text Bytes (KB)', 
+                'flash_bytes' => 'Flash Bytes (KB)',
+                'flash_requests' => 'Flash Requests',
+                'html_bytes' => 'HTML Bytes (KB)',
+                'html_requests' => 'HTML Requests',
+                'text_bytes' => 'Text Bytes (KB)',
                 'text_requests' => 'Text Requests',
 		'video_bytes' => 'Video Bytes (KB)',
 		'video_requests => 'Video Requests',
-                'other_bytes' => 'Other Bytes (KB)', 
+                'other_bytes' => 'Other Bytes (KB)',
                 'other_requests' => 'Other Requests',
                 'browser_version' => 'Browser Version'
                 );
@@ -140,7 +140,7 @@ foreach ($benchmarks as &$benchmark) {
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Benchmark test comparison</title>
+        <title>WebPageTest - Benchmark Test Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -162,14 +162,14 @@ foreach ($benchmarks as &$benchmark) {
             echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
             $site_js_loaded = true;
             ?>
-            
+
             <div class="translucent">
             <?php
               echo '<h2>Comparing: ' . htmlspecialchars($comparing) . '<br>From: ' . htmlspecialchars($baseline) . '</h2>';
             ?>
             <div style="clear:both;">
                 <div style="float:left;" class="notes">
-                    Click on a data point in the chart to see the full test data (waterfall, etc) for the given data point.<br>
+                    Click on a data point in the chart to see the full test data (waterfall, etc.) for the given data point.<br>
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.
                 </div>
             </div>
@@ -222,7 +222,7 @@ foreach ($benchmarks as &$benchmark) {
             }
             ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
@@ -258,5 +258,5 @@ function DisplayBenchmarkData($metric) {
         echo "</script>\n";
     }
   }
-}    
+}
 ?>

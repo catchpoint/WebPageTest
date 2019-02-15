@@ -17,7 +17,7 @@ class DomainBreakdownHtmlSnippet extends BreakdownHtmlSnippet {
 
   public function create() {
     $out = $this->createChartMarkup();
-    $out .= $this->createJavascript("wptDomainBreakdownData", $this->_getJSONBreakdown());
+    $out .= $this->createJavaScript("wptDomainBreakdownData", $this->_getJSONBreakdown());
     return $out;
   }
 

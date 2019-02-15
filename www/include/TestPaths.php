@@ -231,7 +231,7 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for Main thread interactive time periods
+   * @return string Path for main-thread interactive-time periods
    */
   public function interactiveFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_interactive.json";
@@ -266,14 +266,14 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for devtools CPU timeline
+   * @return string Path for devtools-CPU timeline
    */
   public function devtoolsCPUTimelineFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_timeline_cpu.json";
   }
 
   /**
-   * @return string Path for devtools script execution times timeline
+   * @return string Path for devtools script-execution-times timeline
    */
   public function devtoolsScriptTimingFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_script_timing.json";
@@ -322,7 +322,7 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for lighthouse json file
+   * @return string Path for lighthouse JSON file
    */
   public function lighthouseJsonFile() {
     return $this->testRoot . "lighthouse.json";
@@ -333,14 +333,14 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for lighthouse html file
+   * @return string Path for lighthouse HTML file
    */
   public function lighthouseHtmlFile() {
     return $this->testRoot . "lighthouse.html";
   }
 
   /**
-   * @return string Path for lighthouse json file
+   * @return string Path for lighthouse JSON file
    */
   public function lighthouseLogFile() {
     return $this->testRoot . "lighthouse.log";
@@ -452,7 +452,7 @@ class TestPaths {
   public function requestsAnalysisFile() {
     return $this->testRoot . $this->dotIdentifier() . ".analysis.json";
   }
-  
+
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for page data
@@ -482,4 +482,3 @@ class TestPaths {
   }
 
 }
-
