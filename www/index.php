@@ -6,6 +6,8 @@ if (array_key_exists('bulk', $_GET)) {
 }
 if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
+if (!$privateInstall && !$user && !$admin && !$this_user)
+    $settings['noBulk'] = 1;
 
 // see if we are overriding the max runs
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
