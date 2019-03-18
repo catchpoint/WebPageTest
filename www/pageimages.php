@@ -32,7 +32,7 @@ $userImages = true;
     </style>
   </head>
   <body>
-    <div class="page">
+    <div class="page-wide">
       <?php
       $tab = 'Test Result';
       $subtab = null;
