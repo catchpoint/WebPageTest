@@ -163,6 +163,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
     $include_js = (bool)@$options['include_js'];
+    $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
 
     $top = 0;
     $row_count = count($rows);
@@ -833,7 +834,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                       $is_thumbnail, $is_mime, $is_state, $request['url']);
                   $bars = GetBars($request, $x_scaler, $y1, $y2,
                                   $is_thumbnail, $is_mime, $is_state, $include_js,
-                                  $max_bw, $pass);
+                                  $max_bw, $pass, $show_chunks);
                   foreach ($bars as $bar) {
                       list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
                       DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
@@ -1219,7 +1220,7 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 */
 function GetBars($request, $x_scaler, $y1, $y2,
                  $is_thumbnail, $is_mime, $is_state, $include_js,
-                 $max_bw, $pass) {
+                 $max_bw, $pass, $show_chunks) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1233,7 +1234,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
   // TODO(slamm): tweak minimum width of bars.
   //  (!$is_mime && !$is_thumbnail) ? each bar at least 1px
   //   ($is_mime && !$is_thumbnail) ? each bar group at least 1px
-  if (isset($request['chunks']) && is_array($request['chunks']) && count($request['chunks'])) {
+  if ($show_chunks && isset($request['chunks']) && is_array($request['chunks']) && count($request['chunks'])) {
     // Show each chunk of the download
     // First, draw the TTFB color over the whole request time
     if ($pass == 1) {

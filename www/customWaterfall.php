@@ -32,6 +32,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization <br>
                     <input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
+                    <input id="showChunks" type="checkbox" checked> Show download chunks
                 </form>
             </div>
             <br>
@@ -100,6 +101,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 var showLabels = 0;
                 if( $('#showLabels').attr('checked') )
                     showLabels = 1;
+                var showChunks = 0;
+                if( $('#showChunks').attr('checked') )
+                    showChunks = 1;
                 <?php
                 echo "var testId='$id';\n";
                 echo "var testRun='$run';\n";
@@ -121,6 +125,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                           '&bw=' + showBW +
                           '&dots=' + showDots +
                           '&labels=' + showLabels +
+                          '&chunks=' + showChunks +
                           '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };
