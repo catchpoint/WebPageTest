@@ -4,10 +4,9 @@ include 'common.inc';
 if (array_key_exists('bulk', $_GET)) {
     $settings['noBulk'] = 0;
 }
-if (!array_key_exists('noBulk', $settings))
+if (!array_key_exists('noBulk', $settings)) {
     $settings['noBulk'] = 0;
-if (!$privateInstall && !$user && !$admin && !$this_user)
-    $settings['noBulk'] = 1;
+}
 
 // see if we are overriding the max runs
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -170,6 +169,8 @@ $loc = ParseLocations($locations);
                 echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
               if (isset($_REQUEST['warmup']))
                 echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
+            } else {
+              $settings['noBulk'] = 1;
             }
             ?>
 
