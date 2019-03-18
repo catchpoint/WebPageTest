@@ -113,60 +113,62 @@ $loc = ParseLocations($locations);
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
-            if (array_key_exists('iq', $_REQUEST))
-              echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
-            if (array_key_exists('pngss', $_REQUEST))
-              echo '<input type="hidden" name="pngss" value="' . htmlspecialchars($_REQUEST['pngss']) . "\">\n";
-            if (array_key_exists('shard', $_REQUEST))
-              echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
-            if (array_key_exists('discard', $_REQUEST))
-              echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
-            if (array_key_exists('timeout', $_REQUEST))
-              echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
-            if (array_key_exists('appendua', $_REQUEST))
-              echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
-            if (array_key_exists('keepvideo', $_REQUEST))
-              echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
-            if (array_key_exists('medianMetric', $_REQUEST))
-              echo '<input type="hidden" name="medianMetric" value="' . htmlspecialchars($_REQUEST['medianMetric']) . "\">\n";
-            if (array_key_exists('affinity', $_REQUEST))
-              echo '<input type="hidden" name="affinity" value="' . htmlspecialchars($_REQUEST['affinity']) . "\">\n";
-            if (array_key_exists('tester', $_REQUEST))
-              echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
-            if (array_key_exists('minimal', $_REQUEST))
-              echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
-            if (isset($_REQUEST['noopt']))
-              echo '<input type="hidden" name="noopt" value="' . htmlspecialchars($_REQUEST['noopt']) . "\">\n";
-            if (isset($_REQUEST['debug']))
-              echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
-            if (isset($_REQUEST['throttle_cpu']))
-              echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
-            if (isset($_REQUEST['browser_width']))
-              echo '<input type="hidden" name="browser_width" value="' . htmlspecialchars($_REQUEST['browser_width']) . "\">\n";
-            if (isset($_REQUEST['browser_height']))
-              echo '<input type="hidden" name="browser_height" value="' . htmlspecialchars($_REQUEST['browser_height']) . "\">\n";
-            if (isset($_REQUEST['width']))
-              echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
-            if (isset($_REQUEST['height']))
-              echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
-            if (isset($_REQUEST['thumbsize']))
-              echo '<input type="hidden" name="thumbsize" value="' . htmlspecialchars($_REQUEST['thumbsize']) . "\">\n";
-            if (isset($_REQUEST['fps']))
-              echo '<input type="hidden" name="fps" value="' . htmlspecialchars($_REQUEST['fps']) . "\">\n";
-            if (isset($_REQUEST['timeline_fps']))
-              echo '<input type="hidden" name="timeline_fps" value="' . htmlspecialchars($_REQUEST['timeline_fps']) . "\">\n";
-            if (isset($_REQUEST['discard_timeline']))
-              echo '<input type="hidden" name="discard_timeline" value="' . htmlspecialchars($_REQUEST['discard_timeline']) . "\">\n";
-            if (isset($_REQUEST['htmlbody']))
-              echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
-            if (isset($_REQUEST['disable_video']))
-              echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
-            if (isset($_REQUEST['heroElementTimes']))
-              echo '<input type="hidden" name="heroElementTimes" value="' . htmlspecialchars($_REQUEST['heroElementTimes']) . "\">\n";
-            if (isset($_REQUEST['lighthouseThrottle']))
-              echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
-            if (isset($_REQUEST['warmup']))
-              echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
+            if ($privateInstall || $user || $admin || $this_user) {
+              if (array_key_exists('iq', $_REQUEST))
+                echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
+              if (array_key_exists('pngss', $_REQUEST))
+                echo '<input type="hidden" name="pngss" value="' . htmlspecialchars($_REQUEST['pngss']) . "\">\n";
+              if (array_key_exists('shard', $_REQUEST))
+                echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
+              if (array_key_exists('discard', $_REQUEST))
+                echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
+              if (array_key_exists('timeout', $_REQUEST))
+                echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
+              if (array_key_exists('appendua', $_REQUEST))
+                echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
+              if (array_key_exists('keepvideo', $_REQUEST))
+                echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
+              if (array_key_exists('medianMetric', $_REQUEST))
+                echo '<input type="hidden" name="medianMetric" value="' . htmlspecialchars($_REQUEST['medianMetric']) . "\">\n";
+              if (array_key_exists('affinity', $_REQUEST))
+                echo '<input type="hidden" name="affinity" value="' . htmlspecialchars($_REQUEST['affinity']) . "\">\n";
+              if (array_key_exists('tester', $_REQUEST))
+                echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
+              if (array_key_exists('minimal', $_REQUEST))
+                echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
+              if (isset($_REQUEST['noopt']))
+                echo '<input type="hidden" name="noopt" value="' . htmlspecialchars($_REQUEST['noopt']) . "\">\n";
+              if (isset($_REQUEST['debug']))
+                echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
+              if (isset($_REQUEST['throttle_cpu']))
+                echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
+              if (isset($_REQUEST['browser_width']))
+                echo '<input type="hidden" name="browser_width" value="' . htmlspecialchars($_REQUEST['browser_width']) . "\">\n";
+              if (isset($_REQUEST['browser_height']))
+                echo '<input type="hidden" name="browser_height" value="' . htmlspecialchars($_REQUEST['browser_height']) . "\">\n";
+              if (isset($_REQUEST['width']))
+                echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
+              if (isset($_REQUEST['height']))
+                echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
+              if (isset($_REQUEST['thumbsize']))
+                echo '<input type="hidden" name="thumbsize" value="' . htmlspecialchars($_REQUEST['thumbsize']) . "\">\n";
+              if (isset($_REQUEST['fps']))
+                echo '<input type="hidden" name="fps" value="' . htmlspecialchars($_REQUEST['fps']) . "\">\n";
+              if (isset($_REQUEST['timeline_fps']))
+                echo '<input type="hidden" name="timeline_fps" value="' . htmlspecialchars($_REQUEST['timeline_fps']) . "\">\n";
+              if (isset($_REQUEST['discard_timeline']))
+                echo '<input type="hidden" name="discard_timeline" value="' . htmlspecialchars($_REQUEST['discard_timeline']) . "\">\n";
+              if (isset($_REQUEST['htmlbody']))
+                echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
+              if (isset($_REQUEST['disable_video']))
+                echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
+              if (isset($_REQUEST['heroElementTimes']))
+                echo '<input type="hidden" name="heroElementTimes" value="' . htmlspecialchars($_REQUEST['heroElementTimes']) . "\">\n";
+              if (isset($_REQUEST['lighthouseThrottle']))
+                echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
+              if (isset($_REQUEST['warmup']))
+                echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
+            }
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
