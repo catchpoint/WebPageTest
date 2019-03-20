@@ -28,7 +28,7 @@ if( strlen($page_description) )
     
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;
-    if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+    if( stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false )
         $privateInstall = false;
 
     $blkLogo = false;
