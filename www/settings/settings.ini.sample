@@ -80,6 +80,9 @@ allowNonFQDN=0
 ;Uncomment to disable the force "3G Fast" throttling applied to lighthouse tests.
 ;lighthouseThrottle=1
 
+;Uncomment enable hero element times.
+;heroElementTimes=1
+
 ;Software identification string to include in the user agent string of tests
 ;UAModifier=PTST
 
