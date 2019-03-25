@@ -92,7 +92,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
     // Keep track of the number of each request so we can add a dotted row when one is missing
     $last_request_number = 0;
     foreach ($filtered_requests as $request) {
-        if ($request['number'] > $last_request_number + 1) {
+        if ($use_dots && $request['number'] > $last_request_number + 1) {
             $rows[] = _GetDotsRow();
         }
 
