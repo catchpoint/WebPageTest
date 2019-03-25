@@ -210,7 +210,7 @@
               $test['lighthouse'] = $req_lighthouse;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
             $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
-            $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : 0;
+            $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : GetSetting('heroElementTimes', 0);
             if (isset($req_timeline))
               $test['timeline'] = $req_timeline;
             if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])

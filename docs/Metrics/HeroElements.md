@@ -15,3 +15,23 @@ WebPageTest will also calculate two more hero metrics, based on the values of th
 
 - **First Painted Hero** - The time that the first hero element is visible in the viewport.
 - **Last Painted Hero** - The time that the last hero element is visible in the viewport.
+
+## How hero elements are measured
+
+Hero element rendering times are calculated as follows:
+
+1. Identify the largest hero elements in the viewport.
+2. Collect the dimensions and position of these elements, as well as any custom selectors and elements with the `elementtiming` attribute.
+3. For each of the hero elements, crop the final video frame to use as a "fully rendered" reference.
+4. Iterate over each video frame, applying the same crop and comparing it to the reference frame.
+5. When a frame is found that is sufficiently similar to the reference, use the timestamp of that frame as the hero element render time.
+
+## Limitations
+
+### Only elements in the viewport can be measured
+
+Since the hero element timings are determined by analysing video frames, only elements that appear in the viewport can be measured. The hero element detection is done in such a way that only part of the element must be visible.
+
+### Animated content or pop-overs can interfere
+
+When a hero element is animated or is covered by pop-over elements, the rendering times may not be accurate. This is because the "fully rendered" reference frame may have the hero element in a state that is different to when it first renders.
