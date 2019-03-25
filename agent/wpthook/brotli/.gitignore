@@ -1,9 +1,0 @@
-*.o
-*.pyc
-*.txt.uncompressed
-*.bro
-*.unbro
-bin/
-buildfiles/
-**/obj/
-dist/

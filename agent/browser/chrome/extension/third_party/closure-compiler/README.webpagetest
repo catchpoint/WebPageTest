@@ -1,7 +1,0 @@
-Change Log:
-
-2012/02/02: Sam Kerner (skerner at google dot com)
-  Update Chrome extension API externs to warn about deprecated function
-  chrome.tabs.getSelected(), and support new function chrome.tabs.query.
-
-    modified: closure-compiler/contrib/externs/chrome_extensions.js
