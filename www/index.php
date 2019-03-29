@@ -691,11 +691,18 @@ $loc = ParseLocations($locations);
                             <div id="block" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="block_requests_containing" class="full_width">
-                                        Block Requests Containing...<br>
+                                        Block Requests Containing (URL substrings)...<br>
                                         <small>Space-separated list</small>
                                     </label>
-                                </p>
                                 <textarea name="block" id="block_requests_containing" cols="0" rows="0"></textarea>
+                                </p>
+                                <p>
+                                    <label for="block_domains" class="full_width">
+                                        Block Domains (full host names)...<br>
+                                        <small>Space-separated list of domains</small>
+                                    </label>
+                                <textarea name="blockDomains" id="block_domains" cols="0" rows="0"></textarea>
+                                </p>
                             </div>
 
                             <div id="spof" class="test_subbox ui-tabs-hide">
