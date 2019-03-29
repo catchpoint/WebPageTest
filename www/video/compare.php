@@ -718,6 +718,13 @@ function DisplayGraphs() {
                         'TTFB' => 'Time to First Byte',
                         'titleTime' => 'Time to Title',
                         'render' => 'Time to Start Render',
+                        'heroElementTimes.FirstPaintedHero' => 'First Painted Hero',
+                        'heroElementTimes.LastPaintedHero' => 'Last Painted Hero',
+                        'heroElementTimes.elementtiming' => 'Hero Element Timing Painted',
+                        'heroElementTimes.Heading' => 'Hero Heading Painted',
+                        'heroElementTimes.Heading2' => 'Hero H2 Painted',
+                        'heroElementTimes.Image' => 'Hero Image Painted',
+                        'heroElementTimes.BackgroundImage' => 'Hero BAckground Image Painted',
                         'fullyLoadedCPUms' => 'CPU Busy Time');
     $progress_end = 0;
     foreach($tests as &$test) {
