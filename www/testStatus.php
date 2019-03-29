@@ -1,4 +1,5 @@
 <?php
+$DISABLE_RESTORE = true;
 require_once('common.inc');
 require_once('testStatus.inc');
 set_time_limit(60*5);

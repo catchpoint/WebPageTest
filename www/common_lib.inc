@@ -1250,7 +1250,7 @@ function RestoreTest($id)
 {
   global $userIsBot;
   $ret = false;
-  if (!$userIsBot && ValidateTestId($id)) {
+  if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
     // Only trigger a restore if the test info is not valid
     $testInfo = GetTestInfo($id);
