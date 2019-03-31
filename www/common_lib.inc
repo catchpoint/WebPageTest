@@ -1249,6 +1249,7 @@ function FixUrlSlash($url)
 function RestoreTest($id)
 {
   global $userIsBot;
+  global $DISABLE_RESTORE;
   $ret = false;
   if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
