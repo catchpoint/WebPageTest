@@ -358,8 +358,8 @@ $loc = ParseLocations($locations);
                                         if (isset($_REQUEST['fvonly']))
                                           $fvOnly = (int)$_REQUEST['fvonly'];
                                         ?>
-                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
-                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
+                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0"><label class="radio" for="viewBoth">First View and Repeat View</label>
+                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1"><label class="radio" for="viewFirst">First View Only</label>
                                     </li>
                                     <li>
                                       <label for="videoCheck">Capture Video</label>
