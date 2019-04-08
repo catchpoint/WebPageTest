@@ -275,7 +275,7 @@ $loc = ParseLocations($locations);
                             <ul class="ui-tabs-nav">
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
-                                <li><a href="#advanced-chrome">Chrome</a></li>
+                                <li><a href="#advanced-chrome">Chromium</a></li>
                                 <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                                 <li><a href="#auth">Auth</a></li>
                                 <?php } ?>
