@@ -139,14 +139,10 @@ if (array_key_exists('HTTP_HOST', $_SERVER) &&
 if (isset($_REQUEST['bulk'])) {
     $settings['noBulk'] = 0;
 }
-$is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
+$is_ssl = isSslConnection();
 $GLOBALS['cdnPath'] = '';
 if (isset($settings['cdn']) && !$is_ssl) {
     $GLOBALS['cdnPath'] = $settings['cdn'];
-}
-$GLOBALS['ptotocol'] = 'http';
-if ($is_ssl) {
-    $GLOBALS['ptotocol'] = 'https';
 }
 
 $tz_offset = null;

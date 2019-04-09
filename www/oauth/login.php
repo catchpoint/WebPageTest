@@ -7,7 +7,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . './lib/oauth');
 require_once 'Google/Client.php';
 $client_id = GetSetting('google_oauth_client_id');
 $client_secret = GetSetting('google_oauth_client_secret');
-$protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+$protocol = getUrlProtocol();
 $host  = $_SERVER['HTTP_HOST'];
 $uri   = $_SERVER['PHP_SELF'];
 $redirect_uri = "$protocol://$host$uri";

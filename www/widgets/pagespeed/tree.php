@@ -24,7 +24,7 @@ header ("Content-type: text/javascript");
 $div = $_REQUEST['div'];
 if (strlen($testPath) && strlen($div)) {
     // inject the css file into the document dynamically
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $base_path = "$protocol://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $css = "$base_path/tree.css?v=2";
     echo "var pagespeed_tree_css=document.createElement('link');\n";

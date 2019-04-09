@@ -161,7 +161,7 @@ function ImportBenchmarkRun($benchmark, $epoch, &$test_data) {
     file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     Unlock($lock);
     // kick off the collection and aggregation of the results
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $cron = "$protocol://$host$uri/benchmarks/cron.php?benchmark=" . urlencode($benchmark);
