@@ -12,4 +12,3 @@ function getUrlProtocol() {
     return isSslConnection() ? 'https' : 'http';
 }
 ?>
-
