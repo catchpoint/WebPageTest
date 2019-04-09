@@ -106,7 +106,7 @@ if( $xml || $json )
         {
             $code = 200;
 
-            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $protocol = getUrlProtocol();
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
             $videoUrl = "$protocol://$host$uri/download.php?id=$videoId";
@@ -314,7 +314,7 @@ else
                 if(!$embed) {
                     echo "<br><a class=\"link\" href=\"/video/download.php?id=$videoId\">Download</a> | ";
                     echo '<a class="link" href="javascript:ShowEmbed()">Embed</a>';
-                    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                    $protocol = getUrlProtocol();
                     $dataText = 'View as data comparison';
                     $dataUrl = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId&data=1";
                     if ($displayData) {
@@ -374,7 +374,7 @@ else
               $dimensions = "&width=$width&height=$height";
               $framesize = " width=\"$width\" height=\"$height\"";
             }
-            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $protocol = getUrlProtocol();
             echo htmlspecialchars("<iframe src=\"$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId&embed=1$dimensions\"$framesize></iframe>");
             ?>
             </p>
