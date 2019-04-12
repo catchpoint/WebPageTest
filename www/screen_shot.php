@@ -243,6 +243,11 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
 
             foreach ($hero_elements as $heroIndex => $hero) {
                 $hero_time = $hero_times[$hero['name']];
+                $hero_info = ["{$hero_time}ms"];
+
+                if (isset($hero_times["LastPaintedHero"]) && $hero_time == $hero_times["LastPaintedHero"]) {
+                    $hero_info[] = "<abbr title=\"Last Painted Hero\">LPH</abbr>";
+                }
 
                 if ($hero_time > 0 && isset($frames[$hero_time])) {
                     $frame_file = $frames[$hero_time]['file'];
@@ -267,7 +272,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
                     $w = $hero['width'] * $scale;
                     $h = $hero['height'] * $scale;
 
-                    echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . '</h2>';
+                    echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . ' <small>(' . implode(', ', $hero_info) . ')</small></h2>';
                     echo '<div style="display: inline-block; position: relative">';
                     echo '<img class="center" alt="Hero Element Screenshot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
                     echo <<<SVG
