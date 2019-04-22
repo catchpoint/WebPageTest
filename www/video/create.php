@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/../util.inc');
 $version = 9;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
@@ -28,7 +29,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
@@ -278,7 +279,7 @@ else
     // redirect to the destination page
     if( $id )
     {
-        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+        $protocol = getUrlProtocol();
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 

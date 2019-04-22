@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/archive.inc');
+require_once(__DIR__ . '/util.inc');
 
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
@@ -2502,7 +2503,7 @@ function ShardKey($test_num, $locationID = null) {
 * @param mixed $relative_url
 */
 function SendAsyncRequest($relative_url) {
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = getUrlProtocol();
   $url = "$protocol://{$_SERVER['HTTP_HOST']}$relative_url";
   $local = GetSetting('local_server');
   if ($local)

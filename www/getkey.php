@@ -291,7 +291,7 @@ function EmailKeyInfo($info, $display) {
       }
     }
   }
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = getUrlProtocol();
   $url = "$protocol://{$_SERVER['HTTP_HOST']}/getLocations.php?f=html&k=$prefix";
   $content .= "\nThe list of current locations available for API testing here: $url.\n";
   if (count($locations)) {
@@ -314,7 +314,7 @@ function EmailKeyInfo($info, $display) {
 function EmailValidation($info) {
   $email = $info['email'];
   $id = $info['id'];
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = getUrlProtocol();
   $url = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?validate=$id";
   $content = "Thank you for requesting a WebPageTest API key.  In order to assign a key we need to validate your email address.\n\nTo complete the validation and retrieve your API key please go to $url";
   SendMessage($email, 'WebPagetest API Key Request', $content);

@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/../util.inc');
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -14,8 +15,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
                 $tests .= "-r:{$parts[1]}";
         }
     }
-
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
