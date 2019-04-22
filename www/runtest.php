@@ -1894,6 +1894,7 @@ function LogTest(&$test, $testId, $url)
         'owner' => @$test['owner'],
         'key' => @$test['key'],
         'count' => @$pageLoads,
+        'priority' => @$test['priority'],
     );
 
     $log = makeLogLine($line_data);
