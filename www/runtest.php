@@ -50,6 +50,7 @@
     if (array_key_exists('headless', $settings) && $settings['headless']) {
         $headless = true;
     }
+    $is_bulk_test = false;
 
     // Load the location information
     $locations = LoadLocationsIni();
@@ -477,8 +478,10 @@
             // see if it is a batch test
             $test['batch'] = 0;
             if( (isset($req_bulkurls) && strlen($req_bulkurls)) ||
-                (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) )
+                (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) ) {
                 $test['batch'] = 1;
+                $is_bulk_test = true;
+            }
 
             // login tests are forced to be private
             if( isset($test['login']) && strlen($test['login']) )
@@ -1953,6 +1956,7 @@ function CheckUrl($url)
   global $usingAPI;
   global $error;
   global $admin;
+  global $is_bulk_test;
   $date = gmdate("Ymd");
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
     $url = 'http://' . $url;
@@ -1964,7 +1968,7 @@ function CheckUrl($url)
       // Follow redirects to see if they are obscuring the site being tested
       $rhost = '';
       $rurl = '';
-      if (GetSetting('check_redirects'))
+      if (GetSetting('check_redirects') && !$is_bulk_test)
         GetRedirect($url, $rhost, $rurl);
       foreach( $blockUrls as $block ) {
         $block = trim($block);
@@ -2001,7 +2005,7 @@ function CheckUrl($url)
     }
   }
 
-  if ($ok && !$admin && !$usingAPI) {
+  if ($ok && !$admin && !$usingAPI && !$is_bulk_test) {
     $ok = SBL_Check($url, $message);
     if (!$ok) {
       $error = "<br>Sorry, your test was blocked because " . htmlspecialchars($url) . " is suspected of being used for
