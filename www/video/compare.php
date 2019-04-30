@@ -395,7 +395,7 @@ function ScreenShotTable()
 
             if (!defined('EMBED')) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
-                $href = $urlGenerator->resultPage("details");
+                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
                 echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
