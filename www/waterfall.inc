@@ -1253,6 +1253,15 @@ function GetBars($request, $x_scaler, $y1, $y2,
     }
     // Add a bar for the TTFB (headers)
     AddBarIfValid($bars, 'download', 'download_start', 'download_start', $request, $x_scaler, $y1, $y2);
+    // Make sure the chunks stay withing the download time
+    $min = null;
+    if (isset($request['download_start'])) {
+      $min = $request['download_start'];
+    } elseif (isset($request['ttfb_end'])) {
+      $min = $request['ttfb_end'];
+    } elseif (isset($request['ttfb_start'])) {
+      $min = $request['ttfb_start'];
+    }
     // Add the bars for each chunk
     foreach($request['chunks'] as $chunk) {
       if (isset($chunk['ts'])) {
@@ -1263,6 +1272,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
           if ($chunk_time > 0)
             $start -= $chunk_time;
         }
+        $start = max($min, $start);
         $bars[] = array(
             $x_scaler(round($start)), $x_scaler(round($chunk['ts'])),
             $y1, $y2,
