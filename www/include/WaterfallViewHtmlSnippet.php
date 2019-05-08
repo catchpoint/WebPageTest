@@ -34,6 +34,7 @@ class WaterfallViewHtmlSnippet {
     $out .=  "<br><a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
     $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->stepDetailPage("pageimages") . "\">View all Images</a>";
     $out .=  " &#8226; <a id=\"http2-dependencies\" href=\"" . $urlGenerator->stepDetailPage("http2_dependencies") . "\">View HTTP/2 Dependency Graph</a>";
+    $out .=  " &#8226; <a href=\"" . $urlGenerator->filmstripView() . "\">Filmstrip</a>";
     return $out;
   }
 
