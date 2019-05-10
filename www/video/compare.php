@@ -113,6 +113,12 @@ else
                 }
                 #videoContainer
                 {
+                    position: sticky;
+                    top: 0;
+                    z-index: 2;
+                    <?php
+                        echo "background: #$bgcolor;\n";
+                    ?>
                     table-layout: fixed;
                     margin-left: auto;
                     margin-right: auto;
@@ -361,15 +367,7 @@ function ScreenShotTable()
         if (!defined('EMBED')) {
             echo '<br>';
         }
-        echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
-        echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
-        echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
-        echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
-        echo "<input type=\"hidden\" name=\"text\" value=\"$color\">";
-        if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
-          echo '<input type="hidden" name="labelHeight" value="' . htmlspecialchars($_REQUEST['labelHeight']) . '">"';
-        if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
-          echo '<input type="hidden" name="timeHeight" value="' . htmlspecialchars($_REQUEST['timeHeight']) . '">"';
+
         echo '<table id="videoContainer"><tr>';
 
         // build a table with the labels
@@ -506,6 +504,16 @@ function ScreenShotTable()
 
         // end of the container table
         echo "</td></tr></table>\n";
+
+        echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
+        echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
+        echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
+        echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
+        echo "<input type=\"hidden\" name=\"text\" value=\"$color\">";
+        if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
+            echo '<input type="hidden" name="labelHeight" value="' . htmlspecialchars($_REQUEST['labelHeight']) . '">"';
+        if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
+            echo '<input type="hidden" name="timeHeight" value="' . htmlspecialchars($_REQUEST['timeHeight']) . '">"';
         echo '<div class="page">';
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
