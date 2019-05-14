@@ -1440,7 +1440,7 @@ EOT;
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   require_once('./object_detail.inc');
   $opacity = number_format(1.0 / count($waterfalls), 2, '.', '');
-  echo '<div class="waterfall-container" style="text-align: left;margin-top:10em;">';
+  echo '<div class="waterfall-container waterfall-sliders" style="text-align: left;">';
   echo 'Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):<br>';
   echo '<table>';
   if (count($waterfalls) == 2) {

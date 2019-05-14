@@ -115,7 +115,7 @@ else
                 {
                     position: sticky;
                     top: 0;
-                    z-index: 2;
+                    z-index: 5;
                     <?php
                         echo "background: #$bgcolor;\n";
                     ?>
@@ -182,6 +182,7 @@ else
                     float: right;
                     position: relative;
                     top: -8em;
+                    z-index: 4;
                 }
                 #layoutTable
                 {
@@ -273,7 +274,17 @@ else
                 <?php
                 }
                 ?>
-                div.waterfall-container {top: -8em; width:930px; margin: 0 auto;}
+                div.waterfall-container {top: -2em; width:930px; margin: 0 auto;}
+                div.waterfall-sliders {
+                    position: sticky;
+                    clear: none;
+                    margin-top: 3em;
+                    top: 0;
+                    z-index: 3;
+                    <?php
+                        echo "background: #$bgcolor;\n";
+                    ?>
+                }
             </style>
         </head>
         <body>
@@ -938,6 +949,16 @@ function DisplayGraphs() {
             }
             ?>
         }
+    </script>
+    <script>
+        var videoContainer = document.querySelector("#videoContainer");
+        var waterfallSliders = document.querySelector(".waterfall-sliders");
+
+        console.log(videoContainer);
+        console.log(waterfallSliders);
+        console.log(videoContainer.offsetHeight);
+
+        waterfallSliders.style.top = videoContainer.offsetHeight.toString() + "px";
     </script>
     <?php
 }
