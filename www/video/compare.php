@@ -113,11 +113,17 @@ else
                 }
                 #videoContainer
                 {
-                    position: sticky;
-                    top: 0;
-                    z-index: 5;
                     <?php
-                        echo "background: #$bgcolor;\n";
+                    if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+                    ?>
+                        position: sticky;
+                        top: 0;
+                        z-index: 5;
+                        <?php
+                            echo "background: #$bgcolor;\n";
+                        ?>
+                    <?php
+                    }
                     ?>
                     table-layout: fixed;
                     margin-left: auto;
@@ -275,16 +281,21 @@ else
                 }
                 ?>
                 div.waterfall-container {top: -2em; width:930px; margin: 0 auto;}
-                div.waterfall-sliders {
-                    position: sticky;
-                    clear: none;
-                    margin-top: 3em;
-                    top: 0;
-                    z-index: 3;
-                    <?php
-                        echo "background: #$bgcolor;\n";
-                    ?>
+                <?php
+                if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+                ?>
+                    div.waterfall-sliders {
+                        position: sticky;
+                        clear: none;
+                        margin-top: 3em;
+                        top: 0;
+                        z-index: 3;
+                        <?php
+                            echo "background: #$bgcolor;\n";
+                        ?>
+                <?php
                 }
+                ?>
             </style>
         </head>
         <body>
@@ -950,16 +961,22 @@ function DisplayGraphs() {
             ?>
         }
     </script>
-    <script>
-        var videoContainer = document.querySelector("#videoContainer");
-        var waterfallSliders = document.querySelector(".waterfall-sliders");
+    <?php
+    if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+    ?>
+        <script>
+          var videoContainer = document.querySelector("#videoContainer");
+          var waterfallSliders = document.querySelector(".waterfall-sliders");
 
-        console.log(videoContainer);
-        console.log(waterfallSliders);
-        console.log(videoContainer.offsetHeight);
+          console.log(videoContainer);
+          console.log(waterfallSliders);
+          console.log(videoContainer.offsetHeight);
 
-        waterfallSliders.style.top = videoContainer.offsetHeight.toString() + "px";
-    </script>
+          waterfallSliders.style.top = videoContainer.offsetHeight.toString() + "px";
+        </script>
+    <?php
+    }
+    ?>
     <?php
 }
 ?>
