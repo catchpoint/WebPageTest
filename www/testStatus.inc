@@ -141,6 +141,7 @@ function GetTestStatus($id, $includePosition = true) {
                             $ret['statusCode'] = 200;
                             $ret['statusText'] = 'Test Complete';
                             $ret['completeTime'] = $date;
+                            SendCallback($testInfoJson);
                           }
                         }
                         SaveTestInfo($id, $testInfoJson);
