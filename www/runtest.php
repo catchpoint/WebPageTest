@@ -202,7 +202,9 @@
             if (isset($req_pingback))
               $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback))
-                $test['callback'] = $req_callback;
+              $test['callback'] = $req_callback;
+            if(!isset($test['callback']) && GetSetting('ping_back_url'))
+              $test['callback'] = GetSetting('ping_back_url');
             if (isset($req_agent))
               $test['agent'] = $req_agent;
             if (isset($req_tcpdump))

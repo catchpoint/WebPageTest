@@ -202,6 +202,9 @@ maxNavigateCount=20
 ;logTestRequests=/var/log/webpagetest/requests.log
 ;logPrivateTests=0
 
+; Default URL to ping when the test is complete
+;ping_back_url=http://pingbackurl.com
+
 ; **************
 ; Test Archiving
 ; **************
