@@ -1,5 +1,0 @@
-chromedriver/ -- chromedriver binary, in platform dirs named $(uname -ms).
-
-Download from https://sites.google.com/a/chromium.org/chromedriver/downloads
-Note the version.
-Unzip, copy to "chromedriver/$(uname -ms)/chromedriver-<version>".

@@ -22,7 +22,7 @@ import re
 import time
 import urlparse
 
-# try a fast json parser if it is installed
+# try a fast JSON parser if it is installed
 try:
     import ujson as json
 except BaseException:
@@ -61,7 +61,7 @@ class Trace():
     #   Output Logging
     ##########################################################################
     def write_json(self, out_file, json_data):
-        """Write out one of the internal structures as a json blob"""
+        """Write out one of the internal structures as a JSON blob"""
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':

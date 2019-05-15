@@ -1,4 +1,4 @@
-<?php 
+<?php
 include __DIR__ . '/common.inc';
 require_once __DIR__ . '/video.inc';
 require_once __DIR__ . '/page_data.inc';
@@ -13,18 +13,18 @@ $fileHandler = new FileHandler();
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
-$page_keywords = array('Screen Shot','Webpagetest','Website Speed Test');
-$page_description = "Website performance test screen shots$testLabel.";
+$page_keywords = array('Screenshot','WebPageTest','Website Speed Test');
+$page_description = "Website performance-test screenshots$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Screen Shots<?php echo $testLabel; ?></title>
-        <?php $gaTemplate = 'Screen Shot'; include ('head.inc'); ?>
+        <title>WebPageTest Screenshots<?php echo $testLabel; ?></title>
+        <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
         <style type="text/css">
         img.center {
-            display:block; 
+            display:block;
             margin-left: auto;
             margin-right: auto;
         }
@@ -77,7 +77,7 @@ $userImages = true;
             overflow: hidden;
         }
         .time {
-            white-space:nowrap; 
+            white-space:nowrap;
         }
         tr.even {
             background: whitesmoke;
@@ -88,12 +88,12 @@ $userImages = true;
         <div class="page">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Screen Shot';
+            $subtab = 'Screenshot';
             include 'header.inc';
 
             printContent($fileHandler, $testInfo, $testRunResults);
             ?>
-            
+
             </div>
 
             <?php include('footer.inc'); ?>
@@ -138,7 +138,7 @@ function printQuicklinks($testRunResults) {
         $class = ($i % 2 == 0) ? " class='even'" : "";
         echo '<tr' . $class . '>';
         echo '<th>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</th>';
-        echo '<td><a href="#step_' . $i . '">Screen Shots</a></td>';
+        echo '<td><a href="#step_' . $i . '">Screenshots</a></td>';
         echo '</tr>';
     }
     echo '</tbody>';
@@ -182,7 +182,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
+        echo '<img class="center" alt="Screenshot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
         echo '</a>';
     }
 
@@ -201,21 +201,21 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
         if (isset($pageRunData) && isset($pageRunData['render']))
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Start Render Screen Shot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
+        echo '<img class="center" alt="Start Render Screenshot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
         echo '<br><br><a name="dom_element' . $linkSuffix . '"><h2>DOM Element';
         if (isset($pageRunData) && isset($pageRunData['domTime']))
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="DOM Element Screen Shot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
+        echo '<img class="center" alt="DOM Element Screenshot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
         echo '<br><br><a name="doc_complete' . $linkSuffix . '"><h2>Document Complete';
         if (isset($pageRunData) && isset($pageRunData['docTime']))
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Document Complete Screen Shot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
+        echo '<img class="center" alt="Document Complete Screenshot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
         echo '<br><br><a name="aft' . $linkSuffix . '"><h2>AFT Details';
@@ -228,6 +228,69 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("responsive"))) {
         echo '<br><br><h2 id="responsive">Responsive Site Check</h2>';
         echo '<img class="center" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
+    }
+
+    // Display hero element frames
+    if (gz_is_file($localPaths->heroElementsJsonFile())) {
+        $hero_data = json_decode(gz_file_get_contents($localPaths->heroElementsJsonFile()), true);
+        $visual_progress = $testStepResult->getVisualProgress();
+
+        if (isset($visual_progress['frames']) && $hero_data) {
+            $frames = $visual_progress['frames'];
+            $hero_elements = $hero_data['heroes'];
+            $hero_times = $testStepResult->getMetric('heroElementTimes');
+            $viewport = $hero_data['viewport'];
+
+            foreach ($hero_elements as $heroIndex => $hero) {
+                $hero_time = $hero_times[$hero['name']];
+                $hero_info = ["{$hero_time}ms"];
+
+                if (isset($hero_times["LastPaintedHero"]) && $hero_time == $hero_times["LastPaintedHero"]) {
+                    $hero_info[] = "<abbr title=\"Last Painted Hero\">LPH</abbr>";
+                }
+
+                if ($hero_time > 0 && isset($frames[$hero_time])) {
+                    $frame_file = $frames[$hero_time]['file'];
+                    $frame_path = "{$localPaths->videoDir()}/{$frame_file}";
+                    if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.png')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.png';
+                        $frame = imagecreatefrompng($frame_path);
+                    } else if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.jpg')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.jpg';
+                        $frame = imagecreatefromjpeg($frame_path);
+                    } else {
+                        continue;
+                    }
+
+                    $frame_w = imagesx($frame);
+                    $frame_h = imagesy($frame);
+                    imagedestroy($frame);
+
+                    $scale = min($frame_w / $viewport['width'], $frame_h / $viewport['height']);
+                    $x = $hero['x'] * $scale;
+                    $y = $hero['y'] * $scale;
+                    $w = $hero['width'] * $scale;
+                    $h = $hero['height'] * $scale;
+
+                    echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . ' <small>(' . implode(', ', $hero_info) . ')</small></h2>';
+                    echo '<div style="display: inline-block; position: relative">';
+                    echo '<img class="center" alt="Hero Element Screenshot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
+                    echo <<<SVG
+                    <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
+                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />
+
+                        <mask id="opacity-mask-{$heroIndex}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                            <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" fill="black" />
+                        </mask>
+
+                        <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" stroke="rgb(0, 255, 0)" stroke-width="2" fill="none" />
+                    </svg>
+SVG;
+                    echo '</div>';
+                }
+            }
+        }
     }
 
     // display all of the status messages

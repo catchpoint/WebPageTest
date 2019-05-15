@@ -1,4 +1,4 @@
-<?php 
+<?php
 include __DIR__ . '/common.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestRunResults.php';
@@ -6,7 +6,7 @@ require_once __DIR__ . '/optimization_detail.inc.php';
 require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
 require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
-$page_keywords = array('Optimization','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Optimization','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance optimization recommendations$testLabel.";
 
 global $testPath, $run, $cached, $step; // defined in common.inc
@@ -17,7 +17,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Optimization Check Results<?php echo $testLabel; ?></title>
+        <title>WebPageTest Optimization Check Results<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
         <style type="text/css">
             td.nowrap {white-space:nowrap;}
@@ -29,7 +29,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             {
                 font-size: larger;
             }
-            
+
             #opt
             {
                 margin-bottom: 2em;
@@ -173,7 +173,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 echo '<br>';
                 dumpOptimizationGlossary($settings);
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
         <a href="#top" id="back_to_top">Back to top</a>

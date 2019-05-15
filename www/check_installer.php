@@ -89,13 +89,15 @@ function IsValidIp($ip, $installer) {
   global $has_apc;
   global $has_apcu;
   $ok = true;
-  
-  // Make sure it isn't on our banned IP list
+
+  // Make sure it isn't on our banned-IP list
   $filename = __DIR__ . '/settings/block_installer_ip.txt';
   if (is_file($filename)) {
     $blocked_addresses = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (in_array($ip, $blocked_addresses)) {
-      $ok = false;
+    foreach ($blocked_addresses as $address) {
+      if (strpos($ip, $address) === 0) {
+        $ok = false;
+      }
     }
   }
 
@@ -149,7 +151,7 @@ function ApcCheckIp($ip, $installer) {
 /**
 * For each IP/Installer pair, keep track of the last 4 checks and if they
 * were within the last hour fail the request.
-* 
+*
 * @param mixed $installer
 */
 function CheckIp($ip, $installer) {
@@ -163,7 +165,7 @@ function CheckIp($ip, $installer) {
         $history = json_decode(gz_file_get_contents($file), true);
       if (!isset($history) || !is_array($history))
         $history = array();
-      
+
       if (isset($history[$ip])) {
         if (isset($history[$ip][$installer])) {
           $history[$ip][$installer][] = $now;
@@ -190,14 +192,14 @@ function CheckIp($ip, $installer) {
       if ($ok) {
         $history[$ip]["last-$installer"] = $now;
       }
-      
+
       // prune any agents that haven't connected in 7 days
       foreach ($history as $agent => $info) {
         if ($now - $info['last'] > 604800) {
           unset($history[$agent]);
         }
       }
-      
+
       gz_file_put_contents($file, json_encode($history));
       Unlock($lock);
     }
@@ -207,7 +209,7 @@ function CheckIp($ip, $installer) {
 
 /**
 * Override installer options from settings
-* 
+*
 * @param mixed $data
 */
 function ModifyInstaller(&$data) {
@@ -222,7 +224,7 @@ function ModifyInstaller(&$data) {
 function GetEC2Region($ip) {
   $region = null;
   $json = null;
-  
+
   if (isset($_REQUEST['ec2zone'])) {
     $region = substr($_REQUEST['ec2zone'], 0, strlen($_REQUEST['ec2zone']) - 1);
   } else {
@@ -236,7 +238,7 @@ function GetEC2Region($ip) {
         if ($now > $updated && $now - $updated >= 86400)
           $needs_update = true;
       }
-      
+
       if (!is_file($region_file) || $needs_update) {
         $json = file_get_contents('https://ip-ranges.amazonaws.com/ip-ranges.json');
         if (isset($json) && $json !== FALSE && strlen($json))
@@ -268,7 +270,7 @@ function GetEC2Region($ip) {
       }
     }
   }
-  
+
   return $region;
 }
 ?>

@@ -4,7 +4,7 @@ include 'common.inc';
 // see if we are processing an import or presenting the UI
 if (array_key_exists('tests', $_REQUEST)) {
     require_once('page_data.inc');
-    
+
     /****************************************************************************
     * Creating a bulk test from existing tests
     ****************************************************************************/
@@ -50,10 +50,10 @@ if (array_key_exists('tests', $_REQUEST)) {
       }
     }
     gz_file_put_contents("$testPath/bulk.json", json_encode($bulk));
-    
+
     // Return the test ID (or redirect if not using the API)
     TestResult($test, $error);
-    
+
 } elseif (array_key_exists('devtools', $_FILES)) {
   if (ValidateKey()) {
     /****************************************************************************
@@ -84,10 +84,10 @@ if (array_key_exists('tests', $_REQUEST)) {
       $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
       $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
       if (array_key_exists('tsview_id', $_REQUEST) && strlen($_REQUEST['tsview_id']))
-        $test['tsview_id'] = $_REQUEST['tsview_id'];    
+        $test['tsview_id'] = $_REQUEST['tsview_id'];
       if (array_key_exists('k', $_REQUEST))
         $test['key'] = $_REQUEST['k'];
-      
+
       // generate the test ID
       $test['id'] = CreateTestID();
       $id = $test['id'];
@@ -97,7 +97,7 @@ if (array_key_exists('tests', $_REQUEST)) {
         mkdir($testPath, 0777, true);
       $run = 1;
     }
-    
+
     if (!isset($error)) {
       // move the dev tools file over
       if (array_key_exists('devtools', $_FILES) &&
@@ -106,8 +106,8 @@ if (array_key_exists('tests', $_REQUEST)) {
         move_uploaded_file($_FILES['devtools']['tmp_name'], "$testPath/{$run}_devtools.json");
         gz_compress("$testPath/{$run}_devtools.json");
       }
-      
-      // screen shot (if we got one)
+
+      // screenshot (if we got one)
       if (array_key_exists('screenshot', $_FILES) &&
           array_key_exists('tmp_name', $_FILES['screenshot']) &&
           array_key_exists('name', $_FILES['screenshot']) &&
@@ -137,7 +137,7 @@ if (array_key_exists('tests', $_REQUEST)) {
           strlen($_FILES['tcpdump']['tmp_name'])) {
         move_uploaded_file($_FILES['tcpdump']['tmp_name'], "$testPath/$run.cap");
       }
-      
+
       // custom metrics
       if (array_key_exists('metrics', $_REQUEST) &&
           strlen($_REQUEST['metrics'])) {
@@ -158,7 +158,7 @@ if (array_key_exists('tests', $_REQUEST)) {
         if (count($metrics))
           gz_file_put_contents("$testPath/{$run}_metrics.json", json_encode($metrics));
       }
-      
+
       // create the test info files
       SaveTestInfo($id, $test);
 
@@ -174,7 +174,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       $testInfo .= "connectivity=Unknown\r\n";
       $testInfo .= "\r\n[runs]\r\n";
       file_put_contents("$testPath/testinfo.ini",  $testInfo);
-      
+
       // run the normal workdone processing flow
       $_REQUEST['id'] = $id;
       $_REQUEST['done'] = (array_key_exists('pending', $_REQUEST) && $_REQUEST['pending']) ? 0 : 1;
@@ -187,26 +187,26 @@ if (array_key_exists('tests', $_REQUEST)) {
       // re-load the test info
       $test = GetTestInfo($id);
     }
-    
+
     // Return the test ID (or redirect if not using the API)
     TestResult($test, $error);
   } else {
     // Invalid API key = block if keys are configured (for now anyway)
     header('HTTP/1.0 403 Forbidden');
-    echo 'Access Denied.  Invalid API Key';
+    echo 'Access Denied.  Invalid API Key.';
   }
-  
+
   /****************************************************************************
   * Display the import UI
   ****************************************************************************/
 } else {
-  $page_keywords = array('Import','Chrome Dev Tools','Webpagetest','Website Speed Test','Page Speed');
+  $page_keywords = array('Import','Chrome Dev Tools','WebPageTest','Website Speed Test','Page Speed');
   $page_description = "Import Chrome Dev Tools.";
 ?>
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebPagetest - Import Chrome Dev Tools</title>
+    <title>WebPageTest - Import Chrome Dev Tools</title>
     <meta http-equiv="charset" content="iso-8859-1">
     <meta name="author" content="Patrick Meenan">
     <?php $gaTemplate = 'Import'; include ('head.inc'); ?>
@@ -236,13 +236,13 @@ if (array_key_exists('tests', $_REQUEST)) {
               <li>
                 <input type="file" name="devtools" id="devtools" size="40">
                 <label for="devtools">
-                    Dev Tools File to import
+                    Dev Tools file to import
                 </label>
               </li>
               <li>
                 <input type="file" name="screenshot" id="screenshot" size="40">
                 <label for="screenshot">
-                    Screen Shot<br><small>(optional - PNG or JPG)</small>
+                    Screenshot<br><small>(optional - PNG or JPG)</small>
                 </label>
               </li>
               <li>
@@ -298,8 +298,8 @@ if (array_key_exists('tests', $_REQUEST)) {
             <input type="submit" value="Submit">
           </div>
         </div>
-      </form>            
-      
+      </form>
+
       <?php include('footer.inc'); ?>
     </div>
   </body>
@@ -333,7 +333,7 @@ function CreateTestID() {
 }
 
 function TestResult(&$test, $error) {
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = getUrlProtocol();
   $host  = $_SERVER['HTTP_HOST'];
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
   if (array_key_exists('f', $_REQUEST)) {

@@ -19,13 +19,13 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
 $data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
 $isMultistep = $testRunResults->countSteps() > 1;
 
-$page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
+        <title>WebPageTest Test Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
         div.bar {
@@ -155,7 +155,7 @@ $page_description = "Website performance test details$testLabel";
                 {
                     require_once('google/google_lib.inc');
                 ?>
-                    <h2>Csi Metrics</h2>
+                    <h2>CSI Metrics</h2>
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
@@ -214,6 +214,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td><a href='#request_headers_$stepSuffix'>Request Headers</a></td>";
                         echo "<td><a href='" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
                         echo "<td><a href='" . $urlGenerator->stepDetailPage("pageimages") . "'>All Images</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("http2_dependencies") . "'>HTTP/2 Dependency Graph</a></td>";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";
@@ -415,4 +416,3 @@ $page_description = "Website performance test details$testLabel";
         </script>
     </body>
 </html>
-

@@ -17,7 +17,7 @@ class TestInfo {
   }
 
   /**
-   * @param string $id The test id
+   * @param string $id The test ID
    * @param string $rootDirectory The root directory of the test data
    * @param array $testInfo Array with information about the test
    * @return TestInfo The created instance

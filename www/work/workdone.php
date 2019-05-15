@@ -1,5 +1,5 @@
 <?php
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessRun');
   newrelic_add_custom_tracer('loadAllPageData');
   newrelic_add_custom_tracer('getRequestsForStep');
@@ -16,7 +16,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('loadPageStepData');
   newrelic_add_custom_tracer('ParseUserTiming');
   newrelic_add_custom_tracer('CalculateTimeToInteractive');
-  
+
 }
 
 chdir('..');
@@ -45,7 +45,7 @@ ignore_user_abort(true);
 $key  = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
 $id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
 
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_parameter('test', $id);
 }
 
@@ -71,9 +71,9 @@ else
 // params can be set by a client to declare that they support a new
 // behavior.  Once all clients are updated, they should be removed.
 
-// Should zipped har uploads be flattened?  The main user is the mobitest iOS
+// Should zipped HAR uploads be flattened?  The main user is the mobitest iOS
 // agent.  The agent will be updated to always set this, but until we can
-// re-image all agents we need to support the old behavior for a while.
+// re-image all agents, we need to support the old behavior for a while.
 $flattenUploadedZippedHar =
     arrayLookupWithDefault('flattenZippedHar', $_REQUEST, false);
 
@@ -119,7 +119,7 @@ if (ValidateTestId($id)) {
       if (!isset($testLock))
         logTestMsg($id, "Failed to lock test");
       $testInfo = GetTestInfo($id);
-      
+
       // Figure out the path to the results.
       $ini = parse_ini_file("$testPath/testinfo.ini");
       $time = time();
@@ -134,7 +134,7 @@ if (ValidateTestId($id)) {
           array_key_exists('tester', $testInfo) &&
           strlen($testInfo['tester']))
         $tester = $testInfo['tester'];
-                          
+
       if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
         ProcessIncrementalResult();
 
@@ -173,15 +173,15 @@ if (ValidateTestId($id)) {
           }
         }
       }
-      
+
       // keep track of any overall or run-specific errors reported by the agent
       if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
         $testInfo['test_error'] = $_REQUEST['testerror'];
         $testInfo_dirty = true;
       }
-      if (isset($runNumber) && 
-          isset($cacheWarmed) && 
-          array_key_exists('error', $_REQUEST) && 
+      if (isset($runNumber) &&
+          isset($cacheWarmed) &&
+          array_key_exists('error', $_REQUEST) &&
           strlen($_REQUEST['error'])) {
         if (!array_key_exists('errors', $testInfo))
           $testInfo['errors'] = array();
@@ -209,7 +209,7 @@ if (ValidateTestId($id)) {
           $rebooted = false;
         UpdateTester($location, $tester, $testerInfo, $cpu, $testerError, $rebooted);
       }
-              
+
       // see if the test is complete
       if ($done) {
         // Mark the test as done and save it out so that we can load the page data
@@ -231,7 +231,7 @@ if (ValidateTestId($id)) {
         $testInfo['steps'] = $numSteps;
         SaveTestInfo($id, $testInfo);
         $testInfo_dirty = false;
-        
+
         // delete any .test files
         $files = scandir($testPath);
         foreach ($files as $file)
@@ -239,14 +239,14 @@ if (ValidateTestId($id)) {
             unlink("$testPath/$file");
         if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file']))
           unlink($testInfo['job_file']);
-        
+
         $perTestTime = 0;
         $testCount = 0;
 
         // do pre-complete post-processing
         MoveVideoFiles($testPath);
         WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
-        
+
         if (!isset($pageData))
           $pageData = loadAllPageData($testPath);
         $medianRun = GetMedianRun($pageData, 0, $medianMetric);
@@ -256,7 +256,7 @@ if (ValidateTestId($id)) {
         // delete all of the videos except for the median run?
         if( array_key_exists('median_video', $ini) && $ini['median_video'])
           KeepVideoForRun($testPath, $medianRun);
-        
+
         $test = file_get_contents("$testPath/testinfo.ini");
         $now = gmdate("m/d/y G:i:s", $time);
 
@@ -279,8 +279,8 @@ if (ValidateTestId($id)) {
       /*************************************************************************
       * Do No modify TestInfo after this point
       **************************************************************************/
-        
-      // do any post-processing when the full test is complete that doesn't rely on testinfo        
+
+      // do any post-processing when the full test is complete that doesn't rely on testinfo
       if ($done) {
         logTestMsg($id, "Test Complete");
 
@@ -327,7 +327,7 @@ function ProcessRun() {
 
 /**
 * Delete all of the video files except for the median run
-* 
+*
 * @param mixed $id
 */
 function KeepVideoForRun($testPath, $run)
@@ -373,7 +373,7 @@ function RemoveSensitiveHeaders($file) {
 
 /**
 * Reset the state of the given test directory (delete all the results)
-* 
+*
 * @param mixed $testDir
 */
 function ResetTestDir($testPath) {
@@ -390,7 +390,7 @@ function ResetTestDir($testPath) {
 
 /**
 * Handle sharded test results where they come in individually
-* 
+*
 */
 function ProcessIncrementalResult() {
   global $testPath;
@@ -409,7 +409,7 @@ function ProcessIncrementalResult() {
     $testInfo['shards_finished'][$runNumber] = true;
     $testInfo_dirty = true;
     logTestMsg($id, "Marked shard $runNumber as complete: " . json_encode($testInfo['shards_finished']));
-    
+
     // make sure all of the sharded tests are done
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
       if (!isset($testInfo['shards_finished'][$run]) || $testInfo['shards_finished'][$run] !== true)
@@ -418,7 +418,7 @@ function ProcessIncrementalResult() {
     if ($done) {
       logTestMsg($id, "All {$testInfo['runs']} runs are complete");
     }
-    
+
     if (!$done &&
         array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
         $testInfo['test_runs'][$runNumber]['discarded']) {
@@ -464,9 +464,9 @@ function ExtractZipFile($file, $testPath) {
   if ($zip->open($file) === TRUE) {
     $valid = true;
     // Make sure all of the uploaded files are appropriate
-    for ($i=0; $i < $zip->numFiles; $i++) { 
-      $entry = $zip->getNameIndex($i); 
-      if (substr($entry, -1) == '/') continue; // skip directories 
+    for ($i=0; $i < $zip->numFiles; $i++) {
+      $entry = $zip->getNameIndex($i);
+      if (substr($entry, -1) == '/') continue; // skip directories
       $fileName = basename($entry);
       if (!validateUploadFileName($fileName))
         $valid = false;
@@ -475,12 +475,12 @@ function ExtractZipFile($file, $testPath) {
       $extractPath = realpath($testPath);
       if ($extractPath !== false) {
         if (!$zip->extractTo($extractPath))
-          logTestMsg($id, "Error extracting uploaded zip file '$file' to '$testPath'");
+          logTestMsg($id, "Error extracting uploaded ZIP file '$file' to '$testPath'");
         $zip->close();
       }
     }
   } else {
-    logTestMsg($id, "Error opening uploaded zip file '$file'");
+    logTestMsg($id, "Error opening uploaded ZIP file '$file'");
   }
 }
 ?>

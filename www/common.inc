@@ -81,23 +81,23 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 $userIsBot = false;
 if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
     strlen($_SERVER['HTTP_USER_AGENT']) &&
-    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|Wget|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
   $userIsBot = true;
 }
 
 // constants
-define('VER_WEBPAGETEST', '18.02');   // webpagetest version
-define('VER_CSS', 74);           // version of the sitewide css file
-define('VER_JS', 33);            // version of the sitewide javascript file
-define('VER_JS_TEST', 39);       // version of the javascript specific to the test pages
-define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
-define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
-                                 // To find code that fails to check that a time
-                                 // is unknown, change this constant to a large
-                                 // negative number.
+define('VER_WEBPAGETEST', '19.04');   // webpagetest version
+define('VER_CSS', 74);                // version of the sitewide css file
+define('VER_JS', 33);                 // version of the sitewide javascript file
+define('VER_JS_TEST', 41);            // version of the javascript specific to the test pages
+define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
+define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
+                                      // To find code that fails to check that a time
+                                      // is unknown, change this constant to a large
+                                      // negative number.
 
 // SEO stuff
-$page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
 
 $tempDir = './tmp';
@@ -130,8 +130,8 @@ $max_load = GetSetting('render_max_load');
 
 $privateInstall = true;
 if (array_key_exists('HTTP_HOST', $_SERVER) &&
-    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') !== false &&
-    stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false) {
+    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') === false &&
+    stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false) {
     $privateInstall = false;
 }
 
@@ -139,14 +139,10 @@ if (array_key_exists('HTTP_HOST', $_SERVER) &&
 if (isset($_REQUEST['bulk'])) {
     $settings['noBulk'] = 0;
 }
-$is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
+$is_ssl = isSslConnection();
 $GLOBALS['cdnPath'] = '';
 if (isset($settings['cdn']) && !$is_ssl) {
     $GLOBALS['cdnPath'] = $settings['cdn'];
-}
-$GLOBALS['ptotocol'] = 'http';
-if ($is_ssl) {
-    $GLOBALS['ptotocol'] = 'https';
 }
 
 $tz_offset = null;
@@ -332,11 +328,11 @@ if (strlen($id)) {
         if( isset($testDate) && strlen($testDate) )
             $testLabel .= " - $testDate";
     }
-    
+
     if (!isset($test)) {
         $test = array();
     }
-    
+
     if (!array_key_exists('testinfo', $test)) {
         $test['testinfo'] = array();
     }

@@ -188,7 +188,7 @@ function LoadTestData() {
       if (strlen($url))
         $test['url'] = $url;
     }
-    
+
     // Round the end time up based on the selected interval
     if (isset($test['end']))
       $test['end'] = ceil($test['end'] / $interval) * $interval;
@@ -201,7 +201,7 @@ function LoadTestData() {
         $test['name'] = trim($testInfo['label']);
     }
 
-    // See if we have an overridden test label in the sqlite DB
+    // See if we have an overridden test label in the SQLite DB
     $new_label = getLabel($test['id'], $user);
     if (!empty($new_label))
       $test['name'] = $new_label;
@@ -228,7 +228,7 @@ function LoadTestData() {
         foreach($test['video']['progress']['frames'] as $ms => $frame) {
           if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
             $supports60fps = true;
-            
+
           if ((!$test['end'] || $test['end'] == -1 || $ms <= $test['end']) &&
               (!isset($test['initial']) || !count($test['video']['frames']) || $ms >= $test['initial']) ) {
             $path = "$videoPath/{$frame['file']}";

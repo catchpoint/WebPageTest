@@ -1,10 +1,8 @@
 FROM php:5.6-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
-RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes \
-    deb-multimedia-keyring \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --allow-unauthenticated \
     imagemagick \
     libjpeg-progs \
     exiftool \
@@ -12,7 +10,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     wget \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
-    libpng12-dev \
+    libpng-dev \
     libcurl4-openssl-dev \
     python \
     python-pillow \
@@ -20,7 +18,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     beanstalkd \
     supervisor && \
     \
-    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes\
+    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --allow-downgrades --allow-change-held-packages \
     ffmpeg && \
     apt-get clean && \
     apt-get autoclean

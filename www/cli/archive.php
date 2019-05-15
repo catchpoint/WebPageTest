@@ -6,6 +6,7 @@ require_once('common.inc');
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
+error_reporting(E_ALL);
 if (php_sapi_name() == "cli" && function_exists('proc_nice'))
   proc_nice(19);
 
@@ -41,9 +42,9 @@ $log = fopen('./cli/archive.log', 'w');
 // check the old tests first
 /*
 *   Archive any tests that have not already been archived
-*   We will also keep track of all of the tests that are 
+*   We will also keep track of all of the tests that are
 *   known to have been archived separately so we don't thrash
-*/  
+*/
 $UTC = new DateTimeZone('UTC');
 
 $now = time();
@@ -133,7 +134,7 @@ function DeleteArchivedFiles($dir) {
 
 /**
 * Clean up the relay directory of old tests
-* 
+*
 */
 function CheckRelay() {
   $dirs = scandir('./results/relay');
@@ -196,7 +197,7 @@ function CheckRelay() {
 
 /**
 * Recursively scan the old directory for tests
-* 
+*
 * @param mixed $path
 */
 function CheckOldDir($path) {
@@ -205,7 +206,7 @@ function CheckOldDir($path) {
     if( $oldDir != '.' && $oldDir != '..' ) {
       // see if it is a test or a higher-level directory
       if( is_file("$path/$oldDir/testinfo.ini") )
-        CheckTest("$path/$oldDir", $oldDir, 1000);
+        CheckTest("$path/$oldDir", $oldDir, 1000, FALSE);
       else
         CheckOldDir("$path/$oldDir");
     }
@@ -215,7 +216,7 @@ function CheckOldDir($path) {
 
 /**
 * Recursively check within a given day
-* 
+*
 * @param mixed $dir
 * @param mixed $baseID
 * @param mixed $archived
@@ -244,8 +245,8 @@ function CheckDay($dir, $baseID, $elapsedDays, $forced_only) {
 }
 
 /**
-* Check the given log file for all tests that match
-* 
+* Check the given logfile for all matching tests
+*
 * @param mixed $logFile
 * @param mixed $match
 */
@@ -312,7 +313,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   } else {
     $kept++;
   }
-        
+
   if( $log ) {
     $logLine .= "\n";
     fwrite($log, $logLine);

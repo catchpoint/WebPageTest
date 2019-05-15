@@ -20,16 +20,16 @@ $logFile = 'benchmark.log';
 
 header ("Content-type: text/plain");
 
-$nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
-                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex', 
+$nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render',
+                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex',
                 'VisuallyCompleteDT', 'SpeedIndexDT', 'lastVisualChange');
 
-// see if we need to actuall process the given benchmark
+// see if we need to actually process the given benchmark
 if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
   $benchmark = trim($_GET['benchmark']);
   if (is_file("./settings/benchmarks/$benchmark.php")) {
     $logFile = "bm-$benchmark.log";
-    // see if we are using API keys
+    // see if we're using API keys
     $key = null;
     if (is_file('./settings/keys.ini')) {
         $keys = parse_ini_file('./settings/keys.ini', true);
@@ -47,13 +47,13 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
           unlink("./log/$logFile");
       }
       logMsg("Running benchmarks cron processing", "./log/$logFile", true);
-      
-      // See if we have benchmark data in S3 that needs to be imported
+
+      // See if we have benchmark data in S3 which needs to be imported
       if (GetSetting('s3_benchmarks')) {
         ImportS3Benchmarks();
       }
 
-      // iterate over all of the benchmarks and if we need to do any processing spawn off a child request to do the actual work
+      // iterate over all of the benchmarks; if we need to do any processing, spawn off a child request to do the actual work
       // this way we can concurrently process all of the benchmarks
 
       // load the list of benchmarks
@@ -74,7 +74,7 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
 /**
 * Check to see if we need to do any processing for the given benchmark
 * if so, send an async request to do the actual processing
-* 
+*
 * @param mixed $benchmark
 */
 function PreProcessBenchmark($benchmark) {
@@ -97,7 +97,7 @@ function PreProcessBenchmark($benchmark) {
       } else {
         $needsRunning = true;
       }
-      
+
       // see if we need to kick off a new benchmark run
       if (!$needsRunning) {
         if (!array_key_exists('last_run', $state))
@@ -114,12 +114,12 @@ function PreProcessBenchmark($benchmark) {
     echo "Benchmark '$benchmark' is currently locked\n";
     logMsg("Benchmark '$benchmark' is currently locked", "./log/$logFile", true);
   }
-  
+
   if ($needsRunning) {
     echo "Benchmark '$benchmark' needs processing, spawning task\n";
     logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
-    
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+
+    $protocol = getUrlProtocol();
     $url = "$protocol://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
     if (function_exists('curl_init')) {
       $c = curl_init();
@@ -142,7 +142,7 @@ function PreProcessBenchmark($benchmark) {
 
 /**
 * Do all of the processing for a given benchmark
-* 
+*
 * @param mixed $benchmark
 */
 function ProcessBenchmark($benchmark) {
@@ -176,7 +176,7 @@ function ProcessBenchmark($benchmark) {
                     $state['last_run'] = $last_run;
                 }
             }
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
+            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
         }
         if (!is_array($state)) {
             $state = array('running' => false);
@@ -184,7 +184,7 @@ function ProcessBenchmark($benchmark) {
         if (!array_key_exists('running', $state)) {
             $state['running'] = false;
         }
-        
+
         if (array_key_exists('running', $state)) {
             CheckBenchmarkStatus($benchmark, $state);
             // update the state between steps
@@ -192,14 +192,14 @@ function ProcessBenchmark($benchmark) {
         } else {
             $state['running'] = false;
         }
-        
+
         if (!$state['running'] && (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation'])) {
           if (array_key_exists('runs', $state) && count($state['runs']))
             AggregateResults($benchmark, $state, $options);
           $state['needs_aggregation'] = false;
           file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
         }
-        
+
         // see if we need to kick off a new benchmark run
         if (!$state['running'] &&
             (!array_key_exists('tests', $state) || !is_array($state['tests']) || !count($state['tests']))) {
@@ -228,7 +228,7 @@ function ProcessBenchmark($benchmark) {
 
 /**
 * Check the status of any pending tests
-* 
+*
 * @param mixed $state
 */
 function CheckBenchmarkStatus($benchmark, &$state) {
@@ -267,7 +267,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", "./log/$logFile", true);
                 }
-                
+
                 // collect the test data and archive the test as we get each result
                 if ($test['completed']) {
                     $updated++;
@@ -282,7 +282,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 }
             }
         }
-        
+
         if ($updated) {
             logMsg("Data updated for for $updated tests, total data rows: " . count($data), "./log/$logFile", true);
             gz_file_put_contents($dataFile, json_encode($data));
@@ -292,27 +292,27 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 
         $now = time();
         $elapsed = $now > $start_time ? $now - $start_time : 0;
-        
+
         if ($elapsed > 172800) // kill it if it has been running for 2 days
-          $done = true;  
+          $done = true;
 
         if ($done) {
             logMsg("Benchmark '$benchmark' is finished after running for $elapsed seconds", "./log/$logFile", true);
             $state['runs'][] = $start_time;
             $state['running'] = false;
             $state['needs_aggregation'] = true;
-            unset($state['tests']);    
+            unset($state['tests']);
         } else {
             logMsg("'$benchmark' is waiting for $pending_tests of $total_tests tests after $elapsed seconds", "./log/$logFile", true);
         }
-        
+
         logMsg("Done checking status", "./log/$logFile", true);
     }
 }
 
 /**
 * Do any aggregation once all of the tests have finished
-* 
+*
 * @param mixed $state
 */
 function CollectResults(&$test, &$data) {
@@ -360,15 +360,15 @@ function CollectResults(&$test, &$data) {
 
 /**
 * Submit the various test permutations
-* 
+*
 * @param mixed $configurations
 * @param mixed $state
 */
 function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     $submitted = false;
-    
+
     $state['tests'] = array();
-    
+
     // group all of the tests by URL so that any given URL is tested in all configurations before going to the next URL
     $tests = array();
     foreach ($configurations as $config_label => $config) {
@@ -406,26 +406,26 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
       }
     }
 
-    // now submit the actual tests    
+    // now submit the actual tests
     foreach($tests as &$testGroup) {
         foreach($testGroup as &$test) {
             $id = SubmitBenchmarkTest($test['url'], $test['location'], $test['settings'], $test['benchmark']);
             if ($id !== false ) {
-                $state['tests'][] = array(  'id' => $id, 
+                $state['tests'][] = array(  'id' => $id,
                                             'label' => $test['label'],
-                                            'url' => $test['url'], 
-                                            'location' => $test['location'], 
+                                            'url' => $test['url'],
+                                            'location' => $test['location'],
                                             'config' => $test['config'],
-                                            'submitted' => time(), 
+                                            'submitted' => time(),
                                             'completed' => 0);
             }
         }
     }
-    
+
     if (count($state['tests'])) {
         $submitted = true;
     }
-    
+
     return $submitted;
 }
 
@@ -442,7 +442,7 @@ function IsTestValid($id) {
 
 /**
 * Submit a single test and return the test ID (or false in the case of failure)
-* 
+*
 * @param mixed $url
 * @param mixed $location
 * @param mixed $settings
@@ -452,22 +452,22 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     global $key;
     global $logFile;
     $priority = 7;  // default to a really low priority
-    
+
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
-    
+
     foreach ($settings as $setting => $value) {
         if ($setting == 'priority') {
             $priority = $value;
         } else {
             $data .= "Content-Disposition: form-data; name=\"$setting\"\r\n\r\n$value";
-            $data .= "\r\n--$boundary\r\n"; 
+            $data .= "\r\n--$boundary\r\n";
         }
     }
-    
+
     if (isset($key)) {
         $data .= "Content-Disposition: form-data; name=\"k\"\r\n\r\n$key";
-        $data .= "\r\n--$boundary\r\n"; 
+        $data .= "\r\n--$boundary\r\n";
     }
 
     if (!strncasecmp($url, 'script:', 7)) {
@@ -476,18 +476,18 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
         $url = str_replace('\n', "\n", $url);
         $url = str_replace('\t', "\t", $url);
         $data .= "Content-Disposition: form-data; name=\"script\"\r\n\r\n$url";
-        $data .= "\r\n--$boundary\r\n"; 
+        $data .= "\r\n--$boundary\r\n";
     } else {
         $data .= "Content-Disposition: form-data; name=\"url\"\r\n\r\n$url";
-        $data .= "\r\n--$boundary\r\n"; 
+        $data .= "\r\n--$boundary\r\n";
     }
     $data .= "Content-Disposition: form-data; name=\"location\"\r\n\r\n$location";
-    $data .= "\r\n--$boundary\r\n"; 
+    $data .= "\r\n--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"benchmark\"\r\n\r\n$benchmark";
-    $data .= "\r\n--$boundary\r\n"; 
+    $data .= "\r\n--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"f\"\r\n\r\njson";
-    $data .= "\r\n--$boundary\r\n"; 
-    $data .= "Content-Disposition: form-data; name=\"priority\"\r\n\r\n$priority"; 
+    $data .= "\r\n--$boundary\r\n";
+    $data .= "Content-Disposition: form-data; name=\"priority\"\r\n\r\n$priority";
     $data .= "\r\n--$boundary--\r\n";
 
     $params = array('http' => array(
@@ -497,15 +497,15 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
                     ));
 
     $ctx = stream_context_create($params);
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $fp = fopen("$protocol://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
     if ($fp) {
         $response = @stream_get_contents($fp);
         if ($response && strlen($response)) {
             $result = json_decode($response, true);
-            if (is_array($result) && array_key_exists('statusCode', $result) && 
-                $result['statusCode'] == 200 && 
-                array_key_exists('data', $result) && 
+            if (is_array($result) && array_key_exists('statusCode', $result) &&
+                $result['statusCode'] == 200 &&
+                array_key_exists('data', $result) &&
                 array_key_exists('testId', $result['data']) ){
                 $id = $result['data']['testId'];
                 logMsg("Test submitted: $id", "./log/$logFile", true);
@@ -514,19 +514,19 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
             }
         }
     }
-    
+
     return $id;
 }
 
 /**
 * Generate aggregate metrics for the given test
-* 
+*
 * @param mixed $benchmark
 * @param mixed $state
 */
 function AggregateResults($benchmark, &$state, $options) {
     global $logFile;
-    
+
     if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
         mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
     if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
@@ -534,16 +534,16 @@ function AggregateResults($benchmark, &$state, $options) {
     } else {
         $info = array('runs' => array());
     }
-    
+
     if (!array_key_exists('runs', $info)) {
         $info['runs'] = array();
     }
     // store a list of metrics that we aggregate in the info block
-    $info['metrics'] = array('TTFB', 'basePageSSLTime', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 
-                                'connections', 'requests', 'requestsDoc', 'render', 
+    $info['metrics'] = array('TTFB', 'basePageSSLTime', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc',
+                                'connections', 'requests', 'requestsDoc', 'render',
                                 'fullyLoaded', 'docTime', 'domTime', 'score_cache', 'score_cdn',
                                 'score_gzip', 'score_keep-alive', 'score_compress', 'gzip_total', 'gzip_savings',
-                                'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time', 
+                                'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time',
                                 'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete', 'lastVisualChange',
                                 'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
                                 'flash_bytes', 'flash_requests', 'video_bytes', 'video_requests','html_bytes', 'html_requests', 'text_bytes', 'text_requests',
@@ -579,7 +579,7 @@ function AggregateResults($benchmark, &$state, $options) {
             }
         }
     }
-    
+
     file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", json_encode($info));
     $state['needs_aggregation'] = false;
     logMsg("Agregation complete", "./log/$logFile", true);
@@ -587,7 +587,7 @@ function AggregateResults($benchmark, &$state, $options) {
 
 /**
 * Create the various aggregations for the given data chunk
-* 
+*
 * @param mixed $info
 * @param mixed $data
 * @param mixed $benchmark
@@ -603,7 +603,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
         AggregateMetric($metric, $info, $data, $run_time, $agg_data, $options);
         gz_file_put_contents($metric_file, @json_encode($agg_data));
         unset($agg_data);
-        
+
         if (array_key_exists('labels', $info) && count($info['labels']) <= 20) {
             $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.labels.json";
             if (gz_is_file($metric_file)) {
@@ -620,7 +620,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
 
 /**
 * Create the aggregates for the given metric grouped by config and cached state
-* 
+*
 * @param mixed $info
 * @param mixed $data
 * @param mixed $run_time
@@ -629,18 +629,18 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
 function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options) {
     $configs = array();
     global $nonZero;
-    
+
     // group the individual records
     foreach ($data as &$record) {
-        if (array_key_exists($metric, $record) && 
-            array_key_exists('result', $record) && 
-            array_key_exists('config', $record) && 
-            array_key_exists('cached', $record) && 
-            array_key_exists('location', $record) && 
+        if (array_key_exists($metric, $record) &&
+            array_key_exists('result', $record) &&
+            array_key_exists('config', $record) &&
+            array_key_exists('cached', $record) &&
+            array_key_exists('location', $record) &&
             strlen($record['config']) &&
             strlen($record['location']) &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
-                
+
             // make sure all of the metrics that we expect to be non-zero are
             $ok = true;
             foreach($nonZero as $nzMetric) {
@@ -663,7 +663,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options
                     $configs[$config][$location][$cached] = array();
                 }
                 $configs[$config][$location][$cached][] = $record[$metric];
-                
+
                 if (array_key_exists('label', $record) &&
                     strlen($record['label'])) {
                     if (!array_key_exists('labels', $info)) {
@@ -676,7 +676,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options
             }
         }
     }
-    
+
     foreach ($configs as $config => &$locations) {
         foreach ($locations as $location => &$cache_state) {
             foreach ($cache_state as $cached => &$records) {
@@ -686,11 +686,11 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options
                     $entry['config'] = $config;
                     $entry['location'] = $location;
                     $entry['cached'] = $cached;
-                    
+
                     // see if we already have a record that matches that we need to overwrite
                     $exists = false;
                     foreach ($agg_data as $i => &$row) {
-                        if ($row['time'] == $run_time && 
+                        if ($row['time'] == $run_time &&
                             $row['config'] == $config &&
                             $row['location'] == $location &&
                             $row['cached'] == $cached) {
@@ -710,7 +710,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options
 
 /**
 * Create the aggregates for the given metric grouped by config, label and cached state
-* 
+*
 * @param mixed $info
 * @param mixed $data
 * @param mixed $run_time
@@ -721,12 +721,12 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data, $
     global $nonZero;
     // group the individual records
     foreach ($data as &$record) {
-        if (array_key_exists($metric, $record) && 
-            array_key_exists('result', $record) && 
-            array_key_exists('config', $record) && 
-            array_key_exists('location', $record) && 
-            array_key_exists('cached', $record) && 
-            array_key_exists('label', $record) && 
+        if (array_key_exists($metric, $record) &&
+            array_key_exists('result', $record) &&
+            array_key_exists('config', $record) &&
+            array_key_exists('location', $record) &&
+            array_key_exists('cached', $record) &&
+            array_key_exists('label', $record) &&
             strlen($record['config']) &&
             strlen($record['location']) &&
             strlen($record['label']) &&
@@ -775,7 +775,7 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data, $
                         // see if we already have a record that matches that we need to overwrite
                         $exists = false;
                         foreach ($agg_data as $i => &$row) {
-                            if ($row['time'] == $run_time && 
+                            if ($row['time'] == $run_time &&
                                 $row['config'] == $config &&
                                 $row['location'] == $location &&
                                 $row['cached'] == $cached &&
@@ -795,9 +795,9 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data, $
     }
 }
 
-/** 
+/**
 * Calculate several aggregations on the given data set
-* 
+*
 * @param mixed $records
 */
 function CalculateMetrics(&$records) {
@@ -818,14 +818,14 @@ function CalculateMetrics(&$records) {
     $sum = 0.0;
     foreach($records as $value)
       $sum += log(doubleval($value));
-    $entry['geo-mean'] = exp($sum/$count);  
+    $entry['geo-mean'] = exp($sum/$count);
 
     // median
     if ($count %2)
       $entry['median'] = $records[floor($count * 0.5)];
     else
       $entry['median'] = intval(round(($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2));
-    
+
     // confidence interval for median using calculation from
     // here: https://epilab.ich.ucl.ac.uk/coursematerial/statistics/non_parametric/confidence_interval.html
     $entry['confLow'] =  $records[max(0, min($count - 1, intval(round(($count / 2) - ((1.96 * sqrt($count)) / 2)))))];
@@ -848,13 +848,13 @@ function CalculateMetrics(&$records) {
 
 /**
 * Prune the extra data we don't need for benchmarks from the test result
-* video, screen shots, headers, etc
-* 
+* video, screenshots, headers, etc
+*
 * @param mixed $id
 */
 function PruneTestData($id) {
     $testPath = './' . GetTestPath($id);
-    
+
     $files = scandir($testPath);
     foreach( $files as $file ) {
         // just do the videos for now
@@ -876,7 +876,7 @@ function PruneTestData($id) {
 
 /**
 * Do any necessary pre-processing on the data set (like reducing to the median run)
-* 
+*
 * @param mixed $data
 * @param mixed $options
 */
@@ -889,9 +889,9 @@ function FilterRawData(&$data, $options) {
         // first group the results for each test
         $grouped = array();
         foreach($data as $row) {
-            if (array_key_exists('id', $row) && 
-                array_key_exists($metric, $row) && 
-                array_key_exists('cached', $row) && 
+            if (array_key_exists('id', $row) &&
+                array_key_exists($metric, $row) &&
+                array_key_exists('cached', $row) &&
                 array_key_exists('result', $row) &&
                 ($row['result'] == 0 || $row['result'] == 99999)) {
                 $id = $row['id'];
@@ -948,7 +948,7 @@ function ImportS3Benchmarks() {
   if (!isset($s3Benchmarks) || !is_array($s3Benchmarks)) {
     $s3Benchmarks = array();
   }
-  
+
   // list all of the benchmark files for this month and if it is in the first
   // 10 days of the month, include the previous month.
   $day = date('d');
@@ -992,7 +992,7 @@ function ImportS3Benchmarks() {
       }
     }
   }
-  
+
   file_put_contents('./results/benchmarks/s3.json', json_encode($s3Benchmarks));
 }
 
@@ -1008,7 +1008,7 @@ function ImportS3Benchmark($info) {
     $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
   if (!isset($state) || !is_array($state))
     $state = array('running' => false, 'needs_aggregation' => false, 'runs' => array());
-  
+
   if (!$state['running'] && !$state['needs_aggregation']) {
     if (isset($info['epoch'])) {
       $state['last_run'] = $info['epoch'];
@@ -1020,17 +1020,17 @@ function ImportS3Benchmark($info) {
     }
     $state['tests'] = array();
     logMsg("  $benchmark import: " . json_encode($info), "./log/$logFile", true);
-    
+
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
         logMsg("$benchmark: Imported S3 test {$test['id']} ({$test['label']}) with config {$test['config']} for url {$test['url']}", "./log/$logFile", true);
         $location = isset($test['location']) ? $test['location'] : 'Imported';
-        $state['tests'][] = array(  'id' => $test['id'], 
+        $state['tests'][] = array(  'id' => $test['id'],
                                     'label' => $test['label'],
-                                    'url' => $test['url'], 
-                                    'location' => $location, 
+                                    'url' => $test['url'],
+                                    'location' => $location,
                                     'config' => $test['config'],
-                                    'submitted' => $state['last_run'], 
+                                    'submitted' => $state['last_run'],
                                     'completed' => 0);
       }
     } else {
@@ -1045,7 +1045,7 @@ function ImportS3Benchmark($info) {
   } else {
     logMsg("  Benchmark $benchmark is currently busy", "./log/$logFile", true);
   }
-  
+
   return $imported;
 }
 ?>

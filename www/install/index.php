@@ -5,9 +5,9 @@ include 'common.inc';
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Install Check</title>
+        <title>WebPageTest - Install Check</title>
         <meta http-equiv="charset" content="iso-8859-1">
-        <meta name="description" content="Installation check for WebPagetest">
+        <meta name="description" content="Installation check for WebPageTest">
         <meta name="author" content="Patrick Meenan">
         <meta name="robots" content="noindex,nofollow" />
         <style type="text/css">
@@ -19,17 +19,17 @@ include 'common.inc';
             padding:0 2em;
             margin:0;
         }
-        li.pass { 
+        li.pass {
             background:url("../images/check.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
-        li.fail { 
+        li.fail {
             background:url("../images/error.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
-        li.warn { 
+        li.warn {
             background:url("../images/warning.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
         span.pass {
             color: #008600;
@@ -46,12 +46,12 @@ include 'common.inc';
         </style>
     </head>
     <body>
-        <h1>WebPagetest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
+        <h1>WebPageTest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
         <h2>PHP</h2><ul>
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
         <?php CheckUtils(); ?>
-        </ul><h2>Misc</h2><ul>
+      </ul><h2>Misc.</h2><ul>
         <?php CheckMisc(); ?>
         </ul><h2>Filesystem</h2><ul>
         <?php CheckFilesystem(); ?>
@@ -93,19 +93,19 @@ function ShowCheck($label, $pass, $required = true, $value = null) {
 function CheckPHP() {
     global $settings;
     ShowCheck('PHP version at least 5.3', phpversion() >= 5.3, true, phpversion());
-    ShowCheck('GD Module Installed', extension_loaded('gd'));
+    ShowCheck('GD module installed', extension_loaded('gd'));
     ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
-    ShowCheck('zip Module Installed', extension_loaded('zip'));
-    ShowCheck('zlib Module Installed', extension_loaded('zlib'));
+    ShowCheck('zip module installed', extension_loaded('zip'));
+    ShowCheck('zlib module installed', extension_loaded('zlib'));
     ShowCheck('mbstring available', function_exists('mb_substr'));
-    ShowCheck('curl Module Installed', extension_loaded('curl'), false);
+    ShowCheck('curl module installed', extension_loaded('curl'), false);
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
-    ShowCheck('APC Installed', extension_loaded('apc') || extension_loaded('apcu'), false);
-    ShowCheck('SQLite Installed (for editable test labels)', class_exists("SQLite3"), false);
-    ShowCheck('Open SSL Module Installed (for "Login with Google")', function_exists('openssl_x509_read'), false);
-    ShowCheck('xml Module Installed (for rss feeds)', extension_loaded('xml'), false);
-    ShowCheck('pcre Module Installed (for rss feeds)', extension_loaded('pcre'), false);
-    ShowCheck('xmlreader Module Installed (for rss feeds)', extension_loaded('xmlreader'), false);
+    ShowCheck('APC installed', extension_loaded('apc') || extension_loaded('apcu'), false);
+    ShowCheck('SQLite installed (for editable test labels)', class_exists("SQLite3"), false);
+    ShowCheck('Open SSL module installed (for "Login with Google")', function_exists('openssl_x509_read'), false);
+    ShowCheck('xml module installed (for RSS feeds)', extension_loaded('xml'), false);
+    ShowCheck('pcre module installed (for RSS feeds)', extension_loaded('pcre'), false);
+    ShowCheck('xmlreader module installed (for RSS feeds)', extension_loaded('xmlreader'), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
     ShowCheck('php.ini post_max_size > 10MB', return_bytes(ini_get('post_max_size')) > 10000000, false, ini_get('post_max_size'));
     ShowCheck('php.ini memory_limit > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));
@@ -113,17 +113,17 @@ function CheckPHP() {
 
 function CheckUtils() {
   global $settings;
-  ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
-  ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
-  ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
-  ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
-  ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
+  ShowCheck('ffmpeg installed with --enable-libx264 (required for video)', CheckFfmpeg());
+  ShowCheck('ffmpeg installed with scale and decimate filters (required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
+  ShowCheck('imagemagick compare installed (required for mobile video)', CheckCompare(), false);
+  ShowCheck('jpegtran installed (required for JPEG analysis)', CheckJpegTran(), false);
+  ShowCheck('exiftool installed (required for JPEG analysis)', CheckExifTool(), false);
   if (array_key_exists('beanstalkd', $settings))
       ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
 }
 
 function CheckMisc() {
-    ShowCheck('python 2.7 with modules (faster mobile video processing)', CheckPythonVideo($info), false, $info);
+    ShowCheck('Python 2.7 with modules (faster mobile-video processing)', CheckPythonVideo($info), false, $info);
 }
 
 /*-----------------------------------------------------------------------------
@@ -282,7 +282,7 @@ function return_bytes($val) {
 
 /**
 * See if we can talk to beanstalkd
-* 
+*
 */
 function CheckBeanstalkd() {
     global $settings;
@@ -303,7 +303,7 @@ function CheckBeanstalkd() {
 
 /**
 * Check to make sure ffmpeg is installed and working
-* 
+*
 */
 function CheckFfmpeg() {
     $ret = false;
@@ -318,13 +318,13 @@ function CheckFfmpeg() {
                 $x264 = true;
         }
     }
-    
+
     return $ret && $x264;
 }
 
 /**
-* Check to make sure ffmpeg is installed and working
-* 
+* Check to make sure ffmpeg-filters is installed and working
+*
 */
 function CheckFfmpegFilters(&$info) {
     $ret = false;
@@ -405,7 +405,7 @@ function CheckPythonVideo(&$info) {
   $ret = CheckPythonVisualMetrics($failures);
   if (!$ret) {
     if (isset($failures)) {
-      $info = 'Missing python modules: ' . implode(',', $failures);
+      $info = 'Missing Python modules: ' . implode(',', $failures);
     } else {
       $info = 'Error running "python video/visualmetrics.py -c"';
     }

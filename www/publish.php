@@ -18,22 +18,22 @@ if (array_key_exists('test', $_REQUEST) && strlen($_REQUEST['test'])) {
     $id = $_REQUEST['test'];
     ValidateTestId($id);
 }
-$page_keywords = array('Publish','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "Publish test results to WebPagetest.";
+$page_keywords = array('Publish','WebPageTest','Website Speed Test','Page Speed');
+$page_description = "Publish test results to WebPageTest.";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Publish</title>
+        <title>WebPageTest - Publish</title>
         <?php $gaTemplate = 'Publish'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">
             <?php
             include 'header.inc';
-            
+
             if ($id) {
-                echo "<p>Please wait wile the results are uploaded to $pub (could take several minutes)...</p>";
+                echo "<p>Please wait while the results are uploaded to $pub (could take several minutes)...</p>";
                 ob_flush();
                 flush();
                 echo '<p>';
@@ -41,7 +41,7 @@ $page_description = "Publish test results to WebPagetest.";
                 if( isset($pubUrl) && strlen($pubUrl) )
                     echo "The test has been published to $pub and is available here: <a href=\"$pubUrl\">$pubUrl</a>";
                 else
-                    echo "There was an error publishing the results to $pub. Please try again later";
+                    echo "There was an error publishing the results to $pub. Please try again later.";
                 if( FRIENDLY_URLS )
                     echo "</p><p><a href=\"/result/$id/\">Back to the test results</a></p>";
                 else
@@ -69,7 +69,7 @@ $page_description = "Publish test results to WebPagetest.";
                 <?php
             }
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
@@ -79,7 +79,7 @@ $page_description = "Publish test results to WebPagetest.";
 
 /**
 * Publish the current result
-* 
+*
 */
 function PublishResult()
 {
@@ -87,7 +87,7 @@ function PublishResult()
     global $pub;
     global $noheaders;
     $result;
-    
+
     // build the list of files to zip
     $files;
     $testPath = realpath($testPath);
@@ -101,7 +101,7 @@ function PublishResult()
     closedir($dir);
 
     if( isset($files) && count($files) )
-    {    
+    {
         // zip up the results
         $zipFile = $testPath . '/publish.zip';
         $zip = new ZipArchive();
@@ -134,18 +134,18 @@ function PublishResult()
 
             $data .= "Content-Disposition: form-data; name=\"file\"; filename=\"publish.zip\"\r\n";
             $data .= "Content-Type: application/zip\r\n\r\n";
-            $data .= file_get_contents($zipFile); 
+            $data .= file_get_contents($zipFile);
 
             if (array_key_exists('noheaders', $_REQUEST)) {
-                $data .= "\r\n--$boundary\r\n"; 
+                $data .= "\r\n--$boundary\r\n";
                 $data .= "Content-Disposition: form-data; name=\"noheaders\"\r\n\r\n1";
             }
 
             if (array_key_exists('noscript', $_REQUEST)) {
-                $data .= "\r\n--$boundary\r\n"; 
+                $data .= "\r\n--$boundary\r\n";
                 $data .= "Content-Disposition: form-data; name=\"noscript\"\r\n\r\n1";
             }
-            
+
             $data .= "\r\n--$boundary--\r\n";
 
             $params = array('http' => array(
@@ -163,12 +163,12 @@ function PublishResult()
                 if( $response && strlen($response) )
                     $result = "$pub/results.php?test=$response";
             }
-            
-            // delete the zip file
+
+            // delete the ZIP file
             unlink($zipFile);
         }
     }
-    
+
     return $result;
 }
 ?>

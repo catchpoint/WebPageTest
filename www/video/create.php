@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/../util.inc');
 $version = 9;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
@@ -28,7 +29,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
@@ -102,12 +103,12 @@ else
                 $test['bg'] = $bgColor;
                 $test['text'] = $textColor;
                 $label = null;
-                
+
                 if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
                   $test['labelHeight'] = intval($_REQUEST['labelHeight']);
                 if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
                   $test['timeHeight'] = intval($_REQUEST['timeHeight']);
-                
+
                 if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
                   $test['speed'] = 0.2;
 
@@ -128,7 +129,7 @@ else
                             $test['end'] = trim($p[1]);
                         if( $p[0] == 'i' )
                             $test['initial'] = intval(trim($p[1]) * 1000.0);
-                        // Optional Extra info to sync the video with
+                        // Optional extra info to sync the video with
                         if( $p[0] == 'p' )
                             $test['syncStartRender'] = (int)$p[1];
                         if( $p[0] == 'd' )
@@ -201,7 +202,7 @@ else
                 $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
                 $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
                 $test['videoPath'] = $localPaths->videoDir();
-  
+
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
 
@@ -220,7 +221,7 @@ else
                 if (empty($label))
                     $label = trim($stepResult->getUrl());
                 $test['label'] = $label;
-                
+
                 if ($info && isset($info['locationText']))
                     $test['location'] = $info['locationText'];
 
@@ -278,7 +279,7 @@ else
     // redirect to the destination page
     if( $id )
     {
-        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+        $protocol = getUrlProtocol();
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 

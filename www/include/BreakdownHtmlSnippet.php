@@ -42,7 +42,7 @@ abstract class BreakdownHtmlSnippet {
 EOT;
   }
 
-  protected function createJavascript($jsVarName, $jsonBreakdown) {
+  protected function createJavaScript($jsVarName, $jsonBreakdown) {
     $id = $this->breakdownId;
     $out = "<script type=\"text/javascript\">";
     $out .= "if (typeof $jsVarName == 'undefined') var $jsVarName = {};";

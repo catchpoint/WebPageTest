@@ -1,12 +1,12 @@
-<?php 
+<?php
 include 'common.inc';
-$page_keywords = array('Optimization','Webpagetest','Website Speed Test','Tips');
+$page_keywords = array('Optimization','WebPageTest','Website Speed Test','Tips');
 $page_description = "Website performance optimization tips.";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Tips</title>
+        <title>WebPageTest - Tips</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -34,7 +34,7 @@ $page_description = "Website performance optimization tips.";
                 }
             }
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

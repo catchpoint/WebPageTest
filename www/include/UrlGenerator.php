@@ -1,7 +1,7 @@
 <?php
 
 /**
- * For generation of test run specific URLs
+ * For generation of test-run specific URLs
  */
 abstract class UrlGenerator {
 
@@ -21,7 +21,7 @@ abstract class UrlGenerator {
 
   /**
    * @param bool $friendlyUrls If the URL should be friendly (via mod_rewrite) or standard
-   * @param string $baseUrl Url base for the server (like http://my.wpt.server)
+   * @param string $baseUrl URL base for the server (like http://my.wpt.server)
    * @param string $testId ID of the test
    * @param int $run Run number
    * @param bool $cached True if cached run, false otherwise
@@ -58,7 +58,7 @@ abstract class UrlGenerator {
   /**
    * @param bool $connectionView True for a connection view waterfall, false for the normal one.
    * @param int $width Width of the generated image
-   * @param bool $withMime True if mime data should be generated, false otherwise
+   * @param bool $withMime True if MIME data should be generated, false otherwise
    * @return string The generated URL
    */
   public abstract function waterfallImage($connectionView, $width, $withMime);
@@ -104,7 +104,7 @@ abstract class UrlGenerator {
   }
 
   /**
-   * @param int $bodyId The body id to identify the response body
+   * @param int $bodyId The body ID to identify the response body
    * @return string The generated URL
    */
   public function responseBodyWithBodyId($bodyId) {

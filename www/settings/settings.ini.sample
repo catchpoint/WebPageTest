@@ -59,6 +59,9 @@ maxtime=600
 ; Time limit for all steps in a single test run.
 ;run_time_limit=180
 
+; Force individual runs to end if they didn't complete.
+max_run_minutes=60
+
 ; Maximum server load to allow when rendering video on the server
 render_max_load=8
 
@@ -71,8 +74,14 @@ allowNonFQDN=0
 ; image quality (defaults to 30)
 ;iq=75
 
-;save png full-resolution screen shots
+;save png full-resolution screenshots
 ;pngss=1
+
+;Uncomment to disable the force "3G Fast" throttling applied to lighthouse tests.
+;lighthouseThrottle=1
+
+;Uncomment enable hero element times.
+;heroElementTimes=1
 
 ;Software identification string to include in the user agent string of tests
 ;UAModifier=PTST
@@ -133,9 +142,6 @@ maxNavigateCount=20
 ; Automatically update from git hourly.
 ; (assumes a git clone and just runs "git pull origin master" as the web user).
 ;gitUpdate=1
-
-; Automatically update test agents hourly (pulls the latest test agents from the provided server)
-agentUpdate=http://cdn.webpagetest.org/
 
 ; If an android device is connected to the server, scrape updated APK's off of the
 ; device to be installed on the test agents automatically (for cases where
@@ -276,9 +282,8 @@ agentUpdate=http://cdn.webpagetest.org/
 ;EC2.us-east-1.min=0
 ;EC2.us-east-1.max=1
 
-; Per-location Security Group and Subnet IDs to enable launching into VPCs 
-; (note that this will pin your instances to the availability zone associated with 
+; Per-location Security Group and Subnet IDs to enable launching into VPCs
+; (note that this will pin your instances to the availability zone associated with
 ; the subnet). This is required only if you do not have a default VPC.
 ;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
 ;EC2.us-west-2.subnetId=subnet-aaa0011bc1
-

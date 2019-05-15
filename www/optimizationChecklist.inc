@@ -56,7 +56,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $i++;
         }
 
-        // draw the optimization checks separators
+        // draw the optimization checks' separators
         $standards = array( 'score_keep-alive' => 'Keep-Alive',
                             'score_gzip' => 'GZip',
                             'score_compress' => 'Compress Img',
@@ -89,7 +89,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $x += $inc;
         }
 
-        // put the url label in
+        // put the URL label in
         $x = 4;
         $y = 2 + $rowHeight;
         $label = $url;

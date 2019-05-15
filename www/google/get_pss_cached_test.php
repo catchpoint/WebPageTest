@@ -10,7 +10,7 @@ if (array_key_exists('url', $_REQUEST) && strlen($_REQUEST['url'])) {
 }
 
 if (isset($id) && strlen($id)) {
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $ret['statusCode'] = 200;
     $ret['statusText'] = 'Ok';

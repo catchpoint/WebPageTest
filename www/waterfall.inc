@@ -35,7 +35,25 @@ function GetConnectionRows(&$requests, $show_labels = true) {
       }
     }
     if (count($host_connections)) {
-      $rows = call_user_func_array('array_merge', $host_connections);
+      // merge the hosts together by connection
+      $rows = array();
+      foreach ($host_connections as $host => $connections) {
+        foreach ($connections as $socket => $connection) {
+          if (!isset($rows[$socket])) {
+            $rows[$socket] = $connection;
+          } else {
+            if (strpos($rows[$socket]['host'], $connection['host']) === False)
+              $rows[$socket]['host'] .= ',' . $connection['host'];
+            if ($connection['start'] < $rows[$socket]['start'])
+              $rows[$socket]['start'] = $connection['start'];
+            if ($connection['end'] > $rows[$socket]['end'])
+              $rows[$socket]['end'] = $connection['end'];
+            foreach ($connection['requests'] as $request)
+              $rows[$socket]['requests'][] = $request;
+          }
+        }
+      }
+      $rows = array_values($rows);
       foreach (array_keys($rows) as $row_index) {
         if ($show_labels) {
           $rows[$row_index]['label'] = sprintf(
@@ -74,10 +92,10 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
     // Keep track of the number of each request so we can add a dotted row when one is missing
     $last_request_number = 0;
     foreach ($filtered_requests as $request) {
-        if ($request['number'] > $last_request_number + 1) {
+        if ($use_dots && $request['number'] > $last_request_number + 1) {
             $rows[] = _GetDotsRow();
         }
-        
+
         $rows[] = array(
             'is_connection' => false,
             'label' => GetRequestLabel($request, $show_labels),
@@ -140,12 +158,13 @@ function GetWaterfallImage($rows, $url, $page_events, $options, $page_data) {
 */
 function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data) {
     global $settings;
-    $is_mime = (bool)@$options['is_mime'];
+    $is_mime = isset($options['is_mime']) ? (bool)@$options['is_mime'] : (bool)GetSetting('mime_waterfalls', 1);
     $is_state = (bool)@$options['is_state'] || $is_mime;
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
     $include_js = (bool)@$options['include_js'];
-    
+    $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
+
     $top = 0;
     $row_count = count($rows);
     if (isset($options) && array_key_exists('rowcount', $options) && $options['rowcount'] > 0)
@@ -188,9 +207,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
     // Load the pcap-based bandwidth information if we have it
     $max_bw = 0;
+    if (isset($options) && array_key_exists('max_bw', $options))
+        $max_bw = $options['max_bw'];
     if ($use_bw) {
-      if (isset($options) && array_key_exists('max_bw', $options))
-          $max_bw = $options['max_bw'];
       $pcap_slices = LoadPcapSlices($localPaths->pcapUtilizationFile(), $max_bw);
     }
     if ($use_cpu || $use_bw) {
@@ -245,7 +264,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         }
       }
     }
-    
+
     if ($show_labels) {
         if ($is_thumbnail) {
             $data_x = (int)($width * 0.25); // width of request labels (no borders)
@@ -299,7 +318,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             $user_times[$label] = $value;
           }
         }
-      }    
+      }
       if (isset($csi_info)) {
         if (!isset($user_times))
           $user_times = array();
@@ -311,19 +330,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
     if ($is_image_map) {
       $map = array();
-      AddMapUrl($map, 0, $top, $data_x, $data_header_height, $url);
+      AddMapUrl($map, 0, $top + $data_header_height - $row_height, $data_x, $top + $data_header_height, $url);
       if (isset($rows) && is_array($rows) && count($rows)) {
         foreach ($rows as $row) {
-          $is_connection = $row['is_connection'];
-          foreach ($row['requests'] as $request) {
-            if ($is_connection) {
-              $x1 = $x_scaler($request['ttfb_start']);
-              $x2 = $x_scaler($request['download_end']);
-            } else {
+          if ($row['is_connection']) {
+            AddMapUrl($map, 0, $top + $row['y1'], $data_x, $top + $row['y2'], $row['host']);
+          } else {
+            foreach ($row['requests'] as $request) {
               $x1 = 0;
               $x2 = $width - 1;
+              AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'], $request);
             }
-            AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'], $request);
           }
         }
       }
@@ -369,7 +386,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         if (isset($cpu_slice_info)) {
           $cpu_slice_colors = array();
           $mime_colors = MimeColors();
-          
+
           $cpu_slice_colors['ParseHTML'] = GetColor($im, 112, 162, 227);
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
@@ -455,14 +472,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
             }
         }
-        
+
         // Draw pcap-based bandwidth backgrounds, labels and borders
         if (isset($pcap_slices)) {
           if (!$is_thumbnail && $show_labels)
               DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black);
           DrawPerfBackground($im, $pcap_slices, $data_x, $border_color, $bg_colors['alt']);
         }
-        
+
         // Draw timeline backgrounds, labels and borders
         if (isset($cpu_slice_info)) {
           foreach ($cpu_slice_info as $thread => $p) {
@@ -473,7 +490,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
           }
         }
-        
+
         if (isset($interactive)) {
           $iTop = $height - $row_height - 1;
           imagerectangle($im, 0, $iTop, $width - 1, $height - 1, $border_color);  // border
@@ -629,7 +646,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
               }
             }
-            
+
             // Draw the pcap-based bandwidth data
             if (isset($pcap_slices)) {
               // go through each pixel and draw bars individually
@@ -658,7 +675,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
               }
             }
-            
+
             // Draw the Timeline information
             if (isset($cpu_slice_info) && $max_ms) {
               foreach ($cpu_slice_info as $p) {
@@ -727,7 +744,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                   imagefilledrectangle($im, $iLeft, $iTop, $r, $iBottom, $white);
               }
             }
-            
+
             // Draw the user timings
             if (isset($user_times)) {
                 foreach ($user_times as $name => $value) {
@@ -793,39 +810,42 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         // Draw requests.
         foreach ($rows as $row) {
             $is_connection = $row['is_connection'];
-            foreach ($row['requests'] as $request) {
-                $y1 = $top + $row['y1'];
-                $y2 = $top + $row['y2'];
-                if (!$is_thumbnail && !$is_connection) {
-                  $label_x1 = $x_scaler($request['all_start']);
-                  $label_x2 = $x_scaler($request['all_end']);
-                  $label_y1 = $y1;
-                  $label_y2 = $y2;
-                  $bg_color = $row['bg_color'];
-                  DrawRequestTimeLabelBackground(
-                      $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
-                      $data_x, $width - 1,
-                      $font, $font_width, $black, $bg_color);
-                }
-                if (!$is_thumbnail) {
-                    $y1 += 1;
-                    $y2 -= 1;
-                }
-                $request['colors'] = GetRequestColors(
-                    @$request['contentType'],
-                    $is_thumbnail, $is_mime, $is_state, $request['url']);
-                $bars = GetBars($request, $x_scaler, $y1, $y2,
-                                $is_thumbnail, $is_mime, $is_state, $include_js);
-                foreach ($bars as $bar) {
-                    list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
-                    DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
-                }
-                if (!$is_thumbnail && !$is_connection) {
-                  DrawRequestTimeLabel(
-                      $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
-                      $data_x, $width - 1,
-                      $font, $font_width, $black, $bg_color);
-                }
+            for ($pass = 1; $pass <= 2; $pass++) {
+              foreach ($row['requests'] as $request) {
+                  $y1 = $top + $row['y1'];
+                  $y2 = $top + $row['y2'];
+                  if (!$is_thumbnail && !$is_connection) {
+                    $label_x1 = $x_scaler($request['all_start']);
+                    $label_x2 = $x_scaler($request['all_end']);
+                    $label_y1 = $y1;
+                    $label_y2 = $y2;
+                    $bg_color = $row['bg_color'];
+                    DrawRequestTimeLabelBackground(
+                        $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
+                        $data_x, $width - 1,
+                        $font, $font_width, $black, $bg_color);
+                  }
+                  if (!$is_thumbnail) {
+                      $y1 += 1;
+                      $y2 -= 1;
+                  }
+                  $request['colors'] = GetRequestColors(
+                      @$request['contentType'],
+                      $is_thumbnail, $is_mime, $is_state, $request['url']);
+                  $bars = GetBars($request, $x_scaler, $y1, $y2,
+                                  $is_thumbnail, $is_mime, $is_state, $include_js,
+                                  $max_bw, $pass, $show_chunks);
+                  foreach ($bars as $bar) {
+                      list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
+                      DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
+                  }
+                  if (!$is_thumbnail && !$is_connection) {
+                    DrawRequestTimeLabel(
+                        $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
+                        $data_x, $width - 1,
+                        $font, $font_width, $black, $bg_color);
+                  }
+              }
             }
         }
     }
@@ -922,7 +942,7 @@ function FilterRequests($requests) {
 
     if (!count($filtered_requests))
         $filtered_requests = $requests;
-        
+
     return $filtered_requests;
 }
 
@@ -1199,7 +1219,8 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 * for the parts of a request.
 */
 function GetBars($request, $x_scaler, $y1, $y2,
-                 $is_thumbnail, $is_mime, $is_state, $include_js) {
+                 $is_thumbnail, $is_mime, $is_state, $include_js,
+                 $max_bw, $pass, $show_chunks) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1213,11 +1234,62 @@ function GetBars($request, $x_scaler, $y1, $y2,
   // TODO(slamm): tweak minimum width of bars.
   //  (!$is_mime && !$is_thumbnail) ? each bar at least 1px
   //   ($is_mime && !$is_thumbnail) ? each bar group at least 1px
-  AddBarIfValid($bars, 'download', $request, $x_scaler, $y1, $y2);
-  AddBarIfValid($bars, 'ttfb',     $request, $x_scaler, $y1, $y2);
-  AddBarIfValid($bars, 'ssl',      $request, $x_scaler, $state_y1, $state_y2);
-  AddBarIfValid($bars, 'connect',  $request, $x_scaler, $state_y1, $state_y2);
-  AddBarIfValid($bars, 'dns',      $request, $x_scaler, $state_y1, $state_y2);
+  if ($show_chunks && isset($request['chunks']) && is_array($request['chunks']) && count($request['chunks'])) {
+    // Show each chunk of the download
+    // First, draw the TTFB color over the whole request time
+    if ($pass == 1) {
+      $start_key = null;
+      if (isset($request['ttfb_start']))
+        $start_key = 'ttfb_start';
+      if (isset($request['download_start']) && (!isset($start_key) || $request['download_start'] < $request[$start_key]))
+        $start_key = 'download_start';
+      $end_key = null;
+      if (isset($request['download_end']))
+        $end_key = 'download_end';
+      if (isset($request['ttfb_end']) && (!isset($end_key) || $request['ttfb_end'] > $request[$end_key]))
+        $end_key = 'ttfb_end';
+      if (isset($start_key) && isset($end_key))
+        AddBarIfValid($bars, 'ttfb', $start_key, $end_key, $request, $x_scaler, $y1, $y2);
+    }
+    // Add a bar for the TTFB (headers)
+    AddBarIfValid($bars, 'download', 'download_start', 'download_start', $request, $x_scaler, $y1, $y2);
+    // Make sure the chunks stay withing the download time
+    $min = null;
+    if (isset($request['download_start'])) {
+      $min = $request['download_start'];
+    } elseif (isset($request['ttfb_end'])) {
+      $min = $request['ttfb_end'];
+    } elseif (isset($request['ttfb_start'])) {
+      $min = $request['ttfb_start'];
+    }
+    // Add the bars for each chunk
+    foreach($request['chunks'] as $chunk) {
+      if (isset($chunk['ts'])) {
+        $start = $chunk['ts'];
+        if ($max_bw > 0 && isset($chunk['bytes'])) {
+          // Calculate when the chunk started
+          $chunk_time = floatval($chunk['bytes']) / (floatval($max_bw) / 8.0);
+          if ($chunk_time > 0)
+            $start -= $chunk_time;
+        }
+        $start = max($min, $start);
+        $bars[] = array(
+            $x_scaler(round($start)), $x_scaler(round($chunk['ts'])),
+            $y1, $y2,
+            $request['colors']['download'],
+            true);
+      }
+    }
+  } else {
+    // Show the download as a single bar
+    AddBarIfValid($bars, 'download', 'download_start', 'download_end', $request, $x_scaler, $y1, $y2);
+    if ($pass == 1) {
+      AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
+    }
+  }
+  AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
+  AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
+  AddBarIfValid($bars, 'dns', 'dns_start', 'dns_end', $request, $x_scaler, $state_y1, $state_y2);
   if (isset($request['js_timing']) && $include_js) {
     $bar_height = $y2 - $y1 + 1;
     $js_height = max(2, intval($bar_height * 0.5));
@@ -1235,11 +1307,9 @@ function GetBars($request, $x_scaler, $y1, $y2,
 }
 
 /**
-* Append a bar for a request part if it exists and is valid.
+* Append a bar for a request part if it exists and is valid
 */
-function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
-    $start_key = $key . '_start';
-    $end_key = $key . '_end';
+function AddBarIfValid(&$bars, $key, $start_key, $end_key, $request, $x_scaler, $y1, $y2) {
     if (array_key_exists($start_key, $request) &&
         array_key_exists($end_key, $request) &&
         $request[$end_key] > 0) {
@@ -1258,7 +1328,7 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 
 /**
 * Insert an interactive waterfall into the current page
-* 
+*
 */
 function InsertWaterfall($url, $requests, $id, $run, $cached, $page_data, $waterfall_options = '') {
   echo CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options);
@@ -1267,10 +1337,10 @@ function InsertWaterfall($url, $requests, $id, $run, $cached, $page_data, $water
 function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options = '', $step = 1) {
     global $settings;
 
-    // create the image map (this is for fallback when Javascript isn't enabled
+    // create the image map (this is for fallback when JavaScript isn't enabled
     // but also gives us the position for each request)
     $out = '<map name="waterfall_map_step' . $step . '">';
-    $is_mime = (bool)GetSetting('mime_waterfalls');
+    $is_mime = (bool)GetSetting('mime_waterfalls', 1);
     if (strpos($waterfall_options, 'mime=1') !== false)
       $is_mime = true;
     $options = array(
@@ -1298,7 +1368,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         }
     }
     $out .= '</map>';
-    
+
     // main container for the waterfall
     $out .= '<div class="waterfall-container">';
     $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
@@ -1347,7 +1417,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
 EOT;
 
     $out .= '</div>'; // container
-    
+
     // script support
     $out .= "<script type=\"text/javascript\">\n";
     $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
@@ -1397,7 +1467,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
         $row_count = $count;
     }
   }
-  
+
   $height_style = '';
   if ($row_count) {
     $row_height = imagefontheight(2) + 4;
@@ -1432,7 +1502,7 @@ function LoadPcapSlices($slices_file, $max_bw) {
           $data[$series]["$time"] = $value * 80; // 8 bits per byte, 10 100ms buckets per second
         }
       }
-      
+
       // Smooth out the bandwidth as needed to not exceed the configured bandwidth
       if ($max_bw) {
         $max_bw *= 1000;
@@ -1469,7 +1539,7 @@ function LoadPcapSlices($slices_file, $max_bw) {
           }
         }
       }
-      
+
       $count = count($data['in']);
       if ($count) {
         $slices = array('count' => $count);
@@ -1486,18 +1556,18 @@ function LoadPcapSlices($slices_file, $max_bw) {
         if (isset($data['in_dup']))
           $slices['in_dup'] = $data['in_dup'];
       }
-    }    
+    }
   }
   return $slices;
 }
 
 function GetAverageSliceValue($slices, $start, $end) {
   $avg = 0.0;
-  
+
   $start_bucket = floatval(floor($start * 10.0)) / 10.0;
   $end_bucket = floatval(ceil($end * 10.0)) / 10.0;
   $slice_width = $end - $start;
-  
+
   if ($slice_width > 0.1) {
     // Spans multiple buckets
     $count = 0;
@@ -1528,19 +1598,19 @@ function GetAverageSliceValue($slices, $start, $end) {
       $avg = $start_weight * $start_value + $end_weight * $end_value;
     }
   }
-  
+
   return $avg;
 }
 
 /**
 * Add the JS execution times to the requests
-* 
+*
 * @param mixed $requests
 * @param mixed $script_timings_file
 */
 
 function AddRequestScriptTimings(&$requests, $script_timings_file) {
-  $script_events = array('EvaluateScript', 
+  $script_events = array('EvaluateScript',
                          'v8.compile',
                          'FunctionCall',
                          'GCEvent',

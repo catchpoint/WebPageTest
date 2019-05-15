@@ -5,7 +5,7 @@ TTI measures the time until the page being loaded is considered usable and will 
 1. Time to First Interactive: This is a newer metric and reports when the page is first expected to be usable and will respond to input quickly (with the possibility of slow responses as more content loads).
 
 ## Underlying Measurements
-TTI is built on top of a collection of other measurements:
+TTI is built atop a collection of other measurements:
 
 ### Time to First Contentful Paint
 The point in time when the first image or text is rendered to the screen (something other than background colors).

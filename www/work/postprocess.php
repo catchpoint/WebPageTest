@@ -11,11 +11,13 @@ set_time_limit(60*50);
 header("Content-Length: 0", true);
 ob_end_flush();
 flush();
-ob_end_clean();
+if (ob_get_length())
+  ob_end_clean();
+
 if (function_exists('fastcgi_finish_request'))
   fastcgi_finish_request();
-    
-if(extension_loaded('newrelic')) { 
+
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ArchiveTest');
   newrelic_add_custom_tracer('loadAllPageData');
   newrelic_add_custom_tracer('SendBeacon');
@@ -27,7 +29,7 @@ if (array_key_exists('test', $_REQUEST)) {
   if (ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
     $testInfo = GetTestInfo($id);
-    
+
     // see if we need to log the raw test data
     $now = time();
     $allowLog = true;
@@ -51,7 +53,7 @@ if (array_key_exists('test', $_REQUEST)) {
             $testData['testConnectivity'] = $testInfo['connectivity'];
             $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
             $testData['testRunId'] = "$id.$run.$cached";
-            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $protocol = getUrlProtocol();
             $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
             error_log(json_encode($testData) . "\n", 3, $pageLog);
           }
@@ -79,7 +81,7 @@ if (array_key_exists('test', $_REQUEST)) {
               $request['testConnectivity'] = $testInfo['connectivity'];
               $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
               $request['testRunId'] = "$id.$run.$cached";
-              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $protocol = getUrlProtocol();
               $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
               error_log(json_encode($request) . "\n", 3, $requestsLog);
             }
@@ -97,7 +99,7 @@ if (array_key_exists('test', $_REQUEST)) {
         error_log($log_entry, 3, './tmp/slow_tests.log');
       }
     }
-    
+
     // archive the actual test
     if (!GetSetting("lazyArchive"))
       ArchiveTest($id, false);
@@ -118,8 +120,8 @@ if (array_key_exists('test', $_REQUEST)) {
       require_once('./lib/statsd.inc.php');
       StatsdPostResult($testInfo, $testPath);
     }
- 
-    // Send an email notification if necessary
+
+    // send an email notification if necessary
     $notifyFrom = GetSetting('notifyFrom');
     if ($notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini")) {
       $host = GetSetting('host');
@@ -140,7 +142,7 @@ if (array_key_exists('test', $_REQUEST)) {
         if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
           $send_callback = true;
       }
-      
+
       if ($send_callback) {
         $url = $testInfo['callback'];
         if( strncasecmp($url, 'http', 4) )
@@ -183,7 +185,7 @@ function SendCallback($url) {
 
 /**
 * Send a mail notification to the user
-* 
+*
 * @param mixed $mailto
 * @param mixed $id
 * @param mixed $testPath
@@ -191,22 +193,22 @@ function SendCallback($url) {
 function notify( $mailto, $from,  $id, $testPath, $host )
 {
     global $test;
-    
+
     // calculate the results
     require_once 'page_data.inc';
     $headers  = "MIME-Version: 1.0\r\n";
     $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
     $headers .= "From: $from\r\n";
     $headers .= "Reply-To: $from";
-    
+
     $pageData = loadAllPageData($testPath);
     $url = trim($pageData[1][0]['URL']);
     $shorturl = substr($url, 0, 40);
     if( strlen($url) > 40 )
         $shorturl .= '...';
-    
+
     $subject = "Test results for $shorturl";
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     if( !isset($host) )
         $host  = $_SERVER['HTTP_HOST'];
 
@@ -217,7 +219,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $numRequests = number_format($pageData[$fv][0]['requests'],0);
         $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
         $result = "$protocol://$host/result/$id";
-        
+
         // capture the optimization report
         require_once 'optimization.inc';
         require_once('object_detail.inc');
@@ -226,7 +228,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $optimization = dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
 
         // build the message body
-        $body = 
+        $body =
         "<html>
             <head>
                 <title>$subject</title>
@@ -237,7 +239,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
             </head>
             <body>
             <p>The full test results for <a href=\"$url\">$url</a> are now <a href=\"$result/\">available</a>.</p>
-            <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download 
+            <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download
             the page required <b>$numRequests requests</b> and <b>$bytes KB</b>.</p>
             <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/$fv/screen_shot/\"><img src=\"$result/{$fv}_screen_thumb.jpg\"></a></p>
             <h3>Here are the things on the page that could use improving:</h3>

@@ -14,14 +14,14 @@ $testInfo = TestInfo::fromFiles($testPath);
 $localPaths = new TestPaths($testPath, $run, $cached, $step);
 $urlGenerator = UrlGenerator::create(false, "", $id, $run, $cached, $step);
 $requests = getRequestsForStep($localPaths, $urlGenerator, $secure);
-$page_keywords = array('Images','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Images','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website speed test images$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebPagetest Page Images<?php echo $testLabel; ?></title>
+    <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>
     <style type="text/css">
       .images td
@@ -32,7 +32,7 @@ $userImages = true;
     </style>
   </head>
   <body>
-    <div class="page">
+    <div class="page-wide">
       <?php
       $tab = 'Test Result';
       $subtab = null;
@@ -46,7 +46,7 @@ $userImages = true;
           echo "<h3>Step " . $stepResult->readableIdentifier($step) . "</h3>";
         }
         ?>
-        <p>Images are what are currently being served from the given url and may not necessarily match what was loaded at the time of the test.</p>
+        <p>Images are currently being served from the given URL, and might not necessarily match what was loaded at the time of the test.</p>
         <table class="images">
           <?php
           foreach( $requests as &$request ) {

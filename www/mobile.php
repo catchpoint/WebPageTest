@@ -2,14 +2,14 @@
 include 'common.inc';
 $tid=$_GET['tid'];
 $run=$_GET['run'];
-$page_keywords = array('Mobile','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Mobile','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real mobile devices.";
 ?>
 
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Mobile Test</title>
+        <title>WebPageTest - Mobile Test</title>
         <?php $gaTemplate = 'Mobile Test'; include ('head.inc'); ?>
     </head>
     <body>
@@ -40,7 +40,7 @@ $page_description = "Run a free website speed test from around the globe using r
                             <li><input type="hidden" name="source" value="webpagetest" /></li>
                             <li>
                                 <select name="device">
-                                <option value="">Select a device</option> 
+                                <option value="">Select a device</option>
                                 <option value="iphone50-us">Cambridge, MA - iPhone 4 iOS 5</option>
                                 <option value="munich-iphone1">Munich, Germany - iPhone 4 iOS 5</option>
                                 <option value="ipad-us">Washington, DC iPad iOS 5</option>
@@ -70,9 +70,9 @@ $page_description = "Run a free website speed test from around the globe using r
                 <p><input type="submit" name="submit" value="" class="start_test"></p>
             </div>
             <div class="cleared"></div>
-                
+
             </form>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

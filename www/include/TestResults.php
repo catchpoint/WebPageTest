@@ -211,7 +211,7 @@ class TestResults {
     return false;
   }
 
-  /** Return the lighthouse results (from json) */
+  /** Return the lighthouse results (from JSON) */
   public function getLighthouseResult() {
     $lighthouse = null;
     $localPaths = new TestPaths($this->testInfo->getRootDirectory(), 1, 0, 1);

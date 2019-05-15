@@ -53,8 +53,11 @@ if (isset($locations) && is_array($locations) && count($locations) &&
   $location = trim($locations[0]);
   if (!$is_done && array_key_exists('reboot', $_GET) && GetSetting('allowReboot'))
     $is_done = GetReboot();
+  /*
+  // The legacy agents are no longer supported. Server-based updating is now disabled.
   if (!$is_done && array_key_exists('ver', $_GET))
     $is_done = GetUpdate();
+  */
   foreach ($locations as $loc) {
     $location = trim($loc);
     if (!$is_done && strlen($location)) {
@@ -197,6 +200,8 @@ function TestToJSON($testInfo) {
                   $testJson['customMetrics'][$metric] = $code;
                 }
               }
+            } elseif ($key == 'heroElements') {
+              $testJson['heroElements'] = json_decode(base64_decode($value));
             } elseif ($key == 'injectScript') {
               $testJson['injectScript'] = base64_decode($value);
             } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
@@ -217,7 +222,7 @@ function TestToJSON($testInfo) {
   if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
     $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
     if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
-      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+      $protocol = getUrlProtocol();
       $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
       $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
       foreach ($apk_info['packages'] as $package => $info)

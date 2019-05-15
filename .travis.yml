@@ -1,0 +1,8 @@
+sudo: required
+language: php
+services:
+  - docker
+script:
+  - docker build -t webpagetest-server .
+after_script:
+  - docker images

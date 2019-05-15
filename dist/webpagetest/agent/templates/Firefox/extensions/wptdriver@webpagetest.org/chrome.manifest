@@ -1,3 +1,0 @@
-content wptdriver chrome/content/
-
-overlay chrome://browser/content/browser.xul	chrome://wptdriver/content/overlay.xul

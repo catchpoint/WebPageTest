@@ -9,14 +9,14 @@ if ($_REQUEST['run'] == 'lighthouse')
   $run = 'lighthouse';
 $timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached,s:$step";
 if ($newTimeline) {
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = getUrlProtocol();
   $host  = $_SERVER['HTTP_HOST'];
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
   $cdn = GetSetting('cdn');
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
-  // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with a &
-  $url .= "/inspector-20170320/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
+  // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with an &
+  $url .= "/inspector-20181102/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
   header("Location: $url");
 }
 ?>

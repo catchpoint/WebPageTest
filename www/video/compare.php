@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/../util.inc');
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -14,8 +15,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
                 $tests .= "-r:{$parts[1]}";
         }
     }
-
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
@@ -34,10 +34,10 @@ else
     require_once('object_detail.inc');
     require_once('waterfall.inc');
 
-    $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+    $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
     $page_description = "Visual comparison of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 
-    $title = 'Web page visual comparison';
+    $title = 'Webpage visual comparison';
     $labels = '';
     $location = null;
     foreach( $tests as &$test )
@@ -65,7 +65,7 @@ else
     <!DOCTYPE html>
     <html>
         <head>
-            <title>WebPagetest - Visual Comparison</title>
+            <title>WebPageTest - Visual Comparison</title>
             <?php
                 if( !$ready )
                 {
@@ -395,7 +395,7 @@ function ScreenShotTable()
 
             if (!defined('EMBED')) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
-                $href = $urlGenerator->resultPage("details");
+                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
                 echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
@@ -523,7 +523,7 @@ function ScreenShotTable()
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
                 <table id="layoutTable">
-                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison End Point</th></th></tr>
+                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison Endpoint</th></th></tr>
                     <?php
                         // fill in the thumbnail size selection
                         echo "<tr><td>";
@@ -567,7 +567,7 @@ function ScreenShotTable()
                         echo "<input type=\"radio\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec<br>";
                         echo "</td>";
 
-                        // fill in the end-point selection
+                        // fill in the endpoint selection
                         echo "<td>";
                         if( !strcasecmp($endTime, 'aft') )
                             $endTime = 'visual';
@@ -722,6 +722,16 @@ function DisplayGraphs() {
     $progress_end = 0;
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
+        if ($hasStepResult &&
+            !empty($test['stepResult']->getMetric('heroElements'))) {
+            foreach ($test['stepResult']->getMetric('heroElements') as $hero) {
+                $heroKey = "heroElementTimes.{$hero['name']}";
+
+                if (!isset($timeMetrics[$heroKey])) {
+                    $timeMetrics[$heroKey] = "Hero {$hero['name']}";
+                }
+            }
+        }
         if ($hasStepResult &&
             !isset($timeMetrics['visualComplete85']) &&
             $test['stepResult']->getMetric('visualComplete85') > 0) {

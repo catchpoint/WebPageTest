@@ -4,7 +4,7 @@ include 'common.inc';
 $loc = GetDefaultLocation();
 $tid= array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
 $run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
-$page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+$page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
 if (is_file(__DIR__ . '/../settings/profiles.ini'))
@@ -14,7 +14,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Visual Comparison</title>
+        <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
     <body>
@@ -56,7 +56,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                 </ul>
                 <div id="visual_comparison" class="test_box">
 
-                    <p>Enter multiple urls to compare them against each other visually.</p>
+                    <p>Enter multiple URLs to compare them against each other visually.</p>
                         <input type="hidden" id="nextid" value="2">
                         <div id="urls">
                             <?php
@@ -80,8 +80,8 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                             }
                             ?>
                             <div id="urldiv1" class="urldiv">
-                                Label: <input id="label1" type="text" name="label[1]" style="width:10em"> 
-                                URL: <input id="url1" type="text" name="url[1]" style="width:30em" onkeypress="if (event.keyCode == 32) {return false;}" > 
+                                Label: <input id="label1" type="text" name="label[1]" style="width:10em">
+                                URL: <input id="url1" type="text" name="url[1]" style="width:30em" onkeypress="if (event.keyCode == 32) {return false;}" >
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
@@ -114,8 +114,8 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                           echo '</ul>';
                         }
                         ?>
-                        <p id="footnote" class="cleared">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.  
-                        The tests will also be publically available.  If you would like to test with different settings, submit your tests individually from the 
+                        <p id="footnote" class="cleared">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
+                        The tests will also be publically available.  If you would like to test with different settings, submit your tests individually from the
                         <a href="/">main test page</a>.</p>
                     </div>
                 </div>
@@ -130,9 +130,9 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                   ?>
                 </div>
                 <div class="cleared"></div>
-                
+
                 <script type="text/javascript">
-                <?php 
+                <?php
                   echo "var profiles = " . json_encode($profiles) . ";\n";
                 ?>
                 var wptStorage = window.localStorage || {};
@@ -150,7 +150,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                   if (profiles[profile] !== undefined) {
                     var d = new Date();
                     d.setTime(d.getTime() + (365*24*60*60*1000));
-                    document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";          
+                    document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
                     if (profiles[profile]['description'] !== undefined)
                       description = profiles[profile]['description'];
                   }
@@ -159,10 +159,10 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                 profileChanged();
                 </script>
             </form>
-            
+
             <?php include('footer.inc'); ?>
         </div>
 
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
     </body>
 </html>

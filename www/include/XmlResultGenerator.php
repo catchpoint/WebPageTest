@@ -28,10 +28,10 @@ class XmlResultGenerator {
   /**
    * XmlResultGenerator constructor.
    * @param TestInfo $testInfo Information about the test
-   * @param string $urlStart Start for test related URLS
+   * @param string $urlStart Start for test-related URLs
    * @param FileHandler $fileHandler FileHandler to be used
    * @param array $additionalInfo Array of INFO_* constants to define which additional information should be printed
-   * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
+   * @param bool $friendlyUrls True if friendly URLs should be used (mod_rewrite), false otherwise
    */
   public function __construct($testInfo, $urlStart, $fileHandler, $additionalInfo, $friendlyUrls) {
     $this->testInfo = $testInfo;
@@ -55,7 +55,7 @@ class XmlResultGenerator {
    * @param TestResults $testResults
    * @param string $median_metric
    * @param string $requestId
-   * @param bool $medianFvOnly 
+   * @param bool $medianFvOnly
    */
   public function printAllResults($testResults, $median_metric, $requestId = null, $medianFvOnly = false) {
     $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
@@ -277,7 +277,7 @@ class XmlResultGenerator {
     echo "<screenShot>" . htmlspecialchars($urlGenerator->resultPage("screen_shot")) . "</screenShot>\n";
     echo "</pages>\n";
 
-    // urls for the relevant images
+    // URLs for the relevant images
     echo "<thumbnails>\n";
     echo "<waterfall>" . htmlspecialchars($urlGenerator->thumbnail("waterfall.png")) . "</waterfall>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->thumbnail("optimization.png")) . "</checklist>\n";
@@ -471,7 +471,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * Print a breakdown of the requests and bytes by mime type
+   * Print a breakdown of the requests and bytes by MIME type
    * @param TestStepResult $testResult Result data of affected run
    */
   private function printMimeTypeBreakdown($testResult) {
@@ -540,6 +540,15 @@ function ArrayToXML($array) {
       if (is_numeric($key))
         $key = 'value';
       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+
+      /* XXX: XML tag name should not start with digit or '-' or '.'
+       * so we check if key starts with an invalid XML tagname, and if this is the
+       * case, we prefix the tagname with '_'.
+       */
+      if (preg_match('/^[a-zA-Z_]/', $key) == 0) {
+          $key = "_" . $key;
+      }
+
       $ret .= "<$key>";
       if (is_array($val))
         $ret .= "\n" . ArrayToXML($val);
