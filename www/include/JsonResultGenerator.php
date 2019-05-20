@@ -105,7 +105,7 @@ class JsonResultGenerator {
     $cachedMax = 0;
     if (!$fvOnly)
       $cachedMax = 1;
-    $ret['runs'] = $runs;
+    $ret['testRuns'] = $runs;
     $ret['fvonly'] = $fvOnly;
     $ret['successfulFVRuns'] = $testResults->countSuccessfulRuns(false);
     if (!$fvOnly)
