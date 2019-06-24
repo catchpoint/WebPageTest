@@ -300,6 +300,8 @@
               $test['medianMetric'] = $_REQUEST['medianMetric'];
             if (isset($_REQUEST['throttle_cpu']))
               $test['throttle_cpu'] = $_REQUEST['throttle_cpu'];
+            if (isset($_REQUEST['bypass_cpu_normalization']))
+              $test['bypass_cpu_normalization'] = $_REQUEST['bypass_cpu_normalization'] ? 1 : 0;
 
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
@@ -2252,6 +2254,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'warmup', $test['warmup']);
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
                 AddIniLine($testFile, 'throttle_cpu', $test['throttle_cpu']);
+            if( isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization'])
+                AddIniLine($testFile, 'bypass_cpu_normalization', '1');
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 AddIniLine($testFile, 'dpr', $test['dpr']);
             if( isset($test['width']) && $test['width'] > 0 )
