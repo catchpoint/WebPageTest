@@ -964,16 +964,31 @@ function ParseUserTiming($file) {
     usort($events, 'CompareTimestamps');
     $main_frame = null;
     $start_time = null;
+    // Make a first pass looking for FMP/FCP events which are only ever on the main frame
+    $main_frames = array();
+    foreach ($events as $event) {
+      if (is_array($event) &&
+          isset($event['name']) &&
+          isset($event['args']['frame']) &&
+          strpos($event['name'], 'Paint') !== FALSE &&
+          !in_array($event['args']['frame'], $main_frames)) {
+        $main_frames[] = $event['args']['frame'];
+      }
+    }
+    if (count($main_frames) == 1) {
+      $main_frame = $main_frames[0];
+    }
     // Find the first navigation to determine which is the main frame
     foreach ($events as $event) {
       if (is_array($event) && isset($event['name']) && isset($event['ts'])) {
         if (!isset($start_time)) {
           $start_time = $event['ts'];
         }
-        if ($event['name'] == 'navigationStart' ||
-            $event['name'] == 'unloadEventStart' ||
-            $event['name'] == 'redirectStart' ||
-            $event['name'] == 'domLoading') {
+        if (!isset($main_frame) &&
+            ($event['name'] == 'navigationStart' ||
+             $event['name'] == 'unloadEventStart' ||
+             $event['name'] == 'redirectStart' ||
+             $event['name'] == 'domLoading')) {
           if (isset($event['args']['frame'])) {
             $main_frame = $event['args']['frame'];
             break;
