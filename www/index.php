@@ -564,7 +564,7 @@ $loc = ParseLocations($locations);
                                         ?>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="v8_rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">
+                                        <input type="checkbox" name="v8rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">
                                         <label for="v8rcs" class="auto_width">
                                             Capture <a href="https://v8.dev/docs/rcs">V8 Runtime Call Stats</a>
                                         </label>
