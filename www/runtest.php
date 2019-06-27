@@ -221,6 +221,7 @@
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             if (isset($req_swrender))
               $test['swrender'] = $req_swrender;
+            $test['v8rcs'] = isset($_REQUEST['v8rcs']) && $_REQUEST['v8rcs'] ? 1 : 0;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
             if (isset($_REQUEST['trace']) &&
                 strlen($_REQUEST['traceCategories']) &&
@@ -2240,6 +2241,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'lighthouse', '1');
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 AddIniLine($testFile, 'lighthouseTrace', '1');
+            if( isset($test['v8rcs']) && $test['v8rcs'] )
+                AddIniLine($testFile, 'v8rcs', '1');
             if( isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'] )
                 AddIniLine($testFile, 'lighthouseThrottle', '1');
             if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
