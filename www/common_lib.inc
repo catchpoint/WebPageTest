@@ -1973,6 +1973,11 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
           if ($include_sensitive) {
              $entry['test'] = @$tester['test'];
           }
+
+          if (isset($tester['browsers'])) {
+             $entry['browsers'] = @$tester['browsers'];
+          }
+
           $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
           if (isset($tester['cpu']) && is_array($tester['cpu']) && count($tester['cpu']))

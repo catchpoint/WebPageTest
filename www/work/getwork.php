@@ -31,6 +31,7 @@ $screenheight = array_key_exists('screenheight', $_GET) ? $_GET['screenheight'] 
 $winver = isset($_GET['winver']) ? $_GET['winver'] : '';
 $isWinServer = isset($_GET['winserver']) ? $_GET['winserver'] : '';
 $isWin64 = isset($_GET['is64bit']) ? $_GET['is64bit'] : '';
+$browsers = isset($_GET['browsers']) ? ParseBrowserInfo($_GET['browsers']) : '';
 $tester = null;
 if (strlen($ec2))
   $tester = $ec2;
@@ -253,6 +254,7 @@ function GetJob() {
   global $winver;
   global $isWinServer;
   global $isWin64;
+  global $browsers;
 
   $workDir = "./work/jobs/$location";
   $locInfo = GetLocationInfo($location);
@@ -367,6 +369,8 @@ function GetJob() {
       $testerInfo['isWinServer'] = $isWinServer;
       $testerInfo['isWin64'] = $isWin64;
       $testerInfo['test'] = '';
+      if (isset($browsers) && count(array_filter($browsers, 'strlen')))
+        $testerInfo['browsers'] = $browsers;
       if (isset($testId))
         $testerInfo['test'] = $testId;
       UpdateTester($location, $tester, $testerInfo);
@@ -594,5 +598,23 @@ function GetReboot() {
     echo "Reboot";
   }
   return $reboot;
+}
+
+/**
+* Parse browser and version info
+* 
+*/
+function ParseBrowserInfo($browerString){
+  $browserInfo = array();
+  if($browerString){
+      foreach(explode(",", $browerString) as $info){
+          $data = explode(':', $info);
+          if($data[0] && $data[1]){
+              $browserInfo[$data[0]] = $data[1];
+          }
+      }
+  }
+
+  return $browserInfo;
 }
 ?>
