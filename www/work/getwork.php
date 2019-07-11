@@ -32,6 +32,7 @@ $winver = isset($_GET['winver']) ? $_GET['winver'] : '';
 $isWinServer = isset($_GET['winserver']) ? $_GET['winserver'] : '';
 $isWin64 = isset($_GET['is64bit']) ? $_GET['is64bit'] : '';
 $browsers = isset($_GET['browsers']) ? ParseBrowserInfo($_GET['browsers']) : '';
+$key_valid = false;
 $tester = null;
 if (strlen($ec2))
   $tester = $ec2;
@@ -243,6 +244,7 @@ function GetJob() {
 
   global $location;
   global $key;
+  global $key_valid;
   global $pc;
   global $ec2;
   global $tester;
@@ -264,8 +266,8 @@ function GetJob() {
   if (strpos($location, '..') == false &&
       strpos($location, '\\') == false &&
       strpos($location, '/') == false &&
-      (!strlen($locKey) || !strcmp($key, $locKey))) {
-    
+      (!strlen($locKey) || $key_valid || !strcmp($key, $locKey))) {
+    $key_valid = true;
     GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
     
     if (!$offline) {
