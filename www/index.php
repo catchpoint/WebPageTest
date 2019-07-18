@@ -655,7 +655,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" class="text" style="width: 200px;">
+                                        <input type="text" name="password" id="password" autocomplete="off" class="text" style="width: 200px;">
                                     </li>
                                 </ul>
                             </div>
