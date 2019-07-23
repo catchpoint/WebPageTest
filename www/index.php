@@ -462,6 +462,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
+                                    <li>
+                                        <label for="appendua" style="width: auto;">
+                                        Append to UA String
+                                        </label>
+                                        <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
+                                    </li>
                                     <?php
                                     if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
                                     { ?>
