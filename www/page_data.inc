@@ -266,12 +266,14 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
         $seek_start = 0;
         $TTI = null;
+        $last_interactive = 0;
+        $measurement_end = 0;
         if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+[          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
         if ($seek_start > 0) {
-          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive);
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive, $last_interactive, $total_blocking_time);
         }
         if (isset($first_interactive) && $first_interactive > 0) {
           if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $first_interactive)
@@ -282,14 +284,6 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $TTI)
             $TTI = $ret['domContentLoadedEventEnd'];
           $ret['TimeToInteractive'] = $TTI;
-        }
-        $measurement_end = 0;
-        $last_interactive = 0;
-        foreach ($ret['interactivePeriods'] as $window) {
-          if ($window[1] > $measurement_end) {
-            $measurement_end = max($window[1], $seek_start);
-            $last_interactive = max($window[0], $seek_start);
-          }
         }
         if ($measurement_end > 0)
           $ret['TTIMeasurementEnd'] = $measurement_end;
@@ -303,6 +297,12 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           if (!isset($ret['FirstInteractive'])) {
             $ret['FirstInteractive'] = $last_interactive;
           }
+        }
+        if (isset($ret['FirstInteractive'])) {
+          $ret['FirstCPUIdle'] = $ret['FirstInteractive'];
+        }
+        if (isset($total_blocking_time)) {
+          $ret['TotalBlockingTime'] = $total_blocking_time;
         }
       }
     }
@@ -1039,10 +1039,21 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive) {
+function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time) {
   $TTI = null;
   $first_interactive = null;
+  $total_blocking_time = null;
+  $measurement_end = 0;
 
+  // See when the absolute last interaction measurement was
+  $last_interactive = 0;
+  foreach ($interactiveWindows as $window) {
+    if ($window[1] > $measurement_end) {
+      $measurement_end = max($window[1], $seek_start);
+      $last_interactive = max($window[0], $seek_start);
+    }
+  }
+  
   // Start by filtering the interactive windows to only include 5 second windows that don't
   // end before the start time.
   $end = 0;
@@ -1121,6 +1132,24 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
       $TTI = max($startTime, $window[0]);
   }
 
+  // Calculate the total blocking time - https://docs.google.com/document/d/1xCERB_X7PiP5RAZDwyIkODnIXoBk-Oo7Mi9266aEdGg/edit
+  $endTime = $TTI ? isset($TTI) : $last_interactive;
+  if ($endTime > $startTime) {
+    $lastBusy = $startTime;
+    $total_blocking_time = 0;
+    foreach ($interactiveWindows as $window) {
+      $start = min($window[0], $endTime);
+      $end = $window[1];
+      if ($start > $lastBusy) {
+        $busyTime = $start - $lastBusy - 50;  // 50ms of grace time for every blocking period
+        if ($busyTime > 0) {
+          $total_blocking_time += $busyTime;
+        }
+      }
+      $lastBusy = min($end, $endTime);
+    }
+  }
+  
   return $TTI;
 }
 ?>
