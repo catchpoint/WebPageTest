@@ -269,7 +269,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         $last_interactive = 0;
         $measurement_end = 0;
         if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
-[          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
         if ($seek_start > 0) {

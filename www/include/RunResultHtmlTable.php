@@ -145,7 +145,7 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("DOM Element");
     }
     if ($this->isColumnEnabled(self::COL_TTI)) {
-      $out .= $this->_headCell("<a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First Interactive (beta)</a>");
+      $out .= $this->_headCell("<a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First CPU Idle</a>");
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_headCell("Result (error&nbsp;code)");
