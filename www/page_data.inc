@@ -963,7 +963,14 @@ function ParseUserTiming($file) {
   if (isset($events) && is_array($events)) {
     usort($events, 'CompareTimestamps');
     $start_time = null;
-    // Make a first pass looking for FMP/FCP events which are only ever on the main frame
+    // Make a first pass looking to see if the start time is explicitly set
+    foreach ($events as $event) {
+      if (is_array($event) && isset($event['startTime'])) {
+        $start_time = $event['startTime'];
+      }
+    }
+    
+    // Make a pass looking for FMP/FCP events which are only ever on the main frame
     $main_frames = array();
     foreach ($events as $event) {
       if (is_array($event) &&
@@ -994,12 +1001,16 @@ function ParseUserTiming($file) {
     }
     if (count($main_frames) && isset($start_time)) {
       foreach ($events as $event) {
+        $isMainFrame = false;
+        if (isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames))
+          $isMainFrame = true;
+        elseif (isset($event['args']['data']['inMainFrame']) && $event['args']['data']['inMainFrame'])
+          $isMainFrame = true;
         if (is_array($event) &&
             isset($event['name']) &&
-            isset($event['args']['frame']) &&
             isset($event['ts']) &&
             $event['name'] != 'navigationStart' &&
-            in_array($event['args']['frame'], $main_frames) &&
+            $isMainFrame &&
             ($event['ts'] >= $start_time || isset($event['args']['value']))) {
           if (!isset($user_timing)) {
             $user_timing = array();
