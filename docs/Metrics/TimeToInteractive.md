@@ -30,3 +30,9 @@ At any point in time this is the number of outstanding successful GET requests (
 1. Start looking for First Interactive at *first contentful paint*
 2. Look for the first *interactive window* (with no regard to *in-flight requests*)
 3. First Interactive is the start of the *interactive window* from step 2, *first contentful paint* or *DOM Content Loaded*, whichever is later
+
+## Page is Interactive
+Page is Interactive is a graphical display of interactivity throughput the page load cycle.
+1. Displays White – up until first contentful paint (or start render, if first contentful paint doesn’t exist)
+2. Displays Green – for any window >= 500ms where all tasks on the main thread are <= 50ms
+3. Otherwise displays red

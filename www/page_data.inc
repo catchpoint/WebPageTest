@@ -262,7 +262,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         }
       }
 
-      // Calculate Time to Interactive if we have First Meaningful Paint and interactive Windows
+      // Calculate Time to Interactive if we have First Contentful Paint and interactive Windows
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
         $seek_start = 0;
         $TTI = null;
