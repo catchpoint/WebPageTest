@@ -120,6 +120,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
 function GetPageEvents($page_data) {
     return array(
         'render' => $page_data['render'],
+        'first_contentful_paint' => $page_data['firstContentfulPaint'],
         'dom_element' => $page_data['domTime'],
         'aft' =>  $page_data['aft'],
         'nav_first_paint' => $page_data['firstPaint'],
@@ -737,9 +738,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               if ($max_interactive < $iRight)
                 imagefilledrectangle($im, $max_interactive, $iTop, $iRight, $iBottom, $color_interactive);
 
-              // Everything before start render is N/A (blank)
-              if (isset($page_events['render'])) {
-                $r = $iLeft + intval(min($iWidth, $page_events['render'] * $iScale));
+              // Everything before first contentful paint (or start render if its not available) is N/A (blank)
+              if(isset($page_events['first_contentful_paint'])) {
+                $start_event = $page_events['first_contentful_paint'];
+              } elseif(isset($page_events['render'])) {
+                $start_event = $page_events['render'];
+              }
+              if ($start_event) {
+                $r = $iLeft + intval(min($iWidth, $start_event * $iScale));
                 if ($r > $iLeft)
                   imagefilledrectangle($im, $iLeft, $iTop, $r, $iBottom, $white);
               }

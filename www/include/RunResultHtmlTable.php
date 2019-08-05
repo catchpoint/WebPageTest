@@ -7,7 +7,7 @@ class RunResultHtmlTable {
 
   const COL_LABEL = "label";
   const COL_ABOVE_THE_FOLD = "aft";
-  const COL_USER_TIME = "userTime";
+  const COL_FIRST_CONTENTFUL_PAINT = "firstContentfulPaint";
   const COL_DOM_TIME = "domTime";
   const COL_DOM_ELEMENTS = "domElements";
   const COL_TTI = "FirstInteractive";
@@ -42,7 +42,7 @@ class RunResultHtmlTable {
     $this->runResults = $runResults;
     $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
-    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_USER_TIME, self::COL_TTI,
+    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_TTI,
       self::COL_SPEED_INDEX, self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
     $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
@@ -52,7 +52,7 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $checkByMetric = array(self::COL_USER_TIME, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
+    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
                            self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
@@ -126,8 +126,8 @@ class RunResultHtmlTable {
     $out .= $this->_headCell("Load Time");
     $out .= $this->_headCell("First Byte");
     $out .= $this->_headCell("Start Render");
-    if ($this->isColumnEnabled(self::COL_USER_TIME)) {
-      $out .= $this->_headCell("User Time");
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_headCell('<a href="https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint">First Contentful <br> Paint</a>');
     }
     if($this->isColumnEnabled(self::COL_ABOVE_THE_FOLD)) {
       $out .= $this->_headCell("Above the Fold");
@@ -221,8 +221,8 @@ class RunResultHtmlTable {
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
     $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
 
-    if ($this->isColumnEnabled(self::COL_USER_TIME)) {
-      $out .= $this->_bodyCell($idPrefix . "UserTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "userTime"), $class);
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_bodyCell($idPrefix . "firstContentfulPaint" . $idSuffix, $this->_getIntervalMetric($stepResult, "firstContentfulPaint"), $class);
     }
     if ($this->isColumnEnabled(self::COL_ABOVE_THE_FOLD)) {
       $aft = $stepResult->getMetric("aft");
