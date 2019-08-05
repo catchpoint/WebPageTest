@@ -52,7 +52,8 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
+    $this->enabledColumns[self::COL_FIRST_CONTENTFUL_PAINT] = true;
+    $checkByMetric = array(self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
                            self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
