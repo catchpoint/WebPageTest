@@ -52,8 +52,7 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $this->enabledColumns[self::COL_FIRST_CONTENTFUL_PAINT] = true;
-    $checkByMetric = array(self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
+    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
                            self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
@@ -127,7 +126,9 @@ class RunResultHtmlTable {
     $out .= $this->_headCell("Load Time");
     $out .= $this->_headCell("First Byte");
     $out .= $this->_headCell("Start Render");
-    $out .= $this->_headCell('<a href="https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint">First Contentful <br> Paint</a>');
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_headCell('<a href="https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint">First Contentful <br> Paint</a>');
+    }
     if($this->isColumnEnabled(self::COL_ABOVE_THE_FOLD)) {
       $out .= $this->_headCell("Above the Fold");
     }
@@ -219,8 +220,10 @@ class RunResultHtmlTable {
     $out .= $this->_bodyCell($idPrefix . "LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'), $class);
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
     $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
-    $out .= $this->_bodyCell($idPrefix . "firstContentfulPaint" . $idSuffix, $this->_getIntervalMetric($stepResult, "firstContentfulPaint"), $class);
-    
+
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_bodyCell($idPrefix . "firstContentfulPaint" . $idSuffix, $this->_getIntervalMetric($stepResult, "firstContentfulPaint"), $class);
+    }
     if ($this->isColumnEnabled(self::COL_ABOVE_THE_FOLD)) {
       $aft = $stepResult->getMetric("aft");
       $aft = $aft !== null ? (number_format($aft / 1000.0, 1) . 's') : "N/A";
