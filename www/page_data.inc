@@ -1049,8 +1049,8 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
   $last_interactive = 0;
   foreach ($interactiveWindows as $window) {
     if ($window[1] > $measurement_end) {
-      $measurement_end = max($window[1], $seek_start);
-      $last_interactive = max($window[0], $seek_start);
+      $measurement_end = max($window[1], $startTime);
+      $last_interactive = max($window[0], $startTime);
     }
   }
   
