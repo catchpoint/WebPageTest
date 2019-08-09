@@ -8,6 +8,7 @@ class RunResultHtmlTable {
   const COL_LABEL = "label";
   const COL_ABOVE_THE_FOLD = "aft";
   const COL_FIRST_CONTENTFUL_PAINT = "firstContentfulPaint";
+  const COL_START_RENDER = "render";
   const COL_DOM_TIME = "domTime";
   const COL_DOM_ELEMENTS = "domElements";
   const COL_TTI = "FirstInteractive";
@@ -64,6 +65,15 @@ class RunResultHtmlTable {
       $this->enabledColumns[self::COL_TTI] = $runResults->hasValidMetric('LastInteractive') ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric('LastInteractive'));
     }
+
+    // If strict_video = 1, only show if metric is present, otherwise alway show
+    if (GetSetting('strict_video')) {
+      array_push($this->leftOptionalColumns, self::COL_START_RENDER);
+      $this->enabledColumns[self::COL_START_RENDER] = $runResults->hasValidMetric(self::COL_START_RENDER) ||
+                                                      ($rvRunResults && $rvRunResults->hasValidMetric(self::COL_START_RENDER));
+    } else {
+      $this->enabledColumns[self::COL_START_RENDER] = true;
+    }
   }
 
   /**
@@ -108,7 +118,7 @@ class RunResultHtmlTable {
   }
 
   private function _createHead() {
-    $colspan = 3 + $this->_countLeftEnabledColumns();
+    $colspan = 3 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
     $out = "<tr>\n";
     $out .= $this->_headCell("", "empty", $colspan);
     $out .= $this->_headCell("Document Complete", "border", 3);
@@ -125,7 +135,9 @@ class RunResultHtmlTable {
     }
     $out .= $this->_headCell("Load Time");
     $out .= $this->_headCell("First Byte");
-    $out .= $this->_headCell("Start Render");
+    if ($this->isColumnEnabled(self::COL_START_RENDER)) {
+      $out .= $this->_headCell("Start Render");
+    }
     if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
       $out .= $this->_headCell('<a href="https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint">First Contentful <br> Paint</a>');
     }
@@ -219,8 +231,9 @@ class RunResultHtmlTable {
     }
     $out .= $this->_bodyCell($idPrefix . "LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'), $class);
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
-    $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
-
+    if ($this->isColumnEnabled(self::COL_START_RENDER)) {
+      $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
+    }
     if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
       $out .= $this->_bodyCell($idPrefix . "firstContentfulPaint" . $idSuffix, $this->_getIntervalMetric($stepResult, "firstContentfulPaint"), $class);
     }
