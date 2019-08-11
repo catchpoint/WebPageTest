@@ -1,0 +1,1 @@
+allDescriptors.push(...[]);applicationDescriptor.modules.push(...[]);
