@@ -13,9 +13,7 @@ class UserTimingHtmlTable {
   private $isMultistep;
   private $hasNavTiming;
   private $hasUserTiming;
-  private $hasFirstPaint;
   private $hasDomInteractive;
-  private $hasTTI;
 
   /**
    * UserTimingHtmlTable constructor.
@@ -26,9 +24,7 @@ class UserTimingHtmlTable {
     $this->hasNavTiming = $runResults->hasValidMetric("loadEventStart") ||
                           $runResults->hasValidMetric("domContentLoadedEventStart");
     $this->hasUserTiming = $this->_initUserTimings();
-    $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
     $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
-    $this->hasTTI = $this->runResults->hasValidMetric("FirstInteractive") || $this->runResults->hasValidMetric("LastInteractive");
     $this->isMultistep = $runResults->countSteps() > 1;
   }
 
@@ -49,8 +45,6 @@ class UserTimingHtmlTable {
     if ($this->isMultistep) {
       $out .= "<th>Step</th>";
     }
-    if ($this->hasTTI)
-      $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First CPU Idle</a></th>";
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
         if (count($this->userTimings[0]) < 5 || substr($label, 0, 5) !== 'goog_')
@@ -58,8 +52,6 @@ class UserTimingHtmlTable {
     }
     if ($this->hasNavTiming) {
       $out .= "<th$borderClass>";
-      if ($this->hasFirstPaint)
-        $out .= "RUM First Paint</th><th>";
       if ($this->hasDomInteractive)
         $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
       $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th>";
@@ -83,22 +75,12 @@ class UserTimingHtmlTable {
     if ($this->isMultistep) {
       $out .= "<td>" . FitText($stepResult->readableIdentifier(), 30) . "</td>";
     }
-    if ($this->hasTTI) {
-      $tti = '-';
-      if ($stepResult->getMetric("FirstInteractive"))
-        $tti = $this->_getTimeMetric($stepResult, "FirstInteractive");
-      elseif ($stepResult->getMetric("LastInteractive"))
-        $tti = '&GT; ' . $this->_getTimeMetric($stepResult, "LastInteractive");
-      $out .= "<td>$tti</td>";
-    }
     if ($this->hasUserTiming)
       foreach ($stepUserTiming as $label => $value)
         if (count($stepUserTiming) < 5 || substr($label, 0, 5) !== 'goog_')
           $out .= '<td>' . htmlspecialchars($value) . '</td>';
     if ($this->hasNavTiming) {
       $out .= "<td$borderClass>";
-      if ($this->hasFirstPaint)
-        $out .= $this->_getTimeMetric($stepResult, "firstPaint") . '</td><td>';
       if ($this->hasDomInteractive)
         $out .= $this->_getTimeMetric($stepResult, "domInteractive") . '</td><td>';
       $out .= $this->_getTimeRangeMetric($stepResult, 'domContentLoadedEventStart', 'domContentLoadedEventEnd');
