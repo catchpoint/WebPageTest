@@ -67,7 +67,7 @@ function loadPageRunData($testPath, $run, $cached, $testInfo = null) {
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
-  $cacheVer = 8;
+  $cacheVer = 9;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile)) {
@@ -1023,6 +1023,9 @@ function ParseUserTiming($file) {
             $elapsed_usec = $event['ts'] - $start_time;
             $elapsed_ms = intval($elapsed_usec / 1000.0);
             $entry['time'] = $elapsed_ms;
+          }
+          if (isset($event['args']['data']['durationInMilliseconds'])) {
+            $entry['time'] = $event['args']['data']['durationInMilliseconds'];
           }
           $user_timing[] = $entry;
         }
