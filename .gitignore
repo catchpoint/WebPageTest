@@ -92,3 +92,12 @@ docker/local/results/*
 
 # intellij
 *.iml
+
+www/custom
+www/results
+www/tmp
+www/images/sponsors
+www/work/jobs
+www/dat/.htaccess
+www/tmp/.htaccess
+www/work/jobs/.htaccess
