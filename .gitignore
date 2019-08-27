@@ -101,3 +101,4 @@ www/work/jobs
 www/dat/.htaccess
 www/tmp/.htaccess
 www/work/jobs/.htaccess
+www/.vscode/launch.json
