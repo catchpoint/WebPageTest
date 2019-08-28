@@ -270,9 +270,14 @@ class JsonResultGenerator {
     $ret['images']['waterfall'] = $friendlyUrlGenerator->generatedImage("waterfall");
     $ret['images']['connectionView'] = $friendlyUrlGenerator->generatedImage("connection");
     $ret['images']['checklist'] = $friendlyUrlGenerator->optimizationChecklistImage();
-    $ret['images']['screenShot'] = $urlGenerator->getFile($nameOnlyPaths->screenShotFile());
+    if ($this->fileHandler->fileExists($localPaths->screenShotFile())) {
+      $ret['images']['screenShot'] = $urlGenerator->getFile($nameOnlyPaths->screenShotFile());
+    }
     if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
       $ret['images']['screenShotPng'] = $urlGenerator->getFile($nameOnlyPaths->screenShotPngFile());
+      if (!isset($ret['images']['screenShot'])) {
+        $ret['images']['screenShot'] = $ret['images']['screenShotPng'];
+      }
     }
     if ($this->fileHandler->fileExists($localPaths->renderedVideoFile())) {
       $ret['video'] = $urlGenerator->getFile($nameOnlyPaths->renderedVideoFile());

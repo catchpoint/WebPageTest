@@ -295,6 +295,9 @@ class XmlResultGenerator {
     }
     if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
       echo "<screenShotPng>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotPngFile())) . "</screenShotPng>\n";
+      if (!$this->fileHandler->fileExists($localPaths->screenShotFile())) {
+        echo "<screenShot>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotPngFile())) . "</screenShot>\n";
+      }
     }
     echo "</images>\n";
     if ($this->fileHandler->fileExists($localPaths->renderedVideoFile())) {
