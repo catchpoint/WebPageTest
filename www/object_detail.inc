@@ -476,6 +476,7 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
           }
         }
       }
+      $zip->close();
     }
   }
 }
