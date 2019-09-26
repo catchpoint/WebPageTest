@@ -260,6 +260,9 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
 $median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
+    if(extension_loaded('newrelic')) {
+        newrelic_add_custom_parameter ('testID', $id);
+    }  
     if (@strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
