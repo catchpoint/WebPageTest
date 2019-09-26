@@ -454,6 +454,9 @@ function AddHeaders(&$requests, $headers_file_name) {
 */
 function AddResponseBodyFlags(&$requests, $bodies_file_name) {
   if (is_file($bodies_file_name)) {
+    // build a list of all of the file names in the bodies zip
+    $ids = array();
+
     $zip = new ZipArchive;
     if ($zip->open($bodies_file_name) === TRUE) {
       for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -461,13 +464,7 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
         $parts = explode('-', $name);
         if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
           $id = trim($parts[1]);
-          foreach ($requests as &$request) {
-            if (isset($request['raw_id']) && !strcmp(trim($request['raw_id']), $id)) {
-              $request['body_id'] = $id;
-            } elseif (isset($request['request_id']) && !strcmp(trim($request['request_id']), $id)) {
-              $request['body_id'] = $id;
-            }
-          }
+          $ids[$id] = $id;
         } else {
           // old-style where the files are numbered in order of request
           $index = intval($name, 10);
@@ -477,6 +474,17 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
         }
       }
       $zip->close();
+    }
+
+    // match the bodies with the requests
+    if (count($ids)) {
+      foreach ($requests as &$request) {
+        if ( isset($request['raw_id']) && isset($ids[trim($request['raw_id'])]) ) {
+          $request['body_id'] = $ids[trim($request['raw_id'])];
+        } elseif (isset($request['request_id']) && isset($ids[trim($request['request_id'])])) {
+          $request['body_id'] = $ids[trim($request['request_id'])];
+        }
+      }
     }
   }
 }

@@ -339,7 +339,7 @@ function generate_languages()
             } else {
                 $qual = explode('=', $parts[1]);
             }
-            if (count($qual) == 2) {
+            if (is_array($qual) && count($qual) == 2) {
                 $qual = (float)$qual[1];  // q-factor
             } else {
                 $qual = 1;  // ill-formed q-f
