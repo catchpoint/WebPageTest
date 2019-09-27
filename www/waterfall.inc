@@ -873,7 +873,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $mime_count = count($mime_colors);
         if ($include_js)
           $mime_count++;
-        $bar_labels = array('dns', 'connect', 'ssl');
+        $bar_labels = array('wait', 'dns', 'connect', 'ssl');
         $mime_count += count($bar_labels);
         $bar_width = $width / $mime_count;
         $x = 0;
@@ -1293,6 +1293,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
       AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
     }
   }
+  AddBarIfValid($bars, 'wait', 'created', 'ttfb_start', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'dns', 'dns_start', 'dns_end', $request, $x_scaler, $state_y1, $state_y2);
