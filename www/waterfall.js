@@ -131,6 +131,8 @@ function SelectRequest(step, request) {
             details += '<b>Request ID: </b>' + htmlEncode(r['request_id']) + '<br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
+        if (r['created'] !== undefined)
+            details += '<b>Discovered: </b>' + (r['created'] / 1000.0).toFixed(3) + ' s<br>';
         if (r['load_start'] !== undefined)
             details += '<b>Request Start: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
         if (IsValidDuration(r['dns_ms'])) {
