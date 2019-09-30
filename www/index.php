@@ -1,4 +1,5 @@
 <?php
+$REDIRECT_HTTPS = true;
 include 'common.inc';
 
 if (array_key_exists('bulk', $_GET)) {

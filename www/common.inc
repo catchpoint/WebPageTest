@@ -1,6 +1,14 @@
 <?php
 require_once('./common_lib.inc');
 require_once('./plugins.php.inc');
+require_once('./util.inc');
+
+if (isset($REDIRECT_HTTPS) && $REDIRECT_HTTPS && !isSslConnection() && GetSetting('prefer_https')) {
+    $location = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . $location);
+    exit(0);
+}
 
 // if any query parameter includes a .., exit right away - likely a hack attempt
 foreach($_REQUEST as $key => $val) {

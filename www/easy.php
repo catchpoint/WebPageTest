@@ -1,4 +1,5 @@
 <?php
+$REDIRECT_HTTPS = true;
 include 'common.inc';
 
 $headless = false;
