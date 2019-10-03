@@ -33,6 +33,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                     <input id="showChunks" type="checkbox" checked> Show download chunks
+                    <input id="showJS" type="checkbox" checked> Show JS Execution chunks
+                    <input id="showWait" type="checkbox" checked> Show Wait Time
                 </form>
             </div>
             <br>
@@ -40,7 +42,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1\">";
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">";
             ?>
 
             <?php include('footer.inc'); ?>
@@ -104,6 +106,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 var showChunks = 0;
                 if( $('#showChunks').attr('checked') )
                     showChunks = 1;
+                var showJS = 0;
+                if( $('#showJS').attr('checked') )
+                    showJS = 1;
+                var showWait = 0;
+                if( $('#showWait').attr('checked') )
+                    showWait = 1;
                 <?php
                 echo "var testId='$id';\n";
                 echo "var testRun='$run';\n";
@@ -126,6 +134,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
                           '&dots=' + showDots +
                           '&labels=' + showLabels +
                           '&chunks=' + showChunks +
+                          '&js=' + showJS +
+                          '&wait=' + showWait +
                           '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };

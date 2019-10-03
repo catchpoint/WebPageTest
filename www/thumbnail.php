@@ -121,6 +121,7 @@ function tbnDrawWaterfall($testStepResult, &$img)
         'show_user_timing' => GetSetting('waterfall_show_user_timing'),
         'is_thumbnail' => true,
         'include_js' => true,
+        'include_wait' => true,
         'show_chunks' => true,
         'is_mime' => (bool)GetSetting('mime_waterfalls', 1),
         'width' => $newWidth

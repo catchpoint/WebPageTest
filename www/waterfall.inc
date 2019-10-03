@@ -164,6 +164,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
     $include_js = (bool)@$options['include_js'];
+    $include_wait = (bool)@$options['include_wait'];
     $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
 
     $top = 0;
@@ -840,7 +841,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                       $is_thumbnail, $is_mime, $is_state, $request['url']);
                   $bars = GetBars($request, $x_scaler, $y1, $y2,
                                   $is_thumbnail, $is_mime, $is_state, $include_js,
-                                  $max_bw, $pass, $show_chunks);
+                                  $max_bw, $pass, $show_chunks, $include_wait);
                   foreach ($bars as $bar) {
                       list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
                       DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
@@ -873,7 +874,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $mime_count = count($mime_colors);
         if ($include_js)
           $mime_count++;
-        $bar_labels = array('wait', 'dns', 'connect', 'ssl');
+        $bar_labels = array('dns', 'connect', 'ssl');
+        if ($include_wait) {
+          array_unshift($bar_labels, 'wait');
+        }
         $mime_count += count($bar_labels);
         $bar_width = $width / $mime_count;
         $x = 0;
@@ -1226,7 +1230,7 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 */
 function GetBars($request, $x_scaler, $y1, $y2,
                  $is_thumbnail, $is_mime, $is_state, $include_js,
-                 $max_bw, $pass, $show_chunks) {
+                 $max_bw, $pass, $show_chunks, $include_wait) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1293,7 +1297,9 @@ function GetBars($request, $x_scaler, $y1, $y2,
       AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
     }
   }
-  AddBarIfValid($bars, 'wait', 'created', 'ttfb_start', $request, $x_scaler, $state_y1, $state_y2);
+  if ($include_wait) {
+    AddBarIfValid($bars, 'wait', 'created', 'ttfb_start', $request, $x_scaler, $state_y1, $state_y2);
+  }
   AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'dns', 'dns_start', 'dns_end', $request, $x_scaler, $state_y1, $state_y2);
