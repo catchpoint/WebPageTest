@@ -373,7 +373,9 @@ $page_description = "Website performance test details$testLabel";
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
-              accordionHandler.toggleAccordion(slide_opener, true, expand);
+                <?php if ($isMultistep) { ?>
+                accordionHandler.toggleAccordion(slide_opener, true, expand);
+                <?php } ?>
             } else {
                 expand();
             }
@@ -384,7 +386,9 @@ $page_description = "Website performance test details$testLabel";
             if (!hash) {
                 var defaultAccordion = $("#waterfall_view_step1");
                 if (defaultAccordion.length) {
-                  accordionHandler.toggleAccordion(defaultAccordion);
+                    <?php if ($isMultistep) { ?>
+                    accordionHandler.toggleAccordion(defaultAccordion);
+                    <?php } ?>
                 }
                 return;
             }
@@ -392,7 +396,9 @@ $page_description = "Website performance test details$testLabel";
                 hash.startsWith("#connection_view_step") ||
                 hash.startsWith("#request_details_step") ||
                 hash.startsWith("#request_headers_step")) {
+              <?php if ($isMultistep) { ?>
               accordionHandler.handleHash();
+              <?php } ?>
             }
             handleRequestHash();
         }

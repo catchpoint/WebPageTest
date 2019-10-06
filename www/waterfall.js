@@ -82,6 +82,7 @@ function SelectRequest(step, request) {
     var details='';
     var requestHeaders='';
     var responseHeaders='';
+    let json = '';
     $("#response-body-" + stepLabel).html('');
     try {
         if (wptBodyRequest !== undefined)
@@ -90,6 +91,7 @@ function SelectRequest(step, request) {
     }
     if (wptRequestData[stepLabel][request - 1] !== undefined) {
         var r = wptRequestData[stepLabel][request - 1];
+        json = JSON.stringify(r, null, 4);
         if (r['full_url'] !== undefined) {
             if (wptNoLinks) {
                 details += '<b>URL:</b> ' + htmlEncode(r['full_url']) + '<br>';
@@ -229,6 +231,7 @@ function SelectRequest(step, request) {
     $("#request-details-" + stepLabel).html(details);
     $("#request-headers-" + stepLabel).html(requestHeaders);
     $("#response-headers-" + stepLabel).html(responseHeaders);
+    $("#request-raw-details-json-" + stepLabel).text(json);
     $('#request-dialog-' + stepLabel).jqmShow();
 
     // highlight the selected request

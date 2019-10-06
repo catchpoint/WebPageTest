@@ -1413,7 +1413,8 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <span id="request-details-button$stepSuffix"><input type="radio" id="radio1$stepSuffix" value="request-details$stepSuffix" name="radio" checked="checked" /><label for="radio1$stepSuffix">Details</label></span>
                 <span id="request-headers-button$stepSuffix"><input type="radio" id="radio2$stepSuffix" value="request-headers$stepSuffix" name="radio" /><label for="radio2$stepSuffix">Request</label></span>
                 <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
-                <span id="response-body-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Object</label></span>
+                <span id="request-raw-details-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="request-raw-details$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Raw Details</label></span>
+                <span id="response-body-button$stepSuffix"><input type="radio" id="radio5$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio5$stepSuffix">Object</label></span>
             </div>
         </div>
         <div class="jqmdBC">
@@ -1421,6 +1422,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
                 <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
                 <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
+                <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre id="request-raw-details-json$stepSuffix"></pre></div>
                 <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
             </div>
         </div>
