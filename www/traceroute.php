@@ -177,6 +177,10 @@ $page_description = "Test network path from multiple locations around the world 
             echo "var maxRuns = {$settings['maxruns']};\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
+            $maps_api_key = GetSetting('maps_api_key');
+            if ($maps_api_key) {
+                echo "var mapsApiKey = '$maps_api_key';";
+            }
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
