@@ -482,7 +482,11 @@ function SelectLocation()
 
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src = "https://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
+    var src = "https://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
+    if (window.mapsApiKey !== undefined) {
+        src += "&key=" + window.mapsApiKey;
+    }
+    script.src = src;
     document.body.appendChild(script);
 
     return false;
