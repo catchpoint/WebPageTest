@@ -18,6 +18,14 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
     } else {
       $file = "lighthouse.html.gz";
       $filePath = "$testPath/$file";
+      if (!is_file($filePath)) {
+        $file = "lighthouse.report.html.gz";
+        $filePath = "$testPath/$file";
+      }
+      if (!is_file($filePath)) {
+        $file = "lighthouse.report.html";
+        $filePath = "$testPath/$file";
+      }
       if (is_file($filePath)) {
         $ok = true;
 
