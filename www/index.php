@@ -100,6 +100,7 @@ $loc = ParseLocations($locations);
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             <input type="hidden" name="lighthouseTrace" value="1">
+            <input type="hidden" name="lighthouseScreenshots" value="0">
 
             <?php
             echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
