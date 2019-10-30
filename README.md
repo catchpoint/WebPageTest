@@ -65,7 +65,11 @@ An experiment in creating a stand-alone agent built entirely as a Chrome extensi
 ## Mobitest Mobile Agents
 The Mobitest agents are managed by Akamai and are hosted on [Google code](https://code.google.com/p/mobitest-agent/).
 
-# API Examples
+# Documentation
+
+[WebPageTest Documentation](https://sites.google.com/a/webpagetest.org/docs/)
+
+## API Examples
 There are two examples using the [Restful API](https://sites.google.com/a/webpagetest.org/docs/advanced-features/webpagetest-restful-apis):
 
 * /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
