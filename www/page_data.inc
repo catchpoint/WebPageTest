@@ -978,7 +978,10 @@ function ParseUserTiming($file) {
           isset($event['args']['frame']) &&
           !in_array($event['args']['frame'], $main_frames)) {
         $is_main_frame = false;
-        if (isset($event['args']['data']['isLoadingMainFrame']) && $event['args']['data']['isLoadingMainFrame']) {
+        if (isset($event['args']['data']['isLoadingMainFrame']) &&
+            $event['args']['data']['isLoadingMainFrame'] &&
+            isset($event['args']['data']['documentLoaderURL']) &&
+            strlen($event['args']['data']['documentLoaderURL'])) {
           $is_main_frame = true;
         } elseif (isset($event['args']['data']['isMainFrame']) && $event['args']['data']['isMainFrame']) {
           $is_main_frame = true;
