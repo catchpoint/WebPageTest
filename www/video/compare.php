@@ -793,6 +793,11 @@ function DisplayGraphs() {
             $timeMetrics['chromeUserTiming.firstMeaningfulPaint'] = "First Meaningful Paint";
         }
         if ($hasStepResult &&
+            !isset($timeMetrics['chromeUserTiming.LargestContentfulPaint']) &&
+            $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint') > 0) {
+            $timeMetrics['chromeUserTiming.LargestContentfulPaint'] = "Largest Contentful Paint";
+        }
+        if ($hasStepResult &&
             !isset($timeMetrics['TimeToInteractive']) &&
             $test['stepResult']->getMetric('TimeToInteractive') > 0) {
             $timeMetrics['TimeToInteractive'] = "Time To Interactive";
