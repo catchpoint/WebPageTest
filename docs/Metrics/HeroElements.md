@@ -8,7 +8,7 @@ Hero elements enable you to measure when critical elements are displayed on scre
 
 You can also specify your own hero elements. This can be done by:
 
-- Adding the `elementtiming` attribute to any element. This approach is based on the [Hero Text Element Timing proposal](https://docs.google.com/document/d/1sBM5lzDPws2mg1wRKiwM0TGFv9WqI6gEdF7vYhBYqUg/edit?usp=sharing).
+- Adding the `elementtiming` attribute to any element. This approach is based on the [Hero Text Element Timing proposal](https://github.com/WICG/element-timing).
 - Specifying element names and selectors in the WebPageTest UI. These can be specified in the **Custom Hero Element Selectors** text box within the **Custom** tab. The format is a JSON string of `{ "heroElementName": "elementSelector" }`, for example: `{ "intro": "p.introduction", "buyButton": ".item .buy" }`.
 
 WebPageTest will also calculate two more hero metrics, based on the values of the other hero elements:
