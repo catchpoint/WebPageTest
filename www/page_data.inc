@@ -67,7 +67,7 @@ function loadPageRunData($testPath, $run, $cached, $testInfo = null) {
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
-  $cacheVer = 9;
+  $cacheVer = 10;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile)) {
