@@ -268,10 +268,10 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         $TTI = null;
         $last_interactive = 0;
         $measurement_end = 0;
-        if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
-        elseif (isset($ret['render']) && $ret['render'] > 0)
+        if (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
+        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         if ($seek_start > 0) {
           $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive, $last_interactive, $total_blocking_time);
         }
