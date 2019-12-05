@@ -251,7 +251,12 @@ $common_label = implode(" ", $common_labels);
             <script type="text/javascript" src="//www.google.com/jsapi"></script>
             <script type="text/javascript">
                 <?php
-                    echo "var chartData = " . json_encode($chartData) . ";\n";
+                    $chartDataJson = json_encode($chartData);
+                    // If JSON encode fails due to inf and nan, replace those occurences with '0' in the serialized output then retry.
+                    if (json_last_error() == JSON_ERROR_INF_OR_NAN) {
+                      $chartDataJson = json_encode(unserialize(str_replace(array('NAN;', 'INF;'), '0;', serialize($chartData))));
+                    }
+                    echo "var chartData = " . $chartDataJson . ";\n";
                     echo "var runs = $num_runs;\n";
                 ?>
             <?php include('graph_page_data.js'); ?>
