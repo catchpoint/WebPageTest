@@ -346,7 +346,13 @@ function GetJob() {
         
         if ($is_json) {
           $testJson = TestToJSON($testInfo);
-          echo json_encode($testJson);
+          if(!isset($testJson['run']) && 
+	        GetSetting("shard_tests") && 
+			$testJson['type'] != 'traceroute'){
+            logTestMsg($testId,"Tried to start sharded test with no runs set");
+          } else {
+            echo json_encode($testJson);
+          }
         } else {
           echo $testInfo;
         }
