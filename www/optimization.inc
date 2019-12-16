@@ -57,19 +57,19 @@ function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
     $out = "";
     if( isset($score) )
     {
-        $out .= "<a  name=\"first_byte_time\"><h3 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
+        $out .= "<a  name=\"first_byte_time\"></a><h3 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100 <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/Server\" aria-label=\"Learn more about improving server response times\" target=\"blank\" rel=\"noopener\">Learn More</a></h3><p class=\"indented1\">\n";
         $out .= "<b>$ttfb ms</b> First Byte Time<br>\n";
         $out .= "<b>$target ms</b> Target First Byte Time<br>\n";
     }
     else
-        $out .= "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): N/A</h3></a><p class=\"indented1\">\n";
+        $out .= "<a name=\"first_byte_time\"></a><h3>First Byte Time (back-end processing): N/A</h3><p class=\"indented1\">\n";
     $out .= "</p><br>\n";
     return $out;
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportKeepAlive(&$pageData, &$requests, $step)
@@ -80,7 +80,7 @@ function ReportKeepAlive(&$pageData, &$requests, $step)
     if( isset($pageData['score_keep-alive']) && $pageData['score_keep-alive'] >= 0 )
     {
         $score = "{$pageData['score_keep-alive']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_keep-alive']) && $request['score_keep-alive'] >= 0 && $request['score_keep-alive'] < 100 )
@@ -93,11 +93,11 @@ function ReportKeepAlive(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         ksort($report);
     }
-        
-    $out .= "<a  name=\"keep_alive_enabled\"><h3 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
+
+    $out .= "<a name=\"keep_alive_enabled\"></a><h3 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h3><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -105,8 +105,8 @@ function ReportKeepAlive(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportTransferCompression(&$pageData, &$requests, $step)
@@ -122,7 +122,7 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
 
         $summary = "$original KB total in compressible text, target size = $target KB - potential savings = <b>$save KB</b>";
         $score = "{$pageData['score_gzip']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_gzip']) && $request['score_gzip'] >= 0 && $request['score_gzip'] < 100 )
@@ -131,7 +131,7 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
                 $original = number_format($request['gzip_total'] / 1024.0, 1);
                 $save = number_format($request['gzip_save'] / 1024.0, 1);
                 $target = number_format(($request['gzip_total'] - $request['gzip_save']) / 1024.0, 1);
-                
+
                 if( $request['score_gzip'] < 50 )
                     $value = 'FAILED - ';
                 else
@@ -145,11 +145,11 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         krsort($report, SORT_NUMERIC);
     }
-        
-    $out .= "<a  name=\"compress_text\"><h3 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
+
+    $out .= "<a name=\"compress_text\"></a><h3 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score<a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/EnableCompression\" aria-label=\"Learn more about enabling compression\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -160,8 +160,8 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportImageCompression(&$pageData, &$requests, $step)
@@ -177,7 +177,7 @@ function ReportImageCompression(&$pageData, &$requests, $step)
 
         $summary = "$original KB total in images, target size = $target KB - potential savings = <b>$save KB</b>";
         $score = "{$pageData['score_compress']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_compress']) && $request['score_compress'] >= 0 && $request['score_compress'] < 100 )
@@ -186,7 +186,7 @@ function ReportImageCompression(&$pageData, &$requests, $step)
                 $original = number_format($request['image_total'] / 1024.0, 1);
                 $save = number_format($request['image_save'] / 1024.0, 1);
                 $target = number_format(($request['image_total'] - $request['image_save']) / 1024.0, 1);
-                
+
                 if( $request['score_compress'] < 50 )
                     $value = 'FAILED - ';
                 else
@@ -200,11 +200,11 @@ function ReportImageCompression(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         krsort($report, SORT_NUMERIC);
     }
-        
-    $out .= "<a  name=\"compress_images\"><h3 id='image_compression_step$step'>Compress Images: $score</h3></a>\n";
+
+    $out .= "<a name=\"compress_images\"></a><h3 id='image_compression_step$step'>Compress Images: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/OptimizeImages\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -224,7 +224,7 @@ function ReportProgressiveJpeg(&$pageData, &$requests, $step)
         $score = "{$pageData['score_progressive_jpeg']}/100";
         $candidateBytes = 0;
         $progressiveBytes = 0;
-        
+
         foreach( $requests as $index => &$request )
         {
             if (array_key_exists('score_progressive_jpeg', $request) && $request['score_progressive_jpeg'] >= 0) {
@@ -253,11 +253,11 @@ function ReportProgressiveJpeg(&$pageData, &$requests, $step)
           $progressiveBytes = number_format($progressiveBytes / 1024.0, 1);
           $summary = "$progressiveBytes KB of a possible $candidateBytes KB ($pct%) were from progressive JPEG images";
         }
-        
+
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"progressive_jpeg\"><h3 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score</h3></a>\n";
+    $out .= "<a name=\"progressive_jpeg\"></a><h3 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/OptimizeImages\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -268,8 +268,8 @@ function ReportProgressiveJpeg(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportCache(&$pageData, &$requests, $step)
@@ -280,18 +280,18 @@ function ReportCache(&$pageData, &$requests, $step)
     if( isset($pageData['score_cache']) && $pageData['score_cache'] >= 0 )
     {
         $score = "{$pageData['score_cache']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_cache']) && $request['score_cache'] >= 0 && $request['score_cache'] < 100 )
             {
                 $key = $request['cache_time'] . ' ' . $request['host'] . ' ' . $index;
-                
+
                 if( $request['score_cache'] < 50 )
                     $value = 'FAILED - ';
                 else
                     $value = 'WARNING - ';
-                    
+
                 $time = 'No max-age or expires';
                 if( $request['cache_time'] > 0 )
                 {
@@ -313,11 +313,11 @@ function ReportCache(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         ksort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"cache_static_content\"><h3 id='caching_step$step'>Leverage browser caching of static assets: $score</h3></a>\n";
+    $out .= "<a name=\"cache_static_content\"></a><h3 id='caching_step$step'>Leverage browser caching of static assets: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/LeverageBrowserCaching\" aria-label=\"Learn more about leveraging browser caching\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
@@ -326,8 +326,8 @@ function ReportCache(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportCombine(&$pageData, &$requests, $step)
@@ -338,7 +338,7 @@ function ReportCombine(&$pageData, &$requests, $step)
     if( isset($pageData['score_combine']) && $pageData['score_combine'] >= 0 )
     {
         $score = "{$pageData['score_combine']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_combine']) && $request['score_combine'] >= 0 && $request['score_combine'] < 100 )
@@ -351,11 +351,11 @@ function ReportCombine(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         ksort($report);
     }
 
-    $out .= "<a  name=\"combine_js_css_files\"><h3 id='combine_step$step'>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a name=\"combine_js_css_files\"></a><h3 id='combine_step$step'>Combine static CSS and JS files: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h3><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -363,8 +363,8 @@ function ReportCombine(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportCDN(&$pageData, &$requests, $step)
@@ -376,7 +376,7 @@ function ReportCDN(&$pageData, &$requests, $step)
     if( isset($pageData['score_cdn']) && $pageData['score_cdn'] >= 0 )
     {
         $score = "{$pageData['score_cdn']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_cdn']) && $request['score_cdn'] >= 0 && $request['score_cdn'] < 100 )
@@ -393,11 +393,11 @@ function ReportCDN(&$pageData, &$requests, $step)
                 $cdns[$request['host']] = $request['cdn_provider'];
             }
         }
-        
+
         ksort($report);
     }
 
-    $out .= "<a  name=\"use_of_cdn\"><h3 id='cdn_step$step'>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a name=\"use_of_cdn\"></a><h3 id='cdn_step$step'>Use a CDN for all static assets: $score</h3><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     if( count($cdns) )
@@ -411,8 +411,8 @@ function ReportCDN(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportMinify(&$pageData, &$requests, $step)
@@ -428,7 +428,7 @@ function ReportMinify(&$pageData, &$requests, $step)
 
         $summary = "$original KB total in minifiable text, target size = $target KB - potential savings = <b>$save KB</b>";
         $score = "{$pageData['score_minify']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_minify']) && $request['score_minify'] >= 0 && $request['score_minify'] < 100 )
@@ -437,7 +437,7 @@ function ReportMinify(&$pageData, &$requests, $step)
                 $original = number_format($request['minify_total'] / 1024.0, 1);
                 $save = number_format($request['minify_save'] / 1024.0, 1);
                 $target = number_format(($request['minify_total'] - $request['minify_save']) / 1024.0, 1);
-                
+
                 if( $request['score_minify'] < 50 )
                     $value = 'FAILED - ';
                 else
@@ -451,11 +451,11 @@ function ReportMinify(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"minify_js\"><h3 id='minify_step$step'>Minify JS: $score</h3></a>\n";
+    $out .= "<a name=\"minify_js\"></a><h3 id='minify_step$step'>Minify JS: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -466,8 +466,8 @@ function ReportMinify(&$pageData, &$requests, $step)
 }
 
 /**
-* 
-* 
+*
+*
 * @param mixed $requests
 */
 function ReportCookies(&$pageData, &$requests, $step)
@@ -478,7 +478,7 @@ function ReportCookies(&$pageData, &$requests, $step)
     if( isset($pageData['score_cookies']) && $pageData['score_cookies'] >= 0 )
     {
         $score = "{$pageData['score_cookies']}/100";
-        
+
         foreach( $requests as $index => &$request )
         {
             if( isset($request['score_cookies']) && $request['score_cookies'] >= 0 && $request['score_cookies'] < 100 )
@@ -491,11 +491,11 @@ function ReportCookies(&$pageData, &$requests, $step)
                 $report[$key] = $value;
             }
         }
-        
+
         ksort($report);
     }
 
-    $out .= "<a  name=\"cookies\"><h3 id='cookies_step$step'>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a name=\"cookies\"></a><h3 id='cookies_step$step'>Proper cookie usage: $score</h3><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -504,7 +504,7 @@ function ReportCookies(&$pageData, &$requests, $step)
 
 /**
 * Display a glossary for the optimization results
-* 
+*
 * @param mixed $settings
 */
 function dumpOptimizationGlossary(&$settings)
@@ -541,7 +541,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >Transfer-encoding is checked to see if it is gzip.  If it is not then the file is compressed and the percentage of compression 
+            <td >Transfer-encoding is checked to see if it is gzip.  If it is not then the file is compressed and the percentage of compression
             is the result (so a page that can save 30% of the size of it's text by compressing would yield a 70% test result)</td>
         </tr>
 
@@ -553,7 +553,7 @@ function dumpOptimizationGlossary(&$settings)
         <tr>
             <td class="nowrap">What is checked</td>
             <td >Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
-            The overall score is the percentage of image bytes that can be saved by re-compressing the images.                        
+            The overall score is the percentage of image bytes that can be saved by re-compressing the images.
             </td>
         </tr>
 
@@ -576,8 +576,8 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >             
-                An "Expires" header is present (and is not 0 or -1) or a "cache-control: max-age" directive is present and set for an hour or greater. If the expiration is set for less 7 days you will get a warning. If the expiration is set for less than 1 hour you will get a failure. This only applies to max-age currently. 
+            <td >
+                An "Expires" header is present (and is not 0 or -1) or a "cache-control: max-age" directive is present and set for an hour or greater. If the expiration is set for less 7 days you will get a warning. If the expiration is set for less than 1 hour you will get a failure. This only applies to max-age currently.
             </td>
         </tr>
 

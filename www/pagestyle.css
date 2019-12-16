@@ -139,8 +139,8 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #test_subbox-container .ui-tabs-nav li a {display: block;height: inherit;color: #444;padding: 0 10px;text-decoration: none;font-weight: bold;}
 .test_subbox.ui-tabs-hide {display: none;}
 
-.tooltip { display:none;  background-color:LightGoldenRodYellow; border: 1px solid black; padding:0.5em;  width:40em;  z-index: 3000; } 
-.tooltip .label { color:yellow; width:35px; } 
+.tooltip { display:none;  background-color:LightGoldenRodYellow; border: 1px solid black; padding:0.5em;  width:40em;  z-index: 3000; }
+.tooltip .label { color:yellow; width:35px; }
 .tooltip a { color:#ad4; font-size:11px; font-weight:bold; }
 
 .test_subbox {overflow: hidden;padding: 20px;background-color: #eee;}
@@ -169,7 +169,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(/images/start_test-bkg.png);border: none;}
 #sponsor {display: none; background-color: #fff; }
 
-/* Test Reults Pages */
+/* Test Results Pages */
 .grades {float: right;line-height: 1.2em;font-size: 11px;}
 .grades li {float: left;width: 59px;margin-left: 10px;}
 .grades h2 {width: 100%; text-align:center; height: 30px; margin:0; padding-top: 11px; font-size: 35px; margin-bottom: 5px;}
@@ -206,6 +206,8 @@ table.result {width: 920px;}
 .batchResults .good {color: green; font-weight: bold;}
 .batchResults .bad {color: red;  font-weight: bold;}
 .batchResults th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
+.link-external {vertical-align:middle; font-weight:normal; font-size: 12px;}
+.link-external::after {position:relative; top:-4px; display:inline-block; content:""; width:12px; height:12px; background:url(/images/external_header.svg) center center no-repeat; background-size:12px;}
 
 /*Status page*/
 #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
@@ -244,7 +246,7 @@ table.pretty td.even { background: whitesmoke; }
 
 /* details page */
 #headers {text-align: left; width:930px; overflow:auto;}
-#headers h1, #headers h2 {text-transform:none;} 
+#headers h1, #headers h2 {text-transform:none;}
 
 /* feeds */
 #feeds {background-color: #302f2f; color: #fff; width: 980px; border-collapse: collapse; table-layout: fixed; }
