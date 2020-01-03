@@ -1,6 +1,5 @@
 <?php
 include 'common.inc';
-global $settings;
 define('BARE_UI', true);
 $prefix = GetSetting('api_key_prefix');
 if (!$prefix)
