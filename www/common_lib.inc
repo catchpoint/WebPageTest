@@ -3070,3 +3070,41 @@ function validateUploadFileName($fileName) {
   // TODO: shouldn't this be a whitelist?
   return !in_array($ext, array('php', 'pl', 'py', 'cgi', 'asp', 'js', 'rb', 'htaccess', 'jar'));
 }
+
+function SendCallback($testInfo) {
+  if (isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback'])) {
+    $send_callback = true;
+    $testId = $testInfo['id'];
+    if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
+      require_once('testStatus.inc');
+      $testId = $testInfo['batch_id'];
+      $status = GetTestStatus($testId);
+      $send_callback = false;
+      if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
+        $send_callback = true;
+    }
+    if ($send_callback) {
+      $url = $testInfo['callback'];
+      if( strncasecmp($url, 'http', 4) )
+        $url = "http://" . $url;
+      if( strpos($url, '?') == false )
+        $url .= '?';
+      else
+        $url .= '&';
+      $url .= "id=$testId";
+      if (function_exists('curl_init')) {
+        $c = curl_init();
+        curl_setopt($c, CURLOPT_URL, $url);
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($c, CURLOPT_TIMEOUT, 10);
+        curl_exec($c);
+        curl_close($c);
+      } else {
+        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10)));
+        file_get_contents($url, false, $context);
+      }
+    }
+  }
+}

@@ -143,6 +143,8 @@ $page_description = "Website performance test result$testLabel.";
                     $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                     $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
+                    echo "<a href='/jsonResult.php?test=$id&pretty=1'>View JSON result</a><br>";
+
                     // create friendlier (unique) names for the file URLs
                     $fileUrl = GetFileUrl($url);
                     if( FRIENDLY_URLS )

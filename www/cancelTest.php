@@ -71,6 +71,8 @@ function CancelTest($id)
         if (1 === count($found_files))
           $cancelled = @unlink($found_files[0]);
       }
+      $testInfo['id'] = $id;
+      SendCallback($testInfo);
     }
     UnlockTest($lock);
   }
