@@ -386,27 +386,7 @@ function CreateApiKey($request) {
 }
 
 function SendMessage($to, $subject, $body) {
-  global $settings;
-
-  // send the email through an SMTP server?
-  if (isset($settings['mail_host'])) {
-    require_once "Mail.php";
-    $mailInit = array ();
-    if (array_key_exists('mail_host', $settings))
-      $mailInit['host'] = $settings['mail_host'];
-    if (array_key_exists('port', $settings))
-      $mailInit['port'] = $settings['mail_port'];
-    if (array_key_exists('useAuth', $settings) && $settings['mail_useAuth']) {
-      $mailInit['auth'] = true;
-      $mailInit['username'] = $settings['mail_username'];
-      $mailInit['password'] = $settings['mail_password'];
-    }
-    $smtp = Mail::factory('smtp', $mailInit);
-    $headers = array ('From' => $settings['mail_from'], 'To' => $to, 'Subject' => $subject);
-    $mail = $smtp->send($to, $headers, $body);
-  } else {
-    mail($to, $subject, $body);
-  }
+  mail($to, $subject, $body);
 }
 
 ?>
