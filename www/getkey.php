@@ -1,5 +1,6 @@
 <?php
 include 'common.inc';
+global $settings;
 define('BARE_UI', true);
 $prefix = GetSetting('api_key_prefix');
 if (!$prefix)
@@ -389,21 +390,20 @@ function SendMessage($to, $subject, $body) {
   global $settings;
 
   // send the email through an SMTP server?
-  if (array_key_exists('mailserver', $settings)) {
+  if (array_key_exists('mail_host', $settings)) {
     require_once "Mail.php";
-    $mailServerSettings = $settings['mailserver'];
     $mailInit = array ();
-    if (array_key_exists('host', $mailServerSettings))
-      $mailInit['host'] = $mailServerSettings['host'];
-    if (array_key_exists('port', $mailServerSettings))
-      $mailInit['port'] = $mailServerSettings['port'];
-    if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth']) {
+    if (array_key_exists('mail_host', $settings))
+      $mailInit['host'] = $settings['mail_host'];
+    if (array_key_exists('port', $settings))
+      $mailInit['port'] = $settings['mail_port'];
+    if (array_key_exists('useAuth', $settings) && $settings['mail_useAuth']) {
       $mailInit['auth'] = true;
-      $mailInit['username'] = $mailServerSettings[ 'username'];
-      $mailInit['password'] = $mailServerSettings['password'];
+      $mailInit['username'] = $settings['mail_username'];
+      $mailInit['password'] = $settings['mail_password'];
     }
     $smtp = Mail::factory('smtp', $mailInit);
-    $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
+    $headers = array ('From' => $settings['mail_from'], 'To' => $to, 'Subject' => $subject);
     $mail = $smtp->send($to, $headers, $body);
   } else {
     mail($to, $subject, $body);
