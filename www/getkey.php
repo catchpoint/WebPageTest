@@ -389,7 +389,7 @@ function SendMessage($to, $subject, $body) {
   global $settings;
 
   // send the email through an SMTP server?
-  if (array_key_exists('mail_host', $settings)) {
+  if (isset($settings['mail_host'])) {
     require_once "Mail.php";
     $mailInit = array ();
     if (array_key_exists('mail_host', $settings))
