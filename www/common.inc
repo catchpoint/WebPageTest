@@ -259,9 +259,9 @@ if (isset($_REQUEST['color'])) {
 
 // Load the test-specific data
 $id = '';
-if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
+if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_REQUEST['test'];
-} elseif (preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
+} elseif (isset($_COOKIE['tid']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
     $id = $_COOKIE['tid'];
 }
 

@@ -12,19 +12,19 @@ $page_description = "History of website performance speed tests run on WebPageTe
 
 $supportsGrep = false;
 $out = exec('grep --version', $output, $result_code);
-if ($ret == 0 && isset($output) && is_array($output) && count($output))
+if ($result_code == 0 && isset($output) && is_array($output) && count($output))
   $supportsGrep = true;
 
 
 $days      = (int)$_GET["days"];
-$from      = $_GET["from"] ?: 'now';
+$from      = (isset($_GET["from"]) && strlen($_GET["from"])) ? $_GET["from"] : 'now';
 $filter    = $_GET["filter"];
-$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \.\(\))\-\+]/', '', strtolower($filter)) : null;
+$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
 $onlyVideo = !empty($_REQUEST['video']);
 $all       = !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
-$csv       = !strcasecmp($_GET["f"], 'csv');
+$csv       = isset($_GET["f"]) && !strcasecmp($_GET["f"], 'csv');
 
 if ($all && $days > 7 && !strlen(trim($filterstr))) {
   header('HTTP/1.0 403 Forbidden');
@@ -47,8 +47,8 @@ if(extension_loaded('newrelic')) {
 $includeip      = false;
 $includePrivate = false;
 if ($admin) {
-    $includeip = (int)$_GET["ip"] == 1;
-    $includePrivate = (int)$_GET["private"] == 1;
+    $includeip = isset($_GET["ip"]) && (int)$_GET["ip"] == 1;
+    $includePrivate = isset($_GET["private"]) && (int)$_GET["private"] == 1;
 }
 
 function check_it($val) {
@@ -161,9 +161,9 @@ else
                               $command = "grep -a -i -F";
                               foreach($patterns as $pattern) {
                                 $pattern = str_replace('"', '\\"', $pattern);
-                                $command .= " -e \"$pattern\"";
+                                $command .= " -e '$pattern'";
                               }
-                              $command .= " \"$fileName\"";
+                              $command .= " '$fileName'";
                               exec($command, $lines, $result_code);
                               if ($result_code === 0 && is_array($lines) && count($lines))
                                 $ok = true;
@@ -207,9 +207,9 @@ else
                                       $testUID    = @$line_data['testUID'];
                                       $testUser   = @$line_data['testUser'];
                                       $video      = @$line_data['video'];
-                                      $label      = htmlentities(@$line_data['label']);
-                                      $o          = @$line_data['o'];
-                                      $key        = @$line_data['key'];
+                                      $label      = isset($line_data['label']) ? htmlentities($line_data['label']) : '';
+                                      $o          = isset($line_data['o']) ? $line_data['o'] : NULL;
+                                      $key        = isset($line_data['key']) ? $line_data['key'] : NULL;
                                       $count      = @$line_data['count'];
 
                                       if (!$location) {
