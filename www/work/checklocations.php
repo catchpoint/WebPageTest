@@ -109,8 +109,8 @@ function SendMessage($to, $subject, &$body) {
         $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
         $mail = $smtp->send($to, $headers, $body);
     } else {
-      $from = GetSetting['notifyFrom'];
-      if ($from) {
+      $from = GetSetting('notifyFrom');
+      if ($from && is_string($from) && strlen($from)) {
         mail($to, $subject, $body, "From: $from\r\nReply-To: $from");
       } else {
         mail($to, $subject, $body);
