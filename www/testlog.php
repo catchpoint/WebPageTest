@@ -1,6 +1,10 @@
 <?php
 include 'common.inc';
-set_time_limit(0);
+if ($admin || $privateInstall) {
+    set_time_limit(0);
+} else {
+    set_time_limit(60);
+}
 
 if ($userIsBot || GetSetting('disableTestlog')) {
   header('HTTP/1.0 403 Forbidden');
