@@ -588,7 +588,7 @@ $loc = ParseLocations($locations);
                                         Trace Categories<br>
                                         <small>(when tracing is enabled)</small>
                                         </label>
-                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats">
+                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats" autocomplete="off">
                                     </li>
                                     <li>
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
@@ -632,14 +632,14 @@ $loc = ParseLocations($locations);
                                         <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
-                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
+                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;" autocomplete="off">
                                     </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>
                                         <small>Custom options</small>
                                         </label>
-                                        <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;">
+                                        <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;" autocomplete="off">
                                     </li>
                                 </ul>
                             </div>
@@ -659,11 +659,11 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="username" style="width: auto;">Username</label>
-                                        <input type="text" name="login" id="username" class="text" style="width: 200px;">
+                                        <input type="text" name="login" id="username" class="text" style="width: 200px;" autocomplete="off">
                                     </li>
                                     <li>
                                         <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" autocomplete="off" class="text" style="width: 200px;">
+                                        <input type="text" name="password" id="password" autocomplete="off" class="text" style="width: 200px;" autocomplete="off">
                                     </li>
                                 </ul>
                             </div>
