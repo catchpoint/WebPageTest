@@ -268,22 +268,26 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         $TTI = null;
         $last_interactive = 0;
         $measurement_end = 0;
+        $max_fid = null;
         if (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
         elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+        $DCL = null;
+        if (isset($ret['domContentLoadedEventEnd'])) {
+          $DCL = $ret['domContentLoadedEventEnd'];
+        }
         if ($seek_start > 0) {
-          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive, $last_interactive, $total_blocking_time);
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive, $last_interactive, $total_blocking_time, $max_fid, $DCL);
         }
         if (isset($first_interactive) && $first_interactive > 0) {
-          if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $first_interactive)
-            $first_interactive = $ret['domContentLoadedEventEnd'];
           $ret['FirstInteractive'] = $first_interactive;
         }
         if (isset($TTI) && $TTI > 0) {
-          if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $TTI)
-            $TTI = $ret['domContentLoadedEventEnd'];
           $ret['TimeToInteractive'] = $TTI;
+        }
+        if (isset($max_fid)) {
+          $ret['maxFID'] = $max_fid;
         }
         if ($measurement_end > 0)
           $ret['TTIMeasurementEnd'] = $measurement_end;
@@ -1050,7 +1054,7 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time) {
+function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time, &$max_fid, $DCL) {
   $TTI = null;
   $first_interactive = null;
   $total_blocking_time = null;
@@ -1144,10 +1148,12 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
   }
 
   // Calculate the total blocking time - https://docs.google.com/document/d/1xCERB_X7PiP5RAZDwyIkODnIXoBk-Oo7Mi9266aEdGg/edit
+  // and the max possible FID (longest task)
   $endTime = $TTI ? isset($TTI) : $last_interactive;
   if ($endTime > $startTime) {
     $lastBusy = $startTime;
     $total_blocking_time = 0;
+    $max_fid = 0;
     foreach ($interactiveWindows as $window) {
       $start = min($window[0], $endTime);
       $end = $window[1];
@@ -1156,8 +1162,20 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
         if ($busyTime > 0) {
           $total_blocking_time += $busyTime;
         }
+        if ($busyTime > $max_fid) {
+          $max_fid = $busyTime;
+        }
       }
       $lastBusy = min($end, $endTime);
+    }
+  }
+
+  if (isset($DCL)) {
+    if (isset($TTI) && $TTI > 0 && $DCL > $TTI) {
+      $TTI = $DCL;
+    }
+    if (isset($first_interactive) && $first_interactive > 0 && $DCL > $first_interactive) {
+      $first_interactive = $DCL;
     }
   }
   
