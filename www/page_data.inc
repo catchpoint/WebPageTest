@@ -1155,18 +1155,19 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
     $total_blocking_time = 0;
     $max_fid = 0;
     foreach ($interactiveWindows as $window) {
-      $start = min($window[0], $endTime);
+      $start = max($startTime, min($window[0], $endTime));
       $end = $window[1];
       if ($start > $lastBusy) {
         $busyTime = $start - $lastBusy - 50;  // 50ms of grace time for every blocking period
         if ($busyTime > 0) {
           $total_blocking_time += $busyTime;
         }
+        $busyTime = $start - $lastBusy;
         if ($busyTime > $max_fid) {
           $max_fid = $busyTime;
         }
       }
-      $lastBusy = min($end, $endTime);
+      $lastBusy = max($startTime, min($end, $endTime));
     }
   }
 

@@ -18,7 +18,7 @@
         if( is_file('./tmp/feeds.dat') )
             $feeds = json_decode(file_get_contents('./tmp/feeds.dat'), true);
 
-        if( count($feeds) && !defined('BARE_UI') )
+        if( isset($feeds) && count($feeds) && !defined('BARE_UI') )
         {
             echo '<table id="feeds"><tr>';
 
