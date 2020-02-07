@@ -2,6 +2,10 @@
 chdir('..');
 include 'common.inc';
 RestoreTest($id);
+$token = GetSetting('trace_viewer_token', '');
+if (strlen($token)) {
+  header("Origin-Trial: $token");
+}
 if ($_REQUEST['run'] == 'lighthouse')
   $fileBase = 'lighthouse';
 else{
