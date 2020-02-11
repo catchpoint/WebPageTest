@@ -1016,6 +1016,37 @@ function ParseUserTiming($file) {
       }
     }
     if (count($main_frames) && isset($start_time)) {
+      // Pre-process the "LargestXXX" events, just recording the biggest one
+      $largest = [];
+      foreach ($events as $event) {
+        if (is_array($event) &&
+            isset($event['name']) &&
+            isset($event['ts']) &&
+            isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
+            ($event['ts'] >= $start_time || isset($event['args']['value'])) &&
+            stripos($event['name'], 'Largest') === 0 &&
+            isset($event['args']['data']['size'])) {
+          $name = $event['name'];
+          if (!isset($largest[$name]) || $event['args']['data']['size'] > $largest[$name]['args']['data']['size']) {
+            $time = null;
+            if (isset($event['args']['value'])) {
+              $time = $event['args']['value'];
+            } else {
+              $elapsed_usec = $event['ts'] - $start_time;
+              $elapsed_ms = intval($elapsed_usec / 1000.0);
+              $time = $elapsed_ms;
+            }
+            if (isset($event['args']['data']['durationInMilliseconds'])) {
+              $time = $event['args']['data']['durationInMilliseconds'];
+            }
+            if (isset($time)) {
+              $event['time'] = $time;
+              $largest[$name] = $event;
+            }
+          }
+        }
+      }
+
       foreach ($events as $event) {
         if (is_array($event) &&
             isset($event['name']) &&
@@ -1037,10 +1068,14 @@ function ParseUserTiming($file) {
           if (isset($event['args']['data']['durationInMilliseconds'])) {
             $time = $event['args']['data']['durationInMilliseconds'];
           }
-          if (isset($name) && isset($time)) {
+          if (isset($name) && isset($time) && !isset($largest[$name])) {
             $user_timing[] = array('name' => $name, 'time' => $time);
           }
         }
+      }
+
+      foreach ($largest as $name => $event) {
+        $user_timing[] = array('name' => $event['name'], 'time' => $event['time']);
       }
     }
   }
