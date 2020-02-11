@@ -4,6 +4,9 @@ require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
+// Prevent the details page from running out of control.
+set_time_limit(30);
+
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/RunResultHtmlTable.php';
