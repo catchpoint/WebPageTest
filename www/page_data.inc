@@ -76,6 +76,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       $ret = null;
     }
   }
+  $ret = null;
 
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
@@ -240,8 +241,13 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           $ret["chromeUserTiming"] = $user_timing;
           foreach($user_timing as $value) {
             $key = "chromeUserTiming.{$value['name']}";
-            if (!isset($ret[$key]) || $value['time'] > $ret[$key])
-              $ret[$key] = $value['time'];
+            if (isset($value['time'])) {
+              if (!isset($ret[$key]) || $value['time'] > $ret[$key]) {
+                $ret[$key] = $value['time'];
+              }
+            } elseif (isset($value['value'])) {
+              $ret[$key] = $value['value'];
+            }
           }
         }
       }
@@ -1047,6 +1053,7 @@ function ParseUserTiming($file) {
         }
       }
 
+      $cumulative_layout_shift = 0.0;
       foreach ($events as $event) {
         if (is_array($event) &&
             isset($event['name']) &&
@@ -1057,6 +1064,12 @@ function ParseUserTiming($file) {
             $user_timing = array();
           }
           $name = $event['name'];
+          if ($name == "LayoutShift" &&
+              isset($event['args']['data']['is_main_frame']) &&
+              $event['args']['data']['is_main_frame'] &&
+              isset($event['args']['data']['cumulative_score'])) {
+            $cumulative_layout_shift = $event['args']['data']['cumulative_score'];
+          }
           $time = null;
           if (isset($event['args']['value'])) {
             $time = $event['args']['value'];
@@ -1077,6 +1090,7 @@ function ParseUserTiming($file) {
       foreach ($largest as $name => $event) {
         $user_timing[] = array('name' => $event['name'], 'time' => $event['time']);
       }
+      $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $cumulative_layout_shift);
     }
   }
   return $user_timing;
