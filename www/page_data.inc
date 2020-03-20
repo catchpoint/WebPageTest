@@ -76,7 +76,6 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       $ret = null;
     }
   }
-  $ret = null;
 
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
