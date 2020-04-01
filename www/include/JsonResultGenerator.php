@@ -9,6 +9,8 @@ class JsonResultGenerator {
   const WITHOUT_RUNS = 5;
   const WITHOUT_REQUESTS = 6;
   const WITHOUT_CONSOLE = 7;
+  const WITHOUT_LIGHTHOUSE = 8;
+  const WITHOUT_REPEAT_VIEW = 9;
 
   /* @var TestInfo */
   private $testInfo;
@@ -103,7 +105,7 @@ class JsonResultGenerator {
         $fvOnly = $testInfo['fvonly'] ? true : false;
     }
     $cachedMax = 0;
-    if (!$fvOnly)
+    if (!$fvOnly && !$this->hasInfoFlag(self::WITHOUT_REPEAT_VIEW))
       $cachedMax = 1;
     $ret['testRuns'] = $runs;
     $ret['fvonly'] = $fvOnly;
@@ -112,7 +114,7 @@ class JsonResultGenerator {
       $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
 
     // lighthouse
-    if (!$this->hasInfoFlag(self::BASIC_INFO_ONLY)) {
+    if (!$this->hasInfoFlag(self::BASIC_INFO_ONLY) && !$this->hasInfoFlag(self::WITHOUT_LIGHTHOUSE)) {
       $lighthouse = $testResults->getLighthouseResult();
       if (isset($lighthouse))
         $ret['lighthouse'] = $lighthouse;

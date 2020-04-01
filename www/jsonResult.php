@@ -94,7 +94,9 @@ function getRequestInfoFlags() {
     "median" => JsonResultGenerator::WITHOUT_MEDIAN,
     "runs" => JsonResultGenerator::WITHOUT_RUNS,
     "requests" => JsonResultGenerator::WITHOUT_REQUESTS,
-    "console" => JsonResultGenerator::WITHOUT_CONSOLE
+    "console" => JsonResultGenerator::WITHOUT_CONSOLE,
+    "lighthouse" => JsonResultGenerator::WITHOUT_LIGHTHOUSE,
+    "rv" => JsonResultGenerator::WITHOUT_REPEAT_VIEW
   );
 
   $infoFlags = array();
