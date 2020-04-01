@@ -1819,42 +1819,67 @@ function GetRedirect($url, &$rhost, &$rurl) {
       $rhost = $redirect_cache[$url]['host'];
       $rurl = $redirect_cache[$url]['url'];
     } elseif (function_exists('curl_init')) {
-      $parts = parse_url($url);
-      $original = $parts['host'];
-      $host = '';
-      $curl = curl_init();
-      curl_setopt($curl, CURLOPT_URL, $url);
-      curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
-      curl_setopt($curl, CURLOPT_FILETIME, true);
-      curl_setopt($curl, CURLOPT_NOBODY, true);
-      curl_setopt($curl, CURLOPT_HEADER, true);
-      curl_setopt($curl, CURLOPT_FAILONERROR, true);
-      curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-      curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
-      curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
-      curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-      curl_setopt($curl, CURLOPT_TIMEOUT, 20);
-      curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-      $headers = curl_exec($curl);
-      curl_close($curl);
-      $lines = explode("\n", $headers);
-      foreach($lines as $line) {
-        $line = trim($line);
-        $split = strpos($line, ':');
-        if ($split > 0) {
-          $key = trim(substr($line, 0, $split));
-          $value = trim(substr($line, $split + 1));
-          if (!strcasecmp($key, 'Location')) {
-            $rurl = $value;
-            $parts = parse_url($rurl);
-            $host = trim($parts['host']);
+      $cache_key = md5($url);
+      $redirect_info = null;
+      if (function_exists('apcu_fetch')) {
+        $redirect_info = apcu_fetch($cache_key);
+        if ($redirect_info === false)
+          $redirect_info = null;
+      } elseif (function_exists('apc_fetch')) {
+        $redirect_info = apc_fetch($cache_key);
+        if ($redirect_info === false)
+          $redirect_info = null;
+      }
+      if (isset($redirect_info) && isset($redirect_info['host']) && isset($redirect_info['url'])) {
+        $rhost = $redirect_info['host'];
+        $rurl = $redirect_info['url'];
+      } else {
+        $parts = parse_url($url);
+        $original = $parts['host'];
+        $host = '';
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
+        curl_setopt($curl, CURLOPT_FILETIME, true);
+        curl_setopt($curl, CURLOPT_NOBODY, true);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_FAILONERROR, true);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
+        curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
+        curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+        curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $headers = curl_exec($curl);
+        curl_close($curl);
+        $lines = explode("\n", $headers);
+        foreach($lines as $line) {
+          $line = trim($line);
+          $split = strpos($line, ':');
+          if ($split > 0) {
+            $key = trim(substr($line, 0, $split));
+            $value = trim(substr($line, $split + 1));
+            if (!strcasecmp($key, 'Location')) {
+              $rurl = $value;
+              $parts = parse_url($rurl);
+              $host = trim($parts['host']);
+            }
           }
         }
       }
+
       if( strlen($host) && $original !== $host )
         $rhost = $host;
-      $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
+      
+      // Cache the redirct info
+      $redirect_info = array('host' => $rhost, 'url' => $rurl);
+      $redirect_cache[$url] = $redirect_info;
+      if (function_exists('apcu_store')) {
+        apcu_store($cache_key, $redirect_info, 3600);
+      } elseif (function_exists('apc_store')) {
+        apc_store($cache_key, $redirect_info, 3600);
+      }
     }
   }
   if (strlen($rhost))
