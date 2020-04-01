@@ -1909,6 +1909,22 @@ function SaveJobQueue($workDir, &$queue)
 * @param mixed $dir
 */
 function GetTesters($locationId, $includeOffline = false, $include_sensitive = true) {
+  $location = null;
+
+  // cache the location testers info for up to one minute
+  $cache_key = "$locationId-$includeOffline-$include_sensitive";
+  if (function_exists('apcu_fetch')) {
+    $location = apcu_fetch($cache_key);
+    if (isset($location) && $location !== false) {
+      return $location;
+    }
+  } elseif (function_exists('apc_fetch')) {
+    $location = apc_fetch($cache_key);
+    if (isset($location) && $location !== false) {
+      return $location;
+    }
+  }
+
   $location = array();
   $dir = __DIR__ . "/tmp/testers-$locationId";
   if (is_dir($dir)) {
@@ -2016,6 +2032,12 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
   else
     $location['status'] = 'OFFLINE';
 
+  if (function_exists('apcu_store')) {
+    apcu_store($cache_key, $location, 60);
+  } elseif (function_exists('apc_store')) {
+    apc_store($cache_key, $location, 60);
+  }
+  
   return $location;
 }
 
