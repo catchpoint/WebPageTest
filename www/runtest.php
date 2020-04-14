@@ -2740,53 +2740,72 @@ function GetSortableString($num, $targetLen = 6) {
   return $str;
 }
 
+function gen_uuid() {
+  return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+    mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
+    mt_rand( 0, 0xffff ),
+    mt_rand( 0, 0x0fff ) | 0x4000,
+    mt_rand( 0, 0x3fff ) | 0x8000,
+    mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
+  );
+}
+
 function ReportAnalytics(&$test)
 {
   global $usingAPI;
   $ga = GetSetting('analytics');
-  if ($ga) {
-    $payload = 'v=1&t=event&ds=web&ec=Test&tid=' . urlencode($ga);
-    $payload .= '&ea=' . ($usingAPI ? 'API' : 'Manual');
-    
-    if (isset($test['location']) && strlen($test['location'])) {
-      $payload .= '&el=' . urlencode($test['location']);
-    }
+
+  if ($ga && function_exists('curl_init') &&
+      isset($test['location']) && strlen($test['location'])) {
 
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
         $ip = $test['ip'];
-    $payload .= '&uip=' . urlencode($ip);
-
-    if (isset($_SERVER['HTTP_USER_AGENT']) && strlen($_SERVER['HTTP_USER_AGENT'])) {
-      $payload .= '&ua=' . urlencode($_SERVER['HTTP_USER_AGENT']);
-    }
+            
+    $data = array(
+      'v' => '1',
+      'tid' => $ga,
+      'cid' => gen_uuid(),
+      't' => 'event',
+      'ds' => 'web',
+      'ec' => 'Test',
+      'ea' => $usingAPI ? 'API' : 'Manual',
+      'el' => $test['location'],
+      'uip' => $ip
+    );
 
     if (isset($_SERVER['HTTP_REFERER']) && strlen($_SERVER['HTTP_REFERER'])) {
-      $payload .= '&dr=' . urlencode($_SERVER['HTTP_REFERER']);
+      $data['dr'] = $_SERVER['HTTP_REFERER'];
     }
 
     if (isset($_SERVER['HTTP_HOST']) && isset($_SERVER['PHP_SELF'])) {
-      $self = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-      $payload .= '&dl=' . urlencode($self);
+      $data['dl'] = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
     }
 
-    // post the payload to the GA server with a relatively aggressive timeout
-    if (function_exists('curl_init')) {
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, "https://www.google-analytics.com/collect");
-      curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
-      curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-      curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 10);
-      curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-      curl_exec($ch);
-      curl_close($ch);
+    $payload = utf8_encode(http_build_query($data));
+
+    $ua = 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)';
+    if (isset($_SERVER['HTTP_USER_AGENT']) && strlen($_SERVER['HTTP_USER_AGENT'])) {
+      $ua = $_SERVER['HTTP_USER_AGENT'];
     }
+
+    $ga_url = "https://www.google-analytics.com/collect?" . $payload;
+
+    // post the payload to the GA server with a relatively aggressive timeout
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $ga_url);
+    curl_setopt($ch, CURLOPT_USERAGENT, $ua);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_1_1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_exec($ch);
+    curl_close($ch);
   }
 }
 
