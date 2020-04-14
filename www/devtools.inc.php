@@ -359,7 +359,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
               $pageData['connections'] = count($connections);
           }
       }
-      if (count($requests)) {
+      if (isset($requests) && is_array($requests) && count($requests)) {
         if ($pageData['responses_200'] == 0) {
           if (array_key_exists('responseCode', $requests[0]))
             $pageData['result'] = $requests[0]['responseCode'];
