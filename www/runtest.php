@@ -1740,6 +1740,10 @@ function WriteJob($location, &$test, &$job, $testId)
     }
   }
 
+  if ($ret) {
+    ReportAnalytics($test);
+  }
+
   return $ret;
 }
 
@@ -2734,6 +2738,56 @@ function GetSortableString($num, $targetLen = 6) {
   }
   $str = str_pad($str, $targetLen, '0', STR_PAD_LEFT);
   return $str;
+}
+
+function ReportAnalytics(&$test)
+{
+  global $usingAPI;
+  $ga = GetSetting('analytics');
+  if ($ga) {
+    $payload = 'v=1&t=event&ds=web&ec=Test&tid=' . urlencode($ga);
+    $payload .= '&ea=' . ($usingAPI ? 'API' : 'Manual');
+    
+    if (isset($test['location']) && strlen($test['location'])) {
+      $payload .= '&el=' . urlencode($test['location']);
+    }
+
+    $ip = $_SERVER['REMOTE_ADDR'];
+    if( array_key_exists('ip',$test) && strlen($test['ip']) )
+        $ip = $test['ip'];
+    $payload .= '&uip=' . urlencode($ip);
+
+    if (isset($_SERVER['HTTP_USER_AGENT']) && strlen($_SERVER['HTTP_USER_AGENT'])) {
+      $payload .= '&ua=' . urlencode($_SERVER['HTTP_USER_AGENT']);
+    }
+
+    if (isset($_SERVER['HTTP_REFERER']) && strlen($_SERVER['HTTP_REFERER'])) {
+      $payload .= '&dr=' . urlencode($_SERVER['HTTP_REFERER']);
+    }
+
+    if (isset($_SERVER['HTTP_HOST']) && isset($_SERVER['PHP_SELF'])) {
+      $self = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+      $payload .= '&dl=' . urlencode($self);
+    }
+
+    // post the payload to the GA server with a relatively aggressive timeout
+    if (function_exists('curl_init')) {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, "https://www.google-analytics.com/collect");
+      curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
+      curl_setopt($ch, CURLOPT_POST, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+      curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 10);
+      curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_exec($ch);
+      curl_close($ch);
+    }
+  }
 }
 
 ?>
