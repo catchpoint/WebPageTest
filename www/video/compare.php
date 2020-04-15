@@ -636,7 +636,7 @@ function ScreenShotTable()
           $waterfalls = array();
           foreach ($tests as &$test) {
             $waterfalls[] = array('id' => $test['id'],
-                                  'label' => $test['name'],
+                                  'label' => htmlspecialchars($test['name']),
                                   'run' => $test['run'],
                                   'step' => $test['step'],
                                   'cached' => $test['cached']);
