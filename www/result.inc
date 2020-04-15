@@ -175,7 +175,7 @@ $page_description = "Website performance test result$testLabel.";
                 if ($fvMedian)
                 {
                     if ($testResults->countRuns() > 1)
-                        echo '<h2>Performance Results (Median Run)</h2>';
+                        echo '<h2>Performance Results (Median Run - ' . htmlspecialchars($median_metric) . ')</h2>';
                     $fvRunResults = $testResults->getRunResult($fvMedian, false);
                     $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
