@@ -4,6 +4,7 @@
         newrelic_add_custom_tracer('CheckIp');
         newrelic_add_custom_tracer('WptHookValidateTest');
         newrelic_add_custom_tracer('GetRedirect');
+        newrelic_add_custom_tracer('ReportAnalytics');
     }
 
     // deal with magic quotes being enabled

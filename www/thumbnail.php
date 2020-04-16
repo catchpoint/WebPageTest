@@ -2,6 +2,7 @@
 if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('tbnDrawWaterfall');
     newrelic_add_custom_tracer('tbnDrawChecklist');
+    newrelic_add_custom_tracer('tbnLoadImage');
     newrelic_add_custom_tracer('GenerateThumbnail');
     newrelic_add_custom_tracer('SendImage');
     newrelic_add_custom_tracer('getRequests');
@@ -50,19 +51,7 @@ else
             tbnDrawChecklist($testStepResult, $img);
         }
         else {
-            if( !is_file("$testPath/$file") ) {
-                $file = str_ireplace('.jpg', '.png', $file);
-                $parts = pathinfo($file);
-                $type = $parts['extension'];
-            }
-            if( is_file("$testPath/$file") ) {
-                if( !strcasecmp( $type, 'jpg') )
-                    $img = @imagecreatefromjpeg("$testPath/$file");
-                elseif( !strcasecmp( $type, 'gif') )
-                    $img = @imagecreatefromgif("$testPath/$file");
-                else
-                    $img = @imagecreatefrompng("$testPath/$file");
-            }
+            tbnLoadImage($testPath, $file, $type, $img);
         }
 
         if( $img )
@@ -76,6 +65,23 @@ else
         {
             header("HTTP/1.0 404 Not Found");
         }
+    }
+}
+
+function tbnLoadImage($testPath, $file, $type, &$img)
+{
+    if( !is_file("$testPath/$file") ) {
+        $file = str_ireplace('.jpg', '.png', $file);
+        $parts = pathinfo($file);
+        $type = $parts['extension'];
+    }
+    if( is_file("$testPath/$file") ) {
+        if( !strcasecmp( $type, 'jpg') )
+            $img = @imagecreatefromjpeg("$testPath/$file");
+        elseif( !strcasecmp( $type, 'gif') )
+            $img = @imagecreatefromgif("$testPath/$file");
+        else
+            $img = @imagecreatefrompng("$testPath/$file");
     }
 }
 
