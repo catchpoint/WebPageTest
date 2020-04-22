@@ -71,12 +71,20 @@ foreach($compTests as $t) {
                     $test['done'] = true;
                     $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
 
+                    $stepResult = null;
                     if( !array_key_exists('run', $test) || !$test['run'] ) {
+                      try{
                         $testResults = TestResults::fromFiles($testInfoObject);
                         $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
                         $runResults = $testResults->getRunResult($test['run'], $test['cached']);
-                        $stepResult = $runResults->getStepResult($test['step']);
-                    } else {
+                        if (isset($runResults)) {
+                          $stepResult = $runResults->getStepResult($test['step']);
+                        }
+                      } catch(Exception $e) {
+                      }
+                    }
+
+                    if (!isset($stepResult)) {
                         $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
                     }
                     $test['stepResult'] = $stepResult;
