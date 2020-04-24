@@ -185,6 +185,7 @@ $common_label = implode(" ", $common_labels);
             $customMetrics = null;
             $csiMetrics = null;
             $userTimings = null;
+            $userMeasures = null;
             foreach ($pagesData as &$pageData) {
               foreach ($pageData as &$pageRun)
                 foreach ($pageRun as &$data) {
@@ -203,9 +204,14 @@ $common_label = implode(" ", $common_labels);
                       if (!isset($userTimings))
                         $userTimings = array();
                       $userTimings[$metric] = 'User Timing - ' . substr($metric, 9);
+                    } else if (substr($metric, 0, 18) == 'userTimingMeasure.') {
+                      if (!isset($userMeasures))
+                        $userMeasures = array();
+                      $userMeasures[$metric] = 'User Timing Measure - ' . substr($metric, 18);
                     }
                   }
                   $timingCount = count($userTimings);
+                  $measuresCount = count($userMeasures);
                   if (array_key_exists('CSI', $data) && is_array($data['CSI']) && count($data['CSI'])) {
                     if (!isset($csiMetrics))
                       $csiMetrics = array();
@@ -235,6 +241,12 @@ $common_label = implode(" ", $common_labels);
             if (isset($userTimings) && is_array($userTimings) && count($userTimings)) {
               echo '<h1 id="UserTiming"><a href="http://www.w3.org/TR/user-timing/">W3C User Timing marks</a></h1>';
               foreach($userTimings as $metric => $label) {
+                InsertChart($metric, $label);
+              }
+            }
+            if (isset($userMeasures) && is_array($userMeasures) && count($userMeasures)) {
+              echo '<h1 id="UserTimingMeasure"><a href="http://www.w3.org/TR/user-timing/#dom-performance-measure">W3C User Timing measures</a></h1>';
+              foreach($userMeasures as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
