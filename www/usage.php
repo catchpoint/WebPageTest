@@ -21,11 +21,11 @@ include 'admin_header.inc';
         $prefix = 'A';
         if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
           $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-          $results = $db->query("SELECT key,email,key_limit FROM keys");
+          $results = $db->query("SELECT key,email,key_limit FROM keys;");
           if ($results){
             while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
               $k = "$prefix.{$row['key']}";
-              $keys[$key] = array('contact' => $row['email'], 'limit' => $row['key_limit']);
+              $keys[$k] = array('contact' => $row['email'], 'limit' => $row['key_limit']);
             }
           }
           $db->close();
