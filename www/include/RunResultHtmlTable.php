@@ -11,7 +11,7 @@ class RunResultHtmlTable {
   const COL_START_RENDER = "render";
   const COL_DOM_TIME = "domTime";
   const COL_DOM_ELEMENTS = "domElements";
-  const COL_TTI = "FirstInteractive";
+  const COL_TBT = "TotalBlockingTime";
   const COL_SPEED_INDEX = "SpeedIndex";
   const COL_LAST_PAINTED_HERO = "LastPaintedHero";
   const COL_VISUAL_COMPLETE = "visualComplete";
@@ -43,7 +43,7 @@ class RunResultHtmlTable {
     $this->runResults = $runResults;
     $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
-    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_TTI,
+    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_TBT,
       self::COL_SPEED_INDEX, self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
     $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
@@ -53,19 +53,13 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
+    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_DOM_TIME, self::COL_TBT, self::COL_SPEED_INDEX,
                            self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
     }
     
-    // Special-case the check for TTI
-    if (!$this->enabledColumns[self::COL_TTI]) {
-      $this->enabledColumns[self::COL_TTI] = $runResults->hasValidMetric('LastInteractive') ||
-                                   ($rvRunResults && $rvRunResults->hasValidMetric('LastInteractive'));
-    }
-
     // If strict_video = 1, only show if metric is present, otherwise alway show
     if (GetSetting('strict_video')) {
       array_push($this->leftOptionalColumns, self::COL_START_RENDER);
@@ -156,8 +150,8 @@ class RunResultHtmlTable {
     if ($this->isColumnEnabled(self::COL_DOM_TIME)) {
       $out .= $this->_headCell("DOM Element");
     }
-    if ($this->isColumnEnabled(self::COL_TTI)) {
-      $out .= $this->_headCell("<a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First CPU Idle</a>");
+    if ($this->isColumnEnabled(self::COL_TBT)) {
+      $out .= $this->_headCell("<a href=\"https://web.dev/tbt/\">Total Blocking Time</a>");
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_headCell("Result (error&nbsp;code)");
@@ -257,13 +251,11 @@ class RunResultHtmlTable {
     if ($this->isColumnEnabled(self::COL_DOM_TIME)) {
       $out .= $this->_bodyCell($idPrefix . "DomTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"), $class);
     }
-    if ($this->isColumnEnabled(self::COL_TTI)) {
+    if ($this->isColumnEnabled(self::COL_TBT)) {
       $value = '-';
-      if ($stepResult->getMetric("FirstInteractive"))
-        $value = $this->_getIntervalMetric($stepResult, "FirstInteractive");
-      elseif ($stepResult->getMetric("LastInteractive"))
-        $value = '&GT; ' . $this->_getIntervalMetric($stepResult, "LastInteractive");
-      $out .= $this->_bodyCell($idPrefix. "FirstInteractive" . $idSuffix, $value, $class);
+      if ($stepResult->getMetric("TotalBlockingTime"))
+        $value = $this->_getIntervalMetric($stepResult, "TotalBlockingTime");
+      $out .= $this->_bodyCell($idPrefix. "TotalBlockingTime" . $idSuffix, $value, $class);
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_bodyCell($idPrefix . "result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"), $class);

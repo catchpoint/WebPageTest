@@ -1206,7 +1206,7 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
       $TTI = max($startTime, $window[0]);
   }
 
-  // Calculate the total blocking time - https://docs.google.com/document/d/1xCERB_X7PiP5RAZDwyIkODnIXoBk-Oo7Mi9266aEdGg/edit
+  // Calculate the total blocking time - https://web.dev/tbt/
   // and the max possible FID (longest task)
   $endTime = isset($TTI) ? $TTI : $last_interactive;
   if (isset($long_tasks) && $endTime > $startTime) {
