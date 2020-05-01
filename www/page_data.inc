@@ -1213,8 +1213,8 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
     $total_blocking_time = 0;
     $max_fid = 0;
     foreach ($long_tasks as $task) {
-      $start = max($startTime, min($task[0], $endTime)) + 50; // "blocking" time excludes the first 50ms
-      $end = $task[1];
+      $start = max($task[0], $startTime) + 50; // "blocking" time excludes the first 50ms
+      $end = min($task[1], $endTime);
       $busyTime = $end - $start;
       if ($busyTime > 0) {
         $total_blocking_time += $busyTime;
