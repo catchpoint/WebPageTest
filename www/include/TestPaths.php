@@ -238,6 +238,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for main-thread interactive-time periods
+   */
+  public function longTasksFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_long_tasks.json";
+  }
+
+  /**
    * @return string Path for diagnostic test timing
    */
   public function testTimingFile() {

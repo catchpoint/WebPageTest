@@ -70,7 +70,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
   $cacheVer = 10;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
-  if (gz_is_file($cacheFile)) {
+  if (!isset($_REQUEST['recalculate']) && gz_is_file($cacheFile)) {
     $ret = json_decode(gz_file_get_contents($cacheFile), true);
     if (!isset($ret['result'])) {
       $ret = null;
@@ -124,6 +124,13 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
         if (isset($interactive) && is_array($interactive) && count($interactive))
           $ret['interactivePeriods'] = $interactive;
+      }
+
+      // Load the long tasks list
+      if (gz_is_file($localPaths->longTasksFile())) {
+        $long_tasks = json_decode(gz_file_get_contents($localPaths->longTasksFile()), true);
+        if (isset($long_tasks) && is_array($long_tasks) && count($long_tasks))
+          $ret['longTasks'] = $long_tasks;
       }
 
       // Load the diagnostic test timing information if available
@@ -282,8 +289,12 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         if (isset($ret['domContentLoadedEventEnd'])) {
           $DCL = $ret['domContentLoadedEventEnd'];
         }
+        $long_tasks = null;
+        if (isset($ret['longTasks'])) {
+          $long_tasks = $ret['longTasks'];
+        }
         if ($seek_start > 0) {
-          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive, $last_interactive, $total_blocking_time, $max_fid, $DCL);
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $long_tasks, $measurement_end, $first_interactive, $last_interactive, $total_blocking_time, $max_fid, $DCL);
         }
         if (isset($first_interactive) && $first_interactive > 0) {
           $ret['FirstInteractive'] = $first_interactive;
@@ -1102,7 +1113,7 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time, &$max_fid, $DCL) {
+function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, $long_tasks, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time, &$max_fid, $DCL) {
   $TTI = null;
   $first_interactive = null;
   $total_blocking_time = null;
@@ -1197,25 +1208,20 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
 
   // Calculate the total blocking time - https://docs.google.com/document/d/1xCERB_X7PiP5RAZDwyIkODnIXoBk-Oo7Mi9266aEdGg/edit
   // and the max possible FID (longest task)
-  $endTime = $TTI ? isset($TTI) : $last_interactive;
-  if ($endTime > $startTime) {
-    $lastBusy = $startTime;
-    $total_blocking_time = 0;
+  $endTime = isset($TTI) ? $TTI : $last_interactive;
+  if (isset($long_tasks) && $endTime > $startTime) {
+    $total_blocking_time = $startTime;
     $max_fid = 0;
-    foreach ($interactiveWindows as $window) {
-      $start = max($startTime, min($window[0], $endTime));
-      $end = $window[1];
-      if ($start > $lastBusy) {
-        $busyTime = $start - $lastBusy - 50;  // 50ms of grace time for every blocking period
-        if ($busyTime > 0) {
-          $total_blocking_time += $busyTime;
-        }
-        $busyTime = $start - $lastBusy;
+    foreach ($long_tasks as $task) {
+      $start = max($startTime, min($task[0], $endTime)) + 50; // "blocking" time excludes the first 50ms
+      $end = $task[1];
+      $busyTime = $end - $start;
+      if ($busyTime > 0) {
+        $total_blocking_time += $busyTime;
         if ($busyTime > $max_fid) {
           $max_fid = $busyTime;
         }
       }
-      $lastBusy = max($startTime, min($end, $endTime));
     }
   }
 
