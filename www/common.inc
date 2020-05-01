@@ -94,7 +94,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 }
 
 // constants
-define('VER_WEBPAGETEST', '20.01');   // webpagetest version
+define('VER_WEBPAGETEST', '20.05');   // webpagetest version
 define('VER_CSS', 74);                // version of the sitewide css file
 define('VER_JS', 33);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 42);            // version of the javascript specific to the test pages
