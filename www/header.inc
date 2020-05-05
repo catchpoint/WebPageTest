@@ -401,7 +401,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
     }
 
-    if (GetSetting('securityInsights)) {
+    if (GetSetting('securityInsights')) {
         require_once('security_checks.php');
         $securityGrade = getSecurityGrade($testInfo, $testRunResults);
         $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
