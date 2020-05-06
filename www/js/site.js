@@ -995,7 +995,9 @@ var getScrollbarWidth = function() {
 
                 if (t.hasClass('keep_alive_enabled')) {
                     return 'Click the grade to see the requests that did not have keep-alives enabled';
-                } else if (t.hasClass('compress_text')) {
+                } else if (t.hasClass('security')) {
+                    return 'Click the grade to see the full security score detailed report';
+                }  else if (t.hasClass('compress_text')) {
                     return 'Click the grade to see the requests that should be gzipped but were not';
                 } else if (t.hasClass('compress_images')) {
                     return 'Click the grade to see a list of the images that can be better compressed';
