@@ -22,13 +22,14 @@ function getSecurityHeadersInfo($testInfo, $testRunResults) {
  */
 function getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults) {
   $testResults = $testRunResults->getstepResult(1);
-  $severityDetected['high'] = 0;
-  $severityDetected['medium'] = 0;
-  $severityDetected['low'] = 0;
+  $severityDetected = null;
   if ($testResults) {
     $jsLibsVulns = $testResults->getRawResults()['jsLibsVulns'];
-    foreach ($jsLibsVulns as $vuln) {
-      $severityDetected[$vuln['severity']]++;
+    if (isset($jsLibsVulns)) {
+      $severityDetected = array('high' => 0, 'medium' => 0, 'low' => 0);
+      foreach ($jsLibsVulns as $vuln) {
+        $severityDetected[$vuln['severity']]++;
+      }
     }
   }
 
@@ -41,14 +42,20 @@ function getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults) {
  */
 function getSecurityGrade($testInfo, $testRunResults) {
   $securityHeadersData = getSecurityHeadersInfo($testInfo, $testRunResults);
+  $securityHeadersScore = null;
 
   $gradeResult = array();
   if ($securityHeadersData) {
     $securityHeadersScore = $securityHeadersData['securityHeadersScore'];
+  } else {
+    return null;
   }
 
   $scoreFactorDown = 0;
   $securityVulns = getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults);
+  if (!isset($securityVulns)) {
+    return null;
+  }
   if (isset($securityVulns['high']) && $securityVulns['high'] >= 1) {
     if ($securityHeadersScore >= 75) {
       $securityHeadersScore = 70;
