@@ -4,8 +4,7 @@ const HEADERS_SCORES = {
   "content-security-policy": 25,
   "x-frame-options": 20,
   "x-xss-protection": 20,
-  "x-content-type-options": 20,
-  "public-key-pins": 30,
+  "x-content-type-options": 20
 };
 
 function getHttpHeadersAndScheme(requests) {
@@ -34,12 +33,11 @@ function detectSecurityHeaders({ headers, scheme }) {
     "content-security-policy",
     "x-frame-options",
     "x-xss-protection",
-    "x-content-type-options",
+    "x-content-type-options"
   ];
 
   const securityHeadersHttps = [
     "strict-transport-security",
-    "public-key-pins",
     ...securityHeadersHttp,
   ];
 
