@@ -191,7 +191,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                             $lighthouse = $urlGenerator->resultPage("lighthouse");
                             echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else if ($check == 'security') {
-                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=web&utm_source=webpagetest&utm_campaign=website-scanner";
+                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
                             echo "<li class=\"$check\"><a href=\"$snykUrl\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else {
                             echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
