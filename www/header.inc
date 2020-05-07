@@ -401,13 +401,13 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
     }
 
-    //if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+    if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
         require_once('security_checks.php');
         $securityGrade = getSecurityGrade($testInfo, $testRunResults);
         if (isset($securityGrade)) {
             $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
         }
-    //}
+    }
 
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
