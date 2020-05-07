@@ -191,7 +191,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                             $lighthouse = $urlGenerator->resultPage("lighthouse");
                             echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else if ($check == 'security') {
-                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}";
+                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&tm_medium=web&utm_source=webpagetest&utm_campaign=website-scanner";
                             echo "<li class=\"$check\"><a href=\"$snykUrl\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else {
                             echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
@@ -401,13 +401,13 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
     }
 
-    if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+    //if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
         require_once('security_checks.php');
         $securityGrade = getSecurityGrade($testInfo, $testRunResults);
         if (isset($securityGrade)) {
             $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
         }
-    }
+    //}
 
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
