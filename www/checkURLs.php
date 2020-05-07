@@ -64,19 +64,23 @@ $title = 'WebPageTest - Check URLs';
 include 'admin_header.inc';
 
 echo '<table class="table"><tr><th>Total</th>';
-foreach( $dayCounts as $index => &$dayCount ) {
-    echo "<th>Day $index</th>";
+if ($days < 15) {
+  foreach( $dayCounts as $index => &$dayCount ) {
+      echo "<th>Day $index</th>";
+  }
 }
 echo '<th>URL Host</th></tr>';
 
 foreach($counts as $url => $count) {
     if( $count > 50 ) {
         echo "<tr><td>$count</td>";
-        foreach( $dayCounts as $index => &$dayCount ) {
-            $c = 0;
-            if( isset($dayCount[$url]) )
-                $c = $dayCount[$url];
-            echo "<td>$c</td>";
+        if ($days < 15) {
+          foreach( $dayCounts as $index => &$dayCount ) {
+              $c = 0;
+              if( isset($dayCount[$url]) )
+                  $c = $dayCount[$url];
+              echo "<td>$c</td>";
+          }
         }
         $blocked = FQDNBlocked($url) ? ' (Blocked)' : '';
         echo "<td>$url$blocked</td></tr>\n";
