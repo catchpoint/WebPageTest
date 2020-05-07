@@ -61,13 +61,34 @@ include 'admin_header.inc';
                 if( $u )
                     $used[] = array('used' => $u, 'description' => $keyUser['description'], 'contact' => $keyUser['contact'], 'limit' => $keyUser['limit']);
             }
-            if( count($used) )
-            {
-                usort($used, 'comp');
-                echo "<table class=\"table\"><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
-                foreach($used as &$entry)
-                    echo "<tr><td>{$entry['used']}</td><td>{$entry['limit']}</td><td>{$entry['contact']}</td><td>{$entry['description']}</td></tr>";
-                echo '</table>';
+            if (isset($_REQUEST['domains'])) {
+              $domains = array();
+              foreach($used as &$entry) {
+                $email = $entry['contact'];
+                $offset = strpos($email, '@');
+                if ($offset > 0) {
+                  $domain = substr($email, $offset + 1);
+                  if (!isset($domains[$domain])) {
+                    $domains[$domain] = 0;
+                  }
+                  $domains[$domain] += $entry['used'];
+                }
+              }
+              arsort($domains);
+              echo "<table class=\"table\"><tr><th>Used</th><th>Contact Domain</th></tr>";
+              foreach($domains as $domain => $count) {
+                echo "<tr><td>$count</td><td>$domain</td></tr>";
+              }
+              echo '</table>';
+          } else {
+              if( count($used) )
+              {
+                  usort($used, 'comp');
+                  echo "<table class=\"table\"><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
+                  foreach($used as &$entry)
+                      echo "<tr><td>{$entry['used']}</td><td>{$entry['limit']}</td><td>{$entry['contact']}</td><td>{$entry['description']}</td></tr>";
+                  echo '</table>';
+              }
             }
         } else {
             if( isset($keys[$key]) ) {
