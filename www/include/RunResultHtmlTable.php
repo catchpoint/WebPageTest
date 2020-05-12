@@ -18,6 +18,7 @@ class RunResultHtmlTable {
   const COL_LARGEST_CONTENTFUL_PAINT = 'chromeUserTiming.LargestContentfulPaint';
   const COL_CUMULATIVE_LAYOUT_SHIFT = 'chromeUserTiming.CumulativeLayoutShift';
   const COL_TOTAL_BLOCKING_TIME = 'TotalBlockingTime';
+  const COL_TIME_TO_INTERACTIVE = 'TimeToInteractive';
 
   /* @var TestInfo */
   private $testInfo;
@@ -51,7 +52,7 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $checkByMetric = array(self::COL_SPEED_INDEX,
+    $checkByMetric = array(self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
                            self::COL_LAST_PAINTED_HERO, self::COL_LARGEST_CONTENTFUL_PAINT,
                            self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME);
     foreach ($checkByMetric as $col) {
@@ -284,6 +285,9 @@ class RunResultHtmlTable {
 
     if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
       $value = $this->_getIntervalMetric($stepResult, self::COL_TOTAL_BLOCKING_TIME);
+      if (!$this->isColumnEnabled(self::COL_TIME_TO_INTERACTIVE)) {
+        $value = '&ge; ' . $value;
+      }
       $rawValue = $stepResult->getMetric(self::COL_TOTAL_BLOCKING_TIME);
       $scoreClass = 'good';
       if ($rawValue >= 600) {
