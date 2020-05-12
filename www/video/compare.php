@@ -802,6 +802,11 @@ function DisplayGraphs() {
             $test['stepResult']->getMetric('TimeToInteractive') > 0) {
             $timeMetrics['TimeToInteractive'] = "Time To Interactive";
         }
+        if ($hasStepResult &&
+            !isset($timeMetrics['TotalBlockingTime']) &&
+            $test['stepResult']->getMetric('TotalBlockingTime') !== null) {
+            $timeMetrics['TotalBlockingTime'] = "Total Blocking Time";
+        }
         $test['breakdown'] = $hasStepResult ? $test['stepResult']->getMimeTypeBreakdown() : array();
         if (array_key_exists('progress', $test['video'])
             && array_key_exists('frames', $test['video']['progress'])) {

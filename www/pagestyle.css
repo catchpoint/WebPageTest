@@ -243,6 +243,9 @@ table.pretty th { background: gainsboro; }
 table.pretty th.empty { background: #fff; border:0; }
 table.pretty th.border, table.pretty td.border { border-left: 2px black solid; }
 table.pretty td.even { background: whitesmoke; }
+table.pretty td.good { background: #A1FFA4; }
+table.pretty td.ok { background: #FFB342; }
+table.pretty td.poor { background: #FF7580; }
 
 /* details page */
 #headers {text-align: left; width:930px; overflow:auto;}
