@@ -154,15 +154,18 @@ class RunResultHtmlTable {
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_headCell("Result (error&nbsp;code)");
     }
-
+    $vitalsBorder = "border";
     if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/lcp/">Largest<br>Contentful<br>Paint</a>', "border");
+      $out .= $this->_headCell('<a href="https://web.dev/lcp/">Largest<br>Contentful<br>Paint</a>', $vitalsBorder);
+      $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/cls/">Cumulative<br>Layout<br>Shift</a>');
+      $out .= $this->_headCell('<a href="https://web.dev/cls/">Cumulative<br>Layout<br>Shift</a>', $vitalsBorder);
+      $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-      $out .= $this->_headCell('<a href="https://web.dev/tbt/">Total<br>Blocking<br>Time</a>');
+      $out .= $this->_headCell('<a href="https://web.dev/tbt/">Total<br>Blocking<br>Time</a>', $vitalsBorder);
+      $vitalsBorder = null;
     }
 
     for ($i = 0; $i < 2; $i++) {
