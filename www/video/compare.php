@@ -172,8 +172,8 @@ else
                     word-wrap: break-word;
                 }
                 .thumb{ border: none; }
-                .thumbChanged{border: 3px solid #FEB301;}
-                .thumbAFT{border: 3px solid #FF0000;}
+                .thumbChanged{border: 3px solid #FFC233;}
+                .thumbLCP{border: 3px solid #FF0000;}
                 #createForm
                 {
                     width:100%;
@@ -449,6 +449,11 @@ function ScreenShotTable()
         $maxThumbWidth = 0;
         foreach($tests as &$test) {
             $aft = (int)$test['aft'] / 100;
+            $hasStepResult = isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult");
+            $lcp = null;
+            if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
+                $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
+            }
 
             // figure out the height of the image
             $height = 0;
@@ -503,6 +508,10 @@ function ScreenShotTable()
                         if( !$firstFrame || $frameCount < $firstFrame )
                             $firstFrame = $frameCount;
                         $class = 'thumbChanged';
+                        if (isset($lcp) && $ms >= $lcp) {
+                            $class = 'thumbLCP';
+                            $lcp = null;
+                        }
                     }
                     echo " class=\"$class\"";
                     echo " width=\"$width\"";
