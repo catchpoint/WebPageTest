@@ -247,7 +247,7 @@ class TestRunResults {
   public function hasValidMetric($metric) {
     foreach ($this->stepResults as $stepResult) {
       $value = $stepResult->getMetric($metric);
-      if (!empty($value)) {
+      if (isset($value)) {
         return true;
       }
     }
