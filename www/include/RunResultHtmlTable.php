@@ -15,6 +15,7 @@ class RunResultHtmlTable {
   const COL_RESULT = "result";
   const COL_COST = "cost";
   const COL_CERTIFICATE_BYTES = "certificate_bytes";
+  const COL_FIRST_CONTENTFUL_PAINT = 'chromeUserTiming.firstContentfulPaint';
   const COL_LARGEST_CONTENTFUL_PAINT = 'chromeUserTiming.LargestContentfulPaint';
   const COL_CUMULATIVE_LAYOUT_SHIFT = 'chromeUserTiming.CumulativeLayoutShift';
   const COL_TOTAL_BLOCKING_TIME = 'TotalBlockingTime';
@@ -44,7 +45,7 @@ class RunResultHtmlTable {
     $this->runResults = $runResults;
     $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
-    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_SPEED_INDEX, self::COL_LAST_PAINTED_HERO, self::COL_RESULT);
+    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_LAST_PAINTED_HERO, self::COL_RESULT);
     $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
 
@@ -52,7 +53,7 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-    $checkByMetric = array(self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
+    $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
                            self::COL_LAST_PAINTED_HERO, self::COL_LARGEST_CONTENTFUL_PAINT,
                            self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME);
     foreach ($checkByMetric as $col) {
@@ -146,6 +147,9 @@ class RunResultHtmlTable {
     if ($this->isColumnEnabled(self::COL_START_RENDER)) {
       $out .= $this->_headCell("Start<br>Render");
     }
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_headCell('<a href="https://web.dev/fcp/">First<br>Contentful<br>Paint</a>', $vitalsBorder);
+    }
     if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed<br>Index</a>');
     }
@@ -238,6 +242,9 @@ class RunResultHtmlTable {
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
     if ($this->isColumnEnabled(self::COL_START_RENDER)) {
       $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
+    }
+    if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+      $out .= $this->_bodyCell($idPrefix . self::COL_FIRST_CONTENTFUL_PAINT . $idSuffix, $this->_getIntervalMetric($stepResult, self::COL_FIRST_CONTENTFUL_PAINT), $class);
     }
     if($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $speedIndex = $stepResult->getMetric("SpeedIndexCustom");
