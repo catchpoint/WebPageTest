@@ -34,9 +34,9 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .position-container {position: relative; left: 0; top: 0;}
 .position-background {position: absolute; left: 0; top: 0;}
 
-#optimization {float:right; width:414px;}
+#optimization {float:right; width:474px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}
-#header_data {float:left; width: 510px; overflow-x: hidden;}
+#header_data {float:left; width: 458px; overflow-x: hidden;}
 .header_data_full {width: 924px !important;}
 #header_data h2 {margin: 0;}
 #headerPagespeedScore {margin-left: 10px;}
