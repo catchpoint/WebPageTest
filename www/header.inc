@@ -396,9 +396,9 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
         $class = 'C';
       elseif ($lighthouse > 60)
         $class = 'D';
-      $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse PWA Score');
+      $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse Perf');
     } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
-      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
+      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse Perf');
     }
 
     if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {

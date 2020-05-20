@@ -286,7 +286,7 @@ class TestRunResults {
   public function getLighthouseScore() {
     $score = null;
     foreach ($this->stepResults as $stepResult) {
-      $score = $stepResult->getMetric("lighthouse.ProgressiveWebApp");
+      $score = $stepResult->getMetric("lighthouse.Performance");
       if (isset($score)) {
         return intval(($score * 100.0) + 0.5);
       }
