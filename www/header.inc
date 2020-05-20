@@ -388,14 +388,10 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
-      if ($lighthouse > 90)
+      if ($lighthouse >= 90)
         $class = 'A';
-      elseif ($lighthouse > 80)
-        $class = 'B';
-      elseif ($lighthouse > 70)
+      elseif ($lighthouse >= 50)
         $class = 'C';
-      elseif ($lighthouse > 60)
-        $class = 'D';
       $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse Perf');
     } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
       $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse Perf');
