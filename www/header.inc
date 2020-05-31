@@ -191,7 +191,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                             $lighthouse = $urlGenerator->resultPage("lighthouse");
                             echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else if ($check == 'security') {
-                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}";
+                            $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
                             echo "<li class=\"$check\"><a href=\"$snykUrl\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                           }else {
                             echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
@@ -388,24 +388,34 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
-      if ($lighthouse > 90)
+      if ($lighthouse >= 90)
         $class = 'A';
-      elseif ($lighthouse > 80)
-        $class = 'B';
-      elseif ($lighthouse > 70)
+      elseif ($lighthouse >= 50)
         $class = 'C';
-      elseif ($lighthouse > 60)
-        $class = 'D';
-      $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse PWA Score');
+      $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse Perf');
     } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
-      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
+      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse Perf');
     }
 
     if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
-        require_once('security_checks.php');
-        $securityGrade = getSecurityGrade($testInfo, $testRunResults);
-        if (isset($securityGrade)) {
-            $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
+        // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
+        $show_security = true;
+        $testResults = $testRunResults->getstepResult(1);
+        if ($testResults) {
+            $detected = $testResults->getRawResults()['detected'];
+            if (isset($detected) && isset($detected['CMS'])) {
+                if (stripos($detected['CMS'], "WordPress") >= 0) {
+                    $show_security = false;
+                }
+            }
+        }
+        
+        if ($show_security) {
+            require_once('security_checks.php');
+            $securityGrade = getSecurityGrade($testInfo, $testRunResults);
+            if (isset($securityGrade)) {
+                $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
+            }
         }
     }
 

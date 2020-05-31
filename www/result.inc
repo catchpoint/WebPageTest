@@ -181,7 +181,6 @@ $page_description = "Website performance test result$testLabel.";
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
                     $resultTable->useLabelLinks(true);
                     $resultTable->disableColumns(array(
-                      RunResultHtmlTable::COL_ABOVE_THE_FOLD,
                       RunResultHtmlTable::COL_VISUAL_COMPLETE,
                       RunResultHtmlTable::COL_RESULT
                     ));

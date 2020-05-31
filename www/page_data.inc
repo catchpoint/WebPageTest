@@ -242,7 +242,11 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       // See if there is Chrome trace user timing data to load.
       // Do this after the CPU slice calculations so the trace processing has already run.
       if (gz_is_file($localPaths->chromeUserTimingFile())) {
-        $user_timing = ParseUserTiming($localPaths->chromeUserTimingFile());
+        $browser_version = null;
+        if (isset($ret['browser_version']) && strlen($ret['browser_version'])) {
+          $browser_version = floatval($ret['browser_version']);
+        }
+        $user_timing = ParseUserTiming($localPaths->chromeUserTimingFile(), $browser_version);
         if (isset($user_timing) && is_array($user_timing)) {
           $ret["chromeUserTiming"] = $user_timing;
           foreach($user_timing as $value) {
@@ -977,7 +981,7 @@ function CompareTimestamps($a, $b) {
   return ($a['ts'] < $b['ts']) ? -1 : 1;
 }
 
-function ParseUserTiming($file) {
+function ParseUserTiming($file, $browser_version) {
   $user_timing = null;
   $events = json_decode(gz_file_get_contents($file), true);
   if (isset($events) && is_array($events)) {
@@ -1063,36 +1067,39 @@ function ParseUserTiming($file) {
         }
       }
 
-      $cumulative_layout_shift = 0.0;
-      foreach ($events as $event) {
-        if (is_array($event) &&
-            isset($event['name']) &&
-            isset($event['ts']) &&
-            isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
-            ($event['ts'] >= $start_time || isset($event['args']['value']))) {
-          if (!isset($user_timing)) {
-            $user_timing = array();
-          }
-          $name = $event['name'];
-          if ($name == "LayoutShift" &&
-              isset($event['args']['data']['is_main_frame']) &&
-              $event['args']['data']['is_main_frame'] &&
-              isset($event['args']['data']['cumulative_score'])) {
-            $cumulative_layout_shift = $event['args']['data']['cumulative_score'];
-          }
-          $time = null;
-          if (isset($event['args']['value'])) {
-            $time = $event['args']['value'];
-          } else {
-            $elapsed_usec = $event['ts'] - $start_time;
-            $elapsed_ms = intval($elapsed_usec / 1000.0);
-            $time = $elapsed_ms;
-          }
-          if (isset($event['args']['data']['durationInMilliseconds'])) {
-            $time = $event['args']['data']['durationInMilliseconds'];
-          }
-          if (isset($name) && isset($time) && !isset($largest[$name])) {
-            $user_timing[] = array('name' => $name, 'time' => $time);
+      $cumulative_layout_shift = null;
+      if (isset($browser_version) && $browser_version >= 81) {
+        $cumulative_layout_shift = 0.0;
+        foreach ($events as $event) {
+          if (is_array($event) &&
+              isset($event['name']) &&
+              isset($event['ts']) &&
+              isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
+              ($event['ts'] >= $start_time || isset($event['args']['value']))) {
+            if (!isset($user_timing)) {
+              $user_timing = array();
+            }
+            $name = $event['name'];
+            if ($name == "LayoutShift" &&
+                isset($event['args']['data']['is_main_frame']) &&
+                $event['args']['data']['is_main_frame'] &&
+                isset($event['args']['data']['cumulative_score'])) {
+              $cumulative_layout_shift = $event['args']['data']['cumulative_score'];
+            }
+            $time = null;
+            if (isset($event['args']['value'])) {
+              $time = $event['args']['value'];
+            } else {
+              $elapsed_usec = $event['ts'] - $start_time;
+              $elapsed_ms = intval($elapsed_usec / 1000.0);
+              $time = $elapsed_ms;
+            }
+            if (isset($event['args']['data']['durationInMilliseconds'])) {
+              $time = $event['args']['data']['durationInMilliseconds'];
+            }
+            if (isset($name) && isset($time) && !isset($largest[$name])) {
+              $user_timing[] = array('name' => $name, 'time' => $time);
+            }
           }
         }
       }
@@ -1100,7 +1107,9 @@ function ParseUserTiming($file) {
       foreach ($largest as $name => $event) {
         $user_timing[] = array('name' => $event['name'], 'time' => $event['time']);
       }
-      $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $cumulative_layout_shift);
+      if (isset($cumulative_layout_shift)) {
+        $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $cumulative_layout_shift);
+      }
     }
   }
   return $user_timing;

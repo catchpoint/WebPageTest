@@ -33,6 +33,6 @@ At any point in time this is the number of outstanding successful GET requests (
 
 ## Page is Interactive
 Page is Interactive is a graphical display of interactivity throughput the page load cycle.
-1. Displays White – up until first contentful paint (or start render, if first contentful paint doesn’t exist)
-2. Displays Green – for any window >= 500ms where all tasks on the main thread are <= 50ms
+1. Displays White â€“ up until first contentful paint (or start render, if first contentful paint doesnâ€™t exist)
+2. Displays Green â€“ where all tasks on the main thread are <= 50ms
 3. Otherwise displays red

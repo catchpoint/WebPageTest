@@ -34,9 +34,9 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .position-container {position: relative; left: 0; top: 0;}
 .position-background {position: absolute; left: 0; top: 0;}
 
-#optimization {float:right; width:414px;}
+#optimization {float:right; width:472px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}
-#header_data {float:left; width: 510px; overflow-x: hidden;}
+#header_data {float:left; width: 458px; overflow-x: hidden;}
 .header_data_full {width: 924px !important;}
 #header_data h2 {margin: 0;}
 #headerPagespeedScore {margin-left: 10px;}
@@ -243,6 +243,9 @@ table.pretty th { background: gainsboro; }
 table.pretty th.empty { background: #fff; border:0; }
 table.pretty th.border, table.pretty td.border { border-left: 2px black solid; }
 table.pretty td.even { background: whitesmoke; }
+table.pretty td.good { background: #A1FFA4; }
+table.pretty td.ok { background: #FFB342; }
+table.pretty td.poor { background: #FF7580; }
 
 /* details page */
 #headers {text-align: left; width:930px; overflow:auto;}
