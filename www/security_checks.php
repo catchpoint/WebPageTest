@@ -40,7 +40,7 @@ function getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults) {
 /**
  * Gets the overall security score's grade
  */
-function getSecurityGrade($testInfo, $testRunResults) {
+function getSecurityGrade($testInfo, $testRunResults, $includeVulnerabilities = true) {
   $securityHeadersData = getSecurityHeadersInfo($testInfo, $testRunResults);
   $securityHeadersScore = null;
 
@@ -51,30 +51,34 @@ function getSecurityGrade($testInfo, $testRunResults) {
     return null;
   }
 
-  $scoreFactorDown = 0;
-  $securityVulns = getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults);
-  if (!isset($securityVulns)) {
-    return null;
-  }
-  if (isset($securityVulns['high']) && $securityVulns['high'] >= 1) {
-    if ($securityHeadersScore >= 75) {
-      $securityHeadersScore = 70;
-    }
+  if ($includeVulnerabilities === false) {
+    $overallScore = $securityHeadersScore;
   } else {
-    if (isset($securityVulns['medium'])) {
-      $mediumScoreFactor = 25;
-      $scoreFactorDown += ($securityVulns['medium']*$mediumScoreFactor);
+    $scoreFactorDown = 0;
+    $securityVulns = getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults);
+    if (!isset($securityVulns)) {
+      return null;
+    }
+    if (isset($securityVulns['high']) && $securityVulns['high'] >= 1) {
+      if ($securityHeadersScore >= 75) {
+        $securityHeadersScore = 70;
+      }
+    } else {
+      if (isset($securityVulns['medium'])) {
+        $mediumScoreFactor = 25;
+        $scoreFactorDown += ($securityVulns['medium']*$mediumScoreFactor);
+      }
+
+      if (isset($securityVulns['low'])) {
+        $lowScoreFactor = 20;
+        $scoreFactorDown += ($securityVulns['low']*$lowScoreFactor);
+      }
     }
 
-    if (isset($securityVulns['low'])) {
-      $lowScoreFactor = 20;
-      $scoreFactorDown += ($securityVulns['low']*$lowScoreFactor);
+    $overallScore = $securityHeadersScore;
+    if ($overallScore >= 75) {
+      $overallScore = ($securityHeadersScore-$scoreFactorDown);
     }
-  }
-
-  $overallScore = $securityHeadersScore;
-  if ($overallScore >= 75) {
-    $overallScore = ($securityHeadersScore-$scoreFactorDown);
   }
 
   if ($overallScore >= 95)
