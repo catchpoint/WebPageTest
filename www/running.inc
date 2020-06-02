@@ -174,7 +174,18 @@ function GetTip()
 {
     $tip = '';
 
-    $tips = glob('./tips_data/*.html',GLOB_NOSORT);
+    $files = glob('./tips_data/*.html',GLOB_NOSORT);
+    $tips = array();
+    $active_tips = GetSetting("active_tips");
+    if ($active_tips) {
+        $active_tips = explode(" ", $active_tips);
+    }
+    foreach( $files as $file )
+    {
+        if (!$active_tips || in_array(basename($file), $active_tips)) {
+            $tips[] = $file;
+        }
+    }
     $count = count($tips);
     if( $count > 0 )
     {

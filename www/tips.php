@@ -23,14 +23,20 @@ $page_description = "Website performance optimization tips.";
             <h2 class="centered">Tips and Tricks<br><span class="centered small">(all links open in a new window/tab)</span></h2>
             <?php
             $files = glob('./tips_data/*.html');
+            $active_tips = GetSetting("active_tips");
+            if ($active_tips) {
+                $active_tips = explode(" ", $active_tips);
+            }
             foreach( $files as $file )
             {
-                $tip = file_get_contents($file);
-                if( strlen($tip) )
-                {
-                    echo '<table class="tip"><tr><th>Did you know...</th></tr><tr><td>';
-                    echo $tip;
-                    echo "</td></table>\n";
+                if (!$active_tips || in_array(basename($file), $active_tips)) {
+                    $tip = file_get_contents($file);
+                    if( strlen($tip) )
+                    {
+                        echo '<table class="tip"><tr><th>Did you know...</th></tr><tr><td>';
+                        echo $tip;
+                        echo "</td></table>\n";
+                    }
                 }
             }
             ?>
