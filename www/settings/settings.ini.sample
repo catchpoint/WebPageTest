@@ -143,6 +143,10 @@ maxNavigateCount=20
 ; (assumes a git clone and just runs "git pull origin master" as the web user).
 ;gitUpdate=1
 
+; Automatically update test agents hourly (pulls the latest test agents from the provided server)
+; Removing this line means the the old wptdriver agent will not auto-update
+agentUpdate=http://cdn.webpagetest.org/
+
 ; If an android device is connected to the server, scrape updated APK's off of the
 ; device to be installed on the test agents automatically (for cases where
 ; play auto-updating doesn't work - i.e. reverse-tethered devices)
