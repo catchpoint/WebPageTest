@@ -32,7 +32,12 @@ $page_description = "Register for a WebPageTest API key.";
             <div class="translucent">
             <?php
             if (!GetSetting('allow_getkeys')) {
-              echo "Sorry, automatic API-key registration is not permitted on the WebPageTest instance.";
+              $message_file = __DIR__ . '/settings/getkey.html';
+              if (is_file($message_file)) {
+                readfile($message_file);
+              } else {
+                echo "Sorry, automatic API-key registration is not permitted on the WebPageTest instance.";
+              }
             } elseif (isset($_REQUEST['validate'])) {
               ValidateAPIRequest();
             } elseif (isset($_REQUEST['email'])) {
