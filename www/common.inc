@@ -88,8 +88,11 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 
 $userIsBot = false;
 if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
-    strlen($_SERVER['HTTP_USER_AGENT']) &&
-    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+    strlen($_SERVER['HTTP_USER_AGENT'])) {
+  if (preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+    $userIsBot = true;
+  }
+} else {
   $userIsBot = true;
 }
 
