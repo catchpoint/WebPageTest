@@ -8,8 +8,12 @@ if( !$days || $days > 1000 )
     $days = 7;
 
 $title = 'WebPageTest - Usage';
-
-include 'admin_header.inc';
+$json = false;
+if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
+  $json = true;
+} else {
+  include 'admin_header.inc';
+}
 ?>
 
 <?php
@@ -92,8 +96,10 @@ include 'admin_header.inc';
             }
         } else {
             if( isset($keys[$key]) ) {
+                $out = array();
                 $limit = (int)@$keys[$key]['limit'];
-                echo "<table class=\"table\"><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
+                if (!$json)
+                  echo "<table class=\"table\"><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
                 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
                 for($offset = 0; $offset <= $days; $offset++) {
                     $keyfile = './dat/keys_' . $targetDate->format("Ymd") . '.dat';
@@ -104,16 +110,24 @@ include 'admin_header.inc';
                       $used = (int)@$usage[$key];
                     }
                     $date = $targetDate->format("Y/m/d");
-                    echo "<tr><td>$date</td><td>$used</td><td>$limit</td></tr>\n";
+                    if ($json) {
+                      $out[] = array('date' => $date, 'used' => $used, 'limit' => $limit);
+                    } else {
+                      echo "<tr><td>$date</td><td>$used</td><td>$limit</td></tr>\n";
+                    }
                     $targetDate->modify('-1 day');
                 }
-                echo '</table>';
+                if (!$json)
+                  echo '</table>';
 
                 $limit = (int)$keys[$key]['limit'];
                 if( isset($usage[$key]) )
                   $used = (int)$usage[$key];
                 else
                   $used = 0;
+                if ($json) {
+                  json_response($out);
+                }
             }
         }
     } elseif ($privateInstall || $admin) {
@@ -163,6 +177,7 @@ function comp($a, $b)
     return ($a['used'] > $b['used']) ? -1 : 1;
 }
 
-include 'admin_footer.inc';
-
+if (!$json) {
+  include 'admin_footer.inc';
+}
 ?>
