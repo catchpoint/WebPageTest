@@ -206,6 +206,8 @@ function TestToJSON($testInfo) {
               $testJson['heroElements'] = json_decode(base64_decode($value));
             } elseif ($key == 'injectScript') {
               $testJson['injectScript'] = base64_decode($value);
+            } elseif ($key == 'lighthouseConfig') {
+              $testJson['lighthouseConfig'] = base64_decode($value);
             } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
               $testJson[$key] = intval($value);
             } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
