@@ -144,10 +144,14 @@ if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
             $ui = 0;
             foreach ($file as &$line) {
               $parts = tokenizeLogLine($line);
+              $count = 1;
+              if (isset($parts['count'])) {
+                $count = max(1, intval($parts['count']));
+              }
               if (array_key_exists('key', $parts) && strlen($parts['key']))
-                $api++;
+                $api += $count;
               else
-                $ui++;
+                $ui += $count;
             }
             $count = $api + $ui;
             $date = $targetDate->format("Y/m/d");
