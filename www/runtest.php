@@ -215,6 +215,8 @@
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
             $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
             $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
+            if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig']))
+              $test['lighthouseConfig'] = $_REQUEST['lighthouseConfig'];
             $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : GetSetting('heroElementTimes', 0);
             if (isset($req_timeline))
               $test['timeline'] = $req_timeline;
@@ -2280,6 +2282,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'v8rcs', '1');
             if( isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'] )
                 AddIniLine($testFile, 'lighthouseThrottle', '1');
+            if (isset($test['lighthouseConfig']))
+                AddIniLine($testFile, 'lighthouseConfig', base64_encode($test['lighthouseConfig']));
             if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
                 AddIniLine($testFile, 'heroElementTimes', '1');
             if( isset($test['coverage']) && $test['coverage'] )
