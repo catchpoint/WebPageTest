@@ -86,14 +86,23 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
     define('VER_TIMELINE', '');       // Leave the timeline version empty
 }
 
+$privateInstall = true;
+if (array_key_exists('HTTP_HOST', $_SERVER) &&
+    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') === false &&
+    stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false) {
+    $privateInstall = false;
+}
+
 $userIsBot = false;
-if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
-    strlen($_SERVER['HTTP_USER_AGENT'])) {
-  if (preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+if (!$privateInstall) {
+  if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
+      strlen($_SERVER['HTTP_USER_AGENT'])) {
+    if (preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+      $userIsBot = true;
+    }
+  } else {
     $userIsBot = true;
   }
-} else {
-  $userIsBot = true;
 }
 
 // constants
@@ -138,13 +147,6 @@ if (!array_key_exists('nolinks', $settings))
 if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 $max_load = GetSetting('render_max_load');
-
-$privateInstall = true;
-if (array_key_exists('HTTP_HOST', $_SERVER) &&
-    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') === false &&
-    stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false) {
-    $privateInstall = false;
-}
 
 // override some settings from the URI
 if (isset($_REQUEST['bulk'])) {
