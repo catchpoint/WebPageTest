@@ -1487,7 +1487,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   if ($row_count) {
     $row_height = imagefontheight(2) + 4;
     $data_header_height = intval($row_height * 3 / 2);
-    $data_footer_height = $row_height;
+    $data_footer_height = $row_height * 3;
     $height = ($data_header_height + ($row_height * $row_count) +
               $data_footer_height + 2) + 100;
     $height += (2 * $row_height) + 2;

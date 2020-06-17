@@ -264,6 +264,8 @@ else
                     width: 100%;
                 }
                 div.compare-graph {margin:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -759,6 +761,7 @@ function DisplayGraphs() {
                         'render' => 'Time to Start Render',
                         'fullyLoadedCPUms' => 'CPU Busy Time');
     $progress_end = 0;
+    $has_cls = false;
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
         if ($hasStepResult &&
@@ -816,6 +819,12 @@ function DisplayGraphs() {
             $test['stepResult']->getMetric('TotalBlockingTime') !== null) {
             $timeMetrics['TotalBlockingTime'] = "Total Blocking Time";
         }
+        if ($hasStepResult &&
+            !$has_cls &&
+            $test['stepResult']->getMetric('chromeUserTiming.CumulativeLayoutShift') !== null) {
+            $has_cls = true;
+        }
+        
         $test['breakdown'] = $hasStepResult ? $test['stepResult']->getMimeTypeBreakdown() : array();
         if (array_key_exists('progress', $test['video'])
             && array_key_exists('frames', $test['video']['progress'])) {
@@ -832,13 +841,19 @@ function DisplayGraphs() {
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
     }
     if (count($tests) <= 4) {
-      echo '<div id="compare_times" class="compare-graph"></div>';
+      echo '<div id="compare_times" class="compare-graph-timings"></div>';
+      if ($has_cls) {
+        echo '<div id="compare_cls" class="compare-graph-cls"></div>';
+      }
       echo '<div id="compare_requests" class="compare-graph"></div>';
       echo '<div id="compare_bytes" class="compare-graph"></div>';
     } else {
       foreach($timeMetrics as $metric => $label) {
         $metricKey = str_replace('.', '', $metric);
         echo "<div id=\"compare_times_$metricKey\" class=\"compare-graph\"></div>";
+      }
+      if ($has_cls) {
+        echo '<div id="compare_cls" class="compare-graph-cls"></div>';
       }
       foreach($mimeTypes as $type) {
         echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
@@ -854,19 +869,23 @@ function DisplayGraphs() {
             var dataTimes = new google.visualization.DataTable();
             var dataRequests = new google.visualization.DataTable();
             var dataBytes = new google.visualization.DataTable();
+            var dataCls = new google.visualization.DataTable();
             dataTimes.addColumn('string', 'Time (ms)');
             dataRequests.addColumn('string', 'MIME Type');
             dataBytes.addColumn('string', 'MIME Type');
+            dataCls.addColumn('string', 'Viewports Shifted');
             <?php
             foreach($tests as &$test) {
                 $name = htmlspecialchars($test['name']);
                 echo "dataTimes.addColumn('number', '$name');\n";
                 echo "dataRequests.addColumn('number', '$name');\n";
                 echo "dataBytes.addColumn('number', '$name');\n";
+                echo "dataCls.addColumn('number', '$name');\n";
             }
             echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
             echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
             echo 'dataBytes.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
+            echo "dataCls.addRows(1);\n";
             if ($progress_end) {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
                 echo "  ['Time (ms)'";
@@ -919,6 +938,18 @@ function DisplayGraphs() {
               echo "dataTimes$metricKey.setRows($row, $row);\n";
               $row++;
             }
+            $row = 0;
+            if ($has_cls) {
+                echo "dataCls.setValue($row, 0, 'CLS');\n";
+                $column = 1;
+                foreach($tests as &$test) {
+                    $metric = 'chromeUserTiming.CumulativeLayoutShift';
+                    $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
+                    if ($hasStepResult && $test['stepResult']->getMetric($metric) !== null)
+                      echo "dataCls.setValue($row, $column, {$test['stepResult']->getMetric($metric)});\n";
+                    $column++;
+                }
+            }
             echo "dataRequests.setValue(0, 0, 'Total');\n";
             echo "dataBytes.setValue(0, 0, 'Total');\n";
             $column = 1;
@@ -955,15 +986,19 @@ function DisplayGraphs() {
             }
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
-                echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
+                echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:450, width:'75%'}});\n";
             }
             if (count($tests) <= 4) {
               echo "var timesChart = new google.visualization.BarChart(document.getElementById('compare_times'));\n";
-              echo "timesChart.draw(dataTimes, {title: 'Timings (ms)'});\n";
+              echo "timesChart.draw(dataTimes, {title: 'Timings (ms)', chartArea:{left:200, top:60, height:800, width:'60%'}});\n";
               echo "var requestsChart = new google.visualization.BarChart(document.getElementById('compare_requests'));\n";
-              echo "requestsChart.draw(dataRequests, {title: 'Requests'});\n";
+              echo "requestsChart.draw(dataRequests, {title: 'Requests', chartArea:{left:80, top:60, height:500, width:'70%'}});\n";
               echo "var bytesChart = new google.visualization.BarChart(document.getElementById('compare_bytes'));\n";
-              echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
+              echo "bytesChart.draw(dataBytes, {title: 'Bytes', chartArea:{left:80, top:60, height:500, width:'70%'}});\n";
+              if ($has_cls) {
+                echo "var clsChart = new google.visualization.BarChart(document.getElementById('compare_cls'));\n";
+                echo "clsChart.draw(dataCls, {title: 'Cumulative Layout Shift', chartArea:{left:80, top:60, height:100, width:'70%'}});\n";
+              }
             } else {
               foreach($timeMetrics as $metric => $label) {
                 $metricKey = str_replace('.', '', $metric);
@@ -975,6 +1010,10 @@ function DisplayGraphs() {
                 echo "requestsChart$type.draw(dataRequests$type, {title: '$type Requests'});\n";
                 echo "var bytesChart$type = new google.visualization.BarChart(document.getElementById('compare_bytes_$type'));\n";
                 echo "bytesChart$type.draw(dataBytes$type, {title: '$type Bytes'});\n";
+              }
+              if ($has_cls) {
+                echo "var clsChart = new google.visualization.BarChart(document.getElementById('compare_cls'));\n";
+                echo "clsChart.draw(dataCls, {title: 'Cumulative Layout Shift', chartArea:{left:80, top:60, height:100, width:'70%'}});\n";
               }
             }
             ?>
