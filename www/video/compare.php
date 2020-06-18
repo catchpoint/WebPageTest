@@ -264,6 +264,7 @@ else
                     width: 100%;
                 }
                 div.compare-graph {margin:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
                 <?php
@@ -761,6 +762,7 @@ function DisplayGraphs() {
                         'render' => 'Time to Start Render',
                         'fullyLoadedCPUms' => 'CPU Busy Time');
     $progress_end = 0;
+    $layout_shifts_end = 0;
     $has_cls = false;
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
@@ -834,16 +836,37 @@ function DisplayGraphs() {
                 }
             }
         }
+
+        if ($hasStepResult) {
+            $shifts = $test['stepResult']->getMetric('LayoutShifts');
+            if ($shifts !== null && is_array($shifts) && count($shifts)) {
+                foreach($shifts as $shift) {
+                    if (isset($shift['time']) && $shift['time'] > $layout_shifts_end) {
+                        $layout_shifts_end = $shift['time'];
+                    }
+                }
+            }
+        }
     }
     if ($progress_end) {
+        if ($layout_shifts_end && $progress_end > $layout_shifts_end) {
+            $layout_shifts_end = $progress_end;
+        }
         if ($progress_end % 100)
             $progress_end = intval((intval($progress_end / 100) + 1) * 100);
-        echo '<div id="compare_visual_progress" class="compare-graph"></div>';
+        echo '<div id="compare_visual_progress" class="compare-graph-progress"></div>';
+    }
+    if ($layout_shifts_end) {
+        if ($layout_shifts_end % 100)
+            $layout_shifts_end = intval((intval($layout_shifts_end / 100) + 1) * 100);
     }
     if (count($tests) <= 4) {
       echo '<div id="compare_times" class="compare-graph-timings"></div>';
       if ($has_cls) {
         echo '<div id="compare_cls" class="compare-graph-cls"></div>';
+      }
+      if ($layout_shifts_end) {
+        echo '<div id="compare_layout_shifts" class="compare-graph-progress"></div>';
       }
       echo '<div id="compare_requests" class="compare-graph"></div>';
       echo '<div id="compare_bytes" class="compare-graph"></div>';
@@ -854,6 +877,9 @@ function DisplayGraphs() {
       }
       if ($has_cls) {
         echo '<div id="compare_cls" class="compare-graph-cls"></div>';
+      }
+      if ($layout_shifts_end) {
+        echo '<div id="compare_layout_shifts" class="compare-graph-progress"></div>';
       }
       foreach($mimeTypes as $type) {
         echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
@@ -888,12 +914,12 @@ function DisplayGraphs() {
             echo "dataCls.addRows(1);\n";
             if ($progress_end) {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
-                echo "  ['Time (ms)'";
+                echo "  ['Time (seconds)'";
                 foreach($tests as &$test)
                     echo ", '" . htmlspecialchars($test['name']) . "'";
                 echo " ]";
-                for ($ms = 0; $ms <= $progress_end; $ms += 100) {
-                    echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
+                for ($ms = 0; $ms <= $progress_end; $ms += 10) {
+                    echo ",\n  ['" . number_format($ms / 1000.0, 2) . "'";
                     foreach($tests as &$test) {
                         $progress = 0;
                         if (array_key_exists('last_progress', $test)) {
@@ -914,6 +940,31 @@ function DisplayGraphs() {
                             }
                         }
                         echo ", $progress";
+                    }
+                    echo "]";
+                }
+                echo "]);\n";
+            }
+            if ($layout_shifts_end) {
+                echo "var dataLayoutShifts = google.visualization.arrayToDataTable([\n";
+                echo "  ['Time (seconds)'";
+                foreach($tests as &$test) {
+                    echo ", '" . htmlspecialchars($test['name']) . "'";
+                    $test['layout_shifts'] = $test['stepResult']->getMetric('LayoutShifts');
+                }
+                echo " ]";
+                for ($ms = 0; $ms <= $layout_shifts_end; $ms += 10) {
+                    echo ",\n  ['" . number_format($ms / 1000.0, 2) . "'";
+                    foreach($tests as &$test) {
+                        $cls = 0;
+                        if (isset($test['layout_shifts'])) {
+                            foreach($test['layout_shifts'] as $shift) {
+                                if (isset($shift['time']) && $ms >= $shift['time'] && isset($shift['cumulative_score']) && $shift['cumulative_score'] > $cls) {
+                                    $cls = $shift['cumulative_score'];
+                                }
+                            }
+                        }
+                        echo ", $cls";
                     }
                     echo "]";
                 }
@@ -986,7 +1037,11 @@ function DisplayGraphs() {
             }
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
-                echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:450, width:'75%'}});\n";
+                echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:250, width:'75%'}});\n";
+            }
+            if ($layout_shifts_end) {
+                echo "var layoutShiftsChart = new google.visualization.LineChart(document.getElementById('compare_layout_shifts'));\n";
+                echo "layoutShiftsChart.draw(dataLayoutShifts, {title: 'Layout Shifts (Viewports)', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:250, width:'75%'}});\n";
             }
             if (count($tests) <= 4) {
               echo "var timesChart = new google.visualization.BarChart(document.getElementById('compare_times'));\n";
