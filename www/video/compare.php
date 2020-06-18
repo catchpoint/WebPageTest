@@ -174,6 +174,7 @@ else
                 .thumb{ border: none; }
                 .thumbChanged{border: 3px solid #FFC233;}
                 .thumbLCP{border: 3px solid #FF0000;}
+                .thumbLayoutShifted{border-style: dotted;}
                 #createForm
                 {
                     width:100%;
@@ -457,6 +458,18 @@ function ScreenShotTable()
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
                 $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
             }
+            $shifts = array();
+            if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
+                $layout_shifts = $test['stepResult']->getMetric('LayoutShifts');
+                if (isset($layout_shifts) && is_array($layout_shifts) && count($layout_shifts)) {
+                    foreach($layout_shifts as $shift) {
+                        if (isset($shift['time'])) {
+                            $shifts[] = $shift['time'];
+                        }
+                    }
+                }
+                asort($shifts);
+            }
 
             // figure out the height of the image
             $height = 0;
@@ -514,6 +527,12 @@ function ScreenShotTable()
                         if (isset($lcp) && $ms >= $lcp) {
                             $class = 'thumbLCP';
                             $lcp = null;
+                        }
+                        if (count($shifts) && $ms > $shifts[0]) {
+                            $class .= ' thumbLayoutShifted';
+                            while(count($shifts) && $ms > $shifts[0]) {
+                                array_shift($shifts);
+                            }
                         }
                     }
                     echo " class=\"$class\"";
