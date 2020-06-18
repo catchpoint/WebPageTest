@@ -1060,7 +1060,7 @@ function DisplayGraphs() {
             }
             if ($layout_shifts_end) {
                 echo "var layoutShiftsChart = new google.visualization.LineChart(document.getElementById('compare_layout_shifts'));\n";
-                echo "layoutShiftsChart.draw(dataLayoutShifts, {title: 'Layout Shifts (Viewports)', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:250, width:'75%'}});\n";
+                echo "layoutShiftsChart.draw(dataLayoutShifts, {title: 'Layout Shifts', hAxis: {title: 'Time (seconds)'}, chartArea:{left:60, top:60, height:250, width:'75%'}});\n";
             }
             if (count($tests) <= 4) {
               echo "var timesChart = new google.visualization.BarChart(document.getElementById('compare_times'));\n";
