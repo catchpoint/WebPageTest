@@ -200,6 +200,7 @@
             $test['latency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['testLatency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
+            $test['tcQdiscLimit'] = isset($req_tcQdiscLimit) ? (int)$req_tcQdiscLimit : 0;
             if (isset($req_pingback))
               $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback))
@@ -2246,6 +2247,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'bwOut', $test['bwOut']);
                 AddIniLine($testFile, 'latency', $test['testLatency']);
                 AddIniLine($testFile, 'plr', $test['plr']);
+                AddIniLine($testFile, 'tcQdiscLimit', $test['tcQdiscLimit']);
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
