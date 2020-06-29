@@ -89,6 +89,8 @@ class JsonResultGenerator {
         $ret['latency'] = $testInfo['latency'];
       if (array_key_exists('plr', $testInfo))
         $ret['plr'] = $testInfo['plr'];
+      if (array_key_exists('tcQdiscLimit', $testInfo))
+        $ret['tcQdiscLimit'] = $testInfo['tcQdiscLimit'];
       if (array_key_exists('mobile', $testInfo))
         $ret['mobile'] = $testInfo['mobile'];
       if (array_key_exists('label', $testInfo) && strlen($testInfo['label']))

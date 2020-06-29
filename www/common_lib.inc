@@ -1182,6 +1182,8 @@ function GetTestInfoHtml($includeScript = true)
         $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
             $html .= ", {$test['testinfo']['plr']}% Packet Loss";
+        if( $test['testinfo']['tcQdiscLimit'] )
+            $html .= ", tc qdisc limit={$test['testinfo']['tcQdiscLimit']} Packets";
         $html .= '<br>';
     }
     if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
@@ -2037,7 +2039,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
   } elseif (function_exists('apc_store')) {
     apc_store($cache_key, $location, 60);
   }
-  
+
   return $location;
 }
 
