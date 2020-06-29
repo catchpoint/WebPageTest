@@ -1182,8 +1182,8 @@ function GetTestInfoHtml($includeScript = true)
         $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
             $html .= ", {$test['testinfo']['plr']}% Packet Loss";
-        if( $test['testinfo']['tcQdiscLimit'] )
-            $html .= ", tc qdisc limit={$test['testinfo']['tcQdiscLimit']} Packets";
+        if( $test['testinfo']['shaperLimit'] )
+            $html .= ", shaperLimit {$test['testinfo']['shaperLimit']}";
         $html .= '<br>';
     }
     if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
