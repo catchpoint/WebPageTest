@@ -200,6 +200,7 @@
             $test['latency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['testLatency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
+            $test['shaperLimit'] = isset($req_shaperLimit) ? (int)$req_shaperLimit : 0;
             if (isset($req_pingback))
               $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback))
@@ -1878,7 +1879,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
 
       if( strlen($host) && $original !== $host )
         $rhost = $host;
-      
+
       // Cache the redirct info
       $redirect_info = array('host' => $rhost, 'url' => $rurl);
       $redirect_cache[$url] = $redirect_info;
@@ -2246,6 +2247,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'bwOut', $test['bwOut']);
                 AddIniLine($testFile, 'latency', $test['testLatency']);
                 AddIniLine($testFile, 'plr', $test['plr']);
+                AddIniLine($testFile, 'shaperLimit', $test['shaperLimit']);
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
@@ -2766,7 +2768,7 @@ function ReportAnalytics(&$test)
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
         $ip = $test['ip'];
-            
+
     $data = array(
       'v' => '1',
       'tid' => $ga,
@@ -2801,7 +2803,7 @@ function ReportAnalytics(&$test)
     curl_setopt($ch, CURLOPT_URL, $ga_url);
     curl_setopt($ch, CURLOPT_USERAGENT, $ua);
     curl_setopt($ch, CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_1_1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
