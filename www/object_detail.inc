@@ -80,7 +80,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
           $request['index'] = $index;
           $request['number'] = $index + 1;
           if ($rootUrlGenerator) {
-            if (isset($request['body_id']) && $request['body_id'] > 0) {
+            if (isset($request['body_id']) && strlen($request['body_id'])) {
               $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
             } elseif (@$request['body']) {
               $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
@@ -461,11 +461,19 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
     if ($zip->open($bodies_file_name) === TRUE) {
       for ($i = 0; $i < $zip->numFiles; $i++) {
         $name = $zip->getNameIndex($i);
-        $parts = explode('-', $name);
-        if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
-          $id = trim($parts[1]);
-          $ids[$id] = $id;
-        } else {
+        $first = strpos($name, '-');
+        $found = false;
+        if ($first > 0) {
+          $last = strrpos($name, '-body.txt');
+          if ($last > $first) {
+            $id = substr($name, $first + 1, $last - $first - 1);
+            if (strlen($id)) {
+              $ids[$id] = $id;
+              $found = true;
+            }
+          }
+        }
+        if (!$found) {
           // old-style where the files are numbered in order of request
           $index = intval($name, 10);
           if ($index && array_key_exists($index - 1, $requests)) {
