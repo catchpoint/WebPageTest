@@ -1,5 +1,9 @@
 <?php
 chdir('..');
+if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
+{
+  $ALLOW_IFRAME = true;
+}
 include 'common.inc';
 if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
   header("HTTP/1.0 404 Not Found");

@@ -41,6 +41,11 @@ extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 // add a CORS header
 header('Access-Control-Allow-Origin: *');
 
+// Prevent embedding except for pages that were explicitly designed to be embedded (video)
+if (!isset($ALLOW_IFRAME) || !$ALLOW_IFRAME) {
+  header('X-Frames-Options: sameorigin');
+}
+
 // set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
