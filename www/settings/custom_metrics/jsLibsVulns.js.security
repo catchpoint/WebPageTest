@@ -1,902 +1,3994 @@
 var npm = {
-	angular: [
-		{
-			id: "SNYK-JS-ANGULAR-534884",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=1.4.0-beta.6 <1.7.9"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-ANGULAR-471885",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.3"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-ANGULAR-471882",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.5"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-ANGULAR-471879",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.0-rc.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20180202",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.9"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20171018",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.7"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20160527",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.0.0 <1.2.30"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20160122",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.3.0 <1.5.0-rc.2"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20140608",
-			severity: "low",
-			semver: {
-				vulnerable: [
-					"<1.3.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20131113",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<1.2.2"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20140908",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.3.0-rc.4"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20161101",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.5.0 <1.5.9"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20150909",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<1.5.0-beta.2"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20151205",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.5.0-rc.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20151130",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.4.10"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20130622",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.0.0 <1.2.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20150807-1",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.3.1 <1.5.0-beta.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20150807",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=1.0.0 <1.5.0-beta.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20150315",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.1"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20150310",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<1.5.0-beta.2"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20141104",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.3.2"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20130621",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.2.0"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20140909",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=1.2.19 <1.2.24"
-				]
-			}
-		},
-		{
-			id: "npm:angular:20130625",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<1.1.5"
-				]
-			}
-		}
-	],
-	backbone: [
-		{
-			id: "npm:backbone:20160523",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<0.1.2"
-				]
-			}
-		},
-		{
-			id: "npm:backbone:20110701",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<0.5.0"
-				]
-			}
-		}
-	],
-	bootstrap: [
-		{
-			id: "SNYK-JS-BOOTSTRAP-173700",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.1",
-					">=4.0.0 <4.3.1"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-BOOTSTRAP-73560",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=4.0.0 <4.1.2"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-BOOTSTRAP-72890",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.0"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-BOOTSTRAP-72889",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.0"
-				]
-			}
-		},
-		{
-			id: "npm:bootstrap:20180529",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.0",
-					">=4.0.0 <4.1.2"
-				]
-			}
-		},
-		{
-			id: "npm:bootstrap:20160627",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.0",
-					">=4.0.0-alpha <4.0.0-beta.2"
-				]
-			}
-		},
-		{
-			id: "npm:bootstrap:20120510",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.1.0"
-				]
-			}
-		}
-	],
-	dojo: [
-		{
-			id: "SNYK-JS-DOJO-559224",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.11.10",
-					">=1.12.0 <1.12.8",
-					">=1.13.0 <1.13.7",
-					">=1.14.0 <1.14.6",
-					">=1.15.0 <1.15.3",
-					">=1.16.0 <1.16.2"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-DOJO-174934",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.0.0 <1.0.3",
-					">=1.1.0 <1.1.2",
-					">=1.2.0 <1.2.4",
-					">=1.3.0 <1.3.3",
-					">=1.4.0 <1.4.2"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-DOJO-174933",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.2.0"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-DOJO-72305",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.14"
-				]
-			}
-		},
-		{
-			id: "npm:dojo:20180818",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.10.10",
-					">=1.11.0 <1.11.6",
-					">=1.12.0 <1.12.4",
-					">=1.13.0 <1.13.1"
-				]
-			}
-		},
-		{
-			id: "npm:dojo:20160523",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.1.0"
-				]
-			}
-		},
-		{
-			id: "npm:dojo:20100614-6",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.4.2"
-				]
-			}
-		},
-		{
-			id: "npm:dojo:20100614",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=0.4 <0.4.4",
-					">=1.0 <1.0.3",
-					">=1.1 <1.1.2",
-					">=1.2 <1.2.4",
-					">=1.3 <1.3.3",
-					">=1.4 <1.4.2"
-				]
-			}
-		},
-		{
-			id: "npm:dojo:20090409",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.1"
-				]
-			}
-		}
-	],
-	"foundation-sites": [
-		{
-			id: "npm:foundation-sites:20170802",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<6.0.0"
-				]
-			}
-		},
-		{
-			id: "npm:foundation-sites:20150619",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<5.5.3"
-				]
-			}
-		},
-		{
-			id: "npm:foundation-sites:20120717",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=3.0.0 <3.0.6"
-				]
-			}
-		}
-	],
-	"google-closure-library": [
-		{
-			id: "SNYK-JS-GOOGLECLOSURELIBRARY-561341",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<20200315.0.0"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-GOOGLECLOSURELIBRARY-174519",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=20190121.0.0 <20190301.0.0"
-				]
-			}
-		}
-	],
-	handlebars: [
-		{
-			id: "SNYK-JS-HANDLEBARS-534988",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=4.0.0 <4.5.3",
-					"<3.0.8"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-HANDLEBARS-534478",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=4.0.0 <4.5.3",
-					"<3.0.8"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-HANDLEBARS-480388",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=4.0.0 <4.4.5"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-HANDLEBARS-469063",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=4.0.0 <4.3.0",
-					"<3.8.0"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-HANDLEBARS-174183",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=3.0.0 <3.0.7",
-					">=4.1.0 <4.1.2",
-					">=4.0.0 <4.0.14"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-HANDLEBARS-173692",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<4.0.14",
-					">=4.1.0 <4.1.2"
-				]
-			}
-		},
-		{
-			id: "npm:handlebars:20151207",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<4.0.0"
-				]
-			}
-		},
-		{
-			id: "npm:handlebars:20110425",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<=1.0.0-beta.3"
-				]
-			}
-		}
-	],
-	highcharts: [
-		{
-			id: "npm:highcharts:20180225",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<6.1.0"
-				]
-			}
-		}
-	],
-	jquery: [
-		{
-			id: "SNYK-JS-JQUERY-174006",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.4.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery:20160529",
-			severity: "low",
-			semver: {
-				vulnerable: [
-					">=3.0.0-rc1 <3.0.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery:20150627",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.12.2",
-					">=1.12.3 <2.2.2",
-					">=2.2.3 <3.0.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery:20140902",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.4.2 <1.6.2"
-				]
-			}
-		},
-		{
-			id: "npm:jquery:20120206",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=1.7.1 <1.9.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery:20110606",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.6.3"
-				]
-			}
-		}
-	],
-	"jquery-mobile": [
-		{
-			id: "SNYK-JS-JQUERYMOBILE-174599",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<=1.5.0-alpha.1"
-				]
-			}
-		},
-		{
-			id: "npm:jquery-mobile:20120802",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.2.0"
-				]
-			}
-		}
-	],
-	"jquery-ui": [
-		{
-			id: "npm:jquery-ui:20121127",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.10.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery-ui:20100903",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<1.10.0"
-				]
-			}
-		},
-		{
-			id: "npm:jquery-ui:20160721",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<1.12.0"
-				]
-			}
-		}
-	],
-	knockout: [
-		{
-			id: "npm:knockout:20180213",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.5.0-beta"
-				]
-			}
-		},
-		{
-			id: "npm:knockout:20130701",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=2.1.0-pre <3.0.0"
-				]
-			}
-		}
-	],
-	lodash: [
-		{
-			id: "SNYK-JS-LODASH-450202",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<4.17.12"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-LODASH-73639",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<4.17.11"
-				]
-			}
-		},
-		{
-			id: "SNYK-JS-LODASH-73638",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					"<4.17.11"
-				]
-			}
-		},
-		{
-			id: "npm:lodash:20180130",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<4.17.5"
-				]
-			}
-		}
-	],
-	moment: [
-		{
-			id: "npm:moment:20170905",
-			severity: "low",
-			semver: {
-				vulnerable: [
-					"<2.19.3"
-				]
-			}
-		},
-		{
-			id: "npm:moment:20161019",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.15.2"
-				]
-			}
-		},
-		{
-			id: "npm:moment:20160126",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.11.2"
-				]
-			}
-		}
-	],
-	mustache: [
-		{
-			id: "npm:mustache:20151207",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.2.1"
-				]
-			}
-		},
-		{
-			id: "npm:mustache:20110814",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"< 0.3.1"
-				]
-			}
-		}
-	],
-	react: [
-		{
-			id: "npm:react:20150318",
-			severity: "high",
-			semver: {
-				vulnerable: [
-					">=0.0.1 <0.14.0"
-				]
-			}
-		},
-		{
-			id: "npm:react:20131217",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=0.5.0 <0.5.2",
-					">=0.4.0 <0.4.2"
-				]
-			}
-		}
-	],
-	riot: [
-		{
-			id: "npm:riot:20131114",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<0.9.6"
-				]
-			}
-		}
-	],
-	"socket.io": [
-		{
-			id: "npm:socket.io:20120417",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<0.9.6"
-				]
-			}
-		},
-		{
-			id: "npm:socket.io:20120323",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<0.9.7"
-				]
-			}
-		}
-	],
-	vue: [
-		{
-			id: "npm:vue:20170829",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.4.3"
-				]
-			}
-		},
-		{
-			id: "npm:vue:20170401",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.3.0-beta.1"
-				]
-			}
-		},
-		{
-			id: "npm:vue:20180802",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.5.17"
-				]
-			}
-		},
-		{
-			id: "npm:vue:20180222",
-			severity: "low",
-			semver: {
-				vulnerable: [
-					"<2.5.14"
-				]
-			}
-		}
-	],
-	yui: [
-		{
-			id: "npm:yui:20130604",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					">=3.0.0 <3.10.1 || =3.10.2"
-				]
-			}
-		},
-		{
-			id: "npm:yui:20130515",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.10.0 >=3.0.0"
-				]
-			}
-		},
-		{
-			id: "npm:yui:20121030",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.0.0 >=2.4.0"
-				]
-			}
-		},
-		{
-			id: "npm:yui:20120428",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<3.5.1 >=3.5.0-PR1"
-				]
-			}
-		},
-		{
-			id: "npm:yui:20101025",
-			severity: "medium",
-			semver: {
-				vulnerable: [
-					"<2.8.2 >=2.4.0"
-				]
-			}
-		}
-	]
-};
+  "ag-grid": [
+    {
+      "id": "npm:ag-grid:20171016",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=13.0.0 <14.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:ag-grid:20160519",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.3.0 <5.0.0-alpha.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:ag-grid:20160128",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.0.0"
+        ]
+      }
+    }
+  ],
+  "angular": [
+    {
+      "id": "SNYK-JS-ANGULAR-572020",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.8.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-ANGULAR-570058",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.8.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-ANGULAR-534884",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.4.0-beta.6 <1.7.9"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-ANGULAR-471885",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.3"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-ANGULAR-471882",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.5"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-ANGULAR-471879",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.0-rc.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20180202",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20171018",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20160527",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.2.30"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20160122",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.3.0 <1.5.0-rc.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20140608",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.3.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20131113",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.2.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20140908",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.0-rc.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20161101",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.5.0 <1.5.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20150909",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.5.0-beta.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20151205",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.5.0-rc.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20151130",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.10"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20130622",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.2.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20150807-1",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.3.1 <1.5.0-beta.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20150807",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.5.0-beta.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20150315",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20150310",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.4.0-beta.6"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20141104",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20130621",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20140909",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.2.19 <1.2.24"
+        ]
+      }
+    },
+    {
+      "id": "npm:angular:20130625",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.1.5"
+        ]
+      }
+    }
+  ],
+  "angular-gettext": [
+    {
+      "id": "npm:angular-gettext:20140624",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "angular-jwt": [
+    {
+      "id": "npm:angular-jwt:20180605",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.10"
+        ]
+      }
+    }
+  ],
+  "angular-redactor": [
+    {
+      "id": "npm:angular-redactor:20180705",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.1.7"
+        ]
+      }
+    }
+  ],
+  "ansi2html": [
+    {
+      "id": "npm:ansi2html:20151025",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.0.1"
+        ]
+      }
+    }
+  ],
+  "ascii-art": [
+    {
+      "id": "SNYK-JS-ASCIIART-72306",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.4.4"
+        ]
+      }
+    }
+  ],
+  "assign-deep": [
+    {
+      "id": "SNYK-JS-ASSIGNDEEP-450211",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.0.1",
+          "<0.4.8"
+        ]
+      }
+    },
+    {
+      "id": "npm:assign-deep:20180215",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.4.7"
+        ]
+      }
+    }
+  ],
+  "astronomia": [
+    {
+      "id": "npm:astronomia:20180225",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.3.9"
+        ]
+      }
+    }
+  ],
+  "atob": [
+    {
+      "id": "npm:atob:20180429",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.1.0"
+        ]
+      }
+    }
+  ],
+  "auth0-lock": [
+    {
+      "id": "SNYK-JS-AUTH0LOCK-543943",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<11.21.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:auth0-lock:20180409",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<11.0.0"
+        ]
+      }
+    }
+  ],
+  "backbone": [
+    {
+      "id": "npm:backbone:20160523",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:backbone:20110701",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.5.0"
+        ]
+      }
+    }
+  ],
+  "base64-url": [
+    {
+      "id": "npm:base64-url:20180512",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.0"
+        ]
+      }
+    }
+  ],
+  "blueimp-file-upload": [
+    {
+      "id": "SNYK-JS-BLUEIMPFILEUPLOAD-72453",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<9.22.1"
+        ]
+      }
+    }
+  ],
+  "bootstrap": [
+    {
+      "id": "SNYK-JS-BOOTSTRAP-173700",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.1",
+          ">=4.0.0 <4.3.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-BOOTSTRAP-73560",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.1.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-BOOTSTRAP-72890",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-BOOTSTRAP-72889",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:bootstrap:20180529",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.0",
+          ">=4.0.0 <4.1.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:bootstrap:20160627",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.0",
+          ">=4.0.0-alpha <4.0.0-beta.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:bootstrap:20120510",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.1.0"
+        ]
+      }
+    }
+  ],
+  "bootstrap-markdown": [
+    {
+      "id": "npm:bootstrap-markdown:20140826",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=2.10.0"
+        ]
+      }
+    }
+  ],
+  "bootstrap-tagsinput": [
+    {
+      "id": "npm:bootstrap-tagsinput:20160720",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.8.0"
+        ]
+      }
+    }
+  ],
+  "brace-expansion": [
+    {
+      "id": "npm:brace-expansion:20170302",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.7"
+        ]
+      }
+    }
+  ],
+  "braces": [
+    {
+      "id": "npm:braces:20180219",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<2.3.1"
+        ]
+      }
+    }
+  ],
+  "bson": [
+    {
+      "id": "SNYK-JS-BSON-561052",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.1.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:bson:20180225",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=0.5.0 <1.0.5"
+        ]
+      }
+    }
+  ],
+  "buefy": [
+    {
+      "id": "SNYK-JS-BUEFY-567814",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.8.18"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-BUEFY-72871",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.7.2"
+        ]
+      }
+    }
+  ],
+  "c3": [
+    {
+      "id": "npm:c3:20160817",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.4.11"
+        ]
+      }
+    }
+  ],
+  "checkit": [
+    {
+      "id": "npm:checkit:20180226",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<=0.7.0"
+        ]
+      }
+    }
+  ],
+  "citeproc": [
+    {
+      "id": "npm:citeproc:20180214",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.1.184"
+        ]
+      }
+    }
+  ],
+  "ckeditor": [
+    {
+      "id": "SNYK-JS-CKEDITOR-72618",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.11.0"
+        ]
+      }
+    }
+  ],
+  "clusterize.js": [
+    {
+      "id": "npm:clusterize.js:20150429",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.1"
+        ]
+      }
+    }
+  ],
+  "compromise": [
+    {
+      "id": "npm:compromise:20180226",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<11.5.1"
+        ]
+      }
+    }
+  ],
+  "console-io": [
+    {
+      "id": "npm:console-io:20160418",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.3.0"
+        ]
+      }
+    }
+  ],
+  "content-type-parser": [
+    {
+      "id": "npm:content-type-parser:20170905",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.0.0"
+        ]
+      }
+    }
+  ],
+  "crypto-browserify": [
+    {
+      "id": "npm:crypto-browserify:20140722",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.1.11"
+        ]
+      }
+    }
+  ],
+  "d3.js": [
+    {
+      "id": "npm:d3.js:20170802",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<= 1.0.2"
+        ]
+      }
+    }
+  ],
+  "datatables": [
+    {
+      "id": "npm:datatables:20151106",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.10 >=1.10.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:datatables:20150918",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.10"
+        ]
+      }
+    }
+  ],
+  "deap": [
+    {
+      "id": "npm:deap:20180415",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.1"
+        ]
+      }
+    }
+  ],
+  "decamelize": [
+    {
+      "id": "npm:decamelize:20151223",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.1.0 <1.1.2"
+        ]
+      }
+    }
+  ],
+  "deep-extend": [
+    {
+      "id": "npm:deep-extend:20180409",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.5.1"
+        ]
+      }
+    }
+  ],
+  "defaults-deep": [
+    {
+      "id": "SNYK-JS-DEFAULTSDEEP-173661",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.2.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:defaults-deep:20180215",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.2.4"
+        ]
+      }
+    }
+  ],
+  "diff": [
+    {
+      "id": "npm:diff:20180305",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.5.0"
+        ]
+      }
+    }
+  ],
+  "dijit": [
+    {
+      "id": "SNYK-JS-DIJIT-572370",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.11.11",
+          ">=1.12.0 <1.12.9",
+          ">=1.13.0 <1.13.8",
+          ">=1.14.0 <1.14.7",
+          ">=1.15.0 <1.15.4",
+          ">=1.16.0 <1.16.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:dijit:20180205",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.16.3"
+        ]
+      }
+    }
+  ],
+  "dojo": [
+    {
+      "id": "SNYK-JS-DOJO-559224",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.11.10",
+          ">=1.12.0 <1.12.8",
+          ">=1.13.0 <1.13.7",
+          ">=1.14.0 <1.14.6",
+          ">=1.15.0 <1.15.3",
+          ">=1.16.0 <1.16.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-DOJO-174934",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.0.3",
+          ">=1.1.0 <1.1.2",
+          ">=1.2.0 <1.2.4",
+          ">=1.3.0 <1.3.3",
+          ">=1.4.0 <1.4.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-DOJO-174933",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-DOJO-72305",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.14"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojo:20180818",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.10",
+          ">=1.11.0 <1.11.6",
+          ">=1.12.0 <1.12.4",
+          ">=1.13.0 <1.13.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojo:20160523",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojo:20100614-6",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojo:20100614",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.4.0 <0.4.4",
+          ">=1.0.0 <1.0.3",
+          ">=1.1.0 <1.1.2",
+          ">=1.2.0 <1.2.4",
+          ">=1.3.0 <1.3.3",
+          ">=1.4.0 <1.4.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojo:20090409",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1"
+        ]
+      }
+    }
+  ],
+  "dojox": [
+    {
+      "id": "SNYK-JS-DOJOX-559225",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.11.10",
+          ">=1.12.0 <1.12.8",
+          ">=1.13.0 <1.13.7",
+          ">=1.14.0 <1.14.6",
+          ">=1.15.0 <1.15.3",
+          ">=1.16.0 <1.16.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-DOJOX-548257",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.16.0 <1.16.1",
+          ">=1.15.0 <1.15.2",
+          ">=1.4.0 <1.14.5",
+          ">=1.13.0 <1.13.6",
+          ">=1.12.0 <1.12.7",
+          "<1.11.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:dojox:20180818",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.10",
+          ">=1.11.0 <1.11.6",
+          ">=1.12.0 <1.12.4",
+          ">=1.13.0 <1.13.1"
+        ]
+      }
+    }
+  ],
+  "dompurify": [
+    {
+      "id": "SNYK-JS-DOMPURIFY-474012",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.7"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-DOMPURIFY-468981",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:dompurify:20160412",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.7.3 <0.8.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:dompurify:20150217",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.6.1 >=0.4.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:dompurify:20141008",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.4.4 "
+        ]
+      }
+    },
+    {
+      "id": "npm:dompurify:20140308",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:dompurify:20170421",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.8.6"
+        ]
+      }
+    }
+  ],
+  "ducktype": [
+    {
+      "id": "npm:ducktype:20180219",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.2.1"
+        ]
+      }
+    }
+  ],
+  "dustjs-linkedin": [
+    {
+      "id": "npm:dustjs-linkedin:20160819",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.6.0"
+        ]
+      }
+    }
+  ],
+  "easyxdm": [
+    {
+      "id": "npm:easyxdm:20130110",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.4.19"
+        ]
+      }
+    }
+  ],
+  "ember": [
+    {
+      "id": "npm:ember:20140114",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=1.4.0-beta.1 <1.4.0-beta.2",
+          ">=1.3.0 <1.3.1",
+          ">=1.2.0 <1.2.1",
+          ">=1.1.0 <1.1.3",
+          ">=1.0.0 <1.0.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:ember:20140214",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=1.2.0 <1.2.2",
+          ">=1.3.0 <1.3.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:ember:20130105",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">= 1.0.0-rc.1 <1.0.0-rc.1.1",
+          ">= 1.0.0-rc.2 <1.0.0-rc.2.1",
+          ">= 1.0.0-rc.3 <1.0.0-rc.3.1",
+          ">= 1.0.0-rc.4 <1.0.0-rc.4.1",
+          ">= 1.0.0-rc.5 <1.0.0-rc.5.1",
+          ">= 1.0.0-rc.6 <1.0.0-rc.6.1"
+        ]
+      }
+    }
+  ],
+  "emojione": [
+    {
+      "id": "npm:emojione:20160725",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.3.0"
+        ]
+      }
+    }
+  ],
+  "engine.io": [
+    {
+      "id": "npm:engine.io:20140212",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "engine.io-client": [
+    {
+      "id": "npm:engine.io-client:20160426",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.6.9"
+        ]
+      }
+    }
+  ],
+  "exceljs": [
+    {
+      "id": "npm:exceljs:20180805",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.0"
+        ]
+      }
+    }
+  ],
+  "extend": [
+    {
+      "id": "npm:extend:20180424",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.2",
+          ">=3.0.0 <3.0.2"
+        ]
+      }
+    }
+  ],
+  "favico.js": [
+    {
+      "id": "npm:favico.js:20150907",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.3.10"
+        ]
+      }
+    }
+  ],
+  "faye": [
+    {
+      "id": "SNYK-JS-FAYE-567757",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.4",
+          ">=1.1.0 <1.1.3",
+          ">=1.2.0 <1.2.5"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-FAYE-567269",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.1.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:faye:20121107",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.8.9 >=0.5.0"
+        ]
+      }
+    }
+  ],
+  "fernet": [
+    {
+      "id": "npm:fernet:20140306",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.0 >=0.0.1"
+        ]
+      }
+    }
+  ],
+  "foundation-sites": [
+    {
+      "id": "npm:foundation-sites:20170802",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<6.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:foundation-sites:20150619",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<5.5.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:foundation-sites:20120717",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.0.6"
+        ]
+      }
+    }
+  ],
+  "fuelux": [
+    {
+      "id": "npm:fuelux:20160725",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.15.7"
+        ]
+      }
+    }
+  ],
+  "fullpage.js": [
+    {
+      "id": "npm:fullpage.js:20151207",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.7.6"
+        ]
+      }
+    }
+  ],
+  "getstats": [
+    {
+      "id": "npm:getstats:20180226",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.2.0"
+        ]
+      }
+    }
+  ],
+  "git-username": [
+    {
+      "id": "npm:git-username:20180226",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<0.5.1"
+        ]
+      }
+    }
+  ],
+  "github-url-to-object": [
+    {
+      "id": "npm:github-url-to-object:20180226",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<4.0.4"
+        ]
+      }
+    }
+  ],
+  "gmail-js": [
+    {
+      "id": "npm:gmail-js:20160721",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.6.5"
+        ]
+      }
+    }
+  ],
+  "google-closure-library": [
+    {
+      "id": "SNYK-JS-GOOGLECLOSURELIBRARY-561341",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<20200315.0.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-GOOGLECLOSURELIBRARY-174519",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=20190121.0.0 <20190301.0.0"
+        ]
+      }
+    }
+  ],
+  "handlebars": [
+    {
+      "id": "SNYK-JS-HANDLEBARS-567742",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.6.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-534988",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.5.3",
+          "<3.0.8"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-534478",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.5.3",
+          "<3.0.8"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-480388",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.4.5"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-469063",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=4.0.0 <4.3.0",
+          "<3.8.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-174183",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.0.7",
+          ">=4.1.0 <4.1.2",
+          ">=4.0.0 <4.0.14"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-HANDLEBARS-173692",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.0.14",
+          ">=4.1.0 <4.1.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:handlebars:20151207",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:handlebars:20110425",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.0.0-beta.3"
+        ]
+      }
+    }
+  ],
+  "haraka": [
+    {
+      "id": "SNYK-JS-HARAKA-456231",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.8.20"
+        ]
+      }
+    },
+    {
+      "id": "npm:haraka:20180625",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.8.19"
+        ]
+      }
+    }
+  ],
+  "harb": [
+    {
+      "id": "npm:harb:20180222",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<=1.0.0"
+        ]
+      }
+    }
+  ],
+  "hawk": [
+    {
+      "id": "npm:hawk:20160119",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<3.1.3",
+          ">=4.0.0 <4.1.1"
+        ]
+      }
+    }
+  ],
+  "highcharts": [
+    {
+      "id": "SNYK-JS-HIGHCHARTS-571995",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<8.1.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:highcharts:20180225",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<6.1.0"
+        ]
+      }
+    }
+  ],
+  "html-dom-parser": [
+    {
+      "id": "npm:html-dom-parser:20180220",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<0.1.3"
+        ]
+      }
+    }
+  ],
+  "i18next": [
+    {
+      "id": "npm:i18next:20161013",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.0.0 <3.4.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:i18next:20151018",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.3"
+        ]
+      }
+    }
+  ],
+  "is-my-json-valid": [
+    {
+      "id": "npm:is-my-json-valid:20180214",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.4.1",
+          ">=2.0.0 <2.17.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:is-my-json-valid:20160118",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.12.4"
+        ]
+      }
+    }
+  ],
+  "is-url": [
+    {
+      "id": "npm:is-url:20180319",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.2.4"
+        ]
+      }
+    }
+  ],
+  "ismobilejs": [
+    {
+      "id": "SNYK-JS-ISMOBILEJS-72624",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.5.0"
+        ]
+      }
+    }
+  ],
+  "jplayer": [
+    {
+      "id": "npm:jplayer:20130511",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.2.20"
+        ]
+      }
+    },
+    {
+      "id": "npm:jplayer:20180813",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:jplayer:20180814",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.0"
+        ]
+      }
+    }
+  ],
+  "jqtree": [
+    {
+      "id": "npm:jqtree:20160725",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.3.3"
+        ]
+      }
+    }
+  ],
+  "jquery": [
+    {
+      "id": "SNYK-JS-JQUERY-569619",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.9.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JQUERY-567880",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.2.0 <3.5.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JQUERY-565129",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.3 <3.5.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JQUERY-174006",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery:20160529",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0-rc1 <3.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery:20150627",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.12.2",
+          ">=1.12.3 <2.2.2",
+          ">=2.2.3 <3.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery:20140902",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.4.2 <1.6.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery:20120206",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.7.1 <1.9.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery:20110606",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.3"
+        ]
+      }
+    }
+  ],
+  "jquery-colorbox": [
+    {
+      "id": "npm:jquery-colorbox:20171115",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.6.4"
+        ]
+      }
+    }
+  ],
+  "jquery-file-upload": [
+    {
+      "id": "SNYK-JS-JQUERYFILEUPLOAD-72622",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<=4.0.11"
+        ]
+      }
+    }
+  ],
+  "jquery-migrate": [
+    {
+      "id": "npm:jquery-migrate:20130419",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.1"
+        ]
+      }
+    }
+  ],
+  "jquery-mobile": [
+    {
+      "id": "SNYK-JS-JQUERYMOBILE-174599",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.5.0-alpha.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery-mobile:20120802",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.0"
+        ]
+      }
+    }
+  ],
+  "jquery-ui": [
+    {
+      "id": "npm:jquery-ui:20121127",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery-ui:20100903",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:jquery-ui:20160721",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.12.0"
+        ]
+      }
+    }
+  ],
+  "jquery-ujs": [
+    {
+      "id": "npm:jquery-ujs:20150624",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.4"
+        ]
+      }
+    }
+  ],
+  "jquery.js": [
+    {
+      "id": "npm:jquery.js:20170802",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<= 1.0.2"
+        ]
+      }
+    }
+  ],
+  "js-quantities": [
+    {
+      "id": "npm:js-quantities:20161202",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.6.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:js-quantities:20161111",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.7.0"
+        ]
+      }
+    }
+  ],
+  "js-yaml": [
+    {
+      "id": "SNYK-JS-JSYAML-174129",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.13.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JSYAML-174117",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.5.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JSYAML-173999",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.13.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:js-yaml:20130623",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.0.5"
+        ]
+      }
+    }
+  ],
+  "jshamcrest": [
+    {
+      "id": "npm:jshamcrest:20160105",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.7.1"
+        ]
+      }
+    }
+  ],
+  "jspdf": [
+    {
+      "id": "SNYK-JS-JSPDF-575256",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.5.3"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-JSPDF-568273",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.5.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:jspdf:20140327",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.135"
+        ]
+      }
+    }
+  ],
+  "jsrender": [
+    {
+      "id": "npm:jsrender:20160330",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=0.9.73"
+        ]
+      }
+    }
+  ],
+  "jstree": [
+    {
+      "id": "SNYK-JS-JSTREE-72490",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.3.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:jstree:20140710",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.0.3"
+        ]
+      }
+    }
+  ],
+  "knex": [
+    {
+      "id": "SNYK-JS-KNEX-471962",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.19.5"
+        ]
+      }
+    },
+    {
+      "id": "npm:knex:20150413",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.6.23",
+          ">=0.7.0 <0.7.6"
+        ]
+      }
+    }
+  ],
+  "knockout": [
+    {
+      "id": "npm:knockout:20180213",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.5.0-beta"
+        ]
+      }
+    },
+    {
+      "id": "npm:knockout:20130701",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.1.0-pre <3.0.0"
+        ]
+      }
+    }
+  ],
+  "lodash": [
+    {
+      "id": "SNYK-JS-LODASH-567746",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=4.17.15"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-LODASH-450202",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.17.12"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-LODASH-73639",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.17.11"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-LODASH-73638",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.17.11"
+        ]
+      }
+    },
+    {
+      "id": "npm:lodash:20180130",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.17.5"
+        ]
+      }
+    }
+  ],
+  "mapbox.js": [
+    {
+      "id": "npm:mapbox.js:20160112",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.6.6",
+          "< 2.2.4 > 2.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:mapbox.js:20151024",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.6.5",
+          "< 2.1.7 > 2.0.0"
+        ]
+      }
+    }
+  ],
+  "markdown-it": [
+    {
+      "id": "SNYK-JS-MARKDOWNIT-459438",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<10.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:markdown-it:20150702",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.3.1 >=4.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:markdown-it:20160912",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.1.0"
+        ]
+      }
+    }
+  ],
+  "marked": [
+    {
+      "id": "SNYK-JS-MARKED-451540",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.4.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-MARKED-451341",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.4.0 <0.7.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-MARKED-174116",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.1.3 <0.6.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-MARKED-73637",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.5.0 <0.6.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20180225",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.18"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20170815-1",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.3.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20170815",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20170907",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.9"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20170112",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20150520",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=0.3.1 <0.3.6"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20140131",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=0.3.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20140131-1",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.3.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:marked:20140131-2",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.3.3"
+        ]
+      }
+    }
+  ],
+  "mathjs": [
+    {
+      "id": "npm:mathjs:20170402",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.11.5"
+        ]
+      }
+    },
+    {
+      "id": "npm:mathjs:20170331",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.10.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:mathjs:20170527",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.13.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:mathjs:20171118-1",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.17.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:mathjs:20171118",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.17.0"
+        ]
+      }
+    }
+  ],
+  "mediaelement": [
+    {
+      "id": "npm:mediaelement:20170208",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.1.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:mediaelement:20160504",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.17.0 <2.21.0"
+        ]
+      }
+    }
+  ],
+  "merge": [
+    {
+      "id": "SNYK-JS-MERGE-72553",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.2.1"
+        ]
+      }
+    }
+  ],
+  "merge-deep": [
+    {
+      "id": "npm:merge-deep:20180215",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.0.1"
+        ]
+      }
+    }
+  ],
+  "merge-objects": [
+    {
+      "id": "npm:merge-objects:20180415",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.0.5"
+        ]
+      }
+    }
+  ],
+  "merge-options": [
+    {
+      "id": "npm:merge-options:20180415",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.1"
+        ]
+      }
+    }
+  ],
+  "merge-recursive": [
+    {
+      "id": "npm:merge-recursive:20180415",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.0.3"
+        ]
+      }
+    }
+  ],
+  "mergely": [
+    {
+      "id": "npm:mergely:20180623",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.0.5"
+        ]
+      }
+    }
+  ],
+  "millisecond": [
+    {
+      "id": "npm:millisecond:20151120",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.2"
+        ]
+      }
+    }
+  ],
+  "mimer": [
+    {
+      "id": "npm:mimer:20180210",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.3.0"
+        ]
+      }
+    }
+  ],
+  "mixin-deep": [
+    {
+      "id": "SNYK-JS-MIXINDEEP-450212",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=2.0.0 <2.0.1",
+          "<1.3.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:mixin-deep:20180215",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.3.1"
+        ]
+      }
+    }
+  ],
+  "mobile-detect": [
+    {
+      "id": "npm:mobile-detect:20170907",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.0"
+        ]
+      }
+    }
+  ],
+  "moddle-xml": [
+    {
+      "id": "npm:moddle-xml:20180222",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<4.1.3"
+        ]
+      }
+    }
+  ],
+  "mol-proto": [
+    {
+      "id": "npm:mol-proto:20160407",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.6"
+        ]
+      }
+    }
+  ],
+  "moment": [
+    {
+      "id": "npm:moment:20170905",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<2.19.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:moment:20161019",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.15.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:moment:20160126",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.11.2"
+        ]
+      }
+    }
+  ],
+  "morris.js": [
+    {
+      "id": "npm:morris.js:20140717",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=0.5.0"
+        ]
+      }
+    }
+  ],
+  "mqtt": [
+    {
+      "id": "npm:mqtt:20171225",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.0.0 <2.15.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:mqtt:20160817",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "ms": [
+    {
+      "id": "npm:ms:20170412",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=0.7.1 <2.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:ms:20151024",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.7.1"
+        ]
+      }
+    }
+  ],
+  "mustache": [
+    {
+      "id": "npm:mustache:20151207",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.2.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:mustache:20110814",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "< 0.3.1"
+        ]
+      }
+    }
+  ],
+  "mxgraph": [
+    {
+      "id": "SNYK-JS-MXGRAPH-451302",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:mxgraph:20171122",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.7.6"
+        ]
+      }
+    }
+  ],
+  "next": [
+    {
+      "id": "SNYK-JS-NEXT-571938",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<5.1.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-NEXT-561584",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<9.3.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-NEXT-174590",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.4.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-NEXT-72454",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=7.0.0 <7.0.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:next:20180124",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.2.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:next:20170607",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.4.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:next:20170601",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.4.1",
+          ">=3.0.0-beta1 <3.0.0-beta7"
+        ]
+      }
+    }
+  ],
+  "ng-dialog": [
+    {
+      "id": "npm:ng-dialog:20160916",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.0.0"
+        ]
+      }
+    }
+  ],
+  "no-case": [
+    {
+      "id": "npm:no-case:20170908",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.2"
+        ]
+      }
+    }
+  ],
+  "node-htmlparser-classic": [
+    {
+      "id": "npm:node-htmlparser-classic:20170906",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=2.0.0"
+        ]
+      }
+    }
+  ],
+  "node-jose": [
+    {
+      "id": "npm:node-jose:20171222",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.11.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:node-jose:20170313",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.9.3"
+        ]
+      }
+    }
+  ],
+  "node-red": [
+    {
+      "id": "SNYK-JS-NODERED-541514",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.20.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:node-red:20180511",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.18.6"
+        ]
+      }
+    }
+  ],
+  "node-serialize": [
+    {
+      "id": "npm:node-serialize:20170208",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.0.4"
+        ]
+      }
+    }
+  ],
+  "node-uuid": [
+    {
+      "id": "npm:node-uuid:20111130",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:node-uuid:20160328",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.4"
+        ]
+      }
+    }
+  ],
+  "nunjucks": [
+    {
+      "id": "npm:nunjucks:20160906",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.4.3"
+        ]
+      }
+    }
+  ],
+  "nwmatcher": [
+    {
+      "id": "npm:nwmatcher:20180305",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.4.4"
+        ]
+      }
+    }
+  ],
+  "openwhisk": [
+    {
+      "id": "npm:openwhisk:20170302",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.3.1"
+        ]
+      }
+    }
+  ],
+  "parsejson": [
+    {
+      "id": "npm:parsejson:20170908",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.0.3"
+        ]
+      }
+    }
+  ],
+  "pivottable": [
+    {
+      "id": "npm:pivottable:20160817",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.4.0 <2.0.0"
+        ]
+      }
+    }
+  ],
+  "plist": [
+    {
+      "id": "npm:plist:20180219",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.2.0 <3.0.1"
+        ]
+      }
+    }
+  ],
+  "plotly.js": [
+    {
+      "id": "SNYK-JS-PLOTLYJS-455599",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.10.4",
+          ">=1.11.0 <1.16.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:plotly.js:20151210",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.2.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:plotly.js:20160808-1",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.16.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:plotly.js:20160808",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.10.4 <1.16.0"
+        ]
+      }
+    }
+  ],
+  "preact-render-to-string": [
+    {
+      "id": "npm:preact-render-to-string:20180802",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.7.2"
+        ]
+      }
+    }
+  ],
+  "protobufjs": [
+    {
+      "id": "npm:protobufjs:20180305",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<5.0.3",
+          ">=6.0.0 <6.8.6"
+        ]
+      }
+    }
+  ],
+  "pym.js": [
+    {
+      "id": "npm:pym.js:20180215",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.3.2"
+        ]
+      }
+    }
+  ],
+  "qs": [
+    {
+      "id": "npm:qs:20170213",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<6.0.4",
+          ">=6.1.0 <6.1.2",
+          ">=6.2.0 <6.2.3",
+          ">=6.3.0 <6.3.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:qs:20140806-1",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:qs:20140806",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "querystringify": [
+    {
+      "id": "npm:querystringify:20180419",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.0"
+        ]
+      }
+    }
+  ],
+  "quill": [
+    {
+      "id": "SNYK-JS-QUILL-460312",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.7"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-QUILL-451551",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:quill:20160916",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0-beta.0 <1.0.4"
+        ]
+      }
+    }
+  ],
+  "ractive": [
+    {
+      "id": "npm:ractive:20160318",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.8.0"
+        ]
+      }
+    }
+  ],
+  "react": [
+    {
+      "id": "npm:react:20150318",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=0.0.1 <0.14.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:react:20131217",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=0.5.0 <0.5.2",
+          ">=0.4.0 <0.4.2"
+        ]
+      }
+    }
+  ],
+  "react-dom": [
+    {
+      "id": "npm:react-dom:20180802",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=16.0.0 <16.0.1",
+          ">=16.1.0 <16.1.2",
+          ">=16.2.0 <16.2.1",
+          ">=16.3.0 <16.3.3",
+          ">=16.4.0 <16.4.2"
+        ]
+      }
+    }
+  ],
+  "react-marked-markdown": [
+    {
+      "id": "npm:react-marked-markdown:20180517",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.4.6"
+        ]
+      }
+    }
+  ],
+  "react-svg": [
+    {
+      "id": "npm:react-svg:20180427",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.2.18"
+        ]
+      }
+    }
+  ],
+  "react-tooltip": [
+    {
+      "id": "SNYK-JS-REACTTOOLTIP-72363",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.8.1"
+        ]
+      }
+    }
+  ],
+  "reduce-css-calc": [
+    {
+      "id": "npm:reduce-css-calc:20160913",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.5"
+        ]
+      }
+    }
+  ],
+  "remarkable": [
+    {
+      "id": "SNYK-JS-REMARKABLE-174641",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.6.0 <1.7.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-REMARKABLE-174639",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <1.7.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:remarkable:20160820",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.7.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:remarkable:20141113",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.1"
+        ]
+      }
+    }
+  ],
+  "rendr": [
+    {
+      "id": "npm:rendr:20160311",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.4 >=0.4.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:rendr:20131212",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.5.0-rc1"
+        ]
+      }
+    },
+    {
+      "id": "npm:rendr:20130709",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<0.4.8-2"
+        ]
+      }
+    },
+    {
+      "id": "npm:rendr:20160725",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=1.1.3"
+        ]
+      }
+    }
+  ],
+  "rendr-handlebars": [
+    {
+      "id": "npm:rendr-handlebars:20140722",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "reveal.js": [
+    {
+      "id": "SNYK-JS-REVEALJS-543841",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.9.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-REVEALJS-173730",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:reveal.js:20131024",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.6.0"
+        ]
+      }
+    }
+  ],
+  "rgb2hex": [
+    {
+      "id": "npm:rgb2hex:20180429",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.6"
+        ]
+      }
+    }
+  ],
+  "riot": [
+    {
+      "id": "npm:riot:20131114",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.9.6"
+        ]
+      }
+    }
+  ],
+  "rrule": [
+    {
+      "id": "SNYK-JS-RRULE-72455",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.6.0"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-RRULE-72421",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.5.6"
+        ]
+      }
+    }
+  ],
+  "sanitize-html": [
+    {
+      "id": "npm:sanitize-html:20140717",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:sanitize-html:20161026",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.11.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:sanitize-html:20160801",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.4.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:sanitize-html:20141024",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.4.3"
+        ]
+      }
+    }
+  ],
+  "secure-compare": [
+    {
+      "id": "npm:secure-compare:20151024",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.0.1"
+        ]
+      }
+    }
+  ],
+  "select2": [
+    {
+      "id": "SNYK-JS-SELECT2-456562",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.0.8"
+        ]
+      }
+    },
+    {
+      "id": "npm:select2:20130108",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.0 <3.3.0"
+        ]
+      }
+    }
+  ],
+  "semantic-ui": [
+    {
+      "id": "SNYK-JS-SEMANTICUI-174699",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=2.4.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:semantic-ui:20170130",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.2.8"
+        ]
+      }
+    },
+    {
+      "id": "npm:semantic-ui:20140824",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "serialize-to-js": [
+    {
+      "id": "SNYK-JS-SERIALIZETOJS-536958",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.0.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SERIALIZETOJS-460149",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:serialize-to-js:20170208",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.0.0"
+        ]
+      }
+    }
+  ],
+  "shaka-player": [
+    {
+      "id": "npm:shaka-player:20180222",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<2.3.3"
+        ]
+      }
+    }
+  ],
+  "shell-quote": [
+    {
+      "id": "npm:shell-quote:20160621",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.6.1"
+        ]
+      }
+    }
+  ],
+  "showdown-xss-filter": [
+    {
+      "id": "npm:showdown-xss-filter:20150602",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.1"
+        ]
+      }
+    }
+  ],
+  "simditor": [
+    {
+      "id": "SNYK-JS-SIMDITOR-174638",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.22"
+        ]
+      }
+    },
+    {
+      "id": "npm:simditor:20180131",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.22"
+        ]
+      }
+    }
+  ],
+  "simpl-schema": [
+    {
+      "id": "npm:simpl-schema:20180219",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.5.0"
+        ]
+      }
+    }
+  ],
+  "simplemde": [
+    {
+      "id": "SNYK-JS-SIMPLEMDE-72570",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=1.11.2"
+        ]
+      }
+    }
+  ],
+  "slug": [
+    {
+      "id": "npm:slug:20170907",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.9.2"
+        ]
+      }
+    }
+  ],
+  "slugify": [
+    {
+      "id": "npm:slugify:20180805",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.1"
+        ]
+      }
+    }
+  ],
+  "socket.io": [
+    {
+      "id": "npm:socket.io:20120417",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.9.6"
+        ]
+      }
+    },
+    {
+      "id": "npm:socket.io:20120323",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.9.7"
+        ]
+      }
+    }
+  ],
+  "squel": [
+    {
+      "id": "npm:squel:20180322",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=5.13.0"
+        ]
+      }
+    }
+  ],
+  "squire-rte": [
+    {
+      "id": "npm:squire-rte:20160606",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.6.0"
+        ]
+      }
+    }
+  ],
+  "string": [
+    {
+      "id": "npm:string:20170907",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<=3.3.3"
+        ]
+      }
+    }
+  ],
+  "superagent": [
+    {
+      "id": "npm:superagent:20181108",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.8.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:superagent:20170807",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<3.7.0"
+        ]
+      }
+    }
+  ],
+  "swagger-ui": [
+    {
+      "id": "SNYK-JS-SWAGGERUI-572012",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.26.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-472935",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.23.11"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-449942",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.0.3 <2.0.24"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-449941",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.0.13"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-449940",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.2.1"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-449921",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.20.9"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-SWAGGERUI-449808",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.18.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20171031",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.4.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20160901",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.2.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20160815",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.1.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20160725",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.2.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20160721",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.2.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:swagger-ui:20160720",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.2.1"
+        ]
+      }
+    }
+  ],
+  "textangular": [
+    {
+      "id": "npm:textangular:20131227",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.2.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:textangular:20150213",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.7"
+        ]
+      }
+    }
+  ],
+  "timespan": [
+    {
+      "id": "npm:timespan:20170907",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=2.3.0"
+        ]
+      }
+    }
+  ],
+  "tiny-json-http": [
+    {
+      "id": "npm:tiny-json-http:20180214",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<7.0.0"
+        ]
+      }
+    }
+  ],
+  "tinymce": [
+    {
+      "id": "SNYK-JS-TINYMCE-568922",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.9.10",
+          ">=5.0.0 <5.2.2"
+        ]
+      }
+    },
+    {
+      "id": "SNYK-JS-TINYMCE-543825",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=5.0.0 <5.1.4",
+          "<4.9.7"
+        ]
+      }
+    },
+    {
+      "id": "npm:tinymce:20180522",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<4.5.12",
+          ">=4.6.0 <4.7.12"
+        ]
+      }
+    },
+    {
+      "id": "npm:tinymce:20170613",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.6.4"
+        ]
+      }
+    },
+    {
+      "id": "npm:tinymce:20150610",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.2.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:tinymce:20150813",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<4.2.4"
+        ]
+      }
+    }
+  ],
+  "truncate": [
+    {
+      "id": "npm:truncate:20180225",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.0.1"
+        ]
+      }
+    }
+  ],
+  "ua-parser": [
+    {
+      "id": "npm:ua-parser:20170829",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=0.3.5"
+        ]
+      }
+    }
+  ],
+  "ua-parser-js": [
+    {
+      "id": "npm:ua-parser-js:20180227",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.7.18"
+        ]
+      }
+    },
+    {
+      "id": "npm:ua-parser-js:20171012",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.7.16"
+        ]
+      }
+    }
+  ],
+  "uikit": [
+    {
+      "id": "npm:uikit:20160701",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=2.0.0 <2.26.4"
+        ]
+      }
+    }
+  ],
+  "underscore.string": [
+    {
+      "id": "npm:underscore.string:20170908",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">2.4.1 <3.3.5"
+        ]
+      }
+    }
+  ],
+  "uri-js": [
+    {
+      "id": "npm:uri-js:20160804",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<3.0.0"
+        ]
+      }
+    }
+  ],
+  "url-parse": [
+    {
+      "id": "SNYK-JS-URLPARSE-543307",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.4.5"
+        ]
+      }
+    },
+    {
+      "id": "npm:url-parse:20180731",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<1.4.3"
+        ]
+      }
+    }
+  ],
+  "useragent": [
+    {
+      "id": "SNYK-JS-USERAGENT-174737",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<=2.3.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:useragent:20170308",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.1.13"
+        ]
+      }
+    },
+    {
+      "id": "npm:useragent:20170206",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          "<2.1.12"
+        ]
+      }
+    }
+  ],
+  "utile": [
+    {
+      "id": "npm:utile:20180614",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<=0.3.0"
+        ]
+      }
+    }
+  ],
+  "uuid": [
+    {
+      "id": "npm:uuid:20111230",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.3.1"
+        ]
+      }
+    }
+  ],
+  "valid-data-url": [
+    {
+      "id": "npm:valid-data-url:20180214",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.1.5"
+        ]
+      }
+    }
+  ],
+  "validator": [
+    {
+      "id": "npm:validator:20180218",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          ">=5.2.0 <9.4.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:validator:20160218",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<5.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:validator:20150313",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.34.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:validator:20130705",
+      "severity": "high",
+      "semver": {
+        "vulnerable": [
+          ">=0.1.0 <3.22.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:validator:20130705-1",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:validator:20130705-2",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.1"
+        ]
+      }
+    }
+  ],
+  "vega": [
+    {
+      "id": "npm:vega:20151121",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.4.0"
+        ]
+      }
+    }
+  ],
+  "vue": [
+    {
+      "id": "npm:vue:20170829",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.4.3"
+        ]
+      }
+    },
+    {
+      "id": "npm:vue:20170401",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.3.0-beta.1"
+        ]
+      }
+    },
+    {
+      "id": "npm:vue:20180802",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.5.17"
+        ]
+      }
+    },
+    {
+      "id": "npm:vue:20180222",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<2.5.14"
+        ]
+      }
+    }
+  ],
+  "wicket": [
+    {
+      "id": "npm:wicket:20180225",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.3.2"
+        ]
+      }
+    }
+  ],
+  "wysihtml": [
+    {
+      "id": "npm:wysihtml:20121229",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<0.4.0"
+        ]
+      }
+    }
+  ],
+  "xlsx": [
+    {
+      "id": "npm:xlsx:20180222",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<0.12.2"
+        ]
+      }
+    }
+  ],
+  "yui": [
+    {
+      "id": "npm:yui:20130604",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=3.0.0 <3.10.1",
+          "=3.10.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:yui:20130515",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.10.0 >=3.0.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:yui:20121030",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.0.0 >=2.4.0"
+        ]
+      }
+    },
+    {
+      "id": "npm:yui:20120428",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<3.5.1 >=3.5.0-PR1"
+        ]
+      }
+    },
+    {
+      "id": "npm:yui:20101025",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<2.8.2 >=2.4.0"
+        ]
+      }
+    }
+  ],
+  "zeroclipboard": [
+    {
+      "id": "npm:zeroclipboard:20130104",
+      "severity": "low",
+      "semver": {
+        "vulnerable": [
+          "<1.0.8"
+        ]
+      }
+    },
+    {
+      "id": "npm:zeroclipboard:20140131",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          ">=1.0.7 <1.3.2"
+        ]
+      }
+    },
+    {
+      "id": "npm:zeroclipboard:20120528",
+      "severity": "medium",
+      "semver": {
+        "vulnerable": [
+          "<1.1.4"
+        ]
+      }
+    }
+  ]
+}
 var snapshot = {
 	npm: npm
 };
