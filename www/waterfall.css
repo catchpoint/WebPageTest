@@ -7,7 +7,7 @@ div.transparent {opacity:0.0; filter:alpha(opacity=0);}
 div.dialog-title {display: inline;}
 div.dialog-title a {color: #fff;}
 div.request-dialog-radio {display:inline; padding-left: 20px; font-weight: normal; }
-.request-headers, .response-headers, .response-body {display:none;}
+.request-headers, .response-headers, .response-body, .request-raw-details {display:none;}
 
 .jqmWindow {display: none; position: fixed; top: 17%; left: 50%; margin-left: -300px; width: 600px; background-color: #dfdfdf; color: #333; border: 1px solid black; padding: 12px; }
 .jqmOverlay { background-color: #000; }
