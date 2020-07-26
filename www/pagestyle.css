@@ -247,6 +247,8 @@ table.pretty td.good { background: #A1FFA4; }
 table.pretty td.ok { background: #FFB342; }
 table.pretty td.poor { background: #FF7580; }
 
+#custom-metrics table.pretty td { text-align: left; }
+
 /* details page */
 #headers {text-align: left; width:930px; overflow:auto;}
 #headers h1, #headers h2 {text-transform:none;}
