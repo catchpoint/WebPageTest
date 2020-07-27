@@ -11,6 +11,13 @@ $page_description = "View Custom Metrics";
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'ViewCSI'; include ('head.inc'); ?>
+        <style>
+        table.pretty td, table.pretty th {
+            overflow: hidden;
+            text-align: left;
+            max-width: 800px;
+        }
+        </style>
     </head>
     <body>
         <div class="page">
