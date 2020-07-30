@@ -16,8 +16,8 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px; max-width:
 h2 .small {font-weight:normal; font-size: 12px;}
 h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .colored {color: #00A;}
-.page {width: 980px;margin: 0 auto;}
-.page-wide {width: 100%; min-width: 980px;}
+.page {width: 1080px;margin: 0 auto;}
+.page-wide {width: 100%; min-width: 1080px;}
 .centered {text-align: center;}
 .left {text-align: left;}
 .right {text-align: right;}
@@ -48,7 +48,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .logo {width: 222px;margin: 0;padding-top: 15px; float:left;}
 .logo a {display: block;height: 71px;text-indent: -999em;background-image: url(/images/logo_wpt.png);}
 .headerAd {float:right; width:728px; height:90px; margin:5px 0 1px;}
-#wptAuthBar {width: 980px; height: 18px; text-align: right; color: #fff;}
+#wptAuthBar {width: 1080px; height: 18px; text-align: right; color: #fff;}
 #wptAuthBar a {color: #fff;}
 .gplusone {float:right; padding: 4px 5px 0 0;}
 .alert {width:100%; background-color: yellow; color: black; text-align: center; padding: 5px 0;}
@@ -61,7 +61,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #nav li a {display: block;height: 18px;color: #fff;padding: 5px 20px;text-decoration: none;}
 #nav li.current a {text-decoration:underline; color: #f1c52e; }
 
-.test_menu {min-height: 24px;width: 975px;background-color: #2f2f2f;padding-left: 5px; margin-top: 12px; line-height: 24px; clear:both; overflow: auto;}
+.test_menu {min-height: 24px;width: 1075px;background-color: #2f2f2f;padding-left: 5px; margin-top: 12px; line-height: 24px; clear:both; overflow: auto;}
 .test_menu li {float: left;height: inherit;}
 .test_menu li a {padding: 0 11px;height: inherit;color: #fff;text-decoration: none;font-weight: bold;}
 .test_menu li.current a {color: #f1c52e; display: block; text-decoration:underline; }
@@ -79,7 +79,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .content .heading_details {margin: 0 0 10px;}
 
 /* Test Box */
-#test_box-container {float: left;width: 709px;color: #fff;}
+#test_box-container {float: left;width: 809px;color: #fff;}
 
 #test_box-container .ui-tabs-nav {height: 29px;line-height: 29px;}
 #test_box-container .ui-tabs-nav li {float: left;height: 28px;margin: 0 1px 1px 0;background-color: #2a2a2a;}
@@ -192,7 +192,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #download { text-align:right; clear: both; padding:5px 0px; }
 #average {text-align:center; }
 #result h2 {font-size: 1.5em; line-height:1em;}
-table.result {width: 920px;}
+table.result {width: 1020px;}
 .subtitle {margin: -24px 0 24px;font-weight: bold;}
 .dynaTrace {background-color: #ffff5d;}
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
@@ -212,7 +212,7 @@ table.result {width: 920px;}
 /*Status page*/
 #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
 #statusText {font-size: 16px; font-weight: bold; float:none; clear:both; width: 100%; text-align: center; padding: 15px 10px 20px; }
-#runningHeader p{float:left; width:400px;}
+#runningHeader p{float:left; width:500px;}
 #runningHeader h3{text-align: left; padding: 0; float:left;}
 #runningHeader form{float: right;}
 .tip {width: 600px; border-collapse: collapse; border: 1px solid black; margin-left:auto; margin-right:auto; margin-bottom: 1em;}
@@ -222,7 +222,7 @@ table.result {width: 920px;}
 .tip_note {display: block; float: right;}
 
 /* Sponsors */
-#links {clear: both; width: 980px; }
+#links {clear: both; width: 1080px; }
 .links {table-layout:fixed; background-color: #fff; position: relative; width: 100%; height: 45px; }
 .links td { text-align: center; vertical-align: middle;}
 #sponsor_header {background-color: #555; color: #f1c52e;padding: 1px 10px 2px 25px; clear:both; font-weight: bold;}
@@ -252,7 +252,7 @@ table.pretty td.poor { background: #FF7580; }
 #headers h1, #headers h2 {text-transform:none;}
 
 /* feeds */
-#feeds {background-color: #302f2f; color: #fff; width: 980px; border-collapse: collapse; table-layout: fixed; }
+#feeds {background-color: #302f2f; color: #fff; width: 1080px; border-collapse: collapse; table-layout: fixed; }
 #feeds th {padding: 1px 10px 2px 25px; text-align: left; background-color: #555; color: #f1c52e; white-space: nowrap; overflow: hidden;}
 #feeds td {vertical-align: top; white-space: nowrap; overflow: hidden;}
 #feeds a {color: #fff; text-decoration: none;}
