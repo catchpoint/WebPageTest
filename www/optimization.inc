@@ -204,7 +204,7 @@ function ReportImageCompression(&$pageData, &$requests, $step)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"compress_images\"></a><h3 id='image_compression_step$step'>Compress Images: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/OptimizeImages\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"compress_images\"></a><h3 id='image_compression_step$step'>Compress Images: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/graphicalcontent-4#reduce_image_quality\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -317,7 +317,7 @@ function ReportCache(&$pageData, &$requests, $step)
         ksort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"cache_static_content\"></a><h3 id='caching_step$step'>Leverage browser caching of static assets: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/LeverageBrowserCaching\" aria-label=\"Learn more about leveraging browser caching\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"cache_static_content\"></a><h3 id='caching_step$step'>Leverage browser caching of static assets: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/httpcaching-6\" aria-label=\"Learn more about leveraging browser caching\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
     $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
