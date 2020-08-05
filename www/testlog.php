@@ -165,7 +165,7 @@ else
                               $command = "grep -a -i -F";
                               foreach($patterns as $pattern) {
                                 $pattern = str_replace('"', '\\"', $pattern);
-                                $command .= " -e '$pattern'";
+                                $command .= " -e " . escapeshellarg($pattern);
                               }
                               $command .= " '$fileName'";
                               exec($command, $lines, $result_code);
