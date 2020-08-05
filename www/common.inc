@@ -218,6 +218,9 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
   }
   ob_end_clean();
 }
+if (isset($user)) {
+  $user = preg_replace('/[^a-zA-Z0-9@\.\-_]/', '', $user);
+}
 
 if (!$admin) {
   $this_user = null;
@@ -255,6 +258,8 @@ if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
 }else{
   $owner = sha1(uniqid(uniqid('', true), true));
 }
+// Sanitize the owner string
+$owner = preg_replace('/[^a-zA-Z0-9]/', '', $owner);
 setcookie('o', $owner, time()+60*60*24*365, '/');
 
 if ($admin) {
