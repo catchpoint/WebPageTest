@@ -5708,32 +5708,6 @@ var d41d8cd98f00b204e9800998ecf8427e_LibraryDetectorTests = {
             return false;
         }
     },
-    'Create React App': {
-        id: 'create-react-app',
-        icon: 'cra',
-        url: 'https://create-react-app.dev/',
-        npm: 'react-scripts',
-        test: async function (win) {
-            // CRA does not have any explicit markers
-            // This requests for an asset-manifest.json file that exists for mostly all v2 and v3 CRA apps
-            try {
-                const response = await fetch('/asset-manifest.json');
-                const manifest = await response.json();
-
-                const hasFilesEntrypoints = manifest.files || manifest.entrypoints;
-                const containsMainBundle = manifest['main.js'] || (manifest.files && manifest.files['main.js']);
-
-                if (hasFilesEntrypoints || containsMainBundle) {
-                    return { version: UNKNOWN_VERSION };
-                }
-            
-                return false;
-            }
-            catch (err) {
-                return false;
-            }
-        }
-    },
     'Drupal': {
         id: 'drupal',
         icon: 'drupal',
