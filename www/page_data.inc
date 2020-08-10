@@ -122,14 +122,14 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       // Load main-thread interactive windows if available
       if (gz_is_file($localPaths->interactiveFile())) {
         $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
-        if (isset($interactive) && is_array($interactive) && count($interactive))
+        if (isset($interactive) && is_array($interactive))
           $ret['interactivePeriods'] = $interactive;
       }
 
       // Load the long tasks list
       if (gz_is_file($localPaths->longTasksFile())) {
         $long_tasks = json_decode(gz_file_get_contents($localPaths->longTasksFile()), true);
-        if (isset($long_tasks) && is_array($long_tasks) && count($long_tasks))
+        if (isset($long_tasks) && is_array($long_tasks))
           $ret['longTasks'] = $long_tasks;
       }
 
@@ -293,6 +293,8 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           $seek_start = $ret['render'];
         elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+        elseif (isset($ret['firstPaint']) && $ret['firstPaint'] > 0)
+          $seek_start = $ret['firstPaint'];
         $DCL = null;
         if (isset($ret['domContentLoadedEventEnd'])) {
           $DCL = $ret['domContentLoadedEventEnd'];
@@ -1229,17 +1231,19 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
   // Calculate the total blocking time - https://web.dev/tbt/
   // and the max possible FID (longest task)
   $endTime = isset($TTI) ? $TTI : $last_interactive;
-  if (isset($long_tasks) && $endTime > $startTime) {
+  if (isset($long_tasks)) {
     $total_blocking_time = 0;
     $max_fid = 0;
-    foreach ($long_tasks as $task) {
-      $start = max($task[0], $startTime) + 50; // "blocking" time excludes the first 50ms
-      $end = min($task[1], $endTime);
-      $busyTime = $end - $start;
-      if ($busyTime > 0) {
-        $total_blocking_time += $busyTime;
-        if ($busyTime > $max_fid) {
-          $max_fid = $busyTime;
+    if ($endTime > $startTime) {
+      foreach ($long_tasks as $task) {
+        $start = max($task[0], $startTime) + 50; // "blocking" time excludes the first 50ms
+        $end = min($task[1], $endTime);
+        $busyTime = $end - $start;
+        if ($busyTime > 0) {
+          $total_blocking_time += $busyTime;
+          if ($busyTime > $max_fid) {
+            $max_fid = $busyTime;
+          }
         }
       }
     }

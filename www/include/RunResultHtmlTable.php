@@ -368,7 +368,7 @@ class RunResultHtmlTable {
 
   private function _getIntervalMetric($step, $metric) {
     $value = $step->getMetric($metric);
-    $value = $value > 0 ? $value : -1; // -1 is UNKNOWN_TIME, but we can't include common.inc
+    $value = $value >= 0 ? $value : -1; // -1 is UNKNOWN_TIME, but we can't include common.inc
     return formatMsInterval($value, 3);
   }
 
