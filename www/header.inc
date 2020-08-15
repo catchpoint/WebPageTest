@@ -175,6 +175,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               $localPaths = new TestPaths($testPath, $gradeRun, false);
               $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
 
+              echo "<div id=\"opthelp\"> </div>\n";
               echo '</div>';
               echo '<div id="grades">';
                   $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);
