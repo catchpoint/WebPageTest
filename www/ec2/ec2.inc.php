@@ -581,6 +581,12 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       if ($subnetId) {
         $ec2_options['SubnetId'] = $subnetId;
       }
+	    
+      //add/modify the KeyName if present in config
+      $keyName = GetSetting("EC2.$region.keyName");
+      if ($keyName) {
+        $ec2_options['KeyName'] = $keyName;
+      }
 
       $response = $ec2->runInstances ( $ec2_options );
       $ret = true;
