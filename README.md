@@ -67,10 +67,10 @@ The Mobitest agents are managed by Akamai and are hosted on [Google code](https:
 
 # Documentation
 
-[WebPageTest Documentation](https://sites.google.com/a/webpagetest.org/docs/)
+[WebPageTest Documentation](https://github.com/WPO-Foundation/webpagetest-docs)
 
 ## API Examples
-There are two examples using the [Restful API](https://sites.google.com/a/webpagetest.org/docs/advanced-features/webpagetest-restful-apis):
+There are two examples using the [Restful API](https://github.com/WPO-Foundation/webpagetest-docs/blob/master/dev/api.md):
 
 * /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
 * /batchtool - A python project that can submit a bulk set of tests and gather the results.

@@ -473,7 +473,7 @@ function DisplayTests(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
+    echo '<th>Median <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a><br>(First View)</th>';
     echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -514,7 +514,7 @@ function DisplayTestsWithVariations(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
+    echo '<th>Median <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a><br>(First View)</th>';
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -970,9 +970,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if( $includeRender )
                     DisplayMetric('Start Render Time', $fvRenderTimes, $count);
                 if (!$weblite) {
-                  DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
+                  DisplayMetric('<a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
                   if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
-                      DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                      DisplayMetric('<a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
                 }
 
                 if( !$fvonly )

@@ -104,7 +104,7 @@ if (!defined('EMBED')) {
             if (is_dir('forums') && (!isset($settings['disableMybb']) || !$settings['disableMybb'])) {
                 $navTabs['Forums'] = '/forums/';
             }
-            $navTabs['Documentation'] = 'https://sites.google.com/a/webpagetest.org/docs/';
+            $navTabs['Documentation'] = 'https://github.com/WPO-Foundation/webpagetest-docs';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {
@@ -175,7 +175,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               $localPaths = new TestPaths($testPath, $gradeRun, false);
               $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
 
-              echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
+              echo "<div id=\"opthelp clear\"> &nbsp; </div>\n";
               echo '</div>';
               echo '<div id="grades">';
                   $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);

@@ -673,7 +673,7 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            Check out <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/scripting">the documentation</a> for more information on this feature
+                                            Check out <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Scripting.md">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
 

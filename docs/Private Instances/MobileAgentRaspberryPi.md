@@ -1,4 +1,4 @@
-The RaspberryPi works well as a tethered host for driving [WebPageTest mobile agents](https://sites.google.com/a/webpagetest.org/docs/private-instances/node-js-agent/setup).  Here is a walkthrough in configuring it as well as some discussion on deployment options.
+The RaspberryPi works well as a tethered host for driving the mobile agent.  Here is a walkthrough in configuring it as well as some discussion on deployment options.
 
 It is worth noting that these instructions may not be the BEST way to configure a RaspberryPi, but this is how they have been configured on the [public instance](http://www.webpagetest.org) and is known to work.
 

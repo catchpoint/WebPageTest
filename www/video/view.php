@@ -393,7 +393,7 @@ else
 function DisplayData() {
   global $tests;
   $metrics = array('loadTime' => 'Page Load Time',
-                   'SpeedIndex' => '<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index">Speed Index</a> (lower is better)');
+                   'SpeedIndex' => '<a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md">Speed Index</a> (lower is better)');
   echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
           <tr>
           <th class="empty"></th>';
