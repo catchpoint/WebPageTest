@@ -125,7 +125,7 @@ function ContentType($mime, $url = null) {
           $content_type = 'css';
         elseif ($ext == '.htm' || $ext == '.html')
           $content_type = 'html';
-        elseif ($ext == '.png' || $ext == '.gif' || $ext == '.jpg')
+        elseif ($ext == '.png' || $ext == '.gif' || $ext == '.jpg' || $ext == '.avif')
           $content_type = 'image';
         elseif ($ext == '.swf')
           $content_type = 'flash';
