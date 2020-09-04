@@ -21,7 +21,8 @@ class HttpArchiveGenerator
                                               'blinkFeatureFirstUsed' => true,
                                               'detected' => true,
                                               'detected_apps' => true,
-                                              'v8Stats' => true);
+                                              'v8Stats' => true,
+                                              'LayoutShifts' => true);
 
     /**
      * HttpArchiveGenerator constructor.
