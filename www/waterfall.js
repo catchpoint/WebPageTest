@@ -105,6 +105,8 @@ function SelectRequest(step, request) {
                 details += ':' + htmlEncode(r['initiator_line']);
             details += '<br>';
         }
+        if (r['documentURL'] !== undefined)
+            details += '<b>Document: </b>' + htmlEncode(r['documentURL']) + '<br>';
         if (r['host'] !== undefined)
             details += '<b>Host: </b>' + htmlEncode(r['host']) + '<br>';
         if (r['ip_addr'])
