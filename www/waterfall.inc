@@ -166,6 +166,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $include_js = (bool)@$options['include_js'];
     $include_wait = (bool)@$options['include_wait'];
     $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
+    $document_url = isset($page_data['document_URL']) ? $page_data['document_URL'] : null;
 
     $top = 0;
     $row_count = count($rows);
@@ -354,6 +355,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $white = GetColor($im, 255, 255, 255);
         $black = GetColor($im, 0, 0, 0);
         $dark_grey = GetColor($im, 192, 192, 192);
+        $alt_text_color = GetColor($im, 48, 48, 255);
         if ($is_thumbnail) {
             $time_scale_color = GetColor($im, 208, 208, 208);  // mid-grey
             $border_color = $dark_grey;
@@ -794,7 +796,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         foreach ($rows as $row) {
             $is_secure = $row['is_secure'];
             $request_label = $row['label'];
-
+            $text_color = $black;
+            if (isset($document_url) && isset($row['requests']) && count($row['requests']) == 1 && isset($row['requests'][0]['documentURL']) && $row['requests'][0]['documentURL'] != $document_url) {
+                $text_color = $alt_text_color;
+            }
             $y = $top + $row['y1'] + 1;
             if ($is_thumbnail) {
                 ThumbnailText($im, $column_x, $y, $data_x - 2, $row_height,
@@ -809,7 +814,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     $label_max_len -= $lock_width / $font_width;
                 }
                 imagestring($im, $font, $label_x, $y,
-                            FitText($request_label, $label_max_len), $black);
+                            FitText($request_label, $label_max_len), $text_color);
             }
         }
     }
