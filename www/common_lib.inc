@@ -1777,6 +1777,7 @@ function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $te
       if (isset($data) && $data !== FALSE && strlen($data)) {
         $test_job = $data;
       } else {
+        // TODO: Mark the test as started before deleting the job file
         unlink("$workDir/$file");
         unset($file);
       }
