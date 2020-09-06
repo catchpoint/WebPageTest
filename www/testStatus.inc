@@ -194,36 +194,45 @@ function GetTestStatus($id, $includePosition = true) {
                   else
                     $ret['statusText'] = "Waiting at the front of the queue...";
                 } else {
-                  /*
-                  $ret['statusCode'] = 401;
-                  $ret['statusText'] = 'Test request not found';
+                  // Reload the test info in case it started while we were running other checks
+                  $testInfoJson = GetTestInfo($id);
+                  if (isset($testInfoJson['started'])) {
+                    $start = $testInfoJson['started'];
+                    $elapsed = 0;
+                    if ($now > $start)
+                      $elapsed = $now - $start;
+                    $ret['elapsed'] = $elapsed;
+                    $ret['statusCode'] = 100;
+                    if( $elapsed == 0 )
+                      $ret['statusText'] = "Test just started";
+                  } else {
+                    $ret['statusCode'] = 401;
+                    $ret['statusText'] = 'Test request not found';
 
-                  // Force the test to end - something went Very Wrong (tm)
-                  $lock = LockTest($id);
-                  if ($lock) {
-                    $testInfoJson = GetTestInfo($id);
-                    if ($testInfoJson) {
-                      $testInfoJson['completed'] = $now;
-                      $test = file_get_contents("$testPath/testinfo.ini");
-                      $date = gmdate("m/d/y G:i:s", $now);
+                    // Force the test to end - something went Very Wrong (tm)
+                    $lock = LockTest($id);
+                    if ($lock) {
+                      $testInfoJson = GetTestInfo($id);
+                      if ($testInfoJson) {
+                        $testInfoJson['completed'] = $now;
+                        $test = file_get_contents("$testPath/testinfo.ini");
+                        $date = gmdate("m/d/y G:i:s", $now);
 
-                      // Update the completion time if it isn't already set
-                      if (!strpos($test, 'completeTime')) {
-                        $complete = "[test]\r\ncompleteTime=$date";
-                        $out = str_replace('[test]', $complete, $test);
-                        file_put_contents("$testPath/testinfo.ini", $out);
+                        // Update the completion time if it isn't already set
+                        if (!strpos($test, 'completeTime')) {
+                          $complete = "[test]\r\ncompleteTime=$date";
+                          $out = str_replace('[test]', $complete, $test);
+                          file_put_contents("$testPath/testinfo.ini", $out);
+                        }
+                        $ret['statusCode'] = 200;
+                        $ret['statusText'] = 'Test Complete';
+                        $ret['completeTime'] = $date;
+                        logTestMsg($id, "The test was not started, but the test job could not be found.  Forcing it to end.");
+                        SaveTestInfo($id, $testInfoJson);
                       }
-                      $ret['statusCode'] = 200;
-                      $ret['statusText'] = 'Test Complete';
-                      $ret['completeTime'] = $date;
-                      logTestMsg($id, "The test was not started, but the test job could not be found.  Forcing it to end.");
-                      SaveTestInfo($id, $testInfoJson);
+                      UnlockTest($lock);
                     }
-                    UnlockTest($lock);
                   }
-                  */
-                  $ret['statusCode'] = 101;
-                  $ret['statusText'] = 'Test Pending';
                 }
               } else {
                 $ret['statusCode'] = 101;
