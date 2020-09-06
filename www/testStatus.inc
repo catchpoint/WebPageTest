@@ -194,6 +194,7 @@ function GetTestStatus($id, $includePosition = true) {
                   else
                     $ret['statusText'] = "Waiting at the front of the queue...";
                 } else {
+                  /*
                   $ret['statusCode'] = 401;
                   $ret['statusText'] = 'Test request not found';
 
@@ -220,6 +221,9 @@ function GetTestStatus($id, $includePosition = true) {
                     }
                     UnlockTest($lock);
                   }
+                  */
+                  $ret['statusCode'] = 101;
+                  $ret['statusText'] = 'Test Pending';
                 }
               } else {
                 $ret['statusCode'] = 101;
