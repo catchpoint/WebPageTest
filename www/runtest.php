@@ -1708,12 +1708,6 @@ function SubmitUrl($testId, $testData, &$test, $url)
     if (isset($script) && strlen($script))
       $out .= "\r\n[Script]\r\n" . $script;
 
-    // write out the actual test file
-    $ext = 'url';
-    if( $test['priority'] )
-        $ext = "p{$test['priority']}";
-    $test['job'] = "$testId.$ext";
-
     $location = $test['location'];
     $ret = WriteJob($location, $test, $out, $testId);
     if (isset($test['ami']))
@@ -2355,19 +2349,30 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'customMetric', "$name:$code");
             }
 
+            // Generate the job file name
+            $ext = 'url';
+            if( $test['priority'] )
+                $ext = "p{$test['priority']}";
+            $test['job'] = "$testId.$ext";
+
+            // Write out the json before submitting the test to the queue
+            $oldUrl = @$test['url'];
+            $test['url'] = $url;
+            SaveTestInfo($testId, $test);
+            $test['url'] = $oldUrl;
+
             if( !SubmitUrl($testId, $testFile, $test, $url) )
                 $testId = null;
+        } elseif (isset($testId)) {
+            $oldUrl = @$test['url'];
+            $test['url'] = $url;
+            SaveTestInfo($testId, $test);
+            $test['url'] = $oldUrl;
         }
 
         // log the test
         if (isset($testId)) {
           logTestMsg($testId, "Test Created");
-
-          // store the entire test data structure JSON encoded (instead of a bunch of individual files)
-          $oldUrl = @$test['url'];
-          $test['url'] = $url;
-          SaveTestInfo($testId, $test);
-          $test['url'] = $oldUrl;
 
           if ( $batch_locations )
               LogTest($test, $testId, 'Multiple Locations test');
@@ -2378,7 +2383,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         } else {
             // delete the test if we didn't really submit it
             delTree("{$test['path']}/");
-
         }
     } else {
         global $error;
