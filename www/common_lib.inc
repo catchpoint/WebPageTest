@@ -3133,3 +3133,19 @@ function SendCallback($testInfo) {
     }
   }
 }
+
+function GetSortableString($num, $targetLen = 6) {
+  $str = '';
+  if ($num > 0) {
+    $digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $len = strlen($digits);
+    while($num > 0) {
+      $digitValue = $num % $len;
+      $num = (int)($num / $len);
+      $str .= $digits[$digitValue];
+    }
+    $str = strrev($str);
+  }
+  $str = str_pad($str, $targetLen, '0', STR_PAD_LEFT);
+  return $str;
+}
