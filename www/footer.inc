@@ -80,8 +80,8 @@
         if (is_file('./settings/sponsors.ini')) {
             $s = parse_ini_file('./settings/sponsors.ini', true);
             if (is_array($s) && count($s)) {
-                foreach( $s as $entry ){
-                    if( strlen($entry['logo']) ) {
+                foreach( $s as $name => $entry ){
+                    if( $name != 'catchpoint' && strlen($entry['logo']) ) {
                         $offset = 0;
                         if( $entry['index'] )
                             $offset = -40 * $entry['index'];
