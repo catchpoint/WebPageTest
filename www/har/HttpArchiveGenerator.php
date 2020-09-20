@@ -222,7 +222,7 @@ class HttpArchiveGenerator
         $request['bodySize'] = -1;
         $request['cookies'] = array();
         $request['headers'] = array();
-        $ver = '';
+        $ver = $requestData['protocol'];
         $headersSize = 0;
         if (isset($requestData['headers']) && isset($requestData['headers']['request'])) {
             foreach ($requestData['headers']['request'] as &$header) {
@@ -248,9 +248,11 @@ class HttpArchiveGenerator
                         }
                     }
                 } else {
-                    $pos = strpos($header, 'HTTP/');
-                    if ($pos >= 0)
-                        $ver = (string)trim(substr($header, $pos + 5, 3));
+                    if (!$ver) { // if version not already set then try to parse it
+                        $pos = strpos($header, 'HTTP/');
+                        if ($pos !== false)
+                            $ver = (string)trim(substr($header, $pos + 5, 3));
+                    }
                 }
             }
         }
@@ -292,7 +294,7 @@ class HttpArchiveGenerator
         $response['headersSize'] = -1;
         $response['bodySize'] = (int)$requestData['objectSize'];
         $response['headers'] = array();
-        $ver = '';
+        $ver = $requestData['protocol'];
         $loc = '';
         $headersSize = 0;
         if (isset($requestData['headers']) && isset($requestData['headers']['response'])) {
@@ -308,9 +310,11 @@ class HttpArchiveGenerator
                     if (!strcasecmp($name, 'location'))
                         $loc = (string)$val;
                 } else {
-                    $pos = strpos($header, 'HTTP/');
-                    if ($pos >= 0)
-                        $ver = (string)trim(substr($header, $pos + 5, 3));
+                    if (!$ver) { // if version not already set then try to parse it
+                        $pos = strpos($header, 'HTTP/');
+                        if ($pos !== false)
+                            $ver = (string)trim(substr($header, $pos + 5, 3));
+                    }
                 }
             }
         }
