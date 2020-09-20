@@ -222,7 +222,7 @@ class HttpArchiveGenerator
         $request['bodySize'] = -1;
         $request['cookies'] = array();
         $request['headers'] = array();
-        $ver = $requestData['protocol'];
+        $ver = '';
         $headersSize = 0;
         if (isset($requestData['headers']) && isset($requestData['headers']['request'])) {
             foreach ($requestData['headers']['request'] as &$header) {
@@ -258,7 +258,7 @@ class HttpArchiveGenerator
         }
         if ($headersSize)
             $request['headersSize'] = $headersSize;
-        $request['httpVersion'] = $ver;
+        $request['httpVersion'] = $ver || $requestData['protocol'];
 
         $request['queryString'] = array();
         $parts = parse_url($request['url']);
@@ -294,7 +294,7 @@ class HttpArchiveGenerator
         $response['headersSize'] = -1;
         $response['bodySize'] = (int)$requestData['objectSize'];
         $response['headers'] = array();
-        $ver = $requestData['protocol'];
+        $ver = '';
         $loc = '';
         $headersSize = 0;
         if (isset($requestData['headers']) && isset($requestData['headers']['response'])) {
@@ -320,7 +320,7 @@ class HttpArchiveGenerator
         }
         if ($headersSize)
             $response['headersSize'] = $headersSize;
-        $response['httpVersion'] = $ver;
+        $response['httpVersion'] = $ver || $requestData['protocol'];
         $response['redirectURL'] = $loc;
 
         $response['content'] = array();
