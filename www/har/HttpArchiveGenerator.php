@@ -251,7 +251,7 @@ class HttpArchiveGenerator
                     if (!$ver) { // if version not already set then try to parse it
                         $pos = strpos($header, 'HTTP/');
                         if ($pos !== false)
-                            $ver = (string)trim(substr($header, $pos + 5, 3));
+                            $ver = (string)trim(substr($header, $pos, 8));
                     }
                 }
             }
@@ -313,7 +313,7 @@ class HttpArchiveGenerator
                     if (!$ver) { // if version not already set then try to parse it
                         $pos = strpos($header, 'HTTP/');
                         if ($pos !== false)
-                            $ver = (string)trim(substr($header, $pos + 5, 3));
+                            $ver = (string)trim(substr($header, $pos, 8));
                     }
                 }
             }
