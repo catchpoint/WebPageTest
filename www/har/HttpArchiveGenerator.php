@@ -258,7 +258,13 @@ class HttpArchiveGenerator
         }
         if ($headersSize)
             $request['headersSize'] = $headersSize;
-        $request['httpVersion'] = $ver || $requestData['protocol'];
+        if (strlen($ver)) {
+            $request['httpVersion'] = $ver;
+        } elseif(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
+            $request['httpVersion'] = $requestData['protocol'];
+        } else {
+            $request['httpVersion'] = '';
+        }
 
         $request['queryString'] = array();
         $parts = parse_url($request['url']);
@@ -320,7 +326,13 @@ class HttpArchiveGenerator
         }
         if ($headersSize)
             $response['headersSize'] = $headersSize;
-        $response['httpVersion'] = $ver || $requestData['protocol'];
+        if (strlen($ver)) {
+            $response['httpVersion'] = $ver;
+        } elseif(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
+            $response['httpVersion'] = $requestData['protocol'];
+        } else {
+            $response['httpVersion'] = '';
+        }
         $response['redirectURL'] = $loc;
 
         $response['content'] = array();
