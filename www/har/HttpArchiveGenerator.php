@@ -248,15 +248,17 @@ class HttpArchiveGenerator
                         }
                     }
                 } else {
-                    $pos = strpos($header, 'HTTP/');
-                    if ($pos >= 0)
-                        $ver = (string)trim(substr($header, $pos + 5, 3));
+                    if (!$ver) { // if version not already set then try to parse it
+                        $pos = strpos($header, 'HTTP/');
+                        if ($pos !== false)
+                            $ver = (string)trim(substr($header, $pos, 8));
+                    }
                 }
             }
         }
         if ($headersSize)
             $request['headersSize'] = $headersSize;
-        $request['httpVersion'] = $ver;
+        $request['httpVersion'] = $ver || $requestData['protocol'];
 
         $request['queryString'] = array();
         $parts = parse_url($request['url']);
@@ -308,15 +310,17 @@ class HttpArchiveGenerator
                     if (!strcasecmp($name, 'location'))
                         $loc = (string)$val;
                 } else {
-                    $pos = strpos($header, 'HTTP/');
-                    if ($pos >= 0)
-                        $ver = (string)trim(substr($header, $pos + 5, 3));
+                    if (!$ver) { // if version not already set then try to parse it
+                        $pos = strpos($header, 'HTTP/');
+                        if ($pos !== false)
+                            $ver = (string)trim(substr($header, $pos, 8));
+                    }
                 }
             }
         }
         if ($headersSize)
             $response['headersSize'] = $headersSize;
-        $response['httpVersion'] = $ver;
+        $response['httpVersion'] = $ver || $requestData['protocol'];
         $response['redirectURL'] = $loc;
 
         $response['content'] = array();
