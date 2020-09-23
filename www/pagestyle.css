@@ -237,7 +237,8 @@ table.result {width: 920px;}
 .bottom a:hover {text-decoration: underline;}
 
 /* shared table themes */
-table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; display: block; overflow-x:auto; }
+table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
+table.scrollable { display: block; overflow-x:auto; }
 table.pretty th, table.pretty td {border: 1px silver solid; padding: 0.4em; text-align: center; }
 table.pretty th { background: gainsboro; }
 table.pretty th.empty { background: #fff; border:0; }
