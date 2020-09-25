@@ -33,7 +33,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
     $ret = false;
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
-        array_key_exists('archive_url', $archive_settings) ||    // Archive server (simple PUT, HEAD, GET)
+        array_key_exists('archive_url', $settings) ||           // Archive server (simple PUT, HEAD, GET)
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
         $status = GetTestStatus($id, false);
         $completed = true;
@@ -121,7 +121,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                       if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
                                           $ret = true;
                                   }
-                              } elseif (array_key_exists('archive_url', $archive_settings)) {
+                              } elseif (array_key_exists('archive_url', $settings)) {
                                 $archive_url = GetSetting('archive_url');
                                 if ($archive_url) {
                                     $archive_url .= "$id.zip";
@@ -347,7 +347,7 @@ function VerifyArchive($id) {
             if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {
                 $valid = true;
             }
-        } elseif (array_key_exists('archive_url', $archive_settings)) {
+        } elseif (array_key_exists('archive_url', $settings)) {
             $archive_url = GetSetting('archive_url');
             if ($archive_url) {
                 $archive_url .= "$id.zip";
