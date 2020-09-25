@@ -41,7 +41,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
             $completed = false;
         $testPath = realpath('./' . GetTestPath($id));
         $testInfo = GetTestInfo($id);
-        if ($testInfo && ($completed || $testInfo['batch'])) {
+        if ($testInfo && ($completed || @$testInfo['batch'])) {
             if (GetSetting('archive_dir') == '/dev/null') {
               $ret = true;
             } else {
