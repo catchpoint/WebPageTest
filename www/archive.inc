@@ -33,6 +33,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
     $ret = false;
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
+        array_key_exists('archive_url', $archive_settings) ||    // Archive server (simple PUT, HEAD, GET)
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
         $status = GetTestStatus($id, false);
         $completed = true;
@@ -120,6 +121,14 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                       if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
                                           $ret = true;
                                   }
+                              } elseif (array_key_exists('archive_url', $archive_settings)) {
+                                $archive_url = GetSetting('archive_url');
+                                if ($archive_url) {
+                                    $archive_url .= "$id.zip";
+                                    if (http_put_file($archive_url, $zipFile)) {
+                                        $ret = true;
+                                    }
+                                }
                               }
                           }
                           // make sure we don't leave a file hanging around
@@ -188,18 +197,23 @@ function RestoreArchive($id) {
             }
             if (strlen($url) ||
                 array_key_exists('archive_dir', $archive_settings) ||
+                array_key_exists('archive_url', $archive_settings) ||
                 array_key_exists('archive_s3_url', $archive_settings) ||
                 array_key_exists('archive_s3_server', $archive_settings)) {
                 $deleteZip = true;
+                $do_not_download = false;
                 $zipfile = "./tmp/$id.zip";
                 if (strlen($url)) {
                     $url .= "/$id.zip";
                 } else {
                     if (isset($archive_settings['archive_dir'])) {
                         $deleteZip = false;
-                        $zipfile = GetArchiveFile($id);
-                        if (is_file($zipfile))
+                        $archiveZip = GetArchiveFile($id);
+                        if (is_file($archiveZip)) {
+                            $zipfile = $archiveZip;
+                            $do_not_download = true;
                             touch($zipfile);
+                        }
                     } elseif (isset($archive_settings['archive_s3_url'])) {
                         $separator = strrpos($id, '_');
                         if ($separator !== false) {
@@ -224,13 +238,22 @@ function RestoreArchive($id) {
                         $s3->getObject($bucket, $file, $zipfile);
                     }
                 }
-                if (strlen($url)) {
-                    logMsg("Downloading: $url");
-                    $data = file_get_contents($url);
-                    if ($data) {
-                        logMsg("Saving: $url to $zipfile");
-                        file_put_contents($zipfile, $data);
-                        unset($data);
+                // Support fallback methods for restoring archives from other locations
+                if (!$do_not_download) {
+                    $urls = array();
+                    if (strlen($url)) {
+                        $urls[] = $url;
+                    }
+                    $archive_url = GetSetting('archive_url');
+                    if ($archive_url) {
+                        $archive_url .= "$id.zip";
+                        $urls[] = $archive_url;
+                    }
+                    foreach ($urls as $download_url){
+                        logMsg("Downloading: $download_url");
+                        if (http_fetch_file($download_url, $zipfile)) {
+                            break;
+                        }
                     }
                 }
                 if (is_file($zipfile)) {
@@ -323,6 +346,14 @@ function VerifyArchive($id) {
             $file = "$id.zip";
             if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {
                 $valid = true;
+            }
+        } elseif (array_key_exists('archive_url', $archive_settings)) {
+            $archive_url = GetSetting('archive_url');
+            if ($archive_url) {
+                $archive_url .= "$id.zip";
+                if (http_head($archive_url)) {
+                    $valid = true;
+                }
             }
         }
     }

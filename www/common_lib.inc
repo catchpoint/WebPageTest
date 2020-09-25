@@ -2429,6 +2429,22 @@ function http_fetch_file($url, $file) {
   return $ret;
 }
 
+function http_head($url) {
+  $ok = false;
+  if (function_exists('curl_init')) {
+    $ok = true;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+    if($httpcode !== 200)
+        $ok = false;
+  }
+  return $ok;
+}
+
 function http_put_raw($url, $body) {
   $ok = false;
   if (function_exists('curl_init')) {
@@ -2449,6 +2465,35 @@ function http_put_raw($url, $body) {
     curl_close($ch);
     if($response === false)
         $ok = false;
+  }
+  return $ok;
+}
+
+function http_put_file($url, $file) {
+  $ok = false;
+  if (function_exists('curl_init')) {
+    $file_stream = fopen($file, 'rb');
+    if ($file_stream) {
+      $ok = true;
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_PUT, 1 );
+
+      curl_setopt($ch, CURLOPT_INFILE, $file_stream);
+      curl_setopt($ch, CURLOPT_INFILESIZE, filesize($file));
+
+      curl_setopt($ch, CURLOPT_FAILONERROR, true);
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+      curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+      curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+      $response = curl_exec($ch);
+      $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+      curl_close($ch);
+      if($httpcode !== 200)
+          $ok = false;
+      fclose($file_stream);
+    }
   }
   return $ok;
 }
