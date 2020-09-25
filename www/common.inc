@@ -31,6 +31,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) && strlen($_SERVER['HTTP_USER_
   if (preg_match('/UAEmdDd8nuc0DvQH29vueQpMtlFduGU48pbw/i', $_SERVER['HTTP_USER_AGENT'])) {
     header('HTTP/1.1 403 Forbidden');
     echo "<html><body>Sorry, the request was blocked for constantly requesting invalid content, please contact us for details.";
+    exit(0);
   }
 }
 
