@@ -1260,9 +1260,11 @@ function RestoreTest($id)
     $testInfo = GetTestInfo($id);
     if (!$testInfo) {
       $archive_dir = GetSetting('archive_dir');
+      $archive_url = GetSetting('archive_url');
       $archive_s3_url = GetSetting('archive_s3_url');
       $archive_s3_server = GetSetting('archive_s3_server');
       if (($archive_dir && strlen($archive_dir)) ||
+          ($archive_url && strlen($archive_url)) ||
           ($archive_s3_url && strlen($archive_s3_url)) ||
           ($archive_s3_server && strlen($archive_s3_server))) {
         $ret = RestoreArchive($id);
