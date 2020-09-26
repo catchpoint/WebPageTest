@@ -49,6 +49,7 @@ else
     require_once __DIR__ . '/../include/TestResults.php';
     require_once __DIR__ . '/../include/TestStepResult.php';
     require_once('video.inc');
+    require_once('archive.inc');
 
     $xml = false;
     if( !strcasecmp($_REQUEST['f'], 'xml') )
@@ -70,6 +71,7 @@ else
     {
         // see if the video already exists
         $id = $_REQUEST['id'];
+        RestoreVideoArchive($id);
         $path = GetVideoPath($id);
         if( is_file("./$path/video.mp4") )
             $exists = true;
@@ -252,6 +254,7 @@ else
                     $id = gmdate('ymd_') . md5(uniqid(rand(), true));
             }
 
+            RestoreVideoArchive($id);
             $path = GetVideoPath($id);
             if( is_file("./$path/video.mp4") )
             {

@@ -393,4 +393,93 @@ function ArchiveApi($id) {
     touch("$testPath/archive.me");
   }
 }
+
+/***************************************************************************
+ * Video archive support
+ ***************************************************************************/
+function ArchiveVideo($id) {
+    global $settings;
+    $ret = false;
+    if ( isset($settings['video_archive_url']) ) {
+        $lock = Lock("video-$id");
+        if ($lock) {
+            $videoPath = './' . GetVideoPath($id);
+            if (is_dir($videoPath) && is_file("$videoPath/video.mp4")) {
+                if (is_file("$videoPath/.archive")) {
+                    $ret - true;
+                } else {
+                    // Create the zip file
+                    $zipFile = "./tmp/video_$id.zip";
+                    $zip = new ZipArchive();
+                    if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
+                        // add the files
+                        $files = scandir($videoPath);
+                        foreach ($files as $file) {
+                            $filePath = "$videoPath/$file";
+                            if (is_file($filePath)) {
+                                $zip->addFile($filePath, $file);
+                            }
+                        }
+                        $zip->close();
+
+                        // Upload the zip file
+                        $archive_url = GetSetting('video_archive_url');
+                        if ($archive_url) {
+                            $archive_url .= "$id.zip";
+                            if (http_put_file($archive_url, $zipFile)) {
+                                touch("$videoPath/.archive");
+                                $ret = true;
+                            }
+                        }
+
+                        // make sure we don't leave a file hanging around
+                        if (is_file($zipFile)) {
+                            unlink($zipFile);
+                        }
+                    }
+                }
+            }
+            UnLock($lock);
+        }
+    }
+
+    return $ret;
+}
+
+function RestoreVideoArchive($id) {
+    global $settings;
+    if ( isset($settings['video_archive_url']) ) {
+        $lock = Lock("video-$id");
+        if ($lock) {
+            $videoPath = './' . GetVideoPath($id);
+            if (is_dir($videoPath)) {
+                // Update the last time it was accessed
+                if (is_file("$videoPath/.archive")) {
+                    touch("$videoPath/.archive");
+                }
+            } else {
+                // Try restoring it
+                $archive_url = GetSetting('video_archive_url');
+                if ($archive_url) {
+                    $zipFile = "./tmp/video_$id.zip";
+                    $archive_url .= "$id.zip";
+                    if (http_fetch_file($archive_url, $zipFile)) {
+                        if (is_file($zipFile)) {
+                            if (!is_dir($videoPath))
+                                mkdir( $videoPath, 0777, true );
+                            ZipExtract($zipFile, $videoPath);
+                            touch("$videoPath/.archive");
+                        }
+                    }
+                    // make sure we don't leave a file hanging around
+                    if (is_file($zipFile)) {
+                        unlink($zipFile);
+                    }
+                }
+            }
+            UnLock($lock);
+        }
+    }
+}
+
 ?>

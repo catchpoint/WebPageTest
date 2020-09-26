@@ -5,6 +5,7 @@ if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
   $ALLOW_IFRAME = true;
 }
 include 'common.inc';
+require_once('archive.inc');
 if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
   header("HTTP/1.0 404 Not Found");
   die();
@@ -51,6 +52,7 @@ if( array_key_exists('f', $_REQUEST)) {
 $ini = null;
 $title = "WebPageTest - Visual Comparison";
 
+RestoreVideoArchive($videoId);
 $dir = GetVideoPath($videoId, true);
 if( is_dir("./$dir") )
 {
