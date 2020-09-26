@@ -2413,6 +2413,7 @@ function http_fetch($url) {
 function http_fetch_file($url, $file) {
   $ret = false;
   if (function_exists('curl_init')) {
+    $httpcode = 0;
     $fp = fopen ($file, 'w+');
     if ($fp) {
       $ch = curl_init($url);
@@ -2420,10 +2421,15 @@ function http_fetch_file($url, $file) {
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
       }
       fclose($fp);
-      $ret = filesize($file);
+      if($httpcode === 200) {
+        $ret = filesize($file);
+      } else {
+        unlink($file);
+      }
     }
   } else {
     $ret = file_put_contents($file, fopen($url, 'r'));
