@@ -53,6 +53,7 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
   (array_key_exists('archive_url', $settings) && strlen($settings['archive_url'])) ||
   (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
   CheckRelay();
+  CheckVideos();
   CheckOldDir('./results/old');
 
   // Archive the actual tests
@@ -291,7 +292,6 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
         $archiveCount++;
         $logLine .= "Archived";
         $delete = true;
-        usleep(1000);
       } else if ($elapsed < 60) {
         $status = GetTestStatus($id, true);
         $logLine .= " status {$status['statusCode']}";
@@ -331,6 +331,86 @@ function ElapsedDays($year, $month, $day) {
   $daytime = $date->getTimestamp();
   $elapsed = max($now - $daytime, 0) / 86400;
   return $elapsed;
+}
+
+// Scan the videos for videos that need to be archived or deleted
+function CheckVideos() {
+  $years = scandir('./results/video');
+  foreach ($years as $year) {
+    $yearDir = "./results/video/$year";
+    if (is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..') {
+      $months = scandir($yearDir);
+      foreach ($months as $month) {
+        $monthDir = "$yearDir/$month";
+        if (is_dir($monthDir) && $month != '.' && $month != '..') {
+          $days = scandir($monthDir);
+          foreach( $days as $day ) {
+            $dayDir = "$monthDir/$day";
+            if (is_dir($dayDir) && $day != '.' && $day != '..') {
+              CheckVideoDay($dayDir, "$year$month$day");
+            }
+          }
+          @rmdir($monthDir);
+        }
+      }
+      @rmdir($yearDir);
+    }
+  }
+}
+
+function CheckVideoDay($dir, $baseID) {
+  if (is_dir($dir)) {
+    $videos = scandir($dir);
+    if (isset($videos) && is_array($videos) && count($videos)) {
+      foreach( $videos as $video ) {
+        if( $video != '.' && $video != '..' ) {
+          // see if it is a test or a higher-level directory
+          if( is_file("$dir/$video/video.ini") || is_file("$dir/$video/video.mp4") ) {
+            CheckVideo("$dir/$video", "{$baseID}_$video");
+          } else {
+            // We're likely looking at a shard directory, loop through the actual videos
+            CheckVideoDay("$dir/$video", "{$baseID}_$video");
+          }
+        }
+      }
+    }
+    @rmdir($dir);
+  }
+}
+
+function CheckVideo($videoPath, $id) {
+  global $archiveCount;
+  global $deleted;
+  global $kept;
+  global $log;
+  $logLine = "Video $id: ";
+
+  echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Video:" . str_pad($id,45);
+
+  if (is_file("$videoPath/.archive")) {
+    // See if it has been over a day since it has been accessed (if so, delete it)
+    $elapsed = time() - filemtime("$videoPath/.archive");
+    if ($elapsed > 3600) {
+      delTree("$videoPath/");
+      $deleted++;
+      $logLine .= "Deleted";
+    } else {
+      $kept++;
+      $logLine .= "Kept ($elapsed seconds since last access)";
+    }
+  } else {
+    if (ArchiveVideo($id) ) {
+      $archiveCount++;
+      $logLine .= "Archived";
+    } else {
+      $logLine .= "Failed to archive";
+    }
+  }
+
+  if( $log ) {
+    $logLine .= "\n";
+    fwrite($log, $logLine);
+  }
 }
 
 ?>
