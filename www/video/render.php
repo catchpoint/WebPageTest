@@ -2,6 +2,7 @@
 chdir('..');
 $settings = null;
 require_once('common_lib.inc');
+require_once('archive.inc');
 require_once __DIR__ . '/visualProgress.inc.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
@@ -139,6 +140,7 @@ if (isset($tests) && count($tests)) {
     $ini = 'completed=' . gmdate('c') . "\r\n";
     file_put_contents("$videoPath/video.ini", $ini);
     Unlock($lock);
+    ArchiveVideo($videoId);
   }
 }
 
