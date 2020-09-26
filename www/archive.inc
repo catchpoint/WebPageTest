@@ -452,12 +452,7 @@ function RestoreVideoArchive($id) {
         $lock = Lock("video-$id");
         if ($lock) {
             $videoPath = './' . GetVideoPath($id);
-            if (is_dir($videoPath)) {
-                // Update the last time it was accessed
-                if (is_file("$videoPath/.archive")) {
-                    touch("$videoPath/.archive");
-                }
-            } else {
+            if (!is_dir($videoPath)) {
                 // Try restoring it
                 $archive_url = GetSetting('video_archive_url');
                 if ($archive_url) {
