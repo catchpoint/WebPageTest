@@ -453,13 +453,18 @@ function RestoreVideoArchive($id) {
         if ($lock) {
             $videoPath = './' . GetVideoPath($id);
             if (!is_dir($videoPath)) {
+                // Update the last time it was accessed
+                if (is_file("$videoPath/.archive")) {
+                    touch("$videoPath/.archive");
+                }
+            } else {
                 // Try restoring it
                 $archive_url = GetSetting('video_archive_url');
                 if ($archive_url) {
                     $zipFile = "./tmp/video_$id.zip";
                     $archive_url .= "$id.zip";
                     if (http_fetch_file($archive_url, $zipFile)) {
-                        if (is_file($zipFile)) {
+                        if (is_file($zipFile) && filesize($zipFile)) {
                             if (!is_dir($videoPath))
                                 mkdir( $videoPath, 0777, true );
                             ZipExtract($zipFile, $videoPath);
