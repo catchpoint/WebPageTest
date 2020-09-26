@@ -350,10 +350,9 @@ function VerifyArchive($id) {
         } elseif (array_key_exists('archive_url', $settings)) {
             $archive_url = GetSetting('archive_url');
             if ($archive_url) {
-                $archive_url .= "$id.zip";
-                if (http_head($archive_url)) {
-                    $valid = true;
-                }
+                // If the test is marked as archived and we are using url-based archiving then assume it is valid.
+                // It is possible to do a HEAD check to be sure but the archived bit is only set if the POST succeeded.
+                $valid = true;
             }
         }
     }
