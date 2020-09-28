@@ -49,17 +49,15 @@ if (GetSetting('shard_tests', true) && array_key_exists('shards', $_REQUEST) && 
   $supports_sharding = true;
 
 $is_done = false;
+$work_servers = GetSetting('work_servers');
+$work_server = GetSetting('work_server');
 if (isset($locations) && is_array($locations) && count($locations) &&
     (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1)) {
   shuffle($locations);
   $location = trim($locations[0]);
   if (!$is_done && array_key_exists('reboot', $_GET) && GetSetting('allowReboot'))
     $is_done = GetReboot();
-  /*
-  // The legacy agents are no longer supported. Server-based updating is now disabled.
-  if (!$is_done && array_key_exists('ver', $_GET))
-    $is_done = GetUpdate();
-  */
+
   foreach ($locations as $loc) {
     $location = trim($loc);
     if (!$is_done && strlen($location)) {
@@ -85,6 +83,14 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     echo "Reboot";
     $is_done = true;
   }
+}
+
+if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_servers) && strlen($work_servers)) {
+  header('Content-type: text/plain');
+  header("Cache-Control: no-cache, must-revalidate");
+  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+  echo "Servers:$servers";
+  $is_done = true;
 }
 
 // kick off any cron work we need to do asynchronously
@@ -173,6 +179,8 @@ function StartTest($testId, $time) {
 }
 
 function TestToJSON($testInfo) {
+  global $work_servers, $work_server;
+
   $testJson = array();
   $script = '';
   $isScript = false;
@@ -233,6 +241,12 @@ function TestToJSON($testInfo) {
         $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
       $testJson['apk_info'] = $apk_info;
     }
+  }
+  if (is_string($work_servers) && strlen($work_servers)) {
+    $testJson['work_servers'] = $work_servers;
+  }
+  if (is_string($work_server) && strlen($work_server)) {
+    $testJson['work_server'] = $work_server;
   }
   return $testJson;
 }
@@ -348,9 +362,7 @@ function GetJob() {
         
         if ($is_json) {
           $testJson = TestToJSON($testInfo);
-          if(!isset($testJson['run']) && 
-	        GetSetting("shard_tests") && 
-			$testJson['type'] != 'traceroute'){
+          if(!isset($testJson['run']) && GetSetting("shard_tests") && $testJson['type'] != 'traceroute'){
             logTestMsg($testId,"Tried to start sharded test with no runs set");
           } else {
             echo json_encode($testJson);
