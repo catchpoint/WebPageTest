@@ -89,7 +89,7 @@ if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_
   header('Content-type: text/plain');
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-  echo "Servers:$servers";
+  echo "Servers:$work_servers";
   $is_done = true;
 }
 
