@@ -156,7 +156,7 @@ maxNavigateCount=20
 
 ; List of URLs that point directly to individual servers behind a load balancer
 ; for an agent to request work from (round-robin).
-;work_servers="http://a.webpagetest.org/work/ http://b.webpagetest.org/work/"
+;work_servers="http://a.webpagetest.org/work/,http://b.webpagetest.org/work/"
 
 ; Base URL for work for this specific server so that results will be posted back
 ; to the same server that originated a task.
