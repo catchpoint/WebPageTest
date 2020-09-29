@@ -35,6 +35,16 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) && strlen($_SERVER['HTTP_USER_
   }
 }
 
+// see if we need to proxy requests to another server
+if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
+    strpos($_SERVER['REQUEST_URI'], '/video/', 0) !== 0 &&
+    preg_match('/\d\d\d\d\d\d_([\w]+)i[^_]+_[\w]+/', $_SERVER['QUERY_STRING'], $matches)) {
+  $proxy_host = GetSetting("proxy_{$matches[1]}");
+  if ($proxy_host) {
+    proxy_request($proxy_host);
+    exit(0);
+  }
+}
 
 // shared initializiation/loading code
 set_time_limit(300);

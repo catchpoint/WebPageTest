@@ -3202,3 +3202,49 @@ function GetSortableString($num, $targetLen = 6) {
   $str = str_pad($str, $targetLen, '0', STR_PAD_LEFT);
   return $str;
 }
+
+// Proxy the current GET request to the given destination
+// requires CURL
+$PROXY_REQUEST_HOST = null;
+$PROXY_CURRENT_HOST = null;
+function proxy_request($proxy_host) {
+  global $PROXY_REQUEST_HOST, $PROXY_CURRENT_HOST;
+  $PROXY_REQUEST_HOST = $proxy_host;
+  $PROXY_CURRENT_HOST  = $_SERVER['HTTP_HOST'];
+  $protocol = getUrlProtocol();
+  $url = $protocol . '://' . $proxy_host . $_SERVER['REQUEST_URI'];
+
+  // Initialize curl
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+
+  // populate the request headers
+  $headers = getallheaders();
+  $request_headers = array();
+  foreach( $headers as $name => $value) {
+    if (strcasecmp($name, "host") !== 0 &&
+        strcasecmp($name, "accept-encoding") !== 0 &&
+        strlen($value)) {
+      $request_headers[] = "$name: $value";
+    }
+  }
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $request_headers);
+
+  // Handle response headers as they come in
+  curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
+    global $PROXY_REQUEST_HOST, $PROXY_CURRENT_HOST;
+    header(str_replace($PROXY_REQUEST_HOST, $PROXY_CURRENT_HOST, $header));
+    return strlen($header);
+  });
+
+  // stream the response
+  curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $body) {
+    echo $body;
+    return strlen($body);
+  });
+
+  $response = curl_exec($ch);
+  curl_close($ch);
+}
