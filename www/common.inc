@@ -35,17 +35,6 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) && strlen($_SERVER['HTTP_USER_
   }
 }
 
-// see if we need to proxy requests to another server
-if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
-    strpos($_SERVER['REQUEST_URI'], '/video/', 0) !== 0 &&
-    preg_match('/\d\d\d\d\d\d_([\w]+)i[^_]+_[\w]+/', $_SERVER['QUERY_STRING'], $matches)) {
-  $proxy_host = GetSetting("proxy_{$matches[1]}");
-  if ($proxy_host) {
-    proxy_request($proxy_host);
-    exit(0);
-  }
-}
-
 // shared initializiation/loading code
 set_time_limit(300);
 if (!array_key_exists('debug', $_REQUEST) && (!isset($debug) || !$debug)) {
@@ -380,6 +369,19 @@ if (strlen($id)) {
     if (!array_key_exists('testinfo', $test)) {
         $test['testinfo'] = array();
     }
+}
+
+// see if we need to proxy requests to another server (after restoring the test and if we don't have it locally)
+if (isset($testPath) && !is_dir($testPath)) {
+  if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
+      strpos($_SERVER['REQUEST_URI'], '/video/', 0) !== 0 &&
+      preg_match('/\d\d\d\d\d\d_([\w]+)i[^_]+_[\w]+/', $_SERVER['QUERY_STRING'], $matches)) {
+    $proxy_host = GetSetting("proxy_{$matches[1]}");
+    if ($proxy_host) {
+      proxy_request($proxy_host);
+      exit(0);
+    }
+  }
 }
 
 if (array_key_exists('medianMetric', $_REQUEST)) {
