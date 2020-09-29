@@ -282,6 +282,9 @@ maxNavigateCount=20
 ; agents.
 ;EC2.IdleTerminateMinutes=15
 
+; Tags to add to the agent instances
+; EC2.tags="myTag=>myValue|foo=>bar"
+
 ; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
 ;EC2.default=us-east-1
 
@@ -293,8 +296,9 @@ maxNavigateCount=20
 ;EC2.us-east-1.min=0
 ;EC2.us-east-1.max=1
 
-; Per-location Security Group and Subnet IDs to enable launching into VPCs
+; Per-location Security Group, Subnet IDs and Key Name to enable launching into VPCs
 ; (note that this will pin your instances to the availability zone associated with
 ; the subnet). This is required only if you do not have a default VPC.
 ;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
 ;EC2.us-west-2.subnetId=subnet-aaa0011bc1
+;EC2.us-west-2.keyName=my-ssh-key
