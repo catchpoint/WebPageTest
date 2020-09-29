@@ -162,16 +162,6 @@ maxNavigateCount=20
 ; to the same server that originated a task.
 ;work_server="http://a.webpagetest.org/work/"
 
-; Mapping of server ID's to a direct base URL to access that server. In a cluster
-; deployment the server will attemt to forward a request to the appropriate back-end
-; and fall back to attempting to serve itself if the back-end is not available.
-; server_default is the server URL to use for any unprefixed tests, otherwise
-; server_A, server_B, etc point to individual servers.
-;server_default="http://a.webpagetest.org/"
-;server_A="http://a.webpagetest.org/"
-;server_B="http://b.webpagetest.org/"
-
-
 ; For basic authentication with WPT server
 ;ba_username=username
 ;ba_password=password
