@@ -36,14 +36,6 @@ $page_description = "Website performance test result$testLabel.";
                 height: 2em;
             }
         </style>
-        <script language="JavaScript">
-            <?php
-                $wpt_host = trim($_SERVER['HTTP_HOST']);
-                echo "var wpt_host='$wpt_host';\n";
-            ?>
-            if( window.location.host.length && wpt_host.length && window.location.host != wpt_host )
-                window.location = document.location.protocol + '//' + wpt_host + window.location.pathname;
-        </script>
         <?php if( !$testComplete ) {
                 $autoRefresh = true;
         ?>
