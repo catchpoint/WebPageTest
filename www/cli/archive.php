@@ -271,6 +271,10 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
       !is_file("$testPath/testinfo.json.gz") &&
       !is_file("$testPath/testinfo.json")) {
     $delete = true;
+  } elseif (is_file("$testPath/.archived")) {
+    $archiveCount++;
+    $logLine .= "Already Archived";
+    $delete = true;
   } else {
     $needs_archive = is_file("$testPath/archive.me");
     if ($needs_archive) {

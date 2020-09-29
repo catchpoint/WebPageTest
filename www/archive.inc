@@ -45,13 +45,14 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
             if (GetSetting('archive_dir') == '/dev/null') {
               $ret = true;
             } else {
-              if( isset($testInfo['archived']) && $testInfo['archived'] ) {
+              if( is_file("$testPath/.archived") || (isset($testInfo['archived']) && $testInfo['archived']) ) {
                   if (VerifyArchive($id)) {
                       $ret = true;
                   } else {
                       $zipFile = GetArchiveFile($id, true);
                       unlink($zipFile);
                       $testInfo['archived'] = false;
+                      @unlink("$testPath/.archived");
                       SaveTestInfo($id, $testInfo);
                   }
               }
@@ -135,6 +136,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                           if (is_file($zipFile))
                               unlink($zipFile);
                           if ($ret && $store_result) {
+                              touch("$testPath/.archived");
                               $testInfo['archived'] = true;
                               SaveTestInfo($id, $testInfo);
                           }
@@ -263,6 +265,7 @@ function RestoreArchive($id) {
                   $ret = true;
                   $testInfo = GetTestInfo($id);
                   if ($testInfo) {
+                    touch("$testPath/.archived");
                     $testInfo['archived'] = true;
                     $testInfo['restored'] = true;
                     $testInfo['restoredDataOnly'] = false;
