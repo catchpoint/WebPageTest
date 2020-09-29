@@ -61,8 +61,8 @@ function GetTestStatus($id, $includePosition = true) {
             if ((array_key_exists('started', $testInfoJson) &&
                 $testInfoJson['started']) ||
                 isset($test['test']['completeTime'])) {
-              $ret['startTime'] = $test['test']['startTime'];
-              $start = $testInfoJson['started'];
+              $ret['startTime'] = isset($test['test']['startTime']) ? $test['test']['startTime'] : $now;
+              $start = isset($testInfoJson['started']) ? $testInfoJson['started'] : $now;
               $elapsed = 0;
               if ($now > $start)
                 $elapsed = $now - $start;
@@ -74,7 +74,7 @@ function GetTestStatus($id, $includePosition = true) {
                 $ret['completeTime'] = $test['test']['completeTime'];
                 $ret['testsCompleted'] = $ret['testsExpected'];
                 if (isset($testInfoJson['completed']))
-                  $ret['elapsed'] = $testInfoJson['completed'] - $testInfoJson['started'];
+                  $ret['elapsed'] = max($testInfoJson['completed'] - $start, 0);
               } else {
                 $ret['statusCode'] = 100;
                 if( $elapsed == 0 )

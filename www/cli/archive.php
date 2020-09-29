@@ -203,17 +203,19 @@ function CheckRelay() {
 * @param mixed $path
 */
 function CheckOldDir($path) {
-  $oldDirs = scandir($path);
-  foreach( $oldDirs as $oldDir ) {
-    if( $oldDir != '.' && $oldDir != '..' ) {
-      // see if it is a test or a higher-level directory
-      if( is_file("$path/$oldDir/testinfo.ini") )
-        CheckTest("$path/$oldDir", $oldDir, 1000, FALSE);
-      else
-        CheckOldDir("$path/$oldDir");
+  if (is_dir($path)) {
+    $oldDirs = scandir($path);
+    foreach( $oldDirs as $oldDir ) {
+      if( $oldDir != '.' && $oldDir != '..' ) {
+        // see if it is a test or a higher-level directory
+        if( is_file("$path/$oldDir/testinfo.ini") )
+          CheckTest("$path/$oldDir", $oldDir, 1000, FALSE);
+        else
+          CheckOldDir("$path/$oldDir");
+      }
     }
+    @rmdir($path);
   }
-  @rmdir($path);
 }
 
 /**
