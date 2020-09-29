@@ -3221,7 +3221,16 @@ function proxy_request($proxy_host) {
   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 
   // populate the request headers
-  $headers = getallheaders();
+  $headers = array();
+  if (function_exists('getallheaders')) {
+    $headers = getallheaders();
+  } else {
+    foreach ($_SERVER as $name => $value) {
+        if (substr($name, 0, 5) == 'HTTP_') {
+            $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+        }
+    }
+  }  
   $request_headers = array();
   foreach( $headers as $name => $value) {
     if (strcasecmp($name, "host") !== 0 &&
