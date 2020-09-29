@@ -74,10 +74,10 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
               CheckDay($dayDir, "$year$month$day", $elapsedDays, $forced_only);
             }
           }
-          rmdir($monthDir);
+          @rmdir($monthDir);
         }
       }
-      rmdir($yearDir);
+      @rmdir($yearDir);
     }
   }
 }
@@ -96,13 +96,13 @@ if (isset($archive_kept_days) && isset($archive_dir) && strlen($archive_dir)) {
             $dayDir = "$monthDir/$day";
             if (is_numeric($day) && is_dir($dayDir) && ElapsedDays($year, $month, $day) > $archive_kept_days) {
               DeleteArchivedFiles($dayDir);
-              rmdir($dayDir);
+              @rmdir($dayDir);
             }
           }
-          rmdir($monthDir);
+          @rmdir($monthDir);
         }
       }
-      rmDir($yearDir);
+      @rmDir($yearDir);
     }
   }
 }
@@ -127,7 +127,7 @@ function DeleteArchivedFiles($dir) {
           $archivesDeletedCount++;
         } else {
           DeleteArchivedFiles($absoulutePath);
-          rmdir($absoulutePath);
+          @rmdir($absoulutePath);
         }
       }
     }
