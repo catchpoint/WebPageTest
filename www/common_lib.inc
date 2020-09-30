@@ -3279,6 +3279,7 @@ function server_sync($apiKey, $runCount, $logline) {
       'http' => array(
           'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
           'method'  => 'POST',
+          'timeout' => 5,
           'content' => http_build_query($data)
       )
     );
