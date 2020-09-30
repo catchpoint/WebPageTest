@@ -240,18 +240,23 @@ else
             if( !strlen($id) )
             {
                 // try and create a deterministic id so multiple submissions of the same tests will result in the same id
-                if( strlen($_REQUEST['tests']) )
-                {
+                $server_id = GetSetting('serverID');
+                if (is_string($server_id)) {
+                    $server_id .= 'i';
+                } else {
+                    $server_id = '';
+                }
+                if( strlen($_REQUEST['tests']) ) {
                     $date = gmdate('ymd_');
                     $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra . $bgColor . $textColor;
                     if( $_REQUEST['slow'] )
                         $hashstr .= '.slow';
                     if( strpos($hashstr, '_') == 6 )
                         $date = substr($hashstr, 0, 7);
-                    $id = $date . sha1($hashstr);
+                        $id = $date . $server_id . sha1($hashstr);
+                } else {
+                    $id = gmdate('ymd_') . $server_id . md5(uniqid(rand(), true));
                 }
-                else
-                    $id = gmdate('ymd_') . md5(uniqid(rand(), true));
             }
 
             RestoreVideoArchive($id);
