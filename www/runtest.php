@@ -42,6 +42,8 @@
     $error = NULL;
     $xml = false;
     $usingAPI = false;
+    $runcount = 0;
+    $apiKey = null;
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
     $json = false;
@@ -1161,6 +1163,8 @@ function ValidateKey(&$test, &$error, $key = null)
   global $uid;
   global $user;
   global $this_user;
+  global $runcount;
+  global $apiKey;
 
   // load the secret key (if there is one)
   $secret = '';
@@ -1205,6 +1209,7 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
+      $apiKey = $key;
 
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
@@ -1896,8 +1901,12 @@ function GetRedirect($url, &$rhost, &$rurl) {
 */
 function LogTest(&$test, $testId, $url)
 {
-    if (GetSetting('logging_off'))
+    global $runcount;
+    global $apiKey;
+    if (GetSetting('logging_off')) {
+        server_sync($apiKey, $runcount, null);
         return;
+    }
 
     if( !is_dir('./logs') )
         mkdir('./logs', 0777, true);
@@ -1936,6 +1945,7 @@ function LogTest(&$test, $testId, $url)
     $log = makeLogLine($line_data);
 
     error_log($log, 3, $filename);
+    server_sync($apiKey, $runcount, rtrim($log, "\r\n"));
 }
 
 

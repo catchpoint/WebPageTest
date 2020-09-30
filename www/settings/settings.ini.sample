@@ -154,6 +154,11 @@ maxNavigateCount=20
 ; YYMMDD_<serverID>hash_xxx
 ;serverID=A
 
+; For syncing test history and API usage across multiple servers (comma-separated list)
+;sync-secret="somesecretstring"
+;sync-servers="https://www.webpagetest.org/sync.php"
+
+
 ; Allow for proxying requests for test data for the main progress and results page 
 ; with a given server ID to a different server.
 ; This way the requests will be sticky to the server that created it while the test is in the queue 

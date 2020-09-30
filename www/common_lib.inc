@@ -3257,3 +3257,36 @@ function proxy_request($proxy_host) {
   $response = curl_exec($ch);
   curl_close($ch);
 }
+
+// Sync the server status with others in the cluster
+function server_sync($apiKey, $runCount, $logline) {
+  $servers_str = GetSetting("sync-servers");
+  $secret = GetSetting("sync-secret");
+  if (is_string($servers_str) && is_string($secret) && strlen($secret)) {
+    $servers = explode(',', $servers_str);
+    $data = array('secret' => $secret);
+    $ok = false;
+    if (isset($apiKey) && $runCount) {
+      $data['key'] = $apiKey;
+      $data['runs'] = $runCount;
+      $ok = true;
+    }
+    if (isset($logline) && strlen($logline)) {
+      $data['history'] = $logline;
+      $ok = true;
+    }
+    $options = array(
+      'http' => array(
+          'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+          'method'  => 'POST',
+          'content' => http_build_query($data)
+      )
+    );
+    if ($ok) {
+      foreach ($servers as $url) {
+        $context  = stream_context_create($options);
+        file_get_contents($url, false, $context);
+      }
+    }
+  }
+}
