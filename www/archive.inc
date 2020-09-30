@@ -401,9 +401,9 @@ function ArchiveApi($id) {
  * Video archive support
  ***************************************************************************/
 function ArchiveVideo($id) {
-    global $settings;
     $ret = false;
-    if ( isset($settings['video_archive_url']) ) {
+    $archive_url = GetSetting('video_archive_url');
+    if ( is_string($archive_url) ) {
         $lock = Lock("video-$id");
         if ($lock) {
             $videoPath = './' . GetVideoPath($id);
@@ -426,13 +426,10 @@ function ArchiveVideo($id) {
                         $zip->close();
 
                         // Upload the zip file
-                        $archive_url = GetSetting('video_archive_url');
-                        if ($archive_url) {
-                            $archive_url .= "$id.zip";
-                            if (http_put_file($archive_url, $zipFile)) {
-                                touch("$videoPath/.archive");
-                                $ret = true;
-                            }
+                        $archive_url .= "$id.zip";
+                        if (http_put_file($archive_url, $zipFile)) {
+                            touch("$videoPath/.archive");
+                            $ret = true;
                         }
 
                         // make sure we don't leave a file hanging around
@@ -450,8 +447,8 @@ function ArchiveVideo($id) {
 }
 
 function RestoreVideoArchive($id) {
-    global $settings;
-    if ( isset($settings['video_archive_url']) ) {
+    $archive_url = GetSetting('video_archive_url');
+    if ( is_string($archive_url) ) {
         $lock = Lock("video-$id");
         if ($lock) {
             $videoPath = './' . GetVideoPath($id);
@@ -462,22 +459,19 @@ function RestoreVideoArchive($id) {
                 }
             } else {
                 // Try restoring it
-                $archive_url = GetSetting('video_archive_url');
-                if ($archive_url) {
-                    $zipFile = "./tmp/video_$id.zip";
-                    $archive_url .= "$id.zip";
-                    if (http_fetch_file($archive_url, $zipFile)) {
-                        if (is_file($zipFile) && filesize($zipFile)) {
-                            if (!is_dir($videoPath))
-                                mkdir( $videoPath, 0777, true );
-                            ZipExtract($zipFile, $videoPath);
-                            touch("$videoPath/.archive");
-                        }
+                $zipFile = "./tmp/video_$id.zip";
+                $archive_url .= "$id.zip";
+                if (http_fetch_file($archive_url, $zipFile)) {
+                    if (is_file($zipFile) && filesize($zipFile)) {
+                        if (!is_dir($videoPath))
+                            mkdir( $videoPath, 0777, true );
+                        ZipExtract($zipFile, $videoPath);
+                        touch("$videoPath/.archive");
                     }
-                    // make sure we don't leave a file hanging around
-                    if (is_file($zipFile)) {
-                        unlink($zipFile);
-                    }
+                }
+                // make sure we don't leave a file hanging around
+                if (is_file($zipFile)) {
+                    unlink($zipFile);
                 }
             }
             UnLock($lock);
