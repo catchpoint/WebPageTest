@@ -403,16 +403,24 @@ function ArchiveApi($id) {
 function ArchiveVideo($id) {
     $ret = false;
     $archive_url = GetSetting('video_archive_url');
-    if ( is_string($archive_url) ) {
+    $s3_server = GetSetting('archive_s3_server');
+    $s3_key = GetSetting('archive_s3_key');
+    $s3_secret = GetSetting('archive_s3_secret');
+    $s3_bucket = GetSetting('archive_s3_bucket');
+    $s3_urlstyle = GetSetting('archive_s3_urlstyle');
+    $videoPath = './' . GetVideoPath($id);
+    $zipFile = "./tmp/video_$id.zip";
+
+    if (is_file("$videoPath/.archive")) {
+        $ret - true;
+    } elseif ( is_string($archive_url) || (is_string($s3_server) && is_string($s3_key) && is_string($s3_secret) && is_string($s3_bucket)) ) {
         $lock = Lock("video-$id");
         if ($lock) {
-            $videoPath = './' . GetVideoPath($id);
             if (is_dir($videoPath) && is_file("$videoPath/video.mp4")) {
                 if (is_file("$videoPath/.archive")) {
                     $ret - true;
                 } else {
                     // Create the zip file
-                    $zipFile = "./tmp/video_$id.zip";
                     $zip = new ZipArchive();
                     if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
                         // add the files
@@ -426,10 +434,21 @@ function ArchiveVideo($id) {
                         $zip->close();
 
                         // Upload the zip file
-                        $archive_url .= "$id.zip";
-                        if (http_put_file($archive_url, $zipFile)) {
-                            touch("$videoPath/.archive");
-                            $ret = true;
+                        if (is_string($archive_url)) {
+                            $archive_url .= "$id.zip";
+                            if (http_put_file($archive_url, $zipFile)) {
+                                touch("$videoPath/.archive");
+                                $ret = true;
+                            }
+                        } else {
+                            require_once('./lib/S3.php');
+                            $urlstyle = isset($s3_urlstyle) ? trim($s3_urlstyle) : 'vhost';
+                            $s3 = new S3(trim($s3_key), trim($s3_secret), false, trim($s3_server), $urlstyle);
+                            $file = "video-$id.zip";
+                            if ($s3->putObject($s3->inputFile($zipFile, false), trim($s3_bucket), $file, S3::ACL_PRIVATE)) {
+                                touch("$videoPath/.archive");
+                                $ret = true;
+                            }
                         }
 
                         // make sure we don't leave a file hanging around
@@ -448,31 +467,55 @@ function ArchiveVideo($id) {
 
 function RestoreVideoArchive($id) {
     $archive_url = GetSetting('video_archive_url');
-    if ( is_string($archive_url) ) {
+    $s3_server = GetSetting('archive_s3_server');
+    $s3_key = GetSetting('archive_s3_key');
+    $s3_secret = GetSetting('archive_s3_secret');
+    $s3_bucket = GetSetting('archive_s3_bucket');
+    $s3_urlstyle = GetSetting('archive_s3_urlstyle');
+    $zipFile = "./tmp/video_$id.zip";
+
+    $videoPath = './' . GetVideoPath($id);
+    if (is_dir($videoPath)) {
+        // Update the last time it was accessed
+        if (is_file("$videoPath/.archive")) {
+            touch("$videoPath/.archive");
+        }
+    } elseif ( is_string($archive_url) ) {
         $lock = Lock("video-$id");
         if ($lock) {
-            $videoPath = './' . GetVideoPath($id);
-            if (is_dir($videoPath)) {
-                // Update the last time it was accessed
-                if (is_file("$videoPath/.archive")) {
+            // Try restoring it
+            $archive_url .= "$id.zip";
+            if (http_fetch_file($archive_url, $zipFile)) {
+                if (is_file($zipFile) && filesize($zipFile)) {
+                    if (!is_dir($videoPath))
+                        mkdir( $videoPath, 0777, true );
+                    ZipExtract($zipFile, $videoPath);
                     touch("$videoPath/.archive");
                 }
-            } else {
-                // Try restoring it
-                $zipFile = "./tmp/video_$id.zip";
-                $archive_url .= "$id.zip";
-                if (http_fetch_file($archive_url, $zipFile)) {
-                    if (is_file($zipFile) && filesize($zipFile)) {
-                        if (!is_dir($videoPath))
-                            mkdir( $videoPath, 0777, true );
-                        ZipExtract($zipFile, $videoPath);
-                        touch("$videoPath/.archive");
-                    }
-                }
-                // make sure we don't leave a file hanging around
-                if (is_file($zipFile)) {
-                    unlink($zipFile);
-                }
+            }
+            // make sure we don't leave a file hanging around
+            if (is_file($zipFile)) {
+                unlink($zipFile);
+            }
+            UnLock($lock);
+        }
+    } elseif(is_string($s3_server) && is_string($s3_key) && is_string($s3_secret) && is_string($s3_bucket)) {
+        $lock = Lock("video-$id");
+        if ($lock) {
+            require_once('./lib/S3.php');
+            $urlstyle = is_string($s3_urlstyle) ? trim($s3_urlstyle) : 'vhost';
+            $s3 = new S3(trim($s3_key), trim($s3_secret), false, trim($s3_server), $urlstyle);
+            $bucket = trim($s3_bucket);
+            $file = "video-$id.zip";
+            $s3->getObject($bucket, $file, $zipfile);
+            if (is_file($zipFile) && filesize($zipFile)) {
+                if (!is_dir($videoPath))
+                    mkdir( $videoPath, 0777, true );
+                ZipExtract($zipFile, $videoPath);
+                touch("$videoPath/.archive");
+            }
+            if (is_file($zipFile)) {
+                unlink($zipFile);
             }
             UnLock($lock);
         }
