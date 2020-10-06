@@ -2326,9 +2326,11 @@ function ValidateTestId(&$id) {
   }
 
   if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
-    if (!defined('OLD_TEST') && intval(substr($testId, 0, 2)) < intval(date("y")) - 1)
-      define('OLD_TEST', true);
-    $valid = true;
+    $testYear = intval(substr($testId, 0, 2));
+    $currentYear = intval(date("y"));
+    if ($testYear >= 8 && $testYear <= $currentYear) {
+      $valid = true;
+    }
   } else {
     $id = '';
   }
