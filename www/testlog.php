@@ -30,7 +30,7 @@ $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = isset($_GET["f"]) && !strcasecmp($_GET["f"], 'csv');
 
-if ($all && $days > 7 && !strlen(trim($filterstr))) {
+if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
   header('HTTP/1.0 403 Forbidden');
   exit;
 }
