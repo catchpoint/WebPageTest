@@ -1256,9 +1256,8 @@ function RestoreTest($id)
   $ret = false;
   if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
-    // Only trigger a restore if the test info is not valid
-    $testInfo = GetTestInfo($id);
-    if (!$testInfo) {
+    // Only trigger a restore if the directory doesn't exist
+    if (!is_dir($testPath)) {
       $archive_dir = GetSetting('archive_dir');
       $archive_url = GetSetting('archive_url');
       $archive_s3_url = GetSetting('archive_s3_url');
@@ -1268,9 +1267,6 @@ function RestoreTest($id)
           ($archive_s3_url && strlen($archive_s3_url)) ||
           ($archive_s3_server && strlen($archive_s3_server))) {
         $ret = RestoreArchive($id);
-        // Try a second time in case of a transient error
-        if (!$ret)
-          $ret = RestoreArchive($id);
       } else {
         $ret = true;
       }
