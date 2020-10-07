@@ -248,6 +248,10 @@ function TestToJSON($testInfo) {
   if (is_string($work_server) && strlen($work_server)) {
     $testJson['work_server'] = $work_server;
   }
+  $profile_data = GetSetting('profile_data');
+  if (is_string($profile_data) && strlen($profile_data)) {
+    $testJson['profile_data'] = $profile_data;
+  }
   return $testJson;
 }
 
