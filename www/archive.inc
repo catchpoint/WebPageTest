@@ -12,6 +12,7 @@ function ArchiveSkipFile($file) {
   $skip = false;
   if ($file == 'archive.me' ||
       $file == 'test.waiting' ||
+      $file == 'test.running' ||
       preg_match('/\.pageData.\d+\.gz$/', $file) ||
       preg_match('/\.requests.\d+\.gz$/', $file) ||
       preg_match('/\.devToolsCPUTime.\d+\.gz$/', $file)) {

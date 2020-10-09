@@ -284,6 +284,9 @@ if (ValidateTestId($id)) {
       if ($done) {
         logTestMsg($id, "Test Complete");
 
+        touch("$testPath/test.complete");
+        @unlink("$testPath/test.running");
+      
         // send an async request to the post-processing code so we don't block
         SendAsyncRequest("/work/postprocess.php?test=$id");
       }

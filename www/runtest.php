@@ -2112,8 +2112,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
 
         // create the folder for the test results
-        if( !is_dir($test['path']) )
+        if( !is_dir($test['path']) ) 
             mkdir($test['path'], 0777, true);
+
+        // Start with an initial state of waiting/submitted
+        if (!$batch) {
+          touch("{$test['path']}/test.waiting");
+        }
 
         // write out the ini file
         $testInfo = "[test]\r\n";

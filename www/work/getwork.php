@@ -166,8 +166,10 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
 
 function StartTest($testId, $time) {
   $testPath = './' . GetTestPath($testId);
-  $waiting_file = "$testPath/test.waiting";
-  @unlink($waiting_file);
+  if (!is_file("$testPath/test.running")) {
+    touch("$testPath/test.running");
+  }
+  @unlink("$testPath/test.waiting");
 
   // flag the test with the start time
   $ini = file_get_contents("$testPath/testinfo.ini");

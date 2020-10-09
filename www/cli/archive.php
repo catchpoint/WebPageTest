@@ -266,7 +266,11 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
-  if ($elapsedDays > $MAX_DAYS) {
+  if (is_file("$testPath/test.waiting")) {
+    // Skip tests that are still queued
+  } elseif (is_file("$testPath/test.running")) {
+    // Skip tests that are still running
+  } elseif ($elapsedDays > $MAX_DAYS) {
     $logLine .= "Old test, deleting";
     $delete = true;
   } elseif (!is_file("$testPath/testinfo.ini") &&

@@ -19,11 +19,39 @@ function GetTestStatus($id, $includePosition = true) {
   $testPath = './' . GetTestPath($id);
 
   // Fast-path for pending tests when we don't need to know the queue position (avoid test and location locks)
-  $waiting_file = "$testPath/test.waiting";
-  if (!$includePosition && is_file($waiting_file))
+  if (!$includePosition && is_file("$testPath/test.waiting")) {
     return array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
+  } elseif (is_file("$testPath/test.running")) {
+    $elapsed = time() - filemtime("$testPath/test.running");
+    $ret = array('statusCode' => 100, 'statusText' => 'Test just started', 'id' => $id);
+    if( $elapsed == 0 ) {
+      $ret['statusText'] = "Test just started";
+    } elseif( $elapsed == 1 ) {
+      $ret['statusText'] = "Test Started $elapsed second ago";
+    } elseif( $elapsed < 60 ) {
+      $ret['statusText'] = "Test Started $elapsed seconds ago";
+    } else {
+      $elapsed = floor($elapsed / 60);
+      if( $elapsed == 1 ) {
+        $ret['statusText'] = "Test Started $elapsed minute ago";
+      } elseif( $elapsed < 3600 ) {
+        $ret['statusText'] = "Test Started $elapsed minutes ago";
+      } else {
+        $ret = null;
+      }
+    }
+    if (isset($ret)) {
+      return $ret;
+    }
+  } elseif (is_file("$testPath/test.complete")) {
+    return array('statusCode' => 200, 'statusText' => 'Test Complete', 'id' => $id, 'completeTime' => filemtime("$testPath/test.complete"));
+  }
 
-  $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+  if (is_file("$testPath/test.waiting")) {
+    $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
+  } else {
+    $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+  }
   $now = time();
   RestoreTest($id);
   if (is_dir($testPath) && is_file("$testPath/testinfo.ini")) {
@@ -141,6 +169,9 @@ function GetTestStatus($id, $includePosition = true) {
                             $ret['statusCode'] = 200;
                             $ret['statusText'] = 'Test Complete';
                             $ret['completeTime'] = $date;
+                            touch("$testPath/test.complete");
+                            @unlink("$testPath/test.running");
+
                             SendCallback($testInfoJson);
                           }
                         }

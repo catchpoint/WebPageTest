@@ -1479,15 +1479,13 @@ function GetDailyTestNum() {
 
 function AddTestJob($location, $job, $test, $testId) {
   $ret = false;
-  $waiting_file = null;
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
     $testPath = GetTestPath($testId);
     if (strlen($testPath)) {
       $testPath = './' . $testPath;
       if (!is_dir($testPath))
         mkdir($testPath, 0777, true);
-      $waiting_file = "$testPath/test.waiting";
-      touch($waiting_file);
+      touch("$testPath/test.waiting");
       $info = GetLocationInfo($location);
       if (isset($info) && is_array($info) && isset($info['queue'])) {
         // explicitly configured work queues do not support multiple priorities for status
@@ -1536,8 +1534,6 @@ function AddTestJob($location, $job, $test, $testId) {
       }
     }
   }
-  if (!$ret && isset($waiting_file) && is_file($waiting_file))
-    unlink($waiting_file);
   return $ret;
 }
 
