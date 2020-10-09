@@ -150,17 +150,17 @@
                       }
                     };
                     xhr.onerror = function() {
-                      setTimeout('UpdateStatus()', 15000);
+                      setTimeout('UpdateStatus()', 5000);
                     };
                     xhr.send();
                   } catch (err) {
-                      setTimeout('UpdateStatus()', 15000);
+                      setTimeout('UpdateStatus()', 5000);
                   }
                 } else {
-                  setTimeout('UpdateStatus()', 15000);
+                  setTimeout('UpdateStatus()', 5000);
                 }
             }
-            setTimeout('UpdateStatus()', 15000);
+            setTimeout('UpdateStatus()', 1000);
         </script>
     </body>
 </html>
