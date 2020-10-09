@@ -2270,6 +2270,34 @@ function xml_entities($text, $charset = 'UTF-8')
 }
 
 /**
+ * Normalize all of the keys to only include alphanumeric characters
+ */
+function normalize_keys(&$array) {
+  if (isset($array) && is_array($array)) {
+    // Build a list of keys that need fixing (don't modify the array wile iterating)
+    $keys = array();
+    foreach ($array as $key => $value) {
+      if (!preg_match('/^[0-9a-zA-Z]+$/', $key)) {
+        $keys[] = $key;
+      }
+      // recursively normalize any arrays
+      if (is_array($value)) {
+        normalize_keys($array[$key]);
+      }
+    }
+
+    // Normalize the actual keys
+    foreach($keys as $key) {
+      $new_key = preg_replace('/[^0-9a-zA-Z]+/', '', $key);
+      if (strlen($new_key) && $new_key != $key) {
+        $array[$new_key] = $array[$key];
+        unset($array[$key]);
+      }
+    }
+  }
+}
+
+/**
  * Send a JSON response (including callback for JSONP)
  *
  * @param mixed $response
@@ -2278,6 +2306,10 @@ function json_response(&$response) {
     header("Content-type: application/json; charset=utf-8");
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+    if (isset($_REQUEST['normalizekeys']) && $_REQUEST['normalizekeys']) {
+      normalize_keys($response);
+    }
 
     if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
