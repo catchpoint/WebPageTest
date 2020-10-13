@@ -18,6 +18,23 @@ $parents = array();
 $styles = array();
 
 $row_data = array();
+
+// Pre-scan the requests to see if a given connection has multiple hosts coalesced
+$connection_hosts = array();
+foreach ($requests as $request) {
+  if (isset($request['socket']) &&
+      isset($request['http2_stream_id']) &&
+      isset($request['host']) &&
+      isset($request['url'])) {
+    $connection = strval($request['socket']);
+    if (!isset($connection_hosts[$connection])) {
+      $connection_hosts[$connection] = array($request['host']);
+    } elseif (!in_array($request['host'], $connection_hosts[$connection])) {
+      $connection_hosts[$connection][] = $request['host'];
+    }
+  }
+}
+
 foreach ($requests as $request) {
   if (isset($request['socket']) &&
       isset($request['http2_stream_id']) &&
@@ -27,11 +44,15 @@ foreach ($requests as $request) {
 
     if (!isset($connections[$connection])) {
       // Create the root entry for this connection
-      $connections[$connection] = $request['host'];
-      $label = $request['host'];
+      if (isset($connection_hosts[$connection])){
+        $connections[$connection] = implode(",", $connection_hosts[$connection]);
+      } else {
+        $connections[$connection] = $request['host'];
+      }
+      $label = $connections[$connection];
       if (isset($request['ip_addr']))
         $label .= "<br>({$request['ip_addr']})";
-      $tooltip = $request['host'];
+      $tooltip = $connections[$connection];
       $data = array("v" => $connection, "f" => $label);
       $row = array($data, "", $tooltip);
       $row_data[] = $row;
