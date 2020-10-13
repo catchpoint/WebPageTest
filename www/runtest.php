@@ -1260,8 +1260,8 @@ function ValidateKey(&$test, &$error, $key = null)
               $runcount = max(1, $test['runs']);
               if( !$test['fvonly'] )
                 $runcount *= 2;
-              if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-                $runcount *= $test['navigateCount'];
+              //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+              //  $runcount *= $test['navigateCount'];
 
             if( $limit > 0 ){
               if( $used + $runcount <= $limit ){
@@ -1922,8 +1922,8 @@ function LogTest(&$test, $testId, $url)
     $pageLoads = $test['runs'];
     if (!$test['fvonly'])
         $pageLoads *= 2;
-    if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-        $pageLoads *= $test['navigateCount'];
+    //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+    //    $pageLoads *= $test['navigateCount'];
 
     $line_data = array(
         'date' => gmdate("Y-m-d G:i:s"),
