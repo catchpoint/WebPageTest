@@ -31,6 +31,13 @@ function ArchiveSkipFile($file) {
 function ArchiveTest($id, $store_result = true, $delete = false) {
     global $settings;
     global $api_keys;
+
+    // Short-circuit tests that are already archived
+    $testPath = realpath('./' . GetTestPath($id));
+    if (is_file("$testPath/.archived")) {
+        return true;
+    }
+
     $ret = false;
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
@@ -40,7 +47,6 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
         $completed = true;
         if ($status['statusCode'] >= 100 && $status['statusCode'] < 200)
             $completed = false;
-        $testPath = realpath('./' . GetTestPath($id));
         $testInfo = GetTestInfo($id);
         if ($testInfo && ($completed || @$testInfo['batch'])) {
             if (GetSetting('archive_dir') == '/dev/null') {

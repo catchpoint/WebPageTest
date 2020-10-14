@@ -260,7 +260,6 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   global $kept;
   global $log;
   global $MIN_DAYS;
-  global $MAX_DAYS;
   $logLine = "$id ($elapsedDays): ";
 
   echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
@@ -270,16 +269,10 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
     // Skip tests that are still queued
   } elseif (is_file("$testPath/test.running")) {
     // Skip tests that are still running
-  } elseif ($elapsedDays > $MAX_DAYS) {
-    $logLine .= "Old test, deleting";
-    $delete = true;
   } elseif (!is_file("$testPath/testinfo.ini") &&
       !is_file("$testPath/testinfo.json.gz") &&
       !is_file("$testPath/testinfo.json")) {
-    $delete = true;
-  } elseif (is_file("$testPath/.archived")) {
-    $archiveCount++;
-    $logLine .= "Already Archived";
+    $logLine .= "Invalid test";
     $delete = true;
   } else {
     $needs_archive = is_file("$testPath/archive.me");
@@ -289,30 +282,19 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
       $elapsed = TestLastAccessed($id);
       if (isset($elapsed)) {
         $logLine .= "Last Accessed $elapsed days";
-        if ($elapsed >= 0.5) {
+        if ($elapsed >= $MIN_DAYS) {
           $needs_archive = true;
           $logLine .= " Archiving";
         }
-      } else {
-        $delete = true;
       }
     }
     if ($needs_archive) {
       if (ArchiveTest($id) ) {
         $archiveCount++;
-        $logLine .= "Archived";
+        $logLine .= " Archived";
         $delete = true;
-      } else if ($elapsed < 60) {
-        $status = GetTestStatus($id, true);
-        $logLine .= " status {$status['statusCode']}";
-        if ($status['statusCode'] >= 400 ||
-            ($status['statusCode'] == 102 &&
-             $status['remote'] &&
-             $elapsed > 1)) {
-          $delete = true;
-        }
       } else {
-        $logLine .= "Failed to archive";
+        $logLine .= " Failed to archive";
       }
     }
   }

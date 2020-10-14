@@ -1284,13 +1284,16 @@ function RestoreTest($id)
 function TestLastAccessed($id)
 {
     $elapsed = null;
-    $file = './' . GetTestPath($id) . '/testinfo.ini';
-    if (is_file($file)) {
-      $timestamp = filemtime($file);
-      if( $timestamp )
-      {
+    $testPath = './' . GetTestPath($id);
+    $files = array('.archived', 'testinfo.ini');
+    foreach ($files as $file) {
+      if (is_file("$testPath/$file")) {
+        $timestamp = filemtime("$testPath/$file");
+        if ($timestamp) {
           $elapsed = max(time() - $timestamp, 0);
           $elapsed /= 86400;
+          break;
+        }
       }
     }
     return $elapsed;
