@@ -361,7 +361,7 @@ function VerifyArchive($id) {
             $archive_url = GetSetting('archive_url');
             if ($archive_url) {
                 $valid = false;
-
+                $url = $archive_url . "$id.zip";
                 // Send a HEAD request to verify the archive
                 if (http_head($url)) {
                     touch("$testPath/.archived");
