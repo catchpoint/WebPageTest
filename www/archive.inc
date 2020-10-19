@@ -300,10 +300,10 @@ function VerifyArchive($id) {
     global $settings;
 
     if (!GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
+        $testPath = realpath('./' . GetTestPath($id));
         if (isset($settings['archive_dir'])) {
             // local
             $valid = false;
-            $testPath = realpath('./' . GetTestPath($id));
             $archive = GetArchiveFile($id);
             if (is_dir($testPath) && is_file($archive)) {
                 chmod($archive, 0777);
@@ -360,9 +360,15 @@ function VerifyArchive($id) {
         } elseif (array_key_exists('archive_url', $settings)) {
             $archive_url = GetSetting('archive_url');
             if ($archive_url) {
-                // If the test is marked as archived and we are using url-based archiving then assume it is valid.
-                // It is possible to do a HEAD check to be sure but the archived bit is only set if the POST succeeded.
-                $valid = true;
+                $valid = false;
+
+                // Send a HEAD request to verify the archive
+                if (http_head($url)) {
+                    touch("$testPath/.archived");
+                    $valid = true;
+                } elseif (is_file("$testPath/.archived")) {
+                    unlink("$testPath/.archived");
+                }
             }
         }
     }

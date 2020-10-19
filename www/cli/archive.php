@@ -300,9 +300,13 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   }
 
   if ($delete) {
-    delTree("$testPath/");
-    $deleted++;
-    $logLine .= " Deleted";
+    if (VerifyArchive($id)) {
+      delTree("$testPath/");
+      $deleted++;
+      $logLine .= " Deleted";
+    } else {
+      $logLine .= " Verification Failed";
+    }
   } else {
     $kept++;
   }
