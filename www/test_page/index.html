@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-color: #268bd5;
+                color: white;
+            }
+        </style>
+        <script>
+            function ImageLoaded() {
+                performance.mark('ImageLoaded');
+                console.log("ImageLoaded");
+                requestAnimationFrame(function(){
+                    requestAnimationFrame(function(){
+                        SlowScript();
+                    });
+                });
+            }
+            function SlowScript() {
+                let end = performance.now() + 500;
+                performance.mark('SlowScriptStart');
+                console.log("SlowScript");
+                while(true) {
+                    if (performance.now() > end) {
+                        break;
+                    }
+                }
+                performance.mark('SlowScriptEnd');
+                performance.measure("SlowScript", "SlowScriptStart", "SlowScriptEnd");
+            }
+        </script>
+    </head>
+    <body>
+        This is a test page to exercise a bunch of browser features.
+        <p><img src="slowimage.php"></p>
+        <p><img src="image.png" onload="ImageLoaded();"></p>
+    </body>
+</html>
