@@ -561,6 +561,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 'user' => GetColor($im, 105, 0, 158)
                 );
             foreach ($page_events as $event_name => &$event) {
+                if (!isset($event_colors[$event_name])) {
+                  continue;
+                }
                 $color = $event_colors[$event_name];
                 $endpoints = array(
                     array('y1' => $top + 1 + $row_height,
