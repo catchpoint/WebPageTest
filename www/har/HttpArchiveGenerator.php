@@ -252,8 +252,9 @@ class HttpArchiveGenerator
                         $pos = strpos($header, 'HTTP/');
                         if ($pos !== false) {
                             $ver = (string)trim(substr($header, $pos, 8));
-                            // Only accept HTTP/1 values for versions from headers
-                            if ($ver != 'HTTP/1.0' && $ver != 'HTTP/1.1')
+                            // Only accept HTTP/0.9 and HTTP/1 values for versions from headers
+                            // HTTP/2 and above is not set in headers and will come from protocol
+                            if ($ver !== 'HTTP/0.9' && $ver !== 'HTTP/1.0' && $ver !== 'HTTP/1.1')
                                 $ver = '';
                         }
                     }
@@ -325,8 +326,9 @@ class HttpArchiveGenerator
                         $pos = strpos($header, 'HTTP/');
                         if ($pos !== false) {
                             $ver = (string)trim(substr($header, $pos, 8));
-                            // Only accept HTTP/1 values for versions from headers
-                            if ($ver != 'HTTP/1.0' && $ver != 'HTTP/1.1')
+                            // Only accept HTTP/0.9 and HTTP/1 values for versions from headers
+                            // HTTP/2 and above is not set in headers and will come from protocol
+                            if ($ver !== 'HTTP/0.9' && $ver !== 'HTTP/1.0' && $ver !== 'HTTP/1.1')
                                 $ver = '';
                         }
                     }
