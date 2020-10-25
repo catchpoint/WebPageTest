@@ -248,20 +248,25 @@ class HttpArchiveGenerator
                         }
                     }
                 } else {
-                    if (!$ver) { // if version not already set then try to parse it
+                    if (!$ver) { // if version not already set then try to parse it from headers
                         $pos = strpos($header, 'HTTP/');
-                        if ($pos !== false)
+                        if ($pos !== false) {
                             $ver = (string)trim(substr($header, $pos, 8));
+                            // Only accept HTTP/1 values for versions from headers
+                            if ($ver != 'HTTP/1.0' && $ver != 'HTTP/1.1')
+                                $ver = '';
+                        }
                     }
                 }
             }
         }
         if ($headersSize)
             $request['headersSize'] = $headersSize;
-        if (strlen($ver)) {
-            $request['httpVersion'] = $ver;
-        } elseif(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
+        // Get HTTP version from protocol and only fall back to parsed header version if not set
+        if(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
             $request['httpVersion'] = $requestData['protocol'];
+        } elseif (strlen($ver)) {
+            $request['httpVersion'] = $ver;
         } else {
             $request['httpVersion'] = '';
         }
@@ -316,20 +321,25 @@ class HttpArchiveGenerator
                     if (!strcasecmp($name, 'location'))
                         $loc = (string)$val;
                 } else {
-                    if (!$ver) { // if version not already set then try to parse it
+                    if (!$ver) { // if version not already set then try to parse it from headers
                         $pos = strpos($header, 'HTTP/');
-                        if ($pos !== false)
+                        if ($pos !== false) {
                             $ver = (string)trim(substr($header, $pos, 8));
+                            // Only accept HTTP/1 values for versions from headers
+                            if ($ver != 'HTTP/1.0' && $ver != 'HTTP/1.1')
+                                $ver = '';
+                        }
                     }
                 }
             }
         }
         if ($headersSize)
             $response['headersSize'] = $headersSize;
-        if (strlen($ver)) {
-            $response['httpVersion'] = $ver;
-        } elseif(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
+        // Get HTTP version from protocol and only fall back to parsed header version if not set
+        if(isset($requestData['protocol']) && strlen($requestData['protocol'])) {
             $response['httpVersion'] = $requestData['protocol'];
+        } elseif (strlen($ver)) {
+            $response['httpVersion'] = $ver;
         } else {
             $response['httpVersion'] = '';
         }
