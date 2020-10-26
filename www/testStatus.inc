@@ -6,6 +6,7 @@ if(extension_loaded('newrelic')) {
 }
 
 $testQueue = array();
+$testInfoJson = null;
 
 /**
 * Get the status of the given test ID (and return the info in an array)
@@ -22,8 +23,14 @@ function GetTestStatus($id, $includePosition = true) {
   if (!$includePosition && is_file("$testPath/test.waiting")) {
     return array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
   } elseif (is_file("$testPath/test.running")) {
-    $elapsed = time() - filemtime("$testPath/test.running");
-    $ret = array('statusCode' => 100, 'statusText' => 'Test just started', 'id' => $id);
+    $startTime = filemtime("$testPath/test.running");
+    $elapsed = time() - $startTime;
+    $ret = array('statusCode' => 100,
+                 'statusText' => 'Test just started',
+                 'startTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.running")),
+                 'id' => $id);
+    $testInfoJson = GetTestInfo($id);
+    PopulateTestInfoJson($ret, $testInfoJson);
     if( $elapsed == 0 ) {
       $ret['statusText'] = "Test just started";
     } elseif( $elapsed == 1 ) {
@@ -44,7 +51,13 @@ function GetTestStatus($id, $includePosition = true) {
       return $ret;
     }
   } elseif (is_file("$testPath/test.complete")) {
-    return array('statusCode' => 200, 'statusText' => 'Test Complete', 'id' => $id, 'completeTime' => filemtime("$testPath/test.complete"));
+    $ret = array('statusCode' => 200, 
+                    'statusText' => 'Test Complete',
+                    'id' => $id,
+                    'completeTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.complete")));
+    $testInfoJson = GetTestInfo($id);
+    PopulateTestInfoJson($ret, $testInfoJson);
+    return $ret;
   }
 
   if (is_file("$testPath/test.waiting")) {
@@ -55,7 +68,9 @@ function GetTestStatus($id, $includePosition = true) {
   $now = time();
   RestoreTest($id);
   if (is_dir($testPath) && is_file("$testPath/testinfo.ini")) {
-    $testInfoJson = GetTestInfo($id);
+    if (!isset($testInfoJson) || !is_array($testInfoJson)) {
+      $testInfoJson = GetTestInfo($id);
+    }
     if ($testInfoJson) {
       $ret['testInfo'] = PopulateTestInfo($testInfoJson);
       if (isset($testInfoJson['relayId'])) {
@@ -432,4 +447,31 @@ function GetRelayStatus($id, $testPath, &$test) {
     return $ret;
 }
 
+/**
+ * Populate common status fields from the test JSON
+ */
+function PopulateTestInfoJson(&$ret, $testInfoJson) {
+  if (isset($testInfoJson) && is_array($testInfoJson)) {
+    $ret['testInfo'] = PopulateTestInfo($testInfoJson);  
+    $ret['remote'] = false;
+    $ret['testsExpected'] = $testInfoJson['runs'];
+    if (isset($testInfoJson['started'])){
+      $ret['startTime'] = gmdate("m/d/y G:i:s", $testInfoJson['started']);
+      if (isset($testInfoJson['completed'])) {
+        $ret['completeTime'] = gmdate("m/d/y G:i:s", $testInfoJson['completed']);
+        $ret['elapsed'] = $testInfoJson['completed'] - $testInfoJson['started'];
+      } else {
+        $ret['elapsed'] = $ret['completeTime'] - time();
+      }
+    }
+
+    $copy = function($key) use ($testInfoJson, &$ret) {
+      if (isset($testInfoJson[$key]))
+        $ret[$key] = $testInfoJson[$key];
+    };
+    $keys = array('runs', 'fvonly', 'location');
+    foreach ($keys as $key)
+      $copy($key);
+  }
+}
 ?>
