@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 // Compare the end-state frames across multiple tests and report how similar they are.
 // Only JSON responses are supported.
 chdir('..');

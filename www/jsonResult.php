@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 // Do a really quick check for a pending test to significantly reduce overhead
 if (isset($_REQUEST['noposition']) &&
     $_REQUEST['noposition'] &&

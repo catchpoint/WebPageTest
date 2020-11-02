@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # Copyright 2017 Google Inc. All rights reserved.
-# Use of this source code is governed by the Apache 2.0 license that can be
-# found in the LICENSE file.
+# Copyright 2020 Catchpoint Systems Inc.
+# Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+# found in the LICENSE.md file.
 """Chrome PDB fetch and parser"""
 import os
 import platform

@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 // Module for extracting the Google CSI information from the network trace.
 // It requires "id" in the params corresponding to a particular test. If the 
 // "run" and "cached" param are present (when called from details.php), then

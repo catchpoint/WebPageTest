@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 // pre-process the "timeline" param to extract the test, run and cached state.
 // This is a hack for now because the Chrome timeline viewer doesn't urldecode
 // URLs so it all needs to be passed as a single query param

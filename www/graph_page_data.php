@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 // We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
 $tests = preg_replace('/[^a-zA-Z0-9,_\.\-:\ ]/', '', $tests);

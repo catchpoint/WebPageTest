@@ -1,4 +1,7 @@
 <?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
 
 /**
 * Move all of the progress images to individual video directories (will usually be there but in the case of a jobsync script I need to move them)
