@@ -2361,7 +2361,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (isset($test['lng']) && strlen($test['lng']))
                 AddIniLine($testFile, 'lng', $test['lng']);
             // Pass the WPT server hostname to the agent
-            if (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
+            $hostname = GetSetting('host');
+            if (isset($hostname) && is_string($hostname) && strlen($hostname))
+              AddIniLine($testFile, 'wpthost', $hostname);
+            elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
               AddIniLine($testFile, 'wpthost', $_SERVER['HTTP_HOST']);
 
             // Add custom metrics
