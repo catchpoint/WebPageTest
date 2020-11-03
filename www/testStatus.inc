@@ -44,7 +44,7 @@ function GetTestStatus($id, $includePosition = true) {
       $elapsed = floor($elapsed / 60);
       if( $elapsed == 1 ) {
         $ret['statusText'] = "Test Started $elapsed minute ago";
-      } elseif( $elapsed < 3600 ) {
+      } elseif( $elapsed < 60 ) {
         $ret['statusText'] = "Test Started $elapsed minutes ago";
       } else {
         $ret = null;
