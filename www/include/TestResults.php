@@ -101,7 +101,14 @@ class TestResults {
    * @return string Returns the URL from the first step of the first view of the first run
    */
   public function getUrlFromRun() {
-    return $this->getRunResult(1, false)->getStepResult(1)->getUrl();
+    $runResult = $this->getRunResult(1, false);
+    if (isset($runResult)) {
+      $stepResult = $runResult->getStepResult(1);
+      if (isset($stepResult)) {
+        return $stepResult->getUrl();
+      }
+    }
+    return null;
   }
 
   /**
