@@ -1336,6 +1336,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
 function AddBarIfValid(&$bars, $key, $start_key, $end_key, $request, $x_scaler, $y1, $y2) {
     if (array_key_exists($start_key, $request) &&
         array_key_exists($end_key, $request) &&
+        $request[$start_key] >= 0 &&
         $request[$end_key] > 0) {
         $x1 = $x_scaler($request[$start_key]);
         $x2 = $x_scaler($request[$end_key]);
