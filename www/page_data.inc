@@ -1107,6 +1107,12 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts) {
               $cumulative_layout_shift = $event['args']['data']['cumulative_score'];
               if (isset($time)) {
                 $shift = array('time' => $time, 'cumulative_score' => $event['args']['data']['cumulative_score']);
+                if (isset($event['args']['data']['impacted_nodes'])) {
+                  $shift['nodes'] = $event['args']['data']['impacted_nodes'];
+                }
+                if (isset($event['args']['data']['region_rects'])) {
+                  $shift['rects'] = $event['args']['data']['region_rects'];
+                }
                 if (isset($event['args']['data']['score'])) {
                   $shift['score'] = $event['args']['data']['score'];
                 }
