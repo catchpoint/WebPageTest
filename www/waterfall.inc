@@ -163,11 +163,11 @@ function GetWaterfallImage($rows, $url, $page_events, $options, $page_data) {
 function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data) {
     global $settings;
     $is_mime = isset($options['is_mime']) ? (bool)@$options['is_mime'] : (bool)GetSetting('mime_waterfalls', 1);
-    $is_state = (bool)@$options['is_state'] || $is_mime;
-    $is_thumbnail = (bool)@$options['is_thumbnail'];
-    $show_labels = (bool)@$options['show_labels'];
-    $include_js = (bool)@$options['include_js'];
-    $include_wait = (bool)@$options['include_wait'];
+    $is_state = (isset($options['is_state']) ? (bool)@$options['is_state'] : false) || $is_mime;
+    $is_thumbnail = isset($options['is_thumbnail']) ? (bool)@$options['is_thumbnail'] : false;
+    $show_labels = isset($options['show_labels']) ? (bool)@$options['show_labels'] : true;
+    $include_js = isset($options['include_js']) ? (bool)@$options['include_js'] : true;
+    $include_wait = isset($options['include_wait']) ? (bool)@$options['include_wait'] : true;
     $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
     $document_url = isset($page_data['document_URL']) ? $page_data['document_URL'] : null;
 
@@ -176,7 +176,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     if (isset($options) && array_key_exists('rowcount', $options) && $options['rowcount'] > 0)
       $row_count = $options['rowcount'];
 
-    $width = (int)@$_REQUEST['width'];
+    $width = isset($_REQUEST['width']) ? (int)@$_REQUEST['width'] : 0;
     if ((int)@$options['width']) {
         $width = (int)$options['width'];
     }
@@ -1390,7 +1390,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         'path' => './' . GetTestPath($id),
         'step_id' => $step,
         'run_id' => $run,
-        'is_cached' => @$_GET['cached'],
+        'is_cached' => isset($_GET['cached']) ? @$_GET['cached'] : 0,
         'use_cpu' => true,
         'show_labels' => true,
         'is_mime' => $is_mime,
