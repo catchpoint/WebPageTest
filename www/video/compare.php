@@ -387,11 +387,22 @@ function ScreenShotTable()
     $filmstrip_end_time = 0;
     if( count($tests) )
     {
-        // figure out how many columns there are
+        // figure out how many columns there are and the maximum thumbnail size
         $end = 0;
-        foreach( $tests as &$test )
+        $max_frame_size = null;
+        foreach( $tests as &$test ) {
             if( $test['video']['end'] > $end )
                 $end = $test['video']['end'];
+            if (isset($test['video']['width']) && (!isset($max_frame_size) || $test['video']['width'] > $max_frame_size)) {
+                $max_frame_size = $test['video']['width'];
+            }
+            if (isset($test['video']['height']) && (!isset($max_frame_size) || $test['video']['height'] > $max_frame_size)) {
+                $max_frame_size = $test['video']['height'];
+            }
+        }
+        if (isset($max_frame_size) && $max_frame_size < $thumbSize) {
+            $thumbSize = $max_frame_size;
+        }
 
         if (!defined('EMBED')) {
             echo '<br>';
@@ -586,6 +597,12 @@ function ScreenShotTable()
             <?php
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
+                <table id="optionsTable">
+                <tr><td>
+                <?php
+                // TODO: add more options here
+                ?>
+                </td><td>
                 <table id="layoutTable">
                     <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison Endpoint</th></th></tr>
                     <?php
@@ -600,9 +617,13 @@ function ScreenShotTable()
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> Medium<br>";
                         $checked = '';
-                        if( $thumbSize > 150 )
+                        if( $thumbSize <= 200 && $thumbSize > 150 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> Large";
+                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> Large<br>";
+                        $checked = '';
+                        if( $thumbSize > 200)
+                            $checked = ' checked=checked';
+                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> Huge";
                         echo "</td>";
 
                         // fill in the interval selection
@@ -654,6 +675,7 @@ function ScreenShotTable()
                         echo "</td></tr>";
                     ?>
                 </table>
+                </td></tr></table>
             </form>
         </div>
         <?php
