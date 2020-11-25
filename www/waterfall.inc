@@ -1335,7 +1335,6 @@ function GetBars($request, $x_scaler, $y1, $y2,
         $js_bar_height = max((int)($original_bar_height * $portion), 0);
         $bar_y1 += (int)(($original_bar_height - $js_bar_height) / 2);
         $bar_y2 = $bar_y1 + $js_bar_height;
-        // Brighten the color as well
       }
 
       $bars[] = array(
