@@ -176,6 +176,19 @@ if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 1500 ) {
         $thumbSize = 200;
 }
 
+// Cap the thumbnail size to the largest frame size available
+$max_frame_size = null;
+foreach( $tests as &$test ) {
+  if (isset($test['video']['width']) && (!isset($max_frame_size) || $test['video']['width'] > $max_frame_size)) {
+    $max_frame_size = $test['video']['width'];
+  }
+  if (isset($test['video']['height']) && (!isset($max_frame_size) || $test['video']['height'] > $max_frame_size)) {
+      $max_frame_size = $test['video']['height'];
+  }
+}
+if (isset($max_frame_size) && $max_frame_size < $thumbSize) {
+  $thumbSize = $max_frame_size;
+}
 
 /**
 * Load information about each of the tests (particularly about the video frames)

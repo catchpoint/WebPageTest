@@ -389,19 +389,9 @@ function ScreenShotTable()
     {
         // figure out how many columns there are and the maximum thumbnail size
         $end = 0;
-        $max_frame_size = null;
         foreach( $tests as &$test ) {
             if( $test['video']['end'] > $end )
                 $end = $test['video']['end'];
-            if (isset($test['video']['width']) && (!isset($max_frame_size) || $test['video']['width'] > $max_frame_size)) {
-                $max_frame_size = $test['video']['width'];
-            }
-            if (isset($test['video']['height']) && (!isset($max_frame_size) || $test['video']['height'] > $max_frame_size)) {
-                $max_frame_size = $test['video']['height'];
-            }
-        }
-        if (isset($max_frame_size) && $max_frame_size < $thumbSize) {
-            $thumbSize = $max_frame_size;
         }
 
         if (!defined('EMBED')) {
