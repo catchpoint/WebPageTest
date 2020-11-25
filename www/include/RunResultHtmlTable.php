@@ -149,7 +149,7 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Start<br>Render");
     }
     if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/fcp/">First<br>Contentful<br>Paint</a>', $vitalsBorder);
+      $out .= $this->_headCell('<a href="https://web.dev/fcp/">First<br>Contentful<br>Paint</a>');
     }
     if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed<br>Index</a>');

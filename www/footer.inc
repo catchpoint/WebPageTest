@@ -2,7 +2,7 @@
 
             <?php
             //If we're looking at a test result, include the inner test-result div
-            if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
+            if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) )
             {
                 echo '</div></div>';
             }

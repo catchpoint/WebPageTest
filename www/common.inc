@@ -296,7 +296,7 @@ if (strlen($id)) {
     if(extension_loaded('newrelic')) {
         newrelic_add_custom_parameter ('testID', $id);
     }  
-    if (@strlen($_REQUEST['rkey'])) {
+    if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
     }
@@ -321,8 +321,8 @@ if (strlen($id)) {
     if (!$run) {
         $run = (int)1;
     }
-    $step = max(1, @(int)$_REQUEST['step']); // default is step=1
-    $cached = @(int)$_REQUEST['cached'];  // define a global used in other files
+    $step = max(1, isset($_REQUEST['step']) ? @(int)$_REQUEST['step'] : 1); // default is step=1
+    $cached = isset($_REQUEST['cached']) ? @(int)$_REQUEST['cached'] : 0;  // define a global used in other files
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
       require_once 'include/TestInfo.php';
       require_once 'include/TestResults.php';

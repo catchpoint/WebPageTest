@@ -85,7 +85,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
           if ($rootUrlGenerator) {
             if (isset($request['body_id']) && strlen($request['body_id'])) {
               $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
-            } elseif (@$request['body']) {
+            } elseif (isset($request['body']) && @$request['body']) {
               $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
             }
           }

@@ -24,9 +24,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         } elseif( isset($test['testinfo']['cancelled']) ) {
             include 'testcancelled.inc';
         } elseif( isset($test['test']['completeTime']) || count($pageData) > 0 ) {
-            if( @$test['test']['type'] == 'traceroute' ) {
+            if( isset($test['test']['type']) && @$test['test']['type'] == 'traceroute' ) {
                 include 'resultTraceroute.inc';
-            } elseif( @$test['test']['type'] == 'lighthouse' ) {
+            } elseif( isset($test['test']['type']) && @$test['test']['type'] == 'lighthouse' ) {
                 include 'lighthouse.php';
             } else {
                 include 'result.inc';
