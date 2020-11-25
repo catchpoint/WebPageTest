@@ -1001,6 +1001,10 @@ class XScaler
         return $this->value_max ? $this->x_start + (int)((double)$this->x_width * (double)$value /
                                       $this->value_max) : 0;
     }
+
+    public function bar_width_ms() {
+      return ((float)$this->value_max / (float)$this->x_width);
+    }
 }
 
 function AverageCpuSlices(&$slices, $first_slice, $last_slice, $slice_usecs, &$known_types) {
@@ -1319,10 +1323,24 @@ function GetBars($request, $x_scaler, $y1, $y2,
     $js_height = max(2, intval($bar_height * 0.5));
     $js_y1 = $y1 + intval(($bar_height - $js_height) / 2);
     $js_y2 = $js_y1 + $js_height - 1;
+    $bar_width_ms = $x_scaler->bar_width_ms();
     foreach($request['js_timing'] as $times) {
+      // Calculate the bar hight if the width is less than 1 pixel
+      $duration = $times[1] - $times[0];
+      $bar_y1 = $js_y1;
+      $bar_y2 = $js_y2;
+      if ($bar_width_ms > 0 && $duration < $bar_width_ms) {
+        $portion = $duration / $bar_width_ms;
+        $original_bar_height = $bar_y2 - $bar_y1;
+        $js_bar_height = max((int)($original_bar_height * $portion), 0);
+        $bar_y1 += (int)(($original_bar_height - $js_bar_height) / 2);
+        $bar_y2 = $bar_y1 + $js_bar_height;
+        // Brighten the color as well
+      }
+
       $bars[] = array(
           $x_scaler($times[0]), $x_scaler($times[1]),
-          $js_y1, $js_y2,
+          $bar_y1, $bar_y2,
           $request['colors']['js'],
           false);
     }
