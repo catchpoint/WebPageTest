@@ -271,7 +271,7 @@ else
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
-                #filmstripOptions {vertical-align: top; padding: 2em;}
+                #filmstripOptions {text-align: left; vertical-align: top; padding: 2em;}
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -637,7 +637,14 @@ function ScreenShotTable()
                 if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
                     $checked = ' checked=checked';
                 echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label>"
+                echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label>";
+
+                $checked = '';
+                if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] )
+                    $checked = ' checked=checked';
+                echo "<br><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\">";
+                echo "<label for=\"sticky\"> Make Filmstrip Sticky</label>";
+                
                 ?>
                 </td><td>
                 <table id="layoutTable">
