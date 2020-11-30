@@ -40,7 +40,6 @@ if (@strlen($url)) {
 if (!strlen($filename))
     $filename = "pagetest";
 $filename .= ".$id.har";
-header("Content-disposition: attachment; filename=$filename");
 header('Content-type: application/json');
 
 // see if we need to wrap it in a JSONP callback

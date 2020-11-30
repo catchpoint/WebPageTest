@@ -20,13 +20,6 @@ class HttpArchiveGenerator
 
     private $harData = array();
 
-    private static $includePageArrays = array('priorityStreams' => true,
-                                              'blinkFeatureFirstUsed' => true,
-                                              'detected' => true,
-                                              'detected_apps' => true,
-                                              'v8Stats' => true,
-                                              'LayoutShifts' => true);
-
     /**
      * HttpArchiveGenerator constructor.
      *
@@ -153,8 +146,7 @@ class HttpArchiveGenerator
 
         // dump all of our metrics into the HAR data as custom fields
         foreach ($stepData as $name => $value) {
-            if (!is_array($value) || isset(HttpArchiveGenerator::$includePageArrays[$name]))
-                $pd["_$name"] = $value;
+            $pd["_$name"] = $value;
         }
 
         // add the page-level ldata to the result
