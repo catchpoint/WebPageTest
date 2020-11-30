@@ -271,6 +271,7 @@ else
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
+                #filmstripOptions {vertical-align: top; padding: 2em;}
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -383,6 +384,10 @@ function ScreenShotTable()
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = htmlspecialchars(trim($_REQUEST['end']));
+    
+    $show_shifts = false;
+    if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'])
+        $show_shifts = true;
 
     $filmstrip_end_time = 0;
     if( count($tests) )
@@ -463,16 +468,20 @@ function ScreenShotTable()
                 $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
             }
             $shifts = array();
+            $viewport = null;
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
                 $layout_shifts = $test['stepResult']->getMetric('LayoutShifts');
+                $viewport = $test['stepResult']->getMetric('viewport');
                 if (isset($layout_shifts) && is_array($layout_shifts) && count($layout_shifts)) {
                     foreach($layout_shifts as $shift) {
                         if (isset($shift['time'])) {
-                            $shifts[] = $shift['time'];
+                            $shifts[] = $shift;
                         }
                     }
                 }
-                asort($shifts);
+                usort($shifts, function($a, $b){
+                    return $a['time'] - $b['time'];
+                });
             }
 
             // figure out the height of the image
@@ -524,6 +533,7 @@ function ScreenShotTable()
                     echo "<a href=\"/$imgPath\">";
                     echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
+                    $rects = null;
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
                             $firstFrame = $frameCount;
@@ -532,10 +542,38 @@ function ScreenShotTable()
                             $class = 'thumbLCP';
                             $lcp = null;
                         }
-                        if (count($shifts) && $ms > $shifts[0]) {
+                        if (count($shifts) && $ms > $shifts[0]['time']) {
                             $class .= ' thumbLayoutShifted';
-                            while(count($shifts) && $ms > $shifts[0]) {
-                                array_shift($shifts);
+                            while(count($shifts) && $ms > $shifts[0]['time']) {
+                                $shift = array_shift($shifts);
+                                if ($show_shifts) {
+                                    if (isset($viewport) &&
+                                            isset($viewport['width']) &&
+                                            $viewport['width'] > 0 &&
+                                            isset($viewport['height']) &&
+                                            $viewport['height'] > 0 &&
+                                            isset($shift['rects']) &&
+                                            is_array($shift['rects']) &&
+                                            count($shift['rects'])) {
+                                        // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
+                                        foreach($shift['rects'] as $rect) {
+                                            if (is_array($rect) && count($rect) == 4) {
+                                                $shift_x = (int)(($rect[0] * 1000) / $viewport['width']);
+                                                $shift_y = (int)(($rect[1] * 1000) / $viewport['height']);
+                                                $shift_width = (int)(($rect[2] * 1000) / $viewport['width']);
+                                                $shift_height = (int)(($rect[3] * 1000) / $viewport['height']);
+                                                if ($shift_width > 0 && $shift_height > 0) {
+                                                    if (isset($rects)) {
+                                                        $rects .= ',';
+                                                    } else {
+                                                        $rects = '';
+                                                    }
+                                                    $rects .= "$shift_x.$shift_y.$shift_width.$shift_height";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -543,7 +581,12 @@ function ScreenShotTable()
                     echo " width=\"$width\"";
                     if( $height )
                         echo " height=\"$height\"";
-                    $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize);
+                    $options = null;
+                    if (isset($rects)) {
+                        $color = 'FF0000AA'; // Red with 50% transparency (transparency is ignored for the border)
+                        $options = "rects=$color-$rects";
+                    }
+                    $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize, $options);
                     echo " src=\"$imgUrl\"></a>";
                     if (isset($progress))
                         echo "<br>$progress%";
@@ -588,9 +631,13 @@ function ScreenShotTable()
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
                 <table id="optionsTable">
-                <tr><td>
+                <tr><td id="filmstripOptions">
                 <?php
-                // TODO: add more options here
+                $checked = '';
+                if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
+                    $checked = ' checked=checked';
+                echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
+                echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label>"
                 ?>
                 </td><td>
                 <table id="layoutTable">

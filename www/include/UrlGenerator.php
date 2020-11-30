@@ -145,9 +145,13 @@ abstract class UrlGenerator {
    * @param int $fit Maximum size of the thumbnail
    * @return string The URL for a thumbnail of the video frame
    */
-  public function videoFrameThumbnail($frame, $fit) {
+  public function videoFrameThumbnail($frame, $fit, $options = null) {
     $file = "video_" . rtrim(strtolower($this->underscorePrefix()), "_") . "/" . $frame;
-    return $this->baseUrl . "/thumbnail.php?test=" . $this->testId . "&fit=" . $fit . "&file=" . $file;
+    $url = $this->baseUrl . "/thumbnail.php?test=" . $this->testId . "&fit=" . $fit . "&file=" . $file;
+    if (isset($options)) {
+      $url .= "&$options";
+    }
+    return $url;
   }
 
   /**
