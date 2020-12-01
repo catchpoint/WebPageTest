@@ -45,7 +45,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $devtools_request = $localPaths->devtoolsProcessedRequestsFile();
     $requests = null;
     $cached = true;
-    if (gz_is_file($cache_file)) {
+    if (gz_is_file($cache_file) && !isset($_REQUEST['recalculate'])) {
       $requests = json_decode(gz_file_get_contents($cache_file), true);
     } elseif (gz_is_file($devtools_request)) {
       GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
@@ -525,6 +525,8 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
               $request["cpu.$cpu_event"] = $total;
             }
           }
+          // Don't allocate the JS timings to multiple copies of the same script
+          unset($js_timing[$request['full_url']]);
         }
       }
     }
