@@ -381,6 +381,7 @@ function ScreenShotTable()
     global $color;
     global $bgcolor;
     global $supports60fps;
+    $has_layout_shifts = false;
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = htmlspecialchars(trim($_REQUEST['end']));
@@ -546,30 +547,29 @@ function ScreenShotTable()
                             $class .= ' thumbLayoutShifted';
                             while(count($shifts) && $ms > $shifts[0]['time']) {
                                 $shift = array_shift($shifts);
-                                if ($show_shifts) {
-                                    if (isset($viewport) &&
-                                            isset($viewport['width']) &&
-                                            $viewport['width'] > 0 &&
-                                            isset($viewport['height']) &&
-                                            $viewport['height'] > 0 &&
-                                            isset($shift['rects']) &&
-                                            is_array($shift['rects']) &&
-                                            count($shift['rects'])) {
-                                        // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
-                                        foreach($shift['rects'] as $rect) {
-                                            if (is_array($rect) && count($rect) == 4) {
-                                                $shift_x = (int)(($rect[0] * 1000) / $viewport['width']);
-                                                $shift_y = (int)(($rect[1] * 1000) / $viewport['height']);
-                                                $shift_width = (int)(($rect[2] * 1000) / $viewport['width']);
-                                                $shift_height = (int)(($rect[3] * 1000) / $viewport['height']);
-                                                if ($shift_width > 0 && $shift_height > 0) {
-                                                    if (isset($rects)) {
-                                                        $rects .= ',';
-                                                    } else {
-                                                        $rects = '';
-                                                    }
-                                                    $rects .= "$shift_x.$shift_y.$shift_width.$shift_height";
+                                if (isset($viewport) &&
+                                        isset($viewport['width']) &&
+                                        $viewport['width'] > 0 &&
+                                        isset($viewport['height']) &&
+                                        $viewport['height'] > 0 &&
+                                        isset($shift['rects']) &&
+                                        is_array($shift['rects']) &&
+                                        count($shift['rects'])) {
+                                    $has_layout_shifts = true;
+                                    // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
+                                    foreach($shift['rects'] as $rect) {
+                                        if (is_array($rect) && count($rect) == 4) {
+                                            $shift_x = (int)(($rect[0] * 1000) / $viewport['width']);
+                                            $shift_y = (int)(($rect[1] * 1000) / $viewport['height']);
+                                            $shift_width = (int)(($rect[2] * 1000) / $viewport['width']);
+                                            $shift_height = (int)(($rect[3] * 1000) / $viewport['height']);
+                                            if ($shift_width > 0 && $shift_height > 0) {
+                                                if (isset($rects)) {
+                                                    $rects .= ',';
+                                                } else {
+                                                    $rects = '';
                                                 }
+                                                $rects .= "$shift_x.$shift_y.$shift_width.$shift_height";
                                             }
                                         }
                                     }
@@ -582,7 +582,7 @@ function ScreenShotTable()
                     if( $height )
                         echo " height=\"$height\"";
                     $options = null;
-                    if (isset($rects)) {
+                    if ($show_shifts && isset($rects)) {
                         $color = 'FF0000AA'; // Red with 50% transparency (transparency is ignored for the border)
                         $options = "rects=$color-$rects";
                     }
@@ -633,16 +633,18 @@ function ScreenShotTable()
                 <table id="optionsTable">
                 <tr><td id="filmstripOptions">
                 <?php
-                $checked = '';
-                if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
-                    $checked = ' checked=checked';
-                echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label>";
+                if ($has_layout_shifts) {
+                    $checked = '';
+                    if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
+                        $checked = ' checked=checked';
+                    echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
+                    echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label><br>";
+                }
 
                 $checked = '';
                 if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] )
                     $checked = ' checked=checked';
-                echo "<br><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\">";
+                echo "<input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\">";
                 echo "<label for=\"sticky\"> Make Filmstrip Sticky</label>";
                 
                 ?>
