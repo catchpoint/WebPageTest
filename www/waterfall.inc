@@ -1678,9 +1678,12 @@ function AddRequestScriptTimings(&$requests, $script_timings_file) {
         isset($timings[$timings['main_thread']]) &&
         is_array($timings[$timings['main_thread']])) {
       $js_timing = $timings[$timings['main_thread']];
+      $used = array();
       foreach ($requests as &$request) {
         if (isset($request['full_url']) &&
+            !isset($used[$request['full_url']]) &&
             isset($js_timing[$request['full_url']])) {
+          $used[$request['full_url']] = true;
           $request['js_timing'] = array();
           foreach ($script_events as $script_event) {
             if (isset($js_timing[$request['full_url']][$script_event])) {

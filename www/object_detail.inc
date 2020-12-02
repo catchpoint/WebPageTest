@@ -508,8 +508,11 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
         isset($timings['main_thread']) &&
         isset($timings[$timings['main_thread']])) {
       $js_timing = $timings[$timings['main_thread']];
+      // Only allocate the JS timings to the first occurence of a given URL
+      $used = array();
       foreach ($requests as &$request) {
-        if (isset($request['full_url']) && isset($js_timing[$request['full_url']])) {
+        if (isset($request['full_url']) && isset($js_timing[$request['full_url']]) && !isset($used[$request['full_url']])) {
+          $used[$request['full_url']] = true;
           foreach ($js_timing[$request['full_url']] as $cpu_event => $times) {
             $total = 0.0;
             foreach ($times as $pair) {
@@ -525,8 +528,6 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
               $request["cpu.$cpu_event"] = $total;
             }
           }
-          // Don't allocate the JS timings to multiple copies of the same script
-          unset($js_timing[$request['full_url']]);
         }
       }
     }
