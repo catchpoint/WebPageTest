@@ -80,6 +80,11 @@ $page_description = "Website performance test details$testLabel";
           width: 30em;
           word-wrap: break-word;
         }
+        table.details th.reqMime, table.details td.reqMime {
+          max-width: 10em;
+          word-wrap: break-word;
+          overflow: hidden;
+        }
         table.details td.even {
           background: gainsboro;
         }
