@@ -40,7 +40,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $headers_file_name = $localPaths->headersFile();
     $bodies_file_name = $localPaths->bodiesFile();
     $script_timing_file_name = $localPaths->devtoolsScriptTimingFile();
-    $cache_version = 3;
+    $cache_version = 4;
     $cache_file = $localPaths->requestsCacheFile($cache_version);
     $devtools_request = $localPaths->devtoolsProcessedRequestsFile();
     $requests = null;
@@ -513,6 +513,7 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
       foreach ($requests as &$request) {
         if (isset($request['full_url']) && isset($js_timing[$request['full_url']]) && !isset($used[$request['full_url']])) {
           $used[$request['full_url']] = true;
+          $all_total = 0.0;
           foreach ($js_timing[$request['full_url']] as $cpu_event => $times) {
             $total = 0.0;
             foreach ($times as $pair) {
@@ -521,6 +522,7 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
                 $total += $elapsed;
             }
             if ($total > 0) {
+              $all_total += $total;
               $total = intval(round($total));
               if (!isset($request['cpuTimes']))
                 $request['cpuTimes'] = array();
@@ -528,6 +530,8 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
               $request["cpu.$cpu_event"] = $total;
             }
           }
+          $all_total = intval(round($all_total));
+          $request['cpuTime'] = $all_total;
         }
       }
     }
