@@ -328,7 +328,8 @@ $page_description = "Website performance test details$testLabel";
                     6: { sorter:'currency' } ,
                     7: { sorter:'currency' } ,
                     8: { sorter:'currency' } ,
-                    9: { sorter:'currency' }
+                    9: { sorter:'currency' } ,
+                    10: { sorter:'currency' }
                 }
             });
         }
