@@ -27,12 +27,6 @@ if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
 $color = 'white';
 $bgcolor = "black";
 $lightcolor = '#777';
-$displayData = false;
-if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
-  $bgcolor = 'white';
-  $color = "black";
-  $displayData = true;
-}
 if (array_key_exists('bgcolor', $_REQUEST))
     $bgcolor = htmlspecialchars($_REQUEST['bgcolor']);
 elseif (array_key_exists('bg', $_REQUEST))
@@ -320,8 +314,6 @@ else
                     echo "<div id=\"location\">Tested From: $location</div>";
                   if (array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']))
                     echo "<h2>" . htmlspecialchars($_REQUEST['label']) . "</h2>\n";
-                  if ($displayData)
-                    DisplayData();
                 }
 
                 $width = 800;
@@ -347,23 +339,14 @@ else
                 if (isset($dir))
                   $videoUrl = "/$dir/video.mp4";
                 echo "<video id=\"player\" controls muted
-                       preload=\"auto\" width=\"$width\" height=\"$height\" $poster>
+                       preload=\"auto\" $poster>
                     <source src=\"$videoUrl\" type='video/mp4'>
                 </video>";
 
                 if(!$embed) {
-                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$videoId\">Download</a> | ";
-                    echo '<a class="link" href="javascript:ShowEmbed()">Embed</a>';
-                    $protocol = getUrlProtocol();
-                    $dataText = 'View as data comparison';
-                    $dataUrl = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId&data=1";
-                    if ($displayData) {
-                      $dataText = 'View as video';
-                      $dataUrl = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId";
-                    }
-                    if (defined('BARE_UI'))
-                      $dataUrl .= '&bare=1';
-                    echo "<div class=\"cleared\"></div><div id=\"testmode\"><a class=\"link\" href=\"$dataUrl\">$dataText</a></div>";
+                    echo "<br><a class=\"link\" href=\"$videoUrl\">Download</a>";
+                    if (isset($videoId))
+                      echo ' | <a class="link" href="javascript:ShowEmbed()">Embed</a>';
                 }
             }
             elseif( $valid && !$embed )
@@ -425,86 +408,3 @@ else
 
 <?php
 }
-
-function DisplayData() {
-  global $tests;
-  $metrics = array('loadTime' => 'Page Load Time',
-                   'SpeedIndex' => '<a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md">Speed Index</a> (lower is better)');
-  echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
-          <tr>
-          <th class="empty"></th>';
-  foreach ($tests as &$test) {
-    RestoreTest($test['id']);
-    $label = '';
-    if (array_key_exists('label', $test))
-      $label = htmlspecialchars($test['label']);
-    echo "<th>$label</th>";
-  }
-  echo "</tr>\n";
-  foreach ($metrics as $metric => $label) {
-    echo "<tr><td class=\"right\"><b>$label</b></td>";
-    $base = null;
-    $index = 0;
-    foreach ($tests as &$test) {
-      $display = '';
-      $value = null;
-      if (array_key_exists('cached', $test) &&
-          array_key_exists('run', $test) &&
-          array_key_exists('pageData', $test) &&
-          is_array($test['pageData']) &&
-          array_key_exists($test['run'], $test['pageData']) &&
-          is_array($test['pageData'][$test['run']]) &&
-          array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
-          is_array($test['pageData'][$test['run']][$test['cached']]) &&
-          array_key_exists($metric, $test['pageData'][$test['run']][$test['cached']])) {
-        $value = htmlspecialchars($test['pageData'][$test['run']][$test['cached']][$metric]);
-        if ($metric == 'loadTime')
-          $display = number_format($value / 1000, 3) . 's';
-        else
-          $display = number_format($value, 0);
-      }
-      if (!$index)
-        $base = $value;
-      elseif(isset($base) && isset($value)) {
-        $delta = $value - $base;
-        $deltaPct = number_format(abs(($delta / $base) * 100), 1);
-        if ($metric == 'loadTime')
-          $deltaStr = number_format(abs($delta / 1000), 3) . 's';
-        else
-          $deltaStr = number_format(abs($delta), 0);
-        $deltaStr = htmlspecialchars("$deltaStr / $deltaPct%");
-        if ($delta > 0)
-          $display .= " <span class=\"bad\">(+$deltaStr)</span>";
-         elseif ($delta < 0)
-          $display .= " <span class=\"good\">(-$deltaStr)</span>";
-         else
-          $display .= "(No Change)";
-      }
-      echo "<td>$display</td>";
-      $index++;
-    }
-    echo "</tr>";
-  }
-  echo "<tr><td class=\"right\">Full Test Result</td>";
-  foreach ($tests as &$test) {
-    $img = '';
-    if (array_key_exists('id', $test)) {
-      if( FRIENDLY_URLS )
-        $result = "/result/{$test['id']}/";
-      else
-        $result = "/results.php?test={$test['id']}";
-      $cached = '';
-      if ($test['cached'])
-        $cached = '_Cached';
-      $thumbnail = "/thumbnail.php?test={$test['id']}&width=150&file={$test['run']}{$cached}_screen.jpg";
-      $img = "<a href=\"$result\"><img class=\"progress pimg\" src=\"$thumbnail\"><br>view test</a>";
-    }
-    echo "<td>$img</td>";
-  }
-  echo '</tr></table><br>';
-  $filmstrip = "/video/compare.php?tests=";
-  foreach ($tests as &$test)
-    $filmstrip .= urlencode("{$test['id']}-r:{$test['run']}-c:{$test['cached']}-l:{$test['label']}") . ',';
-  echo "<h2>Visual Comparison (<a href=\"$filmstrip\">view filmstrip comparison</a>)</h2>";
-}
-?>

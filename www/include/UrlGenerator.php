@@ -122,11 +122,7 @@ abstract class UrlGenerator {
     $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
     $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
     $tests .= $end ? "-e:$end" : "";
-
-    $id = $this->testId . "." . $this->run . "." . ($this->cached ? 1 : 0);
-    $id .= ($this->step > 1) ? ("." . $this->step) : "";
-    $id .= $end ? "-e$end" : "";
-    return $this->baseUrl . "/video/create.php?tests=" . $tests . "&id=" . $id;
+    return $this->baseUrl . "/video/view.php?tests=" . $tests;
   }
 
   /**

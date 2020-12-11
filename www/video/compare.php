@@ -605,7 +605,7 @@ function ScreenShotTable()
         // end of the container table
         echo "</td></tr></table>\n";
 
-        echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
+        echo '<form id="createForm" name="create" method="get" action="/video/view.php">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
         echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
         echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
