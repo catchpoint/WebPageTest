@@ -47,12 +47,8 @@ else
     $cwd = getcwd();
     chdir('..');
     include 'common.inc';
-    require_once __DIR__ . '/visualProgress.inc.php';
-    require_once __DIR__ . '/../include/TestInfo.php';
-    require_once __DIR__ . '/../include/TestResults.php';
-    require_once __DIR__ . '/../include/TestStepResult.php';
     require_once('video.inc');
-    require_once('archive.inc');
+    require_once __DIR__ . '/render.inc.php';
 
     $xml = false;
     if( !strcasecmp($_REQUEST['f'], 'xml') )
@@ -82,164 +78,16 @@ else
 
     if( !$exists )
     {
-        $labels = array();
-        $endTime = 'visual';
-        if( strlen($_REQUEST['end']) )
-            $endTime = trim($_REQUEST['end']);
-        $videoIdExtra = "";
-        $bgColor = isset($_REQUEST['bg']) ? htmlspecialchars($_REQUEST['bg']) : '000000';
-        $textColor = isset($_REQUEST['text']) ? htmlspecialchars($_REQUEST['text']) : 'ffffff';
-
-        $compTests = explode(',', $_REQUEST['tests']);
-        foreach($compTests as $t)
-        {
-            $parts = explode('-', $t);
-            if( count($parts) >= 1 )
-            {
-                $test = array();
-                $test['id'] = $parts[0];
-                $test['cached'] = 0;
-                $test['step'] = 1;
-                $test['end'] = $endTime;
-                $test['extend'] = false;
-                $test['syncStartRender'] = "";
-                $test['syncDocTime'] = "";
-                $test['syncFullyLoaded'] = "";
-                $test['bg'] = $bgColor;
-                $test['text'] = $textColor;
-                $label = null;
-
-                if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
-                  $test['labelHeight'] = intval($_REQUEST['labelHeight']);
-                if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
-                  $test['timeHeight'] = intval($_REQUEST['timeHeight']);
-
-                if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
-                  $test['speed'] = 0.2;
-
-                for( $i = 1; $i < count($parts); $i++ )
-                {
-                    $p = explode(':', $parts[$i]);
-                    if( count($p) >= 2 )
-                    {
-                        if( $p[0] == 'r' )
-                            $test['run'] = (int)$p[1];
-                        if( $p[0] == 'l' )
-                            $label = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
-                        if( $p[0] == 'c' )
-                            $test['cached'] = (int)$p[1];
-                        if( $p[0] == 's')
-                            $test['step'] = (int)$p[1];
-                        if( $p[0] == 'e' )
-                            $test['end'] = trim($p[1]);
-                        if( $p[0] == 'i' )
-                            $test['initial'] = intval(trim($p[1]) * 1000.0);
-                        // Optional extra info to sync the video with
-                        if( $p[0] == 'p' )
-                            $test['syncStartRender'] = (int)$p[1];
-                        if( $p[0] == 'd' )
-                            $test['syncDocTime'] = (int)$p[1];
-                        if( $p[0] == 'f' )
-                            $test['syncFullyLoaded'] = (int)$p[1];
-                    }
-                }
-
-                RestoreTest($test['id']);
-                $test['path'] = GetTestPath($test['id']);
-                $info = GetTestInfo($test['id']);
-                if ($info) {
-                    if (array_key_exists('discard', $info) &&
-                        $info['discard'] >= 1 &&
-                        array_key_exists('priority', $info) &&
-                        $info['priority'] >= 1) {
-                        $defaultInterval = 100;
-                    }
-                    $test['url'] = $info['url'];
-                    $test_median_metric = GetSetting('medianMetric', 'loadTime');
-                    if (isset($info['medianMetric']))
-                      $test_median_metric = $info['medianMetric'];
-                }
-                $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
-
-                if( !array_key_exists('run', $test) || !$test['run'] ) {
-                    $testResults = TestResults::fromFiles($testInfoObject);
-                    $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
-                    $runResults = $testResults->getRunResult($test['run'], $test['cached']);
-                    $stepResult = $runResults->getStepResult($test['step']);
-                } else {
-                    $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
-                }
-                $test['pageData'] = $stepResult->getRawResults();
-                $test['aft'] = (int) $stepResult->getMetric('aft');
-
-                $loadTime = $stepResult->getMetric('fullyLoaded');
-                if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
-                    $fastest = $loadTime;
-                // figure out the real end time (in ms)
-                if (isset($test['end'])) {
-                    $visualComplete = $stepResult->getMetric("visualComplete");
-                    if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
-                        $test['end'] = $visualComplete;
-                    } elseif( !strcmp($test['end'], 'load') ) {
-                        $test['end'] = $stepResult->getMetric('loadTime');
-                    } elseif( !strcmp($test['end'], 'doc') ) {
-                        $test['end'] = $stepResult->getMetric('docTime');
-                    } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
-                        $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
-                    } elseif( !strcmp($test['end'], 'full') ) {
-                        $test['end'] = 0;
-                    } elseif( !strcmp($test['end'], 'all') ) {
-                        $test['end'] = -1;
-                    } elseif( !strcmp($test['end'], 'aft') ) {
-                        $test['end'] = $test['aft'];
-                        if( !$test['end'] )
-                            $test['end'] = -1;
-                    } else {
-                        $test['end'] = (int)((double)$test['end'] * 1000.0);
-                    }
-                } else {
-                    $test['end'] = 0;
-                }
-                if( !$test['end'] )
-                    $test['end'] = $stepResult->getMetric('fullyLoaded');
-
-                // round the test end up to the closest 100ms interval
-                $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
-                $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
-                $test['videoPath'] = $localPaths->videoDir();
-
-                if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
-                    $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
-
-                if (!isset($label) || !strlen($label)) {
-                    if ($info && isset($info['label']))
-                        $label = $info['label'];
-                    $new_label = getLabel($test['id'], $user);
-                    if (!empty($new_label))
-                        $label = $new_label;
-                }
-                if( empty($label) ) {
-                  $label = $test['url'];
-                  $label = str_replace('http://', '', $label);
-                  $label = str_replace('https://', '', $label);
-                }
-                if (empty($label))
-                    $label = trim($stepResult->getUrl());
-                $test['label'] = $label;
-
-                if ($info && isset($info['locationText']))
-                    $test['location'] = $info['locationText'];
-
-                if( is_dir($test['videoPath']) ) {
-                    $labels[] = $test['label'];
-                    $tests[] = $test;
-                }
-            }
-        }
+        $tests = BuildRenderTests();
 
         $count = count($tests);
         if( $count )
         {
+            $labels = array();
+            foreach($tests as $test) {
+                $labels[] = $test['label'];
+            }
+
             if( !strlen($id) )
             {
                 // try and create a deterministic id so multiple submissions of the same tests will result in the same id

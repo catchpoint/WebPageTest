@@ -13,10 +13,11 @@ if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
   header("HTTP/1.0 404 Not Found");
   die();
 }
-$videoId = htmlspecialchars($_REQUEST['id']);
+$videoId = isset($_REQUEST['id']) ? htmlspecialchars($_REQUEST['id']) : null;
 $valid = false;
 $done = false;
 $embed = false;
+$dir = null;
 if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
 {
     $embed = true;
@@ -34,8 +35,12 @@ if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
 }
 if (array_key_exists('bgcolor', $_REQUEST))
     $bgcolor = htmlspecialchars($_REQUEST['bgcolor']);
+elseif (array_key_exists('bg', $_REQUEST))
+    $bgcolor = htmlspecialchars('#' . $_REQUEST['bg']);
 if (array_key_exists('color', $_REQUEST))
     $color = htmlspecialchars($_REQUEST['color']);
+elseif (array_key_exists('text', $_REQUEST))
+    $color = htmlspecialchars('#' . $_REQUEST['text']);
 $autoplay = 'false';
 if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
     $autoplay = 'true';
@@ -55,55 +60,81 @@ if( array_key_exists('f', $_REQUEST)) {
 $ini = null;
 $title = "WebPageTest - Visual Comparison";
 
-RestoreVideoArchive($videoId);
-$dir = GetVideoPath($videoId, true);
-if( is_dir("./$dir") )
-{
-    $valid = true;
-    if (is_file("./$dir/video.mp4") || is_file("./$dir/video.ini")) {
-        $ini = parse_ini_file("./$dir/video.ini");
-        if( is_file("./$dir/video.mp4") || isset($ini['completed']) )
-        {
-            $done = true;
-            GenerateVideoThumbnail("./$dir");
-        }
-    }
+if (isset($videoId)) {
+  RestoreVideoArchive($videoId);
+  $dir = GetVideoPath($videoId, true);
+  if( is_dir("./$dir") )
+  {
+      $valid = true;
+      $protocol = getUrlProtocol();
+      $host  = $_SERVER['HTTP_HOST'];
+      $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+      $videoUrl = "$protocol://$host$uri/download.php?id=$videoId";
+      $embedUrl = "$protocol://$host$uri/view.php?embed=1&id=$videoId";
 
-    // get the video time
-    $date = gmdate("M j, Y", filemtime("./$dir"));
-    if( is_file("./$dir/video.mp4")  )
-        $date = gmdate("M j, Y", filemtime("./$dir/video.mp4"));
-    $title .= " - $date";
+      if (is_file("./$dir/video.mp4") || is_file("./$dir/video.ini")) {
+          $ini = parse_ini_file("./$dir/video.ini");
+          if( is_file("./$dir/video.mp4") || isset($ini['completed']) )
+          {
+              $done = true;
+              GenerateVideoThumbnail("./$dir");
+          }
+      }
 
-    $labels = json_decode(file_get_contents("./$dir/labels.txt"), true);
-    if( count($labels) )
-    {
-        $title .= ' : ';
-        foreach($labels as $index => $label)
-        {
-            if( $index > 0 )
-                $title .= ", ";
-            $title .= $label;
-        }
-    }
+      // get the video time
+      $date = gmdate("M j, Y", filemtime("./$dir"));
+      if( is_file("./$dir/video.mp4")  )
+          $date = gmdate("M j, Y", filemtime("./$dir/video.mp4"));
+      $title .= " - $date";
 
-    $location = null;
-    if (gz_is_file("./$dir/testinfo.json")) {
-        $tests = json_decode(gz_file_get_contents("./$dir/testinfo.json"), true);
-        if (is_array($tests) && count($tests)) {
-            foreach($tests as &$test) {
-                if (array_key_exists('location', $test)) {
-                    if (!isset($location)) {
-                        $location = $test['location'];
-                    } elseif ($location != $test['location']) {
-                        $location = '';
-                    }
-                } else {
-                    $location = '';
-                }
-            }
-        }
+      $labels = json_decode(file_get_contents("./$dir/labels.txt"), true);
+      if( count($labels) )
+      {
+          $title .= ' : ';
+          foreach($labels as $index => $label)
+          {
+              if( $index > 0 )
+                  $title .= ", ";
+              $title .= $label;
+          }
+      }
+
+      $location = null;
+      if (gz_is_file("./$dir/testinfo.json")) {
+          $tests = json_decode(gz_file_get_contents("./$dir/testinfo.json"), true);
+          if (is_array($tests) && count($tests)) {
+              foreach($tests as &$test) {
+                  if (array_key_exists('location', $test)) {
+                      if (!isset($location)) {
+                          $location = $test['location'];
+                      } elseif ($location != $test['location']) {
+                          $location = '';
+                      }
+                  } else {
+                      $location = '';
+                  }
+              }
+          }
+      }
+  }
+} elseif (isset($_REQUEST['tests'])) {
+  // Generate the video and poster dynamically
+  $location = null;
+  $protocol = getUrlProtocol();
+  $host  = $_SERVER['HTTP_HOST'];
+  $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+  $params = 'tests=' . htmlspecialchars($_REQUEST['tests']);
+  $validParams = array('bg', 'text', 'end', 'labelHeight', 'timeHeight', 'slow');
+  foreach ($validParams as $p) {
+    if (isset($_REQUEST[$p])) {
+      $params .= "&$p=" . htmlspecialchars($_REQUEST[$p]);
     }
+  }
+  $videoUrl = "$protocol://$host$uri/video.php?$params";
+  $posterUrl = "$protocol://$host$uri/poster.php?$params";
+  $embedUrl = "$protocol://$host$uri/view.php?embed=1&$params";
+  $valid = true;
+  $done = true;
 }
 
 if( $xml || $json )
@@ -114,12 +145,6 @@ if( $xml || $json )
         if( $done )
         {
             $code = 200;
-
-            $protocol = getUrlProtocol();
-            $host  = $_SERVER['HTTP_HOST'];
-            $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-            $videoUrl = "$protocol://$host$uri/download.php?id=$videoId";
-            $embedUrl = "$protocol://$host$uri/view.php?embed=1&id=$videoId";
         }
         else
             $code = 100;
@@ -141,7 +166,8 @@ if( $xml )
     if( strlen($_REQUEST['r']) )
         echo "<requestId>" . htmlspecialchars($_REQUEST['r']) . "</requestId>\n";
     echo "<data>\n";
-    echo "<videoId>$videoId</videoId>\n";
+    if (isset($videoId))
+      echo "<videoId>$videoId</videoId>\n";
     if( strlen($videoUrl) )
         echo '<videoUrl>' . htmlspecialchars($videoUrl) . '</videoUrl>\n';
     echo "</data>\n";
@@ -153,12 +179,13 @@ elseif( $json )
     $ret['statusCode'] = $code;
     $ret['statusText'] = $error;
     $ret['data'] = array();
-    $ret['data']['videoId'] = $videoId;
+    if (isset($videoId))
+      $ret['data']['videoId'] = $videoId;
     if( strlen($videoUrl) )
         $ret['data']['videoUrl'] = $videoUrl;
     if (strlen($embedUrl)) {
         $ret['data']['embedUrl'] = $embedUrl;
-        if (is_file("./$dir/video.png")) {
+        if (isset($dir) && is_file("./$dir/video.png")) {
             list($width, $height) = getimagesize("./$dir/video.png");
             $ret['data']['width'] = $width;
             $ret['data']['height'] = $height;
@@ -301,7 +328,7 @@ else
                 $height = 600;
 
                 $hasThumb = false;
-                if( is_file("./$dir/video.png") )
+                if( isset($dir) && is_file("./$dir/video.png") )
                 {
                     $hasThumb = true;
                     list($width, $height) = getimagesize("./$dir/video.png");
@@ -313,11 +340,15 @@ else
                     $height = (int)$_REQUEST['height'];
 
                 $poster = "";
-                if ($hasThumb)
+                if (isset($posterUrl))
+                  $poster = "poster=\"$posterUrl\"";
+                elseif ($hasThumb)
                   $poster = "poster=\"/$dir/video.png\"";
+                if (isset($dir))
+                  $videoUrl = "/$dir/video.mp4";
                 echo "<video id=\"player\" controls muted
                        preload=\"auto\" width=\"$width\" height=\"$height\" $poster>
-                    <source src=\"/$dir/video.mp4\" type='video/mp4'>
+                    <source src=\"$videoUrl\" type='video/mp4'>
                 </video>";
 
                 if(!$embed) {
