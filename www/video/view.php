@@ -353,10 +353,10 @@ else
                 if(!$embed) {
                     if (isset($videoId)) {
                       echo "<br><a class=\"link\" href=\"$videoUrl\">Download</a>";
-                      echo ' | <a class="link" href="javascript:ShowEmbed()">Embed</a>';
+                      echo ' | <a class="link" href="javascript:ShowEmbed()">Embed</a><br>&nbsp;';
                     } else {
                       echo "<br><a class=\"link\" href=\"$videoUrl\">Video File</a>";
-                      echo " | <a class=\"link\" href=\"$videoUrl&format=gif\">Animated Gif</a>";
+                      echo " | <a class=\"link\" href=\"$videoUrl&format=gif\">Animated Gif</a><br>&nbsp;";
                     }
                 }
             }
