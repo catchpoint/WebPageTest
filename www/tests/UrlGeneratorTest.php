@@ -232,24 +232,6 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expected, $ug->getGZip("foobar.txt.gz"));
   }
 
-  public function testCreateVideoUrl() {
-    $expected = "https://test/video/create.php?tests=160609_a7_b8-r:3-c:1&id=160609_a7_b8.3.1";
-    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 1);
-    $this->assertEquals($expected, $ug->createVideo());
-  }
-
-  public function testCreateVideoUrlMultistep() {
-    $expected = "https://test/video/create.php?tests=160609_a7_b8-r:3-c:1-p:2&id=160609_a7_b8.3.1.2";
-    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
-    $this->assertEquals($expected, $ug->createVideo());
-  }
-
-  public function testCreateVideoUrlMultistepWithEnd() {
-    $expected = "https://test/video/create.php?tests=160609_a7_b8-r:3-c:1-p:2-e:400&id=160609_a7_b8.3.1.2-e400";
-    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
-    $this->assertEquals($expected, $ug->createVideo(400));
-  }
-
   public function filmstripViewUrlSinglestep() {
     $expected = "https://test/video/compare.php?tests=160609_a7_b8-r:3-c:1";
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 1);
