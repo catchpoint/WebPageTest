@@ -381,6 +381,7 @@ function ScreenShotTable()
     global $color;
     global $bgcolor;
     global $supports60fps;
+    global $location;
     $has_layout_shifts = false;
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
@@ -614,6 +615,9 @@ function ScreenShotTable()
             echo '<input type="hidden" name="labelHeight" value="' . htmlspecialchars($_REQUEST['labelHeight']) . '">"';
         if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
             echo '<input type="hidden" name="timeHeight" value="' . htmlspecialchars($_REQUEST['timeHeight']) . '">"';
+        if (isset($location) && strlen($location)) {
+            echo '<input type="hidden" name="loc" value="' . htmlspecialchars(strip_tags($location)) . '">';
+        }
         echo '<div class="page">';
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";

@@ -113,7 +113,7 @@ if (isset($videoId)) {
   }
 } elseif (isset($_REQUEST['tests'])) {
   // Generate the video and poster dynamically
-  $location = null;
+  $location = isset($_REQUEST['loc']) ? htmlspecialchars(strip_tags($_REQUEST['loc'])) : null;
   $protocol = getUrlProtocol();
   $host  = $_SERVER['HTTP_HOST'];
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
