@@ -125,6 +125,7 @@ if (isset($videoId)) {
     }
   }
   $videoUrl = "$protocol://$host$uri/video.php?$params";
+  $imagePreview = "$protocol://$host$uri/video.php?$params&format=gif";
   $posterUrl = "$protocol://$host$uri/poster.php?$params";
   $embedUrl = "$protocol://$host$uri/view.php?embed=1&$params";
   $valid = true;
@@ -214,6 +215,12 @@ else
             {
                 $gaTemplate = 'Video';
                 include ('head.inc');
+            }
+            if (isset($videoUrl)) {
+              echo '<meta property="og:video" content="' . htmlspecialchars($videoUrl) . '" />';
+            }
+            if (isset($imagePreview)) {
+              echo '<meta property="og:image" content="' . htmlspecialchars($imagePreview) . '" />';
             }
         ?>
         <style type="text/css">
@@ -344,9 +351,13 @@ else
                 </video>";
 
                 if(!$embed) {
-                    echo "<br><a class=\"link\" href=\"$videoUrl\">Download</a>";
-                    if (isset($videoId))
+                    if (isset($videoId)) {
+                      echo "<br><a class=\"link\" href=\"$videoUrl\">Download</a>";
                       echo ' | <a class="link" href="javascript:ShowEmbed()">Embed</a>';
+                    } else {
+                      echo "<br><a class=\"link\" href=\"$videoUrl\">Video File</a>";
+                      echo " | <a class=\"link\" href=\"$videoUrl&format=gif\">Animated Gif</a>";
+                    }
                 }
             }
             elseif( $valid && !$embed )

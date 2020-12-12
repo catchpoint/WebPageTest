@@ -16,12 +16,32 @@ if (isset($tests) && is_array($tests) && count($tests)) {
             RenderVideo($tests, $videoFile);
         }
         if (file_exists($videoFile)) {
-            header("Content-Type: video/mp4");
-            header('Last-Modified: ' . gmdate('r'));
-            header('Expires: '.gmdate('r', time() + 31536000));
-            header('Cache-Control: public, max-age=31536000');
-            readfile($videoFile);
-            $ok = true;
+            if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'gif') {
+                // Convert the mp4 to a gif
+                $palette = $videoFile . '.png';
+                $gif = $videoFile . '.gif';
+                shell_exec("ffmpeg -i \"$videoFile\" -vf \"fps=10,palettegen\" -y \"$palette\"");
+                if (file_exists($palette)) {
+                    shell_exec("ffmpeg -i \"$videoFile\" -i \"$palette\" -lavfi \"fps=10 [x]; [x][1:v] paletteuse\" -y \"$gif\"");
+                    if (file_exists($gif)) {
+                        header("Content-Type: image/gif");
+                        header('Last-Modified: ' . gmdate('r'));
+                        header('Expires: '.gmdate('r', time() + 31536000));
+                        header('Cache-Control: public, max-age=31536000');
+                        readfile($gif);
+                        $ok = true;
+                        unlink($gif);
+                    }
+                    unlink($palette);
+                }
+            } else {
+                header("Content-Type: video/mp4");
+                header('Last-Modified: ' . gmdate('r'));
+                header('Expires: '.gmdate('r', time() + 31536000));
+                header('Cache-Control: public, max-age=31536000');
+                readfile($videoFile);
+                $ok = true;
+            }
         }
         unlink($videoFile);
         Unlock($lock);
