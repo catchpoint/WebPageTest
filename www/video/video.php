@@ -11,18 +11,24 @@ if (isset($tests) && is_array($tests) && count($tests)) {
     $videoId = sha1(json_encode($tests));
     $lock = Lock("video-$videoId", false, 600);
     if ($lock) {
-        $videoFile = sys_get_temp_dir() . '/' . $videoId . '.mp4';
-        if (!file_exists($videoFile)) {
-            RenderVideo($tests, $videoFile);
-        }
-        if (file_exists($videoFile)) {
-            if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'gif') {
-                // Convert the mp4 to a gif
-                $palette = $videoFile . '.png';
-                $gif = $videoFile . '.gif';
-                shell_exec("ffmpeg -i \"$videoFile\" -vf \"fps=10,palettegen\" -y \"$palette\"");
-                if (file_exists($palette)) {
-                    shell_exec("ffmpeg -i \"$videoFile\" -i \"$palette\" -lavfi \"fps=10 [x]; [x][1:v] paletteuse\" -y \"$gif\"");
+        $videoFile = realpath(__DIR__ . '/../work/video/');
+        if (isset($videoFile) && strlen($videoFile)) {
+            $videoFile .= '/' . $videoId . '.mp4';
+            if (!file_exists($videoFile)) {
+                RenderVideo($tests, $videoFile);
+            }
+            if (file_exists($videoFile)) {
+                if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'gif') {
+                    // Convert the mp4 to a gif
+                    $palette = $videoFile . '.png';
+                    $gif = $videoFile . '.gif';
+                    if (!file_exists($gif)) {
+                        shell_exec("ffmpeg -i \"$videoFile\" -vf \"fps=10,palettegen\" -y \"$palette\"");
+                        if (file_exists($palette)) {
+                            shell_exec("ffmpeg -i \"$videoFile\" -i \"$palette\" -lavfi \"fps=10 [x]; [x][1:v] paletteuse\" -y \"$gif\"");
+                            unlink($palette);
+                        }
+                    }
                     if (file_exists($gif)) {
                         header("Content-Type: image/gif");
                         header('Last-Modified: ' . gmdate('r'));
@@ -30,20 +36,22 @@ if (isset($tests) && is_array($tests) && count($tests)) {
                         header('Cache-Control: public, max-age=31536000');
                         readfile($gif);
                         $ok = true;
-                        unlink($gif);
                     }
-                    unlink($palette);
+                } else {
+                    // redirect to the video file so Nginx can serve byte ranges for Safari/Mobile
+                    $protocol = getUrlProtocol();
+                    $host  = $_SERVER['HTTP_HOST'];
+                    $uri   = "/work/video/$videoId.mp4";
+                    $videoUrl = "$protocol://$host$uri";
+                    header('HTTP/1.1 307 Temporary Redirect');
+                    header("Location: $videoUrl", true, 307);
+                    header('Cache-Control: no-cache, no-store, must-revalidate');
+                    header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+                    header('Pragma: no-cache');
+                    $ok = true;
                 }
-            } else {
-                header("Content-Type: video/mp4");
-                header('Last-Modified: ' . gmdate('r'));
-                header('Expires: '.gmdate('r', time() + 31536000));
-                header('Cache-Control: public, max-age=31536000');
-                readfile($videoFile);
-                $ok = true;
             }
         }
-        unlink($videoFile);
         Unlock($lock);
     }
 }

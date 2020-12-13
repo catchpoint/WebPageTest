@@ -24,6 +24,7 @@ if (GetSetting('ec2_key')) {
   EC2_DeleteOrphanedVolumes();
 }
 
+PruneVideos();
 GitUpdate();
 ApkUpdate();
 
@@ -54,4 +55,19 @@ function ApkUpdate() {
   }
 }
 
+function PruneVideos() {
+  // Delete any rendered videos that are older than a day (they will re-render automatically on access)
+  $video_dir = realpath(__DIR__ . '/../work/video/');
+  if (isset($video_dir) && strlen($video_dir)) {
+    $files = glob("$video_dir/*.mp4*");
+    $now = time();
+    $seconds_in_a_day = 60 * 60 * 24;
+    foreach ($files as $file) {
+      $elapsed = $now - filemtime($file);
+      if ($elapsed > $seconds_in_a_day) {
+        unlink($file);
+      }
+    }
+  }
+}
 ?>
