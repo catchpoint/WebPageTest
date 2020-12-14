@@ -549,7 +549,7 @@ function RenderFrames(&$tests, $renderInfo, $videoFile, $im) {
     $codec = $renderInfo["encodeFormat"] == 'jpg' ? 'mjpeg' : $renderInfo["encodeFormat"];
     $command = "ffmpeg -f image2pipe -vcodec $codec -r {$renderInfo['fps']} -i - ".
     "-vcodec libx264 -r {$renderInfo['fps']} -crf 24 -g $keyInt ".
-    "-preset {$renderInfo['encoderSpeed']} -y \"$videoFile\"";
+    "-preset {$renderInfo['encoderSpeed']} -movflags +faststart -y \"$videoFile\"";
     $ffmpeg = proc_open($command, $descriptors, $pipes);
     if (is_resource($ffmpeg)){
         // Keep sending the same image to ffmpeg for repeated frames
