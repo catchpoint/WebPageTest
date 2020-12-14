@@ -9,6 +9,10 @@ $ok = false;
 $tests = BuildRenderTests();
 if (isset($tests) && is_array($tests) && count($tests)) {
     $videoId = sha1(json_encode($tests));
+    $server_id = GetSetting('serverID');
+    if (isset($server_id) && is_string($server_id) && strlen($server_id)) {
+        $videoId = $server_id . '-' . $videoId;
+    }
     $lock = Lock("video-$videoId", false, 600);
     if ($lock) {
         $videoFile = realpath(__DIR__ . '/../work/video/');
@@ -41,6 +45,10 @@ if (isset($tests) && is_array($tests) && count($tests)) {
                     // redirect to the video file so Nginx can serve byte ranges for Safari/Mobile
                     $protocol = getUrlProtocol();
                     $host  = $_SERVER['HTTP_HOST'];
+                    $hostname = GetSetting('host');
+                    if (isset($hostname) && is_string($hostname) && strlen($hostname)) {
+                        $host = $hostname;
+                    }
                     $uri   = "/work/video/$videoId.mp4";
                     $videoUrl = "$protocol://$host$uri";
                     header('HTTP/1.1 307 Temporary Redirect');

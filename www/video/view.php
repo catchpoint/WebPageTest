@@ -116,6 +116,10 @@ if (isset($videoId)) {
   $location = isset($_REQUEST['loc']) ? htmlspecialchars(strip_tags($_REQUEST['loc'])) : null;
   $protocol = getUrlProtocol();
   $host  = $_SERVER['HTTP_HOST'];
+  $hostname = GetSetting('host');
+  if (isset($hostname) && is_string($hostname) && strlen($hostname)) {
+      $host = $hostname;
+  }
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
   $params = 'tests=' . htmlspecialchars($_REQUEST['tests']);
   $validParams = array('bg', 'text', 'end', 'labelHeight', 'timeHeight', 'slow');
