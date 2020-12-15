@@ -22,7 +22,6 @@ chdir('..');
 include 'common.inc';
 error_reporting(0);
 set_time_limit(600);
-$is_json = array_key_exists('f', $_GET) && $_GET['f'] == 'json';
 $locations = explode(',', $_GET['location']);
 $key = array_key_exists('key', $_GET) ? $_GET['key'] : '';
 $recover = array_key_exists('recover', $_GET) ? $_GET['recover'] : '';
@@ -270,7 +269,6 @@ function GetJob() {
   global $ec2;
   global $tester;
   global $recover;
-  global $is_json;
   global $dnsServers;
   global $screenwidth;
   global $screenheight;
@@ -301,10 +299,7 @@ function GetJob() {
         $original_test_info = $testInfo;
         $is_done = true;
         
-        if ($is_json)
-          header ("Content-type: application/json");
-        else
-          header('Content-type: text/plain');
+        header ("Content-type: application/json");
         header("Cache-Control: no-cache, must-revalidate");
         header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
@@ -359,12 +354,8 @@ function GetJob() {
           @unlink("$workDir/$fileName");
         }
         
-        if ($is_json) {
-          $testJson = TestToJSON($testInfo);
-          echo json_encode($testJson);
-        } else {
-          echo $testInfo;
-        }
+        $testJson = TestToJSON($testInfo);
+        echo json_encode($testJson);
         $ok = true;
       }
 
