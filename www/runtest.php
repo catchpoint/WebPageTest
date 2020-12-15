@@ -289,9 +289,6 @@
                 $test['keepua'] = 1;
             if (isset($req_pss_advanced))
               $test['pss_advanced'] = $req_pss_advanced;
-            $test['shard_test'] = $settings['shard_tests'];
-            if (array_key_exists('shard', $_REQUEST))
-              $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
             if (isset($_REQUEST['mobileDevice']))
               $test['mobileDevice'] = $_REQUEST['mobileDevice'];
@@ -307,7 +304,6 @@
             $test['debug'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] ? 1 : 0;
             if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
               $test['warmup'] = min(intval($_REQUEST['warmup']), 3);
-              $test['shard_test'] = 0;
             }
             if (isset($_REQUEST['medianMetric']))
               $test['medianMetric'] = $_REQUEST['medianMetric'];

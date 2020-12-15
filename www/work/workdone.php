@@ -138,43 +138,9 @@ if (ValidateTestId($id)) {
           strlen($testInfo['tester']))
         $tester = $testInfo['tester'];
 
-      if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
-        ProcessIncrementalResult();
-
       if (isset($_FILES['file']['tmp_name'])) {
         ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
         CompressTextFiles($testPath);
-      }
-
-      // make sure the test result is valid, otherwise re-run it
-      if ($done && isset($testInfo['job_file']) && isset($testInfo['max_retries']) && $testInfo['max_retries'] > 1) {
-        $testfile = null;
-        $valid = true;
-        $available_runs = 0;
-        $expected_runs = $testInfo['runs'];
-        if (!$testInfo['fvonly'])
-          $expected_runs = $expected_runs * 2;
-        $files = scandir($testPath);
-        foreach ($files as $file) {
-          if (preg_match('/^[0-9]+_(Cached_)?IEWPG.txt/', $file) === true)
-            $available_runs++;
-          if ($file == 'test.job')
-            $testfile = "$testPath/$file";
-        }
-        if ($available_runs < $expected_runs)
-          $valid = false;
-        if (!array_key_exists('retries', $testInfo))
-          $testInfo['retries'] = 0;
-        if (!$valid && $testInfo['retries'] < $testInfo['max_retries'] && isset($testfile)) {
-          if (copy($testfile, $testInfo['job_file'])) {
-            ResetTestDir($testPath);
-            $testInfo['retries']++;
-            AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
-            $done = false;
-            unset($testInfo['started']);
-            $testInfo_dirty = true;
-          }
-        }
       }
 
       // keep track of any overall or run-specific errors reported by the agent
@@ -392,49 +358,6 @@ function ResetTestDir($testPath) {
                 delTree("$testPath/$file");
         }
     }
-}
-
-/**
-* Handle sharded test results where they come in individually
-*
-*/
-function ProcessIncrementalResult() {
-  global $testPath;
-  global $done;
-  global $testInfo;
-  global $testInfo_dirty;
-  global $runNumber;
-  global $cacheWarmed;
-  global $location;
-  global $id;
-
-  if ($done) {
-    // mark this shard as done
-    if (!isset($testInfo['shards_finished']))
-      $testInfo['shards_finished'] = array();
-    $testInfo['shards_finished'][$runNumber] = true;
-    $testInfo_dirty = true;
-    logTestMsg($id, "Marked shard $runNumber as complete: " . json_encode($testInfo['shards_finished']));
-
-    // make sure all of the sharded tests are done
-    for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-      if (!isset($testInfo['shards_finished'][$run]) || $testInfo['shards_finished'][$run] !== true)
-        $done = false;
-    }
-    if ($done) {
-      logTestMsg($id, "All {$testInfo['runs']} runs are complete");
-    }
-
-    if (!$done &&
-        array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
-        $testInfo['test_runs'][$runNumber]['discarded']) {
-      if (is_file("$testPath/test.job")) {
-        if (copy("$testPath/test.job", $testInfo['job_file'])) {
-          AddJobFileHead($location, $testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
-        }
-      }
-    }
-  }
 }
 
 function CompressTextFiles($testPath) {

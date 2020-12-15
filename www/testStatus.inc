@@ -152,46 +152,25 @@ function GetTestStatus($id, $includePosition = true) {
                       $lock = LockTest($id);
                       if ($lock) {
                         $testInfoJson = GetTestInfo($id);
-                        if ($testInfoJson) {
-                          if (array_key_exists('test_runs', $testInfoJson) && $testInfoJson['shard_test']) {
-                            foreach($testInfoJson['test_runs'] as $run => &$testRun) {
-                              if (!array_key_exists('done', $testRun) || !$testRun['done']) {
-                                if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
-                                  $runElapsed = intval(($now - $testRun['started']) / 60);
-                                  if ($runElapsed > $max_run_minutes) {
-                                    $testRun['done'] = true;
-                                    if (array_key_exists('tester', $testRun) && strlen($testRun['tester']))
-                                      $tester = " on {$testRun['tester']}";
-                                    logTestMsg($id, "Test run $run has been running for $runElapsed minutes$tester, forcing done.");
-                                  } else {
-                                    $allComplete = false;
-                                  }
-                                } else {
-                                  $allComplete = false;
-                                }
-                              }
-                            }
-                          }
-                          if ($allComplete) {
-                            logTestMsg($id, "Test has been running for $elapsed minutes and it has been $elapsedUpdate since the last update; forcing the full test to finish.");
-                            $testInfoJson['completed'] = $now;
-                            $test = file_get_contents("$testPath/testinfo.ini");
-                            $date = gmdate("m/d/y G:i:s", $now);
+                        if ($testInfoJson && $allComplete) {
+                          logTestMsg($id, "Test has been running for $elapsed minutes and it has been $elapsedUpdate since the last update; forcing the full test to finish.");
+                          $testInfoJson['completed'] = $now;
+                          $test = file_get_contents("$testPath/testinfo.ini");
+                          $date = gmdate("m/d/y G:i:s", $now);
 
-                            // Update the completion time if it isn't already set
-                            if (isset($test) && is_string($test) && !strpos($test, 'completeTime')) {
-                              $complete = "[test]\r\ncompleteTime=$date";
-                              $out = str_replace('[test]', $complete, $test);
-                              file_put_contents("$testPath/testinfo.ini", $out);
-                            }
-                            $ret['statusCode'] = 200;
-                            $ret['statusText'] = 'Test Complete';
-                            $ret['completeTime'] = $date;
-                            touch("$testPath/test.complete");
-                            @unlink("$testPath/test.running");
-
-                            SendCallback($testInfoJson);
+                          // Update the completion time if it isn't already set
+                          if (isset($test) && is_string($test) && !strpos($test, 'completeTime')) {
+                            $complete = "[test]\r\ncompleteTime=$date";
+                            $out = str_replace('[test]', $complete, $test);
+                            file_put_contents("$testPath/testinfo.ini", $out);
                           }
+                          $ret['statusCode'] = 200;
+                          $ret['statusText'] = 'Test Complete';
+                          $ret['completeTime'] = $date;
+                          touch("$testPath/test.complete");
+                          @unlink("$testPath/test.running");
+
+                          SendCallback($testInfoJson);
                         }
                         SaveTestInfo($id, $testInfoJson);
                         UnlockTest($lock);

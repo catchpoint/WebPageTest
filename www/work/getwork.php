@@ -7,7 +7,6 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('GetJob');
   newrelic_add_custom_tracer('GetTestJob');
   newrelic_add_custom_tracer('CheckCron');
-  newrelic_add_custom_tracer('ProcessTestShard');
   newrelic_add_custom_tracer('GetTesters');
   newrelic_add_custom_tracer('LockLocation');
   newrelic_add_custom_tracer('GetLocationInfo');
@@ -47,9 +46,6 @@ else
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
   $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
-$supports_sharding = false;
-if (GetSetting('shard_tests', true) && array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
-  $supports_sharding = true;
 
 $is_done = false;
 $work_servers = GetSetting('work_servers');
@@ -304,7 +300,6 @@ function GetJob() {
       if (isset($testInfo)) {
         $original_test_info = $testInfo;
         $is_done = true;
-        $delete = true;
         
         if ($is_json)
           header ("Content-type: application/json");
@@ -354,28 +349,19 @@ function GetJob() {
               }
               $dotPos = stripos($testId, ".");
               $testInfoJson['id'] = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
-              ProcessTestShard($testInfoJson, $testInfo, $delete, $priority);
               SaveTestInfo($testId, $testInfoJson);
             }
             UnlockTest($lock);
           }
         }
 
-        if ($delete) {
-          if (isset($fileName)) {
-            @unlink("$workDir/$fileName");
-          }
-        } else {
-          AddTestJobHead($location, $original_test_info, $workDir, $fileName, $priority, true);
+        if (isset($fileName)) {
+          @unlink("$workDir/$fileName");
         }
         
         if ($is_json) {
           $testJson = TestToJSON($testInfo);
-          if(!isset($testJson['run']) && GetSetting("shard_tests") && $testJson['type'] != 'traceroute'){
-            logTestMsg($testId,"Tried to start sharded test with no runs set");
-          } else {
-            echo json_encode($testJson);
-          }
+          echo json_encode($testJson);
         } else {
           echo $testInfo;
         }
@@ -519,74 +505,6 @@ function CheckCron() {
       SendAsyncRequest('/cron/15min.php');
     if ($minutes60)
       SendAsyncRequest('/cron/hourly.php');
-  }
-}
-
-/**
-* Process a sharded test
-* 
-* @param mixed $testInfo
-*/
-function ProcessTestShard(&$testInfo, &$test, &$delete, $priority) {
-  global $supports_sharding;
-  global $tester;
-  if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
-    if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') || !$supports_sharding) {
-      $testInfo['shard_test'] = 0;
-    } else {
-      $done = true;
-      $assigned_run = 0;
-      
-      // find a run to assign to a tester
-      for ($run = 1; $run <= $testInfo['runs']; $run++) {
-        if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
-          $testInfo['test_runs'][$run]['tester'] = $tester;
-          $testInfo['test_runs'][$run]['started'] = time();
-          $testInfo['test_runs'][$run]['done'] = false;
-          $assigned_run = $run;
-          break;
-        }
-      }
-      
-      // go through again and see if all tests have been assigned
-      for ($run = 1; $run <= $testInfo['runs']; $run++) {
-        if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
-          $done = false;
-          break;
-        }
-      }
-      
-      if ($assigned_run) {
-        logTestMsg($testInfo['id'], "Run $assigned_run assigned to $tester");
-        $append = "run=$assigned_run\r\n";
-
-        // Figure out if this test needs to be discarded
-        $index = $assigned_run;
-        if (array_key_exists('discard', $testInfo)) {
-          if ($index <= $testInfo['discard']) {
-            $append .= "discardTest=1\r\n";
-            $index = 1;
-            $done = true;
-            $testInfo['test_runs'][$assigned_run]['discarded'] = true;
-          } else {
-            $index -= $testInfo['discard'];
-          }
-        }
-        $append .= "index=$index\r\n";
-        
-        $insert = strpos($test, "\nurl");
-        if ($insert !== false) {
-          $test = substr($test, 0, $insert + 1) . 
-                  $append . 
-                  substr($test, $insert + 1);
-        } else {
-          $test = "run=$assigned_run\r\n" + $test;
-        }
-      }
-
-      if (!$done)
-        $delete = false;
-    }
   }
 }
 

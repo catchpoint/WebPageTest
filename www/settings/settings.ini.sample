@@ -44,9 +44,6 @@ fullSizeVideoDefault=0
 ; video capture will not get visual metrics.
 ;strict_video=1
 
-; Run tests concurrently across test machines
-;shard_tests=1
-
 ; Maximum number of runs allowed per test
 maxruns=9
 
