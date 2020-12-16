@@ -280,7 +280,6 @@
             if (isset($req_htmlbody))
               $test['htmlbody'] = $req_htmlbody;
             $test['time'] = isset($req_time) ? (int)$req_time : 0;
-            $test['clear_rv'] = isset($req_clearRV) ? (int)$req_clearRV : 0;
             $test['keepua'] = 0;
             if (isset($req_benchmark))
               $test['benchmark'] = $req_benchmark;
@@ -554,7 +553,7 @@
                 foreach ($files as $file) {
                   $name = basename($file, '.js');
                   $code = file_get_contents($file);
-                  $test['customMetrics'][$name] = base64_encode($code);
+                  $test['customMetrics'][$name] = $code;
                 }
               }
             }
@@ -569,7 +568,7 @@
                     if (isset($metric) && strlen($metric) && strlen($code)) {
                       if (!array_key_exists('customMetrics', $test))
                         $test['customMetrics'] = array();
-                      $test['customMetrics'][$metric] = base64_encode($code);
+                      $test['customMetrics'][$metric] = $code;
                     }
                     $code = '';
                     $metric = $matches['metric'];
@@ -581,24 +580,7 @@
               if (isset($metric) && strlen($metric) && strlen($code)) {
                 if (!array_key_exists('customMetrics', $test))
                   $test['customMetrics'] = array();
-                $test['customMetrics'][$metric] = base64_encode($code);
-              }
-            }
-
-            if (array_key_exists('heroElements', $_REQUEST)) {
-              // Custom hero-element selectors should be specified as a JSON string
-              // in { heroName: selector[, heroName2: selector2[, ...]] } format.
-              $heroElements = json_decode($_REQUEST['heroElements']);
-              if (is_object($heroElements)) {
-                // Iterate over each value in the object, filtering out anything
-                // that isn't a string of non-zero length.
-                $heroElements = array_filter((array) $heroElements, function($selector) {
-                  return is_string($selector) && strlen($selector);
-                });
-                if (count($heroElements) > 0) {
-                  $test['heroElementTimes'] = 1;
-                  $test['heroElements'] = base64_encode(json_encode($heroElements, JSON_FORCE_OBJECT));
-                }
+                $test['customMetrics'][$metric] = $code;
               }
             }
 
@@ -1691,29 +1673,20 @@ function ValidateURL(&$url, &$error, &$settings)
 * @param mixed $testRun
 * @param mixed $test
 */
-function SubmitUrl($testId, $testData, &$test, $url)
+function SubmitUrl($testId, $job, &$test, $url)
 {
     $ret = false;
     global $error;
     global $locations;
 
+    $job['Test ID'] = $testId;
+    $job['url'] = $url;
     $script = ProcessTestScript($url, $test);
-
-    $out = "Test ID=$testId\r\nurl=";
     if (isset($script) && strlen($script))
-        $out .= "script://$testId.pts";
-    else
-        $out .= $url;
-    $out .= "\r\n";
-
-    // add the actual test configuration
-    $out .= $testData;
-
-    if (isset($script) && strlen($script))
-      $out .= "\r\n[Script]\r\n" . $script;
+      $job['script'] = $script;
 
     $location = $test['location'];
-    $ret = WriteJob($location, $test, $out, $testId);
+    $ret = WriteJob($location, $test, json_encode($job), $testId);
     if (isset($test['ami']))
       EC2_StartInstanceIfNeeded($test['ami']);
 
@@ -2171,204 +2144,197 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // for "batch" tests (the master) we don't need to submit an actual test request
         if( !$batch && !$batch_locations)
         {
+            // build up the json test job
+            $job = array();
             // build up the actual test commands
-            $testFile = '';
-            if( isset($test['domElement']) && strlen($test['domElement']) )
-                AddIniLine($testFile, 'DOMElement', $test['domElement']);
             if( isset($test['fvonly']) && $test['fvonly'] )
-                AddIniLine($testFile, 'fvonly', '1');
+                $job['fvonly'] = 1;
             if( $timeout )
-                AddIniLine($testFile, 'timeout', $timeout);
+                $job['timeout'] = $timeout;
             if (isset($test['run_time_limit']))
-              AddIniLine($testFile, "run_time_limit", $test['run_time_limit']);
+              $job["run_time_limit"] = $test['run_time_limit'];
             if( isset($test['web10']) && $test['web10'] )
-                AddIniLine($testFile, 'web10', '1');
+                $job['web10'] = 1;
             if( isset($test['ignoreSSL']) && $test['ignoreSSL'] )
-                AddIniLine($testFile, 'ignoreSSL', '1');
+                $job['ignoreSSL'] = 1;
             if( isset($test['tcpdump']) && $test['tcpdump'] )
-                AddIniLine($testFile, 'tcpdump', '1');
+                $job['tcpdump'] = 1;
             if( isset($test['standards']) && $test['standards'] )
-                AddIniLine($testFile, 'standards', '1');
+                $job['standards'] = 1;
             if( isset($test['timeline']) && $test['timeline'] ) {
-                AddIniLine($testFile, 'timeline', '1');
+                $job['timeline'] = 1;
                 if (isset($test['discard_timeline']))
-                  AddIniLine($testFile, 'discard_timeline', $test['discard_timeline']);
+                  $job['discard_timeline'] = $test['discard_timeline'];
                 if (isset($test['timeline_fps']))
-                  AddIniLine($testFile, 'timeline_fps', $test['timeline_fps']);
+                  $job['timeline_fps'] = $test['timeline_fps'];
                 if (isset($test['timelineStackDepth']))
-                  AddIniLine($testFile, 'timelineStackDepth', $test['timelineStackDepth']);
+                  $job['timelineStackDepth'] = $test['timelineStackDepth'];
             }
             if( isset($test['trace']) && $test['trace'] )
-                AddIniLine($testFile, 'trace', '1');
+                $job['trace'] = 1;
             if (isset($test['traceCategories']))
-                AddIniLine($testFile, 'traceCategories', $test['traceCategories']);
+                $job['traceCategories'] = $test['traceCategories'];
             if( isset($test['swrender']) && $test['swrender'] )
-                AddIniLine($testFile, 'swRender', '1');
+                $job['swRender'] = 1;
             if( isset($test['netlog']) && $test['netlog'] )
-                AddIniLine($testFile, 'netlog', '1');
+                $job['netlog'] = 1;
             if( isset($test['spdy3']) && $test['spdy3'] )
-                AddIniLine($testFile, 'spdy3', '1');
+                $job['spdy3'] = 1;
             if( isset($test['noscript']) && $test['noscript'] )
-                AddIniLine($testFile, 'noscript', '1');
+                $job['noscript'] = 1;
             if( isset($test['fullsizevideo']) && $test['fullsizevideo'] )
-                AddIniLine($testFile, 'fullSizeVideo', '1');
+                $job['fullSizeVideo'] = 1;
             if (isset($test['thumbsize']))
-                AddIniLine($testFile, 'thumbsize', $test['thumbsize']);
+                $job['thumbsize'] = $test['thumbsize'];
             if( isset($test['blockads']) && $test['blockads'] )
-                AddIniLine($testFile, 'blockads', '1');
+                $job['blockads'] = 1;
             if( isset($test['video']) && $test['video'] )
-                AddIniLine($testFile, 'Capture Video', '1');
+                $job['Capture Video'] = 1;
             if (isset($test['disable_video']))
-                AddIniLine($testFile, "disable_video", $test['disable_video']);
+                $job["disable_video"] = $test['disable_video'];
             if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
-                AddIniLine($testFile, 'keepvideo', '1');
+                $job['keepvideo'] = 1;
             if (isset($test['renderVideo']) && $test['renderVideo'])
-                AddIniLine($testFile, 'renderVideo', '1');
+                $job['renderVideo'] = 1;
             if( isset($test['type']) && strlen($test['type']) )
-                AddIniLine($testFile, 'type', $test['type']);
+                $job['type'] = $test['type'];
             if( isset($test['block']) && $test['block'] ) {
                 $block = $test['block'];
                 if (isset($forceBlock))
                   $block .= " $forceBlock";
-                AddIniLine($testFile, 'block', $block);
+                $job['block'] = $block;
             } elseif (isset($forceBlock)) {
-                AddIniLine($testFile, 'block', $forceBlock);
+                $job['block'] = $forceBlock;
             }
             if (isset($test['blockDomains']) && strlen($test['blockDomains'])) {
-                AddIniLine($testFile, 'blockDomains', $test['blockDomains']);
+                $job['blockDomains'] = $test['blockDomains'];
             }
             if (isset($test['injectScript']))
-                AddIniLine($testFile, 'injectScript', base64_encode($test['injectScript']));
+                $job['injectScript'] = $test['injectScript'];
             if( isset($test['noopt']) && $test['noopt'] )
-                AddIniLine($testFile, 'noopt', '1');
+                $job['noopt'] = 1;
             if( isset($test['noimages']) && $test['noimages'] )
-                AddIniLine($testFile, 'noimages', '1');
+                $job['noimages'] = 1;
             if( isset($test['noheaders']) && $test['noheaders'] )
-                AddIniLine($testFile, 'noheaders', '1');
+                $job['noheaders'] = 1;
             if( isset($test['discard']) && $test['discard'] )
-                AddIniLine($testFile, 'discard', $test['discard']);
-            AddIniLine($testFile, 'runs', $test['runs']);
+                $job['discard'] = $test['discard'];
+            $job['runs'] = $test['runs'];
 
             if( isset($test['connectivity']) )
             {
-                AddIniLine($testFile, 'bwIn', $test['bwIn']);
-                AddIniLine($testFile, 'bwOut', $test['bwOut']);
-                AddIniLine($testFile, 'latency', $test['testLatency']);
-                AddIniLine($testFile, 'plr', $test['plr']);
-                AddIniLine($testFile, 'shaperLimit', $test['shaperLimit']);
+                $job['bwIn'] = $test['bwIn'];
+                $job['bwOut'] = $test['bwOut'];
+                $job['latency'] = $test['testLatency'];
+                $job['plr'] = $test['plr'];
+                $job['shaperLimit'] = $test['shaperLimit'];
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
-                AddIniLine($testFile, 'browserExe', $test['browserExe']);
+                $job['browserExe'] = $test['browserExe'];
             if( isset($test['browser']) && strlen($test['browser']) )
-                AddIniLine($testFile, 'browser', $test['browser']);
+                $job['browser'] = $test['browser'];
             if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
-                AddIniLine($testFile, 'pngScreenShot', '1');
+                $job['pngScreenShot'] = 1;
             if (isset($test['fps']) && $test['fps'] > 0)
-                AddIniLine($testFile, 'fps', $test['fps']);
+                $job['fps'] = $test['fps'];
             if( isset($test['iq']) && $test['iq'] )
-                AddIniLine($testFile, 'imageQuality', $test['iq']);
+                $job['imageQuality'] = $test['iq'];
             elseif( isset($settings['iq']) && $settings['iq'] )
-                AddIniLine($testFile, 'imageQuality', $settings['iq']);
+                $job['imageQuality'] = $settings['iq'];
             if( isset($test['bodies']) && $test['bodies'] )
-                AddIniLine($testFile, 'bodies', '1');
+                $job['bodies'] = 1;
             if( isset($test['htmlbody']) && $test['htmlbody'] )
-                AddIniLine($testFile, 'htmlbody', '1');
+                $job['htmlbody'] = 1;
             if( isset($test['time']) && $test['time'] )
-                AddIniLine($testFile, 'time', $test['time']);
+                $job['time'] = $test['time'];
             if( isset($test['clear_rv']) && $test['clear_rv'] )
-                AddIniLine($testFile, 'clearRV', $test['clear_rv']);
+                $job['clearRV'] = $test['clear_rv'];
             if( isset($test['keepua']) && $test['keepua'] )
-                AddIniLine($testFile, 'keepua', '1');
+                $job['keepua'] = 1;
             if( isset($test['mobile']) && $test['mobile'] )
-                AddIniLine($testFile, 'mobile', '1');
+                $job['mobile'] = 1;
             if( isset($test['lighthouse']) && $test['lighthouse'] )
-                AddIniLine($testFile, 'lighthouse', '1');
+                $job['lighthouse'] = 1;
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
-                AddIniLine($testFile, 'lighthouseTrace', '1');
+                $job['lighthouseTrace'] = 1;
             if( isset($test['lighthouseScreenshots']) && $test['lighthouseScreenshots'] )
-                AddIniLine($testFile, 'lighthouseScreenshots', '1');
+                $job['lighthouseScreenshots'] = 1;
             if( isset($test['v8rcs']) && $test['v8rcs'] )
-                AddIniLine($testFile, 'v8rcs', '1');
+                $job['v8rcs'] = 1;
             if( isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'] )
-                AddIniLine($testFile, 'lighthouseThrottle', '1');
+                $job['lighthouseThrottle'] = 1;
             if (isset($test['lighthouseConfig']))
-                AddIniLine($testFile, 'lighthouseConfig', base64_encode($test['lighthouseConfig']));
-            if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
-                AddIniLine($testFile, 'heroElementTimes', '1');
+                $job['lighthouseConfig'] = $test['lighthouseConfig'];
             if( isset($test['coverage']) && $test['coverage'] )
-                AddIniLine($testFile, 'coverage', '1');
-            if( isset($test['heroElements']) && strlen($test['heroElements']) )
-                AddIniLine($testFile, 'heroElements', $test['heroElements']);
+                $job['coverage'] = 1;
             if( isset($test['debug']) && $test['debug'] )
-                AddIniLine($testFile, 'debug', '1');
+                $job['debug'] = 1;
             if( isset($test['warmup']) && $test['warmup'] )
-                AddIniLine($testFile, 'warmup', $test['warmup']);
+                $job['warmup'] = $test['warmup'];
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
-                AddIniLine($testFile, 'throttle_cpu', $test['throttle_cpu']);
+                $job['throttle_cpu'] = $test['throttle_cpu'];
             if( isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization'])
-                AddIniLine($testFile, 'bypass_cpu_normalization', '1');
+                $job['bypass_cpu_normalization'] = 1;
             if( isset($test['dpr']) && $test['dpr'] > 0 )
-                AddIniLine($testFile, 'dpr', $test['dpr']);
+                $job['dpr'] = $test['dpr'];
             if( isset($test['width']) && $test['width'] > 0 )
-                AddIniLine($testFile, 'width', $test['width']);
+                $job['width'] = $test['width'];
             if( isset($test['height']) && $test['height'] > 0 )
-                AddIniLine($testFile, 'height', $test['height']);
+                $job['height'] = $test['height'];
             if( isset($test['browser_width']) && $test['browser_width'] > 0 )
-                AddIniLine($testFile, 'browser_width', $test['browser_width']);
+                $job['browser_width'] = $test['browser_width'];
             if( isset($test['browser_height']) && $test['browser_height'] > 0 )
-                AddIniLine($testFile, 'browser_height', $test['browser_height']);
+                $job['browser_height'] = $test['browser_height'];
             if( isset($test['clearcerts']) && $test['clearcerts'] )
-                AddIniLine($testFile, 'clearcerts', '1');
+                $job['clearcerts'] = 1;
             if( isset($test['orientation']) && $test['orientation'] )
-                AddIniLine($testFile, 'orientation', $test['orientation']);
+                $job['orientation'] = $test['orientation'];
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
-                AddIniLine($testFile, 'continuousVideo', '1');
+                $job['continuousVideo'] = 1;
             if (array_key_exists('responsive', $test) && $test['responsive'])
-                AddIniLine($testFile, 'responsive', '1');
+                $job['responsive'] = 1;
             if (array_key_exists('minimalResults', $test) && $test['minimalResults'])
-                AddIniLine($testFile, 'minimalResults', '1');
+                $job['minimalResults'] = 1;
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
-                AddIniLine($testFile, 'cmdLine', $test['cmdLine']);
+                $job['cmdLine'] = $test['cmdLine'];
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
-                AddIniLine($testFile, 'addCmdLine', $test['addCmdLine']);
+                $job['addCmdLine'] = $test['addCmdLine'];
             if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl']))
-                AddIniLine($testFile, 'customBrowserUrl', $test['customBrowserUrl']);
+                $job['customBrowserUrl'] = $test['customBrowserUrl'];
             if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
-                AddIniLine($testFile, 'customBrowserMD5', $test['customBrowserMD5']);
+                $job['customBrowserMD5'] = $test['customBrowserMD5'];
             if (array_key_exists('customBrowserSettings', $test) &&
                 is_array($test['customBrowserSettings']) &&
                 count($test['customBrowserSettings'])) {
               foreach ($test['customBrowserSettings'] as $setting => $value)
-                AddIniLine($testFile, "customBrowser_$setting", $value);
+                $job["customBrowser_$setting"] = $value;
             }
             if (isset($test['uastring']))
-                AddIniLine($testFile, 'uastring', $test['uastring']);
+                $job['uastring'] = $test['uastring'];
             if (isset($test['UAModifier']) && strlen($test['UAModifier']))
-                AddIniLine($testFile, 'UAModifier', $test['UAModifier']);
+                $job['UAModifier'] = $test['UAModifier'];
             if (isset($test['appendua']))
-                AddIniLine($testFile, 'AppendUA', $test['appendua']);
+                $job['AppendUA'] = $test['appendua'];
             if (isset($test['key']) && strlen($test['key']))
-                AddIniLine($testFile, 'APIKey', $test['key']);
+                $job['APIKey'] = $test['key'];
             if (isset($test['ip']) && strlen($test['ip']))
-                AddIniLine($testFile, 'IPAddr', $test['ip']);
+                $job['IPAddr'] = $test['ip'];
             if (isset($test['lat']) && strlen($test['lat']))
-                AddIniLine($testFile, 'lat', $test['lat']);
+                $job['lat'] = $test['lat'];
             if (isset($test['lng']) && strlen($test['lng']))
-                AddIniLine($testFile, 'lng', $test['lng']);
+                $job['lng'] = $test['lng'];
             // Pass the WPT server hostname to the agent
             $hostname = GetSetting('host');
             if (isset($hostname) && is_string($hostname) && strlen($hostname))
-              AddIniLine($testFile, 'wpthost', $hostname);
+              $job['wpthost'] = $hostname;
             elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
-              AddIniLine($testFile, 'wpthost', $_SERVER['HTTP_HOST']);
+              $job['wpthost'] = $_SERVER['HTTP_HOST'];
 
             // Add custom metrics
             if (array_key_exists('customMetrics', $test)) {
-              foreach($test['customMetrics'] as $name => $code)
-                AddIniLine($testFile, 'customMetric', "$name:$code");
+              $job['customMetrics'] = $test['customMetrics'];
             }
-
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
@@ -2381,7 +2347,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
 
-            if( !SubmitUrl($testId, $testFile, $test, $url) )
+            if( !SubmitUrl($testId, $job, $test, $url) )
                 $testId = null;
         } elseif (isset($testId)) {
             $oldUrl = @$test['url'];

@@ -179,8 +179,6 @@ function StartTest($testId, $time) {
 }
 
 function TestToJSON($testInfo) {
-  global $work_servers, $work_server;
-
   $testJson = array();
   $script = '';
   $isScript = false;
@@ -230,28 +228,6 @@ function TestToJSON($testInfo) {
   }
   if( strlen($script) )
       $testJson['script'] = $script;
-  // See if we need to include apk information
-  if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
-    $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
-    if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
-      $protocol = getUrlProtocol();
-      $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
-      $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
-      foreach ($apk_info['packages'] as $package => $info)
-        $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
-      $testJson['apk_info'] = $apk_info;
-    }
-  }
-  if (is_string($work_servers) && strlen($work_servers)) {
-    $testJson['work_servers'] = $work_servers;
-  }
-  if (is_string($work_server) && strlen($work_server)) {
-    $testJson['work_server'] = $work_server;
-  }
-  $profile_data = GetSetting('profile_data');
-  if (is_string($profile_data) && strlen($profile_data)) {
-    $testJson['profile_data'] = $profile_data;
-  }
   return $testJson;
 }
 
@@ -296,30 +272,24 @@ function GetJob() {
         $testerCount = 1;
       $testInfo = GetTestJob($location, $fileName, $workDir, $priority, $pc, $testerIndex, $testerCount);
       if (isset($testInfo)) {
-        $original_test_info = $testInfo;
         $is_done = true;
+        $testJson = null;
+        $testId = null;
         
         header ("Content-type: application/json");
         header("Cache-Control: no-cache, must-revalidate");
         header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-        // send the test info to the test agent
-        $newline = strpos($testInfo, "\n", 2);
-        if ($newline) {
-          $newline++;
-          $after = substr($testInfo, $newline);
-          $testInfo = substr($testInfo, 0, $newline);
-          $software = GetSetting('software');
-          if ($software)
-            $testInfo .= "software=$software\r\n";
-          if (GetSetting('enable_agent_processing'))
-            $testInfo .= "processResults=1\r\n";
-          $testInfo .= $after;
+        if (substr($testInfo, 0, 1) == '{') {
+          $testJson = json_decode($testInfo, true);
+          if (isset($testJson['Test ID'])) {
+            $testId = $testJson['Test ID'];
+          }
+        } else {
+          // extract the test ID from the job file
+          if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
+            $testId = trim($matches[1]);
         }
-
-        // extract the test ID from the job file
-        if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
-          $testId = trim($matches[1]);
 
         if( isset($testId) ) {
           $time = time();
@@ -354,9 +324,35 @@ function GetJob() {
           @unlink("$workDir/$fileName");
         }
         
-        $testJson = TestToJSON($testInfo);
-        echo json_encode($testJson);
-        $ok = true;
+        if (!isset($testJson)) {
+          $testJson = TestToJSON($testInfo);
+        }
+        if (isset($testJson)) {
+          // See if we need to include apk information
+          if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+            $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+            if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+              $protocol = getUrlProtocol();
+              $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+              $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+              foreach ($apk_info['packages'] as $package => $info)
+                $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
+              $testJson['apk_info'] = $apk_info;
+            }
+          }
+          if (is_string($work_servers) && strlen($work_servers)) {
+            $testJson['work_servers'] = $work_servers;
+          }
+          if (is_string($work_server) && strlen($work_server)) {
+            $testJson['work_server'] = $work_server;
+          }
+          $profile_data = GetSetting('profile_data');
+          if (is_string($profile_data) && strlen($profile_data)) {
+            $testJson['profile_data'] = $profile_data;
+          }
+          echo json_encode($testJson);
+          $ok = true;
+        }
       }
 
       // keep track of the last time this location reported in
