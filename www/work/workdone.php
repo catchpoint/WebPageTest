@@ -98,19 +98,23 @@ $testInfo_dirty = false;
 
 if (ValidateTestId($id)) {
   $testPath = './' . GetTestPath($id);
-  $testInfo = GetTestInfo($id);
-  $medianMetric = GetSetting('medianMetric', 'loadTime');
-  if (isset($testInfo['medianMetric']))
-    $medianMetric = $testInfo['medianMetric'];
-  if (!$testInfo || !array_key_exists('location', $testInfo)) {
-    $testLock = LockTest($id);
+  $location = null;
+  if (isset($_REQUEST['location'])) {
+    $location = $_REQUEST['location'];
+  } else {
     $testInfo = GetTestInfo($id);
-    UnlockTest($testLock);
+    if (isset($testInfo['location']))
+      $location = $testInfo['location'];
   }
-  if ($testInfo && array_key_exists('location', $testInfo)) {
-    $location = $testInfo['location'];
+  if (isset($location)) {
     $locKey = GetLocationKey($location);
     if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
+      // Extract the uploaded data
+      if (isset($_FILES['file']['tmp_name'])) {
+        ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
+        CompressTextFiles($testPath);
+      }
+
       $testErrorStr = '';
       $errorStr = '';
       if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
@@ -133,16 +137,13 @@ if (ValidateTestId($id)) {
         $testInfo['timeline'] = 1;
       $testInfo_dirty = true;
 
-      if (!strlen($tester) &&
-          array_key_exists('tester', $testInfo) &&
-          strlen($testInfo['tester']))
+      if (!strlen($tester) && array_key_exists('tester', $testInfo) && strlen($testInfo['tester']))
         $tester = $testInfo['tester'];
 
-      if (isset($_FILES['file']['tmp_name'])) {
-        ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
-        CompressTextFiles($testPath);
-      }
-
+      $medianMetric = GetSetting('medianMetric', 'loadTime');
+      if (isset($testInfo['medianMetric']))
+        $medianMetric = $testInfo['medianMetric'];
+    
       // keep track of any overall or run-specific errors reported by the agent
       if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
         $testInfo['test_error'] = $_REQUEST['testerror'];

@@ -2145,12 +2145,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if( !$batch && !$batch_locations)
         {
             // build up the json test job
-            $job = array();
+            $job = array('testinfo_ini' => $testInfo);
             // build up the actual test commands
             if( isset($test['fvonly']) && $test['fvonly'] )
                 $job['fvonly'] = 1;
             if( $timeout )
-                $job['timeout'] = $timeout;
+                $job['timeout'] = intval($timeout);
             if (isset($test['run_time_limit']))
               $job["run_time_limit"] = $test['run_time_limit'];
             if( isset($test['web10']) && $test['web10'] )
@@ -2163,12 +2163,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['standards'] = 1;
             if( isset($test['timeline']) && $test['timeline'] ) {
                 $job['timeline'] = 1;
-                if (isset($test['discard_timeline']))
-                  $job['discard_timeline'] = $test['discard_timeline'];
+                if (isset($test['discard_timeline']) && $test['discard_timeline'])
+                  $job['discard_timeline'] = 1;
                 if (isset($test['timeline_fps']))
-                  $job['timeline_fps'] = $test['timeline_fps'];
+                  $job['timeline_fps'] = intval($test['timeline_fps']);
                 if (isset($test['timelineStackDepth']))
-                  $job['timelineStackDepth'] = $test['timelineStackDepth'];
+                  $job['timelineStackDepth'] = intval($test['timelineStackDepth']);
             }
             if( isset($test['trace']) && $test['trace'] )
                 $job['trace'] = 1;
@@ -2190,8 +2190,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['blockads'] = 1;
             if( isset($test['video']) && $test['video'] )
                 $job['Capture Video'] = 1;
-            if (isset($test['disable_video']))
-                $job["disable_video"] = $test['disable_video'];
+            if (isset($test['disable_video']) && $test['disable_video'])
+                $job["disable_video"] = 1;
             if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
                 $job['keepvideo'] = 1;
             if (isset($test['renderVideo']) && $test['renderVideo'])
@@ -2218,16 +2218,16 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if( isset($test['noheaders']) && $test['noheaders'] )
                 $job['noheaders'] = 1;
             if( isset($test['discard']) && $test['discard'] )
-                $job['discard'] = $test['discard'];
-            $job['runs'] = $test['runs'];
+                $job['discard'] = intval($test['discard']);
+            $job['runs'] = intval($test['runs']);
 
             if( isset($test['connectivity']) )
             {
-                $job['bwIn'] = $test['bwIn'];
-                $job['bwOut'] = $test['bwOut'];
-                $job['latency'] = $test['testLatency'];
-                $job['plr'] = $test['plr'];
-                $job['shaperLimit'] = $test['shaperLimit'];
+                $job['bwIn'] = intval($test['bwIn']);
+                $job['bwOut'] = intval($test['bwOut']);
+                $job['latency'] = intval($test['testLatency']);
+                $job['plr'] = floatval($test['plr']);
+                $job['shaperLimit'] = intval($test['shaperLimit']);
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
@@ -2237,19 +2237,19 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
                 $job['pngScreenShot'] = 1;
             if (isset($test['fps']) && $test['fps'] > 0)
-                $job['fps'] = $test['fps'];
+                $job['fps'] = intval($test['fps']);
             if( isset($test['iq']) && $test['iq'] )
-                $job['imageQuality'] = $test['iq'];
+                $job['imageQuality'] = intval($test['iq']);
             elseif( isset($settings['iq']) && $settings['iq'] )
-                $job['imageQuality'] = $settings['iq'];
+                $job['imageQuality'] = intval($settings['iq']);
             if( isset($test['bodies']) && $test['bodies'] )
                 $job['bodies'] = 1;
             if( isset($test['htmlbody']) && $test['htmlbody'] )
                 $job['htmlbody'] = 1;
             if( isset($test['time']) && $test['time'] )
-                $job['time'] = $test['time'];
+                $job['time'] = intval($test['time']);
             if( isset($test['clear_rv']) && $test['clear_rv'] )
-                $job['clearRV'] = $test['clear_rv'];
+                $job['clearRV'] = 1;
             if( isset($test['keepua']) && $test['keepua'] )
                 $job['keepua'] = 1;
             if( isset($test['mobile']) && $test['mobile'] )
@@ -2271,21 +2271,21 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if( isset($test['debug']) && $test['debug'] )
                 $job['debug'] = 1;
             if( isset($test['warmup']) && $test['warmup'] )
-                $job['warmup'] = $test['warmup'];
+                $job['warmup'] = intval($test['warmup']);
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
-                $job['throttle_cpu'] = $test['throttle_cpu'];
+                $job['throttle_cpu'] = floatval($test['throttle_cpu']);
             if( isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization'])
                 $job['bypass_cpu_normalization'] = 1;
             if( isset($test['dpr']) && $test['dpr'] > 0 )
-                $job['dpr'] = $test['dpr'];
+                $job['dpr'] = floatval($test['dpr']);
             if( isset($test['width']) && $test['width'] > 0 )
-                $job['width'] = $test['width'];
+                $job['width'] = intval($test['width']);
             if( isset($test['height']) && $test['height'] > 0 )
-                $job['height'] = $test['height'];
+                $job['height'] = intval($test['height']);
             if( isset($test['browser_width']) && $test['browser_width'] > 0 )
-                $job['browser_width'] = $test['browser_width'];
+                $job['browser_width'] = intval($test['browser_width']);
             if( isset($test['browser_height']) && $test['browser_height'] > 0 )
-                $job['browser_height'] = $test['browser_height'];
+                $job['browser_height'] = intval($test['browser_height']);
             if( isset($test['clearcerts']) && $test['clearcerts'] )
                 $job['clearcerts'] = 1;
             if( isset($test['orientation']) && $test['orientation'] )
@@ -2344,6 +2344,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // Write out the json before submitting the test to the queue
             $oldUrl = @$test['url'];
             $test['url'] = $url;
+            // Pass the raw testinfo around with the test itself
+            $job['testinfo'] = $test;
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
 

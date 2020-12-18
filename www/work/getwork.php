@@ -292,31 +292,41 @@ function GetJob() {
         }
 
         if( isset($testId) ) {
+          $dotPos = stripos($testId, ".");
+          $realTestId = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
           $time = time();
           StartTest($testId, $time);
-          $lock = LockTest($testId);
-          if ($lock) {
-            $testInfoJson = GetTestInfo($testId);
-            if ($testInfoJson) {
-              if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
-                $testInfoJson['tester'] = $tester;
-              if (isset($dnsServers) && strlen($dnsServers))
-                $testInfoJson['testerDNS'] = $dnsServers;
-              if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
-                $testInfoJson['started'] = $time;
-                logTestMsg($testId, "Starting test (initiated by tester $tester)");
+          if (!isset($_REQUEST['testinfo'])) {
+            $lock = LockTest($testId);
+            if ($lock) {
+              if (isset($testJson) && isset($testJson['testinfo'])) {
+                $testInfoJson = &$testJson['testinfo'];
+              } else {
+                $testInfoJson = GetTestInfo($testId);
               }
-              if (!array_key_exists('test_runs', $testInfoJson))
-                $testInfoJson['test_runs'] = array();
-              for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
-                if (!array_key_exists($run, $testInfoJson['test_runs']))
-                  $testInfoJson['test_runs'][$run] = array('done' => false);
+              if ($testInfoJson) {
+                if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
+                  $testInfoJson['tester'] = $tester;
+                if (isset($dnsServers) && strlen($dnsServers))
+                  $testInfoJson['testerDNS'] = $dnsServers;
+                if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
+                  $testInfoJson['started'] = $time;
+                  logTestMsg($testId, "Starting test (initiated by tester $tester)");
+                }
+                if (!array_key_exists('test_runs', $testInfoJson))
+                  $testInfoJson['test_runs'] = array();
+                for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
+                  if (!array_key_exists($run, $testInfoJson['test_runs']))
+                    $testInfoJson['test_runs'][$run] = array('done' => false);
+                }
+                $testInfoJson['id'] = $realTestId;
+                SaveTestInfo($testId, $testInfoJson);
               }
-              $dotPos = stripos($testId, ".");
-              $testInfoJson['id'] = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
-              SaveTestInfo($testId, $testInfoJson);
+              UnlockTest($lock);
             }
-            UnlockTest($lock);
+          } elseif(isset($testJson['testinfo'])) {
+            $testJson['testinfo']['id'] = $realTestId;
+            $testJson['testinfo']['tester'] = $tester;
           }
         }
 
