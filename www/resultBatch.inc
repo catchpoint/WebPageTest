@@ -89,6 +89,9 @@ $page_description = "Bulk website performance test result$testLabel.";
 
 if($json)
 {
+  $json_response['id'] = $test['test']['id'];
+  $json_response['created'] = $test['testinfo']['created'];
+  $json_response['label'] = $test['testinfo']['label'];
   $json_response['tests'] = $testIds;
   json_response($json_response);
 }
