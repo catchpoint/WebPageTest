@@ -65,7 +65,7 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
         $ret['statusCode'] = 100;
         $ret['statusText'] = "Completed {$ret['data']['testsCompleted']} of {$ret['data']['testsExpected']} tests";
     }
-} else {
+} elseif (isset($id) && strlen($id)) {
     $ret['data'] = GetTestStatus($id, $position);
     $ret['statusCode'] = $ret['data']['statusCode'];
     $ret['statusText'] = $ret['data']['statusText'];
