@@ -58,19 +58,8 @@ if (!defined('EMBED')) {
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
     <?php
-        if( !defined('BARE_UI') )
-        {
-            // see if we have a location that the test was run from (for a custom ad)
-            $testLoc = null;
-            if( isset($test) && isset($test['test']['loc']) )
-                $testLoc = $test['test']['loc'];
-
-            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false &&
-                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") ) {
-                include("./custom/$testLoc/headerAd.inc");
-            } elseif(is_file('./ads/header.inc')) {
-                include('./ads/header.inc');
-            }
+        if( !defined('BARE_UI') && is_file('./ads/header.inc')) {
+            include('./ads/header.inc');
         }
     ?>
     </div>
