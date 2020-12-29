@@ -511,32 +511,6 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
     }
   }
 
-  $hero_elements_file = $localPaths->heroElementsJsonFile();
-  if (gz_is_file($hero_elements_file)) {
-    $hero_elements = json_decode(gz_file_get_contents($hero_elements_file), true);
-    if ($hero_elements) {
-      $ret['heroElements'] = array();
-      $ret['heroElementTimes'] = array();
-      if (isset($hero_elements['heroes'])) {
-        $ret['heroElements'] = $hero_elements['heroes'];
-      }
-      if (isset($hero_elements['timings'])) {
-        foreach ($hero_elements['timings'] as $timing) {
-          if (isset($timing['value'])) {
-            $ret['heroElementTimes'][$timing['name']] = $timing['value'];
-            $ret["heroElementTimes.{$timing['name']}"] = $timing['value'];
-          }
-        }
-      }
-
-      foreach (['FirstPaintedHero', 'LastPaintedHero'] as $metric) {
-        if (isset($ret['heroElementTimes'][$metric])) {
-          $ret[$metric] = $ret['heroElementTimes'][$metric];
-        }
-      }
-    }
-  }
-
   if (isset($ret['fullyLoaded']))
     $ret['fullyLoaded'] = intval(round($ret['fullyLoaded']));
 

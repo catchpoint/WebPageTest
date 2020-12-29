@@ -233,69 +233,6 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
         echo '<img class="center" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
     }
 
-    // Display hero element frames
-    if (gz_is_file($localPaths->heroElementsJsonFile())) {
-        $hero_data = json_decode(gz_file_get_contents($localPaths->heroElementsJsonFile()), true);
-        $visual_progress = $testStepResult->getVisualProgress();
-
-        if (isset($visual_progress['frames']) && $hero_data) {
-            $frames = $visual_progress['frames'];
-            $hero_elements = $hero_data['heroes'];
-            $hero_times = $testStepResult->getMetric('heroElementTimes');
-            $viewport = $hero_data['viewport'];
-
-            foreach ($hero_elements as $heroIndex => $hero) {
-                $hero_time = $hero_times[$hero['name']];
-                $hero_info = ["{$hero_time}ms"];
-
-                if (isset($hero_times["LastPaintedHero"]) && $hero_time == $hero_times["LastPaintedHero"]) {
-                    $hero_info[] = "<abbr title=\"Last Painted Hero\">LPH</abbr>";
-                }
-
-                if ($hero_time > 0 && isset($frames[$hero_time])) {
-                    $frame_file = $frames[$hero_time]['file'];
-                    $frame_path = "{$localPaths->videoDir()}/{$frame_file}";
-                    if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.png')) {
-                        $frame_path = substr($frame_path, 0, -4) . '.png';
-                        $frame = imagecreatefrompng($frame_path);
-                    } else if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.jpg')) {
-                        $frame_path = substr($frame_path, 0, -4) . '.jpg';
-                        $frame = imagecreatefromjpeg($frame_path);
-                    } else {
-                        continue;
-                    }
-
-                    $frame_w = imagesx($frame);
-                    $frame_h = imagesy($frame);
-                    imagedestroy($frame);
-
-                    $scale = min($frame_w / $viewport['width'], $frame_h / $viewport['height']);
-                    $x = $hero['x'] * $scale;
-                    $y = $hero['y'] * $scale;
-                    $w = $hero['width'] * $scale;
-                    $h = $hero['height'] * $scale;
-
-                    echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . ' <small>(' . implode(', ', $hero_info) . ')</small></h2>';
-                    echo '<div style="display: inline-block; position: relative">';
-                    echo '<img class="center" alt="Hero Element Screenshot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
-                    echo <<<SVG
-                    <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
-                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />
-
-                        <mask id="opacity-mask-{$heroIndex}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                            <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" fill="black" />
-                        </mask>
-
-                        <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" stroke="rgb(0, 255, 0)" stroke-width="2" fill="none" />
-                    </svg>
-SVG;
-                    echo '</div>';
-                }
-            }
-        }
-    }
-
     // display all of the status messages
     if (count($messages)) {
         echo "\n<br><br><a name=\"status_messages" . $linkSuffix . "\"><h2>Status Messages</h2></a>\n";

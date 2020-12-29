@@ -168,8 +168,6 @@ $loc = ParseLocations($locations);
                 echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
               if (isset($_REQUEST['disable_video']))
                 echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
-              if (isset($_REQUEST['heroElementTimes']))
-                echo '<input type="hidden" name="heroElementTimes" value="' . htmlspecialchars($_REQUEST['heroElementTimes']) . "\">\n";
               if (isset($_REQUEST['lighthouseThrottle']))
                 echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
               if (isset($_REQUEST['warmup']))
@@ -749,16 +747,6 @@ $loc = ParseLocations($locations);
 
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                     <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
-
-                                    <div class="notification-container">
-                                        <br>
-                                        <div class="notification"><div class="message">
-                                            See <a href="https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/HeroElements.md">the documentation</a> for details on how to specify custom hero elements.
-                                        </div></div>
-                                    </div>
-
-                                    <p><br><label for="hero_elements" class="full_width">Custom Hero Element Selectors:</label></p>
-                                    <textarea name="heroElements" id="hero_elements" cols="0" rows="0"></textarea>
                                 </div>
                             </div>
 

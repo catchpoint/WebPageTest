@@ -371,13 +371,6 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for the hero element timing results
-   */
-  public function heroElementsJsonFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_hero_elements.json";
-  }
-
-  /**
    * @return string Path for the netlog-parsed requests
    */
   public function netlogRequestsFile() {

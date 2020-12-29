@@ -861,16 +861,6 @@ function DisplayGraphs() {
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
         if ($hasStepResult &&
-            !empty($test['stepResult']->getMetric('heroElements'))) {
-            foreach ($test['stepResult']->getMetric('heroElements') as $hero) {
-                $heroKey = "heroElementTimes.{$hero['name']}";
-
-                if (!isset($timeMetrics[$heroKey])) {
-                    $timeMetrics[$heroKey] = "Hero {$hero['name']}";
-                }
-            }
-        }
-        if ($hasStepResult &&
             !isset($timeMetrics['visualComplete85']) &&
             $test['stepResult']->getMetric('visualComplete85') > 0) {
             $timeMetrics['visualComplete85'] = "85% Visually Complete";
