@@ -2214,6 +2214,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['noopt'] = 1;
             if( isset($test['noimages']) && $test['noimages'] )
                 $job['noimages'] = 1;
+            if( isset($test['sensitive']) && $test['sensitive'] )
+                $job['noheaders'] = 1;
             if( isset($test['noheaders']) && $test['noheaders'] )
                 $job['noheaders'] = 1;
             if( isset($test['discard']) && $test['discard'] )
