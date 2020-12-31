@@ -250,7 +250,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           $browser_version = floatval($ret['browser_version']);
         }
         $layout_shifts = array();
-        $user_timing = ParseUserTiming($localPaths->chromeUserTimingFile(), $browser_version, $layout_shifts);
+        $user_timing = ParseUserTiming($localPaths->chromeUserTimingFile(), $browser_version, $layout_shifts, $ret);
         if (isset($user_timing) && is_array($user_timing)) {
           $ret["chromeUserTiming"] = $user_timing;
           foreach($user_timing as $value) {
@@ -982,7 +982,7 @@ function CompareTimestamps($a, $b) {
   return ($a['ts'] < $b['ts']) ? -1 : 1;
 }
 
-function ParseUserTiming($file, $browser_version, &$layout_shifts) {
+function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) {
   $user_timing = null;
   $events = json_decode(gz_file_get_contents($file), true);
   if (isset($events) && is_array($events)) {
@@ -1063,6 +1063,17 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts) {
             if (isset($time)) {
               $event['time'] = $time;
               $largest[$name] = $event;
+              if (!isset($page_data['largestPaints'])) {
+                $page_data['largestPaints'] = [];
+              }
+              $paint_event = array('event' => $name, 'time' => $time, 'size' => $event['args']['data']['size']);
+              if (isset($event['args']['data']['DOMNodeId'])) {
+                $paint_event['DOMNodeId'] = $event['args']['data']['DOMNodeId'];
+              }
+              if (isset($event['args']['data']['node'])) {
+                $paint_event['nodeInfo'] = $event['args']['data']['node'];
+              }
+              $page_data['largestPaints'][] = $paint_event;
             }
           }
         }
