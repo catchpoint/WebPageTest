@@ -28,26 +28,33 @@ function GetTestStatus($id, $includePosition = true) {
   } elseif (is_file("$testPath/test.running")) {
     $startTime = filemtime("$testPath/test.running");
     $elapsed = time() - $startTime;
-    $ret = array('statusCode' => 100,
-                 'statusText' => 'Test just started',
-                 'startTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.running")),
-                 'id' => $id);
-    $testInfoJson = GetTestInfo($id);
-    PopulateTestInfoJson($ret, $testInfoJson);
-    if( $elapsed == 0 ) {
-      $ret['statusText'] = "Test just started";
-    } elseif( $elapsed == 1 ) {
-      $ret['statusText'] = "Test Started $elapsed second ago";
-    } elseif( $elapsed < 60 ) {
-      $ret['statusText'] = "Test Started $elapsed seconds ago";
+    $max_run_minutes = GetSetting('max_run_minutes', 60);
+    if ($max_run_minutes > 0 && $elapsed > $max_run_minutes * 60) {
+      $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+      touch("$testPath/test.complete");
+      @unlink("$testPath/test.running");
     } else {
-      $elapsed = floor($elapsed / 60);
-      if( $elapsed == 1 ) {
-        $ret['statusText'] = "Test Started $elapsed minute ago";
+      $ret = array('statusCode' => 100,
+                  'statusText' => 'Test just started',
+                  'startTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.running")),
+                  'id' => $id);
+      $testInfoJson = GetTestInfo($id);
+      PopulateTestInfoJson($ret, $testInfoJson);
+      if( $elapsed == 0 ) {
+        $ret['statusText'] = "Test just started";
+      } elseif( $elapsed == 1 ) {
+        $ret['statusText'] = "Test Started $elapsed second ago";
       } elseif( $elapsed < 60 ) {
-        $ret['statusText'] = "Test Started $elapsed minutes ago";
+        $ret['statusText'] = "Test Started $elapsed seconds ago";
       } else {
-        $ret = null;
+        $elapsed = floor($elapsed / 60);
+        if( $elapsed == 1 ) {
+          $ret['statusText'] = "Test Started $elapsed minute ago";
+        } elseif( $elapsed < 60 ) {
+          $ret['statusText'] = "Test Started $elapsed minutes ago";
+        } else {
+          $ret = null;
+        }
       }
     }
     if (isset($ret)) {
