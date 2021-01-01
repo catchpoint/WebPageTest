@@ -228,49 +228,31 @@ function GetTestStatus($id, $includePosition = true) {
                     $ret['statusCode'] = 100;
                     $ret['statusText'] = "Test just started";
                   } else {
-                    // See if the job file exists and we can re-copy it to the queue
-                    if (is_file("$testPath/test.job")) {
-                      $workDir = $testInfoJson['workdir'];
-                      $job = $testInfoJson['job'];
-                      if (isset($testInfoJson['affinity']))
-                        $job = "Affinity{$testInfoJson['affinity']}.$job";
-                      $testNum = GetDailyTestNum();
-                      $sortableIndex = date('ymd') . GetSortableString($testNum);
-                      $job = "$sortableIndex.$job";
-                      $fileName = $job;
-                      $file = "$workDir/$fileName";
-                      if( copy("$testPath/test.job", $file) ) {
-                        AddJobFile($testInfoJson['location'], $workDir, $fileName, $testInfoJson['priority'], $testInfoJson['queue_limit']);
-                        $ret['statusCode'] = 101;
-                        $ret['statusText'] = 'Test Pending';
-                      }
-                    } else {
-                      $ret['statusCode'] = 401;
-                      $ret['statusText'] = 'Test request not found';
-    
-                      // Force the test to end - something went Very Wrong (tm)
-                      $lock = LockTest($id);
-                      if ($lock) {
-                        $testInfoJson = GetTestInfo($id);
-                        if ($testInfoJson) {
-                          $testInfoJson['completed'] = $now;
-                          $test = file_get_contents("$testPath/testinfo.ini");
-                          $date = gmdate("m/d/y G:i:s", $now);
-    
-                          // Update the completion time if it isn't already set
-                          if (!strpos($test, 'completeTime')) {
-                            $complete = "[test]\r\ncompleteTime=$date";
-                            $out = str_replace('[test]', $complete, $test);
-                            file_put_contents("$testPath/testinfo.ini", $out);
-                          }
-                          $ret['statusCode'] = 200;
-                          $ret['statusText'] = 'Test Complete';
-                          $ret['completeTime'] = $date;
-                          logTestMsg($id, "The test was not started, but the test job could not be found.  Forcing it to end.");
-                          SaveTestInfo($id, $testInfoJson);
+                    $ret['statusCode'] = 401;
+                    $ret['statusText'] = 'Test request not found';
+  
+                    // Force the test to end - something went Very Wrong (tm)
+                    $lock = LockTest($id);
+                    if ($lock) {
+                      $testInfoJson = GetTestInfo($id);
+                      if ($testInfoJson) {
+                        $testInfoJson['completed'] = $now;
+                        $test = file_get_contents("$testPath/testinfo.ini");
+                        $date = gmdate("m/d/y G:i:s", $now);
+  
+                        // Update the completion time if it isn't already set
+                        if (!strpos($test, 'completeTime')) {
+                          $complete = "[test]\r\ncompleteTime=$date";
+                          $out = str_replace('[test]', $complete, $test);
+                          file_put_contents("$testPath/testinfo.ini", $out);
                         }
-                        UnlockTest($lock);
+                        $ret['statusCode'] = 200;
+                        $ret['statusText'] = 'Test Complete';
+                        $ret['completeTime'] = $date;
+                        logTestMsg($id, "The test was not started, but the test job could not be found.  Forcing it to end.");
+                        SaveTestInfo($id, $testInfoJson);
                       }
+                      UnlockTest($lock);
                     }
                   }
                 }

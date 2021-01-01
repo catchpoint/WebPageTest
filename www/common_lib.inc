@@ -1527,9 +1527,6 @@ function AddTestJob($location, $job, $test, $testId) {
           $file = "$workDir/$fileName";
           if( file_put_contents($file, $job) ) {
             if (AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-              // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-              $test['job_file'] = realpath($file);
-              file_put_contents("$testPath/test.job", $job);
               $ret = true;
             } else {
               unlink($file);
