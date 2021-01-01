@@ -1073,6 +1073,9 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
               if (isset($event['args']['data']['node'])) {
                 $paint_event['nodeInfo'] = $event['args']['data']['node'];
               }
+              if (isset($event['args']['data']['type'])) {
+                $paint_event['type'] = $event['args']['data']['type'];
+              }
               $page_data['largestPaints'][] = $paint_event;
             }
           }
@@ -1128,6 +1131,38 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
 
       foreach ($largest as $name => $event) {
         $user_timing[] = array('name' => $event['name'], 'time' => $event['time']);
+      }
+      if (isset($largest['LargestContentfulPaint'])) {
+        $event = $largest['LargestContentfulPaint'];
+        if (isset($event['args']['data']['type'])) {
+          $page_data['LargestContentfulPaintType'] = $event['args']['data']['type'];
+          // For images, extract the URL if there is one
+          if ($event['args']['data']['type'] == 'image' && isset($page_data['largestPaints'])) {
+            foreach ($page_data['largestPaints'] as $paint_event) {
+              if ($paint_event['event'] == 'LargestImagePaint' && $paint_event['time'] == $event['time']) {
+                if (isset($paint_event['nodeInfo']['nodeType'])) {
+                  $page_data['LargestContentfulPaintNodeType'] = $paint_event['nodeInfo']['nodeType'];
+                }
+                if (isset($paint_event['nodeInfo']['sourceURL'])) {
+                  $page_data['LargestContentfulPaintImageURL'] = $paint_event['nodeInfo']['sourceURL'];
+                } elseif (isset($paint_event['nodeInfo']['styles']['background-image'])) {
+                  if (preg_match('/url\("?\'?([^"\'\)]+)/', $paint_event['nodeInfo']['styles']['background-image'], $matches)) {
+                    $page_data['LargestContentfulPaintType'] = 'background-image';
+                    $page_data['LargestContentfulPaintImageURL'] = $matches[1];
+                  }
+                }
+              }
+            }
+          } else {
+            foreach ($page_data['largestPaints'] as $paint_event) {
+              if ($paint_event['event'] == 'LargestTextPaint' && $paint_event['time'] == $event['time']) {
+                if (isset($paint_event['nodeInfo']['nodeType'])) {
+                  $page_data['LargestContentfulPaintNodeType'] = $paint_event['nodeInfo']['nodeType'];
+                }
+              }
+            }
+          }
+        }
       }
       if (isset($cumulative_layout_shift)) {
         $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $cumulative_layout_shift);
