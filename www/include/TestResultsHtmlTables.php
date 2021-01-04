@@ -449,6 +449,21 @@ class TestResultsHtmlTables {
   private function _createErrorRow($run, $cached, $tableColumns) {
     $error = $this->testInfo->getRunError($run, $cached);
     $error_str = $error ? htmlspecialchars('Test Error: ' . $error) : "Test Data Missing";
+
+    $runResults = $this->testResults->getRunResult($run, $cached);
+    if ($runResults) {
+      $stepResults = $runResults->getStepResults();
+      if (isset($stepResults) && is_array($stepResults) && count($stepResults) > 0) {
+        $stepResult = $stepResults[0];
+        $localPaths = $stepResult->createTestPaths();
+        if (gz_is_file($localPaths->debugLogFile())) {
+          $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+          $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->debugLogFile());
+          $error_str .= ". <a href=\"$zipUrl\">Debug Log<\a>";
+        }
+      }
+    }
+
     $cachedLabel = $cached ? "Repeat View" : "First View";
     $out = "<tr id='run${run}_step1' class='stepResultRow'>";
     $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>\n";
