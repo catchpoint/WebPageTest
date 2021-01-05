@@ -1073,6 +1073,9 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
               if (isset($event['args']['data']['node'])) {
                 $paint_event['nodeInfo'] = $event['args']['data']['node'];
               }
+              if (isset($event['args']['data']['element'])) {
+                $paint_event['element'] = $event['args']['data']['element'];
+              }
               if (isset($event['args']['data']['type'])) {
                 $paint_event['type'] = $event['args']['data']['type'];
               }
