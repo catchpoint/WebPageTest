@@ -469,6 +469,10 @@ function ScreenShotTable()
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
                 $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
             }
+            $cls = 0;
+            if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
+                $cls = $test['stepResult']->getMetric('chromeUserTiming.CumulativeLayoutShift');
+            }
             $shifts = array();
             $viewport = null;
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
@@ -524,6 +528,9 @@ function ScreenShotTable()
                 if (array_key_exists('frame_progress', $test['video']) &&
                     array_key_exists($frame_ms, $test['video']['frame_progress']))
                   $progress = $test['video']['frame_progress'][$frame_ms];
+                $label = $progress;
+                if (isset($label))
+                    $label = "$label%";
 
                 if( !isset($lastThumb) )
                     $lastThumb = $path;
@@ -536,6 +543,7 @@ function ScreenShotTable()
                     echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
                     $rects = null;
+                    $shift_amount = 0.0;
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
                             $firstFrame = $frameCount;
@@ -548,6 +556,9 @@ function ScreenShotTable()
                             $class .= ' thumbLayoutShifted';
                             while(count($shifts) && $ms > $shifts[0]['time']) {
                                 $shift = array_shift($shifts);
+                                if (isset($shift['score'])) {
+                                    $shift_amount += $shift['score'];
+                                }
                                 if (isset($viewport) &&
                                         isset($viewport['width']) &&
                                         $viewport['width'] > 0 &&
@@ -555,7 +566,9 @@ function ScreenShotTable()
                                         $viewport['height'] > 0 &&
                                         isset($shift['rects']) &&
                                         is_array($shift['rects']) &&
-                                        count($shift['rects'])) {
+                                        count($shift['rects']) &&
+                                        isset($shift['score']) &&
+                                        $shift['score'] >= 0.001) {
                                     $has_layout_shifts = true;
                                     // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
                                     foreach($shift['rects'] as $rect) {
@@ -589,8 +602,15 @@ function ScreenShotTable()
                     }
                     $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize, $options);
                     echo " src=\"$imgUrl\"></a>";
-                    if (isset($progress))
-                        echo "<br>$progress%";
+
+                    if ($show_shifts) {
+                        $label = "&nbsp;";
+                        if (isset($shift_amount) && $shift_amount >= 0.001 && isset($cls) && $cls >= 0.001) {
+                            $label = number_format($shift_amount, 3, ".", "") . ' / ' . number_format($cls, 3, ".", "");
+                        }
+                    }
+                    if (isset($label))
+                        echo "<br>$label";
                     $lastThumb = $path;
                 }
                 $frameCount++;
