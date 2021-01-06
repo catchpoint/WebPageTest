@@ -391,6 +391,10 @@ function ScreenShotTable()
     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'])
         $show_shifts = true;
 
+    $show_lcp = false;
+    if (isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'])
+        $show_lcp = true;
+    
     $filmstrip_end_time = 0;
     if( count($tests) )
     {
@@ -470,13 +474,13 @@ function ScreenShotTable()
                 $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
             }
             $cls = 0;
-            if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
-                $cls = $test['stepResult']->getMetric('chromeUserTiming.CumulativeLayoutShift');
-            }
             $shifts = array();
             $viewport = null;
+            $lcp_events = array();
+            $has_lcp_rect = false;
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
                 $layout_shifts = $test['stepResult']->getMetric('LayoutShifts');
+                $cls = $test['stepResult']->getMetric('chromeUserTiming.CumulativeLayoutShift');
                 $viewport = $test['stepResult']->getMetric('viewport');
                 if (isset($layout_shifts) && is_array($layout_shifts) && count($layout_shifts)) {
                     foreach($layout_shifts as $shift) {
@@ -488,6 +492,30 @@ function ScreenShotTable()
                 usort($shifts, function($a, $b){
                     return $a['time'] - $b['time'];
                 });
+                if (isset($lcp)) {
+                    $lcp_time = $lcp;
+                    $paint_events = $test['stepResult']->getMetric('largestPaints');
+                    if (isset($paint_events) && is_array($paint_events) && count($paint_events)) {
+                        foreach($paint_events as $paint) {
+                            if (isset($paint['event']) &&
+                                $paint['event'] == 'LargestContentfulPaint' &&
+                                isset($paint['time']) &&
+                                isset($paint['element']['boundingRect'])) {
+                                if ($paint['time'] == $lcp) {
+                                    $has_lcp_rect = true;
+                                }
+                                $lcp_events[] = array('time' => $paint['time'],
+                                                      'top' => $paint['element']['boundingRect']['y'],
+                                                      'left' => $paint['element']['boundingRect']['x'],
+                                                      'width' => $paint['element']['boundingRect']['width'],
+                                                      'height' => $paint['element']['boundingRect']['height']);
+                            }
+                        }
+                        usort($lcp_events, function($a, $b){
+                            return $a['time'] - $b['time'];
+                        });
+                    }
+                }
             }
 
             // figure out the height of the image
@@ -543,6 +571,8 @@ function ScreenShotTable()
                     echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
                     $rects = null;
+                    $lcp_candidate_rects = null;
+                    $lcp_rects = null;
                     $shift_amount = 0.0;
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
@@ -590,6 +620,36 @@ function ScreenShotTable()
                                 }
                             }
                         }
+                        if (isset($viewport) &&
+                                isset($viewport['width']) &&
+                                $viewport['width'] > 0 &&
+                                isset($viewport['height']) &&
+                                $viewport['height'] > 0) {
+                            while(count($lcp_events) && $ms > $lcp_events[0]['time']) {
+                                $lcp_event = array_shift($lcp_events);
+                                $lcp_x = (int)(($lcp_event['left'] * 1000) / $viewport['width']);
+                                $lcp_y = (int)(($lcp_event['top'] * 1000) / $viewport['height']);
+                                $lcp_width = (int)(($lcp_event['width'] * 1000) / $viewport['width']);
+                                $lcp_height = (int)(($lcp_event['height'] * 1000) / $viewport['height']);
+                                if ($lcp_width > 0 && $lcp_height > 0) {
+                                    if ($lcp_event['time'] == $lcp_time) {
+                                        if (isset($lcp_rects)) {
+                                            $lcp_rects .= ',';
+                                        } else {
+                                            $lcp_rects = '';
+                                        }
+                                        $lcp_rects .= "$lcp_x.$lcp_y.$lcp_width.$lcp_height";
+                                    } else {
+                                        if (isset($lcp_candidate_rects)) {
+                                            $lcp_candidate_rects .= ',';
+                                        } else {
+                                            $lcp_candidate_rects = '';
+                                        }
+                                        $lcp_candidate_rects .= "$lcp_x.$lcp_y.$lcp_width.$lcp_height";
+                                    }
+                                }
+                            }
+                        }
                     }
                     echo " class=\"$class\"";
                     echo " width=\"$width\"";
@@ -599,6 +659,22 @@ function ScreenShotTable()
                     if ($show_shifts && isset($rects)) {
                         $color = 'FF0000AA'; // Red with 50% transparency (transparency is ignored for the border)
                         $options = "rects=$color-$rects";
+                    }
+                    if ($show_lcp && isset($lcp_candidate_rects)) {
+                        $color = '0000FFAA'; // Blue with 50% transparency (transparency is ignored for the border)
+                        if (isset($options))
+                            $options .= '|';
+                        else
+                            $options = 'rects=';
+                        $options .= "$color-$lcp_candidate_rects";
+                    }
+                    if ($show_lcp && isset($lcp_rects)) {
+                        $color = '00FF00AA'; // Green with 50% transparency (transparency is ignored for the border)
+                        if (isset($options))
+                            $options .= '|';
+                        else
+                            $options = 'rects=';
+                        $options .= "$color-$lcp_rects";
                     }
                     $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize, $options);
                     echo " src=\"$imgUrl\"></a>";
@@ -663,6 +739,13 @@ function ScreenShotTable()
                         $checked = ' checked=checked';
                     echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
                     echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label><br>";
+                }
+                if ($has_lcp_rect) {
+                    $checked = '';
+                    if( isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'] )
+                        $checked = ' checked=checked';
+                    echo "<input type=\"checkbox\" id=\"highlightLCP\" name=\"highlightLCP\" value=\"1\"$checked onclick=\"this.form.submit();\">";
+                    echo "<label for=\"highlightLCP\"> Highlight Largest Contentful Paints</label><br>";
                 }
 
                 $checked = '';
