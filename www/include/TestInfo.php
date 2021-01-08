@@ -14,6 +14,30 @@ class TestInfo {
 
   private function __construct($id, $rootDirectory, $testInfo) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
+
+    // Manually build the test run info if it isn't present
+    $runs = null;
+    if (!isset($testInfo['testinfo']['test_runs'][1]['steps'])) {
+      $this->ScanTestSteps($rootDirectory, $runs);
+      if (isset($runs)) {
+        $testInfo['testinfo']['test_runs'] = $runs;
+      }
+    }
+
+    if (!isset($testInfo['testinfo']['steps']) || !$testInfo['testinfo']['steps']) {
+      if (!isset($runs)) {
+        ScanTestSteps($rootDirectory, $runs);
+      }
+      if (isset($runs)) {
+        $testInfo['testinfo']['steps'] = 0;
+        foreach($runs as $run) {
+          if ($run['steps'] > $testInfo['testinfo']['steps']) {
+            $testInfo['testinfo']['steps'] = $run['steps'];
+          }
+        }
+      }
+    }
+
     $this->id = $id;
     $this->rootDirectory = $rootDirectory;
     $this->rawData = $testInfo;
@@ -230,5 +254,24 @@ class TestInfo {
     if ($ret && !empty($this->rawData["testinfo"]["discard_timeline"]))
       $ret = false;
     return $ret;
+  }
+
+  private function ScanTestSteps($rootDirectory, &$runs) {
+    $files = glob("$rootDirectory/*.gz");
+    foreach($files as $file) {
+      if (preg_match('/^(\d+)_(\d+)_/', basename($file), $matches)) {
+        $run = intval($matches[1]);
+        $step = intval($matches[2]);
+        if (!isset($runs)) {
+          $runs = array();
+        }
+        if (!isset($runs[$run])) {
+          $runs[$run] = array('steps' => 0);
+        }
+        if ($step > $runs[$run]['steps']) {
+          $runs[$run]['steps'] = $step;
+        }
+      }
+    }
   }
 }
