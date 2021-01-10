@@ -26,10 +26,10 @@ class TestInfo {
 
     if (!isset($testInfo['testinfo']['steps']) || !$testInfo['testinfo']['steps']) {
       if (!isset($runs)) {
-        ScanTestSteps($rootDirectory, $runs);
+        $this->ScanTestSteps($rootDirectory, $runs);
       }
       if (isset($runs)) {
-        $testInfo['testinfo']['steps'] = 0;
+        $testInfo['testinfo']['steps'] = 1;
         foreach($runs as $run) {
           if ($run['steps'] > $testInfo['testinfo']['steps']) {
             $testInfo['testinfo']['steps'] = $run['steps'];
@@ -259,14 +259,21 @@ class TestInfo {
   private function ScanTestSteps($rootDirectory, &$runs) {
     $files = glob("$rootDirectory/*.gz");
     foreach($files as $file) {
+      $run = null;
+      $step = null;
       if (preg_match('/^(\d+)_(\d+)_/', basename($file), $matches)) {
         $run = intval($matches[1]);
         $step = intval($matches[2]);
+      } elseif (preg_match('/^(\d+)_/', basename($file), $matches)) {
+        $run = intval($matches[1]);
+        $step = 1;
+      }
+      if (isset($run) && isset($step)) {
         if (!isset($runs)) {
           $runs = array();
         }
         if (!isset($runs[$run])) {
-          $runs[$run] = array('steps' => 0);
+          $runs[$run] = array('steps' => 1, 'done' => true);
         }
         if ($step > $runs[$run]['steps']) {
           $runs[$run]['steps'] = $step;
