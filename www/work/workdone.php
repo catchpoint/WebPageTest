@@ -33,7 +33,6 @@ require_once('video.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
 require_once('./video/visualProgress.inc.php');
-require_once('./video/avi2frames.inc.php');
 require_once __DIR__ . '/../include/ResultProcessing.php';
 
 if (!isset($included)) {
@@ -291,9 +290,6 @@ function ProcessRun() {
       }
       $testInfo['test_runs'][$runNumber]['steps'] = max($numSteps, $reportedSteps);
       $testInfo_dirty = true;
-    }
-    if (!GetSetting('disable_video_processing')) {
-      ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
     }
   }
 }

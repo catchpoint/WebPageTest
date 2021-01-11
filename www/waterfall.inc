@@ -301,18 +301,6 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     }
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
-    // Get the CSI information.
-    if (GetSetting('enable_csi') && is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] == 1) {
-        require_once('./google/google_lib.inc');
-        if (@$settings['enable_google_csi_filter'] == 1) {
-            $filter = array('prt' => 1, 'ol' => 1, 'aft' => 1);
-        } else {
-            $filter = array();
-        }
-        $use_all = false;
-        $csi_params = ParseCsiInfoForStep($localPaths, $use_all);
-        $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
-    }
     // get any user timings
     if (!isset($options['show_user_timing']) || $options['show_user_timing']) {
       if (isset($page_data) && array_key_exists('userTime', $page_data)) {
@@ -324,12 +312,6 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             $user_times[$label] = $value;
           }
         }
-      }
-      if (isset($csi_info)) {
-        if (!isset($user_times))
-          $user_times = array();
-        foreach ($csi_info as $key => $value)
-          $user_times[$key] = $value;
       }
     }
 

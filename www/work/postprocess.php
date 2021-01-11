@@ -33,66 +33,6 @@ if (array_key_exists('test', $_REQUEST)) {
     $testPath = './' . GetTestPath($id);
     $testInfo = GetTestInfo($id);
 
-    // see if we need to log the raw test data
-    $now = time();
-    $allowLog = true;
-    $logPrivateTests = GetSetting('logPrivateTests');
-    if ($testInfo['private'] && $logPrivateTests !== false && $logPrivateTests == 0)
-      $allowLog = false;
-    $pageLog = GetSetting('logTestResults');
-    if ($allowLog && $pageLog !== false && strlen($pageLog)) {
-      $pageData = loadAllPageData($testPath);
-      if (isset($pageData) && is_array($pageData)) {
-        foreach($pageData as $run => &$pageRun) {
-          foreach($pageRun as $cached => &$testData) {
-            $testData['reportedTime'] = gmdate('r', $now);
-            $testData['reportedEpoch'] = $now;
-            $testData['testUrl'] = $testInfo['url'];
-            $testData['run'] = $run;
-            $testData['cached'] = $cached;
-            $testData['testLabel'] = $testInfo['label'];
-            $testData['testLocation'] = $testInfo['location'];
-            $testData['testBrowser'] = $testInfo['browser'];
-            $testData['testConnectivity'] = $testInfo['connectivity'];
-            $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
-            $testData['testRunId'] = "$id.$run.$cached";
-            $protocol = getUrlProtocol();
-            $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
-            error_log(json_encode($testData) . "\n", 3, $pageLog);
-          }
-        }
-      }
-    }
-    $requestsLog = GetSetting('logTestRequests');
-    if ($allowLog && $requestsLog !== false && strlen($requestsLog)) {
-      require_once('object_detail.inc');
-      $max_cached = $testInfo['fvonly'] ? 0 : 1;
-      for ($run = 1; $run <= $testInfo['runs']; $run++) {
-        for ($cached = 0; $cached <= $max_cached; $cached++) {
-          $secure = false;
-          $requests = getRequests($id, $testPath, $run, $cached, $secure);
-          if (isset($requests) && is_array($requests)) {
-            foreach ($requests as &$request) {
-              $request['reportedTime'] = gmdate('r', $now);
-              $request['reportedEpoch'] = $now;
-              $request['testUrl'] = $testInfo['url'];
-              $request['run'] = $run;
-              $request['cached'] = $cached;
-              $request['testLabel'] = $testInfo['label'];
-              $request['testLocation'] = $testInfo['location'];
-              $request['testBrowser'] = $testInfo['browser'];
-              $request['testConnectivity'] = $testInfo['connectivity'];
-              $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
-              $request['testRunId'] = "$id.$run.$cached";
-              $protocol = getUrlProtocol();
-              $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
-              error_log(json_encode($request) . "\n", 3, $requestsLog);
-            }
-          }
-        }
-      }
-    }
-
     // log any slow tests
     $slow_test_time = GetSetting('slow_test_time');
     if (isset($testInfo) && $slow_test_time && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {

@@ -67,8 +67,6 @@ if ($rv) {
 $median_run = (isset($_REQUEST['median_run'])) ? $_REQUEST['median_run'] : 0;
 $median_value = (isset($_REQUEST['median_value'])) ? $_REQUEST['median_value']  : 0;
 
-// Color palette taken from benchmarks/view.php
-// TODO(geening): Combine this with the colors in benchmarks/view.php
 // TODO(geening): Have a cleaner way to support more than 8 tests with
 // distinct-looking colors.
 $colors = array('#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101');
@@ -186,7 +184,6 @@ $common_label = implode(" ", $common_labels);
                             'bytesIn' => 'Bytes In (Fully Loaded)',
                             'browser_version' => 'Browser Version');
             $customMetrics = null;
-            $csiMetrics = null;
             $userTimings = null;
             $userMeasures = null;
             foreach ($pagesData as &$pageData) {
@@ -215,16 +212,6 @@ $common_label = implode(" ", $common_labels);
                   }
                   $timingCount = count($userTimings);
                   $measuresCount = count($userMeasures);
-                  if (array_key_exists('CSI', $data) && is_array($data['CSI']) && count($data['CSI'])) {
-                    if (!isset($csiMetrics))
-                      $csiMetrics = array();
-                    foreach ($data['CSI'] as $metric) {
-                      if (preg_match('/^[0-9\.]+$/', $data["CSI.$metric"]) &&
-                          !array_key_exists($metric, $csiMetrics)) {
-                        $csiMetrics[$metric] = "CSI - $metric";
-                      }
-                    }
-                  }
                 }
             }
 
@@ -251,12 +238,6 @@ $common_label = implode(" ", $common_labels);
               echo '<h1 id="UserTimingMeasure"><a href="http://www.w3.org/TR/user-timing/#dom-performance-measure">W3C User Timing measures</a></h1>';
               foreach($userMeasures as $metric => $label) {
                 InsertChart($metric, $label);
-              }
-            }
-            if (isset($csiMetrics) && is_array($csiMetrics) && count($csiMetrics)) {
-              echo '<h1 id="CSI">CSI Metrics</h1>';
-              foreach($csiMetrics as $metric => $label) {
-                InsertChart("CSI.$metric", $label);
               }
             }
             ?>

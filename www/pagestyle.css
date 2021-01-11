@@ -39,7 +39,6 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #header_data {float:left; width: 458px; overflow-x: hidden;}
 .header_data_full {width: 924px !important;}
 #header_data h2 {margin: 0;}
-#headerPagespeedScore {margin-left: 10px;}
 #opthelp {float:right; display: inline;}
 #header_container {background-color: #e2e2e2;}
 
@@ -260,9 +259,5 @@ table.pretty td.poor { background: #FF7580; }
 #feeds a {color: #fff; text-decoration: none;}
 #feeds li {margin: 2px 10px 2px 25px; display: block; overflow: hidden; width: 100%; }
 #feeds li.morefeeds {margin:0;}
-
-/*pagespeed results*/
-#pagespeed_results {width: 960px; background-color: #fff; padding: 0px 10px 10px; margin: -15px -20px 0px;}
-#pagespeed_results h2 {text-align: center; padding: 10px 0 0 0;}
 
 h1.stepName { border-left: 4px #007 solid; border-right: 4px #007 solid; background: gainsboro; margin-top: 1em; }

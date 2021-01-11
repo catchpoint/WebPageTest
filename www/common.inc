@@ -270,10 +270,6 @@ if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
 $owner = preg_replace('/[^a-zA-Z0-9]/', '', $owner);
 setcookie('o', $owner, time()+60*60*24*365, '/');
 
-if ($admin) {
-    $settings['enable_google_csi'] = true;
-}
-
 // set their color selection as a cookie
 if (isset($_REQUEST['color'])) {
     setcookie('color', $_REQUEST['color'], time()+60*60*24*365, '/');

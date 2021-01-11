@@ -490,9 +490,6 @@ function CheckCron() {
   
   // send the cron requests
   if ($should_run) {
-    if (is_file('./settings/benchmarks/benchmarks.txt') && 
-        is_file('./benchmarks/cron.php'))
-      SendAsyncRequest('/benchmarks/cron.php');
     SendAsyncRequest('/cron/5min.php');
     if (is_file('./jpeginfo/cleanup.php'))
       SendAsyncRequest('/jpeginfo/cleanup.php');

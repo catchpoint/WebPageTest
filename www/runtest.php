@@ -280,8 +280,6 @@
               $test['htmlbody'] = $req_htmlbody;
             $test['time'] = isset($req_time) ? (int)$req_time : 0;
             $test['keepua'] = 0;
-            if (isset($req_benchmark))
-              $test['benchmark'] = $req_benchmark;
             $test['max_retries'] = isset($req_retry) ? min((int)$req_retry, 10) : 0;
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
@@ -394,16 +392,6 @@
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
               $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
-            }
-
-            // see if we need to process a template for these requests
-            if (isset($req_k) && strlen($req_k)) {
-                $keys = parse_ini_file('./settings/keys.ini', true);
-                if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {
-                    $template = $keys[$req_k]['template'];
-                    if (is_file("./templates/$template.php"))
-                        include("./templates/$template.php");
-                }
             }
 
             // Extract the location, browser and connectivity.
@@ -1554,15 +1542,6 @@ function FixScript(&$test, &$script)
                 else {
                     $command = strtok(trim($line), " \t\r\n");
                     if ($command !== false) {
-                        if ($command == "csiVariable") {
-                            $target = strtok("\r\n");
-			                if (isset($test['extract_csi'])) {
-				                array_push($test['extract_csi'], $target);
-			                } else {
-				                $test['extract_csi'] = array($target);
-			                }
-                            continue;
-                        }
                         $newScript .= $command;
                         $expected = ScriptParameterCount($command);
                         if ($expected == 2) {

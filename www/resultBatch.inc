@@ -12,7 +12,6 @@ if( !defined('BARE_UI') )
     define('BARE_UI', true);
 $csv = false;
 $json = false;
-$weblite = false;
 if (array_key_exists('f', $_REQUEST)) {
   if( $_REQUEST['f'] == 'csv' )
   {
@@ -45,11 +44,6 @@ if( count($tests) && count($tests['urls']) ) {
   if( array_key_exists('test', $location_test_ini) && array_key_exists('location', $location_test_ini['test']) )
     $location = $location_test_ini['test']['location'];
 }
-
-$mod_pagespeed = false;
-if (array_key_exists('script', $test['testinfo']) &&
-    stripos($test['testinfo']['script'], "addHeader\tModPagespeed:off\t%HOST_REGEX%") !== false)
-  $mod_pagespeed = true;
 
 $stats = array();
 $stats['fv'] = array();
@@ -146,10 +140,7 @@ else
                 <div id="download">
                     <div id="testinfo">
                         <?php
-                            if ($weblite) {
-                              echo "Tested From: Dulles, VA on a 2G network connection <a href=\"https://github.com/facebook/augmented-traffic-control/blob/master/utils/profiles/2G-DevelopingUrban.json\">(35Kbps, 1.3s RTT)</a>";
-                            }
-                            elseif( $test['test']['batch'] )
+                            if( $test['test']['batch'] )
                             {
                                 echo "Tested From: $location<br>";
                             }

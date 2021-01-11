@@ -139,8 +139,6 @@ $page_description = "Website performance test details$testLabel";
                     </div>
                     <?php
                         echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached&bodies=1&pretty=1" . '">Export HTTP Archive (.har)</a>';
-                        if ( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
-                            echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom']))
                             echo '<br><a href="/custom_metrics.php?' . "test=$id&run=$run&cached=$cached" . '">Custom Metrics</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
@@ -162,44 +160,6 @@ $page_description = "Website performance test details$testLabel";
                 ?>
                 <br>
                 <?php
-                if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
-                {
-                    require_once('google/google_lib.inc');
-                ?>
-                    <h2>CSI Metrics</h2>
-                            <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
-                               <tr>
-                            <?php
-                                if ($isMultistep) {
-                                    echo '<th align="center" class="border" valign="middle">Step</th>';
-                                }
-                                foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                                    echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
-                                echo "</tr>\n";
-                                foreach ($testRunResults->getStepResults() as $stepResult) {
-                                    echo "<tr>\n";
-                                    if (GetSetting('enable_csi'))
-                                      $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
-                                    if ($isMultistep) {
-                                        echo '<td class="even" valign="middle">' . $stepResult->readableIdentifier() . '</td>';
-                                    }
-                                    foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                                    {
-                                        if( isset($params) && array_key_exists($csi_param, $params) )
-                                        {
-                                            echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
-                                        }
-                                        else
-                                        {
-                                            echo '<td class="even" valign="middle">&nbsp;</td>';
-                                        }
-                                    }
-                                    echo "</tr>\n";
-                                }
-                            ?>
-                    </table><br>
-                <?php
-                }
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create();
 
@@ -239,8 +199,7 @@ $page_description = "Website performance test details$testLabel";
                     if ($isMultistep) {
                         echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
                     } else {
-                        $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
-                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
+                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
                         echo $waterfallSnippet->create();
                     }
                 ?>

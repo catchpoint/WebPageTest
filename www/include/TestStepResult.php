@@ -177,17 +177,6 @@ class TestStepResult {
     return empty($identifier) ? ("Step " . $this->step) : $identifier;
   }
 
-  /**
-   * @return string The score
-   */
-  public function getPageSpeedScore() {
-    // TODO: move implementation to this method
-    if ($this->fileHandler->gzFileExists($this->localPaths->pageSpeedFile())) {
-      return GetPageSpeedScore($this->localPaths->pageSpeedFile());
-    }
-    return null;
-  }
-
   public function getVisualProgress() {
     // TODO: move implementation to this method
     if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {

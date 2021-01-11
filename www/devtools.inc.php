@@ -1358,28 +1358,6 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 function DevToolsGetCPUSlicesForStep($localPaths) {
   $slices = null;
   $slices_file = $localPaths->devtoolsCPUTimelineFile() . ".gz";
-  $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
-  $script_timing = $localPaths->devtoolsScriptTimingFile() . ".gz";
-  if (!GetSetting('disable_timeline_processing') && !is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
-    $script = realpath(__DIR__ . '/lib/trace/trace_parser.py');
-    touch($slices_file);
-    if (is_file($slices_file)) {
-      $slices_file = realpath($slices_file);
-      unlink($slices_file);
-    }
-    $user_timing = $localPaths->chromeUserTimingFile() . ".gz";
-    touch($user_timing);
-    if (is_file($user_timing)) {
-      $user_timing = realpath($user_timing);
-      unlink($user_timing);
-    }
-    $trace_file = realpath($trace_file);
-
-    $command = "python \"$script\" -t \"$trace_file\" -u \"$user_timing\" -c \"$slices_file\" -j \"$script_timing\" 2>&1";
-    exec($command, $output, $result);
-    if (!is_file($slices_file))
-      touch($slices_file);
-  }
   if (gz_is_file($slices_file))
     $slices = json_decode(gz_file_get_contents($slices_file), true);
   if (isset($slices) && !is_array($slices))

@@ -68,10 +68,6 @@ class ResultProcessing {
       } else {
         $testerError = 'Missing Results';
       }
-      if (GetSetting('enable_csi') && is_dir(__DIR__ . '/../google') && is_file(__DIR__ . '/../google/google_lib.inc')) {
-        require_once(__DIR__ . '/../google/google_lib.inc');
-        ParseCsiInfoForStep($stepPaths, true);
-      }
     }
     return $testerError;
   }

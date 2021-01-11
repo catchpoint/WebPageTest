@@ -103,13 +103,6 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for the page speed data file
-   */
-  public function pageSpeedFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_pagespeed.txt";
-  }
-
-  /**
    * @return string Path for headers file
    */
   public function headersFile() {
@@ -382,15 +375,6 @@ class TestPaths {
    */
   public function rawDeviceVideo() {
     return $this->testRoot . $this->underscoreIdentifier() . "_video.mp4";
-  }
-
-  /**
-   * @param int $version Cache format version
-   * @return string Path for CSI cache (is the same for all runs and steps)
-   */
-  public function csiCacheFile($version = 1) {
-    $versionStr = $version > 1 ? (".". $version) : "";
-    return $this->testRoot . "csi" . $versionStr . ".json";
   }
 
   /**

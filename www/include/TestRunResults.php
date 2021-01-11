@@ -176,38 +176,6 @@ class TestRunResults {
   }
 
   /**
-   * @return float|null The average page speed score of all steps (if set)
-   */
-  public function averagePageSpeedScore() {
-    $numScores = 0;
-    $scoreSum = 0.0;
-    foreach ($this->stepResults as $step) {
-      $score = $step->getPageSpeedScore();
-      if ($score) {
-        $numScores += 1;
-        $scoreSum += intval($score);
-      }
-    }
-    if ($numScores == 0) {
-      return null;
-    }
-    return ceil($scoreSum / $numScores);
-  }
-
-  /**
-   * @return null|string The first valid pageSpeedVersion of a step, or null
-   */
-  public function getPageSpeedVersion() {
-    foreach ($this->stepResults as $step) {
-      $version = $step->getMetric("pageSpeedVersion");
-      if ($version) {
-        return $version;
-      }
-    }
-    return null;
-  }
-
-  /**
    * @param string[] $keywords Keywords to use for the check
    * @return bool True if the checked site is an adult site, false otherwise
    */

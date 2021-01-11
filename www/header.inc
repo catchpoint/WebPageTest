@@ -239,29 +239,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
                 echo "Blocked: <b>$blockString</b><br>";
-            if (isset($test['testinfo']['benchmark']) && strlen($test['testinfo']['benchmark'])) {
-                echo 'Benchmark: ';
-                $benchmark = $test['testinfo']['benchmark'];
-                if (isset($test['testinfo']['epoch'])) {
-                    $epochStr = $test['testinfo']['epoch'];
-                    $epoch = (int)$epochStr;
-                    $epochTime = strftime('%x %X', $epoch + ($tz_offset * 60));
-                    $benchmarkStr = "$benchmark - <span class=\"jsdate\" date=\"$epochStr\">$epochTime</span>";
-                } else {
-                    $benchmarkStr = $benchmark;
-                }
-                if ($settings['nolinks']) {
-                    echo "<span class=\"medium colored\">$benchmarkStr</span>";
-                } else {
-                    if (isset($test['testinfo']['epoch'])) {
-                        $benchmarkUrl = "/benchmarks/viewtest.php?benchmark=$benchmark&metric=docTime&time=$epoch";
-                    } else {
-                        $benchmarkUrl = "/benchmarks/view.php?benchmark=$benchmark&aggregate=median";
-                    }
-                    echo "<a class=\"url\" rel=\"nofollow\" title=\"$benchmarkUrl\" href=\"$benchmarkUrl\">$benchmarkStr</a>";
-                }
-                echo '<br>';
-            }
             if (isset($test['testinfo']['context']) && strlen($test['testinfo']['context']))
             {
                 echo 'Context: ';
@@ -299,8 +276,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         if ($gradedRunResults->isOptimizationChecked())
             $tabs['Performance Review'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
 
-        if ($gradedRunResults->averagePageSpeedScore() !== null)
-            $tabs['PageSpeed'] = $menuUrlGenerator->resultPage("pagespeed", $endParams);
         $tabs['Content Breakdown'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
         if ($gradedRunResults->hasBreakdownTimeline()) {

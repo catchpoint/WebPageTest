@@ -256,11 +256,6 @@ class JsonResultGenerator {
 
     $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
-    if (!$basic_results && $this->fileHandler->gzFileExists($localPaths->pageSpeedFile())) {
-      $ret['PageSpeedScore'] = $testStepResult->getPageSpeedScore();
-      $ret['PageSpeedData'] = $urlGenerator->getGZip($nameOnlyPaths->pageSpeedFile());
-    }
-
     $ret['pages'] = array();
     $ret['pages']['details'] = $urlGenerator->resultPage("details");
     $ret['pages']['checklist'] = $urlGenerator->resultPage("performance_optimization");

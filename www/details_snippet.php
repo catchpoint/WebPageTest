@@ -24,8 +24,7 @@ switch ($requestedSnippet) {
   case "waterfall":
     require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
 
-    $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
-    $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $stepResult, $enableCsi);
+    $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $stepResult);
     echo $waterfallSnippet->create();
     break;
 

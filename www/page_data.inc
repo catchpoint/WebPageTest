@@ -151,23 +151,6 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           $ret['testTiming'] = $entries;
       }
 
-      // see if we have CSI metrics to load
-      if (GetSetting('enable_csi') && is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
-        require_once(__DIR__ . '/google/google_lib.inc');
-        $csi = ParseCsiInfoForStep($localPaths, true);
-        if (isset($csi) && is_array($csi) && count($csi)) {
-          $ret['CSI'] = array();
-          foreach($csi as $metric => $value) {
-            if (preg_match('/^[0-9]+$/', $value))
-              $value = intval($value);
-            elseif (preg_match('/^[0-9\.]+$/', $value))
-              $value = floatval($value);
-            $ret["CSI.$metric"] = $value;
-            $ret['CSI'][] = $metric;
-          }
-        }
-      }
-
       if (array_key_exists('loadTime', $ret) &&
         !$ret['loadTime'] &&
         array_key_exists('fullyLoaded', $ret) &&
@@ -579,7 +562,6 @@ function loadPageData($file)
                                 'optimization_checked' => @(int)$fields[71],
                                 'aft' => @(int)$fields[72],
                                 'domElements' => @(int)$fields[73],
-                                'pageSpeedVersion' => @trim($fields[74]),
                                 'title' => @htmlspecialchars(trim($fields[75]),ENT_NOQUOTES,'UTF-8'),
                                 'titleTime' => @(int)$fields[76],
                                 'loadEventStart' => @(int)$fields[77],
@@ -619,9 +601,6 @@ function loadPageData($file)
                 if ((isset($fields[106]) && strlen(trim($fields[106])))) $ret['certificate_bytes'] = intval(trim($fields[106]));
 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
-                if (!strlen($ret['pageSpeedVersion']))
-                    $ret['pageSpeedVersion'] = '1.9';
-
                 break;
             }
         }

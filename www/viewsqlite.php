@@ -6,11 +6,6 @@ include 'common.inc';
 
 error_reporting(-1);
 
-// Only allow admins to view this data
-if (empty($settings['enable_google_csi'])) {
-    die('Not Authorized');
-}
-
 $db = new SQLite3('./dat/labels.db');
 $results = $db->query('SELECT * FROM labels');
 

@@ -10,19 +10,16 @@ class WaterfallViewHtmlSnippet {
   private $testInfo;
   private $stepResult;
   private $requests;
-  private $hasCsi;
 
   /**
    * WaterfallViewHtmlSnippet constructor.
    * @param TestInfo $testInfo
    * @param TestStepResult $stepResult
-   * @param bool $enableCsi True if CSI data should be enabled
    */
-  public function __construct($testInfo, $stepResult, $enableCsi) {
+  public function __construct($testInfo, $stepResult) {
     $this->testInfo = $testInfo;
     $this->stepResult = $stepResult;
     $this->requests = $stepResult->getRequestsWithInfo(true, true);
-    $this->hasCsi = $enableCsi;
   }
 
   public function create() {
@@ -86,7 +83,7 @@ class WaterfallViewHtmlSnippet {
     if ((float)$this->stepResult->getMetric("loadEventStart"))
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
-    if (GetSetting('waterfall_show_user_timing') && ($this->stepResult->getMetric('userTime') || $this->hasCsi))
+    if (GetSetting('waterfall_show_user_timing') && $this->stepResult->getMetric('userTime'))
       $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
     $out .= "</tr>\n</table>\n<br>";
     return $out;

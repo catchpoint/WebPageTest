@@ -11,7 +11,6 @@ require_once __DIR__ . '/../common_lib.inc';
 
 class XmlResultGenerator {
 
-  const INFO_PAGESPEED = 0;
   const INFO_REQUESTS = 1;
   const INFO_MEDIAN_REQUESTS = 2;
   const INFO_DOMAIN_BREAKDOWN = 3;
@@ -207,8 +206,6 @@ class XmlResultGenerator {
     } else {
       $singlestepResult = $testResult->getStepResult(1);
       echo ArrayToXML($singlestepResult->getRawResults());
-      $this->printPageSpeed($singlestepResult);
-      $this->printPageSpeedData($singlestepResult);
       $this->printAdditionalInformation($singlestepResult, true);
     }
 
@@ -267,7 +264,6 @@ class XmlResultGenerator {
 
     echo "<results>\n";
     echo ArrayToXML($stepResult->getRawResults());
-    $this->printPageSpeed($stepResult);
     echo "</results>\n";
 
     // links to the relevant pages
@@ -321,7 +317,6 @@ class XmlResultGenerator {
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
     if ($this->fileHandler->gzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
-    $this->printPageSpeedData($stepResult);
     echo "</rawData>\n";
 
     // video frames
@@ -366,31 +361,6 @@ class XmlResultGenerator {
     $tester = $this->testInfo->getTester($run);
     if ($tester) {
       echo "<tester>" . xml_entities($tester) . "</tester>\n";
-    }
-  }
-
-  /**
-   * @param TestStepResult $testResult Result of the run
-   */
-  private function printPageSpeed($testResult) {
-    if ($this->shouldPrintInfo(self::INFO_PAGESPEED)) {
-      $score = $testResult->getPageSpeedScore();
-      if (strlen($score)) {
-        echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-      }
-    }
-  }
-
-  /**
-   * @param TestStepResult $testResult Result Data
-   */
-  private function printPageSpeedData($testResult) {
-    $testRoot = $this->testInfo->getRootDirectory();
-    $localPaths = new TestPaths($testRoot, $testResult->getRunNumber(), $testResult->isCachedRun());
-    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $testResult->isCachedRun());
-
-    if ($this->fileHandler->gzFileExists($localPaths->pageSpeedFile())) {
-      echo "<PageSpeedData>" . $urlPaths->pageSpeedFile() . "</PageSpeedData>\n";
     }
   }
 

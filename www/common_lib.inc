@@ -632,62 +632,6 @@ function gz_is_file($filename)
 }
 
 /**
-* Load the pagespeed results and calculate the score
-*
-* @param mixed $file
-*/
-function GetPageSpeedScore($file, $data = null)
-{
-  $score = '';
-  if (isset($data))
-    $pagespeed = $data;
-  elseif (gz_is_file($file))
-    $pagespeed = LoadPageSpeedData($file);
-
-  if ($pagespeed) {
-    if (isset($pagespeed['score'])) {
-      $score = $pagespeed['score'];
-    } else {
-      $total = 0;
-      $count = 0;
-      foreach ($pagespeed as &$check) {
-        $total += (double)$check['score'];
-        $count++;
-      }
-      if( $count )
-        $score = ceil($total / $count);
-    }
-  }
-
-  return $score;
-}
-
-/**
-* Load the full Page Speed data from disk
-*
-* @param mixed $file
-*/
-function LoadPageSpeedData($file) {
-  $pagespeed = false;
-
-  if (gz_is_file($file)) {
-    $pagespeed = json_decode(gz_file_get_contents($file), true);
-
-    if (!$pagespeed) {
-      // try an alternate JSON decoder
-      require_once('./lib/json.php');
-      $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
-      $pagespeed = $json->decode(gz_file_get_contents($file), true);
-      if ($pagespeed) {
-        // make sure we only have to go this route once, save the corrected file
-        gz_file_put_contents($file, json_encode($pagespeed));
-      }
-    }
-  }
-  return $pagespeed;
-}
-
-/**
 * Count the number of test files in the given directory
 *
 * @param mixed $dir
@@ -2901,52 +2845,6 @@ function SBL_Check($url, &$message) {
     curl_close ($ch);
     if (isset($response) && is_array($response) && isset($response['matches'][0]['threatType'])) {
       $ok = false;
-    }
-  }
-  return $ok;
-}
-
-/**
-* Check to see if we can use the python visual metrics processing script
-*
-*/
-function CheckPythonVisualMetrics(&$failures) {
-  $ok = false;
-  $failures = null;
-  if (function_exists('apcu_fetch')) {
-    $ok = apcu_fetch("PythonVisualMetrics");
-  } elseif (function_exists('apc_fetch')) {
-    $ok = apc_fetch("PythonVisualMetrics");
-  }
-  if (!$ok) {
-    if (is_file(__DIR__ . '/video/visualmetrics.py')) {
-      $script = realpath(__DIR__ . '/video/visualmetrics.py');
-      $command = "python \"$script\" -c 2>&1";
-      exec($command, $output, $result);
-      if (isset($output) && is_array($output) && count($output)) {
-        foreach ($output as $line) {
-          $parts = explode(':', $line);
-          if (count($parts) == 2) {
-            $module = trim($parts[0]);
-            $status = trim($parts[1]);
-            if ($status == 'OK') {
-              $ok = true;
-            } else {
-              if (!isset($failures))
-                $failures = array();
-              $failures[] = $module;
-            }
-          }
-        }
-      }
-    }
-    if (isset($failures)) {
-      $ok = false;
-    }
-    if ($ok && function_exists('apcu_store')) {
-      apcu_store("PythonVisualMetrics", $ok, 3600);
-    } elseif ($ok && function_exists('apc_store')) {
-      apc_store("PythonVisualMetrics", $ok, 3600);
     }
   }
   return $ok;
