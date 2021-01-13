@@ -544,15 +544,23 @@ function ScreenShotTable()
                 $ms = $frameCount * $interval;
                 // find the closest video frame <= the target time
                 $frame_ms = null;
+                $last_frame = null;
                 if (isset($test['video']['frames']) && is_array($test['video']['frames']) && count($test['video']['frames'])) {
                   foreach ($test['video']['frames'] as $frameTime => $file) {
                     if ($frameTime <= $ms && (!isset($frame_ms) || $frameTime > $frame_ms))
                       $frame_ms = $frameTime;
                   }
+                  $last_frame = end($test['video']['frames']);
+                  reset($test['video']['frames']);
                 }
                 $path = null;
-                if (isset($frame_ms))
+                $is_last_frame = false;
+                if (isset($frame_ms)) {
                   $path = $test['video']['frames'][$frame_ms];
+                  if ($path == $last_frame) {
+                    $is_last_frame = true;
+                  }
+                }
                 if (array_key_exists('frame_progress', $test['video']) &&
                     array_key_exists($frame_ms, $test['video']['frame_progress']))
                   $progress = $test['video']['frame_progress'][$frame_ms];
@@ -574,14 +582,18 @@ function ScreenShotTable()
                     $lcp_candidate_rects = null;
                     $lcp_rects = null;
                     $shift_amount = 0.0;
+                    $changed = false;
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
                             $firstFrame = $frameCount;
                         $class = 'thumbChanged';
+                        $changed = true;
                         if (isset($lcp) && $ms >= $lcp) {
                             $class = 'thumbLCP';
                             $lcp = null;
                         }
+                    }
+                    if ($changed || $is_last_frame) {
                         if (count($shifts) && $ms > $shifts[0]['time']) {
                             $class .= ' thumbLayoutShifted';
                             while(count($shifts) && $ms > $shifts[0]['time']) {
