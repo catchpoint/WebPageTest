@@ -1875,6 +1875,13 @@ function LogTest(&$test, $testId, $url)
     //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
     //    $pageLoads *= $test['navigateCount'];
 
+    $user_info = '';
+    if (isset($test['user']) && strlen($test['user'])) {
+      $user_info = $test['user'];
+    } elseif (isset($_COOKIE['google_email']) && strlen($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
+      $user_info = $_COOKIE['google_email'];
+    }
+  
     $line_data = array(
         'date' => gmdate("Y-m-d G:i:s"),
         'ip' => @$ip,
@@ -1883,7 +1890,7 @@ function LogTest(&$test, $testId, $url)
         'location' => @$test['locationText'],
         'private' => @$test['private'],
         'testUID' => @$test['uid'],
-        'testUser' => @$test['user'],
+        'testUser' => $user_info,
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
