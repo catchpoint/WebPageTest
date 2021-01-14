@@ -395,6 +395,16 @@
               $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
             }
 
+            // see if we need to process a template for these requests	
+            if (isset($req_k) && strlen($req_k)) {
+              $keys = parse_ini_file('./settings/keys.ini', true);	
+              if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {	
+                  $template = $keys[$req_k]['template'];	
+                  if (is_file("./templates/$template.php"))	
+                      include("./templates/$template.php");	
+              }	
+            }
+
             // Extract the location, browser and connectivity.
             // location:browser.connectivity
             if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) ||
