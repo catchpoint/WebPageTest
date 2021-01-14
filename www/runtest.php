@@ -45,6 +45,7 @@
     $error = NULL;
     $xml = false;
     $usingAPI = false;
+    $forceValidate = false;
     $runcount = 0;
     $apiKey = null;
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
@@ -1133,6 +1134,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $this_user;
   global $runcount;
   global $apiKey;
+  global $forceValidate;
 
   // load the secret key (if there is one)
   $secret = '';
@@ -1203,6 +1205,8 @@ function ValidateKey(&$test, &$error, $key = null)
             $test['priority'] = $keys[$key]['priority'];
         if (isset($keys[$key]['max-priority']))
             $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
+        if (isset($keys[$key]['forceValidate']))
+          $forceValidate = true;
         if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
           $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
         if( !strlen($error) && isset($keys[$key]['limit']) ) {
@@ -1954,13 +1958,14 @@ function CheckUrl($url)
   $ok = true;
   global $user;
   global $usingAPI;
+  global $forceValidate;
   global $error;
   global $admin;
   global $is_bulk_test;
   $date = gmdate("Ymd");
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
     $url = 'http://' . $url;
-  if (!$usingAPI && !$admin) {
+  if ($forceValidate || (!$usingAPI && !$admin)) {
     $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($blockUrls !== false && count($blockUrls) ||
