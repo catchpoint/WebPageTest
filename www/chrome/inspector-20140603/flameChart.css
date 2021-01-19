@@ -1,0 +1,76 @@
+.overview-container {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 80px;
+}
+
+.chart-container {
+    flex: auto;
+}
+
+#flame-chart-overview-grid .resources-dividers-label-bar {
+    pointer-events: auto;
+}
+
+.flame-chart-main-pane {
+    overflow: hidden;
+}
+
+.flame-chart-overview-pane {
+    flex: 0 0 80px !important;
+}
+
+#flame-chart-overview-container {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.flame-chart-overview-canvas {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.chart-container .entry-info {
+    position: absolute;
+    left: 10px;
+    top: 25px;
+    background-color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+}
+
+.chart-container .entry-info .title {
+    font-weight: bold;
+}
+
+.flame-chart-highlight-element {
+    background-color: black;
+    position: absolute;
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.flame-chart-selected-element {
+    position: absolute;
+    pointer-events: none;
+    border-color: rgb(56, 121, 217);
+    border-width: 2px;
+    border-style: solid;
+    background-color: rgba(56, 121, 217, 0.2);
+}
+
+.flame-chart-v-scroll {
+    flex: 0 0 14px;
+    overflow-x: hidden;
+}
+
+body.platform-mac .flame-chart-v-scroll {
+    position: absolute;
+    width: 14px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
