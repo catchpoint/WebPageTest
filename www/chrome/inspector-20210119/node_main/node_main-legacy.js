@@ -1,0 +1,1 @@
+import{NodeConnectionsPanel as e,NodeMain as n}from"./node_main.js";self.NodeMain=self.NodeMain||{},NodeMain=NodeMain||{},NodeMain.NodeConnectionsPanel=e.NodeConnectionsPanel,NodeMain.NodeMain=n.NodeMainImpl,NodeMain.NodeChildTargetManager=n.NodeChildTargetManager,NodeMain.NodeConnection=n.NodeConnection;

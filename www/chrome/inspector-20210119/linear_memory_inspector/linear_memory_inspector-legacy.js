@@ -1,0 +1,1 @@
+import{LinearMemoryInspectorPane as e}from"./linear_memory_inspector.js";self.LinearMemoryInspector=self.LinearMemoryInspector||{},LinearMemoryInspector=LinearMemoryInspector||{},LinearMemoryInspector.LinearMemoryInspectorPane=e.LinearMemoryInspectorPaneImpl,LinearMemoryInspector.LinearMemoryInspectorPane.Wrapper=e.Wrapper;

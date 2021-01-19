@@ -1,0 +1,1 @@
+import{SearchConfig as e,SearchResultsPane as a,SearchView as c}from"./search.js";self.Search=self.Search||{},Search=Search||{},Search.SearchConfig=e.SearchConfig,Search.SearchResult=e.SearchResult,Search.SearchScope=e.SearchScope,Search.SearchResultsPane=a.SearchResultsPane,Search.SearchView=c.SearchView;

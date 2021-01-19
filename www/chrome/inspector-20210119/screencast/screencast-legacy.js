@@ -1,0 +1,1 @@
+import{ScreencastApp as e,ScreencastView as c}from"./screencast.js";self.Screencast=self.Screencast||{},Screencast=Screencast||{},Screencast.ScreencastApp=e.ScreencastApp,Screencast.ScreencastApp.ToolbarButtonProvider=e.ToolbarButtonProvider,Screencast.ScreencastAppProvider=e.ScreencastAppProvider,Screencast.ScreencastView=c.ScreencastView;

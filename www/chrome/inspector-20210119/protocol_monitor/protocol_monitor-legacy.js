@@ -1,0 +1,1 @@
+import{ProtocolMonitor as o}from"./protocol_monitor.js";self.ProtocolMonitor=self.ProtocolMonitor||{},ProtocolMonitor=ProtocolMonitor||{},ProtocolMonitor.ProtocolMonitor=o.ProtocolMonitorImpl,ProtocolMonitor.ProtocolMonitor.InfoWidget=o.InfoWidget,ProtocolMonitor.ProtocolMonitor.ProtocolNode=o.ProtocolNode;

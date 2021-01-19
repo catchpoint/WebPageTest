@@ -1,0 +1,1 @@
+import{Runtime as o}from"./root.js";self.Root=self.Root||{},Root=Root||{},Root.Runtime=o.Runtime,Root.Runtime.experiments=o.experiments,Root.Runtime.queryParam=o.Runtime.queryParam,Root.runtime,Root.Runtime.loadResourcePromise=o.loadResourcePromise,Root.Runtime.Extension=o.Extension,Root.Runtime.Module=o.Module;

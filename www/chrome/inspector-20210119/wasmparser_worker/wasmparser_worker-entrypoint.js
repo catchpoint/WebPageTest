@@ -1,0 +1,1 @@
+import{WasmParserWorker as s}from"./wasmparser_worker.js";self.onmessage=e=>{"disassemble"===e.data.method&&self.postMessage(s.dissambleWASM(e.data.params,(s=>{self.postMessage(s)})))},self.postMessage("workerReady");

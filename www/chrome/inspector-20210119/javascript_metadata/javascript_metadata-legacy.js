@@ -1,0 +1,1 @@
+import{JavaScriptMetadata as a,NativeFunctions as t}from"./javascript_metadata.js";self.JavaScriptMetadata=self.JavaScriptMetadata||{},JavaScriptMetadata=JavaScriptMetadata||{},JavaScriptMetadata.JavaScriptMetadata=a.JavaScriptMetadataImpl,JavaScriptMetadata.NativeFunctions=t.NativeFunctions,JavaScriptMetadata.NativeFunctions;

@@ -1,0 +1,1 @@
+import{WarningErrorCounter as o}from"./console_counters.js";self.ConsoleCounters=self.ConsoleCounters||{},ConsoleCounters=ConsoleCounters||{},ConsoleCounters.WarningErrorCounter=o.WarningErrorCounter;

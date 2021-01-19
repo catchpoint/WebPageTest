@@ -1,0 +1,1 @@
+import{InputModel as n,InputTimeline as t}from"./input.js";self.Input=self.Input||{},Input=Input||{},Input.InputModel=n.InputModel,Input.InputTimeline=t.InputTimeline,Input.InputTimeline.State=t.State,Input.InputTimeline.TracingClient=t.TracingClient,Input.InputTimeline.ActionDelegate=t.ActionDelegate;
