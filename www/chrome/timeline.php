@@ -26,7 +26,10 @@ if ($newTimeline) {
 <!DOCTYPE html>
 <head>
   <script>
-    localStorage.setItem('screencastEnabled', false);
+    if (!localStorage.getItem("wptdevtools.initialized")) {
+      localStorage.setItem('screencastEnabled', false);
+      localStorage.setItem('wptdevtools.initialized', true);
+    }
     function DevToolsLoaded() {
       <?php
       if (!$newTimeline) {
