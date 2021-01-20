@@ -563,14 +563,10 @@ $loc = ParseLocations($locations);
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
-                                        <?php
-                                        /*
-                                        <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
-                                        <label for="timelineStack" class="auto_width">
-                                            Include call stack (increases overhead)
+                                        <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
+                                        <label for="profiler" class="auto_width">
+                                            Enable v8 Sampling Profiler (much larger traces)
                                         </label>
-                                        */
-                                        ?>
                                     </li>
                                     <li>
                                         <input type="checkbox" name="v8rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">

@@ -228,6 +228,8 @@
               $test['timeline'] = $req_timeline;
             if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])
               $test['timeline_fps'] = 1;
+            if (isset($_REQUEST['profiler']) && $_REQUEST['profiler'])
+              $test['profiler'] = 1;
             if (isset($_REQUEST['discard_timeline']) && $_REQUEST['discard_timeline'])
               $test['discard_timeline'] = 1;
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
@@ -2165,6 +2167,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['timeline'] = 1;
                 if (isset($test['discard_timeline']) && $test['discard_timeline'])
                   $job['discard_timeline'] = 1;
+                if (isset($test['profiler']) && $test['profiler'])
+                  $job['profiler'] = 1;
                 if (isset($test['timeline_fps']))
                   $job['timeline_fps'] = intval($test['timeline_fps']);
                 if (isset($test['timelineStackDepth']))

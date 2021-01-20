@@ -27,7 +27,6 @@ if ($newTimeline) {
 <head>
   <script>
     localStorage.setItem('screencastEnabled', false);
-    localStorage.setItem('Inspector.drawerSplitViewState', {"horizontal":{"size":0,"showMode":"OnlyMain"}});
     function DevToolsLoaded() {
       <?php
       if (!$newTimeline) {
