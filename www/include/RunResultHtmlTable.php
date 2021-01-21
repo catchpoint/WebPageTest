@@ -404,8 +404,9 @@ class RunResultHtmlTable {
     for ($i = 1; $i <= 5; $i++)
       $dollars .= $i <= $count ? '$' : '-';
     $id = $this->testInfo->getId();
+    $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
     $text = "<a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" " .
-      "href=\"http://whatdoesmysitecost.com/test/$id\">$dollars</a>";
+      "href=\"http://whatdoesmysitecost.com/test/$id\" onclick=\"$onclick\">$dollars</a>";
     return $text;
   }
 }
