@@ -1459,21 +1459,37 @@ function AddTestJob($location, $job, $test, $testId) {
       } else {
         $locationLock = LockLocation($location);
         if (isset($locationLock)) {
+          $ret = true;
           if( !is_dir($test['workdir']) )
             mkdir($test['workdir'], 0777, true);
           $workDir = $test['workdir'];
-          if (isset($test['affinity']))
-            $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
-          $testNum = GetDailyTestNum();
-          $sortableIndex = date('ymd') . GetSortableString($testNum);
-          $test['job'] = "$sortableIndex.{$test['job']}";
-          $fileName = $test['job'];
-          $file = "$workDir/$fileName";
-          if( file_put_contents($file, $job) ) {
-            if (AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-              $ret = true;
+          $json = null;
+          if ($test['runs'] > 1 && substr($job, 0, 1) == '{') {
+            $json = json_decode($job, true);
+          }
+          for ($run = 1; $run <= $test['runs']; $run++) {
+            // Submit multiple job files for a multi-run test so they can run in parallel
+            if (isset($json)) {
+              $json['run'] = $run;
+              $job = json_encode($json);
+            }
+            $fileName = $test['job'];
+            if (isset($test['affinity']))
+              $fileName = "Affinity{$test['affinity']}.{$test['job']}";
+            $testNum = GetDailyTestNum();
+            $sortableIndex = date('ymd') . GetSortableString($testNum);
+            $fileName = "$sortableIndex.$fileName";
+            $file = "$workDir/$fileName";
+            if( file_put_contents($file, $job) ) {
+              if (!AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
+                $ret = false;
+                unlink($file);
+              }
             } else {
-              unlink($file);
+              $ret = false;
+            }
+            if (!isset($json)) {
+              break;
             }
           }
           Unlock($locationLock);
@@ -2737,21 +2753,6 @@ function CopyArrayEntry(&$src, &$dest, $srcEntry, $destEntry = null) {
     $destEntry = $srcEntry;
   if (array_key_exists($srcEntry, $src))
     $dest[$destEntry] = $src[$srcEntry];
-}
-
-function IsTestRunComplete($run, &$testInfo) {
-  $completed = false;
-  if ($testInfo) {
-    if (array_key_exists('completed', $testInfo) && $testInfo['completed']) {
-      $completed = true;
-    } elseif (array_key_exists('test_runs', $testInfo) &&
-              array_key_exists($run, $testInfo['test_runs']) &&
-              array_key_exists('done', $testInfo['test_runs'][$run]) &&
-              $testInfo['test_runs'][$run]['done']) {
-      $completed = true;
-    }
-  }
-  return $completed;
 }
 
 function logTestMsg($testIdOrPath, $message) {

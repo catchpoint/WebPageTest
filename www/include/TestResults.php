@@ -53,7 +53,7 @@ class TestResults {
     $firstViewOnly = $testInfo->isFirstViewOnly();
     $testComplete = $testInfo->isComplete();
     for ($runNumber = 1; $runNumber <= $numRuns; $runNumber++) {
-      if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
+      if (!$testComplete) {
         continue;
       }
       $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);

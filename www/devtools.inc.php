@@ -1396,8 +1396,7 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
 function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
   if (!$endTime) {
     require_once(__DIR__ . '/page_data.inc');
-    $runCompleted = IsTestRunComplete($localPaths->getRunNumber(), $testInfo);
-    $pageData =  loadPageStepData($localPaths, $runCompleted);
+    $pageData =  loadPageStepData($localPaths);
     if (isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
       $endTime = $pageData['fullyLoaded'];
     }

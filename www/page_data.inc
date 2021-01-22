@@ -26,10 +26,11 @@ function loadAllPageData($testPath) {
     $completed = true;
     if ($testInfo && (!array_key_exists('completed', $testInfo) || !$testInfo['completed']))
       $completed = false;
+    if (file_exists("$testPath/test.complete"))
+      $completed = true;
 
-    for( $run = 1; $run <= $runs; $run++ ) {
-      // only load page data for individual runs that are complete (or if the whole test is complete)
-      if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
+    if ($completed) {
+      for( $run = 1; $run <= $runs; $run++ ) {
         $data = loadPageRunData($testPath, $run, 0, $testInfo);
         if( isset($data) )
           $ret[$run][0] = $data;
@@ -59,17 +60,15 @@ function loadAllPageData($testPath) {
 function loadPageRunData($testPath, $run, $cached, $testInfo = null) {
   $ret = null;
   $localPaths = new TestPaths($testPath, $run, $cached);
-  $runCompleted = IsTestRunComplete($run, $testInfo);
-  return loadPageStepData($localPaths, $runCompleted, $testInfo);
+  return loadPageStepData($localPaths, $testInfo);
 }
 
 /**
  * @param TestPaths $localPaths Paths for the step or run to load the page data for
- * @param bool $runCompleted If the run that includes this step was completed or not
  * @param array|null $testInfo Optional testInfo to expose a test-level error
  * @return array|null Associative array with data for the given run or null on failure
  */
-function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
+function loadPageStepData($localPaths, $testInfo = null) {
   $cacheVer = 10;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
@@ -184,7 +183,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           !array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'] ||
           !array_key_exists('visualComplete85', $ret) || !$ret['visualComplete85'] ||
           !array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
-        $progress = GetVisualProgressForStep($localPaths, $runCompleted, $startOffset);
+        $progress = GetVisualProgressForStep($localPaths, $startOffset);
         if (isset($progress) && is_array($progress)) {
           if (array_key_exists('SpeedIndex', $progress))
             $ret['SpeedIndex'] = $progress['SpeedIndex'];

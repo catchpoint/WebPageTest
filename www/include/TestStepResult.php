@@ -63,8 +63,7 @@ class TestStepResult {
   public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
     // no support to use FileHandler so far
     $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
-    $runCompleted = $testInfo->isRunComplete($runNumber);
-    $pageData = loadPageStepData($localPaths, $runCompleted, $testInfo->getInfoArray());
+    $pageData = loadPageStepData($localPaths, $testInfo->getInfoArray());
     return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber, $fileHandler);
   }
 
@@ -182,7 +181,7 @@ class TestStepResult {
     if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
       return array();
     }
-    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), $this->getStartOffset());
+    return GetVisualProgressForStep($this->localPaths, $this->getStartOffset());
   }
 
   public function getRequestsWithInfo($addLocationData, $addRawHeaders) {

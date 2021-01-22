@@ -202,13 +202,12 @@ function GetTestStatus($id, $includePosition = true) {
 
                 $ret['fvRunsCompleted'] = $fvRuns;
                 $ret['rvRunsCompleted'] = $rvRuns;
-                if (array_key_exists('test_runs', $testInfoJson)) {
+                if (!file_exists("$testPath/test.complete")) {
                   $ret['testsCompleted'] = 0;
-                  foreach($testInfoJson['test_runs'] as &$testRun)
-                    if (array_key_exists('done', $testRun) && $testRun['done'])
-                      $ret['testsCompleted']++;
-                } else {
-                  $ret['testsCompleted'] = $fvRuns;
+                  $files = glob("$testPath/run.*.complete");
+                  if (isset($files) && is_array($files)) {
+                    $ret['testsCompleted'] = min(count($files), $fvRuns);
+                  }
                 }
                 if ($ret['testsCompleted'] > 0 && $ret['testsExpected'] > 1 && $ret['statusCode'] == 100) {
                   $ret['statusText'] = "Completed {$ret['testsCompleted']} of {$ret['testsExpected']} tests";

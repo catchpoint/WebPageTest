@@ -180,62 +180,64 @@ if (ValidateTestId($id)) {
       }
 
       // see if the test is complete
+      $all_done = false;
       if ($done) {
-        // Mark the test as done and save it out so that we can load the page data
-        $testInfo['completed'] = $time;
-        if (!array_key_exists('test_runs', $testInfo))
-          $testInfo['test_runs'] = array();
-        // the number of steps should be the same for every run. But we take the max in case a step failed during
-        // a run
-        $numSteps = 0;
-        for ($run = 1; $run <= $testInfo['runs']; $run++) {
-          if (array_key_exists($run, $testInfo['test_runs']))
-            $testInfo['test_runs'][$run]['done'] = true;
-          else
-            $testInfo['test_runs'][$run] = array('done' => true);
-          if (!empty($testInfo['test_runs'][$run]['steps'])) {
-            $numSteps = max($numSteps, $testInfo['test_runs'][$run]['steps']);
+        $all_done = true;
+        if (isset($runNumber)) {
+          $runnum = intval($runNumber);
+          if ($runnum) {
+            touch("$testPath/run.$runnum.complete");
+            $files = glob("$testPath/run.*.complete");
+            if (isset($files) && is_array($files)) {
+              $done_count = count($files);
+              if ($done_count >= $testInfo['runs']) {
+                $all_done = true;
+              }
+            }
           }
         }
-        $testInfo['steps'] = $numSteps;
-        SaveTestInfo($id, $testInfo);
-        $testInfo_dirty = false;
+        if ($all_done) {
+          // Mark the test as done and save it out so that we can load the page data
+          $testInfo['completed'] = $time;
+          SaveTestInfo($id, $testInfo);
+          $testInfo_dirty = false;
 
-        // delete any .test files
-        $files = scandir($testPath);
-        foreach ($files as $file)
-          if (preg_match('/.*\.test$/', $file))
-            unlink("$testPath/$file");
-        if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file']))
-          unlink($testInfo['job_file']);
+          // delete any .test files
+          $files = scandir($testPath);
+          foreach ($files as $file)
+            if (preg_match('/.*\.test$/', $file))
+              unlink("$testPath/$file");
+          if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file']))
+            unlink($testInfo['job_file']);
 
-        $perTestTime = 0;
-        $testCount = 0;
+          $perTestTime = 0;
+          $testCount = 0;
 
-        // do pre-complete post-processing
-        MoveVideoFiles($testPath);
-        WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
+          // do pre-complete post-processing
+          MoveVideoFiles($testPath);
+          WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
 
-        if (!isset($pageData))
-          $pageData = loadAllPageData($testPath);
-        $medianRun = GetMedianRun($pageData, 0, $medianMetric);
-        $testInfo['medianRun'] = $medianRun;
-        $testInfo_dirty = true;
+          if (!isset($pageData))
+            $pageData = loadAllPageData($testPath);
+          $medianRun = GetMedianRun($pageData, 0, $medianMetric);
+          $testInfo['medianRun'] = $medianRun;
+          $testInfo_dirty = true;
 
-        // delete all of the videos except for the median run?
-        if( array_key_exists('median_video', $ini) && $ini['median_video'])
-          KeepVideoForRun($testPath, $medianRun);
+          // delete all of the videos except for the median run?
+          if( array_key_exists('median_video', $ini) && $ini['median_video'])
+            KeepVideoForRun($testPath, $medianRun);
 
-        $test = file_get_contents("$testPath/testinfo.ini");
-        $now = gmdate("m/d/y G:i:s", $time);
+          $test = file_get_contents("$testPath/testinfo.ini");
+          $now = gmdate("m/d/y G:i:s", $time);
 
-        // update the completion time if it isn't already set
-        if (!strpos($test, 'completeTime')) {
-          $complete = "[test]\r\ncompleteTime=$now";
-          if($medianRun)
-            $complete .= "\r\nmedianRun=$medianRun";
-          $out = str_replace('[test]', $complete, $test);
-          file_put_contents("$testPath/testinfo.ini", $out);
+          // update the completion time if it isn't already set
+          if (!strpos($test, 'completeTime')) {
+            $complete = "[test]\r\ncompleteTime=$now";
+            if($medianRun)
+              $complete .= "\r\nmedianRun=$medianRun";
+            $out = str_replace('[test]', $complete, $test);
+            file_put_contents("$testPath/testinfo.ini", $out);
+          }
         }
       }
 
@@ -250,11 +252,21 @@ if (ValidateTestId($id)) {
       **************************************************************************/
 
       // do any post-processing when the full test is complete that doesn't rely on testinfo
-      if ($done) {
+      if ($all_done) {
         logTestMsg($id, "Test Complete");
 
         touch("$testPath/test.complete");
         @unlink("$testPath/test.running");
+
+        // Cleanup the files marking each run
+        $files = glob("$testPath/run.*.complete");
+        if (isset($files) && is_array($files)) {
+          foreach ($files as $file) {
+            if (file_exists($file)) {
+              unlink($file);
+            }
+          }
+        }
       
         // send an async request to the post-processing code so we don't block
         SendAsyncRequest("/work/postprocess.php?test=$id");
@@ -268,29 +280,10 @@ if (ValidateTestId($id)) {
 $workdone_end = microtime(true);
 
 function ProcessRun() {
-  global $runNumber, $cacheWarmed, $testPath, $id, $testInfo, $testInfo_dirty, $testerError;
+  global $runNumber, $cacheWarmed, $testPath, $id, $testerError;
   if (isset($runNumber) && isset($cacheWarmed)) {
     $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
     $testerError = $resultProcessing->postProcessRun();
-
-    if ($testInfo['fvonly'] || $cacheWarmed) {
-      if (!array_key_exists('test_runs', $testInfo))
-        $testInfo['test_runs'] = array();
-      if (array_key_exists($runNumber, $testInfo['test_runs']))
-        $testInfo['test_runs'][$runNumber]['done'] = true;
-      else
-        $testInfo['test_runs'][$runNumber] = array('done' => true);
-      $numSteps = $resultProcessing->countSteps();
-      $reportedSteps = 0;
-      if (!empty($testInfo['test_runs'][$runNumber]['steps'])) {
-        $reportedSteps = $testInfo['test_runs'][$runNumber]['steps'];
-        if ($reportedSteps != $numSteps) {
-          $testerError = "Number of steps for first and repeat view differ (fv: $reportedSteps, rv: $numSteps)";
-        }
-      }
-      $testInfo['test_runs'][$runNumber]['steps'] = max($numSteps, $reportedSteps);
-      $testInfo_dirty = true;
-    }
   }
 }
 

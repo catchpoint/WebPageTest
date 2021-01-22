@@ -130,6 +130,7 @@
         {
             $test = array();
             $test['url'] = trim($req_url);
+            $test['steps'] = 1;
             if (isset($req_domelement))
               $test['domElement'] = trim($req_domelement);
             if (isset($req_login))
@@ -1493,6 +1494,8 @@ function ValidateScript(&$script, &$error)
         global $test;
         FixScript($test, $script);
 
+        $stepCount = 0;
+        $loggingData = true;
         $navigateCount = 0;
         $ok = false;
         $lines = explode("\n", $script);
@@ -1500,24 +1503,46 @@ function ValidateScript(&$script, &$error)
         {
             $tokens = explode("\t", $line);
             $command = trim($tokens[0]);
-            if( !strcasecmp($command, 'navigate') )
-            {
+            if( !strcasecmp($command, 'navigate') ) {
                 $navigateCount++;
+                if ($loggingData) {
+                  $stepCount++;
+                }
                 $ok = true;
                 $url = trim($tokens[1]);
-                if (stripos($url, '%URL%') !== false)
+                if (stripos($url, '%URL%') !== false) {
                     $url = null;
-                else
+                } else {
                     CheckUrl($url);
-            } elseif( !strcasecmp($command, 'loadVariables') )
-                $error = "loadVariables is not a supported command for uploaded scripts.";
-            elseif( !strcasecmp($command, 'loadFile') )
-                $error = "loadFile is not a supported command for uploaded scripts.";
-            elseif( !strcasecmp($command, 'fileDialog') )
-                $error = "fileDialog is not a supported command for uploaded scripts.";
-
-            if (stripos($command, 'AndWait') !== false)
+                }
+            } elseif( !strcasecmp($command, 'submitForm') ) {
               $navigateCount++;
+              if ($loggingData) {
+                $stepCount++;
+              }
+            } elseif( !strcasecmp($command, 'loadVariables') ) {
+                $error = "loadVariables is not a supported command for uploaded scripts.";
+            } elseif( !strcasecmp($command, 'loadFile') ) {
+                $error = "loadFile is not a supported command for uploaded scripts.";
+            } elseif( !strcasecmp($command, 'fileDialog') ) {
+                $error = "fileDialog is not a supported command for uploaded scripts.";
+            } elseif( !strcasecmp($command, 'logData') ) {
+              if (isset($tokens[1])) {
+                if (trim($tokens[1]) == '0') {
+                  $loggingData = false;
+                } elseif (trim($tokens[1]) == '1') {
+                  $loggingData = true;
+                }
+              }
+            } elseif (stripos($command, 'AndWait') !== false) {
+              $navigateCount++;
+              if ($loggingData) {
+                $stepCount++;
+              }
+            }
+        }
+        if (!isset($test['steps']) || $stepCount > $test['steps']) {
+          $test['steps'] = $stepCount;
         }
 
         $test['navigateCount'] = $navigateCount;
@@ -1705,7 +1730,7 @@ function WriteJob($location, &$test, &$job, $testId)
     if (AddTestJob($location, $job, $test, $testId)) {
       $ret = true;
     } else {
-      $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
+      $error = "Sorry, that test location appears to be unavailable.  Pleasy try again later.";
     }
   }
 
@@ -2147,7 +2172,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if( !$batch && !$batch_locations)
         {
             // build up the json test job
-            $job = array('testinfo_ini' => $testInfo);
+            $job = array();
             // build up the actual test commands
             if( isset($test['fvonly']) && $test['fvonly'] )
                 $job['fvonly'] = 1;
@@ -2350,8 +2375,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // Write out the json before submitting the test to the queue
             $oldUrl = @$test['url'];
             $test['url'] = $url;
-            // Pass the raw testinfo around with the test itself
-            $job['testinfo'] = $test;
+            $test['id'] = $testId; 
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
 
@@ -2360,6 +2384,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         } elseif (isset($testId)) {
             $oldUrl = @$test['url'];
             $test['url'] = $url;
+            $test['id'] = $testId; 
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
         }

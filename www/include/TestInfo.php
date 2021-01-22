@@ -17,13 +17,6 @@ class TestInfo {
 
     // Manually build the test run info if it isn't present
     $runs = null;
-    if (!isset($testInfo['testinfo']['test_runs'][1]['steps'])) {
-      $this->ScanTestSteps($rootDirectory, $runs);
-      if (isset($runs)) {
-        $testInfo['testinfo']['test_runs'] = $runs;
-      }
-    }
-
     if (!isset($testInfo['testinfo']['steps']) || !$testInfo['testinfo']['steps']) {
       if (!isset($runs)) {
         $this->ScanTestSteps($rootDirectory, $runs);
@@ -62,10 +55,13 @@ class TestInfo {
         touch($iniPath);
     }
     $test["testinfo"] = GetTestInfo($rootDirectory);
-    if (isset($test) && is_array($test) && isset($test['testinfo']["id"]))
+    if (isset($test) && is_array($test) && isset($test['testinfo']["id"])) {
       return new self($test['testinfo']["id"], $rootDirectory, $test);
-    else
+    } elseif (isset($test) && is_array($test) && isset($test['test']['id'])) {
+      return new self($test['test']['id'], $rootDirectory, $test);
+    } else {
       return new self('010101_0_0', $rootDirectory, $test);
+    }
   }
 
   /**
@@ -115,16 +111,7 @@ class TestInfo {
    * @return bool True if the test is complete, false otherwise
    */
   public function isComplete() {
-    return !empty($this->rawData['testinfo']['completed']); // empty also checks for false or null
-  }
-
-  /**
-   * @param int $run The run to check if complete
-   * @return bool True if the test run is complete, false otherwise
-   */
-  public function isRunComplete($run) {
-    // TODO: move implementation here
-    return $run <= $this->getRuns() && IsTestRunComplete($run, $this->rawData['testinfo']);
+    return !empty($this->rawData['testinfo']['completed']) || is_file($this->rootDirectory . '/test.complete'); // empty also checks for false or null
   }
 
   /**
@@ -132,10 +119,10 @@ class TestInfo {
    * @return int The number of steps in this run
    */
   public function stepsInRun($run) {
-    if (empty($this->rawData['testinfo']['test_runs'][$run]['steps'])) {
+    if (empty($this->rawData['testinfo']['steps'])) {
       return 1;
     }
-    return $this->rawData['testinfo']['test_runs'][$run]['steps'];
+    return $this->rawData['testinfo']['steps'];
   }
 
   /**

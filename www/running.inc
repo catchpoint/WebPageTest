@@ -129,14 +129,6 @@
                               else
                                   reload = true;
                           }
-                          if (lastStatusCode == 100) {
-                              interval = 1000;
-                              if (response['data'] != undefined &&
-                                  !response.data['remote'] &&
-                                  response.data['testsCompleted'] != undefined &&
-                                  response.data['testsCompleted'] >= 1)
-                                  reload = true;
-                          }
                           if (response['statusText'] != undefined &&
                               response['statusText'] != lastStatusText) {
                               lastStatusText = response['statusText'];

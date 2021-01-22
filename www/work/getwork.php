@@ -311,12 +311,6 @@ function GetJob() {
                   $testInfoJson['started'] = $time;
                   logTestMsg($testId, "Starting test (initiated by tester $tester)");
                 }
-                if (!array_key_exists('test_runs', $testInfoJson))
-                  $testInfoJson['test_runs'] = array();
-                for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
-                  if (!array_key_exists($run, $testInfoJson['test_runs']))
-                    $testInfoJson['test_runs'][$run] = array('done' => false);
-                }
                 $testInfoJson['id'] = $realTestId;
                 SaveTestInfo($testId, $testInfoJson);
               }

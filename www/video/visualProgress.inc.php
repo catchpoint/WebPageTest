@@ -17,20 +17,17 @@ function GetVisualProgress($testPath, $run, $cached, $startOffset = null) {
   $frames = null;
   $testPath = $testPath[0] == '.' || $testPath[0] == "/" ? $testPath : "./$testPath";
   $localPaths = new TestPaths($testPath, $run, $cached);
-  $testInfo = GetTestInfo($testPath);
-  $completed = IsTestRunComplete($run, $testInfo);
-  return GetVisualProgressForStep($localPaths, $completed, $startOffset);
+  return GetVisualProgressForStep($localPaths, $startOffset);
 }
 
 /**
  * Retrieves the visual progress for a run/step, based on the files passed through $localPaths
  *
  * @param TestPaths $localPaths TestPaths object for this step/run
- * @param bool $runCompleted If the run was completed
  * @param float|int $startOffset Optional start offset
  * @return array|null The visual progress as an array or null
  */
-function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = null) {
+function GetVisualProgressForStep($localPaths, $startOffset = null) {
   $frames = null;
   $video_directory = $localPaths->videoDir();
   $cache_file = $localPaths->visualDataCacheFile();
@@ -45,7 +42,6 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
     if (isset($visual_data['timespans']['page_load']['startOffset']))
       $startOffset += $visual_data['timespans']['page_load']['startOffset'];
   }
-  $dirty = false;
   $current_version = VIDEO_CODE_VERSION;
   if (gz_is_file($cache_file)) {
     $frames = json_decode(gz_file_get_contents($cache_file), true);
@@ -78,7 +74,6 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
   if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
     $frames = array('version' => $current_version);
     $frames['frames'] = array();
-    $dirty = true;
     if (is_dir($video_directory)) {
       $files = scandir($video_directory);
       $last_file = null;
@@ -142,41 +137,10 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
             }
           }
         }
-        if (!$calculated){
-          $histograms = null;
-          if (gz_is_file($histograms_file))
-            $histograms = json_decode(gz_file_get_contents($histograms_file), true);
-          $start_histogram = GetImageHistogram("$video_directory/$first_file", $histograms);
-          $final_histogram = GetImageHistogram("$video_directory/$last_file", $histograms);
-          foreach($frames['frames'] as $time => &$frame) {
-            $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $histograms);
-            $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
-            if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
-              $frames['complete'] = $time;
-          }
-        }
-      }
-    } elseif (gz_is_file($histograms_file)) {
-      $raw = json_decode(gz_file_get_contents($histograms_file), true);
-      $histograms = array();
-      foreach ($raw as $h) {
-        if (isset($h['time']) && isset($h['histogram']))
-          $histograms[$h['time']] = $h['histogram'];
-      }
-      ksort($histograms, SORT_NUMERIC);
-      $final_histogram = end($histograms);
-      $start_histogram = reset($histograms);
-      foreach ($histograms as $time => $histogram) {
-        $frames['frames'][$time] = array();
-        $progress = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
-        $frames['frames'][$time]['progress'] = $progress;
-        if ($progress == 100 && !isset($frames['complete']))
-          $frames['complete'] = $time;
       }
     }
   }
   if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
-    $dirty = true;
     $frames['SpeedIndex'] = CalculateSpeedIndex($frames);
   }
   if (isset($frames)) {
@@ -199,8 +163,6 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
         $frame['path'] = $base_path . '/' . basename($frame['path']);
     }
   }
-  if ($runCompleted && $dirty && isset($frames) && count($frames))
-    gz_file_put_contents($cache_file,json_encode($frames));
   return $frames;
 }
 

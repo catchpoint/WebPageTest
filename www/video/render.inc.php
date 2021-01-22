@@ -303,7 +303,7 @@ function BuildRenderInfo(&$tests) {
                     isset($test['cached'])) {
                 if (isset($test['step'])) {
                     $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
-                    $progress = GetVisualProgressForStep($localPaths, false);
+                    $progress = GetVisualProgressForStep($localPaths);
                 } else {
                     $progress = GetVisualProgress("./{$test['path']}", $test['run'], $test['cached']);
                 }
