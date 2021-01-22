@@ -164,7 +164,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
 
 function StartTest($testId, $time) {
   $testPath = './' . GetTestPath($testId);
-  if (!is_file("$testPath/test.running")) {
+  if (!file_exists("$testPath/test.running")) {
     touch("$testPath/test.running");
   }
   @unlink("$testPath/test.waiting");

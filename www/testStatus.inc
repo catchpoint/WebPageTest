@@ -204,7 +204,7 @@ function GetTestStatus($id, $includePosition = true) {
                 $ret['rvRunsCompleted'] = $rvRuns;
                 if (!file_exists("$testPath/test.complete")) {
                   $ret['testsCompleted'] = 0;
-                  $files = glob("$testPath/run.*.complete");
+                  $files = glob("$testPath/run.complete.*");
                   if (isset($files) && is_array($files)) {
                     $ret['testsCompleted'] = min(count($files), $fvRuns);
                   }

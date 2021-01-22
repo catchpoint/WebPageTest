@@ -184,13 +184,16 @@ if (ValidateTestId($id)) {
       if ($done) {
         $all_done = true;
         if (isset($runNumber)) {
+          $all_done = false;
           $runnum = intval($runNumber);
           if ($runnum) {
-            touch("$testPath/run.$runnum.complete");
-            $files = glob("$testPath/run.*.complete");
+            touch("$testPath/run.complete.$runnum");
+            $files = glob("$testPath/run.complete.*");
             if (isset($files) && is_array($files)) {
               $done_count = count($files);
+              logTestMsg($id, "$done_count of {$testInfo['runs']} tests complete");
               if ($done_count >= $testInfo['runs']) {
+                logTestMsg($id, 'All done');
                 $all_done = true;
               }
             }
@@ -259,7 +262,7 @@ if (ValidateTestId($id)) {
         @unlink("$testPath/test.running");
 
         // Cleanup the files marking each run
-        $files = glob("$testPath/run.*.complete");
+        $files = glob("$testPath/run.complete.*");
         if (isset($files) && is_array($files)) {
           foreach ($files as $file) {
             if (file_exists($file)) {
@@ -267,7 +270,7 @@ if (ValidateTestId($id)) {
             }
           }
         }
-      
+
         // send an async request to the post-processing code so we don't block
         SendAsyncRequest("/work/postprocess.php?test=$id");
       }

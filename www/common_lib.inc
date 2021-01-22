@@ -1464,11 +1464,9 @@ function AddTestJob($location, $job, $test, $testId) {
             mkdir($test['workdir'], 0777, true);
           $workDir = $test['workdir'];
           $json = null;
-          /*
           if ($test['runs'] > 1 && substr($job, 0, 1) == '{') {
             $json = json_decode($job, true);
           }
-          */
           for ($run = 1; $run <= $test['runs']; $run++) {
             // Submit multiple job files for a multi-run test so they can run in parallel
             if (isset($json)) {
