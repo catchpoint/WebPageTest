@@ -302,6 +302,8 @@
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
             $test['minimalResults'] = array_key_exists('minimal', $_REQUEST) && $_REQUEST['minimal'] ? 1 : 0;
             $test['debug'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] ? 1 : 0;
+            $test['disableAVIF'] = isset($_REQUEST['disableAVIF']) && $_REQUEST['disableAVIF'] ? 1 : 0;
+            $test['disableWEBP'] = isset($_REQUEST['disableWEBP']) && $_REQUEST['disableWEBP'] ? 1 : 0;
             if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
               $test['warmup'] = min(intval($_REQUEST['warmup']), 3);
             }
@@ -2355,6 +2357,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['lat'] = $test['lat'];
             if (isset($test['lng']) && strlen($test['lng']))
                 $job['lng'] = $test['lng'];
+            if( isset($test['disableAVIF']) && $test['disableAVIF'] )
+                $job['disableAVIF'] = 1;
+            if( isset($test['disableWEBP']) && $test['disableWEBP'] )
+                $job['disableWEBP'] = 1;
             // Pass the WPT server hostname to the agent
             $hostname = GetSetting('host');
             if (isset($hostname) && is_string($hostname) && strlen($hostname))

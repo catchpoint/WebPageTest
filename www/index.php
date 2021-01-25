@@ -600,6 +600,12 @@ $loc = ParseLocations($locations);
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableAVIF" class="auto_width">Disable AVIF image support</label>
+                                        <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableWEBP" class="auto_width">Disable WEBP image support</label>
+                                    </li>
                                     <?php
                                     if ($admin && GetSetting('wprDesktop')) {
                                     ?>
