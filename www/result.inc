@@ -232,7 +232,6 @@ $page_description = "Website performance test result$testLabel.";
             </div>
 
 		    <br>
-            <?php if (file_exists('./ads/results_bottom.inc')) include('./ads/results_bottom.inc'); ?>
 		    <br>
 
             <?php include('footer.inc'); ?>

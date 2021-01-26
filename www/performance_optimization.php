@@ -156,7 +156,6 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 </table>
             </div>
             <br>
-            <?php include('./ads/optimization_middle.inc'); ?>
             <br>
             <?php
                 // still multistep
@@ -165,14 +164,12 @@ $isMultistep = $testRunResults->countSteps() > 1;
             } else {
                 // singlestep
                 $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-                $snippet->setAdsFile(__DIR__ . '/ads/optimization_middle.inc');
                 echo $snippet->create();
             }
             ?>
 
             <?php
                 echo '<p></p><br>';
-                include('./ads/optimization_bottom.inc');
                 echo '<br>';
                 dumpOptimizationGlossary($settings);
             ?>

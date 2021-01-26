@@ -836,17 +836,6 @@ $loc = ParseLocations($locations);
                 echo "var mapsApiKey = '$maps_api_key';";
             }
 
-            $sponsors = parse_ini_file('./settings/sponsors.ini', true);
-            foreach( $sponsors as &$sponsor )
-            {
-              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
-                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-              $offset = 0;
-              if( $sponsor['index'] )
-                $offset = -40 * $sponsor['index'];
-              $sponsor['offset'] = $offset;
-            }
-            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
             if (isset($_REQUEST['force']) && $_REQUEST['force'])
               echo "var forgetSettings = true;\n";
             else

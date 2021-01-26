@@ -73,63 +73,6 @@
             echo '</tr></table>';
         }
     ?>
-
-    <?php
-        // display the sponsor logos across the bottom of the page
-        $sponsors = array();
-        if (is_file('./settings/sponsors.ini')) {
-            $s = parse_ini_file('./settings/sponsors.ini', true);
-            if (is_array($s) && count($s)) {
-                foreach( $s as $name => $entry ){
-                    if( $name != 'catchpoint' && strlen($entry['logo']) ) {
-                        $offset = 0;
-                        if( $entry['index'] )
-                            $offset = -40 * $entry['index'];
-                        $nofollow = false;
-                        if (isset($entry['nofollow']) && $entry['nofollow'])
-                          $nofollow = true;
-                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset, 'nofollow' => $nofollow);
-                    }
-                }
-            }
-        }
-
-        $count = count($sponsors);
-        if( $count && !defined('BARE_UI') )
-        {
-            echo '<div id="sponsor_header">WebPagetest Partners</div>';
-            shuffle($sponsors);
-
-            $rows = ceil((float)$count / 5.0);
-            $rowCount = ceil((float)$count / (float)$rows);
-            echo '<div id="links">';
-            echo'<table class="links"><tr>';
-            $i = 0;
-            $remaining = $count;
-            foreach( $sponsors as &$sponsor )
-            {
-                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4 && $remaining > $rowCount) )
-                {
-                    $i = 1;
-                    echo '</tr></table><table class="links"><tr>';
-                }
-                else
-                    $i++;
-
-                $remaining--;
-                $style = "background-image: url({$sponsor['logo']}); background-position: 0px {$sponsor['offset']}px;";
-                $title = '';
-                if (array_key_exists('title', $sponsor))
-                    $title = $sponsor['title'];
-                $nofollow = $sponsor['nofollow'] ? 'rel="nofollow"' : '';
-                echo "<td ><a href=\"{$sponsor['href']}\" $nofollow title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
-                if( $remaining && $remaining < $rowCount - $i - 1 )
-                    echo '<td></td>';
-            }
-            echo '</tr></table>';
-            echo '</div>';
-        }
-    ?>
     </div>
     <div class="cleared"></div>
 

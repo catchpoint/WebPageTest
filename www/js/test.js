@@ -185,8 +185,6 @@ function LocationChanged()
         $('#browser').val(wptStorage['testBrowser']);
 
     BrowserChanged();
-
-    UpdateSponsor();
 }
 
 /*
@@ -341,95 +339,6 @@ function ConnectionChanged()
 
         UpdateSettingsSummary();
     }
-}
-
-/*
-    Update the location sponsor
-*/
-function UpdateSponsor()
-{
-    var loc = $('#location').val();
-    var spon = new Array();
-
-    // build the list of sponsors for this location
-    for( var key in locations[loc] )
-    {
-        // only care about the integer indexes
-        if( !isNaN(key) )
-        {
-            var config = locations[loc][key];
-            var sponsor = locations[config]['sponsor'];
-            if( sponsor != undefined && sponsor.length && sponsors[sponsor] != undefined )
-            {
-                // avoid duplicates
-                var found = false;
-                for( var index in spon )
-                    if( spon[index] == sponsor )
-                        found = true;
-
-                if( !found )
-                    spon.push(sponsor);
-            }
-        }
-    }
-
-    if( spon.length )
-    {
-        var html = '<p class="centered"><small>Provided by</small></p>';
-        var count = 0;
-
-        // randomize the list
-        if( spon.length > 1 )
-            spon.sort(function() {return 0.5 - Math.random()});
-
-        for( var index in spon )
-        {
-            var sponsor = spon[index];
-            var s = sponsors[sponsor];
-            if( s != undefined )
-            {
-                var sponsorTxt = '';
-                var sponsorHref = '';
-                var sponsorDiv = '';
-
-                if( s["logo"] != undefined && s["logo"].length ) {
-                    sponsorDiv = '<div class="sponsor_logo" style="background-image: url(' +
-                                  s["logo"] + '); background-position: 0px ' + s["offset"] + 'px; margin-left: auto; margin-right: auto;"></div>';
-                }
-
-                if( s["alt"] != undefined && s["alt"].length )
-                    sponsorTxt = ' title="' + s["alt"] + '"';
-
-                if( s["href"] != undefined && s["href"].length )
-                    sponsorHref = s["href"];
-
-                if(sponsorDiv.length)
-                {
-                    if( count )
-                        html += '<p class="centered nomargin"><small>and</small></p>';
-
-                    html += '<div class="centered nomargin">';
-                    if( sponsorHref.length ) {
-                        html += '<a class="sponsor_link" href="' + sponsorHref + '"' + sponsorTxt + '>';
-                    }
-
-                    html += sponsorDiv;
-
-                    if( sponsorHref.length )
-                        html += '</a>';
-
-                    html += '</div>';
-
-                    count++;
-                }
-            }
-        }
-
-        $('#sponsor').html(html);
-        $('#sponsor').show();
-    }
-    else
-        $('#sponsor').hide();
 }
 
 /*

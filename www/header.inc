@@ -57,11 +57,6 @@ if (!defined('EMBED')) {
 <div id="header" class="page">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
-    <?php
-        if( !defined('BARE_UI') && is_file('./ads/header.inc')) {
-            include('./ads/header.inc');
-        }
-    ?>
     </div>
 </div>
 

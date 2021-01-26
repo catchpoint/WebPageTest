@@ -184,18 +184,6 @@ $page_description = "Test network path from multiple locations around the world 
             if ($maps_api_key) {
                 echo "var mapsApiKey = '$maps_api_key';";
             }
-
-            $sponsors = parse_ini_file('./settings/sponsors.ini', true);
-            foreach( $sponsors as &$sponsor )
-            {
-              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
-                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-              $offset = 0;
-              if( $sponsor['index'] )
-                $offset = -40 * $sponsor['index'];
-              $sponsor['offset'] = $offset;
-            }
-            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>

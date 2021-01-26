@@ -216,7 +216,6 @@ $page_description = "Website performance test details$testLabel";
                     ?>
                 </div>
                 <br><br>
-                <?php include('./ads/details_middle.inc'); ?>
 
                 <br>
                 <h3 name="request_details_view">Request Details</h3>
@@ -231,7 +230,6 @@ $page_description = "Website performance test details$testLabel";
                 ?>
 
                 <br>
-                <?php include('./ads/details_bottom.inc'); ?>
                 <br>
                 <?php
                     echo '';
