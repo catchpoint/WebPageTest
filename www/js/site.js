@@ -1095,3 +1095,22 @@ var getScrollbarWidth = function() {
         });
     });
 })(jQuery);
+
+// Store test info in the test history if it exists
+(function() {
+if (window.indexedDB && wptTestInfo) {
+    let open = window.indexedDB.open('webpagetest', 1);
+    open.onupgradeneeded = function() {
+        let db = open.result;
+        let store = db.createObjectStore('history', { keyPath: 'id' });
+        store.createIndex('url', 'url', {unique: false});
+        store.createIndex('location', 'location', {unique: false});
+        store.createIndex('label', 'label', {unique: false});
+        store.createIndex('created', 'created', {unique: false});
+    }
+    open.onsuccess = function() {
+        let store = open.result.transaction('history', 'readwrite').objectStore('history');
+        store.put(wptTestInfo);
+    }
+}
+})();

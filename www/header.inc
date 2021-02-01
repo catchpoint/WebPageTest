@@ -22,6 +22,24 @@ if (isset($testResults)) {
   }
 }
 
+// For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
+if ($id && isset($test) && is_array($test) && 
+        isset($test['testinfo']['created']) && 
+        isset($test['testinfo']['url']) && 
+        !isset($user) && !isset($_COOKIE['google_email'])) {
+    $history = array(
+        'id' => $id,
+        'url' => $test['testinfo']['url'],
+        'created' => $test['testinfo']['created'],
+        'location' => isset($test['testinfo']['locationText']) ? $test['testinfo']['locationText'] : '',
+        'runs' => isset($test['testinfo']['runs']) ? $test['testinfo']['runs'] : 1,
+        'label' => isset($test['testinfo']['label']) ? $test['testinfo']['label'] : '',
+        'video' => $test['testinfo']['video'] ? true : false
+    );
+    $history_json = json_encode($history);
+    echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
+}
+
 if( $supportsAuth && !defined('EMBED') )
 {
     echo '<div id="wptAuthBar" class="page">';
