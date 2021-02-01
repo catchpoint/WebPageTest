@@ -1,5 +1,7 @@
-FROM php:5.6-apache
+FROM php:7.4-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
+
+RUN chmod o+r /etc/resolv.conf
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --allow-unauthenticated \
@@ -23,7 +25,9 @@ RUN apt-get update && \
     apt-get clean && \
     apt-get autoclean
 
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ && \
+RUN apt-get install libzip-dev -y
+
+RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
     docker-php-ext-install gd && \
     docker-php-ext-install zip && \
     docker-php-ext-install curl && \
@@ -53,6 +57,9 @@ RUN chown -R www-data:www-data /var/www/html && \
 
 COPY docker/server/config/locations.ini /var/www/html/settings/locations.ini
 COPY docker/server/config/php.ini /usr/local/etc/php/
+
+RUN pear config-set php_ini /usr/local/etc/php/php.ini
+
 COPY docker/server/config/apache2.conf /etc/apache2/apache2.conf
 COPY docker/server/config/crontab /etc/crontab
 
