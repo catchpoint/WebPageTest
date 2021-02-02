@@ -68,9 +68,63 @@ if( $csv )
 {
     header ("Content-type: text/csv");
     echo '"Date/Time","Location","Test ID","URL","Label"' . "\r\n";
-}
-else
-{
+} elseif (!isset($user) && !isset($_COOKIE['google_email']) && GetSetting('localHistory')) {
+    // For users not logged in, build a local searchable test history from the data stored in indexeddb.
+?>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebPageTest - Test Log</title>
+        <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
+        <style type="text/css">
+            h4 {text-align: center;}
+            .history table {text-align:left;}
+            .history thead {text-align:left;}
+            .history th {white-space:nowrap; text-decoration:underline;}
+            .history td.date {white-space:nowrap;}
+            .history td.location {white-space:nowrap;}
+            .history td.url {white-space:nowrap;}
+            .history td.ip {white-space:nowrap;}
+            .history td.uid {white-space:nowrap;}
+        </style>
+    </head>
+    <body>
+        <div class="page-wide">
+            <?php
+            $tab = 'Test History';
+            include 'header.inc';
+            ?>
+            <div class="translucent" style="overflow:hidden;">
+                <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
+                <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. Create an account and log-in to keep your test history for longer and to see test history across multiple browsers.</p>
+                    Filter test history: 
+                         <input id="filter" name="filter" type="text" style="width:30em" onkeyup="filterHistory()" placeholder="Filter by URL or location...">
+                </form>
+                <h4>Clicking on an URL will bring you to that test's results</h4>
+                <br>
+                <form name="compare" method="get" action="/video/compare.php">
+                <table id="history" class="history" border="0" cellpadding="5px" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
+                            <th>Date/Time</th>
+                            <th>From</th>
+                            <th>Label</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                </table>
+                </form>
+            </div>
+            <?php include('footer.inc'); ?>
+        </div>
+        <script type="text/javascript">
+        <?php include(__DIR__ . '/js/history.js'); ?>
+        </script>
+    </body>
+</html>
+<?php
+} else {
 ?>
 <!DOCTYPE html>
 <html>
