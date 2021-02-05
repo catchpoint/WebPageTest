@@ -119,6 +119,9 @@
                       var interval = 15000;
                       if (xhr.status == 200) {
                           var response = JSON.parse(xhr.responseText);
+                          if (response['statusCode'] == 100) {
+                              interval = 1000;
+                          }
                           if (response['statusCode'] != undefined &&
                               response['statusCode'] != lastStatusCode) {
                               lastStatusCode = response['statusCode'];

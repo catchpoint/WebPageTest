@@ -260,6 +260,8 @@ if (ValidateTestId($id)) {
 
         touch("$testPath/test.complete");
         @unlink("$testPath/test.running");
+        @unlink("$testPath/test.waiting");
+        @unlink("$testPath/test.scheduled");
 
         // Cleanup the files marking each run
         $files = glob("$testPath/run.complete.*");

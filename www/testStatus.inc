@@ -23,7 +23,29 @@ function GetTestStatus($id, $includePosition = true) {
   $testPath = './' . GetTestPath($id);
 
   // Fast-path for pending tests when we don't need to know the queue position (avoid test and location locks)
-  if (!$includePosition && is_file("$testPath/test.waiting")) {
+  if (file_exists("$testPath/test.scheduled")) {
+    $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
+    $status = GetSchedulerTestStatus($id);
+    if (isset($status) && is_array($status)) {
+      if (isset($status['Position'])) {
+        $count = max($status['Position'] - 1, 0);
+        $ret['statusCode'] = 101;
+        $ret['behindCount'] = $count;
+        if( $count > 1 )
+          $ret['statusText'] = "Waiting behind $count other tests...";
+        elseif( $count == 1 )
+          $ret['statusText'] = "Waiting behind 1 other test...";
+        else
+          $ret['statusText'] = "Waiting at the front of the queue...";
+      } else {
+        $ret = array('statusCode' => 100,
+                     'statusText' => 'Test just started',
+                     'startTime' => gmdate("m/d/y G:i:s"),
+                     'id' => $id);
+      }
+    }
+    return $ret;
+  } elseif (!$includePosition && is_file("$testPath/test.waiting")) {
     return array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
   } elseif (is_file("$testPath/test.running")) {
     $startTime = filemtime("$testPath/test.running");

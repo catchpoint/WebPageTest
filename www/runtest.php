@@ -2176,6 +2176,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // build up the json test job
             $job = array();
             // build up the actual test commands
+            if (isset($test['priority']))
+              $job["priority"] = $test['priority'];
             if( isset($test['fvonly']) && $test['fvonly'] )
                 $job['fvonly'] = 1;
             if( $timeout )
@@ -2368,6 +2370,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
               $job['wpthost'] = $_SERVER['HTTP_HOST'];
 
+            $work_server = GetSetting('work_server');
+            if ($work_server) {
+              $job['work_server'] = $work_server;
+            }
             // Add custom metrics
             if (array_key_exists('customMetrics', $test)) {
               $job['customMetrics'] = $test['customMetrics'];

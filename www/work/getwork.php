@@ -35,6 +35,7 @@ $isWin64 = isset($_GET['is64bit']) ? $_GET['is64bit'] : '';
 $browsers = isset($_GET['browsers']) ? ParseBrowserInfo($_GET['browsers']) : '';
 $key_valid = false;
 $tester = null;
+$scheduler_node = null;
 if (strlen($ec2))
   $tester = $ec2;
 elseif (strlen($pc))
@@ -48,7 +49,6 @@ if (array_key_exists('dns', $_REQUEST))
 
 $is_done = false;
 $work_servers = GetSetting('work_servers');
-$work_server = GetSetting('work_server');
 if (isset($locations) && is_array($locations) && count($locations) &&
     (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1)) {
   shuffle($locations);
@@ -79,6 +79,18 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
     echo "Reboot";
+    $is_done = true;
+  }
+}
+
+if (!$is_done && isset($scheduler_node)) {
+  $scheduler = GetSetting('cp_scheduler');
+  $scheduler_salt = GetSetting('cp_scheduler_salt');
+  if ($scheduler && $scheduler_salt) {
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    echo "Scheduler:$scheduler $scheduler_salt $scheduler_node";
     $is_done = true;
   }
 }
@@ -250,6 +262,7 @@ function GetJob() {
   global $isWinServer;
   global $isWin64;
   global $browsers;
+  global $scheduler_node;
 
   $workDir = "./work/jobs/$location";
   $locInfo = GetLocationInfo($location);
@@ -260,6 +273,9 @@ function GetJob() {
       strpos($location, '\\') == false &&
       strpos($location, '/') == false &&
       (!strlen($locKey) || $key_valid || !strcmp($key, $locKey))) {
+    if (isset($locInfo) && is_array($locInfo) && isset($locInfo['scheduler_node'])) {
+      $scheduler_node = $locInfo['scheduler_node'];
+    }
     $key_valid = true;
     GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
     
@@ -344,9 +360,6 @@ function GetJob() {
           }
           if (is_string($work_servers) && strlen($work_servers)) {
             $testJson['work_servers'] = $work_servers;
-          }
-          if (is_string($work_server) && strlen($work_server)) {
-            $testJson['work_server'] = $work_server;
           }
           $profile_data = GetSetting('profile_data');
           if (is_string($profile_data) && strlen($profile_data)) {

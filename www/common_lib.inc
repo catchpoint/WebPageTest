@@ -1437,7 +1437,36 @@ function AddTestJob($location, $job, $test, $testId) {
         mkdir($testPath, 0777, true);
       touch("$testPath/test.waiting");
       $info = GetLocationInfo($location);
-      if (isset($info) && is_array($info) && isset($info['queue'])) {
+      $scheduler = GetSetting('cp_scheduler');
+      $scheduler_salt = GetSetting('cp_scheduler_salt');
+      $host = GetSetting('host');
+      if ($scheduler && $scheduler_salt && isset($info) && is_array($info) && isset($info['scheduler_node'])) {
+        touch("$testPath/test.scheduled");
+        $json = null;
+        $ret = true;
+        $json = json_decode($job, true);
+        $priority = 0;
+        if (isset($json['priority'])) {
+          $priority = $json['priority'];
+        }
+        for ($run = 1; $run <= $test['runs']; $run++) {
+          $jobID = $testId;
+          if($run > 1) {
+            $jobID .= '.' . $run;
+          }
+          // Submit multiple job files for a multi-run test so they can run in parallel
+          if (isset($json)) {
+            if ($test['runs'] > 1) {
+              $json['run'] = $run;
+            }
+            $json['jobID'] = $jobID;
+            $job = json_encode($json);
+          }
+          if (!AddSchedulerJob($jobID, $job, $scheduler, $scheduler_salt, $info['scheduler_node'], $host, $priority)) {
+            $ret = false;
+          }
+        }
+    } elseif (isset($info) && is_array($info) && isset($info['queue'])) {
         // explicitly configured work queues do not support multiple priorities for status
         // though they do for the actual jobs.
         $queueType = $info['queue'];
@@ -1498,6 +1527,135 @@ function AddTestJob($location, $job, $test, $testId) {
     }
   }
   return $ret;
+}
+
+/**
+ * Get a CPID signature string
+ */
+function GetCPID($host, $salt) {
+  $host = str_replace('.', '', trim($host));
+  $hash_src = strtoupper($host) . ';' . date('Ym') . $salt;
+  $hash_string = base64_encode(sha1($hash_src, true));
+  $cpid_header = 'm;' . $host . ';' . $hash_string;
+  return $cpid_header;
+}
+
+function cp_http_post($url, $body, $cpid) {
+  $result = null;
+  if (function_exists('curl_init')) {
+    $ch = curl_init($url);
+    $headers = array();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, 1 );
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json',
+                                               "CPID: $cpid"));
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$headers) {
+      $len = strlen($header);
+      $header = explode(':', $header, 2);
+      if (count($header) < 2) // ignore invalid headers
+        return $len;
+      $headers[strtolower(trim($header[0]))] = trim($header[1]);
+      return $len;
+    });
+    $response = curl_exec($ch);
+    curl_close($ch);
+    if($response !== false) {
+      if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
+        $result = $response;
+      }
+    }
+  }
+  return $result;
+}
+
+function cp_http_get($url, $cpid) {
+  $result = null;
+  if (function_exists('curl_init')) {
+    $ch = curl_init($url);
+    $headers = array();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("CPID: $cpid"));
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$headers) {
+      $len = strlen($header);
+      $header = explode(':', $header, 2);
+      if (count($header) < 2) // ignore invalid headers
+        return $len;
+      $headers[strtolower(trim($header[0]))] = trim($header[1]);
+      return $len;
+    });
+    $response = curl_exec($ch);
+    curl_close($ch);
+    if($response !== false) {
+      if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
+        $result = $response;
+      }
+    }
+  }
+  return $result;
+}
+
+/**
+ * Add a job to a scheduler queue
+ */
+function AddSchedulerJob($jobID, $job, $scheduler, $scheduler_salt, $scheduler_node, $host, $priority) {
+  $url = "{$scheduler}hawkscheduleserver/wpt-enq.ashx?test=$jobID&node=$scheduler_node&priority=$priority";
+  $cpid = GetCPID($host, $scheduler_salt);
+  $result = cp_http_post($url, $job, $cpid);
+  $ret = false;
+  if (isset($result))
+    $ret = true;
+  return $ret;
+}
+
+function GetSchedulerTestStatus($testID) {
+  $status = null;
+  // cache the status in apc for 15 seconds so we don't hammer the scheduler
+  $cache_key = "scheduler-status-$testID";
+  if (function_exists('apcu_fetch')) {
+    $status = apcu_fetch($cache_key);
+  } elseif (function_exists('apc_fetch')) {
+    $status = apc_fetch($cache_key);
+  }
+  if (isset($status) && !is_array($status)) {
+    $status = null;
+  }
+
+  if (!isset($status)) {  
+    $scheduler = GetSetting('cp_scheduler');
+    $scheduler_salt = GetSetting('cp_scheduler_salt');
+    $host = GetSetting('host');
+    if ($scheduler && $scheduler_salt) {
+      $url = "{$scheduler}hawkscheduleserver/wpt-test-queue.ashx?test=$testID";
+      $cpid = GetCPID($host, $scheduler_salt);
+      $status_text = cp_http_get($url, $cpid);
+      if (isset($status_text)) {
+        if (strlen($status_text)) {
+          $status = json_decode($status_text, true);
+        } else {
+          $status = array();
+        }
+        if (function_exists('apcu_store')) {
+          apcu_store($cache_key, $status, 15);
+        } elseif (function_exists('apc_store')) {
+          apc_store($cache_key, $status, 15);
+        }
+      }
+    }
+  }
+  return $status;
 }
 
 /**
