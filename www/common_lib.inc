@@ -1337,6 +1337,7 @@ function GetPendingTests($loc, &$count)
 *
 * @param mixed $location
 */
+$SCHEDULER_QUEUES = null;
 function GetQueueLengths($location) {
   $queues = array();
   for ($priority = 0; $priority <= 9; $priority++)
@@ -1356,6 +1357,26 @@ function GetQueueLengths($location) {
         $stats = $pheanstalk->statsTube($tube);
         $queues[0] += intval($stats['current-jobs-ready']);
       } catch(Exception $e) {
+      }
+    }
+  } elseif (isset($info) && is_array($info) && isset($info['scheduler_node'])) {
+    // Get the scheduler queue length (not separated by priorities)
+    if (!isset($SCHEDULER_QUEUES)) {
+      $host = GetSetting('host');
+      $scheduler = GetSetting('cp_scheduler');
+      $scheduler_salt = GetSetting('cp_scheduler_salt');
+      if ($scheduler && $scheduler_salt) {
+        $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?queue=1";
+        $cpid = GetCPID($host, $scheduler_salt);
+        $result_text = cp_http_get($url, $cpid);
+        if (isset($result_text) && strlen($result_text)) {
+          $SCHEDULER_QUEUES = json_decode($result_text, true);
+        }
+      }
+    }
+    if (isset($SCHEDULER_QUEUES) && is_array($SCHEDULER_QUEUES)) {
+      if (isset($SCHEDULER_QUEUES['Queues'][$info['scheduler_node']])) {
+        $queues[0] = intval($SCHEDULER_QUEUES['Queues'][$info['scheduler_node']]);
       }
     }
   } else {
