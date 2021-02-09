@@ -487,7 +487,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
           if (!$is_thumbnail) {
             $font_height = imagefontheight($font);
             $label_y = $iTop + ($row_height / 2) - ($font_height / 2);
-            imagestring($im, $font, 50, $label_y, "Page is Interactive", $black);
+            imagestring($im, $font, 50, $label_y, "Long Tasks", $black);
           }
         }
 
