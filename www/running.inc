@@ -121,6 +121,9 @@
                           var response = JSON.parse(xhr.responseText);
                           if (response['statusCode'] == 100) {
                               interval = 1000;
+                          } else if (response['statusCode'] >= 400) {
+                              interval = 0;
+                              reload = false;
                           }
                           if (response['statusCode'] != undefined &&
                               response['statusCode'] != lastStatusCode) {
@@ -129,6 +132,8 @@
                                   $("#statusImage").attr("src",waitingImage);
                               else if (lastStatusCode == 100)
                                   $("#statusImage").attr("src",testingImage);
+                              else if (lastStatusCode >= 400)
+                                  interval = 0;
                               else
                                   reload = true;
                           }
@@ -140,7 +145,7 @@
                       }
                       if (reload) {
                           window.location.reload(true);
-                      } else {
+                      } else if(interval > 0) {
                           setTimeout('UpdateStatus()', interval);
                       }
                     };
