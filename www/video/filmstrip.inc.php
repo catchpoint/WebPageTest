@@ -37,7 +37,7 @@ foreach($compTests as $t) {
                     if( $p[0] == 'r' )
                         $test['run'] = (int)$p[1];
                     if( $p[0] == 'l' )
-                        $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
+                        $test['label_override'] = $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                     if( $p[0] == 'c' )
                         $test['cached'] = (int)$p[1];
                     if( $p[0] == 's')
@@ -229,6 +229,10 @@ function LoadTestData() {
     $new_label = getLabel($test['id'], $user);
     if (!empty($new_label))
       $test['name'] = $new_label;
+    
+    // Override everything with the query-string label
+    if (isset($test['label_override']))
+      $test['name'] = $test['label_override'];
 
     if( !strlen($test['name']) ) {
       $test['name'] = $test['url'];
