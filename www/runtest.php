@@ -48,6 +48,13 @@
     $forceValidate = false;
     $runcount = 0;
     $apiKey = null;
+
+    // load the secret key (if there is one)
+    $server_secret = '';
+    $keys = parse_ini_file('./settings/keys.ini', true);
+    if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
+      $server_secret = trim($keys['server']['secret']);
+
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
     $json = false;
@@ -1150,19 +1157,14 @@ function ValidateKey(&$test, &$error, $key = null)
   global $runcount;
   global $apiKey;
   global $forceValidate;
+  global $server_secret;
 
-  // load the secret key (if there is one)
-  $secret = '';
-  $keys = parse_ini_file('./settings/keys.ini', true);
-  if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-    $secret = trim($keys['server']['secret']);
-
-  if( strlen($secret) ){
+  if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
     // or API key
     if( !isset($key) && isset($test['vh']) && strlen($test['vh']) ){
       // validate the hash
-      $hashStr = $secret;
+      $hashStr = $server_secret;
       $hashStr .= $_SERVER['HTTP_USER_AGENT'];
       $hashStr .= $test['owner'];
       $hashStr .= $test['vd'];
@@ -2085,6 +2087,8 @@ function AddIniLine(&$ini, $key, $value) {
 function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
     global $settings;
+    global $server_secret;
+
     $testId = null;
     if (is_file('./settings/block.txt'))
       $forceBlock = trim(file_get_contents('./settings/block.txt'));
@@ -2369,7 +2373,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
               $job['wpthost'] = $hostname;
             elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
               $job['wpthost'] = $_SERVER['HTTP_HOST'];
-
+            if (isset($server_secret) && strlen($server_secret)) {
+              $job['signature'] = sha1("$testId$server_secret");
+            }
             $work_server = GetSetting('work_server');
             if ($work_server) {
               $job['work_server'] = $work_server;

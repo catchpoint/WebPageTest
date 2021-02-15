@@ -41,9 +41,21 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
         return true;
     }
 
+    // Get the capture server settings if configured and the test ID specifies a capture server
+    $capture_server = null;
+    $capture_salt = null;
+    if (preg_match('/^\d+[^_+][_ix]([^c_])+c/', $id, $matches)) {
+        $capture_prefix = $matches[1];
+        if ($capture_prefix) {
+            $capture_server = GetSetting("cp_capture_$capture_prefix");
+            $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
+        }
+    }
+
     $ret = false;
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
-        (array_key_exists('archive_dir', $settings) ||           // local mount
+        ($capture_server ||                                     // CP Capture server
+        array_key_exists('archive_dir', $settings) ||           // local mount
         array_key_exists('archive_url', $settings) ||           // Archive server (simple PUT, HEAD, GET)
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
         $status = GetTestStatus($id, false);
@@ -101,7 +113,15 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
 
                           // move the archive to its final destination
                           if ($count && is_file($zipFile)) {
-                              if (array_key_exists('archive_dir', $settings)) {
+                              if ($capture_server && $capture_salt) {
+                                  $host = str_replace('.', '', trim(GetSetting('host')));
+                                  $cpid = GetCPID($host, $capture_salt);
+                                  $url = "{$capture_server}hawkcaptureserver/up-wpt.ashx?test=$id&node=$host";
+                                  $result = cp_http_post($url, null, $cpid, $zipFile);
+                                  if (isset($result)) {
+                                      $ret = true;
+                                  }
+                              } elseif (array_key_exists('archive_dir', $settings)) {
                                   $dest = GetArchiveFile($id, true);
                                   if (rename($zipFile, $dest)) {
                                       if (VerifyArchive($id))
@@ -177,37 +197,51 @@ function RestoreArchive($id) {
         if (!$testInfo && strpos($id, '.') === false && GetSetting('archive_dir') != '/dev/null') {
             global $settings;
             $testPath = './' . GetTestPath($id);
-            $url = '';
-            // see if we have an HTTP path where the file is archived
-            $check_dir = $testPath;
-            for ($i = 0; $i <= 4; $i++) {
-                $check_dir = dirname($check_dir);
-                if (is_file("$check_dir/archive.dat")) {
-                    $url = trim(file_get_contents("$check_dir/archive.dat"));
-                    if (strlen($url))
-                        break;
+
+            // Get the capture server settings if configured and the test ID specifies a capture server
+            $capture_server = null;
+            $capture_salt = null;
+            if (preg_match('/^\d+[^_+][_ix]([^c_])+c/', $id, $matches)) {
+                $capture_prefix = $matches[1];
+                if ($capture_prefix) {
+                    $capture_server = GetSetting("cp_capture_$capture_prefix");
+                    $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
                 }
             }
+            $url = '';
             $archive_settings = null;
-            // See if the test ID has a server-specific ID
-            if (preg_match('/_([^_])i/', $id, $matches)) {
-              $server = $matches[1];
-              if (isset($settings["{$server}_archive_s3_server"]) &&
-                  isset($settings["{$server}_archive_s3_key"]) &&
-                  isset($settings["{$server}_archive_s3_secret"]) &&
-                  isset($settings["{$server}_archive_s3_bucket"])) {
-                $archive_settings = array('archive_s3_server' => $settings["{$server}_archive_s3_server"],
-                                          'archive_s3_key' => $settings["{$server}_archive_s3_key"],
-                                          'archive_s3_secret' => $settings["{$server}_archive_s3_secret"],
-                                          'archive_s3_bucket' => $settings["{$server}_archive_s3_bucket"]);
-                if (isset($settings["{$server}archive_s3_urlstyle"]))
-                  $archive_settings['archive_s3_urlstyle'] = $settings["{$server}archive_s3_urlstyle"];
-              }
+            // see if we have an HTTP path where the file is archived
+            if (!$capture_server || !$capture_salt) {
+                $check_dir = $testPath;
+                for ($i = 0; $i <= 4; $i++) {
+                    $check_dir = dirname($check_dir);
+                    if (is_file("$check_dir/archive.dat")) {
+                        $url = trim(file_get_contents("$check_dir/archive.dat"));
+                        if (strlen($url))
+                            break;
+                    }
+                }
+                // See if the test ID has a server-specific ID
+                if (preg_match('/_([^_])i/', $id, $matches)) {
+                $server = $matches[1];
+                if (isset($settings["{$server}_archive_s3_server"]) &&
+                    isset($settings["{$server}_archive_s3_key"]) &&
+                    isset($settings["{$server}_archive_s3_secret"]) &&
+                    isset($settings["{$server}_archive_s3_bucket"])) {
+                        $archive_settings = array('archive_s3_server' => $settings["{$server}_archive_s3_server"],
+                                                'archive_s3_key' => $settings["{$server}_archive_s3_key"],
+                                                'archive_s3_secret' => $settings["{$server}_archive_s3_secret"],
+                                                'archive_s3_bucket' => $settings["{$server}_archive_s3_bucket"]);
+                        if (isset($settings["{$server}archive_s3_urlstyle"]))
+                            $archive_settings['archive_s3_urlstyle'] = $settings["{$server}archive_s3_urlstyle"];
+                    }
+                }
             }
             if (!isset($archive_settings)) {
               $archive_settings = $settings;
             }
             if (strlen($url) ||
+                ($capture_server && $capture_salt) ||
                 array_key_exists('archive_dir', $archive_settings) ||
                 array_key_exists('archive_url', $archive_settings) ||
                 array_key_exists('archive_s3_url', $archive_settings) ||
@@ -215,7 +249,13 @@ function RestoreArchive($id) {
                 $deleteZip = true;
                 $do_not_download = false;
                 $zipfile = "./tmp/$id.zip";
-                if (strlen($url)) {
+                if ($capture_server && $capture_salt) {
+                    $do_not_download = true;
+                    $host = str_replace('.', '', trim(GetSetting('host')));
+                    $cpid = GetCPID($host, $capture_salt);
+                    $cp_url = "{$capture_server}hawkcaptureserver/down-wpt.ashx?test=$id";
+                    cp_http_get_file($cp_url, $cpid, $zipfile);
+                } elseif (strlen($url)) {
                     $url .= "/$id.zip";
                 } else {
                     if (isset($archive_settings['archive_dir'])) {

@@ -1561,14 +1561,28 @@ function GetCPID($host, $salt) {
   return $cpid_header;
 }
 
-function cp_http_post($url, $body, $cpid) {
+function cp_http_post($url, $body, $cpid, $file=null) {
   $result = null;
   if (function_exists('curl_init')) {
     $ch = curl_init($url);
     $headers = array();
+    $file_stream = null;
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, 1 );
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    if (isset($file)) {
+      $file_stream = fopen($file, 'rb');
+      if ($file_stream) {
+        curl_setopt($ch, CURLOPT_PUT, 1 );
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST' );
+        curl_setopt($ch, CURLOPT_INFILE, $file_stream);
+        curl_setopt($ch, CURLOPT_INFILESIZE, filesize($file));
+      } else {
+        curl_close($ch);
+        return null;
+      }
+    } else {
+      curl_setopt($ch, CURLOPT_POST, 1 );
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json',
                                                "CPID: $cpid"));
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
@@ -1591,6 +1605,11 @@ function cp_http_post($url, $body, $cpid) {
       if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
         $result = $response;
       }
+    } else {
+      $error = curl_error($ch);
+    }
+    if ($file_stream) {
+      fclose($file_stream);
     }
   }
   return $result;
@@ -1626,6 +1645,43 @@ function cp_http_get($url, $cpid) {
     }
   }
   return $result;
+}
+
+function cp_http_get_file($url, $cpid, $file) {
+  $ret = false;
+  if (function_exists('curl_init')) {
+    $file_stream = fopen($file, 'wb');
+    if ($file_stream) {
+      $ch = curl_init($url);
+      $headers = array();
+      curl_setopt($ch, CURLOPT_FILE, $file_stream);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array("CPID: $cpid"));
+      curl_setopt($ch, CURLOPT_FAILONERROR, true);
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+      curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+      curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+      curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$headers) {
+        $len = strlen($header);
+        $header = explode(':', $header, 2);
+        if (count($header) < 2) // ignore invalid headers
+          return $len;
+        $headers[strtolower(trim($header[0]))] = trim($header[1]);
+        return $len;
+      });
+      $response = curl_exec($ch);
+      curl_close($ch);
+      fclose($file_stream);
+      if($response !== false) {
+        $ret = true;
+      } else {
+        $error = curl_error($ch);
+        unlink($file_stream);
+      }
+    }
+  }
+  return $ret;
 }
 
 /**
@@ -2631,6 +2687,12 @@ function ShardKey($test_num, $locationID = null) {
       }
       $key .= '_';
     }
+  }
+
+  // Add the capture server if enabled
+  $capture_prefix = GetSetting('cp_capture_prefix');
+  if ($capture_prefix) {
+    $key = $capture_prefix . 'c' . $key;
   }
 
   // Add the location ID if we are using one
