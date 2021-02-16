@@ -77,8 +77,8 @@
           if (isset($location['browser'])) {
             $ok = false;
             if (isset($location['allowKeys'])) {
-              $keys = explode(',', $location['allowKeys']);
-              foreach($keys as $k) {
+              $loc_keys = explode(',', $location['allowKeys']);
+              foreach($loc_keys as $k) {
                 if ($k == $filter) {
                   $ok = true;
                   break;
@@ -1158,6 +1158,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $apiKey;
   global $forceValidate;
   global $server_secret;
+  global $keys;
 
   if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
