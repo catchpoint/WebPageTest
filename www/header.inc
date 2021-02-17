@@ -43,21 +43,24 @@ if ($id && isset($test) && is_array($test) &&
 if( $supportsAuth && !defined('EMBED') )
 {
     echo '<div id="wptAuthBar" class="page">';
-    if( isset($user) )
-    {
+    if ($supportsSaml) {
+        $saml_email = GetSamlEmail();
+        if (isset($saml_email)) {
+            $logoutUrl = 'javascript:ClearOAuthCookies();';
+            echo "Welcome, " . htmlspecialchars($saml_email) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        } else {
+            echo '<a href="/saml/login.php">Login</a> ';
+        }
+    } elseif( isset($user) ) {
         $logoutUrl = '/forums/member.php?action=logout';
         if( isset($mybb) && strlen($mybb->user['logoutkey']) )
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
         echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    }
-    else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-	  {
+    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
         $logoutUrl = 'javascript:ClearOAuthCookies();';
         $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    }
-    else
-    {
+    } else {
         if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
           echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
           echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';

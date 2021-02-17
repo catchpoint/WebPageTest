@@ -50,10 +50,7 @@
     $apiKey = null;
 
     // load the secret key (if there is one)
-    $server_secret = '';
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-      $server_secret = trim($keys['server']['secret']);
+    $server_secret = GetServerSecret();
 
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
@@ -1158,7 +1155,6 @@ function ValidateKey(&$test, &$error, $key = null)
   global $apiKey;
   global $forceValidate;
   global $server_secret;
-  global $keys;
 
   if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
@@ -1198,6 +1194,8 @@ function ValidateKey(&$test, &$error, $key = null)
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
       $apiKey = $key;
+
+      $keys = parse_ini_file('./settings/keys.ini', true);
 
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
@@ -1922,7 +1920,12 @@ function LogTest(&$test, $testId, $url)
     //    $pageLoads *= $test['navigateCount'];
 
     $user_info = '';
-    if (isset($test['user']) && strlen($test['user'])) {
+    if ($supportsSaml) {
+      $saml_email = GetSamlEmail();
+      if (isset($saml_email)) {
+        $user_info = $saml_email;
+      }
+    } elseif (isset($test['user']) && strlen($test['user'])) {
       $user_info = $test['user'];
     } elseif (isset($_COOKIE['google_email']) && strlen($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
       $user_info = $_COOKIE['google_email'];

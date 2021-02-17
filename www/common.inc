@@ -179,13 +179,17 @@ SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
 $supportsAuth = false;
-if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret'))
+$supportsSaml = GetSetting('saml_login') !== false;
+if ($supportsSaml) {
   $supportsAuth = true;
+} elseif (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+  $supportsAuth = true;
+}
 $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
+if (!$supportsSaml && is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
   ob_start();
   $supportsAuth = true;
 
@@ -234,6 +238,8 @@ if (!$admin) {
   $this_user = null;
   if (isset($user)) {
     $this_user = $user;
+  } elseif ($supportsSaml) {
+    $this_user = GetSamlEmail();
   } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
     $this_user = $_COOKIE['google_email'];
   }
@@ -257,13 +263,17 @@ if (!$admin) {
 $isFirstVisit = true;
 $isOwner = false;
 $owner = null;
-if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+if ($supportsSaml) {
+  $isFirstVisit = false;
+  $owner = GetSamlAccount();
+} elseif( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
   $isFirstVisit = false;
   $owner = $_COOKIE['google_id'];
 } else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $isFirstVisit = false;
   $owner = $_COOKIE['o'];
-}else{
+}
+if (!isset($owner)) {
   $owner = sha1(uniqid(uniqid('', true), true));
 }
 // Sanitize the owner string

@@ -3365,3 +3365,78 @@ function server_sync($apiKey, $runCount, $logline) {
     }
   }
 }
+
+
+function GetServerSecret() {
+  $secret = null;
+  // cache the status in apc for 15 seconds so we don't hammer the scheduler
+  if (function_exists('apcu_fetch')) {
+    $secret = apcu_fetch('server-secret');
+  } elseif (function_exists('apc_fetch')) {
+    $secret = apc_fetch('server-secret');
+  }
+  if (isset($secret) && !is_string($secret)) {
+    $secret = null;
+  }
+  if (!isset($secret)) {
+    $keys = parse_ini_file(__DIR__ . '/settings/keys.ini', true);
+    if (isset($keys) && isset($keys['server']['secret'])) {
+      $secret = trim($keys['server']['secret']);
+    }
+  }
+  $ttl = 3600;
+  if (!isset($secret)) {
+    $secret = '';
+    $ttl = 60;
+  }
+  if (function_exists('apcu_store')) {
+    apcu_store('server-secret', $secret, $ttl);
+  } elseif (function_exists('apc_store')) {
+    apc_store('server-secret', $secret, $ttl);
+  }
+  return $secret;
+}
+
+function SignString($string) {
+  return sha1($string . GetServerSecret());
+}
+
+$SAML_EMAIL = null;
+function GetSamlEmail(){
+  if (isset($SAML_EMAIL)) {
+    return $SAML_EMAIL;
+  }
+  if (isset($_COOKIE['samlu'])) {
+    $parts = explode('.', $_COOKIE['samlu']);
+    if (count($parts) == 2) {
+      if ($parts[1] == SignString($parts[0])) {
+        $info = base64_decode($parts[0]);
+        $attributes = explode("\t", $info);
+        if (count($attributes) >= 2) {
+          return $attributes[1];
+        }
+      }
+    }
+  }
+  return null;
+}
+
+$SAML_ACCOUNT = null;
+function GetSamlAccount() {
+  if (isset($SAML_ACCOUNT)) {
+    return $SAML_ACCOUNT;
+  }
+  if (isset($_COOKIE['samlu'])) {
+    $parts = explode('.', $_COOKIE['samlu']);
+    if (count($parts) == 2) {
+      if ($parts[1] == SignString($parts[0])) {
+        $info = base64_decode($parts[0]);
+        $attributes = explode("\t", $info);
+        if (count($attributes) >= 1) {
+          return $attributes[0];
+        }
+      }
+    }
+  }
+  return null;
+}
