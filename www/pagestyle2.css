@@ -1,7 +1,11 @@
-body {margin: 0 0 40px;color: #222;line-height: 1.4em;font-family: Arial, Helvetica, sans-serif;font-size: 12px;background-color: #092141;}
-
-.cufon-dincond_regular {font-family: Arial Narrow, Arial, Helvetica, sans-serif;}
-.cufon-dincond_black {font-family: Arial Narrow, Arial, Helvetica, sans-serif; font-weight: bold;}
+/* Delete later 
+Light-gray bg: #f4f4f4;
+Blue buttons/text: #2F80ED;
+Dark Text: #111111;
+Gray text: #999999;
+Table row divider lines: #f1f1f1;
+*/
+body {margin: 0 0 40px;color: #111;line-height: 1.4em;font-family: Helvetica, Arial, sans-serif;font-size: 12px;background-color: #121D35;}
 
 h1 {font-size: 2.8em; line-height:1em;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 2em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
 h1, h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
@@ -43,10 +47,10 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #header_container {background-color: #e2e2e2;}
 
 /* Header */
-#header {height: 100px;}
-.logo {width: 222px;margin: 0;padding-top: 15px; float:left;}
-.logo a {display: block;height: 71px;text-indent: -999em;background-image: url(/images/logo_wpt2.png);}
-.headerAd {float:right; width:728px; height:90px; margin:5px 0 1px;}
+#header {display: block;overflow: hidden;}
+.logo {width: 150px; margin: 0;padding-top: 15px; float:left;}
+.logo a {display: block;text-indent: -999em;background: url(/images/wpt-logo.svg) no-repeat;}
+.headerAd {float:right; width:728px;margin:5px 0 1px;}
 #wptAuthBar {width: 980px; height: 18px; text-align: right; color: #fff;}
 #wptAuthBar a {color: #fff;}
 .gplusone {float:right; padding: 4px 5px 0 0;}
