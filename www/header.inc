@@ -74,13 +74,15 @@ if (!defined('EMBED')) {
 
 <div id="header" class="page">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
-    <div class="headerAd" style="text-align: right;">
-    <?php
-    if (GetSetting('survey') && $_SERVER['REQUEST_URI'] != '/survey.php') {
-        echo '<br><a href="/survey.php" title="Help improve WebPageTest"><img src="/images/survey-banner.png" alt="Help us improve WebPageTest by taking a survey"/></a>';
-    }
-    ?>
-    </div>
+    <?php if (!GetSetting('newUI')) { ?>
+        <div class="headerAd" style="text-align: right;">
+        <?php
+        if (GetSetting('survey') && $_SERVER['REQUEST_URI'] != '/survey.php') {
+            echo '<br><a href="/survey.php" title="Help improve WebPageTest"><img src="/images/survey-banner.png" alt="Help us improve WebPageTest by taking a survey"/></a>';
+        }
+        ?>
+        </div>
+    <?php } ?>
 </div>
 
 <div id="nav_bkg"><div id="nav_bar"><div class="page"><ul id="nav" class="cufon-dincond_black"><?php
