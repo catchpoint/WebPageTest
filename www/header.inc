@@ -44,10 +44,13 @@ if( $supportsAuth && !defined('EMBED') )
 {
     echo '<div id="wptAuthBar" class="page">';
     if ($supportsSaml) {
-        $saml_email = GetSamlEmail();
-        if (isset($saml_email)) {
+        $saml_name = GetSamlFirstName();
+        if (!isset($saml_name) || !strlen($saml_name)) {
+            $saml_name = GetSamlEmail();
+        }
+        if (isset($saml_name)) {
             $logoutUrl = 'javascript:ClearOAuthCookies();';
-            echo "Welcome, " . htmlspecialchars($saml_email) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+            echo "Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
         } else {
             echo '<a href="/saml/login.php">Login</a> ';
         }

@@ -3401,19 +3401,15 @@ function SignString($string) {
   return sha1($string . GetServerSecret());
 }
 
-$SAML_EMAIL = null;
-function GetSamlEmail(){
-  if (isset($SAML_EMAIL)) {
-    return $SAML_EMAIL;
-  }
+function GetSamlAttribute($index) {
   if (isset($_COOKIE['samlu'])) {
     $parts = explode('.', $_COOKIE['samlu']);
     if (count($parts) == 2) {
       if ($parts[1] == SignString($parts[0])) {
         $info = base64_decode($parts[0]);
         $attributes = explode("\t", $info);
-        if (count($attributes) >= 2) {
-          return $attributes[1];
+        if (count($attributes) > $index) {
+          return $attributes[$index];
         }
       }
     }
@@ -3421,22 +3417,18 @@ function GetSamlEmail(){
   return null;
 }
 
-$SAML_ACCOUNT = null;
 function GetSamlAccount() {
-  if (isset($SAML_ACCOUNT)) {
-    return $SAML_ACCOUNT;
-  }
-  if (isset($_COOKIE['samlu'])) {
-    $parts = explode('.', $_COOKIE['samlu']);
-    if (count($parts) == 2) {
-      if ($parts[1] == SignString($parts[0])) {
-        $info = base64_decode($parts[0]);
-        $attributes = explode("\t", $info);
-        if (count($attributes) >= 1) {
-          return $attributes[0];
-        }
-      }
-    }
-  }
-  return null;
+  return GetSamlAttribute(0);
+}
+
+function GetSamlEmail(){
+  return GetSamlAttribute(1);
+}
+
+function GetSamlFirstName() {
+  return GetSamlAttribute(2);
+}
+
+function GetSamlLastName() {
+  return GetSamlAttribute(3);
 }
