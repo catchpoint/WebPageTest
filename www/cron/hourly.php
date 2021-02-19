@@ -44,7 +44,7 @@ echo "Done\n";
 function GitUpdate() {
   if (GetSetting('gitUpdate')) {
     echo "Updating from GitHub...\n";
-    echo shell_exec('git pull origin release');
+    echo shell_exec('git pull');
   }
 }
 

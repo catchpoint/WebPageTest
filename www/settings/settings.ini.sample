@@ -134,7 +134,7 @@ maxNavigateCount=20
 ;beanstalk_api_only=0
 
 ; Automatically update from git hourly.
-; (assumes a git clone and just runs "git pull origin master" as the web user).
+; (assumes a git clone and just runs "git pull" as the web user).
 ;gitUpdate=1
 
 ; If an android device is connected to the server, scrape updated APK's off of the
