@@ -2388,6 +2388,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (array_key_exists('customMetrics', $test)) {
               $job['customMetrics'] = $test['customMetrics'];
             }
+            $max_requests = GetSetting('max_requests');
+            if ($max_requests) {
+              $job['max_requests'] = $max_requests;
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
