@@ -83,24 +83,26 @@ if (isset($locations) && is_array($locations) && count($locations) &&
   }
 }
 
-if (!$is_done && isset($scheduler_node)) {
-  $scheduler = GetSetting('cp_scheduler');
-  $scheduler_salt = GetSetting('cp_scheduler_salt');
-  if ($scheduler && $scheduler_salt) {
+// Dynamic config information
+if (!$is_done) {
+  $response = '';
+  if (isset($scheduler_node)) {
+    $scheduler = GetSetting('cp_scheduler');
+    $scheduler_salt = GetSetting('cp_scheduler_salt');
+    if ($scheduler && $scheduler_salt) {
+      $response .= "Scheduler:$scheduler $scheduler_salt $scheduler_node\n";
+    }
+  }
+  if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_servers) && strlen($work_servers)) {
+    $response .= "Servers:$work_servers\n";
+  }
+  if (strlen($response)) {
     header('Content-type: text/plain');
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-    echo "Scheduler:$scheduler $scheduler_salt $scheduler_node";
+    echo $response;
     $is_done = true;
   }
-}
-
-if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_servers) && strlen($work_servers)) {
-  header('Content-type: text/plain');
-  header("Cache-Control: no-cache, must-revalidate");
-  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-  echo "Servers:$work_servers";
-  $is_done = true;
 }
 
 // kick off any cron work we need to do asynchronously
