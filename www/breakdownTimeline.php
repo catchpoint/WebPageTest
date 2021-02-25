@@ -48,7 +48,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Processing Breakdown';

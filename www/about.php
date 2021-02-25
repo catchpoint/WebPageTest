@@ -24,8 +24,8 @@ $page_description = "More information about WebPageTest website speed testing an
             $tab = 'About';
             include 'header.inc';
             ?>
-
-            <div class="translucent">
+            <h1>About WebPageTest</h1>
+            <div class="box">
                 <?php
                 if( is_file('settings/about.inc') )
                     include('settings/about.inc');

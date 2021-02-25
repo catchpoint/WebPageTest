@@ -93,7 +93,8 @@ if( $csv )
             $tab = 'Test History';
             include 'header.inc';
             ?>
-            <div class="translucent" style="overflow:hidden;">
+            <h1>Test History</h1>
+            <div class="box" style="overflow:hidden;">
                 <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
                 <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. Create an account and log-in to keep your test history for longer and to see test history across multiple browsers.</p>
                     Filter test history: 

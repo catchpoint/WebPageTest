@@ -123,7 +123,6 @@ $page_description = "Website performance test details$testLabel";
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Details';

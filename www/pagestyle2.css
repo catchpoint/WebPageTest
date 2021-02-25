@@ -12,7 +12,7 @@ body {
     background-color: #F4F4F4;
     display: grid;
     grid-column-gap: 1.25em;
-    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 8, 1fr ) calc(50vw - 45em) [gutter-end];
+    grid-template-columns: [gutter-start] calc(50vw - 50em) repeat( 8, 1fr ) calc(50vw - 50em) [gutter-end];
 }
 .home {
     background-color: #121D35;
@@ -35,8 +35,8 @@ header a{
     color: #fff;
 }
 
-h1 {font-size: 2.8em; line-height:1em;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 2em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
-h1, h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
+h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; padding: 0;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 2em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
+h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}
 a {
@@ -119,12 +119,22 @@ nav li.current a{
 
 #main{
     grid-column: 3 / 9;
+    padding-top: 4.375em;
+}
+.compare{
+    background: #000;
+    color: #fff;
+}
+.compare #main{
+    grid-column: 1 / 11;
+    background: #000;
+    padding: 2em;
 }
 h1.attention{
     text-align: center;
     font-weight: normal;
     font-size: 3.125em /*50px*/;
-    margin: 1.8em auto 1.4em;
+    margin: .4em auto 1.4em;
 }
 /* #nav_bkg {background-color: #000;line-height: 1em; clear:both; font-size: 16px; }
 #nav_bar {background: url(/images/gloss30.png?v=2) repeat-x;}
@@ -259,6 +269,20 @@ h1.attention{
     font-size: 1.25em;
     border: 0px;
     background: #F9D856;
+}
+
+.box{
+    background: #fff;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 1.875em;
+    margin-bottom: 1.875em;
+}
+#result .pretty{width: 100%; font-size: .9em; overflow-x: scroll;}
+
+#videoContainer {
+    background: #000;
+    color: #fff;
 }
 /* #test_box-container {float: left;width: 709px;color: #fff;}
 

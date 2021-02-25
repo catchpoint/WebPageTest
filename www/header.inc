@@ -166,8 +166,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         }
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
         $firstRunResults = $testResults->getRunResult(1, false);
-
-        echo '<div id="header_container">';
+        echo '<h2>Test Results</h2>';
+        echo '<div id="header_container" class="box">';
         // Only include optimization data for normal tests
         $data_class = '';
         if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
@@ -268,7 +268,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo '</div>';
         echo '</div>';
 
-        echo '<div id="test_results-container">';
+        echo '<div id="test_results-container" class="box">';
 
         echo '<div id="test-1" class="test_results">';
         echo '<ul class="test_menu">';
