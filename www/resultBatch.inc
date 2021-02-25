@@ -254,7 +254,7 @@ function DisplayTests(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    echo '<th>Median <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a><br>(First View)</th>';
+    echo '<th>Median <a href="https://docs.webpagetest.org/metrics/speedindex/" target="_blank">Speed Index</a><br>(First View)</th>';
     echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -295,7 +295,7 @@ function DisplayTestsWithVariations(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    echo '<th>Median <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md" target="_blank">Speed Index</a><br>(First View)</th>';
+    echo '<th>Median <a href="https://docs.webpagetest.org/metrics/speedindex/" target="_blank">Speed Index</a><br>(First View)</th>';
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>

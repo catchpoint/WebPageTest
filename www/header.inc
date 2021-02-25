@@ -120,7 +120,7 @@ if (!defined('EMBED')) {
             if (is_dir('forums') && (!isset($settings['disableMybb']) || !$settings['disableMybb'])) {
                 $navTabs['Forums'] = '/forums/';
             }
-            $navTabs['Documentation'] = 'https://github.com/WPO-Foundation/webpagetest-docs';
+            $navTabs['Documentation'] = 'https://docs.webpagetest.org/';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {

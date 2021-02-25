@@ -41,12 +41,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 is also packaged up periodically and available for <a href="https://www.webpagetest.org/forums/forumdisplay.php?fid=12">download</a> if you would like to run your own
                 instance.</p>
                 <p>The online version at <a href="https://www.webpagetest.org/">www.webpagetest.org</a> is run for the benefit of the
-                performance community
-                with several companies and individuals providing the testing infrastructure around the globe.</p>
-                <p>In exchange for running a testing location, partners get their logo associated with the location and a banner on the site.
-                <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Hosting%20a%20Test%20Location.md">Hosting a test location</a> is open to anyone who is interested and
-                does not constitute an endorsement of the services offered by the partner (however, I think you will find that the partners providing test locations
-                tend to be very involved in the web performance community).</p>
+                performance community.</p>
                 <p>If you are having any problems or just have questions about the site, please feel free to <a href="mailto:pmeenan@webpagetest.org">contact me</a>.</p>
                 <?php
                 }

@@ -676,7 +676,7 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            Check out <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Scripting.md">the documentation</a> for more information on this feature
+                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
 
@@ -743,7 +743,7 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            See <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/custom_metrics.md">the documentation</a> for details on how to specify custom metrics to be captured.
+                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
                                         </div></div>
                                     </div>
 
