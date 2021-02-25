@@ -44,7 +44,7 @@ if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
-    $url = 'Enter a Website URL';
+    $url = 'Enter a website URL...';
 }
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
@@ -78,9 +78,14 @@ $loc = ParseLocations($locations);
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
-    <body>
-        <div class="page">
-            <?php
+    <body class="home">
+        <?php 
+            $tab = 'Home';
+            include 'header.inc';
+        ?>
+        <h1 class="attention">Test. Optimize. Repeat.</h1>
+        
+        <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
@@ -97,8 +102,7 @@ $loc = ParseLocations($locations);
               </script>
               <?php
             }
-            $tab = 'Home';
-            include 'header.inc';
+
             if (!$headless) {
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
@@ -177,7 +181,6 @@ $loc = ParseLocations($locations);
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
@@ -188,7 +191,15 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            }
+                            ?>
+                    </li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -765,18 +776,6 @@ $loc = ParseLocations($locations);
                     </div>
                 </div>
             </div>
-
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-                <div id="sponsor">
-                </div>
-            </div>
             <div class="cleared"></div>
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>
@@ -820,7 +819,6 @@ $loc = ParseLocations($locations);
             ?>
 
             <?php include('footer.inc'); ?>
-        </div>
 
         <script type="text/javascript">
         <?php
