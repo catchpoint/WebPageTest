@@ -790,7 +790,7 @@ function FilterLocations(&$locations, $includeHidden = '',
 
     // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
     foreach ($locations as $name => &$locRef) {
-        if (isset($locRef['browser']) && !isset($locRef['ami'])) {
+        if (isset($locRef['browser']) && !isset($locRef['ami']) && !isset($locRef['scheduler_node'])) {
             $parts = explode(':', $name);
             $locname = $parts[0];
             $testers = GetTesters($locname);
