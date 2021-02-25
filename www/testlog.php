@@ -89,7 +89,6 @@ if( $csv )
         </style>
     </head>
     <body>
-        <div class="page-wide">
             <?php
             $tab = 'Test History';
             include 'header.inc';

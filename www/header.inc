@@ -40,40 +40,13 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
-if( $supportsAuth && !defined('EMBED') )
-{
-    echo '<div id="wptAuthBar" class="page">';
-    if( isset($user) )
-    {
-        $logoutUrl = '/forums/member.php?action=logout';
-        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
-            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    }
-    else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-	  {
-        $logoutUrl = 'javascript:ClearOAuthCookies();';
-        $google_email = htmlspecialchars($_COOKIE['google_email']);
-        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    }
-    else
-    {
-        if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
-          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
-        }
-        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          echo '<a href="/oauth/login.php">Login with Google</a> ';
-        }
-    }
-    echo '</div>';
-}
+
 
 if (!defined('EMBED')) {
 ?>
 
-<div id="header" class="page">
-    <h1 class="logo"><a href="/">WebPageTest</a></h1>
+<header>
+    <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a></h1>
     <?php if (!GetSetting('newUI')) { ?>
         <div class="headerAd" style="text-align: right;">
         <?php
@@ -83,9 +56,8 @@ if (!defined('EMBED')) {
         ?>
         </div>
     <?php } ?>
-</div>
-
-<div id="nav_bkg"><div id="nav_bar"><div class="page"><ul id="nav" class="cufon-dincond_black"><?php
+    <nav>
+    <ul id="nav"><?php
         if ($id) {
             $resultUrl = "/results.php?test=$id";
             if (array_key_exists('end', $_REQUEST))
@@ -95,16 +67,6 @@ if (!defined('EMBED')) {
         }
         if (!isset($navTabs) || !count($navTabs)) {
             $navTabs = array(  'Home' => '/' );
-            if (isset($headerType) && $headerType == 'video') {
-                if (!$filmstrip) {
-                    $filmstrip = urldecode($_COOKIE['fs']);
-                }
-                if ($filmstrip) {
-                    $navTabs['Test Result'] = '/video/compare.php?tests=' . urlencode($filmstrip);
-                }
-            } else {
-                $navTabs['Test Result'] = isset($resultUrl) ? $resultUrl : '';
-            }
 
             if (empty($settings['disableTestlog'])) {
               $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
@@ -136,8 +98,38 @@ if (!defined('EMBED')) {
             }
         }
 ?></ul>
-
-</div></div></div>
+    </nav>
+    <?php
+        if( $supportsAuth && !defined('EMBED') )
+        {
+            echo '<ul id="wptAuthBar">';
+            if( isset($user) )
+            {
+                $logoutUrl = '/forums/member.php?action=logout';
+                if( isset($mybb) && strlen($mybb->user['logoutkey']) )
+                    $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
+                echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+            }
+            else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
+            {
+                $logoutUrl = 'javascript:ClearOAuthCookies();';
+                $google_email = htmlspecialchars($_COOKIE['google_email']);
+                echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+            }
+            else
+            {
+                if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
+                echo '<li><a href="/forums/member.php?action=login">Login</a></li> ';
+                echo '<li><a href="/forums/member.php?action=register">Register</a></li> ';
+                }
+                if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+                echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
+                }
+            }
+            echo '</ul>';
+        }
+    ?>
+</header>
 
 <?php
 if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'])) {
@@ -149,9 +141,6 @@ if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'
 ?>
 
 <div id="main">
-    <div class="level_2">
-        <div class="content-wrap">
-            <div class="content">
 
 
 <?php

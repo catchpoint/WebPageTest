@@ -22,8 +22,7 @@ $page_description = "Test network path from multiple locations around the world 
         <title>WebPageTest - Traceroute diagnostic</title>
         <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>
     </head>
-    <body>
-        <div class="page">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
@@ -44,6 +43,7 @@ $page_description = "Test network path from multiple locations around the world 
             $tab = 'Home';
             include 'header.inc';
             ?>
+            <h1 class="attention">Test. Optimize. Repeat.</h1>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
             <input type="hidden" name="type" value="traceroute">
@@ -63,7 +63,6 @@ $page_description = "Test network path from multiple locations around the world 
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents...</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
@@ -74,7 +73,14 @@ $page_description = "Test network path from multiple locations around the world 
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            }
+                            ?></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -132,19 +138,6 @@ $page_description = "Test network path from multiple locations around the world 
                     </ul>
                 </div>
             </div>
-
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-                <div id="sponsor">
-                </div>
-            </div>
-            <div class="cleared"></div>
 
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>

@@ -49,7 +49,6 @@ $page_description = "Website performance test result$testLabel.";
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Summary';

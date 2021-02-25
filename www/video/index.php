@@ -20,8 +20,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
-    <body>
-        <div class="page">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
@@ -42,9 +41,10 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
             $tab = 'Home';
             include 'header.inc';
             ?>
+            <h1 class="attention">Test. Optimize. Repeat.</h1>
+
             <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
-            <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
@@ -120,13 +120,13 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                 </div>
 
                 <div id="start_test-container">
-                  <?php
-                  if (strlen($siteKey)) {
-                    echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                  } else {
-                    echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                  }
-                  ?>
+                <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            }
+                            ?>
                 </div>
                 <div class="cleared"></div>
 

@@ -35,8 +35,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>
     </head>
-    <body>
-        <div class="page">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
@@ -58,6 +57,8 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
             include 'header.inc';
             if (!$headless) {
             ?>
+            <h1 class="attention">Test. Optimize. Repeat.</h1>
+
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
             <?php
@@ -76,7 +77,6 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
@@ -87,7 +87,15 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            }
+                            ?>
+                      </li>
                         <li>
                             <label for="profile">Test Configuration:</label>
                             <select name="profile" id="profile" onchange="profileChanged()">
@@ -120,16 +128,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                 </div>
             </div>
 
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-            </div>
-            <div class="cleared"></div>
+
             </form>
 
             <?php

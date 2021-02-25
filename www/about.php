@@ -20,7 +20,6 @@ $page_description = "More information about WebPageTest website speed testing an
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'About';
             include 'header.inc';
