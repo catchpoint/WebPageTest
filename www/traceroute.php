@@ -70,7 +70,7 @@ $page_description = "Test network path from multiple locations around the world 
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
                     <?php
                     if (is_file(__DIR__ . '/settings/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
                     }
                     ?>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>

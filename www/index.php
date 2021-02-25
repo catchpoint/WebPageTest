@@ -184,7 +184,7 @@ $loc = ParseLocations($locations);
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
                     <?php
                     if (is_file(__DIR__ . '/settings/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
                     }
                     ?>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
