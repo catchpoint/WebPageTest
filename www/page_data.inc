@@ -506,6 +506,9 @@ function loadPageStepData($localPaths, $testInfo = null) {
   if (empty($ret))
     $ret = null;
 
+  if (isset($ret) && is_array($ret) && isset($testInfo) && is_array($testInfo) && isset($testInfo['id'])) {
+    $ret['testID'] = $testInfo['id'];
+  }
   return $ret;
 }
 
