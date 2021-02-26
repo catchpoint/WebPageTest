@@ -238,8 +238,15 @@ function loadPageStepData($localPaths, $testInfo = null) {
           foreach($user_timing as $value) {
             $key = "chromeUserTiming.{$value['name']}";
             if (isset($value['time'])) {
-              if (!isset($ret[$key]) || $value['time'] > $ret[$key]) {
-                $ret[$key] = $value['time'];
+              // Prefer the earliest for "first" events and the latest for others
+              if (stripos($value['name'], 'first') === 0) {
+                if (!isset($ret[$key]) || $value['time'] < $ret[$key]) {
+                  $ret[$key] = $value['time'];
+                }
+              } else {
+                if (!isset($ret[$key]) || $value['time'] > $ret[$key]) {
+                  $ret[$key] = $value['time'];
+                }
               }
             } elseif (isset($value['value'])) {
               $ret[$key] = $value['value'];
