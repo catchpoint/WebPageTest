@@ -946,7 +946,6 @@
                         echo "<requestId>{$req_r}</requestId>\n";
                     echo "<data>\n";
                     echo "<testId>{$test['id']}</testId>\n";
-                    echo "<ownerKey>{$test['owner']}</ownerKey>\n";
                     if( FRIENDLY_URLS )
                     {
                         echo "<xmlUrl>$protocol://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
@@ -973,7 +972,6 @@
                     $ret['statusText'] = 'Ok';
                     $ret['data'] = array();
                     $ret['data']['testId'] = $test['id'];
-                    $ret['data']['ownerKey'] = $test['owner'];
                     $ret['data']['jsonUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}&f=json";
                     if( FRIENDLY_URLS )
                     {
