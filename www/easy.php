@@ -6,7 +6,7 @@
 include 'common.inc';
 
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 // load the secret key (if there is one)

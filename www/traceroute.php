@@ -93,7 +93,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 }
                                 ?>
                             </select>
-                            <?php if( $settings['map'] ) { ?>
+                            <?php if( GetSetting('map') ) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
                             <?php } ?>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
@@ -129,7 +129,7 @@ $page_description = "Test network path from multiple locations around the world 
                         <li>
                             <label for="number_of_tests">
                                 Number of Tests to Run<br>
-                                <small>Up to <?php echo $settings['maxruns']; ?></small>
+                                <small>Up to <?php echo GetSetting('maxruns', 9); ?></small>
                             </label>
                             <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
                         </li>
@@ -177,7 +177,8 @@ $page_description = "Test network path from multiple locations around the world 
 
         <script type="text/javascript">
         <?php
-            echo "var maxRuns = {$settings['maxruns']};\n";
+            $max_runs = GetSetting('maxruns', 9);
+            echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
             $maps_api_key = GetSetting('maps_api_key');

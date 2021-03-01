@@ -30,7 +30,7 @@
             <div id="runningHeader">
                 <p>
                 <?php
-                    if ($settings['nolinks']) {
+                    if (GetSetting('nolinks')) {
                         echo "URL: $url<br>\n";
                     } else {
                         echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";

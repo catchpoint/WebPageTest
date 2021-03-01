@@ -151,24 +151,10 @@ if (isset($_REQUEST['embed'])) {
     if (extension_loaded('newrelic'))
       @newrelic_disable_autorum();
 }
-// load the install-specific settings
-$settings = parse_ini_file('./settings/settings.ini');
-if (!isset($settings) || !is_array($settings))
-    $settings = array();
-if (!array_key_exists('nogzip', $settings))
-    $settings['nogzip'] = false;
-if (!array_key_exists('nolinks', $settings))
-    $settings['nolinks'] = 0;
-$max_load = GetSetting('render_max_load');
-
-// override some settings from the URI
-if (isset($_REQUEST['bulk'])) {
-    $settings['noBulk'] = 0;
-}
 $is_ssl = isSslConnection();
 $GLOBALS['cdnPath'] = '';
-if (isset($settings['cdn']) && !$is_ssl) {
-    $GLOBALS['cdnPath'] = $settings['cdn'];
+if (GetSetting('cdn') && !$is_ssl) {
+    $GLOBALS['cdnPath'] = GetSetting('cdn');
 }
 
 $tz_offset = null;
@@ -189,7 +175,7 @@ $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-if (!$supportsSaml && is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
+if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
   ob_start();
   $supportsAuth = true;
 
@@ -294,7 +280,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
     $id = $_COOKIE['tid'];
 }
 
-$median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
+$median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if(extension_loaded('newrelic')) {

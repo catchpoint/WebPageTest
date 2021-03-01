@@ -14,7 +14,7 @@ $keys = parse_ini_file('./settings/keys.ini', true);
 if( $keys && isset($keys['server']) && isset($keys['server']['key']) )
   $key = trim($keys['server']['key']);
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 

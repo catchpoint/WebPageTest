@@ -4,8 +4,6 @@
 // found in the LICENSE.md file.
 /**
 * Send the test result beacon (to Show Slow instance)
-* 
-* @param mixed $settings
 */
 function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
 {

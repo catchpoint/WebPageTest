@@ -58,7 +58,7 @@
     if( isset($req_f) && !strcasecmp($req_f, 'json') )
         $json = true;
     $headless = false;
-    if (array_key_exists('headless', $settings) && $settings['headless']) {
+    if (GetSetting('headless')) {
         $headless = true;
     }
     $is_bulk_test = false;
@@ -435,8 +435,8 @@
                     if (array_key_exists($test['browser'], $customBrowsers)) {
                       $protocol = getUrlProtocol();
                       $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}/browsers/";
-                      if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
-                          $base_uri = $settings['browsers_url'];
+                      if (GetSetting('browsers_url'))
+                          $base_uri = GetSetting('browsers_url');
                       $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
                           "$base_uri{$test['browser']}.zip" : "$base_uri{$test['browser']}.apk";
                       $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
@@ -545,7 +545,7 @@
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
-            if( isset($settings['noPriority']) && $settings['noPriority'] )
+            if( GetSetting('noPriority') )
                 $test['priority'] =  0;
 
             // take the ad-blocking request and create a custom block from it
@@ -1313,23 +1313,21 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
     if( strlen($test['url']) || $test['batch'] )
     {
-        $settings = parse_ini_file('./settings/settings.ini');
+        $maxruns = (int)GetSetting('maxruns', 0);
         if( isset($_COOKIE['maxruns']) && $_COOKIE['maxruns'] )
-            $settings['maxruns'] = (int)$_COOKIE['maxruns'];
+            $maxruns = (int)$_COOKIE['maxruns'];
         elseif( isset($_REQUEST['maxruns']) && $_REQUEST['maxruns'] )
-            $settings['maxruns'] = (int)$_REQUEST['maxruns'];
-        $maxruns = (int)$settings['maxruns'];
+            $maxruns = (int)$_REQUEST['maxruns'];
         if( !$maxruns )
             $maxruns = 10;
 
-        if ( !isset($settings['fullSizeVideoOn']) || !$settings['fullSizeVideoOn'] )
-        {
+        if (!GetSetting('fullSizeVideoOn')) {
             //overwrite the Full Size Video flag with 0 if feature disabled in the settings
             $test['fullsizevideo'] = 0;
         }
 
         if( !isset($test['batch']) || !$test['batch'] )
-            ValidateURL($test['url'], $error, $settings);
+            ValidateURL($test['url'], $error);
 
         if( !$error )
         {
@@ -1658,7 +1656,7 @@ function ScriptParameterCount($command)
 * @param mixed $test
 * @param mixed $error
 */
-function ValidateURL(&$url, &$error, &$settings)
+function ValidateURL(&$url, &$error)
 {
     $ret = false;
 
@@ -1673,7 +1671,7 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
     elseif( strpos($host, '.') === FALSE && !GetSetting('allowNonFQDN') )
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
-    elseif( preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && !$settings['allowPrivate'] &&
+    elseif( preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && GetSetting('allowPrivate') &&
             (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "169.254.", 8) || !strncmp($host, "10.", 3)) )
         $error = "You can not test <b>" . htmlspecialchars($host) . "</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
     elseif (!strcmp($host, "169.254.169.254"))
@@ -2088,7 +2086,6 @@ function AddIniLine(&$ini, $key, $value) {
 */
 function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
-    global $settings;
     global $server_secret;
 
     $testId = null;
@@ -2275,14 +2272,15 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['browserExe'] = $test['browserExe'];
             if( isset($test['browser']) && strlen($test['browser']) )
                 $job['browser'] = $test['browser'];
-            if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
+            if( (isset($test['pngss']) && $test['pngss']) || GetSetting('pngss') )
                 $job['pngScreenShot'] = 1;
             if (isset($test['fps']) && $test['fps'] > 0)
                 $job['fps'] = intval($test['fps']);
+            $iq = GetSetting('iq');
             if( isset($test['iq']) && $test['iq'] )
                 $job['imageQuality'] = intval($test['iq']);
-            elseif( isset($settings['iq']) && $settings['iq'] )
-                $job['imageQuality'] = intval($settings['iq']);
+            elseif( $iq )
+                $job['imageQuality'] = intval($iq);
             if( isset($test['bodies']) && $test['bodies'] )
                 $job['bodies'] = 1;
             if( isset($test['htmlbody']) && $test['htmlbody'] )
@@ -2446,7 +2444,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 function ParseBulkUrl($line)
 {
     $entry = null;
-    global $settings;
     $err;
     $noscript = 0;
 
@@ -2472,7 +2469,7 @@ function ParseBulkUrl($line)
         $url = trim(substr($line, $equals + 1));
     }
 
-    if( $url && ValidateURL($url, $err, $settings) )
+    if( $url && ValidateURL($url, $err) )
     {
         $entry = array();
         $entry['u'] = $url;
