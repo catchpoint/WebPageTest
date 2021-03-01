@@ -25,7 +25,6 @@ if (GetSetting('ec2_key')) {
 }
 
 PruneVideos();
-GitUpdate();
 ApkUpdate();
 
 Unlock($cron_lock);
@@ -36,17 +35,6 @@ if (GetSetting('cron_archive')) {
 }
 
 echo "Done\n";
-
-/**
-* Automatically update from the git master (if configured)
-* 
-*/
-function GitUpdate() {
-  if (GetSetting('gitUpdate')) {
-    echo "Updating from GitHub...\n";
-    echo shell_exec('git pull');
-  }
-}
 
 function ApkUpdate() {
   if (GetSetting('apkPackages')) {
