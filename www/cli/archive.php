@@ -142,7 +142,12 @@ function DeleteArchivedFiles($dir) {
 */
 function CheckRelay() {
   $dirs = scandir('./results/relay');
-  $keys = parse_ini_file('./settings/keys.ini');
+  $keys_file = __DIR__ . '/settings/keys.ini';
+  if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+    $keys_file = __DIR__ . '/settings/common/keys.ini';
+  if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+    $keys_file = __DIR__ . '/settings/server/keys.ini';
+  $keys = parse_ini_file($keys_file);
   foreach($dirs as $key) {
     if ($key != '.' && $key != '..') {
       $keydir = "./results/relay/$key";

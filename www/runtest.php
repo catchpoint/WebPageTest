@@ -406,7 +406,12 @@
 
             // see if we need to process a template for these requests	
             if (isset($req_k) && strlen($req_k)) {
-              $keys = parse_ini_file('./settings/keys.ini', true);	
+              $keys_file = __DIR__ . '/settings/keys.ini';
+              if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+                $keys_file = __DIR__ . '/settings/common/keys.ini';
+              if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+                $keys_file = __DIR__ . '/settings/server/keys.ini';
+              $keys = parse_ini_file($keys_file, true);	
               if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {	
                   $template = $keys[$req_k]['template'];	
                   if (is_file("./templates/$template.php"))	
@@ -1193,7 +1198,12 @@ function ValidateKey(&$test, &$error, $key = null)
         $key = $test['key'];
       $apiKey = $key;
 
-      $keys = parse_ini_file('./settings/keys.ini', true);
+      $keys_file = __DIR__ . '/settings/keys.ini';
+      if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+        $keys_file = __DIR__ . '/settings/common/keys.ini';
+      if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+        $keys_file = __DIR__ . '/settings/server/keys.ini';
+      $keys = parse_ini_file($keys_file, true);
 
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {

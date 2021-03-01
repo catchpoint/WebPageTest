@@ -105,10 +105,9 @@ $page_description = "Website performance test result$testLabel.";
                           <?php
                         }
                         // load the secret key (if there is one)
-                        $secret = '';
-                        $keys = parse_ini_file('./settings/keys.ini', true);
-                        if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-                          $secret = trim($keys['server']['secret']);
+                        $secret = GetServerSecret();
+                        if (!isset($secret))
+                            $secret = '';
 
                         echo '<form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";

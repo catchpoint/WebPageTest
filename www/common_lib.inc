@@ -3408,7 +3408,12 @@ function GetServerSecret() {
     $secret = null;
   }
   if (!isset($secret)) {
-    $keys = parse_ini_file(__DIR__ . '/settings/keys.ini', true);
+    $keys_file = __DIR__ . '/settings/keys.ini';
+    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+      $keys_file = __DIR__ . '/settings/common/keys.ini';
+    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+      $keys_file = __DIR__ . '/settings/server/keys.ini';
+    $keys = parse_ini_file($keys_file, true);
     if (isset($keys) && isset($keys['server']['secret'])) {
       $secret = trim($keys['server']['secret']);
     }

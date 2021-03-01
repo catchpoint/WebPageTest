@@ -24,7 +24,12 @@ $users = array();
 $keys = array();
 
 // load the API keys
-$keys = parse_ini_file('./settings/keys.ini', true);
+$keys_file = __DIR__ . '/settings/keys.ini';
+if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+  $keys_file = __DIR__ . '/settings/common/keys.ini';
+if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+  $keys_file = __DIR__ . '/settings/server/keys.ini';
+$keys = parse_ini_file($keys_file, true);
 
 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
 for ($offset = 0; $offset <= $days; $offset++) {

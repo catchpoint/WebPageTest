@@ -5,10 +5,9 @@
 include 'common.inc';
 
 // load the secret key (if there is one)
-$secret = '';
-$keys = parse_ini_file('./settings/keys.ini', true);
-if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-  $secret = trim($keys['server']['secret']);
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 $locations = LoadLocations();

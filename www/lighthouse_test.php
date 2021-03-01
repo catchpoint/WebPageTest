@@ -9,13 +9,9 @@ if (GetSetting('headless')) {
     $headless = true;
 }
 // load the secret key (if there is one)
-$secret = '';
-if (is_file('./settings/keys.ini')) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-}
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 $url = '';
 if (isset($req_url)) {
   $url = htmlspecialchars($req_url);

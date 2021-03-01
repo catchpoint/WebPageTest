@@ -4,7 +4,12 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 if (isset($_REQUEST['k'])) {
-  $keys = parse_ini_file(__DIR__ . '/settings/keys.ini', true);
+  $keys_file = __DIR__ . '/settings/keys.ini';
+  if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+    $keys_file = __DIR__ . '/settings/common/keys.ini';
+  if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+    $keys_file = __DIR__ . '/settings/server/keys.ini';
+  $keys = parse_ini_file($keys_file, true);
   if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {
     $admin = true;
   }
