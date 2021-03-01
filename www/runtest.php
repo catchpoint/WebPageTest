@@ -2022,9 +2022,21 @@ function CheckUrl($url)
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
     $url = 'http://' . $url;
   if ($forceValidate || (!$usingAPI && !$admin)) {
-    $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($blockUrls !== false && count($blockUrls) ||
+      if (file_exists('./settings/server/blockurl.txt')) {
+        $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } elseif (file_exists('./settings/common/blockurl.txt')) {
+        $blockUrls = file('./settings/common/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } else {
+        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      }
+      if (file_exists('./settings/server/blockdomains.txt')) {
+        $blockHosts = file('./settings/server/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } elseif (file_exists('./settings/common/blockdomains.txt')) {
+        $blockHosts = file('./settings/common/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } else {
+        $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      }
+      if ($blockUrls !== false && count($blockUrls) ||
         $blockHosts !== false && count($blockHosts)) {
       // Follow redirects to see if they are obscuring the site being tested
       $rhost = '';
