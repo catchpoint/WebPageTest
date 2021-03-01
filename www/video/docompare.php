@@ -101,8 +101,12 @@ function SubmitTest($url, $label, $key)
     $testUrl .= 'f=xml&priority=2&runs=3&video=1&mv=1&fvonly=1&url=' . urlencode($url);
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);
-    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && is_file(__DIR__ . '/../settings/profiles.ini'))
+    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && 
+        (file_exists(__DIR__ . '/../settings/profiles.ini') ||
+         file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
+         file_exists(__DIR__ . '/../settings/server/profiles.ini'))) {
         $testUrl .= "&profile={$_REQUEST['profile']}";
+    }
     if( $ip )
         $testUrl .= "&addr=$ip";
     if( $uid )

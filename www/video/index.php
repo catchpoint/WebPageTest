@@ -10,8 +10,13 @@ $run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
 $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
-if (is_file(__DIR__ . '/../settings/profiles.ini'))
-  $profiles = parse_ini_file(__DIR__ . '/../settings/profiles.ini', true);
+$profile_file = __DIR__ . '/settings/profiles.ini';
+if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/common/profiles.ini';
+if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/server/profiles.ini';
+if (is_file($profile_file))
+  $profiles = parse_ini_file($profile_file, true);
 ?>
 
 <!DOCTYPE html>
@@ -50,7 +55,9 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
                     <?php
-                    if (is_file(__DIR__ . '/../settings/profiles.ini')) {
+                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
                       echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
                     }
                     ?>

@@ -168,7 +168,9 @@ $loc = ParseLocations($locations);
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
                     <?php
-                    if (is_file(__DIR__ . '/settings/profiles.ini')) {
+                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
                       echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
                     }
                     ?>

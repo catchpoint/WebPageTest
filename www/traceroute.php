@@ -68,7 +68,9 @@ $page_description = "Test network path from multiple locations around the world 
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
                     <?php
-                    if (is_file(__DIR__ . '/settings/profiles.ini')) {
+                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
                       echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
                     }
                     ?>

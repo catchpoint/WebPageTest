@@ -20,7 +20,12 @@ if (isset($req_url)) {
 if (!strlen($url)) {
   $url = 'Enter a Website URL';
 }
-$profiles = parse_ini_file('./settings/profiles.ini', true);
+$profile_file = __DIR__ . '/settings/profiles.ini';
+if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/common/profiles.ini';
+if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/server/profiles.ini';
+$profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
 <html>

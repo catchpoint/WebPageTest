@@ -26,8 +26,13 @@
     }
 
     // see if we are loading the test settings from a profile
-    if (isset($_REQUEST['profile']) && is_file(__DIR__ . '/settings/profiles.ini')) {
-      $profiles = parse_ini_file(__DIR__ . '/settings/profiles.ini', true);
+    $profile_file = __DIR__ . '/settings/profiles.ini';
+    if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+      $profile_file = __DIR__ . '/settings/common/profiles.ini';
+    if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+      $profile_file = __DIR__ . '/settings/server/profiles.ini';
+    if (isset($_REQUEST['profile']) && is_file($profile_file)) {
+      $profiles = parse_ini_file($profile_file, true);
       if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
         foreach($profiles[$_REQUEST['profile']] as $key => $value) {
           if ($key !== 'label' && $key !== 'description') {
