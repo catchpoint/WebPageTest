@@ -171,7 +171,12 @@ function GetLocationFallbacks($location) {
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
 function LoadLocationsIni() {
   $ec2_allow = GetSetting('ec2_allow');
-  $locations = parse_ini_file(__DIR__ . '/settings/locations.ini', true);
+  $locations_file = __DIR__ . '/settings/locations.ini';
+  if (file_exists(__DIR__ . '/settings/common/locations.ini'))
+    $locations_file = __DIR__ . '/settings/common/locations.ini';
+  if (file_exists(__DIR__ . '/settings/server/locations.ini'))
+    $locations_file = __DIR__ . '/settings/server/locations.ini';
+  $locations = parse_ini_file($locations_file, true);
   if (GetSetting('ec2_locations')) {
     $ec2 = parse_ini_file(__DIR__ . '/settings/ec2_locations.ini', true);
     if ($ec2 && is_array($ec2) && isset($ec2['locations'])) {
