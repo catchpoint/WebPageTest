@@ -107,7 +107,11 @@
         }
     </script>
     <?php
-    if (is_file('./settings/customfooter.inc.php')) {
+    if (file_exists('./settings/server/customfooter.inc.php')) {
+        include('./settings/server/customfooter.inc.php');
+    } elseif (file_exists('./settings/common/customfooter.inc.php')) {
+        include('./settings/common/customfooter.inc.php');
+    } elseif (file_exists('./settings/customfooter.inc.php')) {
         include('./settings/customfooter.inc.php');
     }
     ?>

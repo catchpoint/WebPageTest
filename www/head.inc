@@ -20,7 +20,11 @@ if( strlen($page_description) )
 <?php 
     if(!isset($noanalytics) && extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_header();
-    if (is_file('./settings/customhead.inc.php')) {
+    if (file_exists('./settings/server/customhead.inc.php')) {
+        include('./settings/server/customhead.inc.php');
+    } elseif (file_exists('./settings/common/customhead.inc.php')) {
+        include('./settings/common/customhead.inc.php');
+    } elseif (file_exists('./settings/customhead.inc.php')) {
         include('./settings/customhead.inc.php');
     }
     echo "<script type=\"text/javascript\">\n";
