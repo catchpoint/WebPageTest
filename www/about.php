@@ -28,10 +28,13 @@ $page_description = "More information about WebPageTest website speed testing an
 
             <div class="translucent">
                 <?php
-                if( is_file('settings/about.inc') )
+                if( is_file('settings/server/about.inc') ) {
+                    include('settings/server/about.inc');
+                } elseif( is_file('settings/common/about.inc') ) {
+                    include('settings/common/about.inc');
+                } elseif( is_file('settings/about.inc') ) {
                     include('settings/about.inc');
-                else
-                {
+                } else {
                 ?>
                 <a href="https://developers.google.com/speed"><img id="logo" src="images/google.png"></a>
                 <br><p>WebPageTest is an open source project that is primarily being developed and supported by Google as part of our efforts
