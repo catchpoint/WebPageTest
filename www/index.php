@@ -33,7 +33,14 @@ if (isset($req_url)) {
 if (!strlen($url)) {
     $url = 'Enter a Website URL';
 }
-$connectivity = parse_ini_file('./settings/connectivity.ini', true);
+$connectivity_file = './settings/connectivity.ini.sample';
+if (file_exists('./settings/connectivity.ini'))
+    $connectivity_file = './settings/connectivity.ini';
+if (file_exists('./settings/common/connectivity.ini'))
+    $connectivity_file = './settings/common/connectivity.ini';
+if (file_exists('./settings/server/connectivity.ini'))
+    $connectivity_file = './settings/server/connectivity.ini';
+$connectivity = parse_ini_file($connectivity_file, true);
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
   // move it to the front of the list
   $insert = $connectivity[$_REQUEST['connection']];
