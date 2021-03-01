@@ -1980,7 +1980,13 @@ function CheckIp(&$test)
     $date = gmdate("Ymd");
     $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
-    $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (file_exists('./settings/server/blockip.txt')) {
+      $blockIps = file('./settings/server/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    } elseif (file_exists('./settings/common/blockip.txt')) {
+      $blockIps = file('./settings/common/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    } else {
+      $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    }
     if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
       foreach( $blockIps as $block ) {
         $block = trim($block);
