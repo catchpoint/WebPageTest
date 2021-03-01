@@ -19,7 +19,13 @@ if (isset($req_url)) {
 if (!strlen($url)) {
   $url = 'Enter a Website URL';
 }
-$lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
+if (file_exists('./settings/server/lighthouse.ini')) {
+  $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);  
+} elseif (file_exists('./settings/common/lighthouse.ini')) {
+  $lighthouse = parse_ini_file('./settings/common/lighthouse.ini', true);  
+} else {
+  $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
+}
 ?>
 <!DOCTYPE html>
 <html>
