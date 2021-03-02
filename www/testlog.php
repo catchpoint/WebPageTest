@@ -121,9 +121,6 @@ if( $csv )
                     </thead>
                 </table>
                 </form>
-            </div>
-            <?php include('footer.inc'); ?>
-        </div>
         <script type="text/javascript">
         <?php include(__DIR__ . '/js/history.js'); ?>
         </script>
@@ -431,7 +428,6 @@ if( $csv )
                     ?>
                 </table>
                 </form>
-            </div>
 
             <?php include('footer.inc'); ?>
         </div>
