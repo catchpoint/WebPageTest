@@ -175,7 +175,6 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
             <?php include('footer.inc'); ?>
         </div>
-        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <?php

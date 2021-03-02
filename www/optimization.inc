@@ -514,7 +514,7 @@ function dumpOptimizationGlossary()
     <hr>
     <h2>Glossary:</h2>
     <p></p>
-    <table border="1" cellpadding="5px" cellspacing="0" style="width:100%">
+    <table class="glossary" cellpadding="5px" cellspacing="0" style="width:100%">
 
         <tr><th class="nowrap" rowspan=2 colspan=1>First Byte Time</th>
             <td class="nowrap">Applicable Objects</td>

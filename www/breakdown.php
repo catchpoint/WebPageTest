@@ -122,7 +122,6 @@ if(!$testInfo->isFirstViewOnly()) {
         </div>
 
         <?php include('footer.inc'); ?>
-        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="//www.google.com/jsapi"></script>

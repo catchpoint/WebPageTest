@@ -243,7 +243,7 @@ $page_description = "Website performance test details$testLabel";
                         $snippet = $requestHeadersSnippet->create();
                         if ($snippet) {
                             echo '<div id="headers">';
-                            echo '<br><hr><h2>Request Headers</h2>';
+                            echo '<br><hr><h3>Request Headers</h3>';
                             echo $snippet;
                             echo '</div>';
                         }
@@ -253,7 +253,6 @@ $page_description = "Website performance test details$testLabel";
 
             <?php include('footer.inc'); ?>
         </div>
-        <a href="#top" id="back_to_top">Back to top</a>
 
         <?php
         if ($isMultistep) {

@@ -35,7 +35,7 @@ header a{
     color: #fff;
 }
 
-h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; padding: 0;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 2em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
+h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; padding: 0;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 1.5em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
 h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}
@@ -123,9 +123,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     color: #000;
     border-bottom: 3px solid #F9D856;
 }
-.test_results-content {
-    text-align: center;
-}
+
 .test_results-content #download {
     overflow: hidden;
     margin-bottom: 3.3em;
@@ -140,9 +138,24 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .test_results-content #testinfo form{
     margin-top: 1em;
 }
-.test_results-content #headers div{
+.test_results-content #headers div,
+.test_results-content div.details{
     text-align: left;
 }
+.test_results-content .link-external {
+    font-size: 14px;
+}
+.test_results-content .link-external::after {
+    position:relative;
+    top:-4px;
+    display:inline-block;
+    content:"";
+    width:12px;
+    height:12px;
+    background:url(/images/external_header.svg) center center no-repeat;
+    background-size:12px;
+}
+
 #average{
     text-align: center;
     margin-bottom: 1.5em;
@@ -349,7 +362,9 @@ input[type="submit"].start_test{
     margin-bottom: 1.875em;
 }
 #result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
-
+#result {
+    text-align: center;
+}
 #videoContainer {
     background: #000;
     color: #fff;
@@ -544,6 +559,17 @@ table.details{
     max-width: 100%;
     font-size: .75em;
     line-height: 1.3em;
+}
+table.glossary{
+    text-align: left;
+    border-collapse:collapse;
+}
+table.glossary td, table.glossary th{
+    border: 1px solid #999;
+    border-collapse: collapse;
+}
+table.glossary th{
+    text-align: center;
 }
 /* details page */
 /* #headers {text-align: left; width:930px; overflow:auto;}
