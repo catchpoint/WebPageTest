@@ -57,3 +57,6 @@ foreach ($locations as $loc) {
         UpdateTester($location, $tester, $testerInfo, $cpu);
     }
 }
+
+// kick off any cron work we need to do asynchronously
+CheckCron();
