@@ -770,8 +770,6 @@ $loc = ParseLocations($locations);
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="cleared"></div>
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>
                 <div id="map">
