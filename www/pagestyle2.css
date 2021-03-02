@@ -42,6 +42,9 @@ ul {list-style: none;margin: 0;padding: 0;}
 a {
     color: #4381E5;
 }
+a:not([href]) {
+    color: #111;
+}
 .home a {color: #fff;}
 img {border: none;}
 input.checkbox, input.radio {margin: 0 10px 0 0;}
@@ -119,6 +122,27 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     font-weight: bold;
     color: #000;
     border-bottom: 3px solid #F9D856;
+}
+.test_results-content #download {
+    overflow: hidden;
+    margin-bottom: 3.3em;
+}
+.test_results-content #download{
+    text-align: right;
+}
+.test_results-content #testinfo {
+    text-align: left;
+    float: left;
+}
+.test_results-content #testinfo form{
+    margin-top: 1em;
+}
+#average{
+    text-align: center;
+    margin-bottom: 1.5em;
+}
+#average h2{
+    font-size: 1.5em;
 }
 /* #header {display: block;overflow: hidden;}
 .logo {width: 150px; margin: 0;padding-top: 15px; float:left;}
