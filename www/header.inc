@@ -40,41 +40,6 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
-if( $supportsAuth && !defined('EMBED') )
-{
-    echo '<div id="wptAuthBar" class="page">';
-    if ($supportsSaml) {
-        $saml_name = GetSamlFirstName();
-        if (!isset($saml_name) || !strlen($saml_name)) {
-            $saml_name = GetSamlEmail();
-        }
-        if (isset($saml_name)) {
-            $logoutUrl = 'javascript:ClearOAuthCookies();';
-            echo "Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-        } else {
-            echo '<a href="/saml/login.php">Login</a> ';
-        }
-    } elseif( isset($user) ) {
-        $logoutUrl = '/forums/member.php?action=logout';
-        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
-            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-        $logoutUrl = 'javascript:ClearOAuthCookies();';
-        $google_email = htmlspecialchars($_COOKIE['google_email']);
-        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-    } else {
-        if (is_dir('./forums') && !GetSetting('disableMybb')) {
-          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
-        }
-        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          echo '<a href="/oauth/login.php">Login with Google</a> ';
-        }
-    }
-    echo '</div>';
-}
-
 if (!defined('EMBED')) {
 ?>
 
@@ -113,7 +78,7 @@ if (!defined('EMBED')) {
             } elseif (is_dir('forums') && !GetSetting('disableMybb')) {
                 $navTabs['Forums'] = '/forums/';
             }
-            $navTabs['Documentation'] = 'https://docs.webpagetest.org/';
+            $navTabs['Docs'] = 'https://docs.webpagetest.org/';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
 
             if ($supportsSaml && isset($USER_EMAIL) && GetSetting('saml_account')) {
@@ -138,36 +103,42 @@ if (!defined('EMBED')) {
         }
 ?></ul>
     </nav>
-    <?php
-        if( $supportsAuth && !defined('EMBED') )
-        {
-            echo '<ul id="wptAuthBar">';
-            if( isset($user) )
-            {
-                $logoutUrl = '/forums/member.php?action=logout';
-                if( isset($mybb) && strlen($mybb->user['logoutkey']) )
-                    $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-                echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-            }
-            else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-            {
-                $logoutUrl = 'javascript:ClearOAuthCookies();';
-                $google_email = htmlspecialchars($_COOKIE['google_email']);
-                echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-            }
-            else
-            {
-                if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
-                echo '<li><a href="/forums/member.php?action=login">Login</a></li> ';
-                echo '<li><a href="/forums/member.php?action=register">Register</a></li> ';
-                }
-                if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-                echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
-                }
-            }
-            echo '</ul>';
+<?php
+    if( $supportsAuth && !defined('EMBED') )
+{
+    echo '<div id="wptAuthBar">';
+    if ($supportsSaml) {
+        $saml_name = GetSamlFirstName();
+        if (!isset($saml_name) || !strlen($saml_name)) {
+            $saml_name = GetSamlEmail();
         }
-    ?>
+        if (isset($saml_name)) {
+            $logoutUrl = 'javascript:ClearOAuthCookies();';
+            echo "Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        } else {
+            echo '<a href="/saml/login.php">Login</a> ';
+        }
+    } elseif( isset($user) ) {
+        $logoutUrl = '/forums/member.php?action=logout';
+        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
+            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
+        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+        $logoutUrl = 'javascript:ClearOAuthCookies();';
+        $google_email = htmlspecialchars($_COOKIE['google_email']);
+        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+    } else {
+        if (is_dir('./forums') && !GetSetting('disableMybb')) {
+          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+        }
+        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+          echo '<a href="/oauth/login.php">Login with Google</a> ';
+        }
+    }
+    echo '</div>';
+}
+?>
 </header>
 
 <?php
