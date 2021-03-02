@@ -5,17 +5,13 @@
 include 'common.inc';
 
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 // load the secret key (if there is one)
-$secret = '';
-if (is_file('./settings/keys.ini')) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-}
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 $url = '';
 if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
@@ -23,7 +19,13 @@ if (isset($req_url)) {
 if (!strlen($url)) {
   $url = 'Enter a Website URL';
 }
-$lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
+if (file_exists('./settings/server/lighthouse.ini')) {
+  $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);  
+} elseif (file_exists('./settings/common/lighthouse.ini')) {
+  $lighthouse = parse_ini_file('./settings/common/lighthouse.ini', true);  
+} else {
+  $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -38,7 +40,7 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
         <div class="page">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>

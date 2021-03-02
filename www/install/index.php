@@ -93,7 +93,6 @@ function ShowCheck($label, $pass, $required = true, $value = null) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function CheckPHP() {
-    global $settings;
     ShowCheck('PHP version at least 5.3', phpversion() >= 5.3, true, phpversion());
     ShowCheck('GD module installed', extension_loaded('gd'));
     ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
@@ -110,12 +109,12 @@ function CheckPHP() {
 }
 
 function CheckUtils() {
-  global $settings;
   ShowCheck('ffmpeg installed with --enable-libx264 (required for video)', CheckFfmpeg());
   ShowCheck('jpegtran installed (required for JPEG analysis)', CheckJpegTran(), false);
   ShowCheck('exiftool installed (required for JPEG analysis)', CheckExifTool(), false);
-  if (array_key_exists('beanstalkd', $settings))
-      ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
+  $beanstalk = GetSetting('beanstalkd');
+  if ($beanstalk)
+      ShowCheck("beanstalkd responding on $beanstalk (configured in settings.ini)", CheckBeanstalkd());
 }
 
 /*-----------------------------------------------------------------------------
@@ -277,10 +276,9 @@ function return_bytes($val) {
 *
 */
 function CheckBeanstalkd() {
-    global $settings;
     $ret = false;
     require_once('./lib/beanstalkd/pheanstalk_init.php');
-    $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+    $pheanstalk = new Pheanstalk_Pheanstalk(GetSetting('beanstalkd'));
     if ($pheanstalk->getConnection()->isServiceListening()) {
         $id = $pheanstalk->putInTube('wpt.installtest', "test");
         $jobStats = $pheanstalk->statsJob($id);

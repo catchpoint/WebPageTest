@@ -83,24 +83,26 @@ if (isset($locations) && is_array($locations) && count($locations) &&
   }
 }
 
-if (!$is_done && isset($scheduler_node)) {
-  $scheduler = GetSetting('cp_scheduler');
-  $scheduler_salt = GetSetting('cp_scheduler_salt');
-  if ($scheduler && $scheduler_salt) {
+// Dynamic config information
+if (!$is_done) {
+  $response = '';
+  if (isset($scheduler_node)) {
+    $scheduler = GetSetting('cp_scheduler');
+    $scheduler_salt = GetSetting('cp_scheduler_salt');
+    if ($scheduler && $scheduler_salt) {
+      $response .= "Scheduler:$scheduler $scheduler_salt $scheduler_node\n";
+    }
+  }
+  if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_servers) && strlen($work_servers)) {
+    $response .= "Servers:$work_servers\n";
+  }
+  if (strlen($response)) {
     header('Content-type: text/plain');
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-    echo "Scheduler:$scheduler $scheduler_salt $scheduler_node";
+    echo $response;
     $is_done = true;
   }
-}
-
-if (!$is_done && isset($_GET['servers']) && $_GET['servers'] && is_string($work_servers) && strlen($work_servers)) {
-  header('Content-type: text/plain');
-  header("Cache-Control: no-cache, must-revalidate");
-  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-  echo "Servers:$work_servers";
-  $is_done = true;
 }
 
 // kick off any cron work we need to do asynchronously
@@ -449,62 +451,6 @@ function GetUpdate() {
   }
   
   return $ret;
-}
-
-/**
-* Send a quick http request locally if we need to process cron events (to each of the cron entry points)
-* 
-* This only runs events on 15-minute intervals and tries to keep it close to the clock increments (00, 15, 30, 45)
-* 
-*/
-function CheckCron() {
-  // open and lock the cron job file - abandon quickly if we can't get a lock
-  $should_run = false;
-  $minutes15 = false;
-  $minutes60 = false;
-  $cron_lock = Lock("Cron Check", false, 1200);
-  if (isset($cron_lock)) {
-    $last_run = 0;
-    if (is_file('./tmp/wpt_cron.dat'))
-      $last_run = file_get_contents('./tmp/wpt_cron.dat');
-    $now = time();
-    $elapsed = $now - $last_run;
-    if (!$last_run) {
-        $should_run = true;
-        $minutes15 = true;
-        $minutes60 = true;
-    } elseif ($elapsed > 120) {
-      if ($elapsed > 1200) {
-        // if it has been over 20 minutes, run regardless of the wall-clock time
-        $should_run = true;
-      } else {
-        $minute = gmdate('i', $now) % 5;
-        if ($minute < 2) {
-          $should_run = true;
-          $minute = gmdate('i', $now) % 15;
-          if ($minute < 2)
-            $minutes15 = true;
-          $minute = gmdate('i', $now) % 60;
-          if ($minute < 2)
-            $minutes60 = true;
-        }
-      }
-    }
-    if ($should_run)
-      file_put_contents('./tmp/wpt_cron.dat', $now);
-    Unlock($cron_lock);
-  }
-  
-  // send the cron requests
-  if ($should_run) {
-    SendAsyncRequest('/cron/5min.php');
-    if (is_file('./jpeginfo/cleanup.php'))
-      SendAsyncRequest('/jpeginfo/cleanup.php');
-    if ($minutes15)
-      SendAsyncRequest('/cron/15min.php');
-    if ($minutes60)
-      SendAsyncRequest('/cron/hourly.php');
-  }
 }
 
 /**

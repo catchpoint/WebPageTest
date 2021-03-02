@@ -26,8 +26,13 @@
     }
 
     // see if we are loading the test settings from a profile
-    if (isset($_REQUEST['profile']) && is_file(__DIR__ . '/settings/profiles.ini')) {
-      $profiles = parse_ini_file(__DIR__ . '/settings/profiles.ini', true);
+    $profile_file = __DIR__ . '/settings/profiles.ini';
+    if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+      $profile_file = __DIR__ . '/settings/common/profiles.ini';
+    if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+      $profile_file = __DIR__ . '/settings/server/profiles.ini';
+    if (isset($_REQUEST['profile']) && is_file($profile_file)) {
+      $profiles = parse_ini_file($profile_file, true);
       if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
         foreach($profiles[$_REQUEST['profile']] as $key => $value) {
           if ($key !== 'label' && $key !== 'description') {
@@ -50,10 +55,7 @@
     $apiKey = null;
 
     // load the secret key (if there is one)
-    $server_secret = '';
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-      $server_secret = trim($keys['server']['secret']);
+    $server_secret = GetServerSecret();
 
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
@@ -61,7 +63,7 @@
     if( isset($req_f) && !strcasecmp($req_f, 'json') )
         $json = true;
     $headless = false;
-    if (array_key_exists('headless', $settings) && $settings['headless']) {
+    if (GetSetting('headless')) {
         $headless = true;
     }
     $is_bulk_test = false;
@@ -409,7 +411,12 @@
 
             // see if we need to process a template for these requests	
             if (isset($req_k) && strlen($req_k)) {
-              $keys = parse_ini_file('./settings/keys.ini', true);	
+              $keys_file = __DIR__ . '/settings/keys.ini';
+              if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+                $keys_file = __DIR__ . '/settings/common/keys.ini';
+              if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+                $keys_file = __DIR__ . '/settings/server/keys.ini';
+              $keys = parse_ini_file($keys_file, true);	
               if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {	
                   $template = $keys[$req_k]['template'];	
                   if (is_file("./templates/$template.php"))	
@@ -438,8 +445,8 @@
                     if (array_key_exists($test['browser'], $customBrowsers)) {
                       $protocol = getUrlProtocol();
                       $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}/browsers/";
-                      if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
-                          $base_uri = $settings['browsers_url'];
+                      if (GetSetting('browsers_url'))
+                          $base_uri = GetSetting('browsers_url');
                       $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
                           "$base_uri{$test['browser']}.zip" : "$base_uri{$test['browser']}.apk";
                       $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
@@ -548,7 +555,7 @@
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
-            if( isset($settings['noPriority']) && $settings['noPriority'] )
+            if( GetSetting('noPriority') )
                 $test['priority'] =  0;
 
             // take the ad-blocking request and create a custom block from it
@@ -949,7 +956,6 @@
                         echo "<requestId>{$req_r}</requestId>\n";
                     echo "<data>\n";
                     echo "<testId>{$test['id']}</testId>\n";
-                    echo "<ownerKey>{$test['owner']}</ownerKey>\n";
                     if( FRIENDLY_URLS )
                     {
                         echo "<xmlUrl>$protocol://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
@@ -976,7 +982,6 @@
                     $ret['statusText'] = 'Ok';
                     $ret['data'] = array();
                     $ret['data']['testId'] = $test['id'];
-                    $ret['data']['ownerKey'] = $test['owner'];
                     $ret['data']['jsonUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}&f=json";
                     if( FRIENDLY_URLS )
                     {
@@ -1115,7 +1120,14 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
   if( isset($test['connectivity']) )
   {
       $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
-      $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+      $connectivity_file = './settings/connectivity.ini.sample';
+      if (file_exists('./settings/connectivity.ini'))
+          $connectivity_file = './settings/connectivity.ini';
+      if (file_exists('./settings/common/connectivity.ini'))
+          $connectivity_file = './settings/common/connectivity.ini';
+      if (file_exists('./settings/server/connectivity.ini'))
+          $connectivity_file = './settings/server/connectivity.ini';
+      $connectivity = parse_ini_file($connectivity_file, true);
       if( isset($connectivity[$test['connectivity']]) )
       {
           $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
@@ -1153,12 +1165,11 @@ function ValidateKey(&$test, &$error, $key = null)
   global $admin;
   global $uid;
   global $user;
-  global $this_user;
+  global $USER_EMAIL;
   global $runcount;
   global $apiKey;
   global $forceValidate;
   global $server_secret;
-  global $keys;
 
   if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
@@ -1181,7 +1192,7 @@ function ValidateKey(&$test, &$error, $key = null)
       } else {
         // if recaptcha is enabled, verify the response
         $secret = GetSetting("recaptcha_secret_key", "");
-        if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($secret)) {
+        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($secret)) {
           $passed = false;
           if (isset($_REQUEST['g-recaptcha-response'])) {
             $captcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secret) . "&response=" . urlencode($_REQUEST['g-recaptcha-response']);
@@ -1198,6 +1209,13 @@ function ValidateKey(&$test, &$error, $key = null)
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
       $apiKey = $key;
+
+      $keys_file = __DIR__ . '/settings/keys.ini';
+      if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+        $keys_file = __DIR__ . '/settings/common/keys.ini';
+      if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+        $keys_file = __DIR__ . '/settings/server/keys.ini';
+      $keys = parse_ini_file($keys_file, true);
 
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
@@ -1317,23 +1335,21 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
     if( strlen($test['url']) || $test['batch'] )
     {
-        $settings = parse_ini_file('./settings/settings.ini');
+        $maxruns = (int)GetSetting('maxruns', 0);
         if( isset($_COOKIE['maxruns']) && $_COOKIE['maxruns'] )
-            $settings['maxruns'] = (int)$_COOKIE['maxruns'];
+            $maxruns = (int)$_COOKIE['maxruns'];
         elseif( isset($_REQUEST['maxruns']) && $_REQUEST['maxruns'] )
-            $settings['maxruns'] = (int)$_REQUEST['maxruns'];
-        $maxruns = (int)$settings['maxruns'];
+            $maxruns = (int)$_REQUEST['maxruns'];
         if( !$maxruns )
             $maxruns = 10;
 
-        if ( !isset($settings['fullSizeVideoOn']) || !$settings['fullSizeVideoOn'] )
-        {
+        if (!GetSetting('fullSizeVideoOn')) {
             //overwrite the Full Size Video flag with 0 if feature disabled in the settings
             $test['fullsizevideo'] = 0;
         }
 
         if( !isset($test['batch']) || !$test['batch'] )
-            ValidateURL($test['url'], $error, $settings);
+            ValidateURL($test['url'], $error);
 
         if( !$error )
         {
@@ -1457,7 +1473,14 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 if( isset($test['connectivity']) )
                 {
                     $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
-                    $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+                    $connectivity_file = './settings/connectivity.ini.sample';
+                    if (file_exists('./settings/connectivity.ini'))
+                        $connectivity_file = './settings/connectivity.ini';
+                    if (file_exists('./settings/common/connectivity.ini'))
+                        $connectivity_file = './settings/common/connectivity.ini';
+                    if (file_exists('./settings/server/connectivity.ini'))
+                        $connectivity_file = './settings/server/connectivity.ini';
+                    $connectivity = parse_ini_file($connectivity_file, true);
                     if( isset($connectivity[$test['connectivity']]) )
                     {
                         $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
@@ -1662,7 +1685,7 @@ function ScriptParameterCount($command)
 * @param mixed $test
 * @param mixed $error
 */
-function ValidateURL(&$url, &$error, &$settings)
+function ValidateURL(&$url, &$error)
 {
     $ret = false;
 
@@ -1677,7 +1700,7 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
     elseif( strpos($host, '.') === FALSE && !GetSetting('allowNonFQDN') )
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
-    elseif( preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && !$settings['allowPrivate'] &&
+    elseif( preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && GetSetting('allowPrivate') &&
             (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "169.254.", 8) || !strncmp($host, "10.", 3)) )
         $error = "You can not test <b>" . htmlspecialchars($host) . "</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
     elseif (!strcmp($host, "169.254.169.254"))
@@ -1899,6 +1922,7 @@ function LogTest(&$test, $testId, $url)
 {
     global $runcount;
     global $apiKey;
+    global $USER_EMAIL;
     if (GetSetting('logging_off')) {
         server_sync($apiKey, $runcount, null);
         return;
@@ -1922,7 +1946,12 @@ function LogTest(&$test, $testId, $url)
     //    $pageLoads *= $test['navigateCount'];
 
     $user_info = '';
-    if (isset($test['user']) && strlen($test['user'])) {
+    if ($supportsSaml) {
+      $saml_email = GetSamlEmail();
+      if (isset($saml_email)) {
+        $user_info = $saml_email;
+      }
+    } elseif (isset($test['user']) && strlen($test['user'])) {
       $user_info = $test['user'];
     } elseif (isset($_COOKIE['google_email']) && strlen($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
       $user_info = $_COOKIE['google_email'];
@@ -1943,6 +1972,7 @@ function LogTest(&$test, $testId, $url)
         'key' => @$test['key'],
         'count' => @$pageLoads,
         'priority' => @$test['priority'],
+        'email' => $USER_EMAIL,
     );
 
     $log = makeLogLine($line_data);
@@ -1966,7 +1996,13 @@ function CheckIp(&$test)
     $date = gmdate("Ymd");
     $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
-    $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (file_exists('./settings/server/blockip.txt')) {
+      $blockIps = file('./settings/server/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    } elseif (file_exists('./settings/common/blockip.txt')) {
+      $blockIps = file('./settings/common/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    } else {
+      $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    }
     if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
       foreach( $blockIps as $block ) {
         $block = trim($block);
@@ -2008,9 +2044,21 @@ function CheckUrl($url)
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
     $url = 'http://' . $url;
   if ($forceValidate || (!$usingAPI && !$admin)) {
-    $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($blockUrls !== false && count($blockUrls) ||
+      if (file_exists('./settings/server/blockurl.txt')) {
+        $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } elseif (file_exists('./settings/common/blockurl.txt')) {
+        $blockUrls = file('./settings/common/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } else {
+        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      }
+      if (file_exists('./settings/server/blockdomains.txt')) {
+        $blockHosts = file('./settings/server/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } elseif (file_exists('./settings/common/blockdomains.txt')) {
+        $blockHosts = file('./settings/common/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      } else {
+        $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      }
+      if ($blockUrls !== false && count($blockUrls) ||
         $blockHosts !== false && count($blockHosts)) {
       // Follow redirects to see if they are obscuring the site being tested
       $rhost = '';
@@ -2087,7 +2135,6 @@ function AddIniLine(&$ini, $key, $value) {
 */
 function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
-    global $settings;
     global $server_secret;
 
     $testId = null;
@@ -2274,14 +2321,15 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['browserExe'] = $test['browserExe'];
             if( isset($test['browser']) && strlen($test['browser']) )
                 $job['browser'] = $test['browser'];
-            if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
+            if( (isset($test['pngss']) && $test['pngss']) || GetSetting('pngss') )
                 $job['pngScreenShot'] = 1;
             if (isset($test['fps']) && $test['fps'] > 0)
                 $job['fps'] = intval($test['fps']);
+            $iq = GetSetting('iq');
             if( isset($test['iq']) && $test['iq'] )
                 $job['imageQuality'] = intval($test['iq']);
-            elseif( isset($settings['iq']) && $settings['iq'] )
-                $job['imageQuality'] = intval($settings['iq']);
+            elseif( $iq )
+                $job['imageQuality'] = intval($iq);
             if( isset($test['bodies']) && $test['bodies'] )
                 $job['bodies'] = 1;
             if( isset($test['htmlbody']) && $test['htmlbody'] )
@@ -2385,6 +2433,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (array_key_exists('customMetrics', $test)) {
               $job['customMetrics'] = $test['customMetrics'];
             }
+            $max_requests = GetSetting('max_requests');
+            if ($max_requests) {
+              $job['max_requests'] = $max_requests;
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
@@ -2441,7 +2493,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 function ParseBulkUrl($line)
 {
     $entry = null;
-    global $settings;
     $err;
     $noscript = 0;
 
@@ -2467,7 +2518,7 @@ function ParseBulkUrl($line)
         $url = trim(substr($line, $equals + 1));
     }
 
-    if( $url && ValidateURL($url, $err, $settings) )
+    if( $url && ValidateURL($url, $err) )
     {
         $entry = array();
         $entry['u'] = $url;

@@ -171,7 +171,12 @@ function GetLocationFallbacks($location) {
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
 function LoadLocationsIni() {
   $ec2_allow = GetSetting('ec2_allow');
-  $locations = parse_ini_file(__DIR__ . '/settings/locations.ini', true);
+  $locations_file = __DIR__ . '/settings/locations.ini';
+  if (file_exists(__DIR__ . '/settings/common/locations.ini'))
+    $locations_file = __DIR__ . '/settings/common/locations.ini';
+  if (file_exists(__DIR__ . '/settings/server/locations.ini'))
+    $locations_file = __DIR__ . '/settings/server/locations.ini';
+  $locations = parse_ini_file($locations_file, true);
   if (GetSetting('ec2_locations')) {
     $ec2 = parse_ini_file(__DIR__ . '/settings/ec2_locations.ini', true);
     if ($ec2 && is_array($ec2) && isset($ec2['locations'])) {
@@ -228,40 +233,64 @@ function LoadLocationsIni() {
 /**
 * Get a setting from settings.ini (and cache it for up to a minute)
 */
+$SETTINGS = null;
 function GetSetting($setting, $default = FALSE) {
-  global $settings;
+  global $SETTINGS;
   $ret = $default;
-  if (function_exists('apcu_fetch') &&
-      function_exists('apcu_store')) {
-    $value = apcu_fetch("setting_$setting", $success);
-    if ($success)
-      $ret = $value;
-    else {
-      if (!isset($settings) || !is_array($settings))
-        $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
-      if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
-        $ret = $settings[$setting];
-      apcu_store("setting_$setting", $ret, 60);
+
+  // Pull the settings from apc cache if possible if they are not in the memory cache
+  if (!isset($SETTINGS)) {
+    $SETTINGS = CacheFetch('settings');
+    if (!isset($SETTINGS)) {
+      $SETTINGS = array();
+      // Load the global settings
+      if (file_exists(__DIR__ . '/settings/settings.ini')) {
+        $SETTINGS = parse_ini_file(__DIR__ . '/settings/settings.ini');
+      }
+      // Load common settings as overrides
+      if (file_exists(__DIR__ . '/settings/common/settings.ini')) {
+        $common = parse_ini_file(__DIR__ . '/settings/common/settings.ini');
+        $SETTINGS = array_merge($SETTINGS, $common);
+      }
+      // Load server-specific settings as overrides
+      if (file_exists(__DIR__ . '/settings/server/settings.ini')) {
+        $server = parse_ini_file(__DIR__ . '/settings/server/settings.ini');
+        $SETTINGS = array_merge($SETTINGS, $server);
+      }
+      CacheStore('settings', $SETTINGS, 60);
     }
-  } elseif (function_exists('apc_fetch') &&
-            function_exists('apc_store')) {
-    $value = apc_fetch("setting_$setting", $success);
-    if ($success)
-      $ret = $value;
-    else {
-      if (!isset($settings) || !is_array($settings))
-        $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
-      if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
-        $ret = $settings[$setting];
-      apc_store("setting_$setting", $ret, 60);
-    }
-  } else {
-    if (!isset($settings) || !is_array($settings))
-      $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
-    if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
-      $ret = $settings[$setting];
+  }
+
+  if (isset($SETTINGS) && is_array($SETTINGS) && isset($SETTINGS[$setting])) {
+    $ret = $SETTINGS[$setting];
   }
   return $ret;
+}
+
+function CacheFetch($key) {
+  $ret = null;
+  if (function_exists('apcu_fetch')) {
+    $ret = apcu_fetch($key, $success);
+    if (!$success) {
+      $ret = null;
+    }
+  } elseif (function_exists('apc_fetch')) {
+    $ret = apc_fetch($key, $success);
+    if (!$success) {
+      $ret = null;
+    }
+  }
+  return $ret;
+}
+
+function CacheStore($key, $value, $ttl) {
+  if (isset($value)) {
+    if (function_exists('apcu_store')) {
+      apcu_store($key, $value, $ttl);
+    } elseif (function_exists('apc_store')) {
+      apc_store($key, $value, $ttl);
+    }
+  }
 }
 
 /**
@@ -790,7 +819,7 @@ function FilterLocations(&$locations, $includeHidden = '',
 
     // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
     foreach ($locations as $name => &$locRef) {
-        if (isset($locRef['browser']) && !isset($locRef['ami'])) {
+        if (isset($locRef['browser']) && !isset($locRef['ami']) && !isset($locRef['scheduler_node'])) {
             $parts = explode(':', $name);
             $locname = $parts[0];
             $testers = GetTesters($locname);
@@ -2755,7 +2784,8 @@ function makeLogLine($line_data) {
     $log = $line_data['date'] . "\t" . $line_data['ip'] . "\t0" . "\t0";
     $log .= "\t" . $line_data['guid'] . "\t" . $line_data['url'] . "\t". $line_data['location'] . "\t" . $line_data['private'];
     $log .= "\t". $line_data['testUID'] . "\t" . $line_data['testUser'] . "\t" . $line_data['video'] . "\t" . $line_data['label'];
-    $log .= "\t". $line_data['owner'] . "\t". $line_data['key'] . "\t" . $line_data['count'] . "\t" . $line_data['priority'] . "\r\n";
+    $log .= "\t". $line_data['owner'] . "\t". $line_data['key'] . "\t" . $line_data['count'] . "\t" . $line_data['priority'];
+    $log .= "\t" . $line_data['email'] . "\r\n";
 
     return $log;
 }
@@ -3363,5 +3393,133 @@ function server_sync($apiKey, $runCount, $logline) {
         file_get_contents($url, false, $context);
       }
     }
+  }
+}
+
+
+function GetServerSecret() {
+  $secret = null;
+  // cache the status in apc for 15 seconds so we don't hammer the scheduler
+  if (function_exists('apcu_fetch')) {
+    $secret = apcu_fetch('server-secret');
+  } elseif (function_exists('apc_fetch')) {
+    $secret = apc_fetch('server-secret');
+  }
+  if (isset($secret) && !is_string($secret)) {
+    $secret = null;
+  }
+  if (!isset($secret)) {
+    $keys_file = __DIR__ . '/settings/keys.ini';
+    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+      $keys_file = __DIR__ . '/settings/common/keys.ini';
+    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+      $keys_file = __DIR__ . '/settings/server/keys.ini';
+    $keys = parse_ini_file($keys_file, true);
+    if (isset($keys) && isset($keys['server']['secret'])) {
+      $secret = trim($keys['server']['secret']);
+    }
+  }
+  $ttl = 3600;
+  if (!isset($secret)) {
+    $secret = '';
+    $ttl = 60;
+  }
+  if (function_exists('apcu_store')) {
+    apcu_store('server-secret', $secret, $ttl);
+  } elseif (function_exists('apc_store')) {
+    apc_store('server-secret', $secret, $ttl);
+  }
+  return $secret;
+}
+
+function SignString($string) {
+  return sha1($string . GetServerSecret());
+}
+
+function GetSamlAttribute($index) {
+  if (isset($_COOKIE['samlu'])) {
+    $parts = explode('.', $_COOKIE['samlu']);
+    if (count($parts) == 2) {
+      if ($parts[1] == SignString($parts[0])) {
+        $info = base64_decode($parts[0]);
+        $attributes = explode("\t", $info);
+        if (count($attributes) > $index) {
+          return $attributes[$index];
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function GetSamlAccount() {
+  return GetSamlAttribute(0);
+}
+
+function GetSamlEmail(){
+  return GetSamlAttribute(1);
+}
+
+function GetSamlFirstName() {
+  return GetSamlAttribute(2);
+}
+
+function GetSamlLastName() {
+  return GetSamlAttribute(3);
+}
+
+/**
+* Send a quick http request locally if we need to process cron events (to each of the cron entry points)
+* 
+* This only runs events on 5-minute intervals and tries to keep it close to the clock increments (00, 15, 30, 45)
+* 
+*/
+function CheckCron() {
+  // open and lock the cron job file - abandon quickly if we can't get a lock
+  $should_run = false;
+  $minutes15 = false;
+  $minutes60 = false;
+  $cron_lock = Lock("Cron Check", false, 1200);
+  if (isset($cron_lock)) {
+    $last_run = 0;
+    if (is_file('./tmp/wpt_cron.dat'))
+      $last_run = file_get_contents('./tmp/wpt_cron.dat');
+    $now = time();
+    $elapsed = $now - $last_run;
+    if (!$last_run) {
+        $should_run = true;
+        $minutes15 = true;
+        $minutes60 = true;
+    } elseif ($elapsed > 120) {
+      if ($elapsed > 1200) {
+        // if it has been over 20 minutes, run regardless of the wall-clock time
+        $should_run = true;
+      } else {
+        $minute = gmdate('i', $now) % 5;
+        if ($minute < 2) {
+          $should_run = true;
+          $minute = gmdate('i', $now) % 15;
+          if ($minute < 2)
+            $minutes15 = true;
+          $minute = gmdate('i', $now) % 60;
+          if ($minute < 2)
+            $minutes60 = true;
+        }
+      }
+    }
+    if ($should_run)
+      file_put_contents('./tmp/wpt_cron.dat', $now);
+    Unlock($cron_lock);
+  }
+  
+  // send the cron requests
+  if ($should_run) {
+    SendAsyncRequest('/cron/5min.php');
+    if (is_file('./jpeginfo/cleanup.php'))
+      SendAsyncRequest('/jpeginfo/cleanup.php');
+    if ($minutes15)
+      SendAsyncRequest('/cron/15min.php');
+    if ($minutes60)
+      SendAsyncRequest('/cron/hourly.php');
   }
 }

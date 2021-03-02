@@ -9,8 +9,20 @@ if( isset($_GET["days"]) )
     $days = (int)$_GET["days"];
 
 $whitelist = array();
-$wl = file('./settings/whitelist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-$blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+if (file_exists('./settings/server/whitelist.txt')) {
+  $wl = file('./settings/server/whitelist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+} elseif (file_exists('./settings/common/whitelist.txt')) {
+  $wl = file('./settings/common/whitelist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+} else {
+  $wl = file('./settings/whitelist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+}
+if (file_exists('./settings/server/blockip.txt')) {
+  $blockIps = file('./settings/server/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+} elseif (file_exists('./settings/common/blockip.txt')) {
+  $blockIps = file('./settings/common/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+} else {
+  $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+}
 foreach ($wl as &$w) {
   $parts = explode(" ", $w);
   $ip = trim($parts[0]);
@@ -24,7 +36,12 @@ $users = array();
 $keys = array();
 
 // load the API keys
-$keys = parse_ini_file('./settings/keys.ini', true);
+$keys_file = __DIR__ . '/settings/keys.ini';
+if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+  $keys_file = __DIR__ . '/settings/common/keys.ini';
+if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+  $keys_file = __DIR__ . '/settings/server/keys.ini';
+$keys = parse_ini_file($keys_file, true);
 
 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
 for ($offset = 0; $offset <= $days; $offset++) {

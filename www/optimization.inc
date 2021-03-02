@@ -507,10 +507,8 @@ function ReportCookies(&$pageData, &$requests, $step)
 
 /**
 * Display a glossary for the optimization results
-*
-* @param mixed $settings
 */
-function dumpOptimizationGlossary(&$settings)
+function dumpOptimizationGlossary()
 {
 ?>
     <hr>

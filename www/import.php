@@ -277,7 +277,12 @@ if (array_key_exists('tests', $_REQUEST)) {
                 <label for="test">Existing Test<br><small>(Add runs to an existing test)</small></label>
               </li>
               <?php
-              if (is_file('./settings/keys.ini')) {
+              $keys_file = __DIR__ . '/settings/keys.ini';
+              if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+                $keys_file = __DIR__ . '/settings/common/keys.ini';
+              if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+                $keys_file = __DIR__ . '/settings/server/keys.ini';
+              if (is_file($keys_file)) {
                 $key = '';
                 if (array_key_exists('k', $_REQUEST))
                   $key = htmlspecialchars($_REQUEST['k']);
@@ -313,10 +318,15 @@ if (array_key_exists('tests', $_REQUEST)) {
 
 function ValidateKey() {
   $valid = false;
-  if (!is_file('./settings/keys.ini')) {
+  $keys_file = __DIR__ . '/settings/keys.ini';
+  if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+    $keys_file = __DIR__ . '/settings/common/keys.ini';
+  if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+    $keys_file = __DIR__ . '/settings/server/keys.ini';
+  if (!is_file($keys_file)) {
     $valid = true;
   } elseif (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
+    $keys = parse_ini_file($keys_file, true);
     if ($keys && is_array($keys) && array_key_exists($_REQUEST['k'], $keys))
       $valid = true;
   }

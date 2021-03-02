@@ -5,7 +5,7 @@
 ob_start();
 set_time_limit(300);
 include 'common.inc';
-$pub = $settings['publishTo'];
+$pub = GetSetting('publishTo', null);
 if (!isset($pub) || !strlen($pub)) {
     $pub = $_SERVER['HTTP_HOST'];
 }

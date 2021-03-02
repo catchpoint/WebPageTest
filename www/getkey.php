@@ -269,7 +269,7 @@ function EmailKeyInfo($info, $display) {
   global $prefix;
   $email = $info['email'];
   $content = "Your API key is: {$prefix}.{$info['key']}\n\n";
-  $content .= "The API key is limited to {$info['key_limit']} page loads per day.  Each run, first or repeat view counts as a page load (10 runs, first and repeat view would be 20 page loads). If you need to do more testing than that allows then you should consider running a private instance: https://github.com/WPO-Foundation/webpagetest-docs/tree/master/user/Private%20Instances\n";
+  $content .= "The API key is limited to {$info['key_limit']} page loads per day.  Each run, first or repeat view counts as a page load (10 runs, first and repeat view would be 20 page loads). If you need to do more testing than that allows then you should consider running a private instance: https://docs.webpagetest.org/private-instances/\n";
 
   $l = LoadLocationsIni();
   $locations = array();

@@ -14,6 +14,12 @@ if ($userIsBot || GetSetting('disableTestlog')) {
   exit;
 }
 
+// Redirect logged-in users to the hosted test history if one is configured
+if (isset($USER_EMAIL) && GetSetting('history_url')) {
+    header('Location: ' . GetSetting('history_url'));
+    exit;
+}
+
 $page_keywords = array('Log','History','WebPageTest','Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPageTest.";
 
@@ -38,8 +44,8 @@ if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
   exit;
 }
 
-if (isset($this_user) && !isset($user))
-  $user = $this_user;
+if (isset($USER_EMAIL) && !isset($user))
+  $user = $USER_EMAIL;
 
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");

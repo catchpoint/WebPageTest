@@ -242,6 +242,7 @@ class JsonResultGenerator {
       return null;
     }
     $ret = $testStepResult->getRawResults();
+    $ret['testID'] = $this->testInfo->getId();
 
     $run = $testStepResult->getRunNumber();
     $cached = $testStepResult->isCachedRun();
@@ -252,7 +253,6 @@ class JsonResultGenerator {
     $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
     $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
     $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, $step);
-
 
     $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 

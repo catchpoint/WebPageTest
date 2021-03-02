@@ -142,6 +142,7 @@ class HttpArchiveGenerator
             $pd['title'] .= "First View";
         $pd['title'] .= " for " . $stepData['URL'];
         $pd['id'] = "page_{$run}_{$cached}_{$stepNumber}";
+        $pd['testID'] = $this->testInfo->getId();
         $pd['pageTimings'] = array('onLoad' => $stepData['docTime'], 'onContentLoad' => -1, '_startRender' => $stepData['render']);
 
         // dump all of our metrics into the HAR data as custom fields

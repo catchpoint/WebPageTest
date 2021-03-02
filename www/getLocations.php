@@ -21,6 +21,20 @@ foreach( $locations as $id => &$location )
     $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
   }
 
+  // calculate the ratio of pending tests to agents
+  if (isset($location['PendingTests']['Total'])) {
+    $location['PendingTests']['TestAgentRatio'] = $location['PendingTests']['Total'];
+    $agent_count = 0;
+    if (isset($location['PendingTests']['Testing']))
+      $agent_count += $location['PendingTests']['Testing'];
+    if (isset($location['PendingTests']['Idle']))
+      $agent_count += $location['PendingTests']['Idle'];
+    if ($agent_count > 0) {
+      $location['PendingTests']['TestAgentRatio'] = floatval($location['PendingTests']['Total']) / floatval($agent_count);
+    }
+  }
+
+
   // strip out any sensitive data
   unset($location['localDir']);
 }

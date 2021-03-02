@@ -7,7 +7,6 @@
 // key: API Key used
 // runs: Number of runs used by the given API key
 // history: Test history log entry
-$settings = null;
 require_once('common_lib.inc');
 $secret = GetSetting('sync-secret');
 if ($secret === false || !isset($_REQUEST['secret']) || $_REQUEST['secret'] != $secret) {
