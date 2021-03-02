@@ -76,7 +76,7 @@ $loc = ParseLocations($locations);
         <div class="page">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>
@@ -113,7 +113,7 @@ $loc = ParseLocations($locations);
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
-            if ($privateInstall || $user || $admin || $this_user) {
+            if ($privateInstall || $user || $admin || $USER_EMAIL) {
               if (array_key_exists('iq', $_REQUEST))
                 echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
               if (array_key_exists('pngss', $_REQUEST))

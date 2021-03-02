@@ -164,6 +164,7 @@ if (isset($_COOKIE['tzo'])) {
 SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
+$USER_EMAIL = null;
 $supportsAuth = false;
 $supportsSaml = GetSetting('saml_login') !== false;
 if ($supportsSaml) {
@@ -182,14 +183,15 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
   if (isset($_COOKIE['mybbuser'])) {
     if (function_exists("apcu_fetch")) {
       $userinfo = apcu_fetch("mybb-user-{$_COOKIE['mybbuser']}");
-      if (isset($userinfo) &&
-          is_array($userinfo) &&
-          isset($userinfo['uid']) &&
-          isset($userinfo['user']) &&
-          isset($userinfo['admin'])) {
-        $uid = $userinfo['uid'];
-        $user = $userinfo['user'];
-        $admin = $userinfo['admin'];
+      if (isset($userinfo) && is_array($userinfo)) {
+        if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
+          $uid = $userinfo['uid'];
+          $user = $userinfo['user'];
+          $admin = $userinfo['admin'];
+        }
+        if (isset($userinfo['email'])) {
+          $USER_EMAIL = $userinfo['email'];
+        }
       }
     }
     if (!isset($user)) {
@@ -201,6 +203,9 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
 
           $uid = $mybb->user['uid'];
           $user = $mybb->user['username'];
+          if (isset($mybb->user['email'])) {
+            $USER_EMAIL = $mybb->user['email'];
+          }
           if( $mybb->usergroup['cancp'] )
               $admin = true;
           unset($mybb);
@@ -209,7 +214,7 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
       }
       chdir($dir);
       if (function_exists('apcu_store')) {
-        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin);
+        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin, 'email' => $USER_EMAIL);
         apcu_store("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
       }
     }
@@ -220,14 +225,19 @@ if (isset($user)) {
   $user = preg_replace('/[^a-zA-Z0-9@\.\-_]/', '', $user);
 }
 
+if (isset($user)) {
+} elseif ($supportsSaml) {
+  $USER_EMAIL = GetSamlEmail();
+} elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+  $USER_EMAIL = $_COOKIE['google_email'];
+}
+
 if (!$admin) {
   $this_user = null;
   if (isset($user)) {
     $this_user = $user;
-  } elseif ($supportsSaml) {
-    $this_user = GetSamlEmail();
-  } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-    $this_user = $_COOKIE['google_email'];
+  } elseif (isset($USER_EMAIL)) {
+    $this_user = $USER_EMAIL;
   }
   if (isset($this_user) && strlen($this_user)) {
     $admin_users = GetSetting("admin_users");

@@ -38,8 +38,8 @@ if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
   exit;
 }
 
-if (isset($this_user) && !isset($user))
-  $user = $this_user;
+if (isset($USER_EMAIL) && !isset($user))
+  $user = $USER_EMAIL;
 
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");

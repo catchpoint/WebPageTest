@@ -1165,7 +1165,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $admin;
   global $uid;
   global $user;
-  global $this_user;
+  global $USER_EMAIL;
   global $runcount;
   global $apiKey;
   global $forceValidate;
@@ -1192,7 +1192,7 @@ function ValidateKey(&$test, &$error, $key = null)
       } else {
         // if recaptcha is enabled, verify the response
         $secret = GetSetting("recaptcha_secret_key", "");
-        if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($secret)) {
+        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($secret)) {
           $passed = false;
           if (isset($_REQUEST['g-recaptcha-response'])) {
             $captcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secret) . "&response=" . urlencode($_REQUEST['g-recaptcha-response']);
@@ -1922,6 +1922,7 @@ function LogTest(&$test, $testId, $url)
 {
     global $runcount;
     global $apiKey;
+    global $USER_EMAIL;
     if (GetSetting('logging_off')) {
         server_sync($apiKey, $runcount, null);
         return;
@@ -1971,6 +1972,7 @@ function LogTest(&$test, $testId, $url)
         'key' => @$test['key'],
         'count' => @$pageLoads,
         'priority' => @$test['priority'],
+        'email' => $USER_EMAIL,
     );
 
     $log = makeLogLine($line_data);
