@@ -8,8 +8,7 @@
 */
 function GetRequestColors($content_type, $thumbnail, $is_mime,
                           $is_state = false, $url = null) {
-    global $settings;
-    if (@$settings['new_colors']) {
+    if (GetSetting('new_colors')) {
         // new color scheme (proposed by Steve Souders)
         $colors = array(
             'error'    => array(204,0,0),

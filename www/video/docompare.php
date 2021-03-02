@@ -10,11 +10,16 @@ $labels = $_REQUEST['label'];
 $ids = array();
 $ip = $_SERVER['REMOTE_ADDR'];
 $key = '';
-$keys = parse_ini_file('./settings/keys.ini', true);
+$keys_file = __DIR__ . '/../settings/keys.ini';
+if (file_exists(__DIR__ . '/../settings/common/keys.ini'))
+  $keys_file = __DIR__ . '/../settings/common/keys.ini';
+if (file_exists(__DIR__ . '/../settings/server/keys.ini'))
+  $keys_file = __DIR__ . '/../settings/server/keys.ini';
+$keys = parse_ini_file($keys_file, true);
 if( $keys && isset($keys['server']) && isset($keys['server']['key']) )
   $key = trim($keys['server']['key']);
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 
@@ -96,8 +101,12 @@ function SubmitTest($url, $label, $key)
     $testUrl .= 'f=xml&priority=2&runs=3&video=1&mv=1&fvonly=1&url=' . urlencode($url);
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);
-    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && is_file(__DIR__ . '/../settings/profiles.ini'))
+    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && 
+        (file_exists(__DIR__ . '/../settings/profiles.ini') ||
+         file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
+         file_exists(__DIR__ . '/../settings/server/profiles.ini'))) {
         $testUrl .= "&profile={$_REQUEST['profile']}";
+    }
     if( $ip )
         $testUrl .= "&addr=$ip";
     if( $uid )

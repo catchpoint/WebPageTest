@@ -11,13 +11,9 @@ if (isset($_REQUEST['id']) && isset($_REQUEST['sig']) && isset($_REQUEST['locati
     $signature = $_REQUEST['sig'];
     if (ValidateTestId($testId)) {
         $signature_matches = true;
-        $secret = '';
-        if (is_file(__DIR__ . '/../settings/keys.ini')) {
-            $keys = parse_ini_file(__DIR__ . '/../settings/keys.ini', true);
-            if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
-                $secret = trim($keys['server']['secret']);
-            }
-        }
+        $secret = GetServerSecret();
+        if (!isset($secret))
+            $secret = '';
         if (strlen($secret)) {
             $signature_matches = false;
             $sig = sha1("$testId$secret");

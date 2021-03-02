@@ -2,43 +2,30 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-$REDIRECT_HTTPS = true;
+//$REDIRECT_HTTPS = true;
 include 'common.inc';
 
-if (array_key_exists('bulk', $_GET)) {
-    $settings['noBulk'] = 0;
-}
-if (!array_key_exists('noBulk', $settings)) {
-    $settings['noBulk'] = 0;
-}
-
 // see if we are overriding the max runs
+$max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
-    $settings['maxruns'] = (int)$_GET['maxruns'];
+    $max_runs = (int)$_GET['maxruns'];
 }
 if (isset($_GET['maxruns'])) {
-    $settings['maxruns'] = (int)$_GET['maxruns'];
-    setcookie("maxruns", $settings['maxruns']);
+    $max_runs = (int)$_GET['maxruns'];
+    setcookie("maxruns", $max_runs);
 }
 
-if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
-    $settings['maxruns'] = 10;
-}
-if (isset($_REQUEST['map'])) {
-    $settings['map'] = 1;
+if ($max_runs <= 0) {
+    $max_runs = 9;
 }
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 // load the secret key (if there is one)
-$secret = '';
-if (is_file('./settings/keys.ini')) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-}
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 $url = '';
 if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
@@ -46,7 +33,14 @@ if (isset($req_url)) {
 if (!strlen($url)) {
     $url = 'Enter a website URL...';
 }
-$connectivity = parse_ini_file('./settings/connectivity.ini', true);
+$connectivity_file = './settings/connectivity.ini.sample';
+if (file_exists('./settings/connectivity.ini'))
+    $connectivity_file = './settings/connectivity.ini';
+if (file_exists('./settings/common/connectivity.ini'))
+    $connectivity_file = './settings/common/connectivity.ini';
+if (file_exists('./settings/server/connectivity.ini'))
+    $connectivity_file = './settings/server/connectivity.ini';
+$connectivity = parse_ini_file($connectivity_file, true);
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
   // move it to the front of the list
   $insert = $connectivity[$_REQUEST['connection']];
@@ -87,7 +81,7 @@ $loc = ParseLocations($locations);
         
         <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>
@@ -123,7 +117,7 @@ $loc = ParseLocations($locations);
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
-            if ($privateInstall || $user || $admin || $this_user) {
+            if ($privateInstall || $user || $admin || $USER_EMAIL) {
               if (array_key_exists('iq', $_REQUEST))
                 echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
               if (array_key_exists('pngss', $_REQUEST))
@@ -176,8 +170,6 @@ $loc = ParseLocations($locations);
                 echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
               if (isset($_REQUEST['warmup']))
                 echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
-            } else {
-              $settings['noBulk'] = 1;
             }
             ?>
 
@@ -185,7 +177,13 @@ $loc = ParseLocations($locations);
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
-                    <li class="easy_mode"><a href="/easy.php">Simple Testing</a></li>
+                    <?php
+                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                    }
+                    ?>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
                 </ul>
@@ -226,7 +224,7 @@ $loc = ParseLocations($locations);
                                     echo "</optgroup>";
                                 ?>
                             </select>
-                            <?php if (isset($settings['map'])) { ?>
+                            <?php if (GetSetting('map')) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
                         </li>
@@ -247,7 +245,7 @@ $loc = ParseLocations($locations);
                             <span class="cleared"></span>
                         </li>
                     </ul>
-                    <?php if (isset($settings['multi_locations'])) { ?>
+                    <?php if (GetSetting('multi_locations')) { ?>
                     <a href="javascript:OpenMultipleLocations()"><font color="white">Multiple locations/browsers?</font></a>
                     <br>
                     <div id="multiple-location-dialog" align=center style="display: none; color: white;">
@@ -286,14 +284,14 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chromium</a></li>
-                                <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
+                                <?php if (!GetSetting('no_basic_auth_ui')) { ?>
                                 <li><a href="#auth">Auth</a></li>
                                 <?php } ?>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
                                 <li><a href="#custom-metrics">Custom</a></li>
-                                <?php if ($admin || !$settings['noBulk']) { ?>
+                                <?php if ($admin || !GetSetting('noBulk') || !isset($_GET['bulk'])) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -343,7 +341,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <label for="number_of_tests">
                                             Number of Tests to Run<br>
-                                            <small>Up to <?php echo $settings['maxruns']; ?></small>
+                                            <small>Up to <?php echo $max_runs; ?></small>
                                         </label>
                                         <?php
                                         $runs = 3;
@@ -353,9 +351,9 @@ $loc = ParseLocations($locations);
                                           $runs = (int)@$_REQUEST["runs"];
                                         if( isset($req_runs) )
                                           $runs = (int)$req_runs;
-                                        $runs = max(1, min($runs, $settings['maxruns']));
+                                        $runs = max(1, min($runs, $max_runs));
                                         ?>
-                                        <input id="number_of_tests" type="number" min="1" max=<?php echo "\"{$settings['maxruns']}\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
+                                        <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$max_runs\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
@@ -455,8 +453,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <?php
                                         $checked = '';
-                                        if ((array_key_exists('keepua', $settings) && $settings['keepua']) ||
-                                                (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
+                                        if (GetSetting('keepua') || (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
                                             $checked = ' checked=checked';
                                         echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
                                         ?>
@@ -478,11 +475,9 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
                                     </li>
-                                    <?php
-                                    if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
-                                    { ?>
+                                    <?php if ( GetSetting('fullSizeVideoOn') ) { ?>
                                     <li>
-                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( isset($settings['fullSizeVideoDefault']) && $settings['fullSizeVideoDefault'] )  echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( GetSetting('fullSizeVideoDefault') )  echo 'checked=checked'; ?> style="float: left;width: auto;">
                                         <label for="full_size_video" class="auto_width">
                                             Capture Full Size Video<br>
                                             <small>Enables full size screenshots in the filmstrip</small>
@@ -654,7 +649,7 @@ $loc = ParseLocations($locations);
                                 </ul>
                             </div>
 
-                            <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
+                            <?php if (!GetSetting('no_basic_auth_ui')) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="warning">
@@ -683,7 +678,7 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            Check out <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Scripting.md">the documentation</a> for more information on this feature
+                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
 
@@ -750,7 +745,7 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            See <a href="https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/custom_metrics.md">the documentation</a> for details on how to specify custom metrics to be captured.
+                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
                                         </div></div>
                                     </div>
 
@@ -759,7 +754,7 @@ $loc = ParseLocations($locations);
                                 </div>
                             </div>
 
-                            <?php if ($admin || !$settings['noBulk']) { ?>
+                            <?php if ($admin || !GetSetting('noBulk') || isset($_GET['bulk'])) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
@@ -822,7 +817,7 @@ $loc = ParseLocations($locations);
 
         <script type="text/javascript">
         <?php
-            echo "var maxRuns = {$settings['maxruns']};\n";
+            echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
             $maps_api_key = GetSetting('maps_api_key');

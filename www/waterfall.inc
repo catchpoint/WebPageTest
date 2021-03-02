@@ -161,7 +161,6 @@ function GetWaterfallImage($rows, $url, $page_events, $options, $page_data) {
 * @return resource
 */
 function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data) {
-    global $settings;
     $is_mime = isset($options['is_mime']) ? (bool)@$options['is_mime'] : (bool)GetSetting('mime_waterfalls', 1);
     $is_state = (isset($options['is_state']) ? (bool)@$options['is_state'] : false) || $is_mime;
     $is_thumbnail = isset($options['is_thumbnail']) ? (bool)@$options['is_thumbnail'] : false;
@@ -1359,8 +1358,6 @@ function InsertWaterfall($url, $requests, $id, $run, $cached, $page_data, $water
 }
 
 function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options = '', $step = 1) {
-    global $settings;
-
     // create the image map (this is for fallback when JavaScript isn't enabled
     // but also gives us the position for each request)
     $out = '<map name="waterfall_map_step' . $step . '">';
@@ -1445,11 +1442,12 @@ EOT;
     $out .= '</div>'; // container
 
     // script support
+    $nolinks = GetSetting('nolinks', null);
     $out .= "<script type=\"text/javascript\">\n";
     $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
     $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";
     $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
-    $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks=$nolinks;\n";
     $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
     $request_data = json_encode($requests, 0, 1024);
     if (!isset($request_data) || $request_data === false || !is_string($request_data) || strlen($request_data) < 3) {

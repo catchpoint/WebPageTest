@@ -2,21 +2,17 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-$REDIRECT_HTTPS = true;
+//$REDIRECT_HTTPS = true;
 include 'common.inc';
 
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 // load the secret key (if there is one)
-$secret = '';
-if (is_file('./settings/keys.ini')) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-}
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 $url = '';
 if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
@@ -24,7 +20,12 @@ if (isset($req_url)) {
 if (!strlen($url)) {
   $url = 'Enter a Website URL';
 }
-$profiles = parse_ini_file('./settings/profiles.ini', true);
+$profile_file = __DIR__ . '/settings/profiles.ini';
+if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/common/profiles.ini';
+if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/server/profiles.ini';
+$profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
 <html>
@@ -38,7 +39,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
     <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>

@@ -54,7 +54,7 @@ if (array_key_exists('test', $_REQUEST)) {
         strlen($tsviewdb) &&
         is_file('./lib/tsview.inc.php')) {
       require_once('./lib/tsview.inc.php');
-      TSViewPostResult($testInfo, $id, $testPath, $settings['tsviewdb'], $testInfo['tsview_id']);
+      TSViewPostResult($testInfo, $id, $testPath, GetSetting('tsviewdb'), $testInfo['tsview_id']);
     }
 
     // post the test to statsd if requested

@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../common_lib.inc';
 
 class RunResultHtmlTable {
-  const SPEED_INDEX_URL = "https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Metrics/SpeedIndex.md";
+  const SPEED_INDEX_URL = "https://docs.webpagetest.org/metrics/speedindex/";
 
   const COL_LABEL = "label";
   const COL_START_RENDER = "render";

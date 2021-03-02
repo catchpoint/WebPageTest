@@ -222,7 +222,7 @@ $page_description = "Website performance test details$testLabel";
                     if ($isMultistep) {
                         echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
                     } else {
-                        $useLinks = !$settings['nolinks'];
+                        $useLinks = !GetSetting('nolinks');
                         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
                         echo $requestDetailsSnippet->create();
                     }

@@ -13,8 +13,6 @@ header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
 $locations = LoadLocationsIni();
-$settings = parse_ini_file('./settings/settings.ini', true);
-
 $count = 0;
 $collected = '';
 
@@ -75,8 +73,9 @@ foreach( $files as $file ) {
 
 echo "\r\n\r\n$count issues:\r\n$collected";
 
-if (array_key_exists('notify', $settings['settings'])) {
-  $to = $settings['settings']['notify'];
+$notify = GetSetting('notify');
+if ($notify) {
+  $to = $notify;
   if ($count && strlen($collected))
     SendMessage($to, "$count locations with issues - WebPagetest ALERT", $collected);
   
@@ -91,25 +90,25 @@ if (array_key_exists('notify', $settings['settings'])) {
 }
 
 function SendMessage($to, $subject, &$body) {
-    global $settings;
-
     // send the e-mail through an SMTP server?
-    if (array_key_exists('mailserver', $settings)) {
+    $smtp_host = GetSetting('mailserver_host');
+    if ($smtp_host) {
         require_once "Mail.php";
-        $mailServerSettings = $settings['mailserver'];
         $mailInit = array ();
-        if (array_key_exists('host', $mailServerSettings))
-            $mailInit['host'] = $mailServerSettings['host'];
-        if (array_key_exists('port', $mailServerSettings))
-            $mailInit['port'] = $mailServerSettings['port'];
-        if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth'])
+        $mailInit['host'] = $smtp_host;
+        $port = GetSetting('mailserver_port');
+        if ($port)
+            $mailInit['port'] = $port;
+        $user = GetSetting('mailserver_username');
+        $password = GetSetting('mailserver_password');
+        if ($user && $password)
         {
             $mailInit['auth'] = true;
-            $mailInit['username'] = $mailServerSettings[ 'username'];
-            $mailInit['password'] = $mailServerSettings['password'];
+            $mailInit['username'] = $user;
+            $mailInit['password'] = $password;
         }
         $smtp = Mail::factory('smtp', $mailInit);
-        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
+        $headers = array ('From' => GetSetting('mailserver_from'), 'To' => $to, 'Subject' => $subject);
         $mail = $smtp->send($to, $headers, $body);
     } else {
       $from = GetSetting('notifyFrom');

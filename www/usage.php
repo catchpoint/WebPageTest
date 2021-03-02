@@ -22,7 +22,12 @@ if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
 <?php
     if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
         $key = trim($_REQUEST['k']);
-        $keys = parse_ini_file('./settings/keys.ini', true);
+        $keys_file = __DIR__ . '/settings/keys.ini';
+        if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+          $keys_file = __DIR__ . '/settings/common/keys.ini';
+        if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+          $keys_file = __DIR__ . '/settings/server/keys.ini';
+        $keys = parse_ini_file($keys_file, true);
 
         // Add the list of self-provisioned keys
         $prefix = 'A';

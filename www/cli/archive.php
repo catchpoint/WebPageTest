@@ -21,19 +21,19 @@ if (!isset($lock)) {
 }
 
 $archive_kept_days = null;
-if (array_key_exists('archive_kept_days', $settings) && is_numeric($settings['archive_kept_days'])) {
-  $archive_kept_days = $settings['archive_kept_days'];
+if (GetSetting('archive_kept_days')) {
+  $archive_kept_days = GetSetting('archive_kept_days');
 }
 
-if (array_key_exists('archive_days', $settings)) {
-    $MIN_DAYS = $settings['archive_days'];
+if (GetSetting('archive_days')) {
+    $MIN_DAYS = GetSetting('archive_days');
 }
 $MIN_DAYS = max($MIN_DAYS,0.1);
 $MAX_DAYS = 30;
 
 $archive_dir = null;
-if (array_key_exists('archive_dir', $settings)) {
-    $archive_dir = $settings['archive_dir'];
+if (GetSetting('archive_dir')) {
+    $archive_dir = GetSetting('archive_dir');
 }
 
 $kept = 0;
@@ -53,8 +53,8 @@ $UTC = new DateTimeZone('UTC');
 $now = time();
 
 if ((isset($archive_dir) && strlen($archive_dir)) ||
-  (array_key_exists('archive_url', $settings) && strlen($settings['archive_url'])) ||
-  (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
+    GetSetting('archive_url') ||
+    GetSetting('archive_s3_server')) {
   CheckRelay();
   CheckOldDir('./results/old');
 
@@ -142,7 +142,12 @@ function DeleteArchivedFiles($dir) {
 */
 function CheckRelay() {
   $dirs = scandir('./results/relay');
-  $keys = parse_ini_file('./settings/keys.ini');
+  $keys_file = __DIR__ . '/settings/keys.ini';
+  if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+    $keys_file = __DIR__ . '/settings/common/keys.ini';
+  if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+    $keys_file = __DIR__ . '/settings/server/keys.ini';
+  $keys = parse_ini_file($keys_file);
   foreach($dirs as $key) {
     if ($key != '.' && $key != '..') {
       $keydir = "./results/relay/$key";

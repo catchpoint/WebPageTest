@@ -609,7 +609,7 @@ function ScreenShotTable()
                                         is_array($shift['rects']) &&
                                         count($shift['rects']) &&
                                         isset($shift['score']) &&
-                                        $shift['score'] >= 0.001) {
+                                        $shift['score'] > 0) {
                                     $has_layout_shifts = true;
                                     // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
                                     foreach($shift['rects'] as $rect) {

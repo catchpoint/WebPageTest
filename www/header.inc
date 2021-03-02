@@ -40,7 +40,40 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
-
+if( $supportsAuth && !defined('EMBED') )
+{
+    echo '<div id="wptAuthBar" class="page">';
+    if ($supportsSaml) {
+        $saml_name = GetSamlFirstName();
+        if (!isset($saml_name) || !strlen($saml_name)) {
+            $saml_name = GetSamlEmail();
+        }
+        if (isset($saml_name)) {
+            $logoutUrl = 'javascript:ClearOAuthCookies();';
+            echo "Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        } else {
+            echo '<a href="/saml/login.php">Login</a> ';
+        }
+    } elseif( isset($user) ) {
+        $logoutUrl = '/forums/member.php?action=logout';
+        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
+            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
+        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+        $logoutUrl = 'javascript:ClearOAuthCookies();';
+        $google_email = htmlspecialchars($_COOKIE['google_email']);
+        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+    } else {
+        if (is_dir('./forums') && !GetSetting('disableMybb')) {
+          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+        }
+        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+          echo '<a href="/oauth/login.php">Login with Google</a> ';
+        }
+    }
+    echo '</div>';
+}
 
 if (!defined('EMBED')) {
 ?>
@@ -68,18 +101,24 @@ if (!defined('EMBED')) {
         if (!isset($navTabs) || !count($navTabs)) {
             $navTabs = array(  'Home' => '/' );
 
-            if (empty($settings['disableTestlog'])) {
+            if (!GetSetting('disableTestlog')) {
               $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
             }
 
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            if (is_dir('forums') && (!isset($settings['disableMybb']) || !$settings['disableMybb'])) {
+            if (GetSetting('forums_url')) {
+                $navTabs['Forums'] = GetSetting('forums_url');
+            } elseif (is_dir('forums') && !GetSetting('disableMybb')) {
                 $navTabs['Forums'] = '/forums/';
             }
-            $navTabs['Documentation'] = 'https://github.com/WPO-Foundation/webpagetest-docs';
+            $navTabs['Documentation'] = 'https://docs.webpagetest.org/';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
+
+            if ($supportsSaml && isset($USER_EMAIL) && GetSetting('saml_account')) {
+                $navTabs['My Account'] = GetSetting('saml_account');
+            }
         }
         foreach ($navTabs as $tabName => $tabUrl) {
             // make sure we have a test result to navigate to
@@ -132,9 +171,10 @@ if (!defined('EMBED')) {
 </header>
 
 <?php
-if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'])) {
+$alert = GetSetting('alert');
+if (!defined('BARE_UI') && isset($alert) && strlen($alert)) {
     echo '<div class="alert">';
-    echo $settings['alert'];
+    echo $alert;
     echo '</div>';
 }
 } // EMBED
@@ -214,7 +254,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
-            if ($settings['nolinks']) {
+            if (GetSetting('nolinks')) {
                 echo "<span class=\"medium colored\">$shortUrl</span>";
             } else {
                 echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
@@ -255,7 +295,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 $contextText = htmlspecialchars($test['testinfo']['context']);
                 if (isset($test['testinfo']['context_url']) && strlen($test['testinfo']['context_url'])) {
                     $contextUrl = $test['testinfo']['context_url'];
-                    if ($settings['nolinks']) {
+                    if (GetSetting('nolinks')) {
                         echo "<span class=\"medium colored\">$contextText</span>";
                     } else {
                         echo "<a class=\"url\" rel=\"nofollow\" title=\"$contextUrl\" href=\"$contextUrl\">$contextText</a>";

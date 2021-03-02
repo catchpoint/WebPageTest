@@ -19,7 +19,7 @@ if (!Initialized()) {
       sleep(5);
     echo "updating";
     // Update from git and re-run
-    shell_exec('git pull origin master');
+    shell_exec('git pull');
     echo "Re-launching for update\n";
     shell_exec('php "' . __FILE__ .'" updated');
   } else {

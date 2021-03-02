@@ -11,7 +11,7 @@ require_once __DIR__ . '/include/TestStepResult.php';
 global $testPath, $run, $cached, $step;  // set in common.inc. This is for IDE to know what exists
 
 $requestedSnippet = $_REQUEST["snippet"];
-$useLinks = !$settings['nolinks'];
+$useLinks = !GetSetting('nolinks');
 $testInfo = TestInfo::fromFiles($testPath);
 $stepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
 

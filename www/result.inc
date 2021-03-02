@@ -17,7 +17,7 @@ $status = GetTestStatus($id, false);
 if( $status['statusCode'] < 200 )
     $testComplete = false;
 $headless = false;
-if (array_key_exists('headless', $settings) && $settings['headless']) {
+if (GetSetting('headless')) {
     $headless = true;
 }
 
@@ -62,7 +62,7 @@ $page_description = "Website performance test result$testLabel.";
                 <p class="left">
                 <br>
                 <?php
-                    if ($settings['nolinks']) {
+                    if (GetSetting('nolinks')) {
                         echo "URL: $url<br>\n";
                     } else {
                         echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
@@ -93,7 +93,7 @@ $page_description = "Website performance test result$testLabel.";
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
                         $siteKey = GetSetting("recaptcha_site_key", "");
-                        if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+                        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
                           echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
                           ?>
                           <script>
@@ -104,10 +104,9 @@ $page_description = "Website performance test result$testLabel.";
                           <?php
                         }
                         // load the secret key (if there is one)
-                        $secret = '';
-                        $keys = parse_ini_file('./settings/keys.ini', true);
-                        if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-                          $secret = trim($keys['server']['secret']);
+                        $secret = GetServerSecret();
+                        if (!isset($secret))
+                            $secret = '';
 
                         echo '<form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
@@ -156,8 +155,9 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<br><a href=\"/viewlog.php?test=$id\">View Test Log</a>";
                     if (is_file("$testPath/lighthouse.log.gz"))
                         echo " - <a href=\"/viewlog.php?test=$id&lighthouse=1\">Lighthouse Test Log</a>";
-                    if( array_key_exists('publishTo', $settings) && $settings['publishTo'] )
-                        echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
+                    $publish = GetSetting('publishTo');
+                    if( $publish )
+                        echo "<br><a href=\"/publish.php?test=$id\">Publish to $publish</a>";
                 ?>
             </div>
             <div class="cleared"></div>
@@ -223,7 +223,7 @@ $page_description = "Website performance test result$testLabel.";
             <?php
             if ($testResults->countRuns() > 1)
                 echo '<h3 style="text-align:center;">Test Results</h3>';
-            $tcpDumpView = !empty($settings['tcpdump_view']) ? $settings['tcpdump_view'] : null;
+            $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpView);
             echo $resultTables->create();
             ?>

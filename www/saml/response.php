@@ -86,6 +86,21 @@ if (isset($_REQUEST['SAMLResponse'])) {
     $attributes = ParseSAMLResponse($xml, $saml_cert_serial);
 }
 
-// TODO: set the owner cookie and redirect to the main page
+// Store the Account ID and email address in a signed cookie
+if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddress']) && isset($attributes['accountId'])) {
+    $firstName = isset($attributes['firstName']) ? $attributes['firstName'] : '';
+    $lastName = isset($attributes['lastName']) ? $attributes['lastName'] : '';
+    $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName");
+    $signature = SignString($info);
+    setcookie('samlu', "$info.$signature", time()+60*60*24*365, '/');
+}
+
+// Redirect to the page they came from (or to the landing page)
+$protocol = getUrlProtocol();
+$url = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . '/';
+if (isset($_COOKIE["samlsrc"])) {
+    $url=base64_decode($_COOKIE["samlsrc"]);
+}
+
 header("Cache-Control: no-store, max-age=0");
-//var_dump($attributes);
+header("Location: $url");

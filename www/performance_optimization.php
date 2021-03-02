@@ -170,7 +170,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             <?php
                 echo '<p></p><br>';
                 echo '<br>';
-                dumpOptimizationGlossary($settings);
+                dumpOptimizationGlossary();
             ?>
 
             <?php include('footer.inc'); ?>

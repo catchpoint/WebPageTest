@@ -10,8 +10,13 @@ $run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
 $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
-if (is_file(__DIR__ . '/../settings/profiles.ini'))
-  $profiles = parse_ini_file(__DIR__ . '/../settings/profiles.ini', true);
+$profile_file = __DIR__ . '/../settings/profiles.ini';
+if (file_exists(__DIR__ . '/../settings/common/profiles.ini'))
+  $profile_file = __DIR__ . '/../settings/common/profiles.ini';
+if (file_exists(__DIR__ . '/../settings/server/profiles.ini'))
+  $profile_file = __DIR__ . '/../settings/server/profiles.ini';
+if (is_file($profile_file))
+  $profiles = parse_ini_file($profile_file, true);
 ?>
 
 <!DOCTYPE html>
@@ -23,7 +28,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
     <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>
@@ -49,7 +54,13 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
-                    <li class="easy_mode"><a href="/easy.php">Simple Testing</a></li>
+                    <?php
+                    if (file_exists(__DIR__ . '/../settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/../settings/server/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                    }
+                    ?>
                     <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Visual Comparison</a></li>
                     <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
                 </ul>
@@ -114,7 +125,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                         }
                         ?>
                         <p id="footnote" class="cleared">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
-                        The tests will also be publically available.  If you would like to test with different settings, submit your tests individually from the
+                        If you would like to test with different settings, submit your tests individually from the
                         <a href="/">main test page</a>.</p>
                     </div>
                 </div>

@@ -11,7 +11,12 @@ if(extension_loaded('newrelic')) {
 * 
 */
 function UpdateFeeds() {
-  if (is_file('./settings/feeds.inc')) {
+  $feed_file = __DIR__ . '/settings/feeds.inc';
+  if (file_exists(__DIR__ . '/settings/common/feeds.inc'))
+    $feed_file = __DIR__ . '/settings/common/feeds.inc';
+  if (file_exists(__DIR__ . '/settings/server/feeds.inc'))
+    $feed_file = __DIR__ . '/settings/server/feeds.inc';
+  if (file_exists($feed_file)) {
     if( !is_dir('./tmp') )
         mkdir('./tmp', 0777);
 
@@ -19,7 +24,7 @@ function UpdateFeeds() {
     $lock = Lock("Update Feeds", false);
     if (isset($lock)) {
       // load the list of feeds
-      require_once('./settings/feeds.inc');
+      require_once($feed_file);
       require_once('./lib/simplepie.inc');
 
       // loop through and update each one

@@ -5,12 +5,18 @@
 include 'common.inc';
 
 // load the secret key (if there is one)
-$secret = '';
-$keys = parse_ini_file('./settings/keys.ini', true);
-if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
-  $secret = trim($keys['server']['secret']);
+$secret = GetServerSecret();
+if (!isset($secret))
+    $secret = '';
 
-$connectivity = parse_ini_file('./settings/connectivity.ini', true);
+$connectivity_file = './settings/connectivity.ini.sample';
+if (file_exists('./settings/connectivity.ini'))
+    $connectivity_file = './settings/connectivity.ini';
+if (file_exists('./settings/common/connectivity.ini'))
+    $connectivity_file = './settings/common/connectivity.ini';
+if (file_exists('./settings/server/connectivity.ini'))
+    $connectivity_file = './settings/server/connectivity.ini';
+$connectivity = parse_ini_file($connectivity_file, true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
 $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Test');
@@ -25,7 +31,7 @@ $page_description = "Test network path from multiple locations around the world 
     <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>
@@ -67,7 +73,13 @@ $page_description = "Test network path from multiple locations around the world 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
-                    <li class="easy_mode"><a href="/easy.php">Simple Testing</a></li>
+                    <?php
+                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
+                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                    }
+                    ?>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
                 </ul>
@@ -95,7 +107,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 }
                                 ?>
                             </select>
-                            <?php if( $settings['map'] ) { ?>
+                            <?php if( GetSetting('map') ) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
                             <?php } ?>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
@@ -131,7 +143,7 @@ $page_description = "Test network path from multiple locations around the world 
                         <li>
                             <label for="number_of_tests">
                                 Number of Tests to Run<br>
-                                <small>Up to <?php echo $settings['maxruns']; ?></small>
+                                <small>Up to <?php echo GetSetting('maxruns', 9); ?></small>
                             </label>
                             <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
                         </li>
@@ -166,7 +178,8 @@ $page_description = "Test network path from multiple locations around the world 
 
         <script type="text/javascript">
         <?php
-            echo "var maxRuns = {$settings['maxruns']};\n";
+            $max_runs = GetSetting('maxruns', 9);
+            echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
             $maps_api_key = GetSetting('maps_api_key');

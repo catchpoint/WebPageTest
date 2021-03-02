@@ -123,7 +123,7 @@ if (!$privateInstall) {
 // constants
 define('VER_WEBPAGETEST', '20.06');   // webpagetest version
 define('VER_CSS', 82);                // version of the sitewide css file
-define('VER_JS', 35);                 // version of the sitewide javascript file
+define('VER_JS', 36);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 43);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
@@ -151,24 +151,10 @@ if (isset($_REQUEST['embed'])) {
     if (extension_loaded('newrelic'))
       @newrelic_disable_autorum();
 }
-// load the install-specific settings
-$settings = parse_ini_file('./settings/settings.ini');
-if (!isset($settings) || !is_array($settings))
-    $settings = array();
-if (!array_key_exists('nogzip', $settings))
-    $settings['nogzip'] = false;
-if (!array_key_exists('nolinks', $settings))
-    $settings['nolinks'] = 0;
-$max_load = GetSetting('render_max_load');
-
-// override some settings from the URI
-if (isset($_REQUEST['bulk'])) {
-    $settings['noBulk'] = 0;
-}
 $is_ssl = isSslConnection();
 $GLOBALS['cdnPath'] = '';
-if (isset($settings['cdn']) && !$is_ssl) {
-    $GLOBALS['cdnPath'] = $settings['cdn'];
+if (GetSetting('cdn') && !$is_ssl) {
+    $GLOBALS['cdnPath'] = GetSetting('cdn');
 }
 
 $tz_offset = null;
@@ -178,28 +164,34 @@ if (isset($_COOKIE['tzo'])) {
 SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
+$USER_EMAIL = null;
 $supportsAuth = false;
-if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret'))
+$supportsSaml = GetSetting('saml_login') !== false;
+if ($supportsSaml) {
   $supportsAuth = true;
+} elseif (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+  $supportsAuth = true;
+}
 $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
+if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
   ob_start();
   $supportsAuth = true;
 
   if (isset($_COOKIE['mybbuser'])) {
     if (function_exists("apcu_fetch")) {
       $userinfo = apcu_fetch("mybb-user-{$_COOKIE['mybbuser']}");
-      if (isset($userinfo) &&
-          is_array($userinfo) &&
-          isset($userinfo['uid']) &&
-          isset($userinfo['user']) &&
-          isset($userinfo['admin'])) {
-        $uid = $userinfo['uid'];
-        $user = $userinfo['user'];
-        $admin = $userinfo['admin'];
+      if (isset($userinfo) && is_array($userinfo)) {
+        if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
+          $uid = $userinfo['uid'];
+          $user = $userinfo['user'];
+          $admin = $userinfo['admin'];
+        }
+        if (isset($userinfo['email'])) {
+          $USER_EMAIL = $userinfo['email'];
+        }
       }
     }
     if (!isset($user)) {
@@ -211,6 +203,9 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
 
           $uid = $mybb->user['uid'];
           $user = $mybb->user['username'];
+          if (isset($mybb->user['email'])) {
+            $USER_EMAIL = $mybb->user['email'];
+          }
           if( $mybb->usergroup['cancp'] )
               $admin = true;
           unset($mybb);
@@ -219,7 +214,7 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
       }
       chdir($dir);
       if (function_exists('apcu_store')) {
-        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin);
+        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin, 'email' => $USER_EMAIL);
         apcu_store("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
       }
     }
@@ -230,12 +225,19 @@ if (isset($user)) {
   $user = preg_replace('/[^a-zA-Z0-9@\.\-_]/', '', $user);
 }
 
+if (isset($user)) {
+} elseif ($supportsSaml) {
+  $USER_EMAIL = GetSamlEmail();
+} elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+  $USER_EMAIL = $_COOKIE['google_email'];
+}
+
 if (!$admin) {
   $this_user = null;
   if (isset($user)) {
     $this_user = $user;
-  } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-    $this_user = $_COOKIE['google_email'];
+  } elseif (isset($USER_EMAIL)) {
+    $this_user = $USER_EMAIL;
   }
   if (isset($this_user) && strlen($this_user)) {
     $admin_users = GetSetting("admin_users");
@@ -257,13 +259,17 @@ if (!$admin) {
 $isFirstVisit = true;
 $isOwner = false;
 $owner = null;
-if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+if ($supportsSaml) {
+  $isFirstVisit = false;
+  $owner = GetSamlAccount();
+} elseif( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
   $isFirstVisit = false;
   $owner = $_COOKIE['google_id'];
 } else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $isFirstVisit = false;
   $owner = $_COOKIE['o'];
-}else{
+}
+if (!isset($owner)) {
   $owner = sha1(uniqid(uniqid('', true), true));
 }
 // Sanitize the owner string
@@ -284,7 +290,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
     $id = $_COOKIE['tid'];
 }
 
-$median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
+$median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if(extension_loaded('newrelic')) {
