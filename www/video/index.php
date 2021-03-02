@@ -125,7 +125,7 @@ if (is_file($profile_file))
                         }
                         ?>
                         <p id="footnote" class="cleared">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
-                        The tests will also be publically available.  If you would like to test with different settings, submit your tests individually from the
+                        If you would like to test with different settings, submit your tests individually from the
                         <a href="/">main test page</a>.</p>
                     </div>
                 </div>
