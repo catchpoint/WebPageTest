@@ -14,6 +14,12 @@ if ($userIsBot || GetSetting('disableTestlog')) {
   exit;
 }
 
+// Redirect logged-in users to the hosted test history if one is configured
+if (isset($USER_EMAIL) && GetSetting('history_url')) {
+    header('Location: ' . GetSetting('history_url'));
+    exit;
+}
+
 $page_keywords = array('Log','History','WebPageTest','Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPageTest.";
 

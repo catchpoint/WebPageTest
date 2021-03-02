@@ -117,11 +117,17 @@ if (!defined('EMBED')) {
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            if (is_dir('forums') && !GetSetting('disableMybb')) {
+            if (GetSetting('forums_url')) {
+                $navTabs['Forums'] = GetSetting('forums_url');
+            } elseif (is_dir('forums') && !GetSetting('disableMybb')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'https://docs.webpagetest.org/';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
+
+            if ($supportsSaml && isset($USER_EMAIL) && GetSetting('saml_account')) {
+                $navTabs['My Account'] = GetSetting('saml_account');
+            }
         }
         foreach ($navTabs as $tabName => $tabUrl) {
             // make sure we have a test result to navigate to
