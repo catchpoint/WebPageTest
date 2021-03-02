@@ -96,7 +96,6 @@ $userImages = true;
             printContent($fileHandler, $testInfo, $testRunResults);
             ?>
 
-            </div>
 
             <?php include('footer.inc'); ?>
             <?php

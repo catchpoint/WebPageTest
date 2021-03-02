@@ -111,6 +111,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     text-align: center;
     flex-grow: 1;
     margin: 0 .5em;
+    font-size: .95em;
 }
 .test_menu a{
     padding: 1em 0;

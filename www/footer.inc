@@ -72,7 +72,6 @@
         }
     ?>
     </div>
-    <div class="cleared"></div>
 
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {

@@ -296,7 +296,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         if ($gradedRunResults->isOptimizationChecked())
             $tabs['Performance Review'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
 
-        $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
+        $tabs['Content Breakdown'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
         if ($gradedRunResults->hasBreakdownTimeline()) {
           // currently only supported by standard urls
