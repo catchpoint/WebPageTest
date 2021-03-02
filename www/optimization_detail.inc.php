@@ -128,7 +128,7 @@ function createGradeArray($scores) {
     {
       if( $item['score'] >= 80 )
       {
-        $item['grade'] = "<img src=\"{$GLOBALS['cdnPath']}/images/grade_check.png\" alt=\"yes\">";
+        $item['grade'] = "&#10003;";
         $item['class'] = 'A';
       }
       else

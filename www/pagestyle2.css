@@ -12,7 +12,7 @@ body {
     background-color: #F4F4F4;
     display: grid;
     grid-column-gap: 1.25em;
-    grid-template-columns: [gutter-start] calc(50vw - 50em) repeat( 8, 1fr ) calc(50vw - 50em) [gutter-end];
+    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 8, 1fr ) calc(50vw - 45em) [gutter-end];
 }
 .home {
     background-color: #121D35;
@@ -130,6 +130,7 @@ nav li.current a{
     background: #000;
     padding: 2em;
 }
+
 h1.attention{
     text-align: center;
     font-weight: normal;
@@ -375,17 +376,33 @@ h1.attention{
 #sponsor {display: none; background-color: #fff; } */
 
 /* Test Results Pages */
-.grades {float: right;line-height: 1.2em;font-size: 11px;}
-.grades li {float: left;width: 59px;margin-left: 10px;}
-.grades h2 {width: 100%; text-align:center; height: 30px; margin:0; padding-top: 11px; font-size: 35px; margin-bottom: 5px;}
+.grades {
+    float: right;
+    line-height: 1.2em;
+    display: flex;
+    max-width: 55%;
+    font-size: 0.625em; /* 10px */
+    justify-content: space-between;
+}
+.grades li {
+    margin-right: 10px;   
+    display: inline-block;
+    width: 14.285714286%;
+}
+.grades h2 {
+    text-align:center;
+    font-size: 3em;
+    padding: 0.43em 0;
+    border-radius: 4px;
+    margin-bottom: .4em;
+    width: 100%;
+}
 .grades .A {background-color: #9bce54;}
 .grades .B {background-color: #9bce54;}
 .grades .C {background-color: #f1c52e;}
 .grades .D {background-color: #e33535;}
 .grades .F {background-color: #e33535;}
 .grades a {text-decoration: none; color: #111}
-.grades.smaller {font-size: 10px;}
-.grades.smaller li {width: 54px;margin-left: 5px;}
 /*
 #test_results-container {margin: 0 -25px -25px;}
 #test_results_running-container {margin: 0 -25px 0px;}
