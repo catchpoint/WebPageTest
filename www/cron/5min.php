@@ -73,21 +73,22 @@ function CleanGetWork() {
 * 
 */
 function GitUpdate() {
+  $dir = getcwd();
   if (GetSetting('gitUpdate')) {
-    $dir = getcwd();
     echo "Updating from GitHub...\n";
     chdir(__DIR__);
     echo shell_exec('git pull');
-    if (is_dir(__DIR__ . '/../settings/common')) {
-      chdir(__DIR__ . '/../settings/common');
-      echo shell_exec('git pull');
-    }
-    if (is_dir(__DIR__ . '/../settings/server')) {
-      chdir(__DIR__ . '/../settings/server');
-      echo shell_exec('git pull');
-    }
-    chdir($dir);
   }
+  // Update the configs independently of the code config
+  if (is_dir(__DIR__ . '/../settings/common')) {
+    chdir(__DIR__ . '/../settings/common');
+    echo shell_exec('git pull');
+  }
+  if (is_dir(__DIR__ . '/../settings/server')) {
+    chdir(__DIR__ . '/../settings/server');
+    echo shell_exec('git pull');
+  }
+  chdir($dir);
 }
 
 ?>
