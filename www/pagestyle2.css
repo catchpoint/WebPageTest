@@ -98,6 +98,28 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     align-self: center;
     justify-self: end;
 }
+
+.test_menu{
+    margin: -1.875em -1.875em 1.25em;
+    border-bottom: 1px solid #E9E9E9;
+    display: flex;
+}
+.test_menu li{
+    text-align: center;
+    flex-grow: 1;
+    margin: 0 .5em;
+}
+.test_menu a{
+    padding: 1em 0;
+    display: inline-block;
+    text-decoration: none;
+    color: #999999;
+}
+.test_menu .current a{
+    font-weight: bold;
+    color: #000;
+    border-bottom: 3px solid #F9D856;
+}
 /* #header {display: block;overflow: hidden;}
 .logo {width: 150px; margin: 0;padding-top: 15px; float:left;}
 .logo a {display: block;text-indent: -999em;background: url(/images/wpt-logo.svg) no-repeat;}
@@ -275,16 +297,20 @@ h1.attention{
     border: 0px;
     border-radius: 4px 0 0 4px;
 }
-.start_test{
-    border: 0px;
+
+input[type="submit"] {
+    border: 0;
+    border-radius: 4px;
+    padding: 0.6875em 2.625em;
+    background: #F9D856;
+    font-size: 1em;
+}
+input[type="submit"].start_test{
     border-radius: 0 4px 4px 0;
     height: 100%;
-    padding: .9em 1.5em;
     font-size: 1.25em;
-    border: 0px;
-    background: #F9D856;
+    padding: .9em 1.5em;
 }
-
 .box{
     background: #fff;
     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
@@ -416,6 +442,8 @@ h1.attention{
 .grades .D {background-color: #e33535;}
 .grades .F {background-color: #e33535;}
 .grades a {text-decoration: none; color: #111}
+#tooltip {position: absolute; z-index: 3000; border: 1px solid #111; background-color: #eee; padding: 5px;}
+
 /*
 #test_results-container {margin: 0 -25px -25px;}
 #test_results_running-container {margin: 0 -25px 0px;}
@@ -433,7 +461,6 @@ table.result {width: 920px;}
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
 #more_checks {padding: 10px 15px 30px;}
 .anchor {position: relative;top: -110px;}
-#tooltip {position: absolute; z-index: 3000; border: 1px solid #111; background-color: #eee; padding: 5px;}
 #tooltip h3, #tooltip div { margin: 0; }
 .batchResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
 .batchResults th, .batchResults td {border: 1px silver solid; padding: 5px 15px; }

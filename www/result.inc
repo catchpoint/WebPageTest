@@ -160,7 +160,6 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to $publish</a>";
                 ?>
             </div>
-            <div class="cleared"></div>
             <div id="average">
                 <?php
                 $is_test_error = $testInfo->isTestError();
