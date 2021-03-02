@@ -78,7 +78,20 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #header_data h2 {margin: 0;}
 #opthelp {float:right; display: inline;}
 #header_container {background-color: #e2e2e2;}
-
+*/
+#header_data h2{
+    font-size: 1.25em;
+    font-weight: normal;
+    line-height: 1.5em;
+    margin-bottom: 2em;
+}
+#header_data .page-tested{
+    font-weight: bold;
+    color: #2F80ED;
+}
+.heading_details {
+    font-size: 0.875em;
+}
 /* Header */
 #wptAuthBar {
     grid-column: 9;

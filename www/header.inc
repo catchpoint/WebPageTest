@@ -187,7 +187,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
               $localPaths = new TestPaths($testPath, $gradeRun, false);
               $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
 
-              echo "<div id=\"opthelp clear\"> &nbsp; </div>\n";
               echo '</div>';
               echo '<div id="grades">';
                   $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);
@@ -224,9 +223,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
-            echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
+            echo "<h2>Web Page Performance Test for<br>";
             if (GetSetting('nolinks')) {
-                echo "<span class=\"medium colored\">$shortUrl</span>";
+                echo "<span class=\"page-tested\">$shortUrl</span>";
             } else {
                 echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
             }
