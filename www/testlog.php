@@ -88,7 +88,7 @@ if( $csv )
             .history td.uid {white-space:nowrap;}
         </style>
     </head>
-    <body>
+    <body class="history">
             <?php
             $tab = 'Test History';
             include 'header.inc';
