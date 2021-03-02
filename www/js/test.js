@@ -298,7 +298,7 @@ function ConnectionChanged()
         var connection = parts[1];
         var setSpeed = true;
 
-        var backlog = locations[config]['backlog'];
+        var backlog = locations[config]['backlog'] || 0;
 
         var up = locations[config]['up'] / 1000;
         var down = locations[config]['down'] / 1000;

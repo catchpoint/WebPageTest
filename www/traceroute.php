@@ -213,13 +213,6 @@ function LoadLocations()
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
     {
-        // count the number of tests at each location
-        if( isset($loc['localDir']) )
-        {
-            $loc['backlog'] = CountTests($loc['localDir']);
-            unset( $loc['localDir'] );
-        }
-
         if( isset($loc['key']) )
             unset( $loc['key'] );
         if( isset($loc['remoteDir']) )
