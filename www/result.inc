@@ -229,8 +229,7 @@ $page_description = "Website performance test result$testLabel.";
             </div>
             </div>
 
-		    <br>
-		    <br>
+              </div>
 
             <?php include('footer.inc'); ?>
         </div>

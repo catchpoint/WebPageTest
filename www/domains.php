@@ -125,6 +125,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 }
               }
             ?>
+            </div>
 
             <?php include('footer.inc'); ?>
         </div>

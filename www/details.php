@@ -250,7 +250,7 @@ $page_description = "Website performance test details$testLabel";
                     }
                 ?>
             </div>
-
+                </div>
             <?php include('footer.inc'); ?>
         </div>
 

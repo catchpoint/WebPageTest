@@ -1,4 +1,3 @@
-            <div style="width:100%;float:none;clear:both;"></div>
 
             <?php
             //If we're looking at a test result, include the inner test-result div
@@ -7,7 +6,6 @@
                 echo '</div></div>';
             }
             ?>
-            </div>
 
 
 <div class="page">

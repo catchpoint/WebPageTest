@@ -54,6 +54,29 @@ h2 .small {font-weight:normal; font-size: 12px;}
 h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 
 .hidden {display: none;}
+
+.tri-col{
+    display: flex;
+}
+.tri-col > div{
+    width: 33%;
+    flex-grow: 1;
+    justify-self: space-between;
+}
+.feature-callouts {
+    text-align: center;
+    margin-bottom: 10.5em;
+}
+.feature-callouts > div{
+    margin-right: 4.375em;
+}
+.feature-callouts > div:last-child{
+    margin-right: 0;
+}
+.feature-callouts p{
+    color: #B2BACB;
+    line-height: 1.625em;
+}
 /*
 .colored {color: #00A;}
 .page {width: 980px;margin: 0 auto;}
@@ -216,6 +239,11 @@ h1.attention{
     font-size: 3.125em /*50px*/;
     margin: .4em auto 1.4em;
 }
+h2.alt{
+    font-weight: normal;
+    color: #fff;
+    font-size: 1.875em;
+}
 /* #nav_bkg {background-color: #000;line-height: 1em; clear:both; font-size: 16px; }
 #nav_bar {background: url(/images/gloss30.png?v=2) repeat-x;}
 #nav {height: 30px;text-transform: uppercase; }
@@ -246,6 +274,7 @@ h1.attention{
     border: 1px solid #2F80ED;
     border-radius: 10px;
     box-shadow: 0 0 30px rgba(47, 128, 237, .5);
+    margin-bottom: 12.5em;
 }
 .ui-tabs-nav{
     display: flex;
@@ -278,6 +307,7 @@ h1.attention{
 .ui-tabs-nav li.ui-tabs-selected a{
     background: #2F80ED;
 }
+#advanced_settings-container .ui-tabs-hide {display: none;}
 
 .test_box{
     padding: 5.625em 2.5em 2.5em;
@@ -380,7 +410,7 @@ input[type="submit"].start_test{
 #test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(/images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
 #test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(/images/miniphonelogo.png);}
 #test_box-container .ui-tabs-nav li.traceroute a {background-image: url(/images/traceroute.png);}
-.test_box.ui-tabs-hide {display: none;}
+
 
 .input_fields {overflow: hidden;margin: 0;}
 .input_fields li {overflow: hidden;margin: 0 0 20px; vertical-align: middle;}

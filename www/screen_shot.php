@@ -95,8 +95,7 @@ $userImages = true;
 
             printContent($fileHandler, $testInfo, $testRunResults);
             ?>
-
-
+            </div>
             <?php include('footer.inc'); ?>
             <?php
             if (!empty($hasJquery) && is_file('./js/jk-navigation.js') && $testRunResults->countSteps() > 1) {

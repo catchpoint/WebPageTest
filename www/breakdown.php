@@ -119,7 +119,7 @@ if(!$testInfo->isFirstViewOnly()) {
                     }
                 ?>
             <?php } ?>
-
+                </div>
         <?php include('footer.inc'); ?>
 
         <!--Load the AJAX API-->

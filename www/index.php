@@ -810,7 +810,24 @@ $loc = ParseLocations($locations);
                 include('settings/intro.inc');
             } // $headless
             ?>
-
+            </div>
+            <div class="tri-col feature-callouts">
+                <div>
+                    <img src="/images/real-experience-icon.svg" alt="">
+                    <h2 class="alt">Real Experience</h2>
+                    <p>Test your user’s real experience with global locations, modern devices, and the latest browser versions.</p>
+                </div>
+                <div>
+                    <img src="/images/video-capture-icon.svg" alt="">
+                    <h2 class="alt">Video Capture</h2>
+                    <p>Correlate your user’s visual experience to the technical measurements of your site.</p>
+                </div>
+                <div>
+                    <img src="/images/indepth-metrics-icon.svg" alt="">
+                    <h2 class="alt">In-Depth Metrics</h2>
+                    <p>Dive into the anatomy of your webpage with components like DNS, TCP, TLS, and more.</p>
+                </div>
+            </div>
             <?php include('footer.inc'); ?>
 
         <script type="text/javascript">

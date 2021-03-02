@@ -173,7 +173,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
                 </tr>
             </table>
         </div>
-
         <?php include('footer.inc'); ?>
 
         <!--Load the AJAX API-->

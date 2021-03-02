@@ -326,7 +326,7 @@ else
                     DisplayStatus();
                 }
                 ?>
-
+</div>
                 <?php include('footer.inc'); ?>
             </div>
 

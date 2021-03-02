@@ -48,7 +48,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 <?php
                 }
                 ?>
-
+            </div>
             <?php include('footer.inc'); ?>
         </div>
     </body>

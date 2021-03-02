@@ -428,7 +428,7 @@ if( $csv )
                     ?>
                 </table>
                 </form>
-
+    </div>
             <?php include('footer.inc'); ?>
         </div>
     </body>
