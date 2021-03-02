@@ -123,6 +123,9 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     color: #000;
     border-bottom: 3px solid #F9D856;
 }
+.test_results-content {
+    text-align: center;
+}
 .test_results-content #download {
     overflow: hidden;
     margin-bottom: 3.3em;
@@ -136,6 +139,9 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 }
 .test_results-content #testinfo form{
     margin-top: 1em;
+}
+.test_results-content #headers div{
+    text-align: left;
 }
 #average{
     text-align: center;
@@ -342,7 +348,7 @@ input[type="submit"].start_test{
     padding: 1.875em;
     margin-bottom: 1.875em;
 }
-#result .pretty{width: 100%; font-size: .9em; overflow-x: scroll;}
+#result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
 
 #videoContainer {
     background: #000;
@@ -534,6 +540,11 @@ table.pretty td.good { background: #A1FFA4; }
 table.pretty td.ok { background: #FFB342; }
 table.pretty td.poor { background: #FF7580; }
 
+table.details{
+    max-width: 100%;
+    font-size: .75em;
+    line-height: 1.3em;
+}
 /* details page */
 /* #headers {text-align: left; width:930px; overflow:auto;}
 #headers h1, #headers h2 {text-transform:none;} */
