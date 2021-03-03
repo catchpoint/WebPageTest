@@ -301,8 +301,8 @@ function loadPageStepData($localPaths, $testInfo = null) {
         $max_fid = null;
         if (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
-        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+        elseif (isset($ret['PerformancePaintTiming.first-contentful-paint']) && $ret['PerformancePaintTiming.first-contentful-paint'] > 0)
+          $seek_start = $ret['PerformancePaintTiming.first-contentful-paint'];
         elseif (isset($ret['firstPaint']) && $ret['firstPaint'] > 0)
           $seek_start = $ret['firstPaint'];
         $DCL = null;

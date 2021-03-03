@@ -17,7 +17,7 @@ class RunResultHtmlTable {
   const COL_RESULT = "result";
   const COL_COST = "cost";
   const COL_CERTIFICATE_BYTES = "certificate_bytes";
-  const COL_FIRST_CONTENTFUL_PAINT = 'chromeUserTiming.firstContentfulPaint';
+  const COL_FIRST_CONTENTFUL_PAINT = 'PerformancePaintTiming.first-contentful-paint';
   const COL_LARGEST_CONTENTFUL_PAINT = 'chromeUserTiming.LargestContentfulPaint';
   const COL_CUMULATIVE_LAYOUT_SHIFT = 'chromeUserTiming.CumulativeLayoutShift';
   const COL_TOTAL_BLOCKING_TIME = 'TotalBlockingTime';

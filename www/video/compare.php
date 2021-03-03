@@ -996,9 +996,9 @@ function DisplayGraphs() {
             $timeMetrics['visualComplete99'] = "99% Visually Complete";
         }
         if ($hasStepResult &&
-            !isset($timeMetrics['chromeUserTiming.firstContentfulPaint']) &&
-            $test['stepResult']->getMetric('chromeUserTiming.firstContentfulPaint') > 0) {
-            $timeMetrics['chromeUserTiming.firstContentfulPaint'] = "First Contentful Paint";
+            !isset($timeMetrics['PerformancePaintTiming.first-contentful-paint']) &&
+            $test['stepResult']->getMetric('PerformancePaintTiming.first-contentful-paint') > 0) {
+            $timeMetrics['PerformancePaintTiming.first-contentful-paint'] = "First Contentful Paint";
         }
         if ($hasStepResult &&
             !isset($timeMetrics['chromeUserTiming.firstMeaningfulPaint']) &&
@@ -1183,7 +1183,8 @@ function DisplayGraphs() {
             }
             $row = 0;
             foreach($timeMetrics as $metric => $label) {
-              $metricKey = str_replace('.', '', $metric);
+              $filterOut = array('.', '-');
+              $metricKey = str_replace($filterOut, '', $metric);
               echo "var dataTimes$metricKey = new google.visualization.DataView(dataTimes);\n";
               echo "dataTimes$metricKey.setRows($row, $row);\n";
               $row++;
