@@ -3468,6 +3468,10 @@ function GetSamlLastName() {
   return GetSamlAttribute(3);
 }
 
+function GetSamlContact() {
+  return GetSamlAttribute(4);
+}
+
 /**
 * Send a quick http request locally if we need to process cron events (to each of the cron entry points)
 * 
