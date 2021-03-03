@@ -87,10 +87,10 @@ if (isset($_REQUEST['SAMLResponse'])) {
 }
 
 // Store the Account ID and email address in a signed cookie
-if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddress']) && isset($attributes['accountId'])) {
+if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddress']) && isset($attributes['accountId']) && isset($attributes['contactId'])) {
     $firstName = isset($attributes['firstName']) ? $attributes['firstName'] : '';
     $lastName = isset($attributes['lastName']) ? $attributes['lastName'] : '';
-    $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName");
+    $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName\t{$attributes['contactId']}");
     $signature = SignString($info);
     setcookie('samlu', "$info.$signature", time()+60*60*24*365, '/');
 }

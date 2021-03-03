@@ -852,7 +852,7 @@ function LoadLocations()
     foreach( $locations as $index => &$loc )
     {
         // count the number of tests at each location
-        if( isset($loc['localDir']) )
+        if( isset($loc['localDir']) && !isset($loc['scheduler_node']) )
         {
             $loc['backlog'] = CountTests($loc['localDir']);
             unset( $loc['localDir'] );
