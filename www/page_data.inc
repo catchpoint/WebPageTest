@@ -301,8 +301,8 @@ function loadPageStepData($localPaths, $testInfo = null) {
         $max_fid = null;
         if (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
-        elseif (isset($ret['PerformancePaintTiming.first-contentful-paint']) && $ret['PerformancePaintTiming.first-contentful-paint'] > 0)
-          $seek_start = $ret['PerformancePaintTiming.first-contentful-paint'];
+        elseif (isset($ret['firstContentfulPaint']) && $ret['firstContentfulPaint'] > 0)
+          $seek_start = $ret['firstContentfulPaint'];
         elseif (isset($ret['firstPaint']) && $ret['firstPaint'] > 0)
           $seek_start = $ret['firstPaint'];
         $DCL = null;
@@ -455,6 +455,15 @@ function loadPageStepData($localPaths, $testInfo = null) {
         if (!isset($ret[$key]))
           $ret[$key] = $value;
       }
+    }
+
+    // set a top level firstContentfulPaint metric
+    if (isset($ret) && is_array($ret) &&
+      !isset($ret['firstContentfulPaint'])) {
+        if (isset($ret['chromeUserTiming.firstContentfulPaint']))
+          $ret['firstContentfulPaint'] = $ret['chromeUserTiming.firstContentfulPaint'];
+        elseif (isset($ret['PerformancePaintTiming.first-contentful-paint']))
+          $ret['firstContentfulPaint'] = $ret['PerformancePaintTiming.first-contentful-paint'];
     }
 
     // see if there is test-level lighthouse data to attach

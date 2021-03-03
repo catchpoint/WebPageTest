@@ -996,9 +996,9 @@ function DisplayGraphs() {
             $timeMetrics['visualComplete99'] = "99% Visually Complete";
         }
         if ($hasStepResult &&
-            !isset($timeMetrics['PerformancePaintTiming.first-contentful-paint']) &&
-            $test['stepResult']->getMetric('PerformancePaintTiming.first-contentful-paint') > 0) {
-            $timeMetrics['PerformancePaintTiming.first-contentful-paint'] = "First Contentful Paint";
+            !isset($timeMetrics['firstContentfulPaint']) &&
+            $test['stepResult']->getMetric('firstContentfulPaint') > 0) {
+            $timeMetrics['firstContentfulPaint'] = "First Contentful Paint";
         }
         if ($hasStepResult &&
             !isset($timeMetrics['chromeUserTiming.firstMeaningfulPaint']) &&
