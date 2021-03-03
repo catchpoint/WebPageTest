@@ -78,7 +78,7 @@ function loadPageStepData($localPaths, $testInfo = null) {
       $ret = null;
     }
   }
-
+    
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
     if (!isset($ret) || !is_array($ret) || !count($ret))
@@ -99,7 +99,9 @@ function loadPageStepData($localPaths, $testInfo = null) {
         }
       }
     }
-
+    //set top level FCP
+    TopLevelFCP($ret);
+    
     if (!empty($ret) && !$basic_results) {
       $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
       loadUserTimingData($ret, $localPaths->userTimedEventsFile());
@@ -457,14 +459,6 @@ function loadPageStepData($localPaths, $testInfo = null) {
       }
     }
 
-    // set a top level firstContentfulPaint metric
-    if (isset($ret) && is_array($ret) &&
-      !isset($ret['firstContentfulPaint'])) {
-        if (isset($ret['chromeUserTiming.firstContentfulPaint']))
-          $ret['firstContentfulPaint'] = $ret['chromeUserTiming.firstContentfulPaint'];
-        elseif (isset($ret['PerformancePaintTiming.first-contentful-paint']))
-          $ret['firstContentfulPaint'] = $ret['PerformancePaintTiming.first-contentful-paint'];
-    }
 
     // see if there is test-level lighthouse data to attach
     // Don't cache the lighthouse bit because the file may come in after other results are cached
@@ -507,6 +501,11 @@ function loadPageStepData($localPaths, $testInfo = null) {
         }
       }
     }
+  }
+  
+  // set top level FCP in case page data was already cached
+  if (!isset($ret['firstContentfulPaint'])) {
+    TopLevelFCP($ret);
   }
 
   if (isset($ret['fullyLoaded']))
@@ -1303,5 +1302,21 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
   }
   
   return $TTI;
+}
+
+/**
+* Set a top-level FCP metric
+* 
+* @param mixed pageData
+*/
+function TopLevelFCP(&$pageData) {
+  // set a top level firstContentfulPaint metric
+  if (isset($pageData) && is_array($pageData) &&
+  !isset($pageData['firstContentfulPaint'])) {
+    if (isset($pageData['chromeUserTiming.firstContentfulPaint']))
+      $pageData['firstContentfulPaint'] = $pageData['chromeUserTiming.firstContentfulPaint'];
+    elseif (isset($pageData['PerformancePaintTiming.first-contentful-paint']))
+      $pageData['firstContentfulPaint'] = $pageData['PerformancePaintTiming.first-contentful-paint'];
+  }
 }
 ?>
