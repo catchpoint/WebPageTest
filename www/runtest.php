@@ -1979,6 +1979,38 @@ function LogTest(&$test, $testId, $url)
 
     error_log($log, 3, $filename);
     server_sync($apiKey, $runcount, rtrim($log, "\r\n"));
+
+    // Log the test history record to redis if configured
+    $redis_server = GetSetting('redis_test_history');
+    if ($redis_server) {
+      $logEntry = array(
+        'date' => gmdate("Y-m-d G:i:s"),
+        'ip' => @$ip,
+        'guid' => @$testId,
+        'url' => @$url,
+        'location' => @$test['locationText'],
+        'private' => TRUE,
+        'testUID' => @$test['uid'],
+        'testUser' => $USER_EMAIL,
+        'video' => @$video,
+        'label' => @$test['label'],
+        'owner' => @$test['owner'],
+        'key' => @$test['key'],
+        'count' => @$pageLoads,
+        'runs' => @$pageLoads,
+        'priority' => @$test['priority'],
+        'clientId' => GetSamlAccount(),
+        'createContactId' => GetSamlContact()
+      );
+      $message = json_encode($logEntry);
+      try {
+        $redis = new Redis();
+        if ($redis->pconnect($redis_server)) {
+          $redis->publish('testRuns', $message); // send message.
+        }
+      } catch (Exception $e) {
+      }
+    }
 }
 
 
