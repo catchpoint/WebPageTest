@@ -3453,7 +3453,10 @@ function GetSamlAttribute($index) {
 }
 
 function GetSamlAccount() {
-  return GetSamlAttribute(0);
+  $ret = GetSamlAttribute(0);
+  if (isset($ret))
+    $ret = intval($ret);
+  return $ret;
 }
 
 function GetSamlEmail(){
@@ -3469,7 +3472,10 @@ function GetSamlLastName() {
 }
 
 function GetSamlContact() {
-  return GetSamlAttribute(4);
+  $ret = GetSamlAttribute(4);
+  if (isset($ret))
+    $ret = intval($ret);
+  return $ret;
 }
 
 /**
