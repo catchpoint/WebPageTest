@@ -269,6 +269,8 @@ function GetSetting($setting, $default = FALSE) {
 
 function CacheFetch($key) {
   $ret = null;
+  // namespace the keys by installation
+  $key = sha1(__DIR__) . $key;
   if (function_exists('apcu_fetch')) {
     $ret = apcu_fetch($key, $success);
     if (!$success) {
@@ -284,6 +286,8 @@ function CacheFetch($key) {
 }
 
 function CacheStore($key, $value, $ttl) {
+  // namespace the keys by installation
+  $key = sha1(__DIR__) . $key;
   if (isset($value)) {
     if (function_exists('apcu_store')) {
       apcu_store($key, $value, $ttl);
