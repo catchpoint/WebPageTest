@@ -1846,16 +1846,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
       $rurl = $redirect_cache[$url]['url'];
     } elseif (function_exists('curl_init')) {
       $cache_key = md5($url);
-      $redirect_info = null;
-      if (function_exists('apcu_fetch')) {
-        $redirect_info = apcu_fetch($cache_key);
-        if ($redirect_info === false)
-          $redirect_info = null;
-      } elseif (function_exists('apc_fetch')) {
-        $redirect_info = apc_fetch($cache_key);
-        if ($redirect_info === false)
-          $redirect_info = null;
-      }
+      $redirect_info = CacheFetch($cache_key);
       if (isset($redirect_info) && isset($redirect_info['host']) && isset($redirect_info['url'])) {
         $rhost = $redirect_info['host'];
         $rurl = $redirect_info['url'];
@@ -1901,11 +1892,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
       // Cache the redirct info
       $redirect_info = array('host' => $rhost, 'url' => $rurl);
       $redirect_cache[$url] = $redirect_info;
-      if (function_exists('apcu_store')) {
-        apcu_store($cache_key, $redirect_info, 3600);
-      } elseif (function_exists('apc_store')) {
-        apc_store($cache_key, $redirect_info, 3600);
-      }
+      CacheStore($cache_key, $redirect_info, 3600);
     }
   }
   if (strlen($rhost))
