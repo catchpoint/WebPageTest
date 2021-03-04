@@ -176,16 +176,16 @@ $loc = ParseLocations($locations);
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
+                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><img src="/images/icon-advanced-testing.svg">Advanced Testing</a></li>
                     <?php
                     if (file_exists(__DIR__ . '/settings/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\"><img src=\"/images/icon-simple-testing.svg\"/>Simple Testing</a></li>";
                     }
                     ?>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/"><img src="/images/icon-visual-comparison.svg">Visual Comparison</a></li>
+                    <li class="traceroute"><a href="/traceroute.php"><img src="/images/icon-traceroute.svg">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
@@ -463,14 +463,14 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="uastring" style="width: auto;">
+                                        <label for="uastring">
                                         User Agent String<br>
                                         <small>(Custom UA String)</small>
                                         </label>
                                         <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
                                     <li>
-                                        <label for="appendua" style="width: auto;">
+                                        <label for="appendua">
                                         Append to UA String
                                         </label>
                                         <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
@@ -583,7 +583,7 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="traceCategories" style="width: auto;">
+                                        <label for="traceCategories">
                                         Trace Categories<br>
                                         <small>(when tracing is enabled)</small>
                                         </label>
@@ -633,14 +633,14 @@ $loc = ParseLocations($locations);
                                     }
                                     ?>
                                     <li>
-                                        <label for="hostResolverRules" style="width: auto;">
+                                        <label for="hostResolverRules">
                                         <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
                                         <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;" autocomplete="off">
                                     </li>
                                     <li>
-                                        <label for="cmdline" style="width: auto;">
+                                        <label for="cmdline">
                                         Command-line<br>
                                         <small>Custom options</small>
                                         </label>
@@ -663,12 +663,12 @@ $loc = ParseLocations($locations);
                                         HTTP Basic Authentication
                                     </li>
                                     <li>
-                                        <label for="username" style="width: auto;">Username</label>
-                                        <input type="text" name="login" id="username" class="text" style="width: 200px;" autocomplete="off">
+                                        <label for="username">Username</label>
+                                        <input type="text" name="login" id="username" class="text" autocomplete="off">
                                     </li>
                                     <li>
-                                        <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" autocomplete="off" class="text" style="width: 200px;" autocomplete="off">
+                                        <label for="password">Password</label>
+                                        <input type="text" name="password" id="password" autocomplete="off" class="text" autocomplete="off">
                                     </li>
                                 </ul>
                             </div>

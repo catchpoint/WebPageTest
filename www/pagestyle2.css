@@ -48,12 +48,21 @@ a:not([href]) {
 .home a {color: #fff;}
 img {border: none;}
 input.checkbox, input.radio {margin: 0 10px 0 0;}
-textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px; max-width: 99%;}
+textarea {overflow-x: hidden; height: 8em; width: 30em; padding: 3px; max-width: 99%;}
 
+select, input[type="text"], input[type="number"] {
+    font-size: 1em;
+    padding: 0.6875em 1.3125em;
+    border-radius: 4px;
+    border: 0px;
+}
+input[type="checkbox"] {
+    padding: .3em;
+}
 h2 .small {font-weight:normal; font-size: 12px;}
 h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 
-.hidden {display: none;}
+.hidden, .input_fields .hidden {display: none;}
 
 .tri-col{
     display: flex;
@@ -291,6 +300,13 @@ h2.alt{
     border-right: 1px solid #2F80ED;
     border-top-right-radius: 10px;
 }
+.ui-tabs-nav img{
+    height: 1.375em;
+    width: auto;
+    margin-right: 0.375em;
+    position: relative;
+    top: .2em;
+}
 .ui-tabs-nav a{
     text-decoration: none;
     background: #395583;
@@ -348,7 +364,7 @@ h2.alt{
     background: transparent;
 }
 #advanced_settings-container .ui-tabs-nav a{
-    color: #999;
+    color: #ccc;
 }
 #advanced_settings-container .ui-tabs-nav li.ui-tabs-selected a{
     color: #fff;
@@ -447,7 +463,7 @@ input[type="submit"].start_test{
     border-bottom: 1.3em solid #fff;
     top: 0;
     bottom: 0;
-    right: -1.3em;
+    right: -1.2em;
 }
 .runningStatusIndicator li.is-active::after {
     border-left-color: #4381E5;
@@ -471,7 +487,6 @@ input[type="submit"].start_test{
 }
 .tip {
     overflow: hidden;
-    color: #484646;
 }
 .tip a{
     text-decoration:  none;
@@ -500,17 +515,7 @@ input[type="submit"].start_test{
 .tip img{
     margin-right: 1em !important;
 }
-/* #test_box-container {float: left;width: 709px;color: #fff;}
-
-#test_box-container .ui-tabs-nav {height: 29px;line-height: 29px;}
-#test_box-container .ui-tabs-nav li {float: left;height: 28px;margin: 0 1px 1px 0;background-color: #2a2a2a;}
-#test_box-container .ui-tabs-nav li.ui-tabs-selected {margin: 0 1px 0 0;height: inherit;background-color: #292929;}
-#test_box-container .ui-tabs-nav li a {display: block;height: inherit;color: #fff;padding: 0 20px 0 32px;text-decoration: none;font-weight: bold;background: no-repeat 8px 6px;}
-#test_box-container .ui-tabs-nav li.analytical_review a {background-image: url(/images/test_box-container-ui-tabs-nav-li-analytical_review-a-bkg.png);}
-#test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(/images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
-#test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(/images/miniphonelogo.png);}
-#test_box-container .ui-tabs-nav li.traceroute a {background-image: url(/images/traceroute.png);}
-
+/* 
 
 .input_fields {overflow: hidden;margin: 0;}
 .input_fields li {overflow: hidden;margin: 0 0 20px; vertical-align: middle;}
