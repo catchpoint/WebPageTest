@@ -179,6 +179,9 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     background:url(/images/external_header.svg) center center no-repeat;
     background-size:12px;
 }
+.test_results-content #headers {
+    overflow-wrap: anywhere;
+}
 
 #average{
     text-align: center;
