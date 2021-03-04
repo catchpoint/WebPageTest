@@ -400,6 +400,103 @@ input[type="submit"].start_test{
     background: #000;
     color: #fff;
 }
+
+#runningHeader .runningDetails{
+    font-size: 1.25em;
+    line-height: 1.3em;
+    color: #111;
+}
+#runningHeader form{
+    float: right;
+}
+#runningHeader input[type="submit"] {
+    background: none;
+    color: #2F80ED;
+    border: 1px solid #2F80ED;
+    cursor: pointer;
+}
+#runningHeader p{
+    color: #484646;
+}
+.runningStatusIndicator {
+    display: flex;
+    max-width: 40%;
+}
+.runningStatusIndicator li{
+    color: #484646;
+    background: #F4F4F4;
+    padding: 0.625em 1.875em 0.625em 2.875em;
+    position: relative;
+    margin-right: 1.25em;
+    flex-grow: 1;
+    margin-bottom: 3.125em;
+}
+.runningStatusIndicator li.is-active {
+    background: #4381E5;
+    color: #fff;
+}
+.runningStatusIndicator li::after{
+    content: " ";
+    position: absolute;
+    border-top: 1.3em solid #fff;
+    border-right: none;
+    border-left: 1.3em solid #F4F4F4;
+    border-bottom: 1.3em solid #fff;
+    top: 0;
+    bottom: 0;
+    right: -1.3em;
+}
+.runningStatusIndicator li.is-active::after {
+    border-left-color: #4381E5;
+}
+.runningStatusIndicator li::before {
+    content: " ";
+    position: absolute;
+    border-top: 1.3em solid #F4F4F4;
+    border-right: none;
+    border-left: 1.3em solid #fff;
+    border-bottom: 1.3em solid #F4F4F4;
+    top: 0;
+    bottom: 0;
+    left: 0em;
+}
+.runningStatusIndicator li:first-child::before {
+    display: none;
+}
+.runningStatusIndicator li:first-child {
+    padding-left: 1.875em;
+}
+.tip {
+    overflow: hidden;
+    color: #484646;
+}
+.tip a{
+    text-decoration:  none;
+}
+.tip a:hover{
+    text-decoration: underline;
+}
+.tip h2{
+    font-size: 1em;
+    margin-top: 0;
+    color: #111;
+}
+.tip .tipHead{
+    border-bottom: 1px solid #E9E9E9;
+    margin-left: -1.875em;
+    margin-right: -1.875em;
+    margin-top: -1.875em;
+    padding: .75em 1.875em;
+    margin-bottom: 1.5em;
+}
+.tip .tipHead .tip_note{
+    text-align: right;
+    float: right;
+    margin-top: -1.6em;
+}
+.tip img{
+    margin-right: 1em !important;
+}
 /* #test_box-container {float: left;width: 709px;color: #fff;}
 
 #test_box-container .ui-tabs-nav {height: 29px;line-height: 29px;}
