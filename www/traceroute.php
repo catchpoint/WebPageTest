@@ -72,16 +72,18 @@ $page_description = "Test network path from multiple locations around the world 
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
+                    <li class="analytical_review"><a href="/"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
                     <?php
                     if (file_exists(__DIR__ . '/settings/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                        echo "<li class=\"easy_mode\"><a href=\"/easy\">";
+                        echo file_get_contents('./images/icon-simple-testing.svg');
+                        echo "Simple Testing</a></li>";
                     }
                     ?>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/"><?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
+                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
@@ -172,7 +174,7 @@ $page_description = "Test network path from multiple locations around the world 
                 </p>
             </div>
             </form>
-
+            <?php include('home-subsections.inc'); ?>                
             <?php include('footer.inc'); ?>
         </div>
 

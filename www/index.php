@@ -176,16 +176,20 @@ $loc = ParseLocations($locations);
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><img src="/images/icon-advanced-testing.svg">Advanced Testing</a></li>
+                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
                     <?php
                     if (file_exists(__DIR__ . '/settings/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\"><img src=\"/images/icon-simple-testing.svg\"/>Simple Testing</a></li>";
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">";
+                      echo file_get_contents('./images/icon-simple-testing.svg');
+                      echo "Simple Testing</a></li>";
                     }
                     ?>
-                    <li class="visual_comparison"><a href="/video/"><img src="/images/icon-visual-comparison.svg">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php"><img src="/images/icon-traceroute.svg">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/">
+                    <?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
+                    <li class="traceroute"><a href="/traceroute.php">
+                    <?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
@@ -811,23 +815,7 @@ $loc = ParseLocations($locations);
             } // $headless
             ?>
             </div>
-            <div class="tri-col feature-callouts">
-                <div>
-                    <img src="/images/real-experience-icon.svg" alt="">
-                    <h2 class="alt">Real Experience</h2>
-                    <p>Test your user’s real experience with global locations, modern devices, and the latest browser versions.</p>
-                </div>
-                <div>
-                    <img src="/images/video-capture-icon.svg" alt="">
-                    <h2 class="alt">Video Capture</h2>
-                    <p>Correlate your user’s visual experience to the technical measurements of your site.</p>
-                </div>
-                <div>
-                    <img src="/images/indepth-metrics-icon.svg" alt="">
-                    <h2 class="alt">In-Depth Metrics</h2>
-                    <p>Dive into the anatomy of your webpage with components like DNS, TCP, TLS, and more.</p>
-                </div>
-            </div>
+            <?php include('home-subsections.inc'); ?>
             <?php include('footer.inc'); ?>
 
         <script type="text/javascript">

@@ -71,6 +71,11 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
     width: 33%;
     flex-grow: 1;
     justify-self: space-between;
+    margin-right: 1.5em;
+    align-self: flex-start;
+}
+.tri-col > div:nth-child(3n) {
+    margin-right: 0;
 }
 .feature-callouts {
     text-align: center;
@@ -85,6 +90,17 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .feature-callouts p{
     color: #B2BACB;
     line-height: 1.625em;
+}
+
+
+footer{
+    text-align: center;
+}
+footer ul{
+    margin: auto;
+    max-width: 80%;
+    display: flex;
+    justify-content: space-around;
 }
 /*
 .colored {color: #00A;}
@@ -256,6 +272,14 @@ h2.alt{
     color: #fff;
     font-size: 1.875em;
 }
+h2.light{
+    text-align: center;
+    margin: auto;
+    font-weight: normal;
+    font-size: 1.875em;
+    color: #fff;
+    margin-bottom: 2.233333333em;
+}
 /* #nav_bkg {background-color: #000;line-height: 1em; clear:both; font-size: 16px; }
 #nav_bar {background: url(/images/gloss30.png?v=2) repeat-x;}
 #nav {height: 30px;text-transform: uppercase; }
@@ -300,7 +324,7 @@ h2.alt{
     border-right: 1px solid #2F80ED;
     border-top-right-radius: 10px;
 }
-.ui-tabs-nav img{
+.ui-tabs-nav svg{
     height: 1.375em;
     width: auto;
     margin-right: 0.375em;
@@ -706,6 +730,54 @@ table.glossary td, table.glossary th{
 }
 table.glossary th{
     text-align: center;
+}
+
+.resource-block{
+    background: #182641;
+    border-radius: 10px;
+    overflow: hidden;
+    padding-bottom: .875em;
+}
+.resource-block img{
+    width: 100%;
+}
+.resource-block h3, .resource-block p{
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+}
+.resource-block h3{
+    font-weight: normal;
+    font-size: 1.5em;
+    line-height: 1.25em;
+}
+.resource-block p{
+    color: #a9c8f1;
+    line-height: 1.5em;
+}
+.resource-block:last-of-type{
+    margin-bottom: 13.125em;
+}
+
+.testimonial {
+    display: block;
+    border: 1px solid #4381E5;
+    background: #182641;
+    text-align: center;
+    box-shadow: 1px 1px 70px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    margin-bottom: 13.125em;
+}
+.testimonial blockquote{
+    font-size: 1.375em;
+    line-height: 1.454545455em;
+    margin-bottom: 1.818181818em;
+    margin-top: 5.909090909em;
+}
+.testimonial cite{
+    color: #a9c8f1;
+    font-style: normal;
+    margin-bottom: 8.125em;
+    display: block;
 }
 /* details page */
 /* #headers {text-align: left; width:930px; overflow:auto;}
