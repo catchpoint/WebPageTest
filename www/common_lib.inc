@@ -2750,6 +2750,8 @@ function tokenizeLogLine($line) {
                 case 13: $line_data['o'] = $token; break;
                 case 14: $line_data['key'] = $token; break;
                 case 15: $line_data['count'] = $token; break;
+                case 16: $line_data['priority'] = $token; break;
+                case 17: $line_data['email'] = $token; break;
             }
         }
 

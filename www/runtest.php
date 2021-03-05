@@ -1989,13 +1989,6 @@ function LogTest(&$test, $testId, $url)
         'clientId' => GetSamlAccount(),
         'createContactId' => GetSamlContact()
       );
-      // strip out null values
-      /*
-      function nullFilter($var){
-        return ($var !== NULL && $var !== FALSE && $var !== "");
-      }
-      $message = json_encode(array_filter($logEntry, "nullFilter"));
-      */
       $message = json_encode($logEntry);
       try {
         $redis = new Redis();
