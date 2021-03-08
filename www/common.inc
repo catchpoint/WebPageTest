@@ -6,6 +6,10 @@ require_once('./common_lib.inc');
 require_once('./plugins.php.inc');
 require_once('./util.inc');
 
+if (GetSetting("serverID")) {
+  header('X-WPT-Server: ' . GetSetting("serverID"));
+}
+
 if (isset($REDIRECT_HTTPS) && $REDIRECT_HTTPS && !isSslConnection() && GetSetting('prefer_https')) {
     $location = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     header('HTTP/1.1 301 Moved Permanently');
