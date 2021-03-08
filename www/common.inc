@@ -181,17 +181,15 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
   $supportsAuth = true;
 
   if (isset($_COOKIE['mybbuser'])) {
-    if (function_exists("apcu_fetch")) {
-      $userinfo = apcu_fetch("mybb-user-{$_COOKIE['mybbuser']}");
-      if (isset($userinfo) && is_array($userinfo)) {
-        if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
-          $uid = $userinfo['uid'];
-          $user = $userinfo['user'];
-          $admin = $userinfo['admin'];
-        }
-        if (isset($userinfo['email'])) {
-          $USER_EMAIL = $userinfo['email'];
-        }
+    $userinfo = CacheFetch("mybb-user-{$_COOKIE['mybbuser']}");
+    if (isset($userinfo) && is_array($userinfo)) {
+      if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
+        $uid = $userinfo['uid'];
+        $user = $userinfo['user'];
+        $admin = $userinfo['admin'];
+      }
+      if (isset($userinfo['email'])) {
+        $USER_EMAIL = $userinfo['email'];
       }
     }
     if (!isset($user)) {
@@ -213,10 +211,8 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
       catch(Exception $e) {
       }
       chdir($dir);
-      if (function_exists('apcu_store')) {
-        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin, 'email' => $USER_EMAIL);
-        apcu_store("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
-      }
+      $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin, 'email' => $USER_EMAIL);
+      CacheStore("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
     }
   }
   ob_end_clean();
