@@ -1989,6 +1989,9 @@ function LogTest(&$test, $testId, $url)
         'clientId' => GetSamlAccount(),
         'createContactId' => GetSamlContact()
       );
+      if (isset($logEntry['location'])) {
+        $logEntry['location'] = strip_tags($logEntry['location']);
+      }
       $message = json_encode($logEntry);
       try {
         $redis = new Redis();
