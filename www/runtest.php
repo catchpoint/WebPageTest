@@ -1992,6 +1992,7 @@ function LogTest(&$test, $testId, $url)
       if (isset($logEntry['location'])) {
         $logEntry['location'] = strip_tags($logEntry['location']);
       }
+      LimitLogEntrySizes($logEntry);
       $message = json_encode($logEntry);
       try {
         $redis = new Redis();
@@ -2001,6 +2002,28 @@ function LogTest(&$test, $testId, $url)
       } catch (Exception $e) {
       }
     }
+}
+
+function LimitLogEntrySizes(&$logEntry) {
+  // keep string lengths to reasonable sizes
+  static $max_sizes = array(
+      'ip' => 50,
+      'guid' => 64,
+      'url' => 4000,
+      'location' => 100,
+      'testUID' => 150,
+      'testUser' => 150,
+      'label' => 250,
+      'owner' => 150,
+      'key' => 100
+  );
+  if (isset($logEntry) && is_array($logEntry)) {
+      foreach($max_sizes as $key => $len){
+          if (isset($logEntry[$key]) && is_string($logEntry[$key]) && $len > 0 && strlen($logEntry[$key]) > $len) {
+              $logEntry[$key] = substr($logEntry[$key], 0, $len);
+          }
+      }
+  }
 }
 
 
