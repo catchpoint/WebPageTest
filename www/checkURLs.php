@@ -2,6 +2,13 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
+require_once('common.inc');
+if (!$privateInstall && !$admin) {
+  header("HTTP/1.1 403 Unauthorized");
+  exit;
+}
+
 error_reporting(0);
 if (file_exists('./settings/server/blockurl.txt')) {
   $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
