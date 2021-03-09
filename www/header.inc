@@ -73,12 +73,16 @@ if (!defined('EMBED')) {
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
+            $navTabs['API'] = '#';
+
             if (GetSetting('forums_url')) {
                 $navTabs['Forums'] = GetSetting('forums_url');
             } elseif (is_dir('forums') && !GetSetting('disableMybb')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
+            $navTabs['Blog'] = 'https://blog.webpagetest.org/';
+
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
 
             if ($supportsSaml && isset($USER_EMAIL) && GetSetting('saml_account')) {

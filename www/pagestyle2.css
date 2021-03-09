@@ -10,7 +10,6 @@ body {
     color: #111;
     font: 100%/1.4em Helvetica, Arial, sans-serif;
     background-color: #F4F4F4;
-    display: grid;
     grid-column-gap: 1.25em;
     grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 8, 1fr ) calc(50vw - 45em) [gutter-end];
 }
@@ -19,17 +18,39 @@ body {
     color: #fff;
 }
 header {
-    display: grid;
     grid-column-gap: 1.25em;
     grid-template-columns: calc(50vw - 45em) repeat( 8, 1fr ) calc(50vw - 45em);
     grid-column: gutter-start / gutter-end;
     border-bottom: 1px solid #1E2B47;
     background-color: #121D35;
 }
+@media screen and (min-width:75em) {
+    body{
+        display: grid;
+    }
+    header {
+        display: grid;
+    }
+}
 header .logo{
-    grid-column: 2;
-    align-self: center;
+    
     line-height: 0;
+    margin: 1em auto;
+    display: block;
+    text-align: center;
+}
+header .logo img {
+    width: 15em;
+    max-width: 100%;
+}
+@media screen and (min-width:75em) {
+    header .logo{
+        grid-column: 2;
+        align-self: center;
+    }
+    header .logo img {
+        width: auto;
+    }
 }
 header a{
     color: #fff;
@@ -64,43 +85,60 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 
 .hidden, .input_fields .hidden {display: none;}
 
-.tri-col{
-    display: flex;
-}
-.tri-col > div{
-    width: 33%;
-    flex-grow: 1;
-    justify-self: space-between;
-    margin-right: 1.5em;
-    align-self: flex-start;
-}
-.tri-col > div:nth-child(3n) {
-    margin-right: 0;
-}
 .feature-callouts {
     text-align: center;
-    margin-bottom: 10.5em;
-}
-.feature-callouts > div{
-    margin-right: 4.375em;
-}
-.feature-callouts > div:last-child{
-    margin-right: 0;
+    max-width: 20em;
+    display: block;
+    margin: auto auto 10.5em;
 }
 .feature-callouts p{
     color: #B2BACB;
     line-height: 1.625em;
 }
+@media screen and (min-width: 55em){
+    .tri-col{
+        display: flex;
+    }
+    .tri-col > div{
+        width: 33%;
+        flex-grow: 1;
+        justify-self: space-between;
+        margin-right: 1.5em;
+        align-self: flex-start;
+    }
+    .tri-col > div:nth-child(3n) {
+        margin-right: 0;
+    }
+    .feature-callouts {
+        max-width:none;
+    }
+    .feature-callouts > div{
+        margin-right: 4.375em;
+    }
+    .feature-callouts > div:last-child{
+        margin-right: 0;
+    }
+}
+
+
+
+
 
 
 footer{
     text-align: center;
 }
-footer ul{
-    margin: auto;
-    max-width: 80%;
-    display: flex;
-    justify-content: space-around;
+footer ul li{
+    margin-bottom: 1em;
+}
+
+@media screen and (min-width: 50em) {
+    footer ul{
+        margin: auto;
+        max-width: 80%;
+        display: flex;
+        justify-content: space-around;
+    }
 }
 /*
 .colored {color: #00A;}
@@ -225,17 +263,20 @@ footer ul{
 .alert {width:100%; background-color: yellow; color: black; text-align: center; padding: 5px 0;} */
 
 /* Nav */
-nav {
-    grid-column: 4 / 7;
+@media screen and (min-width:75em) {
+    nav {
+        grid-column: 4 / 9;
+    }
+    nav ul{
+        display: flex;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+    nav li{
+        display: flex;
+    }
 }
-nav ul{
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1;
-}
-nav li{
-    display: flex;
-}
+
 nav a{
     padding: 1.5em .2em;
     margin: 0 1.3em;
@@ -765,6 +806,8 @@ table.glossary th{
     border-radius: 10px;
     overflow: hidden;
     padding-bottom: .875em;
+    max-width: 20em;
+    margin: auto auto 5em;
 }
 .resource-block img{
     width: 100%;
@@ -785,7 +828,12 @@ table.glossary th{
 .resource-block:last-of-type{
     margin-bottom: 13.125em;
 }
-
+@media screen and (min-width: 55em) {
+    .resource-block{
+        max-width: none;
+        margin: 0;
+    }
+}
 .testimonial {
     display: block;
     border: 1px solid #4381E5;
