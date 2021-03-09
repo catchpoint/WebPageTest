@@ -23,6 +23,7 @@ header {
     grid-column: gutter-start / gutter-end;
     border-bottom: 1px solid #1E2B47;
     background-color: #121D35;
+    padding-top: 1px;
 }
 @media screen and (min-width:75em) {
     body{
@@ -263,7 +264,7 @@ footer ul li{
 .alert {width:100%; background-color: yellow; color: black; text-align: center; padding: 5px 0;} */
 
 /* Nav */
-@media screen and (min-width:75em) {
+@media screen and (min-width:50em) {
     nav {
         grid-column: 4 / 9;
     }
@@ -289,8 +290,13 @@ nav li.current a{
 }
 
 #main{
-    grid-column: 3 / 9;
-    padding-top: 4.375em;
+    padding: 1.5em 1em;
+}
+@media screen and (min-width: 75em) {
+    #main{
+        grid-column: 3 / 9;
+        padding-top: 4.375em;
+    }
 }
 .compare{
     background: #000;
@@ -500,9 +506,17 @@ input[type="submit"].start_test{
 .box{
     background: #fff;
     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
     padding: 1.875em;
     margin-bottom: 1.875em;
+    margin-left: -1em;
+    margin-right: -1em;
+}
+@media screen and (min-width: 50em) {
+    .box {
+        border-radius: 10px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 #result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
 #result {
