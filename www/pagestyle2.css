@@ -534,7 +534,8 @@ input[type="submit"].start_test{
     border-radius: 0 4px 4px 0;
     height: 100%;
     font-size: 1.25em;
-    padding: .9em 1.5em;
+    padding: .9em 1.5em; 
+    align-self: flex-start;
 }
 .box{
     background: #fff;
