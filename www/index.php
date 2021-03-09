@@ -525,6 +525,11 @@ $loc = ParseLocations($locations);
                                         if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
                                           $checked = ' checked';
                                         echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
+                                        ?>
+                                        <label for="mobile">
+                                            Emulate Mobile Browser
+                                        </label>
+                                        <?php
                                         if (is_file('./settings/mobile_devices.ini')) {
                                           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
                                           if ($devices && count($devices)) {
@@ -555,9 +560,7 @@ $loc = ParseLocations($locations);
                                           }
                                         }
                                         ?>
-                                        <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser
-                                        </label>
+                                        
                                     </li>
                                     <li>
                                         <?php
@@ -569,7 +572,10 @@ $loc = ParseLocations($locations);
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
-                                        <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
+                                        
+                                    </li>
+                                    <li>
+                                    <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
                                         <label for="profiler" class="auto_width">
                                             Enable v8 Sampling Profiler (much larger traces)
                                         </label>
@@ -609,6 +615,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableAVIF" class="auto_width">Disable AVIF image support</label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableWEBP" class="auto_width">Disable WEBP image support</label>
                                     </li>

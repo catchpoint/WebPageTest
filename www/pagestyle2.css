@@ -78,6 +78,11 @@ select, input[type="text"], input[type="number"] {
     border-radius: 4px;
     border: 0px;
 }
+input[type="number"] {
+    padding-left: .5em;
+    padding-right: .3em; 
+    margin-right: .3em;
+}
 input[type="checkbox"] {
     padding: .3em;
 }
@@ -476,6 +481,19 @@ h2.light{
     display: flex;
     width: 100%;
     padding-bottom: 1em;
+    align-items: center;
+    margin-bottom: 1em;
+}
+.input_fields li input[type="checkbox"],
+.input_fields li input[type="radio"] {
+    align-self:flex-start;
+    margin-top: .2em;
+}
+.input_fields li input[type="radio"] {
+    margin-right: .3em;
+}
+.input_fields li input[type="radio"]:nth-of-type(2n) {
+    margin-left: 2em;
 }
 .input_fields label {
     width: 30%;
