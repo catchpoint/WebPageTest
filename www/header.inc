@@ -298,14 +298,14 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
 
         if ($gradedRunResults->isOptimizationChecked())
-            $tabs['Performance Review'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+            $tabs['Performance'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
 
-        $tabs['Content Breakdown'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
+        $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
         if ($gradedRunResults->hasBreakdownTimeline()) {
           // currently only supported by standard urls
           $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
-          $tabs['Processing Breakdown'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
+          $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
 
         if( !isset($test['testinfo']) || !isset($test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
@@ -331,7 +331,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
           if ($tabUrl) {
             $tabUrl = str_replace('{test id}', $id, $tabUrl);
             $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Cloudinary']);}}catch(err){}";
-            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
+            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/icon-external.svg\"></a></li>";
           }
         }
 
@@ -341,7 +341,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
           if ($tabUrl) {
             $tabUrl = str_replace('{test id}', $id, $tabUrl);
             $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','RequestMap']);}}catch(err){}";
-            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Request Map<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
+            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Request Map<img src=\"/images/icon-external.svg\"></a></li>";
           }
         }
 

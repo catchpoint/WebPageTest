@@ -70,7 +70,7 @@ if(!$testInfo->isFirstViewOnly()) {
     <body>
             <?php
             $tab = 'Test Result';
-            $subtab = 'Content Breakdown';
+            $subtab = 'Content';
             include 'header.inc';
             ?>
             <?php

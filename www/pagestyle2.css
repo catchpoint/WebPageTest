@@ -206,6 +206,15 @@ footer ul li{
     text-decoration: none;
     color: #999999;
 }
+.test_menu a:hover{
+    color: #666666;
+}
+.test_menu a img{
+    margin-left: 0.5em;
+    position: relative;
+    line-height: 1em;
+    top: 1px;
+}
 .test_menu .current a{
     font-weight: bold;
     color: #000;

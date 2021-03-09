@@ -50,7 +50,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
     <body>
             <?php
             $tab = 'Test Result';
-            $subtab = 'Processing Breakdown';
+            $subtab = 'Processing';
             include 'header.inc';
             $processing = GetDevToolsCPUTime($testPath, $run, $cached);
             if (isset($processing)) {

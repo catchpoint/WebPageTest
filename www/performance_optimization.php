@@ -112,7 +112,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
     <body>
             <?php
             $tab = 'Test Result';
-            $subtab = 'Performance Review';
+            $subtab = 'Performance';
             include 'header.inc';
 
             if ($isMultistep) {

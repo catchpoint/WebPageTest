@@ -23,7 +23,6 @@ $page_description = "View Custom Metrics";
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             include 'header.inc';
@@ -55,8 +54,7 @@ $page_description = "View Custom Metrics";
             }
             ?>
             </div>
-
+          </div>
             <?php include('footer.inc'); ?>
-        </div>
     </body>
 </html>
