@@ -421,6 +421,9 @@ h2.light{
 .ui-tabs-nav li.ui-tabs-selected a{
     background: #2F80ED;
 }
+.ui-tabs-nav li:hover a{
+    background: #4F6890;
+}
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
 .test_box{
@@ -460,6 +463,9 @@ h2.light{
 }
 #advanced_settings-container .ui-tabs-nav a{
     color: #ccc;
+}
+#advanced_settings-container .ui-tabs-nav a:hover{
+    color: #C0C0C0;
 }
 #advanced_settings-container .ui-tabs-nav li.ui-tabs-selected a{
     color: #fff;
