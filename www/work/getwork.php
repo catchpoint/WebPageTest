@@ -125,10 +125,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
   // get the count of testers for this lication and the index of the current tester for affinity checking
   $testerIndex = null;
   if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
-    if (function_exists("apcu_fetch"))
-      $testers = apcu_fetch("testers_$location");
-    elseif (function_exists("apc_fetch"))
-      $testers = apc_fetch("testers_$location");
+    $testers = CacheFetch("testers_$location");
     if (!isset($testers) || !is_array($testers))
       $testers = array();
     $testers[$pc] = $now;
@@ -145,10 +142,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
       }
     }
     $testerCount = count($testers);
-    if (function_exists("apcu_store"))
-      apcu_store("testers_$location", $testers);
-    elseif (function_exists("apc_store"))
-      apc_store("testers_$location", $testers);
+    CacheStore("testers_$location", $testers);
   }
 
   // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
@@ -416,12 +410,7 @@ function GetUpdate() {
     if( isset($_GET['software']) && strlen($_GET['software']) )
       $fileBase = trim($_GET['software']);
     
-    $update = null;
-    if (function_exists('apcu_fetch')) {
-      $update = apcu_fetch("update-$fileBase");
-      if ($update === FALSE)
-        unset($update);
-    }
+    $update = CacheFetch("update-$fileBase");
     
     $updateDir = './work/update';
     if (is_dir("$updateDir/$location"))
@@ -432,9 +421,7 @@ function GetUpdate() {
       if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
         $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
       }
-      if (isset($update) && function_exists('apcu_store')) {
-        apcu_store("update-$fileBase", $update, 60);
-      }
+      CacheStore("update-$fileBase", $update, 60);
     }
     
     if (isset($update)) {

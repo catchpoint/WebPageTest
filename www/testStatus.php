@@ -75,27 +75,8 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 if( isset($_REQUEST['f']) && $_REQUEST['f'] == 'xml' )
 {
     header ('Content-type: text/xml');
-    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<response>\n";
-    
-    foreach( $ret as $key => &$val )
-    {
-        echo "<$key>";
-        if( $key == 'data' )
-        {
-            echo "\n";
-            foreach( $val as $k => $v ) {
-              if (is_string($v))
-                echo("<$k>$v</$k>\n");
-            }
-        }
-        else
-            echo $val;
-            
-        echo "</$key>\n";
-    }
-    
-    echo "</response>\n";
+    print_r( array2xml( $ret, false ));
+
 }
 else
 {

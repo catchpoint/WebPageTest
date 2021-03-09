@@ -295,7 +295,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
                                 <li><a href="#custom-metrics">Custom</a></li>
-                                <?php if ($admin || !GetSetting('noBulk') || !isset($_GET['bulk'])) { ?>
+                                <?php if (ShowBulk()) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -758,7 +758,7 @@ $loc = ParseLocations($locations);
                                 </div>
                             </div>
 
-                            <?php if ($admin || !GetSetting('noBulk') || isset($_GET['bulk'])) { ?>
+                            <?php if (ShowBulk()) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
@@ -868,5 +868,18 @@ function LoadLocations()
     }
 
     return $locations;
+}
+
+// Determine if bulk testing should be shown
+function ShowBulk() {
+    global $admin;
+    global $USER_EMAIL;
+    if ($admin)
+        return true;
+    if (!GetSetting('noBulk'))
+        return true;
+    if (isset($USER_EMAIL) && is_string($USER_EMAIL) && strlen($USER_EMAIL) && isset($_REQUEST['bulk']) && $_REQUEST['bulk'])
+        return true;
+    return false;
 }
 ?>

@@ -466,4 +466,25 @@ function PopulateTestInfoJson(&$ret, $testInfoJson) {
       $copy($key);
   }
 }
+
+/**
+ * Array To XML Utility
+ */
+ function array2xml($array, $xml = false) {
+   if ($xml === false) {
+    $xml = new SimpleXMLElement('<response/>');
+   }
+   
+
+   foreach ($array as $key => $value) {
+     if (is_array($value)){
+       //get children
+       array2xml($value, $xml->addChild($key));
+     } else {
+       $xml->addChild($key, $value);
+     }
+   }
+
+   return $xml->asXML();
+ }
 ?>

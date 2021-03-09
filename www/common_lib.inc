@@ -78,26 +78,8 @@ function GetLocationKey($location) {
 */
 function GetLocationInfo($location) {
   $info = null;
-  $from_cache = false;
   if (isset($location) && strlen($location)) {
-    $has_apcu = false;
-    $has_apc = false;
-    if (function_exists('apcu_fetch') && function_exists('apcu_store')) {
-      $has_apcu = true;
-      $info = apcu_fetch("locinfo_$location");
-      if ($info === false)
-        $info = null;
-      if (isset($info))
-        $from_cache = true;
-    } elseif (function_exists('apc_fetch') && function_exists('apc_store')) {
-      $has_apc = true;
-      $info = apc_fetch("locinfo_$location");
-      if ($info === false)
-        $info = null;
-      if (isset($info))
-        $from_cache = true;
-    }
-
+    $info = CacheFetch("locinfo_$location");
     if (!isset($info)) {
       $info = array();
       $locations = LoadLocationsIni();
@@ -108,13 +90,7 @@ function GetLocationInfo($location) {
           $info['key'] = $default_key ? $default_key : '';
         }
       }
-    }
-
-    if (isset($info) && !$from_cache) {
-      if ($has_apcu)
-        apcu_store("locinfo_$location", $info, 120);
-      elseif ($has_apc)
-        apc_store("locinfo_$location", $info, 120);
+      CacheStore("locinfo_$location", $info, 120);
     }
   }
   return $info;
@@ -123,49 +99,22 @@ function GetLocationInfo($location) {
 function GetLocationFallbacks($location) {
   $fallback = null;
   if (isset($location) && strlen($location)) {
-    if (function_exists('apcu_fetch') &&
-        function_exists('apcu_store')) {
-      $fallback = apcu_fetch("fallback_$location");
-      if ($fallback === false) {
-        $fallback = '';
-        $locations = LoadLocationsIni();
-        if ($locations !== false &&
-            is_array($locations) &&
-            isset($locations[$location]) &&
-            isset($locations[$location]['fallback'])) {
-          $fallback = $locations[$location]['fallback'];
-        }
-        apcu_store("fallback_$location", $fallback, 60);
-      }
-    } elseif (function_exists('apc_fetch') &&
-              function_exists('apc_store')) {
-      $fallback = apc_fetch("fallback_$location");
-      if ($fallback === false) {
-        $fallback = '';
-        $locations = LoadLocationsIni();
-        if ($locations !== false &&
-            is_array($locations) &&
-            isset($locations[$location]) &&
-            isset($locations[$location]['fallback'])) {
-          $fallback = $locations[$location]['fallback'];
-        }
-        apc_store("fallback_$location", $fallback, 60);
-      }
-    } else {
+    $fallback = CacheFetch("fallback_$location");
+    if (!isset($fallback)) {
+      $fallback = '';
       $locations = LoadLocationsIni();
-      if ($locations !== false &&
-          is_array($locations) &&
-          isset($locations[$location]) &&
-          isset($locations[$location]['fallback'])) {
+      if ($locations !== false && is_array($locations) && isset($locations[$location]['fallback'])) {
         $fallback = $locations[$location]['fallback'];
       }
+      CacheStore("fallback_$location", $fallback, 60);
     }
   }
 
   $fallbacks = array();
   if (isset($fallback) && strlen($fallback))
     $fallbacks = explode(',', $fallback);
-  return $fallbacks;
+
+    return $fallbacks;
 }
 
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
@@ -269,6 +218,8 @@ function GetSetting($setting, $default = FALSE) {
 
 function CacheFetch($key) {
   $ret = null;
+  // namespace the keys by installation
+  $key = sha1(__DIR__) . $key;
   if (function_exists('apcu_fetch')) {
     $ret = apcu_fetch($key, $success);
     if (!$success) {
@@ -283,7 +234,9 @@ function CacheFetch($key) {
   return $ret;
 }
 
-function CacheStore($key, $value, $ttl) {
+function CacheStore($key, $value, $ttl=0) {
+  // namespace the keys by installation
+  $key = sha1(__DIR__) . $key;
   if (isset($value)) {
     if (function_exists('apcu_store')) {
       apcu_store($key, $value, $ttl);
@@ -1727,14 +1680,9 @@ function AddSchedulerJob($jobID, $job, $scheduler, $scheduler_salt, $scheduler_n
 }
 
 function GetSchedulerTestStatus($testID) {
-  $status = null;
   // cache the status in apc for 15 seconds so we don't hammer the scheduler
   $cache_key = "scheduler-status-$testID";
-  if (function_exists('apcu_fetch')) {
-    $status = apcu_fetch($cache_key);
-  } elseif (function_exists('apc_fetch')) {
-    $status = apc_fetch($cache_key);
-  }
+  $status = CacheFetch($cache_key);
   if (isset($status) && !is_array($status)) {
     $status = null;
   }
@@ -1753,11 +1701,7 @@ function GetSchedulerTestStatus($testID) {
         } else {
           $status = array();
         }
-        if (function_exists('apcu_store')) {
-          apcu_store($cache_key, $status, 15);
-        } elseif (function_exists('apc_store')) {
-          apc_store($cache_key, $status, 15);
-        }
+        CacheStore($cache_key, $status, 15);
       }
     }
   }
@@ -2038,20 +1982,11 @@ function SaveJobQueue($workDir, &$queue)
 * @param mixed $dir
 */
 function GetTesters($locationId, $includeOffline = false, $include_sensitive = true) {
-  $location = null;
-
   // cache the location testers info for up to one minute
   $cache_key = "$locationId-$includeOffline-$include_sensitive";
-  if (function_exists('apcu_fetch')) {
-    $location = apcu_fetch($cache_key);
-    if (isset($location) && $location !== false) {
-      return $location;
-    }
-  } elseif (function_exists('apc_fetch')) {
-    $location = apc_fetch($cache_key);
-    if (isset($location) && $location !== false) {
-      return $location;
-    }
+  $location = CacheFetch($cache_key);
+  if (isset($location)) {
+    return $location;
   }
 
   $location = array();
@@ -2161,11 +2096,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
   else
     $location['status'] = 'OFFLINE';
 
-  if (function_exists('apcu_store')) {
-    apcu_store($cache_key, $location, 60);
-  } elseif (function_exists('apc_store')) {
-    apc_store($cache_key, $location, 60);
-  }
+  CacheStore($cache_key, $location, 60);
 
   return $location;
 }
@@ -2819,6 +2750,8 @@ function tokenizeLogLine($line) {
                 case 13: $line_data['o'] = $token; break;
                 case 14: $line_data['key'] = $token; break;
                 case 15: $line_data['count'] = $token; break;
+                case 16: $line_data['priority'] = $token; break;
+                case 17: $line_data['email'] = $token; break;
             }
         }
 
@@ -3398,13 +3331,8 @@ function server_sync($apiKey, $runCount, $logline) {
 
 
 function GetServerSecret() {
-  $secret = null;
   // cache the status in apc for 15 seconds so we don't hammer the scheduler
-  if (function_exists('apcu_fetch')) {
-    $secret = apcu_fetch('server-secret');
-  } elseif (function_exists('apc_fetch')) {
-    $secret = apc_fetch('server-secret');
-  }
+  $secret = CacheFetch('server-secret');
   if (isset($secret) && !is_string($secret)) {
     $secret = null;
   }
@@ -3418,16 +3346,13 @@ function GetServerSecret() {
     if (isset($keys) && isset($keys['server']['secret'])) {
       $secret = trim($keys['server']['secret']);
     }
-  }
-  $ttl = 3600;
-  if (!isset($secret)) {
-    $secret = '';
-    $ttl = 60;
-  }
-  if (function_exists('apcu_store')) {
-    apcu_store('server-secret', $secret, $ttl);
-  } elseif (function_exists('apc_store')) {
-    apc_store('server-secret', $secret, $ttl);
+
+    $ttl = 3600;
+    if (!isset($secret)) {
+      $secret = '';
+      $ttl = 60;
+    }
+    CacheStore('server-secret', $secret, $ttl);
   }
   return $secret;
 }
@@ -3453,7 +3378,10 @@ function GetSamlAttribute($index) {
 }
 
 function GetSamlAccount() {
-  return GetSamlAttribute(0);
+  $ret = GetSamlAttribute(0);
+  if (isset($ret))
+    $ret = intval($ret);
+  return $ret;
 }
 
 function GetSamlEmail(){
@@ -3469,7 +3397,10 @@ function GetSamlLastName() {
 }
 
 function GetSamlContact() {
-  return GetSamlAttribute(4);
+  $ret = GetSamlAttribute(4);
+  if (isset($ret))
+    $ret = intval($ret);
+  return $ret;
 }
 
 /**

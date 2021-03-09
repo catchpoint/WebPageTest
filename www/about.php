@@ -44,7 +44,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 instance.</p>
                 <p>The online version at <a href="https://www.webpagetest.org/">www.webpagetest.org</a> is run for the benefit of the
                 performance community.</p>
-                <p>If you are having any problems or just have questions about the site, please feel free to <a href="mailto:pmeenan@webpagetest.org">contact me</a>.</p>
+                <p>If you are having any problems or just have questions about the site, please feel free to <a href="mailto:info@webpagetest.org">contact us</a>.</p>
                 <?php
                 }
                 ?>

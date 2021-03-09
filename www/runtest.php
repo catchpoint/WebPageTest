@@ -1846,16 +1846,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
       $rurl = $redirect_cache[$url]['url'];
     } elseif (function_exists('curl_init')) {
       $cache_key = md5($url);
-      $redirect_info = null;
-      if (function_exists('apcu_fetch')) {
-        $redirect_info = apcu_fetch($cache_key);
-        if ($redirect_info === false)
-          $redirect_info = null;
-      } elseif (function_exists('apc_fetch')) {
-        $redirect_info = apc_fetch($cache_key);
-        if ($redirect_info === false)
-          $redirect_info = null;
-      }
+      $redirect_info = CacheFetch($cache_key);
       if (isset($redirect_info) && isset($redirect_info['host']) && isset($redirect_info['url'])) {
         $rhost = $redirect_info['host'];
         $rurl = $redirect_info['url'];
@@ -1901,11 +1892,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
       // Cache the redirct info
       $redirect_info = array('host' => $rhost, 'url' => $rurl);
       $redirect_cache[$url] = $redirect_info;
-      if (function_exists('apcu_store')) {
-        apcu_store($cache_key, $redirect_info, 3600);
-      } elseif (function_exists('apc_store')) {
-        apc_store($cache_key, $redirect_info, 3600);
-      }
+      CacheStore($cache_key, $redirect_info, 3600);
     }
   }
   if (strlen($rhost))
@@ -1979,6 +1966,64 @@ function LogTest(&$test, $testId, $url)
 
     error_log($log, 3, $filename);
     server_sync($apiKey, $runcount, rtrim($log, "\r\n"));
+
+    // Log the test history record to redis if configured
+    $redis_server = GetSetting('redis_test_history');
+    if ($redis_server) {
+      $logEntry = array(
+        'date' => gmdate("Y-m-d G:i:s"),
+        'ip' => @$ip,
+        'guid' => @$testId,
+        'url' => @$url,
+        'location' => @$test['locationText'],
+        'private' => TRUE,
+        'testUID' => @$test['uid'],
+        'testUser' => $USER_EMAIL,
+        'video' => @$video,
+        'label' => @$test['label'],
+        'owner' => @$test['owner'],
+        'key' => @$test['key'],
+        'count' => @$pageLoads,
+        'runs' => @$pageLoads,
+        'priority' => @$test['priority'],
+        'clientId' => GetSamlAccount(),
+        'createContactId' => GetSamlContact()
+      );
+      if (isset($logEntry['location'])) {
+        $logEntry['location'] = strip_tags($logEntry['location']);
+      }
+      LimitLogEntrySizes($logEntry);
+      $message = json_encode($logEntry);
+      try {
+        $redis = new Redis();
+        if ($redis->pconnect($redis_server)) {
+          $redis->publish('testRuns', $message); // send message.
+        }
+      } catch (Exception $e) {
+      }
+    }
+}
+
+function LimitLogEntrySizes(&$logEntry) {
+  // keep string lengths to reasonable sizes
+  static $max_sizes = array(
+      'ip' => 50,
+      'guid' => 64,
+      'url' => 4000,
+      'location' => 100,
+      'testUID' => 150,
+      'testUser' => 150,
+      'label' => 250,
+      'owner' => 150,
+      'key' => 100
+  );
+  if (isset($logEntry) && is_array($logEntry)) {
+      foreach($max_sizes as $key => $len){
+          if (isset($logEntry[$key]) && is_string($logEntry[$key]) && $len > 0 && strlen($logEntry[$key]) > $len) {
+              $logEntry[$key] = substr($logEntry[$key], 0, $len);
+          }
+      }
+  }
 }
 
 
