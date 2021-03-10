@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'archive.inc';
+require_once('archive.inc');
 header ("Content-type: text/plain");
 
 $testId = $_REQUEST['test'];
