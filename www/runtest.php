@@ -1997,7 +1997,8 @@ function LogTest(&$test, $testId, $url)
       try {
         $redis = new Redis();
         if ($redis->pconnect($redis_server)) {
-          $redis->publish('testRuns', $message); // send message.
+          $redis->lPush('testHistory', $message);
+          $redis->publish('testHistoryAlert', 'wakeup'); // send message.
         }
       } catch (Exception $e) {
       }
