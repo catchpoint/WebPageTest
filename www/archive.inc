@@ -37,6 +37,9 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
     // Short-circuit tests that are already archived
     $testPath = realpath('./' . GetTestPath($id));
     if (is_file("$testPath/.archived")) {
+        if ($delete && is_dir($testPath)) {
+            delTree("$testPath/");
+        }
         return true;
     }
 
@@ -164,11 +167,13 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                           // make sure we don't leave a file hanging around
                           if (is_file($zipFile))
                               unlink($zipFile);
-                          if ($ret && $store_result) {
-                              touch("$testPath/.archived");
-                              $testInfo['archived'] = true;
-                              SaveTestInfo($id, $testInfo);
-                          }
+                          if ($ret) {
+                            touch("$testPath/.archived");
+                            if ($store_result) {
+                                $testInfo['archived'] = true;
+                                SaveTestInfo($id, $testInfo);
+                            }
+                        }
                       }
                   }
                   UnlockTest($lock);
