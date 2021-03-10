@@ -36,6 +36,14 @@ open.onsuccess = () => {
                 }
                 tr.appendChild(compare);
 
+                const url = document.createElement('td');
+                url.className = 'url';
+                const link = document.createElement('a');
+                link.href = '/result/' + entry.id + '/';
+                link.innerText = entry.url;
+                url.appendChild(link);
+                tr.appendChild(url);
+                
                 const datetime = document.createElement('td');
                 datetime.className = 'date';
                 datetime.innerText = new Date(entry.created * 1000).toLocaleString();
@@ -48,16 +56,13 @@ open.onsuccess = () => {
 
                 const label = document.createElement('td');
                 label.className = 'label';
-                label.innerText = entry.label;
+                const labelContain = document.createElement('b');
+                labelContain.innerText = entry.label;
+                label.appendChild(labelContain)
+
                 tr.appendChild(label);
 
-                const url = document.createElement('td');
-                url.className = 'url';
-                const link = document.createElement('a');
-                link.href = '/result/' + entry.id + '/';
-                link.innerText = entry.url;
-                url.appendChild(link);
-                tr.appendChild(url);
+        
 
                 tbody.appendChild(tr);
             }

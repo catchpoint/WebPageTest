@@ -92,7 +92,7 @@ $page_description = "Test network path from multiple locations around the world 
                             if (strlen($siteKey)) {
                             echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
                             } else {
-                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            echo '<input type="submit" name="submit" value="Start Test &#8594;">';
                             }
                             ?></li>
                         <li>

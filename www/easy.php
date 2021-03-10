@@ -32,9 +32,6 @@ $profiles = parse_ini_file($profile_file, true);
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
-        <style>
-        #description { min-height: 2em; padding-left: 170px; width:380px;}
-        </style>
     </head>
     <body class="home">
             <?php
@@ -105,7 +102,7 @@ $profiles = parse_ini_file($profile_file, true);
                             if (strlen($siteKey)) {
                             echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
                             } else {
-                            echo '<input type="submit" name="submit" value="Start Test" class="start_test">';
+                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
                             }
                             ?>
                       </li>
@@ -126,9 +123,7 @@ $profiles = parse_ini_file($profile_file, true);
                                 ?>
                             </select>
                         </li>
-                        <li>
-                        <div id="description"></div>
-                        </li>
+                        <li id="description"></li>
                         <li>
                             <label for="videoCheck">Include Repeat View:<br></label>
                             <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)

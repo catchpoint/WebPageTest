@@ -113,10 +113,10 @@ if( $csv )
                     <thead>
                         <tr>
                             <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
+                            <th>URL</th>
                             <th>Date/Time</th>
                             <th>From</th>
                             <th>Label</th>
-                            <th>URL</th>
                         </tr>
                     </thead>
                 </table>
@@ -134,16 +134,6 @@ if( $csv )
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-        <style type="text/css">
-            h4 {text-align: center;}
-            .history table {text-align:left;}
-            .history th {white-space:nowrap; text-decoration:underline;}
-            .history td.date {white-space:nowrap;}
-            .history td.location {white-space:nowrap;}
-            .history td.url {white-space:nowrap;}
-            .history td.ip {white-space:nowrap;}
-            .history td.uid {white-space:nowrap;}
-        </style>
     </head>
     <body>
         <div class="page-wide">

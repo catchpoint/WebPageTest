@@ -57,8 +57,11 @@ header a{
     color: #fff;
 }
 
-h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; padding: 0;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 1.5em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
+h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; padding: 0;} h2 {font-size: 2.5em; line-height:1em;}
+h3,.h3 {font-size: 1.25em; line-height:1em;}
+h4,.h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
 h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
+
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}
 a {
@@ -311,6 +314,9 @@ nav li.current a{
         grid-column: 3 / 9;
         padding-top: 4.375em;
     }
+    .history #main{
+        grid-column: 2 / 10;
+    }
 }
 .compare{
     background: #000;
@@ -365,6 +371,34 @@ h2.light{
 .content h2.alternate .url {color: #000040; font-size: 16px; line-height: 16px; font-family: Arial, Helvetica, sans-serif;}
 .content .heading_details {margin: 0 0 10px;} */
 
+/* Test log */
+table.history{
+    border-collapse: collapse;
+}
+table.history th {
+    color: #999999;
+    text-decoration: none;
+    font-weight: normal;
+}
+table.history thead th{
+    border-bottom: 1px solid #F1F1F1;
+    padding-bottom: 1em;
+}
+table.history tbody td{
+    padding: 1em 0;
+}
+table.history tbody tr{
+    border-bottom: 1px solid #f1f1f1;
+
+}
+table.history .label b:not(:empty){
+    font-weight: normal;
+    background: #4381E5;
+    border-radius: 20px;
+    color: #fff;
+    display: inline-block;
+    padding: 0.25em 1em;
+}
 /* Test Box */
 #test_box-container {
     grid-column: 3 / 9;
@@ -484,6 +518,10 @@ h2.light{
     align-items: center;
     margin-bottom: 1em;
 }
+.input_fields #description {
+    padding-left: 30%;
+    margin-bottom: 2em;
+}
 .input_fields li input[type="checkbox"],
 .input_fields li input[type="radio"] {
     align-self:flex-start;
@@ -531,11 +569,44 @@ input[type="submit"] {
     font-size: 1em;
 }
 input[type="submit"].start_test{
-    border-radius: 0 4px 4px 0;
+    border-radius: 4px;
     height: 100%;
     font-size: 1.25em;
     padding: .9em 1.5em; 
     align-self: flex-start;
+}
+input +input[type="submit"].start_test {
+    border-radius: 0 4px 4px 0;
+}
+
+/* Visual comparison tab */
+.test-box-lede {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5em;
+}
+#visual_comparison .urldiv{
+    margin-bottom: 1em;
+}
+#visual_comparison .urldiv a{
+    color: #2F80ED;
+
+}
+
+#visual_comparison .urldiv input:first-of-type{
+    margin-right: 2.5em;
+    margin-left: .3em;
+}
+#visual_comparison .urldiv input:last-of-type{
+    width: 28.9375em;
+    margin-right: .5em;
+    margin-left: .3em;
+}
+#visual_comparison .footnote{
+    background: #24334F;
+    border-radius: 10px;
+    padding: 1.875em;
 }
 .box{
     background: #fff;
