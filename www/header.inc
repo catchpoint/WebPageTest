@@ -101,7 +101,7 @@ if (!defined('EMBED')) {
                 if( !strcasecmp($tabName, $tab) )
                     $current = ' class="current"';
                 if (substr($tabUrl, 0, 4) == 'http') {
-                    $target = ' target="_blank"';
+                    $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
                 }
                 echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
