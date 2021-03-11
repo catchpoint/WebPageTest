@@ -100,23 +100,22 @@ if( $csv )
             include 'header.inc';
             ?>
             <h1>Test History</h1>
-            <div class="box" style="overflow:hidden;">
-                <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
+            <form name="filterLog" method="get" action="/testlog.php">
                 <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. Create an account and log-in to keep your test history for longer and to see test history across multiple browsers.</p>
-                    Filter test history: 
-                         <input id="filter" name="filter" type="text" style="width:30em" onkeyup="filterHistory()" placeholder="Filter by URL or location...">
+                    <label for="filter" class="vis-hidden">Filter test history:</label>
+                         <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
                 </form>
-                <h4>Clicking on an URL will bring you to that test's results</h4>
-                <br>
+            <div class="box">
                 <form name="compare" method="get" action="/video/compare.php">
+                <input id="CompareBtn" type="submit" value="Compare">
                 <table id="history" class="history" border="0" cellpadding="5px" cellspacing="0">
                     <thead>
                         <tr>
-                            <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
+                            <th></th>
                             <th>URL</th>
-                            <th>Date/Time</th>
-                            <th>From</th>
+                            <th>Run From</th>
                             <th>Label</th>
+                            <th class="date">Run Date</th>
                         </tr>
                     </thead>
                 </table>

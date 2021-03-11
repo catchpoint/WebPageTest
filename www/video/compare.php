@@ -326,9 +326,9 @@ else
                     DisplayStatus();
                 }
                 ?>
-</div>
                 <?php include('footer.inc'); ?>
-            </div>
+                </div>
+                </div>
 
             <script type="text/javascript">
                 function ShowAdvanced()

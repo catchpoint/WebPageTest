@@ -5,6 +5,17 @@ Dark Text: #111111;
 Gray text: #999999;
 Table row divider lines: #f1f1f1;
 */
+.vis-hidden{
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px
+}
 body {
     margin: 0 0 40px;
     color: #111;
@@ -128,14 +139,17 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
         margin-right: 0;
     }
 }
-
-
+body.compare footer {
+    margin-top: 5em;
+}
 
 
 
 
 footer{
     text-align: center;
+    display: block;
+    width: 100%;
 }
 footer ul li{
     margin-bottom: 1em;
@@ -375,6 +389,8 @@ h2.light{
 /* Test log */
 table.history{
     border-collapse: collapse;
+    font-size: 0.875em;
+    width: 100%;
 }
 table.history th {
     color: #999999;
@@ -399,6 +415,30 @@ table.history .label b:not(:empty){
     color: #fff;
     display: inline-block;
     padding: 0.25em 1em;
+}
+table.history .date{
+    text-align: right;
+}
+
+form[name=filterLog] input[type=text]{
+    border: 1px solid #999;
+}
+form[name=filterLog] {
+    margin-bottom: 1.3em;
+}
+
+#CompareBtn {
+    position: relative;
+    top: -5.8em;
+    left: 13em;
+    background: url('/images/icon-compare.svg') 0 .5em no-repeat transparent;
+    padding: .5em;
+    border: 0;
+    text-indent: 1em;
+    cursor: pointer;
+}
+#CompareBtn:hover{
+    text-decoration: underline;
 }
 /* Test Box */
 #test_box-container {
