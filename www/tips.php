@@ -7,7 +7,7 @@ $page_keywords = array('Optimization','WebPageTest','Website Speed Test','Tips')
 $page_description = "Website performance optimization tips.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Tips</title>
         <meta http-equiv="charset" content="iso-8859-1">

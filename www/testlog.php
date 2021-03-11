@@ -78,7 +78,7 @@ if( $csv )
     // For users not logged in, build a local searchable test history from the data stored in indexeddb.
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
@@ -129,7 +129,7 @@ if( $csv )
 } else {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>

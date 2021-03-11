@@ -29,7 +29,7 @@ $page_keywords = array('Performance Test','Details','WebPageTest','Website Speed
 $page_description = "Website performance test details$testLabel";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Test Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>

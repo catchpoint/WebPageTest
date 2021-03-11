@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute test result<?php echo $testLabel; ?></title>
         <?php

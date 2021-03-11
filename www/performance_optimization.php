@@ -18,7 +18,7 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $step);
 $isMultistep = $testRunResults->countSteps() > 1;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Optimization Check Results<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>

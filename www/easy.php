@@ -28,7 +28,7 @@ if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
 $profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>

@@ -10,7 +10,7 @@ $page_keywords = array('About','Contact','WebPageTest','Website Speed Test','Pag
 $page_description = "More information about WebPageTest website speed testing and how to contact us.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - About</title>
         <meta http-equiv="charset" content="iso-8859-1">

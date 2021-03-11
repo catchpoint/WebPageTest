@@ -23,6 +23,8 @@ body {
     background-color: #F4F4F4;
     grid-column-gap: 1.25em;
     grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 8, 1fr ) calc(50vw - 45em) [gutter-end];
+    min-width: 1200px; /* for now */
+    width: 100%;
 }
 .home {
     background-color: #121D35;
@@ -918,7 +920,6 @@ input +input[type="submit"].start_test {
 .grades .F {background-color: #e33535;}
 .grades a {text-decoration: none; color: #111}
 #tooltip {position: absolute; z-index: 3000; border: 1px solid #111; background-color: #eee; padding: 5px;}
-
 
 .alert-banner{
     font-size: 0.875em;

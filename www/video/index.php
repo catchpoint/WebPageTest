@@ -20,7 +20,7 @@ if (is_file($profile_file))
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>

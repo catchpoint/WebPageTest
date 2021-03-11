@@ -7,7 +7,7 @@ $page_keywords = array('Access Denied','Blocked','WebPageTest','Website Speed Te
 $page_description = "Website speed test blocked.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Access Denied</title>
         <?php $gaTemplate = 'Blocked'; include ('head.inc'); ?>

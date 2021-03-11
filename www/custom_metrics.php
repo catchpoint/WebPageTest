@@ -8,7 +8,7 @@ $page_keywords = array('View Custom Metrics','WebPageTest','Website Speed Test',
 $page_description = "View Custom Metrics";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - View Custom Metrics</title>
         <meta http-equiv="charset" content="iso-8859-1">

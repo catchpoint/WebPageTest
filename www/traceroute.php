@@ -23,7 +23,7 @@ $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Test');
 $page_description = "Test network path from multiple locations around the world (traceroute).";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute diagnostic</title>
         <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>

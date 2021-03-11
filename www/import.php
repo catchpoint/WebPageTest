@@ -207,7 +207,7 @@ if (array_key_exists('tests', $_REQUEST)) {
   $page_description = "Import Chrome Dev Tools.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
   <head>
     <title>WebPageTest - Import Chrome Dev Tools</title>
     <meta http-equiv="charset" content="iso-8859-1">

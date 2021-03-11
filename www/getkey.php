@@ -16,7 +16,7 @@ $page_keywords = array('About','Contact','WebPageTest','Website Speed Test','Pag
 $page_description = "Register for a WebPageTest API key.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Get API Key</title>
         <meta http-equiv="charset" content="iso-8859-1">

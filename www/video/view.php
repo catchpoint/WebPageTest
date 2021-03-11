@@ -196,7 +196,7 @@ else
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title><?php echo $title;?></title>
         <?php

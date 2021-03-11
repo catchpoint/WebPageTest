@@ -2768,7 +2768,7 @@ function GetClosestLocation($url, $browser) {
 function ErrorPage($error) {
     ?>
     <!DOCTYPE html>
-    <html>
+    <html lang="en-us">
         <head>
             <title>WebPageTest - Test Error</title>
             <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>

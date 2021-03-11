@@ -37,7 +37,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 
 
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Domain Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>

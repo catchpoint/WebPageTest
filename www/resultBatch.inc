@@ -96,7 +96,7 @@ else
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Comparison Test Result<?php echo $testLabel; ?></title>
         <?php

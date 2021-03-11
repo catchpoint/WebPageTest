@@ -148,7 +148,7 @@ function get_short_path($path) {
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
     <style type="text/css">
       .chart_node {

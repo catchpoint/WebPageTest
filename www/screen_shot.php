@@ -21,7 +21,7 @@ $page_description = "Website performance-test screenshots$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Screenshots<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>

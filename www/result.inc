@@ -28,7 +28,7 @@ $page_keywords = array('Results','WebPageTest','Website Speed Test','Page Speed'
 $page_description = "Website performance test result$testLabel.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
         <style type="text/css">

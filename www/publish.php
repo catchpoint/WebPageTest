@@ -25,7 +25,7 @@ $page_keywords = array('Publish','WebPageTest','Website Speed Test','Page Speed'
 $page_description = "Publish test results to WebPageTest.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Publish</title>
         <?php $gaTemplate = 'Publish'; include ('head.inc'); ?>

@@ -31,7 +31,7 @@ if( !$ok )
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">

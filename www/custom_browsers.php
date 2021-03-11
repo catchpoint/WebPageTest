@@ -69,7 +69,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Custom Browsers</title>
         <meta http-equiv="charset" content="iso-8859-1">
