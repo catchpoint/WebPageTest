@@ -1997,7 +1997,7 @@ function LogTest(&$test, $testId, $url)
       try {
         $redis = new Redis();
         if ($redis->pconnect($redis_server)) {
-          $redis->multi()
+          $redis->multi(Redis::PIPELINE)
             ->lPush('testHistory', $message)
             ->publish('testHistoryAlert', 'wakeup')
             ->exec();
