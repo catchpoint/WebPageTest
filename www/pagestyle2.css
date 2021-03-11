@@ -619,14 +619,33 @@ input +input[type="submit"].start_test {
     margin-left: .3em;
 }
 #visual_comparison .urldiv input:last-of-type{
-    width: 28.9375em;
+    width: 26.9375em;
     margin-right: .5em;
     margin-left: .3em;
+}
+#visual_comparison .urldiv a{
+    background: url('/images/icon-close.svg') top left no-repeat transparent;
+    padding-left: 1.3em;
+    text-decoration: none;
+}
+#visual_comparison .urldiv a:hover{
+    text-decoration: underline;
 }
 #visual_comparison .footnote{
     background: #24334F;
     border-radius: 10px;
     padding: 1.875em;
+}
+#visual_comparison button{
+    border: 0;
+    font-size: 1em;
+    background: url('/images/icon-add.svg') top left no-repeat transparent;
+    color: #2F80ED;
+    padding-left: 1.9em;
+    cursor: pointer;
+}
+#visual_comparison button:hover{
+    text-decoration: underline;
 }
 .box{
     background: #fff;
