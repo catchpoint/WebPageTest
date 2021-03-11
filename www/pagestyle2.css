@@ -213,6 +213,7 @@ footer ul li{
     display: inline-block;
     text-decoration: none;
     color: #999999;
+    transition: color .1s ease-in-out;
 }
 .test_menu a:hover{
     color: #666666;
@@ -448,6 +449,8 @@ table.history .label b:not(:empty){
     width: 100%;
     padding: 1.1875em 0;
     border-left: 1px solid #121D35;
+    transition: background .1s ease-in-out;
+
 }
 .ui-tabs-nav li:first-child a{
     border-top-left-radius: 10px;
@@ -462,6 +465,9 @@ table.history .label b:not(:empty){
 }
 .ui-tabs-nav li:hover a{
     background: #4F6890;
+}
+.ui-tabs-nav li.ui-tabs-selected a:hover{
+    background: #2F80ED;
 }
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
@@ -502,6 +508,8 @@ table.history .label b:not(:empty){
 }
 #advanced_settings-container .ui-tabs-nav a{
     color: #ccc;
+    transition: color .1s ease-in-out;
+
 }
 #advanced_settings-container .ui-tabs-nav a:hover{
     color: #C0C0C0;
@@ -586,7 +594,7 @@ input +input[type="submit"].start_test {
     border-radius: 4px;
     margin-left: 1.25em;
     cursor: pointer;
-    transition: background .1s ease-in;
+    transition: background .1s ease-in-out;
     background: url('/images/icon-map.svg') .5em .5em no-repeat transparent;
     text-indent: .5em;
 }
