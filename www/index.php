@@ -193,7 +193,9 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <li>
+                            <label for="url" class="vis-hidden">Enter URL to test</label>
+                            <input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php
                             if (strlen($siteKey)) {
                             echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
