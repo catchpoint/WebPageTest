@@ -131,7 +131,6 @@ else
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             include 'header.inc';

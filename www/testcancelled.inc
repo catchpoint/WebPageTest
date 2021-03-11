@@ -10,8 +10,12 @@
         ?>
     </head>
     <body>
-        <div class="page">
-            <div align="center" class="translucent">
+            <?php
+            $tab = 'Test Result';
+            $nosubheader = true;
+            include 'header.inc';
+            ?>
+            <div align="center" class="box">
                 <h3>Sorry, this test was cancelled before it ran!</h3>
                 <form><input type="button" value="Back" onClick="history.go(-1);return true;"> </form>
             </div>
