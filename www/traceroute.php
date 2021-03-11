@@ -110,7 +110,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 ?>
                             </select>
                             <?php if( GetSetting('map') ) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
+                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                             <span class="cleared"></span>

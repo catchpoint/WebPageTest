@@ -2774,15 +2774,17 @@ function ErrorPage($error) {
             <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
         </head>
         <body>
-            <div class="page">
                 <?php
                 include 'header.inc';
+              ?>
+              <h1>There was an error with the test</h1>
+                        <div class="box">
 
+              <?php
                 echo $error;
                 ?>
-
+          </div>
                 <?php include('footer.inc'); ?>
-            </div>
         </body>
     </html>
     <?php
