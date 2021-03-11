@@ -42,7 +42,9 @@ if ($id && isset($test) && is_array($test) &&
 
 if (!defined('EMBED')) {
 ?>
-
+<div class="alert-banner">
+<p>We just launched an API for performance data. <a href="#">Learn more.</a></p>
+</div>
 <header>
     <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a></h1>
     <?php if (!GetSetting('newUI')) { ?>

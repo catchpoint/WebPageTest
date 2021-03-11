@@ -879,6 +879,23 @@ input +input[type="submit"].start_test {
 .grades a {text-decoration: none; color: #111}
 #tooltip {position: absolute; z-index: 3000; border: 1px solid #111; background-color: #eee; padding: 5px;}
 
+
+.alert-banner{
+    font-size: 0.875em;
+    padding: 1.5em;
+    max-width: 100%;
+    background-color: #4381E5;
+    color: #fff;
+    text-align: center;
+}
+.alert-banner p{
+    margin: 0 auto;
+}
+@media screen and (min-width:75em) {
+    .alert-banner{
+        grid-column: 1 / 11;
+    }
+}
 /*
 #test_results-container {margin: 0 -25px -25px;}
 #test_results_running-container {margin: 0 -25px 0px;}
