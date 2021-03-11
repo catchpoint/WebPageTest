@@ -503,13 +503,13 @@ form[name=filterLog] {
     margin-right: 1px;
 }
 .ui-tabs-nav li.ui-tabs-selected a{
-    background: #2F80ED;
+    background: #2f59ed;
 }
 .ui-tabs-nav li:hover a{
     background: #4F6890;
 }
 .ui-tabs-nav li.ui-tabs-selected a:hover{
-    background: #2F80ED;
+    background: #2f59ed;
 }
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
@@ -816,80 +816,14 @@ input +input[type="submit"].start_test {
 .tip img{
     margin-right: 1em !important;
 }
-/* 
 
-.input_fields {overflow: hidden;margin: 0;}
-.input_fields li {overflow: hidden;margin: 0 0 20px; vertical-align: middle;}
-.test_box label {float: left;display: block;width: 150px;margin-right: 20px;line-height: 1.2em;font-weight: bold;}
-.test_box label small {font-weight: normal;}
-.test_box label.auto_width {width: auto;}
-.test_box label.full_width {float: none;width: auto;}
-.test_box label.inline {float: none;display: inline;}
-.test_box input.text {width: 350px;height: 22px;padding: 0 5px;background-color: #fff;border: 1px solid #bbb;}
-.test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;border: none;}
-.test_box input.text.short {width: 40px;}
-.test_box input.before_label {float: left;width: auto;}
-.test_box select {width: 380px;}
-.test_box #label {width: 200px;}
-.pending_tests {margin-left: 10px;color: #dcb315;font-size: 10px;}
-#addheaders {width: 400px;}
-#location {width: 370px;}
-
-
-
-#advanced_settings {color: #f1c52e !important; text-decoration: none; font-size: 13px; font-weight: bold; }
-#advanced_settings .arrow { margin-left: 5px; font-size: 10px; margin-bottom: 3px; border-left-width: 0.9em; border-left-style: solid; border-left-color: #f1c52e; left: 0.25em; }
-#advanced_settings.extended .arrow { border-top-width: 0.9em; border-top-style: solid; border-top-color: #f1c52e; top: 0.25em;  border-left-color: transparent; border-left-width: 0.53em; border-left-style: dashed; left: 0;}
-
-#script_in_results {color: #f1c52e !important; text-decoration: none; font-size: 13px; font-weight: bold; }
-#script_in_results .arrow { margin-left: 5px; font-size: 10px; margin-bottom: 3px; border-left-width: 0.9em; border-left-style: solid; border-left-color: #f1c52e; left: 0.25em; }
-#script_in_results.extended .arrow { border-top-width: 0.9em; border-top-style: solid; border-top-color: #f1c52e; top: 0.25em;  border-left-color: transparent; border-left-width: 0.53em; border-left-style: dashed; left: 0;}
-
-
-#bwTable {margin-left: 170px; margin-top: 10px;}
-#bwTable th {text-align: left;}
-#bwTable td {width: 100px;}
 .backlogWarn{color: #f1c52e; font-weight:bold;}
 .backlogHigh{color: red; font-weight:bold;} */
 
-/* Test Sub-box */
-/* #test_subbox-container {color: #222;}
-
-#test_subbox-container .ui-tabs-nav {height: 29px;line-height: 29px;}
-#test_subbox-container .ui-tabs-nav li {float: left;height: 28px;margin: 0 1px 1px 0;background-color: #bbb;}
-#test_subbox-container .ui-tabs-nav li.ui-tabs-selected {margin: 0 1px 0 0;height: inherit;background-color: #eee;}
-#test_subbox-container .ui-tabs-nav li a {display: block;height: inherit;color: #444;padding: 0 10px;text-decoration: none;font-weight: bold;}
-.test_subbox.ui-tabs-hide {display: none;}
-
-.tooltip { display:none;  background-color:LightGoldenRodYellow; border: 1px solid black; padding:0.5em;  width:40em;  z-index: 3000; }
-.tooltip .label { color:yellow; width:35px; }
-.tooltip a { color:#ad4; font-size:11px; font-weight:bold; }
-
-.test_subbox {overflow: hidden;padding: 20px;background-color: #eee;}
-
-.notification-container {float: right;width: 180px;}
-.notification {margin: 0 0 10px;padding: 10px;line-height: 1.3em;font-weight: bold;background-color: #ffd226;}
-.notification a {color: #00f;}
-.message, .warning {min-height :32px;} */
-
 /* visual comparison page */
-/* #visual_comparison a {color: #fff}
-#visual_comparison input {margin-right: 5px;}
-#visual_comparison .urldiv {padding-top: 0.5em;}
 #visual_comparison .industry { margin-right: 20px; float: left; padding-bottom: 10px; width: 140px; min-height: 140px; font-size: 10px; }
 #visual_comparison .indHead { padding-left: 10px; padding-top: 2px; padding-bottom: 2px; background-color: black; color: #f1c52e; font-weight: bold; width: 100%;}
 #visual_comparison .indBody { padding-left: 5px; width: 100%; }
-#footnote { margin-top:30px; background-color: #e2e2e2; color: #000; padding: 10px; }
-#footnote a {color: #000;} */
-
-/* Mobile */
-/* #mobile_options { float: left; width: 300px; }
-#mobile_logo { margin-top: 100px; float: right; width: 270px; height: 59px;}
-#mobile_test a {color: #fff;}
-
-#start_test-container {float: left;padding: 28px 0 0 21px;background: url(/images/start_test-container-bkg.png) no-repeat left 40px; text-align: center;}
-.start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(/images/start_test-bkg.png);border: none;}
-#sponsor {display: none; background-color: #fff; } */
 
 /* Test Results Pages */
 .grades {
@@ -925,7 +859,7 @@ input +input[type="submit"].start_test {
     font-size: 0.875em;
     padding: 1.5em;
     max-width: 100%;
-    background-color: #4381E5;
+    background-color: #2f59ed;
     color: #fff;
     text-align: center;
 }
@@ -937,59 +871,14 @@ input +input[type="submit"].start_test {
         grid-column: 1 / 11;
     }
 }
-/*
-#test_results-container {margin: 0 -25px -25px;}
-#test_results_running-container {margin: 0 -25px 0px;}
 
-.test_results {clear:both;}
-.test_results-content {padding: 15px 20px 5px; overflow: hidden; }
-#result {background-color: #fff; text-align:center; margin: -15px -20px 0px; padding: 0px 25px; }
-#testinfo { text-align:left; float: left; }
-#download { text-align:right; clear: both; padding:5px 0px; }
-#average {text-align:center; }
-#result h2 {font-size: 1.5em; line-height:1em;}
-table.result {width: 920px;}
-.subtitle {margin: -24px 0 24px;font-weight: bold;}
-.dynaTrace {background-color: #ffff5d;}
-#script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
-#more_checks {padding: 10px 15px 30px;}
-.anchor {position: relative;top: -110px;}
-#tooltip h3, #tooltip div { margin: 0; }
 .batchResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
 .batchResults th, .batchResults td {border: 1px silver solid; padding: 5px 15px; }
 .batchResults th { background: gainsboro; }
 .batchResults .good {color: green; font-weight: bold;}
 .batchResults .bad {color: red;  font-weight: bold;}
 .batchResults th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
-.link-external {vertical-align:middle; font-weight:normal; font-size: 12px;}
-.link-external::after {position:relative; top:-4px; display:inline-block; content:""; width:12px; height:12px; background:url(/images/external_header.svg) center center no-repeat; background-size:12px;} */
 
-/*Status page*/
-/* #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
-#statusText {font-size: 16px; font-weight: bold; float:none; clear:both; width: 100%; text-align: center; padding: 15px 10px 20px; }
-#runningHeader p{float:left; width:400px;}
-#runningHeader h3{text-align: left; padding: 0; float:left;}
-#runningHeader form{float: right;}
-.tip {width: 600px; border-collapse: collapse; border: 1px solid black; margin-left:auto; margin-right:auto; margin-bottom: 1em;}
-.tip th{background-color: #007; color: white; text-align: left; padding: 2px 5px; border: 1px solid black; }
-.tip td{background-color: #eee; padding: 1em;}
-.tip a{color: #00b; text-decoration:none;}
-.tip_note {display: block; float: right;} */
-
-/* Sponsors */
-/* #links {clear: both; width: 980px; }
-.links {table-layout:fixed; background-color: #fff; position: relative; width: 100%; height: 45px; }
-.links td { text-align: center; vertical-align: middle;}
-#sponsor_header {background-color: #555; color: #f1c52e;padding: 1px 10px 2px 25px; clear:both; font-weight: bold;}
-.sponsor_logo {width: 180px; height: 40px; display:block; overflow: hidden; cursor: pointer;}
-.sponsor_logo img {position: relative;} */
-
-/* Footer */
-/* #footer {padding: 20px;background-color: #797979;}
-#footer h2 {color: #fff;font-size: 14px;}
-.bottom {float: right;font-size: 10px;}
-.bottom a {color: #b08b00;line-height: 20px;text-decoration: none;}
-.bottom a:hover {text-decoration: underline;} */
 
 /* shared table themes */
 table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
@@ -1074,16 +963,3 @@ table.glossary th{
     margin-bottom: 8.125em;
     display: block;
 }
-/* details page */
-/* #headers {text-align: left; width:930px; overflow:auto;}
-#headers h1, #headers h2 {text-transform:none;} */
-
-/* feeds */
-/* #feeds {background-color: #302f2f; color: #fff; width: 980px; border-collapse: collapse; table-layout: fixed; }
-#feeds th {padding: 1px 10px 2px 25px; text-align: left; background-color: #555; color: #f1c52e; white-space: nowrap; overflow: hidden;}
-#feeds td {vertical-align: top; white-space: nowrap; overflow: hidden;}
-#feeds a {color: #fff; text-decoration: none;}
-#feeds li {margin: 2px 10px 2px 25px; display: block; overflow: hidden; width: 100%; }
-#feeds li.morefeeds {margin:0;} */
-
-/* h1.stepName { border-left: 4px #007 solid; border-right: 4px #007 solid; background: gainsboro; margin-top: 1em; } */ */
