@@ -1099,7 +1099,7 @@ var getScrollbarWidth = function() {
 
 // Store test info in the test history if it exists
 (function() {
-if (window.indexedDB && wptTestInfo) {
+if (window.indexedDB && typeof wptTestInfo !== 'undefined') {
     let open = window.indexedDB.open('webpagetest', 1);
     open.onupgradeneeded = function() {
         let db = open.result;
