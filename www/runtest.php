@@ -1993,16 +1993,18 @@ function LogTest(&$test, $testId, $url)
         $logEntry['location'] = strip_tags($logEntry['location']);
       }
       LimitLogEntrySizes($logEntry);
-      $message = json_encode($logEntry);
-      try {
-        $redis = new Redis();
-        if ($redis->pconnect($redis_server)) {
-          $redis->multi(Redis::PIPELINE)
-            ->lPush('testHistory', $message)
-            ->publish('testHistoryAlert', 'wakeup')
-            ->exec();
+      if (IsValidLogEntry($logEntry)) {
+        $message = json_encode($logEntry);
+        try {
+          $redis = new Redis();
+          if ($redis->pconnect($redis_server)) {
+            $redis->multi(Redis::PIPELINE)
+              ->lPush('testHistory', $message)
+              ->publish('testHistoryAlert', 'wakeup')
+              ->exec();
+          }
+        } catch (Exception $e) {
         }
-      } catch (Exception $e) {
       }
     }
 }
@@ -2029,6 +2031,17 @@ function LimitLogEntrySizes(&$logEntry) {
   }
 }
 
+function IsValidLogEntry($logEntry) {
+  // Check for required fields
+  static $required_fields = array('guid', 'date', 'url', 'runs', 'location', 'private');
+  foreach ($required_fields as $field) {
+    if (!isset($logEntry[$field])) {
+      return false;
+    }
+  }
+  // Check for valid types
+  return true;
+}
 
 /**
 * Make sure the requesting IP isn't on our block list
