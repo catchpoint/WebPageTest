@@ -84,6 +84,7 @@ function UpdateFeeds() {
                       $entry = array ( 
                         'source' => $feedSource,
                         'title' => $item->get_title(),
+                        'desc' => $item->get_description(true),
                         'link' => $url,
                         'date' => $dateStr
                       );
