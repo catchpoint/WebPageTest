@@ -423,6 +423,7 @@ table.history .date{
 
 form[name=filterLog] input[type=text]{
     border: 1px solid #999;
+    width: 12%;
 }
 form[name=filterLog] {
     margin-bottom: 1.3em;
@@ -453,16 +454,14 @@ form[name=filterLog] {
     position: relative;
 }
 #test_box-container .notification-container{
-    position: absolute;
-    top: 1.5em;
-    right: 1em;
-    width: 21.25em;
     background: #F9D856;
     padding: 1em;
-    border-radius: 4px;
     color: #111;
+    border-radius: 10px;
+    padding: 1.875em;
+    margin-top: 1em;
 }
-.notification a {color: #2F80ED;}
+.notification a {color: #093b80;}
 
 .ui-tabs-nav{
     width: 100%;
@@ -593,13 +592,13 @@ form[name=filterLog] {
         display: flex;
     }
     .input_fields label {
-        width: 30%;
+        width: 28%;
     }
     .input_fields select {
         width: 50%;
     }
     .input_fields #description {
-        padding-left: 30%;
+        padding-left: 28%;
     }
 }
 
@@ -624,6 +623,7 @@ form[name=filterLog] {
     border: 0px;
     box-sizing: border-box;
     border-radius: 4px;
+    margin-top: 0;
 }
 @media screen and (min-width: 50em) {
     #url{
@@ -647,6 +647,7 @@ input[type="submit"].start_test{
     font-size: 1.25em;
     padding: .9em 1.5em; 
     align-self: flex-start;
+    margin-left: 0;
 }
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test {
@@ -684,6 +685,8 @@ input[type="submit"].start_test{
 }
 #visual_comparison .urldiv{
     margin-bottom: 1em;
+    display: flex;
+    align-items: center;
 }
 #visual_comparison .urldiv a{
     color: #2F80ED;
@@ -700,7 +703,7 @@ input[type="submit"].start_test{
     margin-left: .3em;
 }
 #visual_comparison .urldiv a{
-    background: url('/images/icon-close.svg') top left no-repeat transparent;
+    background: url('/images/icon-close.svg') left no-repeat transparent;
     padding-left: 1.3em;
     text-decoration: none;
 }

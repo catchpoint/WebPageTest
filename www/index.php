@@ -665,12 +665,7 @@ $loc = ParseLocations($locations);
 
                             <?php if (!GetSetting('no_basic_auth_ui')) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
-                                <div class="notification-container">
-                                    <div class="notification"><div class="warning">
-                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
-                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
-                                    </div></div>
-                                </div>
+                                
 
                                 <ul class="input_fields">
                                     <li>
@@ -685,16 +680,18 @@ $loc = ParseLocations($locations);
                                         <input type="text" name="password" id="password" autocomplete="off" class="text" autocomplete="off">
                                     </li>
                                 </ul>
+                                <div class="notification-container">
+                                    <div class="notification"><div class="warning">
+                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
+                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
+                                    </div></div>
+                                </div>
                             </div>
                             <?php } ?>
 
                             <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
-                                    <div class="notification-container">
-                                        <div class="notification"><div class="message">
-                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
-                                        </div></div>
-                                    </div>
+                                    
 
                                     <p><label for="enter_script" class="full_width">Enter Script</label></p>
                                     <?php
@@ -719,6 +716,11 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                 </ul>
+                                <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
+                                        </div></div>
+                                    </div>
                             </div>
 
                             <div id="block" class="test_subbox ui-tabs-hide">
@@ -757,15 +759,16 @@ $loc = ParseLocations($locations);
 
                             <div id="custom-metrics" class="test_subbox ui-tabs-hide">
                                 <div>
-                                    <div class="notification-container">
-                                        <div class="notification"><div class="message">
-                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
-                                        </div></div>
-                                    </div>
+                                    
 
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                     <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
                                 </div>
+                                <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
                             </div>
 
                             <?php if (ShowBulk()) { ?>
