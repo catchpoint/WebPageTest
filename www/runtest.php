@@ -1292,18 +1292,57 @@ function ValidateKey(&$test, &$error, $key = null)
         if (isset($keys[$key]['queue_limit']) && $keys[$key]['queue_limit']) {
             $test['queue_limit'] = $keys[$key]['queue_limit'];
         }
-      }else{
+        // Make sure API keys don't exceed the max configured priority
+        $maxApiPriority = GetSetting('maxApiPriority');
+        if ($maxApiPriority) {
+          $test['priority'] = max($test['priority'], $maxApiPriority);
+        }
+      } elseif ($redis_server = GetSetting('redis_api_keys')) {
+        // Check the redis-based API keys if it wasn't a local key
+        try {
+          $redis = new Redis();
+          if ($redis->pconnect($redis_server)) {
+            $response = $redis->get("API_$key");
+            if ($response && strlen($response)) {
+              $account = json_decode($response, true);
+              if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
+                // Check the expiration
+                if (time() <= $account['expiration'] ) {
+                  // Check the balance
+                  $response = $redis->get("C_{$account['accountId']}");
+                  if ($response && strlen($response) && is_numeric($response)) {
+                    if ($runcount <= intval($response)) {
+                      // success.  See if there is a priority override for redis-based API tests
+                      if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
+                        $test['priority'] = intval(GetSetting('redis_api_priority'));
+                      }
+                    } else {
+                      $error = 'The test request will exceed the remaining test balance for the given API key';
+                    }
+                  } else {
+                    $error = 'Error validating API Key Account';
+                  }
+                } else {
+                  $error = 'API key expired';
+                }
+              } else {
+                $error = 'Error validating API Key';
+              }
+            } else {
+              $error = 'Invalid API Key';
+            }
+          } else {
+            $error = 'Error validating API Key';
+          }
+        } catch (Exception $e) {
+          $error = 'Error validating API Key';
+        }
+      } else {
         $error = 'Invalid API Key';
       }
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
-      }
-
-      // Make sure API keys don't exceed the max configured priority
-      $maxApiPriority = GetSetting('maxApiPriority');
-      if ($maxApiPriority) {
-        $test['priority'] = max($test['priority'], $maxApiPriority);
       }
     }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request (missing API key).';
