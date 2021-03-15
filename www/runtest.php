@@ -1302,34 +1302,38 @@ function ValidateKey(&$test, &$error, $key = null)
         try {
           $redis = new Redis();
           if ($redis->pconnect($redis_server)) {
-            $response = $redis->get("API_$key");
-            if ($response && strlen($response)) {
-              $account = json_decode($response, true);
-              if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
-                // Check the expiration
-                if (time() <= $account['expiration'] ) {
-                  // Check the balance
-                  $response = $redis->get("C_{$account['accountId']}");
-                  if ($response && strlen($response) && is_numeric($response)) {
-                    if ($runcount <= intval($response)) {
-                      // Store the account info with the test
-                      $test['accountId'] = $account['accountId'];
-                      $test['contactId'] = $account['contactId'];
-                      // success.  See if there is a priority override for redis-based API tests
-                      if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
-                        $test['priority'] = intval(GetSetting('redis_api_priority'));
-                      }
-                    } else {
-                      $error = 'The test request will exceed the remaining test balance for the given API key';
+            $account = CacheFetch("API_$key");
+            if (!isset($account)) {
+              $response = $redis->get("API_$key");
+              if ($response && strlen($response)) {
+                $account = json_decode($response, true);
+                if (isset($account) && is_array($account)) {
+                  CacheStore("API_$key", $account, 3600);
+                }
+              }
+            }
+            if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
+              // Check the expiration
+              if (time() <= $account['expiration'] ) {
+                // Check the balance
+                $response = $redis->get("C_{$account['accountId']}");
+                if ($response && strlen($response) && is_numeric($response)) {
+                  if ($runcount <= intval($response)) {
+                    // Store the account info with the test
+                    $test['accountId'] = $account['accountId'];
+                    $test['contactId'] = $account['contactId'];
+                    // success.  See if there is a priority override for redis-based API tests
+                    if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
+                      $test['priority'] = intval(GetSetting('redis_api_priority'));
                     }
                   } else {
-                    $error = 'Error validating API Key Account';
+                    $error = 'The test request will exceed the remaining test balance for the given API key';
                   }
                 } else {
-                  $error = 'API key expired';
+                  $error = 'Error validating API Key Account';
                 }
               } else {
-                $error = 'Error validating API Key';
+                $error = 'API key expired';
               }
             } else {
               $error = 'Invalid API Key';
