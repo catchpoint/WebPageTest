@@ -1230,6 +1230,12 @@ function ValidateKey(&$test, &$error, $key = null)
         }
       }
 
+      $runcount = max(1, $test['runs']);
+      if( !$test['fvonly'] )
+        $runcount *= 2;
+      //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+      //  $runcount *= $test['navigateCount'];
+
       // validate their API key and enforce any rate limits
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
@@ -1264,12 +1270,6 @@ function ValidateKey(&$test, &$error, $key = null)
                 $used = (int)$usage[$key];
               else
                 $used = 0;
-
-              $runcount = max(1, $test['runs']);
-              if( !$test['fvonly'] )
-                $runcount *= 2;
-              //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-              //  $runcount *= $test['navigateCount'];
 
             if( $limit > 0 ){
               if( $used + $runcount <= $limit ){
