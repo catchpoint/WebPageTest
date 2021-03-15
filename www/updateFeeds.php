@@ -55,6 +55,8 @@ function UpdateFeeds() {
                 $feed->enable_cache(false);
                 $feed->init();
               }
+
+              $feed_image = $feed->get_image_url();
               
               foreach ($feed->get_items() as $item) {
                 $dateStr = $item->get_date(DATE_RSS);
@@ -79,12 +81,42 @@ function UpdateFeeds() {
                         $parts = parse_url($feedUrl);
                         $url = "{$parts['scheme']}://{$parts['host']}$url";
                       }
-                      $feedData[$category][$date] = array ( 
-                              'source' => $feedSource,
-                              'title' => $item->get_title(),
-                              'link' => $url,
-                              'date' => $dateStr
-                          );
+                      $entry = array ( 
+                        'source' => $feedSource,
+                        'title' => $item->get_title(),
+                        'link' => $url,
+                        'date' => $dateStr
+                      );
+                      $thumbnail = null;
+                      // See if there is an explicit image
+                      if ($enclosure = $item->get_enclosure()) {
+                        $thumbnail = $enclosure->get_thumbnail();
+                      }
+                      // Try grabbing the first image from the content
+                      if (!$thumbnail) {
+                        $content = $item->get_content();
+                        if ($content) {
+                          $doc = new DOMDocument();
+                          if ($doc->loadHTML($content)) {
+                            $doc->preserveWhiteSpace = false;
+                            $images = $doc->getElementsByTagName('img');
+                            foreach ($images as $image) {
+                              $thumbnail = $image->getAttribute('src');
+                              if ($thumbnail) {
+                                break;
+                              }
+                            }
+                          }
+                        }
+                      }
+                      // Fall back to the icon for the feed if there is one
+                      if (!$thumbnail && $feed_image) {
+                        $thumbnail = $feed_image;
+                      }
+                      if ($thumbnail) {
+                        $entry['thumbnail'] = $thumbnail;
+                      }
+                      $feedData[$category][$date] = $entry;
                     }
                   }
                 }
