@@ -1312,6 +1312,9 @@ function ValidateKey(&$test, &$error, $key = null)
                   $response = $redis->get("C_{$account['accountId']}");
                   if ($response && strlen($response) && is_numeric($response)) {
                     if ($runcount <= intval($response)) {
+                      // Store the account info with the test
+                      $test['accountId'] = $account['accountId'];
+                      $test['contactId'] = $account['contactId'];
                       // success.  See if there is a priority override for redis-based API tests
                       if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
                         $test['priority'] = intval(GetSetting('redis_api_priority'));
@@ -2030,6 +2033,10 @@ function LogTest(&$test, $testId, $url)
       );
       if (isset($logEntry['location'])) {
         $logEntry['location'] = strip_tags($logEntry['location']);
+      }
+      if (isset($test['key']) && isset($test['accountId']) && isset($test['contactId'])) {
+        $logEntry['clientId'] = intval($test['accountId']);
+        $logEntry['createContactId'] = intval($test['contactId']);
       }
       LimitLogEntrySizes($logEntry);
       if (IsValidLogEntry($logEntry)) {
