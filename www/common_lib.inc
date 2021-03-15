@@ -1506,8 +1506,6 @@ function AddTestJob($location, $job, $test, $testId) {
               $job = json_encode($json);
             }
             $fileName = $test['job'];
-            if (isset($test['affinity']))
-              $fileName = "Affinity{$test['affinity']}.{$test['job']}";
             $testNum = GetDailyTestNum();
             $sortableIndex = date('ymd') . GetSortableString($testNum);
             $fileName = "$sortableIndex.$fileName";
@@ -1742,7 +1740,7 @@ function AddJobFile($location, $workDir, $file, $priority, $queue_limit = 0)
 /**
 * Get a job from the given work queue (assume it is locked)
 */
-function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $testerIndex = null, $testerCount = null) {
+function GetTestJob($location, &$file, $workDir, &$priority) {
   $test_job = null;
   $file = null;
 
@@ -1776,26 +1774,9 @@ function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $te
         $modified = false;
         $priority = 0;
         while (!isset($file) && $priority <= 9) {
-          // Pick any tests without affinity or whose affinity
-          // matches the existing tester
           if (isset($queue[$priority]) && count($queue[$priority])) {
             foreach ($queue[$priority] as $index => $job_file) {
-              if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
-                $affinity = $matches['affinity'];
-                if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
-                  if (isset($tester) && !strcasecmp($tester,$matches['tester']))
-                    $file = $job_file;
-                } elseif (isset($testerIndex) && isset($testerCount) &&
-                          $testerIndex >= 0 && $testerIndex < $testerCount &&
-                          preg_match('/^[0-9]+$/', $affinity, $matches)) {
-                  $matchIndex = intval($affinity) % $testerCount;
-                  if ($matchIndex == $testerIndex)
-                    $file = $job_file;
-                }
-              } else {
-                // no affinity, this one works
-                $file = $job_file;
-              }
+              $file = $job_file;
               if (isset($file)) {
                 unset($queue[$priority][$index]);
                 $modified = true;
@@ -1919,7 +1900,7 @@ function LoadJobQueue($workDir, &$queue)
           if (is_array($queue)) {
             $empty = true;
             foreach ($queue as &$p) {
-              if (is_array($p) && isset($p[0]) && (strpos($p[0], "AffinityTester") == FALSE)) {
+              if (is_array($p) && isset($p[0])) {
                 $empty = false;
                 break;
               }
