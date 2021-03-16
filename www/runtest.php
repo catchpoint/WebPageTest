@@ -50,6 +50,7 @@
     $error = NULL;
     $xml = false;
     $usingAPI = false;
+    $usingApi2 = false;
     $forceValidate = false;
     $runcount = 0;
     $apiKey = null;
@@ -1314,6 +1315,8 @@ function ValidateKey(&$test, &$error, $key = null)
                 $response = $redis->get("C_{$account['accountId']}");
                 if ($response && strlen($response) && is_numeric($response)) {
                   if ($runcount <= intval($response)) {
+                    global $usingApi2;
+                    $usingApi2 = true;
                     // Store the account info with the test
                     $test['accountId'] = $account['accountId'];
                     $test['contactId'] = $account['contactId'];
@@ -1804,7 +1807,7 @@ function WriteJob($location, &$test, &$job, $testId)
   }
 
   if ($ret) {
-    ReportAnalytics($test);
+    ReportAnalytics($test, $testId);
   }
 
   return $ret;
@@ -2940,9 +2943,11 @@ function gen_uuid() {
   );
 }
 
-function ReportAnalytics(&$test)
+function ReportAnalytics(&$test, $testId)
 {
   global $usingAPI;
+  global $usingApi2;
+  global $USER_EMAIL;
   $ga = GetSetting('analytics');
 
   if ($ga && function_exists('curl_init') &&
@@ -2951,6 +2956,11 @@ function ReportAnalytics(&$test)
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
         $ip = $test['ip'];
+    
+    $eventName = $usingAPI ? 'API' : 'Manual';
+    if ($usingApi2) {
+      $eventName = 'API2';
+    }
 
     $data = array(
       'v' => '1',
@@ -2959,17 +2969,27 @@ function ReportAnalytics(&$test)
       't' => 'event',
       'ds' => 'web',
       'ec' => 'Test',
-      'ea' => $usingAPI ? 'API' : 'Manual',
+      'ea' => $eventName,
       'el' => $test['location'],
-      'uip' => $ip
+      'uip' => $ip,
+      'cd1' => $test['mobile'] ? 'MobileEM' : 'Native'
     );
 
-    if (isset($_SERVER['HTTP_REFERER']) && strlen($_SERVER['HTTP_REFERER'])) {
-      $data['dr'] = $_SERVER['HTTP_REFERER'];
+    if (isset($USER_EMAIL)) {
+      $data['uid'] = $USER_EMAIL;
+    } elseif (isset($test['accountId'])) {
+      $data['uid'] = $test['accountId'];
     }
 
+    if (isset($test['url'])) {
+      $data['dl'] = $test['url'];
+    }
     if (isset($_SERVER['HTTP_HOST']) && isset($_SERVER['PHP_SELF'])) {
-      $data['dl'] = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+      $data['dr'] = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+    }
+
+    if (isset($testId)) {
+      $data['ti'] = $testId;
     }
 
     $payload = utf8_encode(http_build_query($data));
