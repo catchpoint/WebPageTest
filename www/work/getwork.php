@@ -12,6 +12,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('GetLocationInfo');
   newrelic_add_custom_tracer('LockTest');
   newrelic_add_custom_tracer('UpdateTester');
+  newrelic_add_custom_tracer('GetTesterIndex');
   newrelic_add_custom_tracer('StartTest');
   newrelic_add_custom_tracer('TestToJSON');
   newrelic_add_custom_tracer('logTestMsg');
@@ -112,6 +113,61 @@ if (!$is_done) {
   header('Content-type: text/plain');
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+}
+
+function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
+  global $pc;
+  global $ec2;
+  global $tester;
+  global $location;
+  $now = time();
+
+  // get the count of testers for this lication and the index of the current tester for affinity checking
+  $testerIndex = null;
+  if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
+    $testers = CacheFetch("testers_$location");
+    if (!isset($testers) || !is_array($testers))
+      $testers = array();
+    $testers[$pc] = $now;
+    $max_tester_time = min(max(GetSetting('max_tester_minutes', 60), 5), 120) * 60;
+    $earliest = $now - $max_tester_time;
+    $index = 0;
+    foreach($testers as $name => $last_check) {
+      if ($name == $pc)
+        $testerIndex = $index;
+      if ($last_check < $earliest) {
+        unset($testers[$name]);
+      } else {
+        $index++;
+      }
+    }
+    $testerCount = count($testers);
+    CacheStore("testers_$location", $testers);
+  }
+
+  // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
+  $offline = false;
+  if (GetSetting('ec2_key') && !isset($testerIndex) || isset($locInfo['ami'])) {
+    $testers = GetTesters($location, true);
+
+    // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
+    $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
+    if ($testerCount) {
+      if (strlen($ec2)) {
+        foreach($testers['testers'] as $index => $testerInfo) {
+          if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
+              isset($testerInfo['offline']) && $testerInfo['offline'])
+            $offline = true;
+            break;
+        }
+      }
+      foreach($testers['testers'] as $index => $testerInfo)
+        if ($testerInfo['id'] == $tester) {
+          $testerIndex = $index;
+          break;
+        }
+    }
+  }
 }
 
 function StartTest($testId, $time) {
@@ -217,116 +273,123 @@ function GetJob() {
       $scheduler_node = $locInfo['scheduler_node'];
     }
     $key_valid = true;
+    GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
     
-    $testInfo = GetTestJob($location, $fileName, $workDir, $priority);
-    if (isset($testInfo)) {
-      $is_done = true;
-      $testJson = null;
-      $testId = null;
-      
-      header ("Content-type: application/json");
-      header("Cache-Control: no-cache, must-revalidate");
-      header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    if (!$offline) {
+      if (!isset($testerIndex))
+        $testerIndex = 0;
+      if (!$testerCount)
+        $testerCount = 1;
+      $testInfo = GetTestJob($location, $fileName, $workDir, $priority, $pc, $testerIndex, $testerCount);
+      if (isset($testInfo)) {
+        $is_done = true;
+        $testJson = null;
+        $testId = null;
+        
+        header ("Content-type: application/json");
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-      if (substr($testInfo, 0, 1) == '{') {
-        $testJson = json_decode($testInfo, true);
-        if (isset($testJson['Test ID'])) {
-          $testId = $testJson['Test ID'];
+        if (substr($testInfo, 0, 1) == '{') {
+          $testJson = json_decode($testInfo, true);
+          if (isset($testJson['Test ID'])) {
+            $testId = $testJson['Test ID'];
+          }
+        } else {
+          // extract the test ID from the job file
+          if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
+            $testId = trim($matches[1]);
         }
-      } else {
-        // extract the test ID from the job file
-        if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
-          $testId = trim($matches[1]);
-      }
 
-      if( isset($testId) ) {
-        $dotPos = stripos($testId, ".");
-        $realTestId = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
-        $time = time();
-        StartTest($testId, $time);
-        if (!isset($_REQUEST['testinfo'])) {
-          $lock = LockTest($testId);
-          if ($lock) {
-            if (isset($testJson) && isset($testJson['testinfo'])) {
-              $testInfoJson = &$testJson['testinfo'];
-            } else {
-              $testInfoJson = GetTestInfo($testId);
-            }
-            if ($testInfoJson) {
-              if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
-                $testInfoJson['tester'] = $tester;
-              if (isset($dnsServers) && strlen($dnsServers))
-                $testInfoJson['testerDNS'] = $dnsServers;
-              if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
-                $testInfoJson['started'] = $time;
-                logTestMsg($testId, "Starting test (initiated by tester $tester)");
+        if( isset($testId) ) {
+          $dotPos = stripos($testId, ".");
+          $realTestId = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
+          $time = time();
+          StartTest($testId, $time);
+          if (!isset($_REQUEST['testinfo'])) {
+            $lock = LockTest($testId);
+            if ($lock) {
+              if (isset($testJson) && isset($testJson['testinfo'])) {
+                $testInfoJson = &$testJson['testinfo'];
+              } else {
+                $testInfoJson = GetTestInfo($testId);
               }
-              $testInfoJson['id'] = $realTestId;
-              SaveTestInfo($testId, $testInfoJson);
+              if ($testInfoJson) {
+                if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
+                  $testInfoJson['tester'] = $tester;
+                if (isset($dnsServers) && strlen($dnsServers))
+                  $testInfoJson['testerDNS'] = $dnsServers;
+                if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
+                  $testInfoJson['started'] = $time;
+                  logTestMsg($testId, "Starting test (initiated by tester $tester)");
+                }
+                $testInfoJson['id'] = $realTestId;
+                SaveTestInfo($testId, $testInfoJson);
+              }
+              UnlockTest($lock);
             }
-            UnlockTest($lock);
+          } elseif(isset($testJson['testinfo'])) {
+            $testJson['testinfo']['id'] = $realTestId;
+            $testJson['testinfo']['tester'] = $tester;
           }
-        } elseif(isset($testJson['testinfo'])) {
-          $testJson['testinfo']['id'] = $realTestId;
-          $testJson['testinfo']['tester'] = $tester;
+        }
+
+        if (isset($fileName)) {
+          @unlink("$workDir/$fileName");
+        }
+        
+        if (!isset($testJson)) {
+          $testJson = TestToJSON($testInfo);
+        }
+        if (isset($testJson)) {
+          // See if we need to include apk information
+          if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+            $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+            if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+              $protocol = getUrlProtocol();
+              $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+              $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+              foreach ($apk_info['packages'] as $package => $info)
+                $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
+              $testJson['apk_info'] = $apk_info;
+            }
+          }
+          if (is_string($work_servers) && strlen($work_servers)) {
+            $testJson['work_servers'] = $work_servers;
+          }
+          $profile_data = GetSetting('profile_data');
+          if (is_string($profile_data) && strlen($profile_data)) {
+            $testJson['profile_data'] = $profile_data;
+          }
+          echo json_encode($testJson);
+          $ok = true;
         }
       }
 
-      if (isset($fileName)) {
-        @unlink("$workDir/$fileName");
-      }
-      
-      if (!isset($testJson)) {
-        $testJson = TestToJSON($testInfo);
-      }
-      if (isset($testJson)) {
-        // See if we need to include apk information
-        if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
-          $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
-          if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
-            $protocol = getUrlProtocol();
-            $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
-            $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
-            foreach ($apk_info['packages'] as $package => $info)
-              $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
-            $testJson['apk_info'] = $apk_info;
-          }
-        }
-        if (is_string($work_servers) && strlen($work_servers)) {
-          $testJson['work_servers'] = $work_servers;
-        }
-        $profile_data = GetSetting('profile_data');
-        if (is_string($profile_data) && strlen($profile_data)) {
-          $testJson['profile_data'] = $profile_data;
-        }
-        echo json_encode($testJson);
-        $ok = true;
-      }
+      // keep track of the last time this location reported in
+      $testerInfo = array();
+      $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+      $testerInfo['pc'] = $pc;
+      $testerInfo['ec2'] = $ec2;
+      $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
+      $testerInfo['freedisk'] = @$_GET['freedisk'];
+      $testerInfo['upminutes'] = @$_GET['upminutes'];
+      $testerInfo['ie'] = @$_GET['ie'];
+      $testerInfo['dns'] = $dnsServers;
+      $testerInfo['video'] = @$_GET['video'];
+      $testerInfo['GPU'] = @$_GET['GPU'];
+      $testerInfo['screenwidth'] = $screenwidth;
+      $testerInfo['screenheight'] = $screenheight;
+      $testerInfo['winver'] = $winver;
+      $testerInfo['isWinServer'] = $isWinServer;
+      $testerInfo['isWin64'] = $isWin64;
+      $testerInfo['test'] = '';
+      if (isset($browsers) && count(array_filter($browsers, 'strlen')))
+        $testerInfo['browsers'] = $browsers;
+      if (isset($testId))
+        $testerInfo['test'] = $testId;
+      UpdateTester($location, $tester, $testerInfo);
     }
-
-    // keep track of the last time this location reported in
-    $testerInfo = array();
-    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-    $testerInfo['pc'] = $pc;
-    $testerInfo['ec2'] = $ec2;
-    $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
-    $testerInfo['freedisk'] = @$_GET['freedisk'];
-    $testerInfo['upminutes'] = @$_GET['upminutes'];
-    $testerInfo['ie'] = @$_GET['ie'];
-    $testerInfo['dns'] = $dnsServers;
-    $testerInfo['video'] = @$_GET['video'];
-    $testerInfo['GPU'] = @$_GET['GPU'];
-    $testerInfo['screenwidth'] = $screenwidth;
-    $testerInfo['screenheight'] = $screenheight;
-    $testerInfo['winver'] = $winver;
-    $testerInfo['isWinServer'] = $isWinServer;
-    $testerInfo['isWin64'] = $isWin64;
-    $testerInfo['test'] = '';
-    if (isset($browsers) && count(array_filter($browsers, 'strlen')))
-      $testerInfo['browsers'] = $browsers;
-    if (isset($testId))
-      $testerInfo['test'] = $testId;
-    UpdateTester($location, $tester, $testerInfo);
   }
   
   return $is_done;
