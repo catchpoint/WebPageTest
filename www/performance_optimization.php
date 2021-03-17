@@ -18,7 +18,7 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $step);
 $isMultistep = $testRunResults->countSteps() > 1;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Optimization Check Results<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
@@ -110,10 +110,9 @@ $isMultistep = $testRunResults->countSteps() > 1;
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Performance Review';
+            $subtab = 'Performance';
             include 'header.inc';
 
             if ($isMultistep) {
@@ -173,10 +172,9 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 echo '<br>';
                 dumpOptimizationGlossary();
             ?>
-
+    </div>
             <?php include('footer.inc'); ?>
         </div>
-        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <?php

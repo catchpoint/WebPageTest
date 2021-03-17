@@ -21,7 +21,7 @@ $page_description = "Website performance-test screenshots$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Screenshots<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
@@ -88,7 +88,6 @@ $userImages = true;
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Screenshot';
@@ -96,9 +95,7 @@ $userImages = true;
 
             printContent($fileHandler, $testInfo, $testRunResults);
             ?>
-
             </div>
-
             <?php include('footer.inc'); ?>
             <?php
             if (!empty($hasJquery) && is_file('./js/jk-navigation.js') && $testRunResults->countSteps() > 1) {

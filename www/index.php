@@ -31,7 +31,7 @@ if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
-    $url = 'Enter a Website URL';
+    $url = 'Enter a website URL...';
 }
 $connectivity_file = './settings/connectivity.ini.sample';
 if (file_exists('./settings/connectivity.ini'))
@@ -67,14 +67,19 @@ $loc = ParseLocations($locations);
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
-    <body>
-        <div class="page">
-            <?php
+    <body class="home">
+        <?php 
+            $tab = 'Home';
+            include 'header.inc';
+        ?>
+        <h1 class="attention">Test. Optimize. Repeat.</h1>
+        
+        <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
@@ -91,8 +96,7 @@ $loc = ParseLocations($locations);
               </script>
               <?php
             }
-            $tab = 'Home';
-            include 'header.inc';
+
             if (!$headless) {
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
@@ -169,24 +173,37 @@ $loc = ParseLocations($locations);
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
+                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
                     <?php
                     if (file_exists(__DIR__ . '/settings/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                      echo "<li class=\"easy_mode\"><a href=\"/easy\">";
+                      echo file_get_contents('./images/icon-simple-testing.svg');
+                      echo "Simple Testing</a></li>";
                     }
                     ?>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/">
+                    <?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
+                    <li class="traceroute"><a href="/traceroute.php">
+                    <?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li>
+                            <label for="url" class="vis-hidden">Enter URL to test</label>
+                            <input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
+                            }
+                            ?>
+                    </li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -452,14 +469,14 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="uastring" style="width: auto;">
+                                        <label for="uastring">
                                         User Agent String<br>
                                         <small>(Custom UA String)</small>
                                         </label>
                                         <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
                                     <li>
-                                        <label for="appendua" style="width: auto;">
+                                        <label for="appendua">
                                         Append to UA String
                                         </label>
                                         <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
@@ -510,6 +527,11 @@ $loc = ParseLocations($locations);
                                         if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
                                           $checked = ' checked';
                                         echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
+                                        ?>
+                                        <label for="mobile">
+                                            Emulate Mobile Browser
+                                        </label>
+                                        <?php
                                         if (is_file('./settings/mobile_devices.ini')) {
                                           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
                                           if ($devices && count($devices)) {
@@ -540,9 +562,7 @@ $loc = ParseLocations($locations);
                                           }
                                         }
                                         ?>
-                                        <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser
-                                        </label>
+                                        
                                     </li>
                                     <li>
                                         <?php
@@ -554,7 +574,10 @@ $loc = ParseLocations($locations);
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
-                                        <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
+                                        
+                                    </li>
+                                    <li>
+                                    <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
                                         <label for="profiler" class="auto_width">
                                             Enable v8 Sampling Profiler (much larger traces)
                                         </label>
@@ -572,7 +595,7 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="traceCategories" style="width: auto;">
+                                        <label for="traceCategories">
                                         Trace Categories<br>
                                         <small>(when tracing is enabled)</small>
                                         </label>
@@ -594,6 +617,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableAVIF" class="auto_width">Disable AVIF image support</label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableWEBP" class="auto_width">Disable WEBP image support</label>
                                     </li>
@@ -622,14 +647,14 @@ $loc = ParseLocations($locations);
                                     }
                                     ?>
                                     <li>
-                                        <label for="hostResolverRules" style="width: auto;">
+                                        <label for="hostResolverRules">
                                         <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
                                         <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;" autocomplete="off">
                                     </li>
                                     <li>
-                                        <label for="cmdline" style="width: auto;">
+                                        <label for="cmdline">
                                         Command-line<br>
                                         <small>Custom options</small>
                                         </label>
@@ -640,36 +665,33 @@ $loc = ParseLocations($locations);
 
                             <?php if (!GetSetting('no_basic_auth_ui')) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
-                                <div class="notification-container">
-                                    <div class="notification"><div class="warning">
-                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
-                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
-                                    </div></div>
-                                </div>
+                                
 
                                 <ul class="input_fields">
                                     <li>
                                         HTTP Basic Authentication
                                     </li>
                                     <li>
-                                        <label for="username" style="width: auto;">Username</label>
-                                        <input type="text" name="login" id="username" class="text" style="width: 200px;" autocomplete="off">
+                                        <label for="username">Username</label>
+                                        <input type="text" name="login" id="username" class="text" autocomplete="off">
                                     </li>
                                     <li>
-                                        <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" autocomplete="off" class="text" style="width: 200px;" autocomplete="off">
+                                        <label for="password">Password</label>
+                                        <input type="text" name="password" id="password" autocomplete="off" class="text" autocomplete="off">
                                     </li>
                                 </ul>
+                                <div class="notification-container">
+                                    <div class="notification"><div class="warning">
+                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
+                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
+                                    </div></div>
+                                </div>
                             </div>
                             <?php } ?>
 
                             <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
-                                    <div class="notification-container">
-                                        <div class="notification"><div class="message">
-                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
-                                        </div></div>
-                                    </div>
+                                    
 
                                     <p><label for="enter_script" class="full_width">Enter Script</label></p>
                                     <?php
@@ -694,6 +716,11 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                 </ul>
+                                <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
+                                        </div></div>
+                                    </div>
                             </div>
 
                             <div id="block" class="test_subbox ui-tabs-hide">
@@ -732,15 +759,16 @@ $loc = ParseLocations($locations);
 
                             <div id="custom-metrics" class="test_subbox ui-tabs-hide">
                                 <div>
-                                    <div class="notification-container">
-                                        <div class="notification"><div class="message">
-                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
-                                        </div></div>
-                                    </div>
+                                    
 
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                     <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
                                 </div>
+                                <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
                             </div>
 
                             <?php if (ShowBulk()) { ?>
@@ -759,20 +787,6 @@ $loc = ParseLocations($locations);
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-                <div id="sponsor">
-                </div>
-            </div>
-            <div class="cleared"></div>
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>
                 <div id="map">
@@ -813,9 +827,9 @@ $loc = ParseLocations($locations);
                 include('settings/intro.inc');
             } // $headless
             ?>
-
+            </div>
+            <?php include('home-subsections.inc'); ?>
             <?php include('footer.inc'); ?>
-        </div>
 
         <script type="text/javascript">
         <?php

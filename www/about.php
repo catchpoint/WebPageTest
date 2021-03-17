@@ -7,7 +7,7 @@ $page_keywords = array('About','Contact','WebPageTest','Website Speed Test','Pag
 $page_description = "More information about WebPageTest website speed testing and how to contact us.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - About</title>
         <meta http-equiv="charset" content="iso-8859-1">
@@ -20,13 +20,12 @@ $page_description = "More information about WebPageTest website speed testing an
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'About';
             include 'header.inc';
             ?>
-
-            <div class="translucent">
+            <h1>About WebPageTest</h1>
+            <div class="box">
                 <?php
                 if( is_file('settings/server/about.inc') ) {
                     include('settings/server/about.inc');
@@ -50,7 +49,6 @@ $page_description = "More information about WebPageTest website speed testing an
                 }
                 ?>
             </div>
-
             <?php include('footer.inc'); ?>
         </div>
     </body>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Running web page performance and optimization tests...</title>
         <noscript>
@@ -14,7 +14,6 @@
         ?>
     </head>
     <body>
-        <div class="page">
             <?php
             require_once('testStatus.inc');
             $tab = 'Test Result';
@@ -27,19 +26,8 @@
             else
             {
             ?>
-            <div id="runningHeader">
-                <p>
-                <?php
-                    if (GetSetting('nolinks')) {
-                        echo "URL: $url<br>\n";
-                    } else {
-                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
-                    }
-                    echo "From: {$test['test']['location']}<br>\n";
-                    echo GetTestInfoHtml(false);
-                ?>
-                </p>
-                <h3>Testing...</h3>
+            <h1>Testing...</h1>
+            <div id="runningHeader" class="box">
                 <?php
                 $status = GetTestStatus($id, true);
                 if ( !array_key_exists('startTime', $status) || !$status['startTime'] )
@@ -52,35 +40,51 @@
                     <?php
                 }
                 ?>
-            </div>
-            <?php
-              $statusText = $status['statusText'];
-            ?>
-            <div id="statusImg">
+                <p class="runningDetails">
                 <?php
-                    $img = "waiting";
-                    if( array_key_exists('statusCode', $status) && $status['statusCode'] == 100 )
-                        $img = "testing";
-                    echo "<img id='statusImage' src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
-                    echo "<div id=\"statusText\">$statusText</div>\n";
+                    if (GetSetting('nolinks')) {
+                        echo "URL: $url<br>\n";
+                    } else {
+                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    }
+                    echo "From: {$test['test']['location']}<br>\n";
+                    echo GetTestInfoHtml(false);
                 ?>
-            </div>
-            <?php
-            $tip = GetTip();
-            if( strlen($tip) )
-            {
-                echo '<table class="tip"><tr><th>Did you know...<span class="tip_note">(all links open in a new window/tab)</span></th></tr><tr><td>';
-                echo $tip;
-                echo "</td></table>\n";
-            }
-            ?>
+                </p>
+                
+                
+                <?php
+                $statusText = $status['statusText'];
+                $statusStep = "waiting";
+                if( array_key_exists('statusCode', $status) && $status['statusCode'] == 100 )
+                    $statusStep = "testing"
+                ?>
+                <ul class="runningStatusIndicator">
+                    <li <?php if ($statusStep == "waiting") { ?>class="is-active"<?php } ?>>Waiting...</li>
+                    <li <?php if ($statusStep == "testing") { ?>class="is-active"<?php } ?>>Testing...</li>
+                    <li>Done</li>
+                </ul>
+                            
             <p>Your webpage-performance test has been submitted and is now being processed.  This page will automatically update with the test status as
             the test continues to run.  When the test is complete the final results will be available here.</p>
             <p>You can either leave this page open in your browser until the test
              is complete, or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
-            <br>
-            <?php } include('footer.inc'); ?>
+            </div>
+            
+            
+            <?php } ?>
+            <?php
+            $tip = GetTip();
+            if( strlen($tip) )
+            {
+                echo '<div class="tip box"><div class="tipHead"><h2>Did you know?</h2><span class="tip_note">(all links open in a new window/tab)</span></div>';
+                echo $tip;
+                echo "</div>\n";
+            }
+            ?>
+            <?php include('footer.inc'); ?>
         </div>
+        
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
             var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';

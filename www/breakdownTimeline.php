@@ -13,7 +13,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
@@ -48,10 +48,9 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Processing Breakdown';
+            $subtab = 'Processing';
             include 'header.inc';
             $processing = GetDevToolsCPUTime($testPath, $run, $cached);
             if (isset($processing)) {
@@ -174,7 +173,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
                 </tr>
             </table>
         </div>
-
         <?php include('footer.inc'); ?>
 
         <!--Load the AJAX API-->

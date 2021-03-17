@@ -132,7 +132,7 @@ function DisplayError()
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Comparison Error'; include ('head.inc'); ?>

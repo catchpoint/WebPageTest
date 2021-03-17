@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute test result<?php echo $testLabel; ?></title>
         <?php
@@ -11,13 +11,12 @@
         ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $nosubheader = true;
             include 'header.inc';
             ?>
-            <div class="translucent">
+            <div class="box">
                 <h2>Traceroute to <?php echo $url;?></h2>
                 From: <?php echo $test['test']['location'];?><br>
                 <?php if( (int)$test['test']['runs'] > 1 ) echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>'; ?>

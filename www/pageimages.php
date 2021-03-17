@@ -22,7 +22,7 @@ $page_description = "Website speed test images$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
   <head>
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>

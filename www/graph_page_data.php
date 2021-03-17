@@ -84,7 +84,7 @@ $common_label = implode(" ", $common_labels);
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Graph Page Data</title>
         <meta http-equiv="charset" content="iso-8859-1">

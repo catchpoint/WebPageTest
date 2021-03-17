@@ -28,7 +28,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPagetest - Lighthouse Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>

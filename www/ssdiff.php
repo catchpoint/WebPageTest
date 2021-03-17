@@ -27,7 +27,7 @@ if( $refRun && $cmpRun )
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Screenshot Diff</title>
         <?php include ('head.inc'); ?>

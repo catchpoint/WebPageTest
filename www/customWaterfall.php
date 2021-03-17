@@ -7,7 +7,7 @@ $page_keywords = array('Custom','Waterfall','WebPageTest','Website Speed Test');
 $page_description = "Website speed test custom waterfall$testLabel";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>

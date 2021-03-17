@@ -23,13 +23,12 @@ $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Test');
 $page_description = "Test network path from multiple locations around the world (traceroute).";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute diagnostic</title>
         <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>
     </head>
-    <body>
-        <div class="page">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
@@ -50,6 +49,7 @@ $page_description = "Test network path from multiple locations around the world 
             $tab = 'Home';
             include 'header.inc';
             ?>
+            <h1 class="attention">Test. Optimize. Repeat.</h1>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
             <input type="hidden" name="type" value="traceroute">
@@ -69,24 +69,32 @@ $page_description = "Test network path from multiple locations around the world 
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents...</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
+                    <li class="analytical_review"><a href="/"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
                     <?php
                     if (file_exists(__DIR__ . '/settings/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\">Simple Testing</a></li>";
+                        echo "<li class=\"easy_mode\"><a href=\"/easy\">";
+                        echo file_get_contents('./images/icon-simple-testing.svg');
+                        echo "Simple Testing</a></li>";
                     }
                     ?>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/"><?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
+                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
+                            }
+                            ?></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -102,7 +110,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 ?>
                             </select>
                             <?php if( GetSetting('map') ) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
+                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                             <span class="cleared"></span>
@@ -145,19 +153,6 @@ $page_description = "Test network path from multiple locations around the world 
                 </div>
             </div>
 
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-                <div id="sponsor">
-                </div>
-            </div>
-            <div class="cleared"></div>
-
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>
                 <div id="map">
@@ -179,7 +174,7 @@ $page_description = "Test network path from multiple locations around the world 
                 </p>
             </div>
             </form>
-
+            <?php include('home-subsections.inc'); ?>                
             <?php include('footer.inc'); ?>
         </div>
 

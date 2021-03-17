@@ -37,7 +37,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 
 
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Domain Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
@@ -77,7 +77,6 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Domains';
@@ -126,6 +125,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 }
               }
             ?>
+            </div>
 
             <?php include('footer.inc'); ?>
         </div>

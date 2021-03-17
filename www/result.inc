@@ -28,7 +28,7 @@ $page_keywords = array('Results','WebPageTest','Website Speed Test','Page Speed'
 $page_description = "Website performance test result$testLabel.";
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
         <style type="text/css">
@@ -49,7 +49,6 @@ $page_description = "Website performance test result$testLabel.";
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             $subtab = 'Summary';
@@ -161,7 +160,6 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to $publish</a>";
                 ?>
             </div>
-            <div class="cleared"></div>
             <div id="average">
                 <?php
                 $is_test_error = $testInfo->isTestError();
@@ -231,8 +229,7 @@ $page_description = "Website performance test result$testLabel.";
             </div>
             </div>
 
-		    <br>
-		    <br>
+              </div>
 
             <?php include('footer.inc'); ?>
         </div>

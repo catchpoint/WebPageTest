@@ -28,16 +28,12 @@ if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
 $profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
-        <style>
-        #description { min-height: 2em; padding-left: 170px; width:380px;}
-        </style>
     </head>
-    <body>
-        <div class="page">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
@@ -59,6 +55,8 @@ $profiles = parse_ini_file($profile_file, true);
             include 'header.inc';
             if (!$headless) {
             ?>
+            <h1 class="attention">Test. Optimize. Repeat.</h1>
+
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
             <?php
@@ -77,18 +75,37 @@ $profiles = parse_ini_file($profile_file, true);
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
-                    <li class="easy_mode ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Simple Testing</a></li>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
+                    <li class="analytical_review">
+                      <a href="/">
+                        <?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a>
+                    </li>
+                    <li class="easy_mode ui-state-default ui-corner-top ui-tabs-selected ui-state-active">
+                      <a href="#">
+                        <?php echo file_get_contents('./images/icon-simple-testing.svg'); ?>Simple Testing</a>
+                    </li>
+                    <li class="visual_comparison">
+                      <a href="/video/">
+                        <?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison
+                      </a></li>
+                    <li class="traceroute">
+                      <a href="/traceroute">
+                        <?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute
+                      </a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <?php
+                            if (strlen($siteKey)) {
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            } else {
+                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
+                            }
+                            ?>
+                      </li>
                         <li>
                             <label for="profile">Test Configuration:</label>
                             <select name="profile" id="profile" onchange="profileChanged()">
@@ -106,9 +123,7 @@ $profiles = parse_ini_file($profile_file, true);
                                 ?>
                             </select>
                         </li>
-                        <li>
-                        <div id="description"></div>
-                        </li>
+                        <li id="description"></li>
                         <li>
                             <label for="videoCheck">Include Repeat View:<br></label>
                             <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)
@@ -121,22 +136,13 @@ $profiles = parse_ini_file($profile_file, true);
                 </div>
             </div>
 
-            <div id="start_test-container">
-                <?php
-                if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
-                } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
-                }
-                ?>
-            </div>
-            <div class="cleared"></div>
+
             </form>
 
             <?php
             } // $headless
             ?>
-
+          <?php include('home-subsections.inc'); ?>
             <?php include('footer.inc'); ?>
         </div>
 

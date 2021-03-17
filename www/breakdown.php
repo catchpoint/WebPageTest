@@ -25,7 +25,7 @@ if(!$testInfo->isFirstViewOnly()) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
@@ -68,10 +68,9 @@ if(!$testInfo->isFirstViewOnly()) {
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Content Breakdown';
+            $subtab = 'Content';
             include 'header.inc';
             ?>
             <?php
@@ -120,10 +119,8 @@ if(!$testInfo->isFirstViewOnly()) {
                     }
                 ?>
             <?php } ?>
-        </div>
-
+                </div>
         <?php include('footer.inc'); ?>
-        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="//www.google.com/jsapi"></script>

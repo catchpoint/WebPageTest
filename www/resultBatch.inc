@@ -96,7 +96,7 @@ else
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest Comparison Test Result<?php echo $testLabel; ?></title>
         <?php
@@ -131,7 +131,6 @@ else
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = 'Test Result';
             include 'header.inc';

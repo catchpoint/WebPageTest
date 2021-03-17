@@ -6,7 +6,7 @@ chdir ('..');
 include 'common.inc';
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title>WebPageTest - Install Check</title>
         <meta http-equiv="charset" content="iso-8859-1">

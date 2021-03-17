@@ -66,7 +66,7 @@ else
         $title .= ' - ' . $labels;
     ?>
     <!DOCTYPE html>
-    <html>
+    <html lang="en-us">
         <head>
             <title>WebPageTest - Visual Comparison</title>
             <?php
@@ -131,7 +131,7 @@ else
                     table-layout: fixed;
                     margin-left: auto;
                     margin-right: auto;
-                    width: 99%;
+                    width: 100%;
                 }
                 #videoContainer td
                 {
@@ -306,8 +306,7 @@ else
                 ?>
             </style>
         </head>
-        <body>
-            <div class="page-wide">
+        <body class="compare">
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
@@ -327,9 +326,9 @@ else
                     DisplayStatus();
                 }
                 ?>
-
                 <?php include('footer.inc'); ?>
-            </div>
+                </div>
+                </div>
 
             <script type="text/javascript">
                 function ShowAdvanced()

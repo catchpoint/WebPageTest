@@ -196,7 +196,7 @@ else
 {
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
     <head>
         <title><?php echo $title;?></title>
         <?php
@@ -244,13 +244,7 @@ else
                 font-family: arial,sans-serif;
                 padding: 0px 25px;
             }
-            .link
-            {
-                text-decoration: underline;
-                <?php
-                echo "color: " . htmlspecialchars($color) . ";\n";
-                ?>
-            }
+
             #player
             {
                 margin-left: auto;
@@ -310,14 +304,16 @@ else
         </script>
     </head>
     <body>
-        <div class="page">
             <?php
             if( !$embed ) {
                 $tab = '';
                 $nosubheader = true;
                 include 'header.inc';
             }
+?>
+            <div class="box">
 
+<?php
             if( $valid && ($done || $embed) )
             {
                 if (!$embed) {
@@ -371,7 +367,7 @@ else
             else
                 echo '<h1>The requested video does not exist.  Please try creating it again and if the problem persists please contact us.</h1>';
             ?>
-
+</div>
             <?php
                 if (!$embed)
                     include('footer.inc');
