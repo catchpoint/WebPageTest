@@ -545,13 +545,13 @@ form[name=filterLog] {
     margin-right: 1px;
 }
 .ui-tabs-nav li.ui-tabs-selected a{
-    background: #2f59ed;
+    background: #4381E5;
 }
 .ui-tabs-nav li:hover a{
     background: #4F6890;
 }
 .ui-tabs-nav li.ui-tabs-selected a:hover{
-    background: #2f59ed;
+    background: #4381E5;
 }
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
@@ -928,7 +928,7 @@ input[type="submit"].start_test{
     font-size: 0.875em;
     padding: 1.5em;
     max-width: 100%;
-    background-color: #2f59ed;
+    background-color: #4381E5;
     color: #fff;
     text-align: center;
 }
