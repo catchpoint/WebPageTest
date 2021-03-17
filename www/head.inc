@@ -33,8 +33,7 @@ if( strlen($page_description) )
     if (!isset($noanalytics) && is_file('./js/user-timing-rum-min.js'))
       include('./js/user-timing-rum-min.js');
     echo "\n</script>\n";
-    $cssName = GetSetting('newUI') ? 'pagestyle2' : 'pagestyle';
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/$cssName.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
+    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
     echo "<style type=\"text/css\">\n";
     
     // switch to the private install logo if we're not running on webpagetest
