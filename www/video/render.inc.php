@@ -110,6 +110,7 @@ function BuildRenderTests() {
             // figure out the real end time (in ms)
             if (isset($test['end'])) {
                 $visualComplete = $stepResult->getMetric("visualComplete");
+                $lastChange = $stepResult->getMetric("lastVisualChange");
                 if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
                     $test['end'] = $visualComplete;
                 } elseif( !strcmp($test['end'], 'load') ) {
@@ -119,13 +120,13 @@ function BuildRenderTests() {
                 } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
                     $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
                 } elseif( !strcmp($test['end'], 'full') ) {
-                    $test['end'] = 0;
-                } elseif( !strcmp($test['end'], 'all') ) {
-                    $test['end'] = -1;
+                    $test['end'] = $stepResult->getMetric("fullyLoaded");;
+                } elseif( !strcmp($test['end'], 'all') && $lastChange !== null ) {
+                    $test['end'] = $lastChange;
                 } elseif( !strcmp($test['end'], 'aft') ) {
                     $test['end'] = $test['aft'];
                     if( !$test['end'] )
-                        $test['end'] = -1;
+                        $test['end'] = $lastChange;
                 } else {
                     $test['end'] = (int)((double)$test['end'] * 1000.0);
                 }
@@ -136,7 +137,9 @@ function BuildRenderTests() {
                 $test['end'] = $stepResult->getMetric('fullyLoaded');
 
             // round the test end up to the closest 100ms interval
-            $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
+            if ($test['end'] > 0) {
+                $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
+            }
             $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
             $test['videoPath'] = $localPaths->videoDir();
 

@@ -1442,7 +1442,7 @@ EOT;
     $out .= '</div>'; // container
 
     // script support
-    $nolinks = GetSetting('nolinks', null);
+    $nolinks = GetSetting('nolinks', 0);
     $out .= "<script type=\"text/javascript\">\n";
     $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
     $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";

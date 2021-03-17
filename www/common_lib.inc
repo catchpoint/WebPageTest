@@ -1584,7 +1584,7 @@ function cp_http_post($url, $body, $cpid, $file=null) {
     $response = curl_exec($ch);
     curl_close($ch);
     if($response !== false) {
-      if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
+      if (isset($headers['wpt_status_code']) && ($headers['wpt_status_code'] == '0' || $headers['wpt_status_code'] == '22')) {
         $result = $response;
       }
     } else {

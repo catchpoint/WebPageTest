@@ -15,7 +15,7 @@ if ($userIsBot || GetSetting('disableTestlog')) {
 }
 
 // Redirect logged-in users to the hosted test history if one is configured
-if (isset($USER_EMAIL) && GetSetting('history_url')) {
+if (isset($USER_EMAIL) && GetSetting('history_url') && !isset($_REQUEST['local'])) {
     header('Location: ' . GetSetting('history_url'));
     exit;
 }
@@ -119,6 +119,11 @@ if( $csv )
                         </tr>
                     </thead>
                 </table>
+                <?php
+                // Hidden form fields
+                if (isset($_REQUEST['local']) && $_REQUEST['local'])
+                    echo '<input type="hidden" name="local" value="1">';
+                ?>
                 </form>
         <script type="text/javascript">
         <?php include(__DIR__ . '/js/history.js'); ?>
@@ -158,7 +163,11 @@ if( $csv )
                          }
                          if ($includePrivate)
                            echo '<input id="private" type="hidden" name="private" value="1">';
-                         ?>
+                        if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
+                            echo '<input type="hidden" name="ip" value="1">';
+                        if (isset($_REQUEST['local']) && $_REQUEST['local'])
+                            echo '<input type="hidden" name="local" value="1">';
+                        ?>
                         <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests which include video</label> &nbsp;&nbsp;
                         <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat);?> onclick="this.form.submit();"> Show repeat view</label>
                         <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>

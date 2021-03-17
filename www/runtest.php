@@ -50,6 +50,7 @@
     $error = NULL;
     $xml = false;
     $usingAPI = false;
+    $usingApi2 = false;
     $forceValidate = false;
     $runcount = 0;
     $apiKey = null;
@@ -1230,6 +1231,12 @@ function ValidateKey(&$test, &$error, $key = null)
         }
       }
 
+      $runcount = max(1, $test['runs']);
+      if( !$test['fvonly'] )
+        $runcount *= 2;
+      //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+      //  $runcount *= $test['navigateCount'];
+
       // validate their API key and enforce any rate limits
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
@@ -1265,12 +1272,6 @@ function ValidateKey(&$test, &$error, $key = null)
               else
                 $used = 0;
 
-              $runcount = max(1, $test['runs']);
-              if( !$test['fvonly'] )
-                $runcount *= 2;
-              //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-              //  $runcount *= $test['navigateCount'];
-
             if( $limit > 0 ){
               if( $used + $runcount <= $limit ){
                 $used += $runcount;
@@ -1292,18 +1293,66 @@ function ValidateKey(&$test, &$error, $key = null)
         if (isset($keys[$key]['queue_limit']) && $keys[$key]['queue_limit']) {
             $test['queue_limit'] = $keys[$key]['queue_limit'];
         }
-      }else{
+        // Make sure API keys don't exceed the max configured priority
+        $maxApiPriority = GetSetting('maxApiPriority');
+        if ($maxApiPriority) {
+          $test['priority'] = max($test['priority'], $maxApiPriority);
+        }
+      } elseif ($redis_server = GetSetting('redis_api_keys')) {
+        // Check the redis-based API keys if it wasn't a local key
+        try {
+          $redis = new Redis();
+          if ($redis->pconnect($redis_server)) {
+            $account = CacheFetch("API_$key");
+            if (!isset($account)) {
+              $response = $redis->get("API_$key");
+              if ($response && strlen($response)) {
+                $account = json_decode($response, true);
+                if (isset($account) && is_array($account)) {
+                  CacheStore("API_$key", $account, 3600);
+                }
+              }
+            }
+            if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
+              // Check the expiration
+              if (time() <= $account['expiration'] ) {
+                // Check the balance
+                $response = $redis->get("C_{$account['accountId']}");
+                if ($response && strlen($response) && is_numeric($response)) {
+                  if ($runcount <= intval($response)) {
+                    global $usingApi2;
+                    $usingApi2 = true;
+                    // Store the account info with the test
+                    $test['accountId'] = $account['accountId'];
+                    $test['contactId'] = $account['contactId'];
+                    // success.  See if there is a priority override for redis-based API tests
+                    if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
+                      $test['priority'] = intval(GetSetting('redis_api_priority'));
+                    }
+                  } else {
+                    $error = 'The test request will exceed the remaining test balance for the given API key';
+                  }
+                } else {
+                  $error = 'Error validating API Key Account';
+                }
+              } else {
+                $error = 'API key expired';
+              }
+            } else {
+              $error = 'Invalid API Key';
+            }
+          } else {
+            $error = 'Error validating API Key';
+          }
+        } catch (Exception $e) {
+          $error = 'Error validating API Key';
+        }
+      } else {
         $error = 'Invalid API Key';
       }
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
-      }
-
-      // Make sure API keys don't exceed the max configured priority
-      $maxApiPriority = GetSetting('maxApiPriority');
-      if ($maxApiPriority) {
-        $test['priority'] = max($test['priority'], $maxApiPriority);
       }
     }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request (missing API key).';
@@ -1763,7 +1812,7 @@ function WriteJob($location, &$test, &$job, $testId)
   }
 
   if ($ret) {
-    ReportAnalytics($test);
+    ReportAnalytics($test, $testId);
   }
 
   return $ret;
@@ -1992,14 +2041,23 @@ function LogTest(&$test, $testId, $url)
       if (isset($logEntry['location'])) {
         $logEntry['location'] = strip_tags($logEntry['location']);
       }
+      if (isset($test['key']) && isset($test['accountId']) && isset($test['contactId'])) {
+        $logEntry['clientId'] = intval($test['accountId']);
+        $logEntry['createContactId'] = intval($test['contactId']);
+      }
       LimitLogEntrySizes($logEntry);
-      $message = json_encode($logEntry);
-      try {
-        $redis = new Redis();
-        if ($redis->pconnect($redis_server)) {
-          $redis->publish('testRuns', $message); // send message.
+      if (IsValidLogEntry($logEntry)) {
+        $message = json_encode($logEntry);
+        try {
+          $redis = new Redis();
+          if ($redis->pconnect($redis_server)) {
+            $redis->multi(Redis::PIPELINE)
+              ->lPush('testHistory', $message)
+              ->publish('testHistoryAlert', 'wakeup')
+              ->exec();
+          }
+        } catch (Exception $e) {
         }
-      } catch (Exception $e) {
       }
     }
 }
@@ -2026,6 +2084,17 @@ function LimitLogEntrySizes(&$logEntry) {
   }
 }
 
+function IsValidLogEntry($logEntry) {
+  // Check for required fields
+  static $required_fields = array('guid', 'date', 'url', 'runs', 'location', 'private');
+  foreach ($required_fields as $field) {
+    if (!isset($logEntry[$field])) {
+      return false;
+    }
+  }
+  // Check for valid types
+  return true;
+}
 
 /**
 * Make sure the requesting IP isn't on our block list
@@ -2881,9 +2950,11 @@ function gen_uuid() {
   );
 }
 
-function ReportAnalytics(&$test)
+function ReportAnalytics(&$test, $testId)
 {
   global $usingAPI;
+  global $usingApi2;
+  global $USER_EMAIL;
   $ga = GetSetting('analytics');
 
   if ($ga && function_exists('curl_init') &&
@@ -2892,6 +2963,11 @@ function ReportAnalytics(&$test)
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
         $ip = $test['ip'];
+    
+    $eventName = $usingAPI ? 'API' : 'Manual';
+    if ($usingApi2) {
+      $eventName = 'API2';
+    }
 
     $data = array(
       'v' => '1',
@@ -2900,17 +2976,27 @@ function ReportAnalytics(&$test)
       't' => 'event',
       'ds' => 'web',
       'ec' => 'Test',
-      'ea' => $usingAPI ? 'API' : 'Manual',
+      'ea' => $eventName,
       'el' => $test['location'],
-      'uip' => $ip
+      'uip' => $ip,
+      'cd1' => $test['mobile'] ? 'MobileEM' : 'Native'
     );
 
-    if (isset($_SERVER['HTTP_REFERER']) && strlen($_SERVER['HTTP_REFERER'])) {
-      $data['dr'] = $_SERVER['HTTP_REFERER'];
+    if (isset($USER_EMAIL)) {
+      $data['uid'] = $USER_EMAIL;
+    } elseif (isset($test['accountId'])) {
+      $data['uid'] = $test['accountId'];
     }
 
+    if (isset($test['url'])) {
+      $data['dl'] = $test['url'];
+    }
     if (isset($_SERVER['HTTP_HOST']) && isset($_SERVER['PHP_SELF'])) {
-      $data['dl'] = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+      $data['dr'] = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+    }
+
+    if (isset($testId)) {
+      $data['ti'] = $testId;
     }
 
     $payload = utf8_encode(http_build_query($data));

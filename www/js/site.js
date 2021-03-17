@@ -10,6 +10,7 @@ function ClearOAuthCookies() {
   document.cookie = "page_before_google_oauth=; expires=" + mydate.toGMTString() + "; path=/;";
   document.cookie = "samlu=; expires=" + mydate.toGMTString() + "; path=/;";
   document.cookie = "o=; expires=" + mydate.toGMTString() + "; path=/;";
+  window.localStorage.clear();
   window.location.reload();
 }
   /*! jQuery v1.7.1 jquery.com | jquery.org/license */
