@@ -42,9 +42,12 @@ if ($id && isset($test) && is_array($test) &&
 
 if (!defined('EMBED')) {
 ?>
-<div class="alert-banner">
-<p>We just launched an API for performance data. <a href="#">Learn more.</a></p>
-</div>
+<?php
+$alert = GetSetting('alert');
+if ($alert) {
+    echo '<div class="alert-banner"><p>' . $alert . '</p></div>';
+}
+?>
 <header>
     <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a></h1>
     <?php if (!GetSetting('newUI')) { ?>
@@ -151,12 +154,6 @@ if (!defined('EMBED')) {
 </header>
 
 <?php
-$alert = GetSetting('alert');
-if (!defined('BARE_UI') && isset($alert) && strlen($alert)) {
-    echo '<div class="alert">';
-    echo $alert;
-    echo '</div>';
-}
 } // EMBED
 ?>
 
