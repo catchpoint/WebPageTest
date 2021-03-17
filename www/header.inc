@@ -112,7 +112,7 @@ if (!defined('EMBED')) {
 <?php
     if( $supportsAuth && !defined('EMBED') )
 {
-    echo '<div id="wptAuthBar">';
+    echo '<ul id="wptAuthBar">';
     if ($supportsSaml) {
         $saml_name = GetSamlFirstName();
         if (!isset($saml_name) || !strlen($saml_name)) {
@@ -120,29 +120,32 @@ if (!defined('EMBED')) {
         }
         if (isset($saml_name)) {
             $logoutUrl = 'javascript:ClearOAuthCookies();';
-            echo "Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+            echo "<li>Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
         } else {
-            echo '<a href="/saml/login.php">Login</a> ';
+            echo '<li><a href="/saml/login.php">Login';
+            echo file_get_contents('./images/icon-login.svg');
+            echo '</a></li>';
+            echo '<li><a class="pill" href="https://appqa.webpagetest.org/ui/entry/wpt/signup">Sign-up</a></li>';
         }
     } elseif( isset($user) ) {
         $logoutUrl = '/forums/member.php?action=logout';
         if( isset($mybb) && strlen($mybb->user['logoutkey']) )
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
         $logoutUrl = 'javascript:ClearOAuthCookies();';
         $google_email = htmlspecialchars($_COOKIE['google_email']);
-        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else {
         if (is_dir('./forums') && !GetSetting('disableMybb')) {
-          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+          echo '<li><a href="/forums/member.php?action=login">Login</a></li> ';
+          echo '<li><a href="/forums/member.php?action=register">Register</a></li> ';
         }
         if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          echo '<a href="/oauth/login.php">Login with Google</a> ';
+          echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
         }
     }
-    echo '</div>';
+    echo '</ul>';
 }
 ?>
 </header>
