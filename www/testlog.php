@@ -186,9 +186,10 @@ if( $csv )
             <div class="box">
             <h4>Clicking on an URL will bring you to that test's results</h4>
             <form name="compare" method="get" action="/video/compare.php">
+            <input style="top:-2em; left:2em;" id="CompareBtn" type="submit" value="Compare">
             <table class="history" border="0" cellpadding="5px" cellspacing="0">
                 <tr>
-                    <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
+                    <th></th>
                     <th>Date/Time</th>
                     <th>From</th>
                     <?php
