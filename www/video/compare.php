@@ -669,24 +669,24 @@ function ScreenShotTable()
                         echo " height=\"$height\"";
                     $options = null;
                     if ($show_shifts && isset($rects)) {
-                        $color = 'FF0000AA'; // Red with 50% transparency (transparency is ignored for the border)
-                        $options = "rects=$color-$rects";
+                        $overlay_color = 'FF0000AA'; // Red with 50% transparency (transparency is ignored for the border)
+                        $options = "rects=$overlay_color-$rects";
                     }
                     if ($show_lcp && isset($lcp_candidate_rects)) {
-                        $color = '0000FFAA'; // Blue with 50% transparency (transparency is ignored for the border)
+                        $overlay_color = '0000FFAA'; // Blue with 50% transparency (transparency is ignored for the border)
                         if (isset($options))
                             $options .= '|';
                         else
                             $options = 'rects=';
-                        $options .= "$color-$lcp_candidate_rects";
+                        $options .= "$overlay_color-$lcp_candidate_rects";
                     }
                     if ($show_lcp && isset($lcp_rects)) {
-                        $color = '00FF00AA'; // Green with 50% transparency (transparency is ignored for the border)
+                        $overlay_color = '00FF00AA'; // Green with 50% transparency (transparency is ignored for the border)
                         if (isset($options))
                             $options .= '|';
                         else
                             $options = 'rects=';
-                        $options .= "$color-$lcp_rects";
+                        $options .= "$overlay_color-$lcp_rects";
                     }
                     $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize, $options);
                     echo " src=\"$imgUrl\"></a>";
