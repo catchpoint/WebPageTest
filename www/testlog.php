@@ -15,7 +15,7 @@ if ($userIsBot || GetSetting('disableTestlog')) {
 }
 
 // Redirect logged-in users to the hosted test history if one is configured
-if (isset($USER_EMAIL) && GetSetting('history_url')) {
+if (isset($USER_EMAIL) && GetSetting('history_url') && !isset($_REQUEST['local'])) {
     header('Location: ' . GetSetting('history_url'));
     exit;
 }
