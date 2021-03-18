@@ -689,6 +689,7 @@ input[type="submit"].start_test{
     padding: .9em 1.5em; 
     align-self: flex-start;
     margin-left: 0;
+    cursor: pointer;
 }
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test {
