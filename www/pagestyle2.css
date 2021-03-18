@@ -1037,3 +1037,41 @@ table.glossary th{
     margin-bottom: 8.125em;
     display: block;
 }
+
+.feed {
+    overflow: hidden;
+    padding-bottom: .875em;
+    width: 100%;
+    margin: auto auto 3em;
+}
+
+.feed ul {
+    border: 1px solid #2F80ED;
+    box-shadow: 0 0 15px rgb(47 128 237 / 50%);
+    background: #121D35;
+    border-radius: 10px;
+    margin: 15px;
+    padding: 1.25rem;
+}
+
+.feed h2 {
+    font-weight: normal;
+    font-size: 1.5em;
+    line-height: 1.25em;
+    margin-bottom: 1em;
+}
+
+.feed li { 
+    background: #ffffff0a;
+    border-radius: 3px;
+    padding: 0.5em;
+}
+.feed li:nth-child(odd) { 
+    background: #121D35; 
+}
+.feed a {
+    text-decoration: none;
+}
+.feed a:hover{
+    text-decoration: underline;
+}
