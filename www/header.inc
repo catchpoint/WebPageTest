@@ -89,7 +89,10 @@ if ($alert) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
-            $navTabs['Blog'] = 'https://blog.webpagetest.org/';
+            $blogUrl = GetSetting('blog_url');
+            if ($blogUrl) {
+                $navTabs['Blog'] = $blogUrl;
+            }
 
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
 
