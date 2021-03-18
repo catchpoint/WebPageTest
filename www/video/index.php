@@ -165,7 +165,15 @@ if (is_file($profile_file))
                 profileChanged();
                 </script>
             </form>
-            <?php include('home-subsections.inc'); ?>                
+            <?php
+            if (is_file('settings/server/home-subsections.inc')) {
+              include('settings/server/home-subsections.inc');
+            } elseif (is_file('settings/common/home-subsections.inc')) {
+              include('settings/common/home-subsections.inc');
+            } elseif (is_file('settings/home-subsections.inc')) {
+              include('settings/home-subsections.inc');
+            }
+            ?>
             <?php include('footer.inc'); ?>
         </div>
 

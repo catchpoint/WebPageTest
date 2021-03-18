@@ -13,6 +13,8 @@ if (isset($tests) && is_array($tests) && count($tests)) {
     if (isset($server_id) && is_string($server_id) && strlen($server_id)) {
         $videoId = $server_id . '-' . $videoId;
     }
+    if (!is_dir(__DIR__ . '/../work/video/'))
+        mkdir(__DIR__ . '/../work/video/', 0777, true);
     $lock = Lock("video-$videoId", false, 600);
     if ($lock) {
         $videoFile = realpath(__DIR__ . '/../work/video/');

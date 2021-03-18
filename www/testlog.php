@@ -138,60 +138,72 @@ if( $csv )
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
+        <style type="text/css">
+            h4 {text-align: center;}
+            .history table {text-align:left;}
+            .history thead {text-align:left;}
+            .history th {white-space:nowrap; text-decoration:underline;}
+            .history td.date {white-space:nowrap;}
+            .history td.location {white-space:nowrap;}
+            .history td.url {white-space:nowrap;}
+            .history td.ip {white-space:nowrap;}
+            .history td.uid {white-space:nowrap;}
+        </style>
     </head>
-    <body>
-        <div class="page-wide">
-            <?php
-            $tab = 'Test History';
-            include 'header.inc';
-            ?>
-            <div class="translucent" style="overflow:hidden;">
-                <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
-                    View <select name="days" size="1">
-                            <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
-                            <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
-                            <option value="30" <?php if ($days == 30) echo "selected"; ?>>30 Days</option>
-                            <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
-                            <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
-                         </select> test log for URLs containing
-                         <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
-                         <input id="SubmitBtn" type="submit" value="Update List"><br>
-                         <?php
-                         if( ($admin || !GetSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
-                             <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
-                             <?php
-                         }
-                         if ($includePrivate)
-                           echo '<input id="private" type="hidden" name="private" value="1">';
-                        if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
-                            echo '<input type="hidden" name="ip" value="1">';
-                        if (isset($_REQUEST['local']) && $_REQUEST['local'])
-                            echo '<input type="hidden" name="local" value="1">';
-                        ?>
-                        <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests which include video</label> &nbsp;&nbsp;
-                        <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat);?> onclick="this.form.submit();"> Show repeat view</label>
-                        <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>
-
-                </form>
-                <h4>Clicking on an URL will bring you to that test's results</h4>
-                <form name="compare" method="get" action="/video/compare.php">
-                <table class="history" border="0" cellpadding="5px" cellspacing="0">
-                    <tr>
-                        <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
-                        <th>Date/Time</th>
-                        <th>From</th>
+    <body class="history">
+        <?php
+        $tab = 'Test History';
+        include 'header.inc';
+        ?>
+            <h1>Test History</h1>
+            <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
+                View <select name="days" size="1">
+                        <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
+                        <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
+                        <option value="30" <?php if ($days == 30) echo "selected"; ?>>30 Days</option>
+                        <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
+                        <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
+                        </select> test log for URLs containing
+                        <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
+                        <input id="SubmitBtn" type="submit" value="Update List"><br>
                         <?php
-                        if( $includeip )
-                            echo '<th>Requested By</th>';
-                        if( $admin ) {
-                            echo '<th>User</th>';
-                            echo '<th>Page Loads</th>';
+                        if( ($admin || !GetSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
+                            <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
+                            <?php
                         }
-                        ?>
-                        <th>Label</th>
-                        <th>URL</th>
-                    </tr>
+                        if ($includePrivate)
+                        echo '<input id="private" type="hidden" name="private" value="1">';
+                    if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
+                        echo '<input type="hidden" name="ip" value="1">';
+                    if (isset($_REQUEST['local']) && $_REQUEST['local'])
+                        echo '<input type="hidden" name="local" value="1">';
+                    ?>
+                    <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests which include video</label> &nbsp;&nbsp;
+                    <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat);?> onclick="this.form.submit();"> Show repeat view</label>
+                    <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>
+
+            </form>
+            <div class="box">
+            <h4>Clicking on an URL will bring you to that test's results</h4>
+            <form name="compare" method="get" action="/video/compare.php">
+            <input style="top:-2em; left:2em;" id="CompareBtn" type="submit" value="Compare">
+            <table class="history" border="0" cellpadding="5px" cellspacing="0">
+                <tr>
+                    <th></th>
+                    <th>Date/Time</th>
+                    <th>From</th>
                     <?php
+                    if( $includeip )
+                        echo '<th>Requested By</th>';
+                    if( $admin ) {
+                        echo '<th>User</th>';
+                        echo '<th>Page Loads</th>';
+                    }
+                    ?>
+                    <th>Label</th>
+                    <th>URL</th>
+                </tr>
+                <?php
     }  // if( $csv )
                     // loop through the number of days we are supposed to display
                     $rowCount = 0;
@@ -426,9 +438,7 @@ if( $csv )
                     ?>
                 </table>
                 </form>
-    </div>
             <?php include('footer.inc'); ?>
-        </div>
     </body>
 </html>
 <?php
