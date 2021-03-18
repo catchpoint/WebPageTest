@@ -78,7 +78,10 @@ if ($alert) {
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            $navTabs['API'] = '#';
+            $apiUrl = GetSetting('api_url');
+            if ($apiUrl) {
+                $navTabs['API'] = $apiUrl;
+            }
 
             if (GetSetting('forums_url')) {
                 $navTabs['Forums'] = GetSetting('forums_url');
