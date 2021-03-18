@@ -147,8 +147,8 @@ if ($alert) {
         echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else {
         if (is_dir('./forums') && !GetSetting('disableMybb')) {
-          echo '<li><a href="/forums/member.php?action=login">Login</a></li> ';
-          echo '<li><a href="/forums/member.php?action=register">Register</a></li> ';
+          echo '<li><a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+          echo '<a href="/forums/member.php?action=register">Register</a></li> ';
         }
         if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
           echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
