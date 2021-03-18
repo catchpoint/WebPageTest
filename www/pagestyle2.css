@@ -362,6 +362,9 @@ nav li.current a{
     font-weight: bold;
     border-bottom: 3px solid #F9D856;
 }
+nav a:hover{
+    text-decoration: underline;
+}
 
 #main{
     padding: 1.5em 1em;
