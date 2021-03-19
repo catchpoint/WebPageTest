@@ -60,10 +60,13 @@
                     $statusStep = "testing"
                 ?>
                 <ul class="runningStatusIndicator">
-                    <li <?php if ($statusStep == "waiting") { ?>class="is-active"<?php } ?>>Waiting...</li>
-                    <li <?php if ($statusStep == "testing") { ?>class="is-active"<?php } ?>>Testing...</li>
-                    <li>Done</li>
+                    <li id="waiting" <?php if ($statusStep == "waiting") { ?>class="is-active"<?php } ?>>Waiting...</li>
+                    <li id="testing" <?php if ($statusStep == "testing") { ?>class="is-active"<?php } ?>>Testing...</li>
+                    <li id="done" >Done</li>
                 </ul>
+                <?php
+                echo '<h3 id="statusText" class="runningStatusText">' . htmlspecialchars($statusText) . '</h3>';
+                ?>
                             
             <p>Your webpage-performance test has been submitted and is now being processed.  This page will automatically update with the test status as
             the test continues to run.  When the test is complete the final results will be available here.</p>
@@ -87,8 +90,6 @@
         
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
-            var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
-            var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
             var lastStatusCode = 0;
             var lastStatusText = '';
             // polyfill performance.now
@@ -132,14 +133,19 @@
                           if (response['statusCode'] != undefined &&
                               response['statusCode'] != lastStatusCode) {
                               lastStatusCode = response['statusCode'];
-                              if (lastStatusCode == 101)
-                                  $("#statusImage").attr("src",waitingImage);
-                              else if (lastStatusCode == 100)
-                                  $("#statusImage").attr("src",testingImage);
-                              else if (lastStatusCode >= 400)
+                              if (lastStatusCode == 101) {
+                                  //document.getElementById('waiting').classList.add('is-active');
+                                  //document.getElementById('testing').classList.remove('is-active');
+                                  document.getElementById('waiting').classList.remove('is-active');
+                                  document.getElementById('testing').classList.add('is-active');
+                              } else if (lastStatusCode == 100) {
+                                  document.getElementById('waiting').classList.remove('is-active');
+                                  document.getElementById('testing').classList.add('is-active');
+                              } else if (lastStatusCode >= 400) {
                                   interval = 0;
-                              else
+                              } else {
                                   reload = true;
+                              }
                           }
                           if (response['statusText'] != undefined &&
                               response['statusText'] != lastStatusText) {

@@ -849,7 +849,7 @@ input[type="submit"].start_test{
     position: relative;
     margin-right: 1.25em;
     flex-grow: 1;
-    margin-bottom: 3.125em;
+    margin-bottom: 1.125em;
 }
 .runningStatusIndicator li.is-active {
     background: #1151bb;
@@ -880,11 +880,18 @@ input[type="submit"].start_test{
     bottom: 0;
     left: 0em;
 }
+.runningStatusIndicator li.is-active::before {
+    border-top: 1.3em solid #1151bb;
+    border-bottom: 1.3em solid #1151bb;
+}
 .runningStatusIndicator li:first-child::before {
     display: none;
 }
 .runningStatusIndicator li:first-child {
     padding-left: 1.875em;
+}
+.runningStatusText {
+    margin-bottom: 1em;
 }
 .tip {
     overflow: hidden;
