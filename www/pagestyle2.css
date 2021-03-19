@@ -22,7 +22,7 @@ body {
     font: 100%/1.4em Helvetica, Arial, sans-serif;
     background-color: #F4F4F4;
     grid-column-gap: 1.25em;
-    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 9, 1fr ) calc(50vw - 45em) [gutter-end];
+    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, 1fr ) calc(50vw - 45em) [gutter-end];
     width: 100%;
 }
 .home {
@@ -31,7 +31,7 @@ body {
 }
 header {
     grid-column-gap: 1.25em;
-    grid-template-columns: calc(50vw - 45em) repeat( 9, 1fr ) calc(50vw - 45em);
+    grid-template-columns: calc(50vw - 45em) repeat( 10, 1fr ) calc(50vw - 45em);
     grid-column: gutter-start / gutter-end;
     border-bottom: 1px solid #1E2B47;
     background-color: #121D35;
@@ -230,7 +230,7 @@ footer ul li{
         margin-bottom: 0;
     }
     #wptAuthBar {
-        grid-column: 9/11;
+        grid-column: 10/12;
         align-self: center;
         justify-self: end;
         display: flex;
@@ -320,6 +320,17 @@ footer ul li{
     overflow-wrap: anywhere;
 }
 
+.images{
+    overflow-wrap: anywhere;
+    width: 100%;
+    table-layout: fixed;
+}
+.images td{
+    overflow-x: auto;
+}
+.images td:first-child{
+    width: 3em;
+}
 #average{
     text-align: center;
     margin-bottom: 1.5em;
@@ -339,7 +350,7 @@ footer ul li{
 /* Nav */
 @media screen and (min-width:50em) {
     nav {
-        grid-column: 3 / 9;
+        grid-column: 4 / 10;
         justify-self: center;
     }
     nav ul{
@@ -371,11 +382,11 @@ nav a:hover{
 }
 @media screen and (min-width: 75em) {
     #main{
-        grid-column: 3 / 10;
+        grid-column: 3 / 11;
         padding-top: 4.375em;
     }
     .history #main{
-        grid-column: 2 / 11;
+        grid-column: 2 / 12;
     }
 }
 .compare{
@@ -383,7 +394,7 @@ nav a:hover{
     color: #fff;
 }
 .compare #main{
-    grid-column: 1 / 12;
+    grid-column: 1 / 13;
     background: #000;
     padding: 2em;
 }
@@ -528,14 +539,14 @@ form[name=filterLog] {
     width: auto;
     margin-right: 0.375em;
     position: relative;
-    top: .2em;
+    top: .3em;
 }
 .ui-tabs-nav a{
     text-decoration: none;
     background: #395583;
     display: block;
     width: 100%;
-    padding: 1.1875em 0;
+    padding: 1.1875em 0 1.4875em 0;
     border-left: 1px solid #121D35;
     transition: background .1s ease-in-out;
 
@@ -812,6 +823,9 @@ input[type="submit"].start_test{
         margin-right: auto;
     }
 }
+.box form input[type="text"] {
+    border: 1px solid #999;
+}
 #result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
 #result {
     text-align: center;
@@ -975,7 +989,7 @@ input[type="submit"].start_test{
 }
 @media screen and (min-width:75em) {
     .alert-banner{
-        grid-column: 1 / 12;
+        grid-column: 1 / 13;
     }
 }
 

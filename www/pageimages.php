@@ -35,7 +35,6 @@ $userImages = true;
     </style>
   </head>
   <body>
-    <div class="page-wide">
       <?php
       $tab = 'Test Result';
       $subtab = null;
@@ -90,8 +89,8 @@ $userImages = true;
           ?>
         </table>
       </div>
+      </div>
 
       <?php include('footer.inc'); ?>
-    </div>
   </body>
 </html>
