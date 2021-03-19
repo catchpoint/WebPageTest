@@ -2,7 +2,7 @@
 Light-gray bg: #f4f4f4;
 Blue buttons/text: #2F80ED;
 Dark Text: #111111;
-Gray text: #999999;
+Gray text: #595959;
 Table row divider lines: #f1f1f1;
 */
 .vis-hidden{
@@ -77,7 +77,7 @@ h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}
 a {
-    color: #4381E5;
+    color: #1151bb;
 }
 a:not([href]) {
     color: #111;
@@ -267,7 +267,7 @@ footer ul li{
     padding: 1em 0;
     display: inline-block;
     text-decoration: none;
-    color: #999999;
+    color: #595959;
     transition: color .1s ease-in-out;
 }
 .test_menu a:hover{
@@ -438,7 +438,7 @@ table.history{
     width: 100%;
 }
 table.history th {
-    color: #999999;
+    color: #595959;
     text-decoration: none;
     font-weight: normal;
 }
