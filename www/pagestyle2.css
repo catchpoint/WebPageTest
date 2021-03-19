@@ -31,18 +31,24 @@ body {
 }
 header {
     grid-column-gap: 1.25em;
-    grid-template-columns: calc(50vw - 45em) repeat( 10, 1fr ) calc(50vw - 45em);
-    grid-column: gutter-start / gutter-end;
     border-bottom: 1px solid #1E2B47;
     background-color: #121D35;
     padding-top: 1px;
+}
+@media screen and (min-width: 60em) {
+    header {
+        display: grid;
+        grid-template-columns: 1em repeat(4, 1fr) 1em;
+    }
+
 }
 @media screen and (min-width:75em) {
     body{
         display: grid;
     }
     header {
-        display: grid;
+        grid-template-columns: calc(50vw - 45em) repeat( 10, 1fr ) calc(50vw - 45em);
+        grid-column: gutter-start / gutter-end;
     }
 }
 header .logo{
@@ -56,9 +62,14 @@ header .logo img {
     width: 15em;
     max-width: 100%;
 }
+@media screen and (min-width:60em) {
+    header .logo{
+        grid-column: 2 / 6;
+    }
+}
 @media screen and (min-width:75em) {
     header .logo{
-        grid-column: 2;
+        grid-column: 2/4;
         align-self: center;
     }
     header .logo img {
@@ -237,17 +248,18 @@ footer ul li{
     text-decoration: none;
     margin: 1em 1.3em;
 }
-@media screen and (min-width: 50em) {
+@media screen and (min-width: 60em) {
     #wptAuthBar li{
         display: flex;
         margin-bottom: 0;
     }
     #wptAuthBar {
-        grid-column: 10/12;
+        grid-column: 5/6;
         align-self: center;
         justify-self: end;
         display: flex;
         align-items: center;
+        grid-row: 2;
     }
     #wptAuthBar a{
         margin: auto;
@@ -257,8 +269,12 @@ footer ul li{
 
     }
 }
-
-
+@media screen and (min-width:75em) {
+    #wptAuthBar {
+        grid-column: 10/12;
+        grid-row: auto;
+    }
+}
 #wptAuthBar a:hover{
     text-decoration: underline;
 }
@@ -361,10 +377,11 @@ footer ul li{
 .alert {width:100%; background-color: yellow; color: black; text-align: center; padding: 5px 0;} */
 
 /* Nav */
-@media screen and (min-width:50em) {
+@media screen and (min-width:60em) {
     nav {
-        grid-column: 4 / 10;
-        justify-self: center;
+        grid-row: 2;
+        grid-column: 2 / 4;
+        justify-self: flex-start;
     }
     nav ul{
         display: flex;
@@ -374,6 +391,14 @@ footer ul li{
     nav li{
         display: flex;
     }
+}
+@media screen and (min-width:75em) {
+    nav {
+        grid-column: 4 / 10;
+        justify-self: center;
+        grid-row: auto;
+    }
+
 }
 
 nav a{
