@@ -134,10 +134,8 @@
                               response['statusCode'] != lastStatusCode) {
                               lastStatusCode = response['statusCode'];
                               if (lastStatusCode == 101) {
-                                  //document.getElementById('waiting').classList.add('is-active');
-                                  //document.getElementById('testing').classList.remove('is-active');
-                                  document.getElementById('waiting').classList.remove('is-active');
-                                  document.getElementById('testing').classList.add('is-active');
+                                  document.getElementById('waiting').classList.add('is-active');
+                                  document.getElementById('testing').classList.remove('is-active');
                               } else if (lastStatusCode == 100) {
                                   document.getElementById('waiting').classList.remove('is-active');
                                   document.getElementById('testing').classList.add('is-active');
