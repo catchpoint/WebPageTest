@@ -83,7 +83,7 @@ a:not([href]) {
     color: #111;
 }
 a.pill{
-    background: #4381E5;
+    background: #1151bb;
     border-radius: 6.25em;
     padding: 0.6875em 1.4375em;
     line-height: 1em;
@@ -455,7 +455,7 @@ table.history tbody tr{
 }
 table.history .label b:not(:empty){
     font-weight: normal;
-    background: #4381E5;
+    background: #1151bb;
     border-radius: 20px;
     color: #fff;
     display: inline-block;
@@ -549,13 +549,13 @@ form[name=filterLog] {
     margin-right: 1px;
 }
 .ui-tabs-nav li.ui-tabs-selected a{
-    background: #4381E5;
+    background: #1151bb;
 }
 .ui-tabs-nav li:hover a{
     background: #4F6890;
 }
 .ui-tabs-nav li.ui-tabs-selected a:hover{
-    background: #4381E5;
+    background: #1151bb;
 }
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
@@ -826,7 +826,7 @@ input[type="submit"].start_test{
     margin-bottom: 3.125em;
 }
 .runningStatusIndicator li.is-active {
-    background: #4381E5;
+    background: #1151bb;
     color: #fff;
 }
 .runningStatusIndicator li::after{
@@ -841,7 +841,7 @@ input[type="submit"].start_test{
     right: -1.2em;
 }
 .runningStatusIndicator li.is-active::after {
-    border-left-color: #4381E5;
+    border-left-color: #1151bb;
 }
 .runningStatusIndicator li::before {
     content: " ";
@@ -933,7 +933,7 @@ input[type="submit"].start_test{
     font-size: 0.875em;
     padding: 1.5em;
     max-width: 100%;
-    background-color: #4381E5;
+    background-color: #1151bb;
     color: #fff;
     text-align: center;
 }
