@@ -100,6 +100,19 @@ select, input[type="text"], input[type="number"] {
     border-radius: 4px;
     border: 0px;
 }
+select {
+    line-height: 1.3em;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf-8,%3Csvg%20width%3D%2216%22%20height%3D%2210%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M14.354%202.354a.5.5%200%2001-.708%200l.708.708v-.708zM8%208l-.354.354L8%208zm5.646-6.354l-6%206%20.708.708%206-6-.708-.708zm-5.292%206l-6-6-.708.708%206%206%20.708-.708z%22%20fill%3D%22%23111%22%20fill-rule%3D%22nonzero%22%20stroke%3D%22%23000%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat, repeat;
+    background-position: right .7em top 50%, 0 0;
+    background-size: .65em auto, 100%;
+}
 input[type="number"] {
     padding-left: .5em;
     padding-right: .3em; 
@@ -740,7 +753,7 @@ input[type="submit"].start_test{
 #change-location-btn {
     border: 1px solid #fff;
     color: #fff;
-    padding: .7em 1.5em;
+    padding: .7em 1em .7em 1.5em;
     font-size: 1em;
     border-radius: 4px;
     margin-left: 1.25em;
