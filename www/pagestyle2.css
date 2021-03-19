@@ -760,7 +760,7 @@ input[type="submit"].start_test{
     align-items: center;
 }
 #visual_comparison .urldiv a{
-    color: #2F80ED;
+    color: #75ADF5;
 
 }
 
@@ -790,7 +790,7 @@ input[type="submit"].start_test{
     border: 0;
     font-size: 1em;
     background: url('/images/icon-add.svg') top left no-repeat transparent;
-    color: #2F80ED;
+    color: #75ADF5;
     padding-left: 1.9em;
     cursor: pointer;
 }

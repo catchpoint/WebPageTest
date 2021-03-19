@@ -97,7 +97,9 @@ $profiles = parse_ini_file($profile_file, true);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <li>
+                        <label for="url" class="vis-hidden">Enter URL to test</label>
+                        <input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php
                             if (strlen($siteKey)) {
                             echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
@@ -125,11 +127,11 @@ $profiles = parse_ini_file($profile_file, true);
                         </li>
                         <li id="description"></li>
                         <li>
-                            <label for="videoCheck">Include Repeat View:<br></label>
+                            <label for="rv">Include Repeat View:<br></label>
                             <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)
                         </li>
                         <li>
-                            <label for="videoCheck">Run Lighthouse Audit:<br></label>
+                            <label for="lighthouse">Run Lighthouse Audit:<br></label>
                             <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()">
                         </li>
                     </ul>
