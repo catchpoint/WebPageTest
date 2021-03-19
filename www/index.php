@@ -319,10 +319,10 @@ $loc = ParseLocations($locations);
                                         <br>
                                         <table class="configuration hidden" id="bwTable">
                                             <tr>
-                                                <th>BW Down</th>
-                                                <th>BW Up</th>
-                                                <th>Latency</th>
-                                                <th>Packet Loss</th>
+                                                <th><label for="bwDown">BW Down</label></th>
+                                                <th><label for="bwUp">BW Up</label></th>
+                                                <th><label for="latency">Latency</label></th>
+                                                <th><label for="plr">Packet Loss</label></th>
                                             </tr>
                                             <tr>
                                                 <?php
@@ -362,9 +362,8 @@ $loc = ParseLocations($locations);
                                         <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$max_runs\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
                                     </li>
                                     <li>
-                                        <label for="viewBoth">
-                                            Repeat View
-                                        </label>
+                                        <fieldset>
+                                            <legend>Repeat View</legend>
                                         <?php
                                         $fvOnly = true;
                                         if (isset($_COOKIE["testOptions"]))
@@ -372,8 +371,9 @@ $loc = ParseLocations($locations);
                                         if (isset($_REQUEST['fvonly']))
                                           $fvOnly = (int)$_REQUEST['fvonly'];
                                         ?>
-                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
-                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
+                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0"><label for="viewBoth">First View and Repeat View</label>
+                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1"><label for="viewFirst">First View Only</label>
+                                        </fieldset>
                                     </li>
                                     <li>
                                       <label for="videoCheck">Capture Video</label>

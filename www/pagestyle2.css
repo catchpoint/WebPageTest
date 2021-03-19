@@ -2,7 +2,7 @@
 Light-gray bg: #f4f4f4;
 Blue buttons/text: #2F80ED;
 Dark Text: #111111;
-Gray text: #999999;
+Gray text: #595959;
 Table row divider lines: #f1f1f1;
 */
 .vis-hidden{
@@ -77,13 +77,13 @@ h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}
 a {
-    color: #4381E5;
+    color: #1151bb;
 }
 a:not([href]) {
     color: #111;
 }
 a.pill{
-    background: #4381E5;
+    background: #1151bb;
     border-radius: 6.25em;
     padding: 0.6875em 1.4375em;
     line-height: 1em;
@@ -267,7 +267,7 @@ footer ul li{
     padding: 1em 0;
     display: inline-block;
     text-decoration: none;
-    color: #999999;
+    color: #595959;
     transition: color .1s ease-in-out;
 }
 .test_menu a:hover{
@@ -438,7 +438,7 @@ table.history{
     width: 100%;
 }
 table.history th {
-    color: #999999;
+    color: #595959;
     text-decoration: none;
     font-weight: normal;
 }
@@ -455,7 +455,7 @@ table.history tbody tr{
 }
 table.history .label b:not(:empty){
     font-weight: normal;
-    background: #4381E5;
+    background: #1151bb;
     border-radius: 20px;
     color: #fff;
     display: inline-block;
@@ -549,13 +549,13 @@ form[name=filterLog] {
     margin-right: 1px;
 }
 .ui-tabs-nav li.ui-tabs-selected a{
-    background: #4381E5;
+    background: #1151bb;
 }
 .ui-tabs-nav li:hover a{
     background: #4F6890;
 }
 .ui-tabs-nav li.ui-tabs-selected a:hover{
-    background: #4381E5;
+    background: #1151bb;
 }
 #advanced_settings-container .ui-tabs-hide {display: none;}
 
@@ -623,6 +623,7 @@ form[name=filterLog] {
 }
 .input_fields li input[type="radio"] {
     margin-right: .3em;
+    margin-left: 0;
 }
 .input_fields li input[type="radio"]:nth-of-type(2n) {
     margin-left: 2em;
@@ -631,9 +632,23 @@ form[name=filterLog] {
     max-width: 100%;
     width: 100%;
 }
+.input_fields fieldset{
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex: 1;
+}
+.input_fields legend{
+    padding: 0;
+    margin-bottom: .5em;
+}
 @media screen and (min-width: 50em){
     .input_fields li{
         display: flex;
+        flex-wrap: wrap;
     }
     .input_fields label {
         width: 28%;
@@ -643,6 +658,17 @@ form[name=filterLog] {
     }
     .input_fields #description {
         padding-left: 28%;
+    }
+    .input_fields legend{
+        float: left;
+        width: 28%;
+    }
+    .input_fields .configuration{
+        margin-left: 28%;
+        margin-top: 1.5em;
+    }
+    .input_fields .configuration td{
+        padding-right: 1em;
     }
 }
 
@@ -734,7 +760,7 @@ input[type="submit"].start_test{
     align-items: center;
 }
 #visual_comparison .urldiv a{
-    color: #2F80ED;
+    color: #75ADF5;
 
 }
 
@@ -764,7 +790,7 @@ input[type="submit"].start_test{
     border: 0;
     font-size: 1em;
     background: url('/images/icon-add.svg') top left no-repeat transparent;
-    color: #2F80ED;
+    color: #75ADF5;
     padding-left: 1.9em;
     cursor: pointer;
 }
@@ -826,7 +852,7 @@ input[type="submit"].start_test{
     margin-bottom: 3.125em;
 }
 .runningStatusIndicator li.is-active {
-    background: #4381E5;
+    background: #1151bb;
     color: #fff;
 }
 .runningStatusIndicator li::after{
@@ -841,7 +867,7 @@ input[type="submit"].start_test{
     right: -1.2em;
 }
 .runningStatusIndicator li.is-active::after {
-    border-left-color: #4381E5;
+    border-left-color: #1151bb;
 }
 .runningStatusIndicator li::before {
     content: " ";
@@ -933,7 +959,7 @@ input[type="submit"].start_test{
     font-size: 0.875em;
     padding: 1.5em;
     max-width: 100%;
-    background-color: #4381E5;
+    background-color: #1151bb;
     color: #fff;
     text-align: center;
 }

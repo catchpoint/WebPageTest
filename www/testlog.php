@@ -111,7 +111,7 @@ if( $csv )
                 <table id="history" class="history" border="0" cellpadding="5px" cellspacing="0">
                     <thead>
                         <tr>
-                            <th></th>
+                            <th><span class="vis-hidden">Compare</span></th>
                             <th>URL</th>
                             <th>Run From</th>
                             <th>Label</th>
