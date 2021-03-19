@@ -127,7 +127,7 @@ if (!$privateInstall) {
 // constants
 define('VER_WEBPAGETEST', '20.06');   // webpagetest version
 define('VER_CSS', 86);                // version of the sitewide css file
-define('VER_JS', 38);                 // version of the sitewide javascript file
+define('VER_JS', 39);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 45);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.

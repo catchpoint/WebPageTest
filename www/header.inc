@@ -128,7 +128,13 @@ if ($alert) {
             $saml_name = GetSamlEmail();
         }
         if (isset($saml_name)) {
-            $logoutUrl = 'javascript:ClearOAuthCookies();';
+            $saml_logout = GetSetting('saml_logout');
+            if ($saml_logout) {
+                $saml_logout = htmlspecialchars($saml_logout);
+                $logoutUrl = "javascript:wptLogout('$saml_logout');";
+            } else {
+                $logoutUrl = "javascript:wptLogout();";
+            }
             echo "<li>Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
         } else {
             echo '<li><a href="/saml/login.php">Login';
@@ -142,7 +148,7 @@ if ($alert) {
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
         echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-        $logoutUrl = 'javascript:ClearOAuthCookies();';
+        $logoutUrl = 'javascript:wptLogout();';
         $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else {
