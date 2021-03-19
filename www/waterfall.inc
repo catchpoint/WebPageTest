@@ -124,6 +124,7 @@ function GetPageEvents($page_data) {
     return array(
         'render' => $page_data['render'],
         'first_contentful_paint' => $page_data['firstContentfulPaint'],
+        'lcp' => $page_data['chromeUserTiming.LargestContentfulPaint'],
         'dom_element' => $page_data['domTime'],
         'aft' =>  $page_data['aft'],
         'nav_first_paint' => $page_data['firstPaint'],
@@ -535,6 +536,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             // Draw event lines (e.g start render, doc complete).
             $event_colors = array(
                 'render' => GetColor($im, 40, 188, 0),
+                'lcp' => GetColor($im, 0, 128, 0),
                 'dom_element' => GetColor($im, 242, 131, 0),
                 'load' => GetColor($im, 0, 0, 255),
                 'nav_load' => GetColor($im, 192, 192, 255),
@@ -589,10 +591,18 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     $ms = $event;
                     if ($ms > 0) {
                       $x = $x_scaler($ms);
-                      imageline($im, $x, $y1, $x, $y2, $color);
+                      if ($event_name == 'lcp') {
+                        imagedashedline($im, $x, $y1, $x, $y2, $color);
+                      } else {
+                        imageline($im, $x, $y1, $x, $y2, $color);
+                      }
                       if (!$is_thumbnail && $x < $width - 3) {
                         $x++;
-                        imageline($im, $x, $y1, $x, $y2, $color);
+                        if ($event_name == 'lcp') {
+                          imagedashedline($im, $x, $y1, $x, $y2, $color);
+                        } else {
+                          imageline($im, $x, $y1, $x, $y2, $color);
+                        }
                       }
                     }
                   }
