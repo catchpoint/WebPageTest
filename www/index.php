@@ -319,10 +319,10 @@ $loc = ParseLocations($locations);
                                         <br>
                                         <table class="configuration hidden" id="bwTable">
                                             <tr>
-                                                <th>BW Down</th>
-                                                <th>BW Up</th>
-                                                <th>Latency</th>
-                                                <th>Packet Loss</th>
+                                                <th><label for="bwDown">BW Down</label></th>
+                                                <th><label for="bwUp">BW Up</label></th>
+                                                <th><label for="latency">Latency</label></th>
+                                                <th><label for="plr">Packet Loss</label></th>
                                             </tr>
                                             <tr>
                                                 <?php

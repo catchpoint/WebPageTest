@@ -648,6 +648,7 @@ form[name=filterLog] {
 @media screen and (min-width: 50em){
     .input_fields li{
         display: flex;
+        flex-wrap: wrap;
     }
     .input_fields label {
         width: 28%;
@@ -661,6 +662,13 @@ form[name=filterLog] {
     .input_fields legend{
         float: left;
         width: 28%;
+    }
+    .input_fields .configuration{
+        margin-left: 28%;
+        margin-top: 1.5em;
+    }
+    .input_fields .configuration td{
+        padding-right: 1em;
     }
 }
 
