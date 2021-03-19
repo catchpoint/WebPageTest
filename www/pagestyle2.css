@@ -623,6 +623,7 @@ form[name=filterLog] {
 }
 .input_fields li input[type="radio"] {
     margin-right: .3em;
+    margin-left: 0;
 }
 .input_fields li input[type="radio"]:nth-of-type(2n) {
     margin-left: 2em;
@@ -630,6 +631,19 @@ form[name=filterLog] {
 .input_fields select{
     max-width: 100%;
     width: 100%;
+}
+.input_fields fieldset{
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex: 1;
+}
+.input_fields legend{
+    padding: 0;
+    margin-bottom: .5em;
 }
 @media screen and (min-width: 50em){
     .input_fields li{
@@ -643,6 +657,10 @@ form[name=filterLog] {
     }
     .input_fields #description {
         padding-left: 28%;
+    }
+    .input_fields legend{
+        float: left;
+        width: 28%;
     }
 }
 
