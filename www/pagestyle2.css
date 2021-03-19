@@ -320,6 +320,17 @@ footer ul li{
     overflow-wrap: anywhere;
 }
 
+.images{
+    overflow-wrap: anywhere;
+    width: 100%;
+    table-layout: fixed;
+}
+.images td{
+    overflow-x: auto;
+}
+.images td:first-child{
+    width: 3em;
+}
 #average{
     text-align: center;
     margin-bottom: 1.5em;
@@ -811,6 +822,9 @@ input[type="submit"].start_test{
         margin-left: auto;
         margin-right: auto;
     }
+}
+.box form input[type="text"] {
+    border: 1px solid #999;
 }
 #result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
 #result {

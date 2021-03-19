@@ -13,14 +13,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = null;
             include 'header.inc';
             ?>
-
-            <div style="width: 930px; margin-left: auto; margin-right: auto;">
-                <br><b>Generate a custom Waterfall:</b><br>
+            <h1>Generate a Custom Waterfall</h1>
+            <div class="box">
                 <form style="margin-left:2em;" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                     Chart Type: <input type="radio" name="type" value="waterfall" checked="checked"> Waterfall
                      &nbsp; <input type="radio" name="type" value="connection"> Connection View<br>
@@ -40,16 +38,16 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showWait" type="checkbox" checked> Show Wait Time
                 </form>
             </div>
-            <br>
+            <div class="box">
             <?php
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
                 echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">";
             ?>
-
+            </div>
             <?php include('footer.inc'); ?>
-        </div>
+        
 
         <script type="text/javascript">
             $(document).ready(function(){
