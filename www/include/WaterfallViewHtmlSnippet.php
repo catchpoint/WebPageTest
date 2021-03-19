@@ -38,8 +38,14 @@ class WaterfallViewHtmlSnippet {
     return $out;
   }
 
-  private function _legendBarTableCell($color, $label, $width) {
-    $style = "style=\"width:" . $width . "px; background-color:" . $color . "\"";
+    private function _legendBarTableCell($color, $label, $width, $dashed = false) {
+    $style = "style=\"width: {$width}px;";
+    if ($dashed) {
+      $style .= " background-image: linear-gradient(0deg, $color 25%, #ffffff 25%, #ffffff 50%, $color 50%, $color 75%, #ffffff 75%, #ffffff 100%);";
+    } else {
+      $style .= " background-color: $color;";
+    }
+    $style .= '"';
     return "<td><table><tr><td><div class=\"bar\" " . $style . "></div></td><td>" . $label . "</td></tr></table></td>\n";
   }
 
@@ -76,6 +82,8 @@ class WaterfallViewHtmlSnippet {
       $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
     if ((float)$this->stepResult->getMetric("firstPaint"))
       $out .= $this->_legendBarTableCell("#8FBC83", "RUM First Paint", 2);
+    if ((float)$this->stepResult->getMetric("chromeUserTiming.LargestContentfulPaint"))
+      $out .= $this->_legendBarTableCell("#008000", "Largest Contentful Paint", 2, true);
     if ((float)$this->stepResult->getMetric("domInteractive"))
       $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 2);
     if ((float)$this->stepResult->getMetric("domContentLoadedEventStart"))
