@@ -113,7 +113,12 @@ if ($alert) {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
                 }
-                echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
+                if ($opens != '') {
+                    echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
+                } else {
+                    echo "<li$current><a href=\"$tabUrl\"$target>$tabName</a></li>";
+                }
+                
             }
         }
 ?></ul>
