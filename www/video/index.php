@@ -71,7 +71,7 @@ if (is_file($profile_file))
                       <p class="h3">Enter multiple URLs to compare them against each other visually.</p>
                       <?php
                             if (strlen($siteKey)) {
-                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button></p>";
                             } else {
                             echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
                             }
