@@ -50,15 +50,6 @@ if ($alert) {
 ?>
 <header>
     <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a></h1>
-    <?php if (!GetSetting('newUI')) { ?>
-        <div class="headerAd" style="text-align: right;">
-        <?php
-        if (GetSetting('survey') && $_SERVER['REQUEST_URI'] != '/survey.php') {
-            echo '<br><a href="/survey.php" title="Help improve WebPageTest"><img src="/images/survey-banner.png" alt="Help us improve WebPageTest by taking a survey"/></a>';
-        }
-        ?>
-        </div>
-    <?php } ?>
     <nav>
     <ul id="nav"><?php
         if ($id) {
