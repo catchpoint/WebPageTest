@@ -559,36 +559,58 @@ form[name=filterLog] {
 
 .ui-tabs-nav{
     width: 100%;
+
 }
-@media screen and (min-width: 50em){
+
+@media screen and (min-width: 25em){
     .ui-tabs-nav{
         display: flex;
+        align-items: stretch;
     }
 }
 .ui-tabs-nav li{
     flex-grow: 1;
     text-align: center;
+    display: flex;
+    font-size: .8em;
+    line-height: 1.3em;
 }
 .ui-tabs-nav li:last-child {
     border-right: 1px solid #2F80ED;
     border-top-right-radius: 10px;
 }
 .ui-tabs-nav svg{
-    height: 1.375em;
-    width: auto;
-    margin-right: 0.375em;
-    position: relative;
-    top: .3em;
+    width: 2em;
+    display: block;
+    margin: auto auto 1em auto;
 }
+
 .ui-tabs-nav a{
     text-decoration: none;
     background: #395583;
     display: block;
     width: 100%;
-    padding: 1.1875em 0 1.4875em 0;
+    padding: 1.1875em 1em 1.4875em;
     border-left: 1px solid #121D35;
     transition: background .1s ease-in-out;
 
+}
+@media screen and (min-width: 50em) {
+    .ui-tabs-nav svg{
+        margin-right: 0.375em;
+        position: relative;
+        top: .3em;
+        height: 1.375em; 
+        width: auto;
+        display: inline-block;
+        margin-bottom: 0;
+    }
+    .ui-tabs-nav a{
+        padding: 1.1875em 0 1.4875em;
+    }
+    .ui-tabs-nav li{
+        font-size: 1em;
+    }
 }
 .ui-tabs-nav li:first-child a{
     border-top-left-radius: 10px;
@@ -708,6 +730,7 @@ form[name=filterLog] {
     }
     .input_fields #description {
         padding-left: 28%;
+        width: auto;
     }
     .input_fields legend{
         float: left;
@@ -769,6 +792,7 @@ input[type="submit"].start_test{
     align-self: flex-start;
     margin-left: 0;
     cursor: pointer;
+    -webkit-appearance: none;
 }
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test {
