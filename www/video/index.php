@@ -71,7 +71,7 @@ if (is_file($profile_file))
                       <p class="h3">Enter multiple URLs to compare them against each other visually.</p>
                       <?php
                             if (strlen($siteKey)) {
-                            echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button></p>";
+                            echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
                             } else {
                             echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
                             }
@@ -93,20 +93,20 @@ if (is_file($profile_file))
                                     echo '<div id="urldiv0" class="urldiv">';
                                     echo "<input type=\"hidden\" id=\"tid\" name=\"tid\" value=\"$tid\">";
                                     echo "<input type=\"hidden\" id=\"run\" name=\"run\" value=\"$run\">";
-                                    echo "Label <input id=\"tidlabel\" type=\"text\" name=\"tidlabel\" value=\"$label\" > ";
-                                    echo "URL <input id=\"tidurl\" type=\"text\" value=\"$url\" disabled=\"disabled\"> ";
+                                    echo "<label for=\"tidlabel\">Label</label> <input id=\"tidlabel\" type=\"text\" name=\"tidlabel\" value=\"$label\" > ";
+                                    echo "<label for=\"tidurl\">URL</label> <input id=\"tidurl\" type=\"text\" value=\"$url\" disabled=\"disabled\"> ";
                                     echo "<a href='#' onClick='return RemoveUrl(\"#urldiv0\");'>Remove</a>";
                                     echo "</div>\n";
                                 }
                             }
                             ?>
                             <div id="urldiv1" class="urldiv">
-                                Label <input id="label1" type="text" name="label[1]">
-                                URL <input id="url1" type="text" name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
+                                <label for="label1">Label</label> <input id="label1" type="text" name="label[1]">
+                                <label for="url1">URL</label> <input id="url1" type="text" name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
-                        <button onclick="return AddUrl();">Add Page</button>
+                        <button class="addBtn" onclick="return AddUrl();">Add Page</button>
                         <br>
                         <br>
                         <br>
