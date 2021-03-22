@@ -121,7 +121,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
 * Return an array of page events selected from the page data.
 */
 function GetPageEvents($page_data) {
-    return array(
+    $ret = array(
         'render' => $page_data['render'],
         'first_contentful_paint' => $page_data['firstContentfulPaint'],
         'lcp' => $page_data['chromeUserTiming.LargestContentfulPaint'],
@@ -135,6 +135,7 @@ function GetPageEvents($page_data) {
         'nav_dom_interactive' => $page_data['domInteractive'],
         'load' => $page_data['docTime']
         );
+    return $ret;
 }
 
 /**
@@ -311,6 +312,16 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               $user_times = array();
             $user_times[$label] = $value;
           }
+        }
+      }
+    }
+
+    // Get the layout shifts
+    $layout_shifts = array();
+    if (isset($page_data['LayoutShifts'])) {
+      foreach($page_data['LayoutShifts'] as $shift) {
+        if(isset($shift) && is_array($shift) && isset($shift['time'])) {
+          $layout_shifts[] = $shift['time'];
         }
       }
     }
@@ -541,12 +552,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 'load' => GetColor($im, 0, 0, 255),
                 'nav_load' => GetColor($im, 192, 192, 255),
                 'nav_dom' => GetColor($im, 216, 136, 223),
-                //'fcp' => GetColor($im, 143, 188, 131),
                 'fcp' => GetColor($im, 57, 230, 0),
                 'nav_dom_interactive' => GetColor($im, 255, 198, 26),
                 'aft' => GetColor($im, 255, 0, 0),
                 'user' => GetColor($im, 105, 0, 158)
                 );
+
+            // draw the other page events
             foreach ($page_events as $event_name => &$event) {
                 if (!isset($event_colors[$event_name])) {
                   continue;
@@ -610,7 +622,22 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
             }
 
-            // Draw the performance data.
+            // Draw the layout shifts timings
+            if (isset($layout_shifts)) {
+              $layout_shift_color = GetColor($im, 255, 128, 0);
+              foreach ($layout_shifts as $shift_time) {
+                  if ($shift_time > 0 && $shift_time <= $max_ms) {
+                      $x = $x_scaler($shift_time);
+                      imagedashedline($im, $x, $top + $row_height + 5, $x, $top + $height - 1, $layout_shift_color);
+                      if (!$is_thumbnail) {
+                        $x++;
+                        imagedashedline($im, $x, $top + $row_height + 5, $x, $top + $height - 1, $layout_shift_color);
+                      }
+                  }
+              }
+          }
+
+          // Draw the performance data.
             if (isset($perfs) && is_array($perfs)) {
               foreach ($perfs as $p) {
                 $x1 = $x_scaler(0);
