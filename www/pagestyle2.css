@@ -560,6 +560,9 @@ form[name=filterLog] select {
 #test_box-container .test_subbox{
     position: relative;
 }
+.test_subbox .input_fields li{
+    align-items: flex-start;
+}
 #test_box-container .notification-container{
     background: #F9D856;
     padding: 1em;
@@ -955,6 +958,10 @@ button.start_test:hover{
 #videoContainer {
     background: #000;
     color: #fff;
+}
+#createForm #image{
+    margin-top: 2.5em;
+    margin-bottom: 1em;
 }
 
 #runningHeader .runningDetails{
