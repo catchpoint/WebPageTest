@@ -628,10 +628,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               foreach ($layout_shifts as $shift_time) {
                   if ($shift_time > 0 && $shift_time <= $max_ms) {
                       $x = $x_scaler($shift_time);
-                      imagedashedline($im, $x, $top + $row_height + 1, $x, $top + $height - 1, $layout_shift_color);
+                      imagedashedline($im, $x, $top + $row_height + 5, $x, $top + $height - 1, $layout_shift_color);
                       if (!$is_thumbnail) {
                         $x++;
-                        imagedashedline($im, $x, $top + $row_height + 1, $x, $top + $height - 1, $layout_shift_color);
+                        imagedashedline($im, $x, $top + $row_height + 5, $x, $top + $height - 1, $layout_shift_color);
                       }
                   }
               }
