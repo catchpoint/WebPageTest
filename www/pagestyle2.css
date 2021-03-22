@@ -786,7 +786,8 @@ form[name=filterLog] {
     }
 }
 
-input[type="submit"] {
+input[type="submit"],
+button.start_test {
     border: 0;
     border-radius: 4px;
     padding: 0.6875em 2.625em;
@@ -794,7 +795,8 @@ input[type="submit"] {
     font-size: 1em;
     cursor:pointer;
 }
-input[type="submit"].start_test{
+input[type="submit"].start_test,
+button.start_test{
     border-radius: 4px;
     height: 100%;
     font-size: 1.25em;
@@ -804,11 +806,13 @@ input[type="submit"].start_test{
     cursor: pointer;
     -webkit-appearance: none;
 }
-input[type="submit"]:hover{
+input[type="submit"]:hover,
+button.start_test:hover{
     background: #fbe076;
 }
 @media screen and (min-width: 50em) {
-    input +input[type="submit"].start_test {
+    input +input[type="submit"].start_test,
+    input + div + button.start_test {
         border-radius: 0 4px 4px 0;
     }
 }
