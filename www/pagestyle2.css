@@ -765,7 +765,9 @@ form[name=filterLog] {
 #test_box-container label small{
     opacity:.8;
 }
-
+.pending_tests{
+    padding-left: 1em;
+}
 #url{
     width: 100%;
     max-width: 100%;
