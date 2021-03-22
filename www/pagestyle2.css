@@ -110,6 +110,7 @@ select, input[type="text"], input[type="number"] {
     padding: 0.6875em 1.3125em;
     border-radius: 4px;
     border: 0px;
+    max-width: 90%;
 }
 select {
     line-height: 1.3em;
@@ -240,14 +241,15 @@ footer ul li{
 /* Header */
 #wptAuthBar {
     list-style-type: none;
+    margin-top: 0;
 }
 #wptAuthBar li{
-    margin-bottom: 1.5em;
     color: #fff;
 }
 #wptAuthBar a{
     text-decoration: none;
-    margin: 1em 1.3em;
+    margin: 1.5em 1.3em;
+    display: inline-block;
 }
 @media screen and (min-width: 60em) {
     #wptAuthBar li{
@@ -261,13 +263,14 @@ footer ul li{
         display: flex;
         align-items: center;
         grid-row: 2;
+        margin-top: 0;
     }
     #wptAuthBar a{
         margin: auto;
     }
     #wptAuthBar .pill{
         margin-left: 1.75em;
-
+        margin-top: 0;
     }
 }
 @media screen and (min-width:75em) {
@@ -806,7 +809,7 @@ input[type="submit"].start_test{
     padding: .7em 1em .7em 1.5em;
     font-size: 1em;
     border-radius: 4px;
-    margin-left: 1.25em;
+    margin-top: 1em;
     cursor: pointer;
     transition: background .1s ease-in-out;
     background: url('/images/icon-map.svg') .5em .5em no-repeat transparent;
@@ -814,6 +817,12 @@ input[type="submit"].start_test{
 }
 #change-location-btn:hover{
     background-color:  rgba(255,255,255,.1);
+}
+@media screen and (min-width: 50em) {
+    #change-location-btn {
+        margin-left: 1.25em;
+        margin-top: 0;
+    }
 }
 #simplemodal-overlay {background-color:#000;}
 #simplemodal-container {background-color:#fff; border:2px solid #444; padding:4px;}
