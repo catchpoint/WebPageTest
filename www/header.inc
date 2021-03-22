@@ -153,7 +153,7 @@ if ($alert) {
           echo '<a href="/forums/member.php?action=register">Register</a></li> ';
         }
         if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
+          echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
         }
     }
     echo '</ul>';
