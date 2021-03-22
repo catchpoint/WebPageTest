@@ -560,6 +560,9 @@ form[name=filterLog] select {
 #test_box-container .test_subbox{
     position: relative;
 }
+.test_subbox .input_fields li{
+    align-items: flex-start;
+}
 #test_box-container .notification-container{
     background: #F9D856;
     padding: 1em;
