@@ -198,15 +198,9 @@ $loc = ParseLocations($locations);
                             <input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php
                             if (strlen($siteKey)) {
-<<<<<<< HEAD
-                                echo "<input type='submit' name='submit' value='Start Test &#8594;' class='g-recaptcha start_test' data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit'>";
-                            } else {
-                                echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-=======
                             echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
                             } else {
                             echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
->>>>>>> 151b005296c2af5e75085027c4ad41451cc873aa
                             }
                             ?>
                     </li>
