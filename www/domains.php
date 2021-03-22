@@ -49,7 +49,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             }
 
             div.bar {
-                height:12px;
+                height:20px;
                 margin-top:auto;
                 margin-bottom:auto;
             }

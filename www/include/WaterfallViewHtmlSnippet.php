@@ -75,22 +75,25 @@ class WaterfallViewHtmlSnippet {
     $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
       'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">';
     $out .= "\n<tr>\n";
-    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 2);
+    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 4);
     if ($this->stepResult->getMetric("aft"))
-      $out .= $this->_legendBarTableCell("#FF0000", "Above the Fold", 2);
+      $out .= $this->_legendBarTableCell("#FF0000", "Above the Fold", 4);
     if ((float)$this->stepResult->getMetric("domTime"))
-      $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
+      $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 4);
     if ((float)$this->stepResult->getMetric("firstContentfulPaint"))
-      $out .= $this->_legendBarTableCell("#39E600", "First Contentful Paint", 2);
+      $out .= $this->_legendBarTableCell("#39E600", "First Contentful Paint", 4);
     if ((float)$this->stepResult->getMetric("chromeUserTiming.LargestContentfulPaint"))
-      $out .= $this->_legendBarTableCell("#008000", "Largest Contentful Paint", 2, true);
+      $out .= $this->_legendBarTableCell("#008000", "Largest Contentful Paint", 4, true);
+    $shifts = $this->stepResult->getMetric("LayoutShifts");
+    if ($shifts && is_array($shifts) && count($shifts))
+      $out .= $this->_legendBarTableCell("#FF8000", "Layout Shift", 4, true);
     if ((float)$this->stepResult->getMetric("domInteractive"))
-      $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 2);
+      $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 4);
     if ((float)$this->stepResult->getMetric("domContentLoadedEventStart"))
       $out .= $this->_legendBarTableCell("#D888DF", "DOM Content Loaded", 15);
     if ((float)$this->stepResult->getMetric("loadEventStart"))
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
-    $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
+    $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 4);
     if (GetSetting('waterfall_show_user_timing') && $this->stepResult->getMetric('userTime'))
       $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
     $out .= "</tr>\n</table>\n<br>";

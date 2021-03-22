@@ -37,7 +37,7 @@ if(!$testInfo->isFirstViewOnly()) {
             }
 
             div.bar {
-                height:12px;
+                height:20px;
                 margin-top:auto;
                 margin-bottom:auto;
             }
