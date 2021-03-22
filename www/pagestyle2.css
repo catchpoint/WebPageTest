@@ -22,7 +22,7 @@ body {
     font: 100%/1.4em Helvetica, Arial, sans-serif;
     background-color: #F4F4F4;
     grid-column-gap: 1.25em;
-    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, 1fr ) calc(50vw - 45em) [gutter-end];
+    grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, minmax(0, 1fr) ) calc(50vw - 45em) [gutter-end];
     width: 100%;
 }
 .home {
@@ -947,6 +947,11 @@ button.start_test:hover{
 #result {
     text-align: center;
 }
+.scrollableTable{
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+}
 #videoContainer {
     background: #000;
     color: #fff;
@@ -1120,7 +1125,6 @@ button.start_test:hover{
 
 /* shared table themes */
 table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
-table.scrollable { display: block; overflow-x:auto; }
 table.pretty th, table.pretty td {border: 1px silver solid; padding: 0.4em; text-align: center; }
 table.pretty th { background: gainsboro; }
 table.pretty th.empty { background: #fff; border:0; }
