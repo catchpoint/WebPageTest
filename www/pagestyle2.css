@@ -529,6 +529,12 @@ form[name=filterLog] input[type=text]{
 form[name=filterLog] {
     margin-bottom: 1.3em;
 }
+form[name=filterLog] select {
+    border: 1px solid #999;
+    display: inline-block;
+    width: auto;
+    margin-bottom: 2em;
+}
 
 #CompareBtn {
     position: relative;
@@ -812,7 +818,8 @@ button.start_test:hover{
 }
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test,
-    input + div + input[type="submit"].start_test {
+    input + div + input[type="submit"].start_test,
+    input + div + button.start_test {
         border-radius: 0 4px 4px 0;
     }
 }
@@ -849,21 +856,42 @@ button.start_test:hover{
 #location-ok {margin: 0px 10px;}
 /* Visual comparison tab */
 .test-box-lede {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 2.5em;
+}
+@media screen and (min-width: 50em) {
+    .test-box-lede {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 }
 #visual_comparison .urldiv{
     margin-bottom: 1em;
-    display: flex;
     align-items: center;
+}
+#visual_comparison .urldiv label{
+    display: block;
+    margin-top: 1em;
 }
 #visual_comparison .urldiv a{
     color: #75ADF5;
-
+    margin-bottom: 1em;
+    display: block;
+    margin: 1.2em auto 2.5em auto;
 }
+@media screen and (min-width: 50em) {
+    #visual_comparison .urldiv{
+        display: flex;
 
+    }
+    #visual_comparison .urldiv label{
+        display: flex;
+        margin-top: 0;
+    }
+    #visual_comparison .urldiv a{
+        margin: 0 auto;
+    }
+}
 #visual_comparison .urldiv input:first-of-type{
     margin-right: 2.5em;
     margin-left: .3em;
