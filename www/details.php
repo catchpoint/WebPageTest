@@ -35,7 +35,7 @@ $page_description = "Website performance test details$testLabel";
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
         div.bar {
-            height:12px;
+            height:20px;
             margin-top:auto;
             margin-bottom:auto;
         }
