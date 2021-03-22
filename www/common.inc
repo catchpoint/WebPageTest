@@ -60,6 +60,11 @@ if (!isset($ALLOW_IFRAME) || !$ALLOW_IFRAME) {
   header('X-Frames-Options: sameorigin');
 }
 
+// Block indexing on everything except www
+if (GetSetting('host', '') != 'www.webpagetest.org') {
+  header('X-Robots-Tag: noindex');
+}
+
 // set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
