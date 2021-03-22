@@ -959,6 +959,10 @@ button.start_test:hover{
     background: #000;
     color: #fff;
 }
+#createForm #image{
+    margin-top: 2.5em;
+    margin-bottom: 1em;
+}
 
 #runningHeader .runningDetails{
     font-size: 1.25em;
