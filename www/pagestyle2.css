@@ -822,7 +822,8 @@ button.start_test:hover{
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test,
     input + div + input[type="submit"].start_test,
-    input + div + button.start_test {
+    input + div + button.start_test,
+    input + button.start_test {
         border-radius: 0 4px 4px 0;
     }
 }
