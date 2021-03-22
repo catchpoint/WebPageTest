@@ -101,8 +101,10 @@ function ValidateInput(form)
     $("#connection").change(function(){
         ConnectionChanged();
     });
-
-    RestoreSettings();
+    if (window.locations) {
+        RestoreSettings();
+    }
+    
 })(jQuery);
 
 function RestoreSettings() {
@@ -113,6 +115,7 @@ function RestoreSettings() {
         $('#timeline').prop('checked', wptStorage['testTimeline']);
     if (wptStorage['testLoc'] != undefined)
         $('#location').val(wptStorage['testLoc']);
+    
     LocationChanged();
   }
 }
