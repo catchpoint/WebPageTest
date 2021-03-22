@@ -80,8 +80,8 @@ class WaterfallViewHtmlSnippet {
       $out .= $this->_legendBarTableCell("#FF0000", "Above the Fold", 2);
     if ((float)$this->stepResult->getMetric("domTime"))
       $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
-    if ((float)$this->stepResult->getMetric("firstPaint"))
-      $out .= $this->_legendBarTableCell("#8FBC83", "RUM First Paint", 2);
+    if ((float)$this->stepResult->getMetric("firstContentfulPaint"))
+      $out .= $this->_legendBarTableCell("#39E600", "First Contentful Paint", 2);
     if ((float)$this->stepResult->getMetric("chromeUserTiming.LargestContentfulPaint"))
       $out .= $this->_legendBarTableCell("#008000", "Largest Contentful Paint", 2, true);
     if ((float)$this->stepResult->getMetric("domInteractive"))

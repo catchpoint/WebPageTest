@@ -127,7 +127,7 @@ function GetPageEvents($page_data) {
         'lcp' => $page_data['chromeUserTiming.LargestContentfulPaint'],
         'dom_element' => $page_data['domTime'],
         'aft' =>  $page_data['aft'],
-        'nav_first_paint' => $page_data['firstPaint'],
+        'fcp' => $page_data['firstContentfulPaint'],
         'nav_load' => array($page_data['loadEventStart'],
                             $page_data['loadEventEnd']),
         'nav_dom' => array($page_data['domContentLoadedEventStart'],
@@ -541,7 +541,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 'load' => GetColor($im, 0, 0, 255),
                 'nav_load' => GetColor($im, 192, 192, 255),
                 'nav_dom' => GetColor($im, 216, 136, 223),
-                'nav_first_paint' => GetColor($im, 143, 188, 131),
+                //'fcp' => GetColor($im, 143, 188, 131),
+                'fcp' => GetColor($im, 57, 230, 0),
                 'nav_dom_interactive' => GetColor($im, 255, 198, 26),
                 'aft' => GetColor($im, 255, 0, 0),
                 'user' => GetColor($im, 105, 0, 158)
