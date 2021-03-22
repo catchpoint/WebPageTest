@@ -35,10 +35,11 @@ class UserTimingHtmlTable {
     if (!$this->hasUserTiming && !$this->hasNavTiming) {
       return "";
     }
-    $out = '<table id="tableW3CTiming" class="pretty scrollable" align="center" border="1" cellpadding="10" cellspacing="0">';
+    $out = '<div class="scrollableTable">';
+    $out .= '<table id="tableW3CTiming" class="pretty scrollable" align="center" border="1" cellpadding="10" cellspacing="0">';
     $out .= $this->_createHead();
     $out .= $this->_createBody();
-    $out .= "</table><br>\n";
+    $out .= "</table></div><br>\n";
     return $out;
   }
 
