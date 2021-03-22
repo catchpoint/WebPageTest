@@ -156,7 +156,8 @@ if( $csv )
         include 'header.inc';
         ?>
             <h1>Test History</h1>
-            <form style="text-align:center;" name="filterLog" method="get" action="/testlog.php">
+            <div class="box">
+            <form name="filterLog" method="get" action="/testlog.php">
                 View <select name="days" size="1">
                         <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
                         <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
@@ -183,10 +184,10 @@ if( $csv )
                     <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>
 
             </form>
+                    </div>
             <div class="box">
-            <h4>Clicking on an URL will bring you to that test's results</h4>
             <form name="compare" method="get" action="/video/compare.php">
-            <input style="top:-2em; left:2em;" id="CompareBtn" type="submit" value="Compare">
+            <input style="top:-1em; left:2em;" id="CompareBtn" type="submit" value="Compare">
             <table class="history" border="0" cellpadding="5px" cellspacing="0">
                 <tr>
                     <th></th>
