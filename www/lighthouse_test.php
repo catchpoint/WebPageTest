@@ -111,9 +111,9 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             <div id="start_test-container">
                 <?php
                 if (strlen($siteKey)) {
-                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                  echo "<input type='submit' name='submit' value='Start Test &#8594;' class='g-recaptcha start_test' data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit'>";
                 } else {
-                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
+                  echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
                 }
                 ?>
             </div>
