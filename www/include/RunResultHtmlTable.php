@@ -106,10 +106,11 @@ class RunResultHtmlTable {
   }
 
   public function create() {
-    $out = '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
+    $out = '<div class="scrollableTable">';
+    $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
     $out .= $this->_createHead();
     $out .= $this->_createBody();
-    $out .= "</table>\n";
+    $out .= "</table></div>\n";
     return $out;
   }
 
