@@ -123,6 +123,7 @@ select {
     background-repeat: no-repeat, repeat;
     background-position: right .7em top 50%, 0 0;
     background-size: .65em auto, 100%;
+    background-color: #fff;
 }
 input[type="number"] {
     padding-left: .5em;
