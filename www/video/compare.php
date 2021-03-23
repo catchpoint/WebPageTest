@@ -725,6 +725,14 @@ function ScreenShotTable()
             echo '<input type="hidden" name="loc" value="' . htmlspecialchars(strip_tags($location)) . '">';
         }
         echo '<div class="page">';
+        ?>
+        <ul class="key">
+            <li><b class="thumbChanged"></b>A visual change occurred in the frame.</li>
+            <li><b class="thumbLCP"></b>Largest Contenful Paint occurred in the frame.</li>
+            <li><b class="thumbChanged thumbLayoutShifted"></b>A visual change and a Layout Shift occurred in the frame.</li>
+            <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contenful Paint and a Layout Shift occurred in the frame.</li>
+        </ul>
+        <?php
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";

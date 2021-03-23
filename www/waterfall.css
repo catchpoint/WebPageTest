@@ -13,11 +13,13 @@ div.request-dialog-radio {display:inline; padding-left: 20px; font-weight: norma
 .jqmOverlay { background-color: #000; }
 div.jqDrag {cursor: move;}
 .jqResize {width: 100%; height: 3px; background: #dfdfdf; border-top: 1px solid #a3a3a3; border-bottom: 1px solid #a3a3a3; cursor: ns-resize;}
-div.jqmDialog {display: none; position: absolute; top: 17%; right: 20px; width: 700px; height: 400px;
+div.jqmDialog {display: none; position: absolute; top: 17%; right: 20px; width: 800px; height: 500px;
+                font-size: smaller; line-height: 1.5em;
                 overflow: hidden; font-family:verdana,tahoma,helvetica;
                 color: #000; background: #fff; border: 1px solid #000; text-align: left;}
+div.jqmDialog pre {font-size: medium; line-height: 1.25em;}
 div.jqmdTC { background: #303030; color: #000; height: 25px; padding: 7px 22px 5px 5px; font-family:"sans serif",verdana,tahoma,helvetica; font-weight: bold; * zoom: 1; cursor: move;}
-div.jqmdBC { height: 350px; padding: 7px 7px 7px; overflow: auto;}
+div.jqmdBC { height: 450px; padding: 7px 7px 7px; overflow: auto;}
 div.jqmdX { position: absolute; right: 7px; top: 8px; padding: 0 0 0 16px; height: 16px; width: 0px; background: url(/images/dialog-close.png) no-repeat 0px -16px; overflow: hidden;}
 div.jqmdX:hover {background-position: 0px 0px;}
 div.jqmdBC button {margin: 8px 10px 4px 10px; color: #777; background-color: #fff; cursor: pointer; }
