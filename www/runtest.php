@@ -323,6 +323,8 @@
               $test['throttle_cpu'] = $_REQUEST['throttle_cpu'];
             if (isset($_REQUEST['bypass_cpu_normalization']))
               $test['bypass_cpu_normalization'] = $_REQUEST['bypass_cpu_normalization'] ? 1 : 0;
+            if (GetSetting('securityInsights') || (isset($_REQUEST['securityInsights']) && $_REQUEST['securityInsights']))
+              $test['securityInsights'] = 1;
 
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
@@ -2478,6 +2480,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['throttle_cpu'] = floatval($test['throttle_cpu']);
             if( isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization'])
                 $job['bypass_cpu_normalization'] = 1;
+            if (isset($test['securityInsights']) && $test['securityInsights'])
+              $job['securityInsights'] = 1;
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $job['dpr'] = floatval($test['dpr']);
             if( isset($test['width']) && $test['width'] > 0 )
