@@ -1108,15 +1108,19 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
             if ($name == "LayoutShift" &&
                 isset($event['args']['data']['is_main_frame']) &&
                 $event['args']['data']['is_main_frame'] &&
-                isset($event['args']['data']['cumulative_score'])) {
-              $cumulative_layout_shift = $event['args']['data']['cumulative_score'];
+                isset($event['args']['data']['score'])) {
               if (isset($time)) {
-                $shift = array('time' => $time, 'cumulative_score' => $event['args']['data']['cumulative_score']);
+                if (!isset($cumulative_layout_shift)) {
+                  $cumulative_layout_shift = 0;
+                }
+                $cumulative_layout_shift += $event['args']['data']['score'];
+                $shift = array(
+                  'time' => $time,
+                  'score' => $event['args']['data']['score'],
+                  'cumulative_score' => $cumulative_layout_shift
+                );
                 if (isset($event['args']['data']['region_rects'])) {
                   $shift['rects'] = $event['args']['data']['region_rects'];
-                }
-                if (isset($event['args']['data']['score'])) {
-                  $shift['score'] = $event['args']['data']['score'];
                 }
                 if (isset($event['args']['data']['sources'])) {
                   $shift['sources'] = $event['args']['data']['sources'];
