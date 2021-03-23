@@ -691,7 +691,7 @@ function ScreenShotTable()
 
                     if ($show_shifts) {
                         $label = "&nbsp;";
-                        if (isset($shift_amount) && $shift_amount >= 0.001 && isset($cls) && $cls >= 0.001) {
+                        if (isset($shift_amount) && $shift_amount > 0.0 && isset($cls) && $cls > 0.0) {
                             $label = number_format($shift_amount, 3, ".", "") . ' / ' . number_format($cls, 3, ".", "");
                         }
                     }
