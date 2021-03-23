@@ -517,6 +517,19 @@
             if( isset($test['login']) && strlen($test['login']) )
                 $test['private'] = 1;
 
+            if (!$test['mobile'] && (!$test['browser_width'] || !$test['browser_height']) && isset($_REQUEST['resolution'])) {
+              $resolution = $_REQUEST['resolution'];
+              $parts = explode('x', $resolution);
+              if (count($parts) == 2) {
+                $width = $parts[0];
+                $height = $parts[1];
+                if ($width > 0 && $width <= 1920 && $height > 0 && $height <= 1200) {
+                  $test['browser_width'] = $width;
+                  $test['browser_height'] = $height;
+                }
+              }
+            }
+        
             if (!$test['mobile'] && (!$test['browser_width'] || !$test['browser_height'])) {
               $browser_size = GetSetting('default_browser_size');
               if ($browser_size) {
