@@ -161,6 +161,30 @@ $common_label = implode(" ", $common_labels);
             </div>
 
             <div id="result">
+            
+            <?php
+            $web_vitals = array();
+            foreach ($pagesData as &$pageData) {
+              foreach ($pageData as &$pageRun) {
+                foreach ($pageRun as &$data) {
+                  if (isset($data['firstContentfulPaint']))
+                    $web_vitals['firstContentfulPaint'] = 'First Contentful Paint (ms)';
+                  if (isset($data['chromeUserTiming.LargestContentfulPaint']))
+                    $web_vitals['chromeUserTiming.LargestContentfulPaint'] = 'Largest Contentful Paint (ms)';
+                  if (isset($data['chromeUserTiming.CumulativeLayoutShift']))
+                    $web_vitals['chromeUserTiming.CumulativeLayoutShift'] = 'Cumulative Layout Shift';
+                  if (isset($data['TotalBlockingTime']))
+                    $web_vitals['TotalBlockingTime'] = 'Total Blocking Time (ms)';
+                }
+              }
+            }
+            if (count($web_vitals)) {
+              echo '<h1>Web Vitals</h1>';
+              foreach($web_vitals as $metric => $label) {
+                InsertChart($metric, $label);
+              }
+            }
+            ?>
             <h1>Test Result Data Plots</h1>
             <?php
             if (count($common_labels) > 0) {
@@ -168,27 +192,29 @@ $common_label = implode(" ", $common_labels);
             }
             ?>
             <?php
-            $metrics = array('docTime' => 'Load Time (onload - ms)',
-                            'loadEventStart' => 'Browser-reported Load Time (Navigation Timing onload)',
-                            'domContentLoadedEventStart' => 'DOM Content Loaded (Navigation Timing)',
-                            'SpeedIndex' => 'Speed Index',
-                            'TTFB' => 'Time to First Byte (ms)',
-                            'basePageSSLTime' => 'Base Page SSL Time (ms)',
-                            'render' => 'Time to Start Render (ms)',
-                            'LastInteractive' => 'Time to Interactive (ms) - Beta',
-                            'visualComplete' => 'Time to Visually Complete (ms)',
-                            'lastVisualChange' => 'Last Visual Change (ms)',
-                            'titleTime' => 'Time to Title (ms)',
-                            'fullyLoaded' => 'Fully Loaded (ms)',
-                            'server_rtt' => 'Estimated RTT to Server (ms)',
-                            'docCPUms' => 'CPU Busy Time',
-                            'domElements' => 'Number of DOM Elements',
-                            'connections' => 'Connections',
-                            'requests' => 'Requests (Fully Loaded)',
-                            'requestsDoc' => 'Requests (onload)',
-                            'bytesInDoc' => 'Bytes In (onload)',
-                            'bytesIn' => 'Bytes In (Fully Loaded)',
-                            'browser_version' => 'Browser Version');
+            $metrics = array(
+              'docTime' => 'Load Time (onload - ms)',
+              'loadEventStart' => 'Browser-reported Load Time (Navigation Timing onload)',
+              'domContentLoadedEventStart' => 'DOM Content Loaded (Navigation Timing)',
+              'SpeedIndex' => 'Speed Index',
+              'TTFB' => 'Time to First Byte (ms)',
+              'basePageSSLTime' => 'Base Page SSL Time (ms)',
+              'render' => 'Time to Start Render (ms)',
+              'LastInteractive' => 'Time to Interactive (ms) - Beta',
+              'visualComplete' => 'Time to Visually Complete (ms)',
+              'lastVisualChange' => 'Last Visual Change (ms)',
+              'titleTime' => 'Time to Title (ms)',
+              'fullyLoaded' => 'Fully Loaded (ms)',
+              'server_rtt' => 'Estimated RTT to Server (ms)',
+              'docCPUms' => 'CPU Busy Time',
+              'domElements' => 'Number of DOM Elements',
+              'connections' => 'Connections',
+              'requests' => 'Requests (Fully Loaded)',
+              'requestsDoc' => 'Requests (onload)',
+              'bytesInDoc' => 'Bytes In (onload)',
+              'bytesIn' => 'Bytes In (Fully Loaded)',
+              'browser_version' => 'Browser Version'
+            );
             $customMetrics = null;
             $userTimings = null;
             $userMeasures = null;
@@ -290,6 +316,26 @@ function InsertChart($metric, $label) {
   global $median_value;
   global $median_run;
   global $statControl;
+
+  // Make sure we have data for the metric and that it is numeric
+  $metric_ok = false;
+  foreach ($views as $cached) {
+    foreach ($pagesData as $key=>$pageData) {
+      $values = values($pageData, $cached, $metric, true);
+      if (isset($values)) {
+        foreach($values as $value){
+          if (is_numeric($value)) {
+            $metric_ok = true;
+            break;
+          }
+        }
+      }
+    }
+    if ($metric_ok)
+      break;
+  }
+  if (!$metric_ok)
+    return;
 
   $num_runs = max(array_map("numRunsFromTestInfo", $testsInfo));
 
