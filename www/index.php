@@ -334,6 +334,23 @@ $loc = ParseLocations($locations);
                                             </tr>
                                         </table>
                                     </li>
+                                    <li>
+                                        <label for="resolution">Desktop Browser Dimensions</label>
+                                        <select name="resolution" id="resolution">
+                                        <?php
+                                        $default_dimensions = GetSetting('default_browser_size', FALSE);
+                                        if ($default_dimensions === FALSE) {
+                                            $default_dimensions = "1366x768";
+                                        }
+                                        echo "<option value=\"default\" selected>default ($default_dimensions)</option>\n";
+                                        $resolutions = GetSetting('resolutions', '1024x768,1280x720,1280x1024,1366x768,1440x900,1600x900,1920x1080,1920x1200');
+                                        $res = explode(',', $resolutions);
+                                        foreach ($res as $r) {
+                                            echo "<option value=\"$r\">$r</option>\n";
+                                        }
+                                        ?>
+                                        </select>
+                                    </li>
                                     <?php
                                     if ($admin) {
                                       echo '<li>';
