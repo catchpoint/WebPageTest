@@ -944,7 +944,8 @@ button.start_test:hover{
         margin-right: auto;
     }
 }
-.box form input[type="text"] {
+.box form input[type="text"],
+.box form select {
     border: 1px solid #999;
 }
 #result .pretty{width: 100%; font-size: .75em; line-height: 1.4em; overflow-x: auto;}
@@ -1262,4 +1263,30 @@ table.glossary th{
 #filmstripOptions legend{
     font-weight: bold;
     margin-bottom: .3em;
+}
+
+
+/* Graph page data */
+.chart{
+    margin-bottom: 2.5em;
+}
+
+/* simple forms */
+.simple_form{
+    margin-bottom: 1.5em;
+}
+.simple_form fieldset{
+    border: 0;
+    padding: 0;
+    margin-bottom: 1.5em;
+}
+.simple_form legend{
+    font-weight: bold;
+    padding-bottom: .5em;
+}
+.simple_form select{
+    width: auto;
+}
+.simple_form p{
+    margin: 1.5em auto;
 }

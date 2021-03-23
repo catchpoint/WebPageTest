@@ -111,29 +111,35 @@ $common_label = implode(" ", $common_labels);
         </style>
     </head>
     <body>
-        <div class="page">
             <?php
             if (count($testsId) == 1) {
               $tab = 'Test Result';
             }
             include 'header.inc';
             ?>
-            <div style="float: right;">
-                <form name="cached" method="get" action="graph_page_data.php">
+            <div>
+                <form class="simple_form" name="cached" method="get" action="graph_page_data.php">
                     <?php
                     echo "<input type=\"hidden\" name=\"tests\" value=\"$tests\">";
                     echo "<input type=\"hidden\" name=\"medianMetric\" value=\"$median_metric\">";
                     ?>
-                    View: <input type="checkbox" name="fv" value="1"
-                        <?php if ($fv == '1') echo "checked"; ?> >First
-                    <input type="checkbox" name="rv" value="1"
-                        <?php if ($rv == '1') echo "checked"; ?> >Repeat<br>
-                    Median: <input type="checkbox" name="median_value" value="1"
-                        <?php if ($median_value == '1') echo "checked"; ?> >Of plotted metric
-                        <input type="checkbox" name="median_run" value="1"
-                            <?php if ($median_run == '1') echo "checked"; ?> >Run with median
-                        <?php echo $median_metric; ?> <br>
-                    Statistical Comparison Against <select id="control" name="control" size="1" onchange="this.form.submit();">
+                    <fieldset>
+                      <legend>View:</legend>
+                    <input type="checkbox" name="fv" id="fv" value="1"
+                        <?php if ($fv == '1') echo "checked"; ?> ><label for="fv">First</label>
+                    <input type="checkbox" name="rv" id="rv" value="1"
+                        <?php if ($rv == '1') echo "checked"; ?> ><label for="rv">Repeat</label>
+          </fieldset>
+          <fieldset>
+            <legend>Median:</legend>
+                   <input type="checkbox" id="median_value" name="median_value" value="1"
+                        <?php if ($median_value == '1') echo "checked"; ?> ><label for="median_value">Of plotted metric</label>
+                        <input type="checkbox" name="median_run" id="median_run" value="1"
+                            <?php if ($median_run == '1') echo "checked"; ?> ><label for="median_run">Run with median
+                        <?php echo $median_metric; ?></label>
+          </fieldset>
+
+                    <label for="control">Statistical Comparison Against</label> <select id="control" name="control" size="1" onchange="this.form.submit();">
                     <option value="NOSTAT"<?php if ($statControl === "NOSTAT") echo " selected"; ?>>None</option>
                     <?php
                     foreach ($pagesData as $key=>$pageData) {
@@ -142,15 +148,15 @@ $common_label = implode(" ", $common_labels);
                     }
                     ?>
                     </select>
-                    <br>
-                    Tests:
+                    <p>
+                    <strong>Tests:</strong>
                     <?php
                     for ($i = 0; $i < count($testsId); $i++) {
                       echo "<br>" . $testsId[$i] . "-l:" . $testsLabel[$i];
                     }
                     ?>
-                    <br>
-                    <input type="submit">
+                    </p>
+                    <input type="submit" value="Plot Results">
                 </form>
             </div>
 
@@ -242,7 +248,7 @@ $common_label = implode(" ", $common_labels);
             }
             ?>
             </div>
-
+          </div>
             <?php include('footer.inc'); ?>
             <script type="text/javascript" src="//www.google.com/jsapi"></script>
             <script type="text/javascript">
@@ -298,7 +304,7 @@ function InsertChart($metric, $label) {
   $view_index = 0;
 
   if (count($pagesData) == 1 && $num_runs >= 3) {
-    echo '<div class="chartStats"><table class="pretty">';
+    echo '<div class="chartStats scrollableTable"><table class="pretty">';
     echo '<tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr>';
     foreach ($views as $cached) {
       $pageData = reset($pagesData);
