@@ -444,7 +444,34 @@ nav a:hover{
     background: #000;
     padding: 2em;
 }
-
+.key{
+    margin-top: 1em;
+    clear: both;
+}
+.key b{
+    width: .8em;
+    height: .8em;
+    display: inline-block;
+    margin-right: .5em;
+}
+@media screen and (min-width: 50em) {
+    .key{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-column-gap: 1.5em;
+        max-width: 60%;
+        margin: 1em auto;
+    }
+    .key li{
+        padding-left: 1.8em;
+        position: relative;
+    }
+    .key li b{
+        position: absolute;
+        left: 0;
+        margin-right: 0;
+    }
+}
 h1.attention{
     text-align: center;
     font-weight: normal;
