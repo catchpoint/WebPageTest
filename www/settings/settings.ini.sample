@@ -281,6 +281,9 @@ maxNavigateCount=20
 ; Tags to add to the agent instances
 ; EC2.tags="myTag=>myValue|foo=>bar"
 
+; IAM instance profile ID to assign to the agent instances
+; EC2.iamInstanceProfile=name-of-instance-profile
+
 ; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
 ;EC2.default=us-east-1
 

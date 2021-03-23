@@ -1118,6 +1118,9 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
                 if (isset($event['args']['data']['score'])) {
                   $shift['score'] = $event['args']['data']['score'];
                 }
+                if (isset($event['args']['data']['sources'])) {
+                  $shift['sources'] = $event['args']['data']['sources'];
+                }
                 $layout_shifts[] = $shift;
               }
             }
