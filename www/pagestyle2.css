@@ -1251,3 +1251,15 @@ table.glossary th{
 .feed a:hover{
     text-decoration: underline;
 }
+#filmstripOptions{
+    display: flex;
+}
+#filmstripOptions fieldset{
+    border: 0;
+    float: left;
+    flex: 1 1 auto;
+}
+#filmstripOptions legend{
+    font-weight: bold;
+    margin-bottom: .3em;
+}
