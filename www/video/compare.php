@@ -271,7 +271,6 @@ else
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
-                #filmstripOptions {text-align: left; vertical-align: top; padding: 2em;}
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -729,7 +728,7 @@ function ScreenShotTable()
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
-        echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
+        echo '<div id="bottom"><input type="checkbox" id="slow" name="slow" value="1"> <label for="slow">Slow Motion</label><br><br>';
         echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
         echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
         echo "</div></div></form>";
@@ -741,8 +740,9 @@ function ScreenShotTable()
             <?php
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
-                <table id="optionsTable">
-                <tr><td id="filmstripOptions">
+                <div id="filmstripOptions">
+                    <fieldset>
+                        <legend>Filmstrip Options</legend>
                 <?php
                 if ($has_layout_shifts) {
                     $checked = '';
@@ -766,80 +766,80 @@ function ScreenShotTable()
                 echo "<label for=\"sticky\"> Make Filmstrip Sticky</label>";
                 
                 ?>
-                </td><td>
-                <table id="layoutTable">
-                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison Endpoint</th></th></tr>
+                </fieldset>
                     <?php
                         // fill in the thumbnail size selection
-                        echo "<tr><td>";
+                        echo "<fieldset>";
+                        echo "<legend>Thumbnail Size</legend>";
                         $checked = '';
                         if( $thumbSize <= 100 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"100\"$checked onclick=\"this.form.submit();\"> Small<br>";
+                        echo "<input type=\"radio\" id=\"thumbSize100\" name=\"thumbSize\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize100\">Small</label><br>";
                         $checked = '';
                         if( $thumbSize <= 150 && $thumbSize > 100 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> Medium<br>";
+                        echo "<input type=\"radio\" id=\"thumbSize150\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize150\">Medium</label><br>";
                         $checked = '';
                         if( $thumbSize <= 200 && $thumbSize > 150 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> Large<br>";
+                        echo "<input type=\"radio\" id=\"thumbSize200\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize200\">Large</label><br>";
                         $checked = '';
                         if( $thumbSize > 200)
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> Huge";
-                        echo "</td>";
+                        echo "<input type=\"radio\" id=\"thumbSize600\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize600\">Huge</label>";
+                        echo "</fieldset>";
 
                         // fill in the interval selection
-                        echo "<td>";
+                        echo "<fieldset>";
+                        echo "<legend>Thumbnail Interval</legend>";
                         if ($supports60fps) {
                           $checked = '';
                           if( $interval < 100 )
                               $checked = ' checked=checked';
-                          echo "<input type=\"radio\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> 60 FPS<br>";
+                          echo "<input type=\"radio\" id=\"ival60fps\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> <label for=\"ival60fps\">60 FPS</label><br>";
                         }
                         $checked = '';
                         if( ($supports60fps && $interval == 100) || (!$supports60fps && $interval < 500) )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> 0.1 sec<br>";
+                        echo "<input type=\"radio\" id=\"ival100\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"ival100\">0.1 sec</label><br>";
                         $checked = '';
                         if( $interval == 500 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> 0.5 sec<br>";
+                        echo "<input type=\"radio\" id=\"ival500\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> <label for=\"ival500\">0.5 sec</label><br>";
                         $checked = '';
                         if( $interval == 1000 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> 1 sec<br>";
+                        echo "<input type=\"radio\" id=\"ival1000\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival1000\">1 sec</label><br>";
                         $checked = '';
                         if( $interval > 1000 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec<br>";
-                        echo "</td>";
+                        echo "<input type=\"radio\" id=\"ival5000\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival5000\">5 sec</label><br>";
+                        echo "</fieldset>";
 
                         // fill in the endpoint selection
-                        echo "<td>";
+                        echo "<fieldset>";
+                        echo "<legend>Comparison Endpoint</legend>";
                         if( !strcasecmp($endTime, 'aft') )
                             $endTime = 'visual';
                         $checked = '';
                         if( !strcasecmp($endTime, 'visual') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" value=\"visual\"$checked onclick=\"this.form.submit();\"> Visually Complete<br>";
+                        echo "<input type=\"radio\" name=\"end\" id=\"endVisuallyComplete\" value=\"visual\"$checked onclick=\"this.form.submit();\"> <label for=\"endVisuallyComplete\">Visually Complete</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'all') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" value=\"all\"$checked onclick=\"this.form.submit();\"> Last Change<br>";
+                        echo "<input type=\"radio\" name=\"end\" id=\"endLastChange\" value=\"all\"$checked onclick=\"this.form.submit();\"> <label for=\"endLastChange\">Last Change</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'doc') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" value=\"doc\"$checked onclick=\"this.form.submit();\"> Document Complete<br>";
+                        echo "<input type=\"radio\" name=\"end\" id=\"endDocComplete\" value=\"doc\"$checked onclick=\"this.form.submit();\"> <label for=\"endDocComplete\">Document Complete</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'full') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded<br>";
-                        echo "</td></tr>";
+                        echo "<input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> <label for=\"endFullyLoaded\">Fully Loaded</label><br>";
+                        echo "</fieldset>";
                     ?>
-                </table>
-                </td></tr></table>
+                </div>
             </form>
         </div>
         <?php
