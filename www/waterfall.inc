@@ -320,7 +320,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $layout_shifts = array();
     if (isset($page_data['LayoutShifts'])) {
       foreach($page_data['LayoutShifts'] as $shift) {
-        if(isset($shift) && is_array($shift) && isset($shift['time'])) {
+        if(isset($shift) && is_array($shift) && isset($shift['time']) && isset($shift['score']) && $shift['score'] >= 0.001) {
           $layout_shifts[] = $shift['time'];
         }
       }
