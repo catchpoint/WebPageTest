@@ -11,4 +11,5 @@ if (isset($_SERVER["HTTP_REFERER"]) && strlen($_SERVER["HTTP_REFERER"])) {
 }
 // Set the cookie into the past
 setcookie("samlu", "", time() - 3600, '/'); 
+header('Clear-Site-Data: "*"');
 header("Location: $url");
