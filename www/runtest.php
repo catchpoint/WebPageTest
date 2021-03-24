@@ -2057,6 +2057,7 @@ function LogTest(&$test, $testId, $url)
         $logEntry['location'] = strip_tags($logEntry['location']);
       }
       if (isset($test['key']) && isset($test['accountId']) && isset($test['contactId'])) {
+        $logEntry['testUser'] = '';
         $logEntry['clientId'] = intval($test['accountId']);
         $logEntry['createContactId'] = intval($test['contactId']);
       }
