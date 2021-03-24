@@ -157,6 +157,17 @@ function GetWaterfallImage($rows, $url, $page_events, $options, $page_data) {
     return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data);
 }
 
+function _BaseDocumentUrl($url) {
+  $ret = $url;
+  if (isset($url)) {
+    $index = strpos($url, '#');
+    if ($index > 0) {
+      $ret = substr($url, 0, $index);
+    }
+  }
+  return $ret;
+}
+
 /**
 * Draw the waterfall view image.
 *
@@ -822,7 +833,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             $is_secure = $row['is_secure'];
             $request_label = $row['label'];
             $text_color = $black;
-            if (isset($document_url) && isset($row['requests']) && count($row['requests']) == 1 && isset($row['requests'][0]['documentURL']) && $row['requests'][0]['documentURL'] != $document_url) {
+            if (isset($document_url) && isset($row['requests']) && count($row['requests']) == 1 && 
+                    isset($row['requests'][0]['documentURL']) && 
+                    _BaseDocumentUrl($row['requests'][0]['documentURL']) != _BaseDocumentUrl($document_url)) {
                 $text_color = $alt_text_color;
             }
             $y = $top + $row['y1'] + 1;
