@@ -43,7 +43,14 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       if ($location['elapsed'] < 30)
         $error = ' success';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"16\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"16\">" . htmlspecialchars($name) . "$elapsed";
+    if (isset($location['label'])) {
+      echo ' : ' . htmlspecialchars($location['label']);
+      if (isset($location['node'])) {
+        echo htmlspecialchars(" ({$location['node']})");
+      }
+    }
+    echo "</th></tr>\n";
     if (array_key_exists('testers', $location)) {
       echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>";
       echo "<th>IP</th><th>DNS Server(s)</th>";
@@ -175,6 +182,10 @@ function GetAllTesters($include_sensitive = true) {
         $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
       } else {
         $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
+        if (isset($loc[$group[$j]]['label']))
+          $locations[$loc[$group[$j]]['location']]['label'] = $loc[$group[$j]]['label'];
+        if (isset($loc[$group[$j]]['scheduler_node']))
+          $locations[$loc[$group[$j]]['location']]['node'] = $loc[$group[$j]]['scheduler_node'];
       }
 
       $j++;
