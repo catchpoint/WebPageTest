@@ -14,8 +14,9 @@
         if (is_file('settings/common/terms.inc') || is_file('settings/server/terms.inc') || is_file('settings/terms.inc')) {
             echo '<li><a href="/terms.php">Terms of Service</a></li>';
         }
-        if (is_file('settings/common/privacy.inc') || is_file('settings/server/privacy.inc') || is_file('settings/privacy.inc')) {
-            echo '<li><a href="/privacy.php">Privacy Policy</a></li>';
+        $privacy_policy = GetSetting('privacy_policy_url');
+        if ($privacy_policy) {
+            echo "<li><a href='$privacy_policy'>Privacy Policy</a></li>";
         }
         ?>
         <li>&copy; Catchpoint Systems, Inc. All rights reserved.</li>
