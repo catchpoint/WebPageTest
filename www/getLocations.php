@@ -77,7 +77,11 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       $error = ' danger';
     echo "<tr id=\"$name\" class=\"$error\">";
     echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
-    echo "<td>" . @htmlspecialchars($location['labelShort']) . "</td>" . PHP_EOL;
+    $label = $location['labelShort'];
+    if (isset($location['node'])) {
+      $label .= " ({$location['node']})";
+    }
+    echo "<td>" . @htmlspecialchars($label) . "</td>" . PHP_EOL;
     if (array_key_exists('PendingTests', $location)) {
       echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>" . PHP_EOL;
       echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>" . PHP_EOL;
@@ -196,10 +200,15 @@ function LoadLocations()
                                               'Browsers' => $loc[$group[$j]]['browser'],
                                               'localDir' => $loc[$group[$j]]['localDir'],
                                               'status' => @$loc[$group[$j]]['status'],
-                                              'relayServer' => @$loc[$group[$j]]['relayServer'],
-                                              'relayLocation' => @$loc[$group[$j]]['relayLocation'],
                                               'labelShort' => $loc[$loc_name]['label'],
                                               );
+
+              if (isset($loc[$group[$j]]['scheduler_node']))
+                $locations[$loc_name]['node'] = $loc[$group[$j]]['scheduler_node'];
+                if (isset($loc[$group[$j]]['relayServer']))
+                $locations[$loc_name]['relayServer'] = $loc[$group[$j]]['relayServer'];
+                if (isset($loc[$group[$j]]['relayLocation']))
+                $locations[$loc_name]['relayLocation'] = $loc[$group[$j]]['relayLocation'];
 
               if ($default == $loc['locations'][$i] && $def == $group[$j])
                 $locations[$loc_name]['default'] = true;
