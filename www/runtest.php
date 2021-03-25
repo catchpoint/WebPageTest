@@ -2007,6 +2007,8 @@ function LogTest(&$test, $testId, $url)
     } elseif (isset($_COOKIE['google_email']) && strlen($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
       $user_info = $_COOKIE['google_email'];
     }
+
+    $redis_server = GetSetting('redis_test_history');
   
     $line_data = array(
         'date' => gmdate("Y-m-d G:i:s"),
@@ -2024,6 +2026,7 @@ function LogTest(&$test, $testId, $url)
         'count' => @$pageLoads,
         'priority' => @$test['priority'],
         'email' => $USER_EMAIL,
+        'redis' => $redis_server ? '1' : '0'
     );
 
     $log = makeLogLine($line_data);
@@ -2032,7 +2035,6 @@ function LogTest(&$test, $testId, $url)
     server_sync($apiKey, $runcount, rtrim($log, "\r\n"));
 
     // Log the test history record to redis if configured
-    $redis_server = GetSetting('redis_test_history');
     if ($redis_server) {
       $logEntry = array(
         'date' => gmdate("Y-m-d G:i:s"),
