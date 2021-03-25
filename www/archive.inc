@@ -325,6 +325,12 @@ function RestoreArchive($id) {
 function VerifyArchive($id) {
     $valid = true;
 
+    $testPath = realpath('./' . GetTestPath($id));
+    if (is_file("$testPath/.archived")) {
+        // Short-circuit for tests that were already archived (or restored)
+        return true;
+    }
+
     // Get the capture server settings if configured and the test ID specifies a capture server
     $capture_server = null;
     $capture_salt = null;
@@ -337,7 +343,6 @@ function VerifyArchive($id) {
     }
     
     if (!isset($capture_server) && !GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
-        $testPath = realpath('./' . GetTestPath($id));
         if (GetSetting('archive_dir')) {
             // local
             $valid = false;
