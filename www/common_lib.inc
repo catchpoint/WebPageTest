@@ -2716,7 +2716,7 @@ function makeLogLine($line_data) {
     $log .= "\t" . $line_data['guid'] . "\t" . $line_data['url'] . "\t". $line_data['location'] . "\t" . $line_data['private'];
     $log .= "\t". $line_data['testUID'] . "\t" . $line_data['testUser'] . "\t" . $line_data['video'] . "\t" . $line_data['label'];
     $log .= "\t". $line_data['owner'] . "\t". $line_data['key'] . "\t" . $line_data['count'] . "\t" . $line_data['priority'];
-    $log .= "\t" . $line_data['email'] . "\r\n";
+    $log .= "\t" . $line_data['email'] . "\t" . $line_data['redis'] . "\r\n";
 
     return $log;
 }
