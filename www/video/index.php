@@ -101,8 +101,8 @@ if (is_file($profile_file))
                             }
                             ?>
                             <div id="urldiv1" class="urldiv">
-                                <label for="label1">Label</label> <input id="label1" type="text" name="label[1]">
-                                <label for="url1">URL</label> <input id="url1" type="text" name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
+                                <label for="label1">Label</label> <input id="label1" type="text" required name="label[1]">
+                                <label for="url1">URL</label> <input id="url1" type="text" required name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
