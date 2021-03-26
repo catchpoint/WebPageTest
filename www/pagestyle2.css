@@ -73,7 +73,7 @@ header .logo img {
         align-self: center;
     }
     header .logo img {
-        width: auto;
+        width: 12rem;
     }
 }
 header a{
