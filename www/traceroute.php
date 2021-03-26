@@ -89,7 +89,7 @@ $page_description = "Test network path from multiple locations around the world 
                     <ul class="input_fields">
                         <li>
                         <label for="url" class="vis-hidden">Enter URL to test</label>    
-                        <input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <input type="text" name="url" id="url" required placeholder="Host Name/IP Address" class="text large" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php
                             if (strlen($siteKey)) {
                                 echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
