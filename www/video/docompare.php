@@ -138,7 +138,6 @@ function DisplayError()
         <?php $gaTemplate = 'Visual Comparison Error'; include ('head.inc'); ?>
     </head>
     <body>
-        <div class="page">
             <?php
             $tab = null;
             $headerType = 'video';

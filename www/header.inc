@@ -49,7 +49,7 @@ if ($alert) {
 }
 ?>
 <header>
-    <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a></h1>
+    <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a>
     <nav>
     <ul id="nav"><?php
         if ($id) {
