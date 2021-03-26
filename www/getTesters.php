@@ -182,8 +182,13 @@ function GetAllTesters($include_sensitive = true) {
         $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
       } else {
         $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
-        if (isset($loc[$group[$j]]['label']))
-          $locations[$loc[$group[$j]]['location']]['label'] = $loc[$group[$j]]['label'];
+        if (isset($loc[$group[$j]]['label'])) {
+          $label = $loc[$group[$j]]['label'];
+          $index = strpos($label, ' - ');
+          if ($index > 0)
+            $label = substr($label, 0, $index);
+          $locations[$loc[$group[$j]]['location']]['label'] = $label;
+        }
         if (isset($loc[$group[$j]]['scheduler_node']))
           $locations[$loc[$group[$j]]['location']]['node'] = $loc[$group[$j]]['scheduler_node'];
       }
