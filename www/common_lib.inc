@@ -1550,7 +1550,9 @@ function cp_http_post($url, $body, $cpid, $file=null) {
     $headers = array();
     $file_stream = null;
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $contentType = "application/json";
     if (isset($file)) {
+      $contentType = "application/zip";
       $file_stream = fopen($file, 'rb');
       if ($file_stream) {
         curl_setopt($ch, CURLOPT_PUT, 1 );
@@ -1565,7 +1567,7 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       curl_setopt($ch, CURLOPT_POST, 1 );
       curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
     }
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json',
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: $contentType",
                                                "CPID: $cpid"));
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
