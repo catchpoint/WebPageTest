@@ -20,6 +20,7 @@
         }
         ?>
         <li>&copy; Catchpoint Systems, Inc. All rights reserved.</li>
+        </ul>
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {

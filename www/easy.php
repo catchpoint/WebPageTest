@@ -99,7 +99,7 @@ $profiles = parse_ini_file($profile_file, true);
                     <ul class="input_fields">
                         <li>
                         <label for="url" class="vis-hidden">Enter URL to test</label>
-                        <input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                        <input type="text" name="url" required id="url" placeholder="<?php echo $url; ?>" class="text large" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php
                             if (strlen($siteKey)) {
                               echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
