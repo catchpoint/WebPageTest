@@ -3323,7 +3323,7 @@ function server_sync($apiKey, $runCount, $logline) {
       )
     );
     if ($ok) {
-      $host = GetSetting('host');
+      $host = GetSetting('hostname');
       foreach ($servers as $url) {
         $sync_host = parse_url($url, PHP_URL_HOST);
         if ($sync_host != $host) {
