@@ -422,8 +422,8 @@
               $keys = parse_ini_file($keys_file, true);	
               if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {	
                   $template = $keys[$req_k]['template'];	
-                  if (is_file("./templates/$template.php"))	
-                      include("./templates/$template.php");	
+                  if (is_file("./settings/common/templates/$template.php"))	
+                      include("./settings/common/templates/$template.php");	
               }	
             }
 
@@ -583,6 +583,18 @@
               $files = glob('./settings/custom_metrics/*.js');
               if ($files !== false && is_array($files) && count($files)) {
                 $test['customMetrics'] = array();
+                foreach ($files as $file) {
+                  $name = basename($file, '.js');
+                  $code = file_get_contents($file);
+                  $test['customMetrics'][$name] = $code;
+                }
+              }
+            }
+            if (is_dir('./settings/common/custom_metrics')) {
+              $files = glob('./settings/common/custom_metrics/*.js');
+              if ($files !== false && is_array($files) && count($files)) {
+                if (!isset($test['customMetrics']))
+                  $test['customMetrics'] = array();
                 foreach ($files as $file) {
                   $name = basename($file, '.js');
                   $code = file_get_contents($file);
