@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+.spacer {
+  height: 4000px;
+}
+img {
+  width: 200px;
+  height: 200px;
+}
+</style>
+<script>
+
+// Settings
+const warmUpCount = 2;
+const fillPipeCount = 2;
+const testCount = 2;
+const imageCount = 30;
+
+const urlParams = new URLSearchParams(window.location.search);
+let imageUrl = urlParams.get('image');
+let visibleDone = false;
+let hiddenDone = false;
+let totalCount = 0;
+let loadedCount = 0;
+let testedCount = 0;
+let warmedUp = 0;
+
+async function testImages() {
+  console.log(imageUrl);
+  loadImage(false, cbWarmup);
+}
+
+function unique(len) {
+  const validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let array = new Uint8Array(len);
+  window.crypto.getRandomValues(array);
+  array = array.map(x => validChars.charCodeAt(x % validChars.length));
+  return String.fromCharCode.apply(null, array);
+}
+
+function loadImage(visible, callback) {
+  let uniqueUrl = imageUrl;
+  if (uniqueUrl.indexOf('?') >= 0) {
+    uniqueUrl += "&";
+  } else {
+    uniqueUrl += "?";
+  }
+  uniqueUrl += 'h2unique=' + unique(10);
+  if (visible) {
+    uniqueUrl += '-visible';
+  }
+  const divName = visible ? "visible" : "hidden";
+  const parent = document.getElementById(divName);
+  let image = document.createElement("img");
+  image.onload = callback;
+  image.src = uniqueUrl;
+  parent.appendChild(image);
+}
+
+function cbWarmup() {
+  warmedUp++;
+  if (warmedUp == warmUpCount) {
+    performance.mark('test_start');
+    for (let i = 0; i < imageCount; i++) {
+      loadImage(false, cbHidden);
+    }
+  } else {
+    loadImage(false, cbWarmup);
+  }
+}
+
+function cbHidden() {
+  loadedCount++;
+
+  // Once the warm-up images have loaded, load the test image sequence
+  if (loadedCount == fillPipeCount) {
+    performance.mark('visible_start');
+    loadImage(true, cbVisible);
+  }
+
+  if (loadedCount >= imageCount) {
+    hiddenDone = true;
+    performance.mark('hidden_complete');
+    if (visibleDone) {
+      testDone();
+    }
+  }
+}
+
+function cbVisible() {
+  testedCount++;
+  if (testedCount >= testCount) {
+    visibleDone = true;
+    performance.mark('visible_complete');
+    if (hiddenDone) {
+      testDone();
+    }
+  } else {
+    // Queue another visible image
+    loadImage(true, cbVisible);
+  }
+}
+
+function testDone() {
+  performance.mark('test_complete');
+}
+
+</script>
+</head>
+<body>
+  <div id="visible"></div>
+  <div class="spacer"></div>
+  <div id="hidden"></div>
+</body>
+<script>
+  if (imageUrl && imageUrl.startsWith('https://')) {
+    testImages();
+  }
+</script>
+</html>
