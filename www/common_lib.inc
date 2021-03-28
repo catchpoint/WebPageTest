@@ -3323,9 +3323,13 @@ function server_sync($apiKey, $runCount, $logline) {
       )
     );
     if ($ok) {
+      $host = GetSetting('host');
       foreach ($servers as $url) {
-        $context  = stream_context_create($options);
-        file_get_contents($url, false, $context);
+        $sync_host = parse_url($url, PHP_URL_HOST);
+        if ($sync_host != $host) {
+          $context  = stream_context_create($options);
+          file_get_contents($url, false, $context);
+        }
       }
     }
   }
