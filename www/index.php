@@ -352,6 +352,7 @@ $loc = ParseLocations($locations);
                                         </select>
                                     </li>
                                     <?php
+                                    /*
                                     if ($admin) {
                                       echo '<li>';
                                       echo '<label for="custom_browser">';
@@ -360,6 +361,7 @@ $loc = ParseLocations($locations);
                                       echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
                                       echo '</li>';
                                     }
+                                    */
                                     ?>
                                     <li>
                                         <label for="number_of_tests">
