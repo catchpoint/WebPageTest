@@ -1145,6 +1145,7 @@ button.start_test:hover{
 .alert-banner p{
     margin: 0 auto;
 }
+.alert-banner a {color: #fff;}
 @media screen and (min-width:75em) {
     .alert-banner{
         grid-column: 1 / 13;
