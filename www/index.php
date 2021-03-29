@@ -396,12 +396,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                       <label for="videoCheck">Capture Video</label>
-                                      <?php
-                                      $video = 0;
-                                      if (isset($_REQUEST['video']))
-                                        $video = (int)$_REQUEST['video'];
-                                      ?>
-                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox" <?php if( $video ) echo 'checked=checked'; ?>>
+                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked>
                                     </li>
                                     <?php
                                     if (!GetSetting('forcePrivate')) {
@@ -584,12 +579,7 @@ $loc = ParseLocations($locations);
                                         
                                     </li>
                                     <li>
-                                        <?php
-                                        $timeline = 0;
-                                        if (isset($_REQUEST['timeline']))
-                                          $timeline = (int)$_REQUEST['timeline'];
-                                        ?>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" <?php if( $timeline ) echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" checked=checked style="float: left;width: auto;">
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
