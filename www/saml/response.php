@@ -94,6 +94,7 @@ if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddre
     $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName\t{$attributes['contactId']}");
     $signature = SignString($info);
     setcookie('samlu', "$info.$signature", time()+60*60*24*365, '/');
+    $ok = true;
 }
 
 // Redirect to the page they came from (or to the landing page)
