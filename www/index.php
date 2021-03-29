@@ -906,6 +906,8 @@ function ShowBulk() {
     global $USER_EMAIL;
     if ($admin)
         return true;
+    if (GetSetting('bulk_disabled'))
+        return false;
     if (!GetSetting('noBulk'))
         return true;
     if (isset($USER_EMAIL) && is_string($USER_EMAIL) && strlen($USER_EMAIL) && isset($_REQUEST['bulk']) && $_REQUEST['bulk'])
