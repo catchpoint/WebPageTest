@@ -772,7 +772,7 @@ function FilterLocations(&$locations, $includeHidden = '',
 
     // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
     foreach ($locations as $name => &$locRef) {
-        if (isset($locRef['browser']) && !isset($locRef['ami']) && !isset($locRef['scheduler_node'])) {
+        if (isset($locRef['browser']) && !isset($locRef['ami'])) {
             $parts = explode(':', $name);
             $locname = $parts[0];
             $testers = GetTesters($locname);
@@ -780,11 +780,11 @@ function FilterLocations(&$locations, $includeHidden = '',
               $locations[$name]['status'] = $testers['status'];
             // now check the times
             if (isset($testers) && is_array($testers) && isset($testers['elapsed'])) {
-              if (!isset($_REQUEST['hidden']) && $testers['elapsed'] > 30)
+              if (!isset($_REQUEST['hidden']) && $testers['elapsed'] > 30 && !isset($locRef['scheduler_node']))
                 unset($locations[$name]);
             } else {
               // TODO: Fix this so it only hides local locations, not relay and API
-              if (!isset($_REQUEST['hidden']) && !array_key_exists('relayServer', $locRef))
+              if (!isset($_REQUEST['hidden']) && !array_key_exists('relayServer', $locRef) && !isset($locRef['scheduler_node']))
                 unset($locations[$name]);
             }
         }
@@ -1550,7 +1550,9 @@ function cp_http_post($url, $body, $cpid, $file=null) {
     $headers = array();
     $file_stream = null;
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $contentType = "application/json";
     if (isset($file)) {
+      $contentType = "application/zip";
       $file_stream = fopen($file, 'rb');
       if ($file_stream) {
         curl_setopt($ch, CURLOPT_PUT, 1 );
@@ -1565,7 +1567,7 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       curl_setopt($ch, CURLOPT_POST, 1 );
       curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
     }
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json',
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: $contentType",
                                                "CPID: $cpid"));
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -3321,9 +3323,13 @@ function server_sync($apiKey, $runCount, $logline) {
       )
     );
     if ($ok) {
+      $host = GetSetting('hostname');
       foreach ($servers as $url) {
-        $context  = stream_context_create($options);
-        file_get_contents($url, false, $context);
+        $sync_host = parse_url($url, PHP_URL_HOST);
+        if ($sync_host != $host) {
+          $context  = stream_context_create($options);
+          file_get_contents($url, false, $context);
+        }
       }
     }
   }

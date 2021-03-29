@@ -173,6 +173,9 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
         'bw' => array('data' => array()),
         'mem' => array('data' => array())
         );
+    $has_mem = false;
+    $has_cpu = false;
+    $has_bw = false;
     $data = gz_file($file_name, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($data && count($data) > 1) {
         foreach ($data as $row_num => $row) {
@@ -181,17 +184,38 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
                 if (count($fields) >= 4) {
                     $time = $fields[0];
                     if ($use_bw) {
-                        $perfs['bw']['data'][$time] = (int)$fields[1];
+                        $val = (int)$fields[1];
+                        $perfs['bw']['data'][$time] = $val;
+                        if ($val > 0) {
+                            $has_bw = true;
+                        }
                     }
                     if ($use_cpu) {
-                        $perfs['cpu']['data'][$time] = (float)$fields[2];
+                        $val = (float)$fields[2];
+                        $perfs['cpu']['data'][$time] = $val;
+                        if ($val > 0) {
+                            $has_cpu = true;
+                        }
                     }
                     if ($use_mem) {
-                        $perfs['mem']['data'][$time] = (int)$fields[3];
+                        $val = (int)$fields[3];
+                        $perfs['mem']['data'][$time] = $val;
+                        if ($val > 0) {
+                            $has_mem = true;
+                        }
                     }
                 }
             }
         }
+    }
+    if (!$has_bw) {
+        $use_bw = false;
+    }
+    if (!$has_cpu) {
+        $use_cpu = false;
+    }
+    if (!$has_mem) {
+        $use_mem = false;
     }
     // fix any spikiness in the bandwidth data
     if ($max_bw && $use_bw && count($perfs['bw']['data'])) {

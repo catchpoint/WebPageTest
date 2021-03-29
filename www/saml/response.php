@@ -80,6 +80,7 @@ function ParseSAMLResponse($saml_response, $expected_cert_serial=null) {
 }
 
 $attributes = null;
+$ok = false;
 if (isset($_REQUEST['SAMLResponse'])) {
     $xml = base64_decode($_REQUEST['SAMLResponse']);
     $saml_cert_serial = GetSetting('saml_cert_serial', null);
@@ -100,6 +101,9 @@ $protocol = getUrlProtocol();
 $url = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . '/';
 if (isset($_COOKIE["samlsrc"])) {
     $url=base64_decode($_COOKIE["samlsrc"]);
+}
+if ($ok && isset($_REQUEST['returnUrl']) && parse_url($_REQUEST['returnUrl'])) {
+    $url = $_REQUEST['returnUrl'];
 }
 
 header("Cache-Control: no-store, max-age=0");
