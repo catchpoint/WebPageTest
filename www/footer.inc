@@ -19,7 +19,7 @@
             echo "<li><a href='$privacy_policy'>Privacy Policy</a></li>";
         }
         ?>
-        <li>&copy; Catchpoint Systems, Inc. All rights reserved.</li>
+        <li>&copy; <a href="https://www.catchpoint.com/">Catchpoint Systems, Inc.</a> All rights reserved.</li>
         </ul>
     </footer>
     <?php
