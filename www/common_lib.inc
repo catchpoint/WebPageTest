@@ -1321,6 +1321,7 @@ function GetPendingTests($loc, &$count)
 */
 $SCHEDULER_QUEUES = null;
 function GetQueueLengths($location) {
+  global $SCHEDULER_QUEUES;
   $queues = array();
   for ($priority = 0; $priority <= 9; $priority++)
     $queues[$priority] = 0;
