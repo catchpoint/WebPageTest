@@ -87,9 +87,6 @@ if ($alert) {
 
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
 
-            if ($supportsSaml && isset($USER_EMAIL) && GetSetting('saml_account')) {
-                $navTabs['My Account'] = GetSetting('saml_account');
-            }
         }
         foreach ($navTabs as $tabName => $tabUrl) {
             // make sure we have a test result to navigate to
@@ -115,15 +112,13 @@ if ($alert) {
 ?></ul>
     </nav>
 <?php
+
     if( $supportsAuth && !defined('EMBED') )
 {
     echo '<ul id="wptAuthBar">';
     if ($supportsSaml) {
-        $saml_name = GetSamlFirstName();
-        if (!isset($saml_name) || !strlen($saml_name)) {
-            $saml_name = GetSamlEmail();
-        }
-        if (isset($saml_name)) {
+        if (isset($USER_EMAIL) && GetSetting('saml_account')) {
+            $saml_account = GetSetting('saml_account');
             $saml_logout = GetSetting('saml_logout');
             if ($saml_logout) {
                 $saml_logout = htmlspecialchars($saml_logout);
@@ -131,7 +126,7 @@ if ($alert) {
             } else {
                 $logoutUrl = "javascript:wptLogout();";
             }
-            echo "<li>Welcome, " . htmlspecialchars($saml_name) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+            echo "<li><a href=\"$saml_account\">My Account</a>&nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
         } else {
             echo '<li><a href="/saml/login.php">Login';
             echo file_get_contents('./images/icon-login.svg');
