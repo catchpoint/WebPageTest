@@ -76,7 +76,7 @@ if ($alert) {
 
             if (GetSetting('forums_url')) {
                 $navTabs['Forums'] = GetSetting('forums_url');
-            } elseif (GetSetting(GetSetting('mybb_user'))) {
+            } elseif (GetSetting('mybb_user')) {
                 $navTabs['Forums'] = 'https://www.webpagetest.org/forums/';
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
@@ -113,7 +113,7 @@ if ($alert) {
     </nav>
 <?php
 
-    if( $supportsAuth && !defined('EMBED') )
+if( $supportsAuth && !defined('EMBED') )
 {
     echo '<ul id="wptAuthBar">';
     if ($supportsSaml) {
