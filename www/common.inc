@@ -185,12 +185,24 @@ $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
+$mybb_user_info = GetSetting('mybb_user');
+if (!$supportsSaml && $mybb_user_info) {
   ob_start();
   $supportsAuth = true;
 
   if (isset($_COOKIE['mybbuser'])) {
     $userinfo = CacheFetch("mybb-user-{$_COOKIE['mybbuser']}");
+    if (!isset($userinfo)) {
+      $opts = array('http' => array('header'=> 'Cookie: ' . $_SERVER['HTTP_COOKIE']."\r\n"));
+      $context = stream_context_create($opts);
+      $mybb_user_info_raw = file_get_contents($mybb_user_info, false, $context);
+      if ($mybb_user_info_raw) {
+        $userinfo = json_decode($mybb_user_info_raw, true);
+        if (isset($userinfo) && is_array($userinfo)) {
+          CacheStore("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
+        }
+      }
+    }
     if (isset($userinfo) && is_array($userinfo)) {
       if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
         $uid = $userinfo['uid'];
@@ -200,28 +212,6 @@ if (!$supportsSaml && is_dir('./forums') && !GetSetting('disableMybb')) {
       if (isset($userinfo['email'])) {
         $USER_EMAIL = $userinfo['email'];
       }
-    }
-    if (!isset($user)) {
-      $dir = getcwd();
-      try {
-          define("IN_MYBB",1);
-          chdir('forums'); // path to MyBB
-          include './global.php';
-
-          $uid = $mybb->user['uid'];
-          $user = $mybb->user['username'];
-          if (isset($mybb->user['email'])) {
-            $USER_EMAIL = $mybb->user['email'];
-          }
-          if( $mybb->usergroup['cancp'] )
-              $admin = true;
-          unset($mybb);
-      }
-      catch(Exception $e) {
-      }
-      chdir($dir);
-      $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin, 'email' => $USER_EMAIL);
-      CacheStore("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
     }
   }
   ob_end_clean();
