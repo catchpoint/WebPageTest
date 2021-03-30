@@ -26,24 +26,15 @@ $page_description = "WebPageTest Terms of Service.";
     <body>
             <?php
             include 'header.inc';
+            if( is_file('settings/server/terms.inc') ) {
+                include('settings/server/terms.inc');
+            } elseif( is_file('settings/common/terms.inc') ) {
+                include('settings/common/terms.inc');
+            } elseif( is_file('settings/terms.inc') ) {
+                include('settings/terms.inc');
+            }
+            include('footer.inc');
             ?>
-            <h1>Terms of Service</h1>
-            <div class="box">
-                <?php
-                if( is_file('settings/server/terms.inc') ) {
-                    include('settings/server/terms.inc');
-                } elseif( is_file('settings/common/terms.inc') ) {
-                    include('settings/common/terms.inc');
-                } elseif( is_file('settings/terms.inc') ) {
-                    include('settings/terms.inc');
-                } else {
-                ?>
-                Coming soon.
-                <?php
-                }
-                ?>
-            </div>
-            <?php include('footer.inc'); ?>
         </div>
     </body>
 </html>
