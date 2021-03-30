@@ -191,7 +191,8 @@ if (!$supportsSaml && $mybb_user_info) {
   $supportsAuth = true;
 
   if (isset($_COOKIE['mybbuser'])) {
-    $userinfo = CacheFetch("mybb-user-{$_COOKIE['mybbuser']}");
+    $cache_key = 'mybb-user-' . sha1($_COOKIE['mybbuser']);
+    $userinfo = CacheFetch($cache_key);
     if (!isset($userinfo)) {
       $opts = array('http' => array('header'=> 'Cookie: ' . $_SERVER['HTTP_COOKIE']."\r\n"));
       $context = stream_context_create($opts);
@@ -199,7 +200,7 @@ if (!$supportsSaml && $mybb_user_info) {
       if ($mybb_user_info_raw) {
         $userinfo = json_decode($mybb_user_info_raw, true);
         if (isset($userinfo) && is_array($userinfo)) {
-          CacheStore("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
+          CacheStore($cache_key, $userinfo, 3600);
         }
       }
     }
