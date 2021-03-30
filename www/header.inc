@@ -76,8 +76,8 @@ if ($alert) {
 
             if (GetSetting('forums_url')) {
                 $navTabs['Forums'] = GetSetting('forums_url');
-            } elseif (is_dir('forums') && !GetSetting('disableMybb')) {
-                $navTabs['Forums'] = '/forums/';
+            } elseif (GetSetting(GetSetting('mybb_user'))) {
+                $navTabs['Forums'] = 'https://www.webpagetest.org/forums/';
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
             $blogUrl = GetSetting('blog_url');
@@ -134,7 +134,7 @@ if ($alert) {
             echo '<li><a class="pill" href="https://appqa.webpagetest.org/ui/entry/wpt/signup">Sign-up</a></li>';
         }
     } elseif( isset($user) ) {
-        $logoutUrl = '/forums/member.php?action=logout';
+        $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
         if( isset($mybb) && strlen($mybb->user['logoutkey']) )
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
         echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
@@ -143,9 +143,9 @@ if ($alert) {
         $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else {
-        if (is_dir('./forums') && !GetSetting('disableMybb')) {
-          echo '<li><a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-          echo '<a href="/forums/member.php?action=register">Register</a></li> ';
+        if (GetSetting('mybb_user')) {
+          echo '<li><a href="https://www.webpagetest.org/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+          echo '<a href="https://www.webpagetest.org/forums/member.php?action=register">Register</a></li> ';
         }
         if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
           echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
