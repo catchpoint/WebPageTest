@@ -186,7 +186,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         }
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
         $firstRunResults = $testResults->getRunResult(1, false);
-        echo '<h1>Test Results</h1>';
+        if (!$COMPACT_MODE) {
+            echo '<h1>Test Results</h1>';
+        }
         echo '<div id="header_container" class="box">';
         // Only include optimization data for normal tests
         $data_class = '';

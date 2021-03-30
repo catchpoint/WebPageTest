@@ -2876,7 +2876,7 @@ function ErrorPage($error) {
             <title>WebPageTest - Test Error</title>
             <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
         </head>
-        <body>
+        <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
                 <?php
                 include 'header.inc';
               ?>

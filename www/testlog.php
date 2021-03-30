@@ -94,7 +94,7 @@ if( $csv )
             .history td.uid {white-space:nowrap;}
         </style>
     </head>
-    <body class="history">
+    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
             $tab = 'Test History';
             include 'header.inc';
@@ -150,7 +150,7 @@ if( $csv )
             .history td.uid {white-space:nowrap;}
         </style>
     </head>
-    <body class="history">
+    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
         <?php
         $tab = 'Test History';
         include 'header.inc';

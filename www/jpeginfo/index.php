@@ -2,7 +2,7 @@
 <html lang="en-us">
 <head>
 </head>
-<body>
+<body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
 <h1>JPEG Information</h1>  
 <h1>Submit by URL</h1>
 <form name="form" action="jpeginfo.php" method="GET">

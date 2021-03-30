@@ -84,8 +84,10 @@ h1 {font-size: 2.5em; line-height:1em; margin-bottom: 1em; margin-top: 0; paddin
 h3,.h3 {font-size: 1.25em; line-height:1em;}
 h4,.h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
 h2, h3, h4, h5, h6 {padding: 0.5em 0; margin: 0;}
+body.compact h2, body.compact h3, body.compact h4, body.compact h5, body.compact h6 {padding: 0.4em 0;}
 
 p {margin: 0 0 1em;}
+body.compact p {margin: 0 0 0.25em;}
 ul {list-style: none;margin: 0;padding: 0;}
 a {
     color: #1151bb;
@@ -322,6 +324,9 @@ footer ul li{
     overflow: hidden;
     margin-bottom: 3.3em;
 }
+body.compact .test_results-content #download {
+    margin-bottom: 0em;
+}
 .test_results-content #download{
     text-align: right;
 }
@@ -371,6 +376,9 @@ footer ul li{
 #average{
     text-align: center;
     margin-bottom: 1.5em;
+}
+body.compact #average {
+    margin-bottom: 0em;
 }
 #average h2{
     font-size: 1.5em;
@@ -425,6 +433,9 @@ nav a:hover{
 
 #main{
     padding: 1.5em 1em;
+}
+body.compact #main {
+    padding: 0.5em 1em;
 }
 @media screen and (min-width: 75em) {
     #main{
@@ -963,6 +974,12 @@ button.start_test:hover{
     margin-bottom: 1.875em;
     margin-left: -1em;
     margin-right: -1em;
+}
+body.compact .box {
+    margin-bottom: 0.5em;
+}
+body.compact #header_container {
+    padding: 1em;
 }
 @media screen and (min-width: 50em) {
     .box {

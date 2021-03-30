@@ -305,7 +305,7 @@ else
                 ?>
             </style>
         </head>
-        <body class="compare">
+        <body class="compare<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;

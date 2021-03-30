@@ -36,7 +36,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
         #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>
     </head>
-    <body class="home">
+    <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {

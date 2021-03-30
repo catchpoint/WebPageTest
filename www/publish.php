@@ -30,7 +30,7 @@ $page_description = "Publish test results to WebPageTest.";
         <title>WebPageTest - Publish</title>
         <?php $gaTemplate = 'Publish'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             include 'header.inc';

@@ -110,7 +110,7 @@ $common_label = implode(" ", $common_labels);
         }
         </style>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             if (count($testsId) == 1) {
               $tab = 'Test Result';
@@ -184,9 +184,9 @@ $common_label = implode(" ", $common_labels);
                 InsertChart($metric, $label);
               }
             }
-            ?>
-            <h1>Test Result Data Plots</h1>
-            <?php
+            if (!$COMPACT_MODE) {
+              echo '<h1>Test Result Data Plots</h1>';
+            }
             if (count($common_labels) > 0) {
               echo "<h2 style='text-align: center'>${common_label}</h2>";
             }

@@ -65,6 +65,24 @@ if (GetSetting('host', '') != 'www.webpagetest.org') {
   header('X-Robots-Tag: noindex');
 }
 
+// Compact-mode UI
+$COMPACT_MODE = false;
+if (isset($_REQUEST['compact'])) {
+  if ($_REQUEST['compact']) {
+    setcookie('compact', '1', time()+60*60*24*365, '/');
+    $COMPACT_MODE = true;
+  } else {
+    setcookie('compact', '0', time()+60*60*24*365, '/');
+  }
+} elseif (isset($_COOKIE['compact'])) {
+  if ($_COOKIE['compact']) {
+    setcookie('compact', '1', time()+60*60*24*365, '/');
+    $COMPACT_MODE = true;
+  } else {
+    setcookie('compact', '0', time()+60*60*24*365, '/');
+  }
+}
+
 // set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();

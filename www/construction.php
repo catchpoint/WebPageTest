@@ -10,7 +10,7 @@ include 'common.inc';
 		<title>WebPageTest - Under Construction</title>
         <?php $gaTemplate = 'Construction'; include ('head.inc'); ?>
     </head>
-	<body>
+	<body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             $tab = 'Home';

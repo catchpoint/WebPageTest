@@ -32,7 +32,7 @@ if( $refRun && $cmpRun )
         <title>WebPageTest - Screenshot Diff</title>
         <?php include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             $tab = 'Test Result';

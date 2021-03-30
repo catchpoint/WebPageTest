@@ -72,7 +72,7 @@ $loc = ParseLocations($locations);
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
-    <body class="home">
+    <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
         <?php 
             $tab = 'Home';
             include 'header.inc';

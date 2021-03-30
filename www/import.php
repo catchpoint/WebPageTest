@@ -218,7 +218,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     input[type="file"] {color:#FFF;}
     </style>
   </head>
-  <body>
+  <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
     <div class="page">
       <?php
       $tab = 'Import';

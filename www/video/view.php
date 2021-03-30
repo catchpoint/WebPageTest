@@ -303,7 +303,7 @@ else
             }
         </script>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             if( !$embed ) {
                 $tab = '';

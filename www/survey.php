@@ -22,7 +22,7 @@ $page_description = "More information about WebPageTest website speed testing an
         </style>
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             include 'header.inc';

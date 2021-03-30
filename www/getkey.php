@@ -26,7 +26,7 @@ $page_description = "Register for a WebPageTest API key.";
         </style>
         <?php $gaTemplate = 'GetKey'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             include 'header.inc';

@@ -29,7 +29,7 @@ function header_link($url, $title) {
         } ?>
 
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div id="wrap">
             <div class="navbar navbar-default" role="navigation">
                 <div class="container-fluid">

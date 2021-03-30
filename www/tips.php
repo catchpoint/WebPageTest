@@ -16,7 +16,7 @@ $page_description = "Website performance optimization tips.";
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Tips'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             $tab = 'Tips';

@@ -9,7 +9,7 @@
             include ('head.inc');
         ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = 'Test Result';
             $nosubheader = true;

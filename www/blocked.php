@@ -12,7 +12,7 @@ $page_description = "Website speed test blocked.";
         <title>WebPageTest - Access Denied</title>
         <?php $gaTemplate = 'Blocked'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">
             <?php
             include 'header.inc';
