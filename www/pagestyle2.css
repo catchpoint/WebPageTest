@@ -489,6 +489,10 @@ h1.attention{
     font-size: 3.125em /*50px*/;
     margin: .4em auto 1.4em;
 }
+body.compact h1.attention{
+    font-size: 2.5em;
+    margin: .4em auto 1em;
+}
 h2.alt{
     font-weight: normal;
     color: #fff;
@@ -595,6 +599,9 @@ form[name=filterLog] select {
     box-shadow: 0 0 30px rgba(47, 128, 237, .5);
     margin-bottom: 12.5em;
 }
+body.compact  #test_box-container {
+    box-shadow: none;
+}
 #test_box-container .test_subbox{
     position: relative;
 }
@@ -687,6 +694,9 @@ form[name=filterLog] select {
 
 .test_box{
     padding: 5.625em 2.5em 2.5em;
+}
+body.compact .test_box{
+    padding: 2.5em 2.5em 2.5em;
 }
 
 #advanced_settings {
@@ -823,6 +833,9 @@ form[name=filterLog] select {
     box-sizing: border-box;
     border-radius: 4px;
     margin-top: 0;
+}
+body.compact #url{
+    margin-bottom: 0em;
 }
 @media screen and (min-width: 50em) {
     #url{

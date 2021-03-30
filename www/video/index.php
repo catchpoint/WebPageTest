@@ -25,7 +25,7 @@ if (is_file($profile_file))
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
-    <body class="home<?php if ($COMPACT_MODE) {echo 'compact';} ?>">
+    <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
