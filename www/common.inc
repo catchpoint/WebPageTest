@@ -139,7 +139,7 @@ $userIsBot = false;
 if (!$privateInstall) {
   if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
       strlen($_SERVER['HTTP_USER_AGENT'])) {
-    if (preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+    if (preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Faraday|Apache-HttpClient|WebSpeedTest|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
       $userIsBot = true;
     }
   } else {
