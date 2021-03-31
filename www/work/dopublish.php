@@ -31,6 +31,11 @@ if( isset($_FILES['file']) )
       $zip->close();
   }
 
+  // Delete the archive indicator if there is one
+  if (is_file("$path/.archived")) {
+    unlink("$path/.archived");
+  }
+
   // make sure there are no risky files and that nothing is allowed execute permission
   SecureDir($path);
 
@@ -58,6 +63,10 @@ if( isset($_FILES['file']) )
     }
     file_put_contents("$path/testinfo.ini", implode('', $ini));
   }
+
+  // Archive the test
+  if (!GetSetting("lazyArchive"))
+    ArchiveTest($id, false);
 
   echo $id;
 }
