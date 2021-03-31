@@ -231,7 +231,7 @@ footer ul li{
     font-size: 1.25em;
     font-weight: normal;
     line-height: 1.5em;
-    margin-bottom: 2em;
+    margin-bottom: 0;
 }
 #header_data .page-tested{
     font-weight: bold;
@@ -322,7 +322,7 @@ footer ul li{
 
 .test_results-content #download {
     overflow: hidden;
-    margin-bottom: 3.3em;
+    margin-bottom: 1em;
 }
 body.compact .test_results-content #download {
     margin-bottom: 0em;
@@ -375,10 +375,6 @@ body.compact .test_results-content #download {
 }
 #average{
     text-align: center;
-    margin-bottom: 1.5em;
-}
-body.compact #average {
-    margin-bottom: 0em;
 }
 #average h2{
     font-size: 1.5em;

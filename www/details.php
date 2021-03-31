@@ -151,8 +151,6 @@ $page_description = "Website performance test details$testLabel";
                     ?>
                 </div>
                 <div class="cleared"></div>
-                <br>
-
                 <?php
                   $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
                   echo $htmlTable->create();
@@ -187,7 +185,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td><a href='" . $urlGenerator->stepDetailPage("http2_dependencies") . "'>HTTP/2 Dependency Graph</a></td>";
                         echo "</tr>";
                     }
-                    echo "</table>\n<br>\n";
+                    echo "</table>\n";
                     $accordionHelper = new AccordionHtmlHelper($testRunResults);
                 }
                 ?>
