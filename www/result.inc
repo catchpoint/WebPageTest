@@ -220,8 +220,6 @@ $page_description = "Website performance test result$testLabel.";
             <?php } ?>
             <div id="tables" style="text-align:left;">
             <?php
-            if ($testResults->countRuns() > 1 && !$COMPACT_MODE)
-                echo '<h3 style="text-align:center;">Test Results</h3>';
             $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpView);
             echo $resultTables->create();

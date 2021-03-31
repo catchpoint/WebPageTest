@@ -186,9 +186,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         }
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
         $firstRunResults = $testResults->getRunResult(1, false);
-        if (!$COMPACT_MODE) {
-            echo '<h1>Test Results</h1>';
-        }
         echo '<div id="header_container" class="box">';
         // Only include optimization data for normal tests
         $data_class = '';
@@ -234,7 +231,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
-            echo "<h2>Web Page Performance Test for<br>";
+            echo "<h2>Web page performance test result for<br>";
             if (GetSetting('nolinks')) {
                 echo "<span class=\"page-tested\">$shortUrl</span>";
             } else {

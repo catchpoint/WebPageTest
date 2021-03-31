@@ -184,9 +184,6 @@ $common_label = implode(" ", $common_labels);
                 InsertChart($metric, $label);
               }
             }
-            if (!$COMPACT_MODE) {
-              echo '<h1>Test Result Data Plots</h1>';
-            }
             if (count($common_labels) > 0) {
               echo "<h2 style='text-align: center'>${common_label}</h2>";
             }
