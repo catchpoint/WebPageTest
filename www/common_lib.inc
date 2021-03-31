@@ -1185,8 +1185,8 @@ function RestoreTest($id)
   $ret = false;
   if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
-    // Only trigger a restore if the directory doesn't exist
-    if (!is_dir($testPath)) {
+    // Only trigger a restore if the test doesn't exist
+    if (!is_file("$testPath/testinfo.ini")) {
       $archive_dir = GetSetting('archive_dir');
       $archive_url = GetSetting('archive_url');
       $archive_s3_url = GetSetting('archive_s3_url');
