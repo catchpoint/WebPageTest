@@ -2510,6 +2510,11 @@ function http_fetch_file($url, $file) {
     if ($fp) {
       $ch = curl_init($url);
       if ($ch) {
+        $headers = array(
+          "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
+          "User-Agent: {$_SERVER['HTTP_USER_AGENT']}"
+        );
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_exec($ch);
@@ -2523,8 +2528,6 @@ function http_fetch_file($url, $file) {
         unlink($file);
       }
     }
-  } else {
-    $ret = file_put_contents($file, fopen($url, 'r'));
   }
   return $ret;
 }
@@ -2534,8 +2537,13 @@ function http_head($url) {
   if (function_exists('curl_init')) {
     $ok = true;
     $ch = curl_init($url);
+    $headers = array(
+      "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
+      "User-Agent: {$_SERVER['HTTP_USER_AGENT']}"
+    );
     curl_setopt($ch, CURLOPT_NOBODY, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $response = curl_exec($ch);
     $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     curl_close($ch);
@@ -2550,11 +2558,16 @@ function http_put_raw($url, $body) {
   if (function_exists('curl_init')) {
     $ok = true;
     $ch = curl_init($url);
+    $headers = array(
+      "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
+      "User-Agent: {$_SERVER['HTTP_USER_AGENT']}",
+      'Content-Type: text/plain'
+    );
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, 1 );
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
     curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
@@ -2577,10 +2590,14 @@ function http_put_file($url, $file) {
       $ok = true;
       $ch = curl_init($url);
       curl_setopt($ch, CURLOPT_PUT, 1 );
-
+      $headers = array(
+        "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
+        "User-Agent: {$_SERVER['HTTP_USER_AGENT']}",
+        'Content-Type: application/octet-stream'
+      );
+      curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
       curl_setopt($ch, CURLOPT_INFILE, $file_stream);
       curl_setopt($ch, CURLOPT_INFILESIZE, filesize($file));
-
       curl_setopt($ch, CURLOPT_FAILONERROR, true);
       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
@@ -2603,10 +2620,15 @@ function http_post_raw($url, $body) {
   if (function_exists('curl_init')) {
     $ok = true;
     $ch = curl_init($url);
+    $headers = array(
+      "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
+      "User-Agent: {$_SERVER['HTTP_USER_AGENT']}",
+      'Content-Type: text/plain'
+    );
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, 1 );
     curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
