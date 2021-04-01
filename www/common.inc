@@ -220,7 +220,7 @@ if (!$supportsSaml && $mybb_user_info) {
       $mybb_user_info_raw = file_get_contents($mybb_user_info, false, $context);
       if ($mybb_user_info_raw) {
         $userinfo = json_decode($mybb_user_info_raw, true);
-        if (isset($userinfo) && is_array($userinfo)) {
+        if (isset($userinfo) && is_array($userinfo) && isset($userinfo['user'])) {
           CacheStore($cache_key, $userinfo, 3600);
         }
       }
