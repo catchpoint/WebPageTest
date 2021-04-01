@@ -211,10 +211,10 @@ if (!$supportsSaml && $mybb_user_info) {
   ob_start();
   $supportsAuth = true;
 
-  if (isset($_COOKIE['mybbuser'])) {
-    $cache_key = 'mybb-user-' . sha1($_COOKIE['mybbuser']);
+  if (isset($_COOKIE['mybbuser']) && strlen($_COOKIE['mybbuser'])) {
+    $cache_key = 'mybbuser-' . sha1($_COOKIE['mybbuser']);
     $userinfo = CacheFetch($cache_key);
-    if (!isset($userinfo)) {
+    if (!isset($userinfo) || !is_array($userinfo) || !isset($userinfo['user'])) {
       $opts = array('http' => array('header'=> 'Cookie: ' . $_SERVER['HTTP_COOKIE']."\r\n"));
       $context = stream_context_create($opts);
       $mybb_user_info_raw = file_get_contents($mybb_user_info, false, $context);
