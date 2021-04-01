@@ -189,12 +189,42 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
 }
 
 /**
+ * Download a given test directly from the server that "owns" it
+ */
+function DownloadArchive($id, $testServer) {
+    $ret = false;
+    $secret = GetServerSecret();
+    $lock = LockTest($id);
+    if (isset($lock)) {
+        $zipfile = "./tmp/$id.zip";
+        $download_url = "{$testServer}download.php?test=$id&s=$secret";
+        if (http_fetch_file($download_url, $zipfile)) {
+            $testPath = './' . GetTestPath($id);
+            if (!is_dir($testPath))
+                mkdir( $testPath, 0777, true );
+            ZipExtract($zipfile, $testPath);
+            $ret = true;
+            touch("$testPath/.archived");
+            @unlink($zipfile);
+        }        
+        UnlockTest($lock);
+    }
+    return $ret;
+}
+
+/**
 * Restore the given test from the archive if it is archived
 *
 * @param mixed $id
 */
 function RestoreArchive($id) {
     $ret = false;
+    $testServer = GetServerForTest($id);
+    if (isset($testServer)) {
+        if (DownloadArchive($id, $testServer)) {
+            return true;
+        }
+    }
     $lock = LockTest($id);
     if (isset($lock)) {
         $testInfo = GetTestInfo($id);

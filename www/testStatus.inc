@@ -18,6 +18,16 @@ $testInfoJson = null;
 function GetTestStatus($id, $includePosition = true) {
   global $testQueue;
 
+  $testServer = GetServerForTest($id);
+  if (isset($testServer)) {
+    // Proxy the status through the server that actually owns the test
+    $pos = $includePosition ? '1' : '0';
+    $status = json_decode(http_fetch("{$testServer}testStatus.php?test=$id&pos=$pos"), true);
+    if (is_array($status) && isset($status['data'])) {
+      return $status['data'];
+    }
+  }
+
   if (isset($_REQUEST['noposition']) && $_REQUEST['noposition'])
     $includePosition = false;
   $testPath = './' . GetTestPath($id);

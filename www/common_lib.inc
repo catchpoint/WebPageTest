@@ -3487,3 +3487,15 @@ function CheckCron() {
       SendAsyncRequest('/cron/hourly.php');
   }
 }
+
+function GetServerForTest($id) {
+  $server_url = null;
+  if (preg_match('/^\d\d\d\d\d\d_([^_i]+)i/', $id, $matches)) {
+    $test_server = $matches[1];
+    $current_server = GetSetting('serverID', null);
+    if (isset($current_server) && $current_server != $test_server) {
+      $server_url = GetSetting("server_$test_server");
+    }
+  }
+  return $server_url;
+}
