@@ -1241,6 +1241,13 @@ table.glossary th{
 .resource-block:last-of-type{
     margin-bottom: 13.125em;
 }
+.resource-block a{
+    text-decoration: none;
+}
+.resource-block a:hover{
+    text-decoration: underline;
+}
+
 @media screen and (min-width: 55em) {
     .resource-block{
         max-width: none;
