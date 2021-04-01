@@ -226,10 +226,11 @@ if (!$supportsSaml && $mybb_user_info) {
       }
     }
     if (isset($userinfo) && is_array($userinfo)) {
-      if (isset($userinfo['uid']) && isset($userinfo['user']) && isset($userinfo['admin'])) {
+      if (isset($userinfo['uid']) && isset($userinfo['user'])) {
         $uid = $userinfo['uid'];
         $user = $userinfo['user'];
-        $admin = $userinfo['admin'];
+        if (isset($userinfo['admin']))
+          $admin = $userinfo['admin'];
       }
       if (isset($userinfo['email'])) {
         $USER_EMAIL = $userinfo['email'];
