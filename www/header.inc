@@ -131,12 +131,13 @@ if( $supportsAuth && !defined('EMBED') )
             echo '<li><a href="/saml/login.php">Login';
             echo file_get_contents('./images/icon-login.svg');
             echo '</a></li>';
-            echo '<li><a class="pill" href="https://appqa.webpagetest.org/ui/entry/wpt/signup">Sign-up</a></li>';
+            $register = GetSetting('saml_register');
+            if ($register) {
+                echo "<li><a class='pill' href='$register'>Sign-up</a></li>";
+            }
         }
     } elseif( isset($user) ) {
         $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
-        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
-            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
         echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
     } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
         $logoutUrl = 'javascript:wptLogout();';
