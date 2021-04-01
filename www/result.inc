@@ -108,7 +108,7 @@ $page_description = "Website performance test result$testLabel.";
                         if (!isset($secret))
                             $secret = '';
 
-                        echo '<form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
+                        echo "<form name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
                         echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                         if( strlen($secret) ){
