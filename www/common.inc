@@ -226,15 +226,14 @@ if (!$supportsSaml && $mybb_user_info) {
       }
     }
     if (isset($userinfo) && is_array($userinfo)) {
-      if (isset($userinfo['uid']) && isset($userinfo['user'])) {
+      if (isset($userinfo['uid']))
         $uid = $userinfo['uid'];
+      if (isset($userinfo['user']))
         $user = $userinfo['user'];
-        if (isset($userinfo['admin']))
-          $admin = $userinfo['admin'];
-      }
-      if (isset($userinfo['email'])) {
+      if (isset($userinfo['admin']))
+        $admin = $userinfo['admin'];
+      if (isset($userinfo['email']))
         $USER_EMAIL = $userinfo['email'];
-      }
     }
   }
   ob_end_clean();
