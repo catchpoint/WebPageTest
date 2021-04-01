@@ -2910,6 +2910,7 @@ function NumToString($num) {
 */
 function GetTestInfo($testIdOrPath) {
   $testInfo = false;
+  $id = null;
 
   if (isset($testIdOrPath) && strlen($testIdOrPath)) {
     $testPath = $testIdOrPath;
@@ -2932,8 +2933,25 @@ function GetTestInfo($testIdOrPath) {
     }
   }
 
-  if (!isset($testInfo) || !is_array($testInfo))
+  // Try getting the test info directly from a remote server if it is not owned by the current server
+  if (!isset($testInfo) || !is_array($testInfo)) {
+    if (isset($id) && ValidateTestId($id)) {
+      $testServer = GetServerForTest($id);
+      if (isset($testServer)) {
+        $secret = GetServerSecret();
+        if (isset($secret)) {
+          $response = http_fetch("{$testServer}testInfo.php?test=$id&s=$secret");
+          if ($response) {
+            $testInfo = json_decode($response, true);
+          }
+        }
+      }
+    }
+  }
+
+  if (!isset($testInfo) || !is_array($testInfo)) {
     $testInfo = false;
+  }
 
   return $testInfo;
 }

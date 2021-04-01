@@ -8,6 +8,7 @@ require_once __DIR__ . '/visualProgress.inc.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
 require_once __DIR__ . '/../include/TestStepResult.php';
+require_once __DIR__ . '/../testStatus.inc';
 
 // build up the actual test data (needs to include testID and RUN in the requests)
 $defaultInterval = 0;
@@ -62,80 +63,85 @@ foreach($compTests as $t) {
                     $defaultInterval = 100;
                 }
                 $test['url'] = $info['url'];
+                $test['location'] = $info['locationText'];
                 if (isset($info['medianMetric']))
                   $test_median_metric = $info['medianMetric'];
             }
 
-            $testInfo = @parse_ini_file("./{$test['path']}/testinfo.ini",true);
-            if (isset($testInfo) && is_array($testInfo)) {
-                if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
-                    $test['location'] = $testInfo['test']['location'];
-                if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
-                    $test['done'] = true;
-                    $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
-
-                    $stepResult = null;
-                    if( !array_key_exists('run', $test) || !$test['run'] ) {
-                      try{
-                        $testResults = TestResults::fromFiles($testInfoObject);
-                        $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
-                        $runResults = $testResults->getRunResult($test['run'], $test['cached']);
-                        if (isset($runResults)) {
-                          $stepResult = $runResults->getStepResult($test['step']);
-                        }
-                      } catch(Exception $e) {
-                      }
-                    }
-
-                    if (!isset($stepResult)) {
-                        $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
-                    }
-                    $test['stepResult'] = $stepResult;
-                    $test['aft'] = (int) $stepResult->getMetric('aft');
-
-                    $loadTime = $stepResult->getMetric('fullyLoaded');
-                    if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
-                        $fastest = $loadTime;
-
-                    // figure out the real end time (in ms)
-                    if (isset($test['end'])) {
-                        $visualComplete = $stepResult->getMetric("visualComplete");
-                        if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
-                            $test['end'] = $visualComplete;
-                        } elseif( !strcmp($test['end'], 'load') ) {
-                            $test['end'] = $stepResult->getMetric('loadTime');
-                        } elseif( !strcmp($test['end'], 'doc') ) {
-                            $test['end'] = $stepResult->getMetric('docTime');
-                        } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
-                            $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
-                        } elseif( !strcmp($test['end'], 'full') ) {
-                            $test['end'] = 0;
-                        } elseif( !strcmp($test['end'], 'all') ) {
-                            $test['end'] = -1;
-                        } elseif( !strcmp($test['end'], 'aft') ) {
-                            $test['end'] = $test['aft'];
-                            if( !$test['end'] )
-                                $test['end'] = -1;
-                        } else {
-                            $test['end'] = (int)((double)$test['end'] * 1000.0);
-                        }
-                    } else {
-                        $test['end'] = 0;
-                    }
-                    if( !$test['end'] )
-                        $test['end'] = $stepResult->getMetric('fullyLoaded');
-                } else {
-                    $test['done'] = false;
-                    $ready = false;
-
-                    if( isset($testInfo['test']) && isset($testInfo['test']['startTime']) )
-                        $test['started'] = true;
-                    else
-                        $test['started'] = false;
-                }
-
-                $tests[] = $test;
+            $test['done'] = false;
+            $status = GetTestStatus($test['id'], false);
+            if (isset($status) && is_array($status) && isset($status['statusCode'])) {
+              if ($status['statusCode'] >= 200 || $status['statusCode'] < 100) {
+                $test['done'] = true;
+              } elseif ($status['statusCode'] == 100) {
+                $test['started'] = true;
+              }
             }
+
+            if ($test['done']) {
+              $testInfo = @parse_ini_file("./{$test['path']}/testinfo.ini",true);
+              if (isset($testInfo) && is_array($testInfo)) {
+                  if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
+                      $test['location'] = $testInfo['test']['location'];
+                  if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
+                      $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
+
+                      $stepResult = null;
+                      if( !array_key_exists('run', $test) || !$test['run'] ) {
+                        try{
+                          $testResults = TestResults::fromFiles($testInfoObject);
+                          $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
+                          $runResults = $testResults->getRunResult($test['run'], $test['cached']);
+                          if (isset($runResults)) {
+                            $stepResult = $runResults->getStepResult($test['step']);
+                          }
+                        } catch(Exception $e) {
+                        }
+                      }
+
+                      if (!isset($stepResult)) {
+                          $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
+                      }
+                      $test['stepResult'] = $stepResult;
+                      $test['aft'] = (int) $stepResult->getMetric('aft');
+
+                      $loadTime = $stepResult->getMetric('fullyLoaded');
+                      if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
+                          $fastest = $loadTime;
+
+                      // figure out the real end time (in ms)
+                      if (isset($test['end'])) {
+                          $visualComplete = $stepResult->getMetric("visualComplete");
+                          if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
+                              $test['end'] = $visualComplete;
+                          } elseif( !strcmp($test['end'], 'load') ) {
+                              $test['end'] = $stepResult->getMetric('loadTime');
+                          } elseif( !strcmp($test['end'], 'doc') ) {
+                              $test['end'] = $stepResult->getMetric('docTime');
+                          } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
+                              $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
+                          } elseif( !strcmp($test['end'], 'full') ) {
+                              $test['end'] = 0;
+                          } elseif( !strcmp($test['end'], 'all') ) {
+                              $test['end'] = -1;
+                          } elseif( !strcmp($test['end'], 'aft') ) {
+                              $test['end'] = $test['aft'];
+                              if( !$test['end'] )
+                                  $test['end'] = -1;
+                          } else {
+                              $test['end'] = (int)((double)$test['end'] * 1000.0);
+                          }
+                      } else {
+                          $test['end'] = 0;
+                      }
+                      if( !$test['end'] )
+                          $test['end'] = $stepResult->getMetric('fullyLoaded');
+                  }
+                }
+            } else {
+              $ready = false;
+            }
+            $tests[] = $test;
         }
     }
 }
