@@ -76,7 +76,7 @@ $im = GetWaterfallImage($rows, $url, $page_events, $options, $pageData);
 // Spit the image out to the browser.
 header('Last-Modified: ' . gmdate('r'));
 header('Expires: '.gmdate('r', time() + 31536000));
-header('Cache-Control: public, max-age=31536000');
+header('Cache-Control: public, max-age=31536000', true);
 imagepng($im);
 imagedestroy($im);
 ?>

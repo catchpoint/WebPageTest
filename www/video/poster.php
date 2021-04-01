@@ -16,7 +16,7 @@ if (isset($renderInfo)) {
             header("Content-Type: image/png");
             header('Last-Modified: ' . gmdate('r'));
             header('Expires: '.gmdate('r', time() + 31536000));
-            header('Cache-Control: public, max-age=31536000');
+            header('Cache-Control: public, max-age=31536000', true);
             imagepng($im);
         }
         imagedestroy($im);

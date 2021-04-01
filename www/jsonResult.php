@@ -18,7 +18,7 @@ if (isset($_REQUEST['noposition']) &&
   $pendingFile = "$base/$y/$m/$d/$dir/test.waiting";
   if (is_file($pendingFile)) {
     header("Content-type: application/json; charset=utf-8");
-    header("Cache-Control: no-cache, must-revalidate");
+    header("Cache-Control: no-cache, must-revalidate", true);
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )

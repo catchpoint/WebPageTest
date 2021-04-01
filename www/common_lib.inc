@@ -2370,7 +2370,7 @@ function normalize_keys(&$array) {
  */
 function json_response(&$response) {
     header("Content-type: application/json; charset=utf-8");
-    header("Cache-Control: no-cache, must-revalidate");
+    header("Cache-Control: no-cache, must-revalidate", true);
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     if (isset($_REQUEST['normalizekeys']) && $_REQUEST['normalizekeys']) {

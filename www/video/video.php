@@ -39,7 +39,7 @@ if (isset($tests) && is_array($tests) && count($tests)) {
                         header("Content-Type: image/gif");
                         header('Last-Modified: ' . gmdate('r'));
                         header('Expires: '.gmdate('r', time() + 31536000));
-                        header('Cache-Control: public, max-age=31536000');
+                        header('Cache-Control: public, max-age=31536000', true);
                         readfile($gif);
                         $ok = true;
                     }

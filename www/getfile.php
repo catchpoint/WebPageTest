@@ -20,7 +20,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
         $ok = true;
         header('Last-Modified: ' . gmdate('r'));
         header('Expires: '.gmdate('r', time() + 31536000));
-        header('Cache-Control: public,max-age=31536000');
+        header('Cache-Control: public,max-age=31536000', true);
         if ($ext == 'jpg') {
           header ("Content-type: image/jpeg");
         } elseif ($ext == 'png') {

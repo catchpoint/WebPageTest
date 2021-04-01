@@ -1048,7 +1048,7 @@
                 if( $xml )
                 {
                     header ('Content-type: text/xml');
-                    header("Cache-Control: no-cache, must-revalidate");
+                    header("Cache-Control: no-cache, must-revalidate", true);
                     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
                     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
                     echo "<response>\n";
@@ -1066,7 +1066,7 @@
                     if( strlen($req_r) )
                         $ret['requestId'] = $req_r;
                     header ("Content-type: application/json");
-                    header("Cache-Control: no-cache, must-revalidate");
+                    header("Cache-Control: no-cache, must-revalidate", true);
                     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
                     echo json_encode($ret);
                 }

@@ -6,6 +6,9 @@ require_once('./common_lib.inc');
 require_once('./plugins.php.inc');
 require_once('./util.inc');
 
+// Disable caching by default
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
+
 if (GetSetting("serverID")) {
   header('X-WPT-Server: ' . GetSetting("serverID"));
 }

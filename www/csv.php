@@ -30,7 +30,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
   }
   header("Content-disposition: attachment; filename=$filename");
   header ("Content-type: text/csv");
-  header("Cache-Control: no-cache, must-revalidate");
+  header("Cache-Control: no-cache, must-revalidate", true);
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
   if ($test['test']['batch']) {
