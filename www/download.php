@@ -11,25 +11,28 @@ if( strpos($testPath, 'relay') !== false
     && strpos($testPath, '..') === false
     && is_dir($testPath) )
 {
+    $ok = DownloadTest($testPath);
+} elseif (isset($_REQUEST['s']) && GetServerSecret() == $_REQUEST['s']) {
+    $ok = DownloadTest($testPath);
+}
+
+function DownloadTest($testPath) {
+    $ok = false;
+
     // zip the test up and download it
     $zipFile = "$testPath.zip";
     $zip = new ZipArchive();
-    if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true)
-    {
+    if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
         $files = scandir($testPath);
-        foreach( $files as $file )
-        {
+        foreach( $files as $file ) {
             $filePath = "$testPath/$file";
-            if( is_file($filePath) )
+            if( is_file($filePath) ) {
                 $zip->addFile($filePath, $file);
-            elseif( $file != '.' && $file != '..' )
-            {
+            } elseif( $file != '.' && $file != '..' ) {
                 $videoFiles = scandir($filePath);
-                if( $videoFiles )
-                {
+                if( $videoFiles ) {
                     $zip->addEmptyDir($file);
-                    foreach($videoFiles as $videoFile)
-                    {
+                    foreach($videoFiles as $videoFile) {
                         $videoFilePath = "$filePath/$videoFile";
                         if( is_file($videoFilePath) )
                             $zip->addFile($videoFilePath, "$file/$videoFile");
@@ -43,6 +46,8 @@ if( strpos($testPath, 'relay') !== false
         readfile_chunked($zipFile);
         unlink($zipFile);
     }
+
+    return $ok;
 }
 
 if( !$ok )
