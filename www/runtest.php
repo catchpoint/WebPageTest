@@ -1616,7 +1616,10 @@ function ValidateScript(&$script, &$error)
                 }
                 $ok = true;
                 $url = trim($tokens[1]);
-                if (stripos($url, '%URL%') !== false) {
+                if (stripos($url, '%URL%') !== false || 
+                        stripos($url, '%HOST%') !== false || 
+                        stripos($url, '%HOSTR%') !== false ||
+                        stripos($url, '%HOST_REGEX%') !== false) {
                     $url = null;
                 } else {
                     CheckUrl($url);
