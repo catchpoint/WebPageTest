@@ -1215,97 +1215,101 @@ function ValidateKey(&$test, &$error, $key = null)
           }
         }
       }
-    }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
+    } elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
       $apiKey = $key;
 
-      $keys_file = __DIR__ . '/settings/keys.ini';
-      if (file_exists(__DIR__ . '/settings/common/keys.ini'))
-        $keys_file = __DIR__ . '/settings/common/keys.ini';
-      if (file_exists(__DIR__ . '/settings/server/keys.ini'))
-        $keys_file = __DIR__ . '/settings/server/keys.ini';
-      $keys = parse_ini_file($keys_file, true);
+      if ($key == GetServerKey()) {
+        // Always allow the internal server API key
+      } else {
+        $keys_file = __DIR__ . '/settings/keys.ini';
+        if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+          $keys_file = __DIR__ . '/settings/common/keys.ini';
+        if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+          $keys_file = __DIR__ . '/settings/server/keys.ini';
+        $keys = parse_ini_file($keys_file, true);
 
-      // see if it was an auto-provisioned key
-      if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
-        $prefix = $matches['prefix'];
-        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-          $k = $db->escapeString($matches['key']);
-          $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
-          $db->close();
-          if (isset($info) && is_array($info) && isset($info['key_limit']))
-            $keys[$key] = array('limit' => $info['key_limit']);
-        }
-      }
-
-      $runcount = max(1, $test['runs']);
-      if( !$test['fvonly'] )
-        $runcount *= 2;
-      //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-      //  $runcount *= $test['navigateCount'];
-
-      // validate their API key and enforce any rate limits
-      if( array_key_exists($key, $keys) ){
-        if (array_key_exists('default location', $keys[$key]) &&
-            strlen($keys[$key]['default location']) &&
-            !strlen($test['location'])) {
-            $test['location'] = $keys[$key]['default location'];
-        }
-        $api_priority = intval(GetSetting('api_priority', 5));
-        $test['priority'] = $api_priority;
-        if (isset($keys[$key]['priority']))
-            $test['priority'] = intval($keys[$key]['priority']);
-        if (isset($keys[$key]['max-priority']))
-            $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
-        if (isset($keys[$key]['forceValidate']))
-          $forceValidate = true;
-        if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
-          $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
-        if( !strlen($error) && isset($keys[$key]['limit']) ) {
-          $limit = (int)$keys[$key]['limit'];
-
-            // update the number of tests they have submitted today
-            if( !is_dir('./dat') )
-              mkdir('./dat', 0777, true);
-
-          $lock = Lock("API Keys");
-          if( isset($lock) ) {
-              $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
-              $usage = null;
-              if( is_file($keyfile) )
-                $usage = json_decode(file_get_contents($keyfile), true);
-              if( !isset($usage) )
-                $usage = array();
-              if( isset($usage[$key]) )
-                $used = (int)$usage[$key];
-              else
-                $used = 0;
-
-            if( $limit > 0 ){
-              if( $used + $runcount <= $limit ){
-                $used += $runcount;
-                $usage[$key] = $used;
-              }else{
-                $error = 'The test request will exceed the daily test limit for the given API key';
-              }
-            }
-            else {
-                $used += $runcount;
-                $usage[$key] = $used;
-            }
-            if( !strlen($error) )
-              file_put_contents($keyfile, json_encode($usage));
-            Unlock($lock);
+        // see if it was an auto-provisioned key
+        if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
+          $prefix = $matches['prefix'];
+          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+            $k = $db->escapeString($matches['key']);
+            $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+            $db->close();
+            if (isset($info) && is_array($info) && isset($info['key_limit']))
+              $keys[$key] = array('limit' => $info['key_limit']);
           }
         }
-        // check to see if we need to limit queue lengths from this API key
-        if (isset($keys[$key]['queue_limit']) && $keys[$key]['queue_limit']) {
-            $test['queue_limit'] = $keys[$key]['queue_limit'];
+
+        $runcount = max(1, $test['runs']);
+        if( !$test['fvonly'] )
+          $runcount *= 2;
+        //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+        //  $runcount *= $test['navigateCount'];
+
+        // validate their API key and enforce any rate limits
+        if( array_key_exists($key, $keys) ){
+          if (array_key_exists('default location', $keys[$key]) &&
+              strlen($keys[$key]['default location']) &&
+              !strlen($test['location'])) {
+              $test['location'] = $keys[$key]['default location'];
+          }
+          $api_priority = intval(GetSetting('api_priority', 5));
+          $test['priority'] = $api_priority;
+          if (isset($keys[$key]['priority']))
+              $test['priority'] = intval($keys[$key]['priority']);
+          if (isset($keys[$key]['max-priority']))
+              $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
+          if (isset($keys[$key]['forceValidate']))
+            $forceValidate = true;
+          if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
+            $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
+          if( !strlen($error) && isset($keys[$key]['limit']) ) {
+            $limit = (int)$keys[$key]['limit'];
+
+              // update the number of tests they have submitted today
+              if( !is_dir('./dat') )
+                mkdir('./dat', 0777, true);
+
+            $lock = Lock("API Keys");
+            if( isset($lock) ) {
+                $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
+                $usage = null;
+                if( is_file($keyfile) )
+                  $usage = json_decode(file_get_contents($keyfile), true);
+                if( !isset($usage) )
+                  $usage = array();
+                if( isset($usage[$key]) )
+                  $used = (int)$usage[$key];
+                else
+                  $used = 0;
+
+              if( $limit > 0 ){
+                if( $used + $runcount <= $limit ){
+                  $used += $runcount;
+                  $usage[$key] = $used;
+                }else{
+                  $error = 'The test request will exceed the daily test limit for the given API key';
+                }
+              }
+              else {
+                  $used += $runcount;
+                  $usage[$key] = $used;
+              }
+              if( !strlen($error) )
+                file_put_contents($keyfile, json_encode($usage));
+              Unlock($lock);
+            }
+          }
+          // check to see if we need to limit queue lengths from this API key
+          if (isset($keys[$key]['queue_limit']) && $keys[$key]['queue_limit']) {
+              $test['queue_limit'] = $keys[$key]['queue_limit'];
+          }
+          // Make sure API keys don't exceed the max configured priority
+          $test['priority'] = max($test['priority'], $api_priority);
         }
-        // Make sure API keys don't exceed the max configured priority
-        $test['priority'] = max($test['priority'], $api_priority);
       } elseif ($redis_server = GetSetting('redis_api_keys')) {
         // Check the redis-based API keys if it wasn't a local key
         try {
