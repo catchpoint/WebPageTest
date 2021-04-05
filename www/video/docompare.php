@@ -15,9 +15,7 @@ if (file_exists(__DIR__ . '/../settings/common/keys.ini'))
   $keys_file = __DIR__ . '/../settings/common/keys.ini';
 if (file_exists(__DIR__ . '/../settings/server/keys.ini'))
   $keys_file = __DIR__ . '/../settings/server/keys.ini';
-$keys = parse_ini_file($keys_file, true);
-if( $keys && isset($keys['server']) && isset($keys['server']['key']) )
-  $key = trim($keys['server']['key']);
+$key = GetServerKey();
 $headless = false;
 if (GetSetting('headless')) {
     $headless = true;

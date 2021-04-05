@@ -72,7 +72,7 @@
     // Load the location information
     $locations = LoadLocationsIni();
     // See if we need to load a subset of the locations
-    if (!$privateInstall && isset($_REQUEST['k'])) {
+    if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() ) {
       foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['noapi'])) {
             unset($locations[$name]);

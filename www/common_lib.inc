@@ -3402,6 +3402,34 @@ function GetServerSecret() {
   return $secret;
 }
 
+function GetServerKey() {
+  // cache the status in apc for 15 seconds so we don't hammer the scheduler
+  $key = CacheFetch('server-key');
+  if (isset($key) && !is_string($key)) {
+    $key = null;
+  }
+  if (!isset($key)) {
+    $keys_file = __DIR__ . '/settings/keys.ini';
+    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+      $keys_file = __DIR__ . '/settings/common/keys.ini';
+    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+      $keys_file = __DIR__ . '/settings/server/keys.ini';
+    $keys = parse_ini_file($keys_file, true);
+    if (isset($keys) && isset($keys['server']['key'])) {
+      $key = trim($keys['server']['key']);
+    }
+
+    $ttl = 3600;
+    if (!isset($key)) {
+      $key = '';
+      $ttl = 60;
+    }
+    CacheStore('server-key', $key, $ttl);
+  }
+  return $key;
+}
+
+
 function SignString($string) {
   return sha1($string . GetServerSecret());
 }
