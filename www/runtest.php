@@ -72,25 +72,10 @@
     // Load the location information
     $locations = LoadLocationsIni();
     // See if we need to load a subset of the locations
-    if (!$privateInstall) {
-      $filter = null;
-      if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $_REQUEST['k'], $matches)) {
-        $filter = $matches['prefix'];
-        foreach ($locations as $name => $location) {
-          if (isset($location['browser'])) {
-            $ok = false;
-            if (isset($location['allowKeys'])) {
-              $loc_keys = explode(',', $location['allowKeys']);
-              foreach($loc_keys as $k) {
-                if ($k == $filter) {
-                  $ok = true;
-                  break;
-                }
-              }
-            }
-            if (!$ok)
-              unset($locations[$name]);
-          }
+    if (!$privateInstall && isset($_REQUEST['k'])) {
+      foreach ($locations as $name => $location) {
+        if (isset($location['browser']) && isset($location['noapi'])) {
+            unset($locations[$name]);
         }
       }
     }

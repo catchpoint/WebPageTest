@@ -144,8 +144,6 @@ function LoadLocationsIni() {
         foreach($ec2 as $name => $group) {
           if ($name !== 'locations') {
             $locations[$name] = $group;
-            if ($ec2_allow)
-              $locations[$name]['allowKeys'] = $ec2_allow;
           }
         }
       } else {

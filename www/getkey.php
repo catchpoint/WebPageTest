@@ -275,26 +275,16 @@ function EmailKeyInfo($info, $display) {
   $locations = array();
   foreach ($l as $id => $loc) {
     $id = trim($id);
-    if (is_array($loc) &&
-        isset($loc['browser']) &&
-        isset($loc['allowKeys'])) {
-      $allowed = false;
-      $prefixes = explode(',', $loc['allowKeys']);
-      foreach ($prefixes as $p) {
-        if ($p == $prefix)
-          $allowed = true;
-      }
-      if ($allowed) {
-        $browsers = explode(',', $loc['browser']);
-        if (isset($browsers) && is_array($browsers)) {
-          if (count($browsers) > 1) {
-            foreach($browsers as $browser) {
-              $browser = trim($browser);
-              $locations[] = "$id:$browser";
-            }
-          } else {
-            $locations[] = $id;
+    if (is_array($loc) && isset($loc['browser']) && !isset($loc['noapi'])) {
+      $browsers = explode(',', $loc['browser']);
+      if (isset($browsers) && is_array($browsers)) {
+        if (count($browsers) > 1) {
+          foreach($browsers as $browser) {
+            $browser = trim($browser);
+            $locations[] = "$id:$browser";
           }
+        } else {
+          $locations[] = $id;
         }
       }
     }
