@@ -1447,7 +1447,7 @@ function AddTestJob($location, $job, $test, $testId) {
         $json = null;
         $ret = true;
         $json = json_decode($job, true);
-        $priority = 0;
+        $priority = intval(GetSetting('user_priority', 0));
         if (isset($json['priority'])) {
           $priority = $json['priority'];
         }

@@ -190,7 +190,7 @@
             $test['median_video'] = isset($req_mv) ? (int)$req_mv : 0;
             if (isset($req_addr))
               $test['ip'] = $req_addr;
-            $test['priority'] = isset($req_priority) ? (int)$req_priority : 0;
+            $test['priority'] = isset($req_priority) ? (int)$req_priority : intval(GetSetting('user_priority', 0));
             if( isset($req_bwIn) && !isset($req_bwDown) )
                 $test['bwIn'] = (int)$req_bwIn;
             else
@@ -550,16 +550,11 @@
             if( !isset($req_priority) )
             {
                 if( (isset($test['batch']) && $test['batch']) || (isset($test['batch_locations']) && $test['batch_locations']) ) {
-                    $bulkPriority = GetSetting('bulk_priority');
-                    $test['priority'] =  $bulkPriority ? $bulkPriority : 7;
+                    $test['priority'] = intval(GetSetting('bulk_priority', 7));
                 } elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json ) {
-                    $test['priority'] =  5;
+                    $test['priority'] =  intval(GetSetting('api_priority', 5));
                 }
             }
-
-            // do we need to force the priority to be ignored (needed for the AOL system currently?)
-            if( GetSetting('noPriority') )
-                $test['priority'] =  0;
 
             // take the ad-blocking request and create a custom block from it
             if( isset($req_ads) && $req_ads == 'blocked' )
@@ -656,7 +651,7 @@
                 unset($test['path']);
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
-            $test['priority'] =  0;
+            $test['priority'] = intval(GetSetting('user_priority', 0));
         }
 
         if ($test['mobile'] && is_file('./settings/mobile_devices.ini')) {
@@ -1258,8 +1253,10 @@ function ValidateKey(&$test, &$error, $key = null)
             !strlen($test['location'])) {
             $test['location'] = $keys[$key]['default location'];
         }
+        $api_priority = intval(GetSetting('api_priority', 5));
+        $test['priority'] = $api_priority;
         if (isset($keys[$key]['priority']))
-            $test['priority'] = $keys[$key]['priority'];
+            $test['priority'] = intval($keys[$key]['priority']);
         if (isset($keys[$key]['max-priority']))
             $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
         if (isset($keys[$key]['forceValidate']))
@@ -1308,10 +1305,7 @@ function ValidateKey(&$test, &$error, $key = null)
             $test['queue_limit'] = $keys[$key]['queue_limit'];
         }
         // Make sure API keys don't exceed the max configured priority
-        $maxApiPriority = GetSetting('maxApiPriority');
-        if ($maxApiPriority) {
-          $test['priority'] = max($test['priority'], $maxApiPriority);
-        }
+        $test['priority'] = max($test['priority'], $api_priority);
       } elseif ($redis_server = GetSetting('redis_api_keys')) {
         // Check the redis-based API keys if it wasn't a local key
         try {
