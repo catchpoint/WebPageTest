@@ -156,7 +156,7 @@ $page_description = "Website performance test result$testLabel.";
                     if (is_file("$testPath/lighthouse.log.gz"))
                         echo " - <a href=\"/viewlog.php?test=$id&lighthouse=1\">Lighthouse Test Log</a>";
                     $publish = GetSetting('publishTo');
-                    if( $publish )
+                    if( $publish && GetSetting('host') != 'www.webpagetest.org' )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to $publish</a>";
                 ?>
             </div>
