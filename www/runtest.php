@@ -1347,7 +1347,7 @@ function ValidateKey(&$test, &$error, $key = null)
               if (time() <= $account['expiration'] ) {
                 // Check the balance
                 $response = $redis->get("C_{$account['accountId']}");
-                if ($response && strlen($response) && is_numeric($response)) {
+                if (isset($response) && $response !== FALSE && is_string($response) && strlen($response) && is_numeric($response)) {
                   if ($runcount <= intval($response)) {
                     global $usingApi2;
                     $usingApi2 = true;
