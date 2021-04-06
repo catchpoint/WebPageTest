@@ -1343,15 +1343,19 @@ function GetQueueLengths($location) {
   } elseif (isset($info) && is_array($info) && isset($info['scheduler_node'])) {
     // Get the scheduler queue length (not separated by priorities)
     if (!isset($SCHEDULER_QUEUES)) {
-      $host = GetSetting('host');
-      $scheduler = GetSetting('cp_scheduler');
-      $scheduler_salt = GetSetting('cp_scheduler_salt');
-      if ($scheduler && $scheduler_salt) {
-        $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?queue=1";
-        $cpid = GetCPID($host, $scheduler_salt);
-        $result_text = cp_http_get($url, $cpid);
-        if (isset($result_text) && strlen($result_text)) {
-          $SCHEDULER_QUEUES = json_decode($result_text, true);
+      $SCHEDULER_QUEUES = CacheFetch('scheduler-queues', null);
+      if (!isset($SCHEDULER_QUEUES)) {
+        $host = GetSetting('host');
+        $scheduler = GetSetting('cp_scheduler');
+        $scheduler_salt = GetSetting('cp_scheduler_salt');
+        if ($scheduler && $scheduler_salt) {
+          $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?queue=1";
+          $cpid = GetCPID($host, $scheduler_salt);
+          $result_text = cp_http_get($url, $cpid);
+          if (isset($result_text) && strlen($result_text)) {
+            $SCHEDULER_QUEUES = json_decode($result_text, true);
+            CacheStore('scheduler-queues', $SCHEDULER_QUEUES, 15);
+          }
         }
       }
     }
