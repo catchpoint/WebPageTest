@@ -883,9 +883,14 @@ function LoadLocations()
     foreach( $locations as $index => &$loc )
     {
         // count the number of tests at each location
-        if( isset($loc['localDir']) && !isset($loc['scheduler_node']) )
-        {
+        if (isset($loc['scheduler_node'])) {
+            $queues = GetQueueLengths($loc['location']);
+            if (isset($queues) && is_array($queues) && isset($queues[0]))
+                $loc['backlog'] = $queues[0];
+        } elseif( isset($loc['localDir']) ) {
             $loc['backlog'] = CountTests($loc['localDir']);
+        }
+        if (isset($loc['localDir'])) {
             unset( $loc['localDir'] );
         }
 
