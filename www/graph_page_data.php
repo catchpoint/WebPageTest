@@ -111,11 +111,17 @@ $common_label = implode(" ", $common_labels);
         </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
-            <?php
+    <?php
             if (count($testsId) == 1) {
               $tab = 'Test Result';
             }
             include 'header.inc';
+            
+            if (count($testsId) != 1) {
+              ?>
+              <div class="box">
+              <?php
+            }
             ?>
             <div>
                 <form class="simple_form" name="cached" method="get" action="graph_page_data.php">
