@@ -38,6 +38,7 @@ $all       = !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = isset($_GET["f"]) && !strcasecmp($_GET["f"], 'csv');
+$priority  = (isset($_REQUEST['priority']) && is_numeric($_REQUEST['priority'])) ? intval($_REQUEST['priority']) : null;
 
 if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
   header('HTTP/1.0 403 Forbidden');
@@ -123,6 +124,9 @@ if( $csv )
                 // Hidden form fields
                 if (isset($_REQUEST['local']) && $_REQUEST['local'])
                     echo '<input type="hidden" name="local" value="1">';
+                if (isset($priority)) {
+                    echo '<input type="hidden" name="priority" value="' . $priority . '">';
+                }
                 ?>
                 </form>
         <script type="text/javascript">
@@ -286,6 +290,7 @@ if( $csv )
                                       $o          = isset($line_data['o']) ? $line_data['o'] : NULL;
                                       $key        = isset($line_data['key']) ? $line_data['key'] : NULL;
                                       $count      = @$line_data['count'];
+                                      $test_priority   = @$line_data['priority'];
 
                                       if (!$location) {
                                           $location = '';
@@ -319,6 +324,9 @@ if( $csv )
                                           if( $onlyVideo and !$video )
                                               $ok = false;
 
+                                          if ($ok && isset($priority) && $priority != $test_priority)
+                                              $ok = false;
+  
                                           if ($ok && !$all) {
                                               $ok = false;
                                               if ((isset($uid) && $uid == $testUID) ||
