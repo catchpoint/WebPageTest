@@ -93,7 +93,10 @@ if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddre
     $lastName = isset($attributes['lastName']) ? $attributes['lastName'] : '';
     $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName\t{$attributes['contactId']}");
     $signature = SignString($info);
-    setcookie('samlu', "$info.$signature", time()+60*60*24*365, '/');
+    $domain = '';
+    if (strstr(GetSetting('host'), 'webpagetest.org'))
+        $domain = ' Domain=webpagetest.org;';
+    header("Set-Cookie: samlu=$info.$signature; Path=/;$domain Max-Age=31556952; SameSite=Lax");
     $ok = true;
 }
 
