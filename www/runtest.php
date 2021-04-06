@@ -57,6 +57,15 @@
 
     // load the secret key (if there is one)
     $server_secret = GetServerSecret();
+    $api_keys = null;
+    if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
+      $keys_file = __DIR__ . '/settings/keys.ini';
+      if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+        $keys_file = __DIR__ . '/settings/common/keys.ini';
+      if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+        $keys_file = __DIR__ . '/settings/server/keys.ini';
+      $api_keys = parse_ini_file($keys_file, true);	
+    }
 
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
@@ -72,7 +81,7 @@
     // Load the location information
     $locations = LoadLocationsIni();
     // See if we need to load a subset of the locations
-    if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() ) {
+    if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() && isset($api_keys) && !isset($api_keys[$_REQUEST['k']])) {
       foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['noapi'])) {
             unset($locations[$name]);
@@ -398,15 +407,9 @@
             }
 
             // see if we need to process a template for these requests	
-            if (isset($req_k) && strlen($req_k)) {
-              $keys_file = __DIR__ . '/settings/keys.ini';
-              if (file_exists(__DIR__ . '/settings/common/keys.ini'))
-                $keys_file = __DIR__ . '/settings/common/keys.ini';
-              if (file_exists(__DIR__ . '/settings/server/keys.ini'))
-                $keys_file = __DIR__ . '/settings/server/keys.ini';
-              $keys = parse_ini_file($keys_file, true);	
-              if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {	
-                  $template = $keys[$req_k]['template'];	
+            if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
+              if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {	
+                  $template = $api_keys[$req_k]['template'];	
                   if (is_file("./settings/common/templates/$template.php"))	
                       include("./settings/common/templates/$template.php");	
               }	
