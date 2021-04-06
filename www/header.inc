@@ -97,7 +97,7 @@ if ($alert) {
                 $opens = '';
                 if( !strcasecmp($tabName, $tab) )
                     $current = ' class="current"';
-                if (substr($tabUrl, 0, 4) == 'http') {
+                if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
                 }
