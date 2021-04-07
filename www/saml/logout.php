@@ -10,6 +10,7 @@ $url = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . '/';
 //    $url = $_SERVER["HTTP_REFERER"];
 //}
 // Set the cookie into the past
-setcookie("samlu", "", time() - 3600, '/'); 
+$saml_cookie = GetSetting('saml_cookie', 'samlu');
+setcookie($saml_cookie, "", time() - 3600, '/'); 
 header('Clear-Site-Data: "cache", "cookies", "storage", "executionContexts"');
 header("Location: $url");

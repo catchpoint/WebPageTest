@@ -96,7 +96,8 @@ if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddre
     $domain = '';
     if (strstr(GetSetting('host'), 'webpagetest.org'))
         $domain = ' Domain=webpagetest.org;';
-    header("Set-Cookie: samlu=$info.$signature; Path=/;$domain Max-Age=31556952; SameSite=Lax");
+    $saml_cookie = GetSetting('saml_cookie', 'samlu');
+    header("Set-Cookie: $saml_cookie=$info.$signature; Path=/;$domain Max-Age=31556952; SameSite=Lax");
     $ok = true;
 }
 
