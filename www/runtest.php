@@ -2594,6 +2594,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if ($max_requests) {
               $job['max_requests'] = $max_requests;
             }
+            $crux_keys = GetSetting('crux_agent_api_keys');
+            if ($crux_keys && strlen($crux_keys)) {
+              $crux_key = explode(',', $crux_keys);
+              $job['crux_api_key'] = trim($crux_key[array_rand($crux_key)]);
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
