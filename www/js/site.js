@@ -1116,8 +1116,13 @@ if (window.indexedDB && typeof wptTestInfo !== 'undefined') {
         store.createIndex('created', 'created', {unique: false});
     }
     open.onsuccess = function() {
-        let store = open.result.transaction('history', 'readwrite').objectStore('history');
-        store.put(wptTestInfo);
+        try {
+            let store = open.result.transaction('history', 'readwrite').objectStore('history');
+            store.put(wptTestInfo);
+        } catch (err) {
+            // Delete the database and force it to recreate
+            indexedDB.deleteDatabase('webpagetest');
+        }
     }
 }
 })();

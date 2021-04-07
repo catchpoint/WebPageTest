@@ -2,10 +2,22 @@
 const open = window.indexedDB.open("webpagetest", 1);
 const now = Date.now() / 1000;
 const months = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
+open.onupgradeneeded = function() {
+    let db = open.result;
+    let store = db.createObjectStore('history', { keyPath: 'id' });
+    store.createIndex('url', 'url', {unique: false});
+    store.createIndex('location', 'location', {unique: false});
+    store.createIndex('label', 'label', {unique: false});
+    store.createIndex('created', 'created', {unique: false});
+}
 open.onsuccess = () => {
     const db = open.result;
-    const transaction = db.transaction(['history'], 'readwrite');
+    let transaction = null;
+    try {
+        transaction = db.transaction(['history'], 'readwrite');
+    } catch (err) {
+        return;
+    }
     const store = transaction.objectStore('history');
     const index = store.index('created');
     const cursorRequest = index.openCursor();
