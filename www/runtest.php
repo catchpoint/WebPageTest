@@ -2284,6 +2284,7 @@ function AddIniLine(&$ini, $key, $value) {
 function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
     global $server_secret;
+    global $is_mobile;
 
     $testId = null;
     if (is_file('./settings/block.txt'))
