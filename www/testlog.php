@@ -135,6 +135,7 @@ if( $csv )
     </body>
 </html>
 <?php
+exit;
 } else {
 ?>
 <!DOCTYPE html>
