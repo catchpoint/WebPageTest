@@ -2617,7 +2617,7 @@ function http_put_file($url, $file) {
   return $ok;
 }
 
-function http_post_raw($url, $body) {
+function http_post_raw($url, $body, $content_type='text/plain', $return_response=FALSE) {
   $ok = false;
   if (function_exists('curl_init')) {
     $ok = true;
@@ -2625,7 +2625,7 @@ function http_post_raw($url, $body) {
     $headers = array(
       "Fastly-Client-IP: {$_SERVER['REMOTE_ADDR']}",
       "User-Agent: {$_SERVER['HTTP_USER_AGENT']}",
-      'Content-Type: text/plain'
+      "Content-Type: $content_type"
     );
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, 1 );
@@ -2641,6 +2641,8 @@ function http_post_raw($url, $body) {
     curl_close($ch);
     if($response === false)
         $ok = false;
+    if ($return_response)
+      return $response;
   }
   return $ok;
 }

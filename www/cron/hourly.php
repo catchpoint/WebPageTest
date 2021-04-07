@@ -5,6 +5,7 @@
 // Jobs that need to run every hour
 chdir('..');
 require_once('common.inc');
+require_once(__DIR__ . '/../include/CrUX.php');
 ignore_user_abort(true);
 set_time_limit(3600);
 error_reporting(E_ALL);
@@ -24,6 +25,7 @@ if (GetSetting('ec2_key')) {
   EC2_DeleteOrphanedVolumes();
 }
 
+PruneCruxCache();
 PruneVideos();
 ApkUpdate();
 

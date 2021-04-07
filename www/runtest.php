@@ -44,6 +44,7 @@
     }
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
+    require_once(__DIR__ . '/include/CrUX.php');
     set_time_limit(300);
 
     $redirect_cache = array();
@@ -54,6 +55,7 @@
     $forceValidate = false;
     $runcount = 0;
     $apiKey = null;
+    $is_mobile = false;
 
     // load the secret key (if there is one)
     $server_secret = GetServerSecret();
@@ -472,6 +474,16 @@
                 $test['browser'] = trim($browsers[0]);
             }
 
+            if (isset($test['browser'])) {
+              if (substr($test['browser'], 0, 0) == 'iPhone' || substr($test['browser'], 0, 0) == 'iPod') {
+                $is_mobile = true;
+              }
+            }
+
+            if (isset($locations[$test['location']]['mobile']) && $locations[$test['location']]['mobile']) {
+              $is_mobile = true;
+            }
+
             // Extract the multiple locations.
             if ( isset($req_multiple_locations))
             {
@@ -659,6 +671,7 @@
 
         if ($test['mobile'] && is_file('./settings/mobile_devices.ini')) {
           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+          $is_mobile = true;
           if ($devices) {
             if (isset($test['mobileDevice'])) {
               setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
@@ -2302,6 +2315,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // create the folder for the test results
         if( !is_dir($test['path']) ) 
             mkdir($test['path'], 0777, true);
+        
+        // Fetch the CrUX data for the URL
+        $crux_data = GetCruxDataForURL($url, $is_mobile);
+        if (isset($crux_data) && strlen($crux_data)) {
+          gz_file_put_contents("{$test['path']}/crux.json", $crux_data);
+        }
 
         // Start with an initial state of waiting/submitted
         if (!$batch) {

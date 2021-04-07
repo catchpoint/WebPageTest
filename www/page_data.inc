@@ -459,6 +459,18 @@ function loadPageStepData($localPaths, $testInfo = null) {
       }
     }
 
+    // Add the crux data
+    $crux_file = $localPaths->cruxJsonFile();
+    if (gz_is_file($crux_file)) {
+      $crux_data = json_decode(gz_file_get_contents($crux_file), true);
+      if (isset($crux_data) && is_array($crux_data)) {
+        if (isset($crux_data['record'])) {
+          $ret['CrUX'] = $crux_data['record'];
+        } else {
+          $ret['CrUX'] = $crux_data;
+        }
+      }
+    }
 
     // see if there is test-level lighthouse data to attach
     // Don't cache the lighthouse bit because the file may come in after other results are cached

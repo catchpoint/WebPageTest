@@ -327,6 +327,13 @@ class TestPaths {
   /**
    * @return string Path for lighthouse JSON file
    */
+  public function cruxJsonFile() {
+    return $this->testRoot . "crux.json";
+  }
+
+  /**
+   * @return string Path for lighthouse JSON file
+   */
   public function lighthouseJsonFile() {
     return $this->testRoot . "lighthouse.json";
   }
