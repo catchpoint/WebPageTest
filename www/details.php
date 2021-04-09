@@ -159,7 +159,14 @@ $page_description = "Website performance test details$testLabel";
                 <?php
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create();
-
+                if (isset($testRunResults)) {
+                  require_once(__DIR__ . '/include/CrUX.php');
+                  if ($cached) {
+                    InsertCruxHTML(null, $testRunResults);
+                  } else {
+                    InsertCruxHTML($testRunResults, null);
+                  }
+                }
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');

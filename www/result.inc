@@ -214,6 +214,12 @@ $page_description = "Website performance test result$testLabel.";
                 }
                 ?>
             </div>
+            <?php
+            if (isset($fvRunResults)) {
+              require_once(__DIR__ . '/include/CrUX.php');
+              InsertCruxHTML($fvRunResults, $rvRunResults);
+            }
+            ?>
             <script type="text/javascript">
               markUserTime('aft.Result Data Table');
             </script>
