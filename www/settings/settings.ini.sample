@@ -185,6 +185,15 @@ maxNavigateCount=20
 ; Test result integration
 ; ***********************
 
+; Chrome user Experience Report API integration. Populate crux_api_key with a
+; single API key for the CrUX API to have the server query the API for performance 
+; data when a test is submitted (most reliable and well tested).
+; OR populate crux_agent_api_keys with a comma-delimited list of API keys to rotate
+; through and have the agents fetch the CrUX performance for (experimental).
+;crux_api_key=xxxxx
+;crux_agent_api_keys=xxxxx,yyyyyy,zzzzz
+
+
 ;tsview time-series database
 ;tsviewdb=http://<server:port>/src/v1/
 
