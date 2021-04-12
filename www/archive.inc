@@ -122,6 +122,11 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                         $result = cp_http_post($url, null, $cpid, $zipFile);
                                         if (isset($result)) {
                                             $ret = true;
+                                        } else {
+                                            $error_log = GetSetting('error_log');
+                                            if ($error_log) {
+                                                error_log(gmdate('Y/m/d H:i:s - ') . "Error archiving test $id", 3, $error_log);
+                                            }
                                         }
                                     } elseif (GetSetting('archive_dir')) {
                                         $dest = GetArchiveFile($id, true);
@@ -269,6 +274,12 @@ function RestoreArchive($id) {
                     $cpid = GetCPID($host, $capture_salt);
                     $cp_url = "{$capture_server}hawkcaptureserver/down-wpt.ashx?test=$id";
                     cp_http_get_file($cp_url, $cpid, $zipfile);
+                    if (!is_file($zipfile)) {
+                        $error_log = GetSetting('error_log');
+                        if ($error_log) {
+                            error_log(gmdate('Y/m/d H:i:s - ') . "Error restoring test $id", 3, $error_log);
+                        }
+                    }
                 } elseif (strlen($url)) {
                     $url .= "/$id.zip";
                 } else {
