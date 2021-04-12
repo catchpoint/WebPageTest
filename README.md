@@ -17,7 +17,7 @@ The cross-platform browser agent is [here](https://github.com/WPO-Foundation/wpt
 
 [WebPageTest Documentation](https://github.com/WPO-Foundation/webpagetest-docs)
 
-## API Examples
+# API Examples
 There are two examples using the [Restful API](https://docs.webpagetest.org/dev/api/):
 
 * /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
@@ -25,3 +25,6 @@ There are two examples using the [Restful API](https://docs.webpagetest.org/dev/
 
 # Contributing
 There are 2 separate lies of development under different licenses and pull requests are accepted to either of them.  The master branch where most active development is occurring is under the [Polyform Shield 1.0.0 license](LICENSE.md) and there is an "apache" branch which is under the more permissive Apache 2.0 license.
+
+# Change Log
+View the [WebPageTest Change Log](https://docs.webpagetest.org/change-log)
