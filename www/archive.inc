@@ -125,7 +125,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                         } else {
                                             $error_log = GetSetting('error_log');
                                             if ($error_log) {
-                                                error_log(gmdate('Y/m/d H:i:s - ') . "Error archiving test $id", 3, $error_log);
+                                                error_log(gmdate('Y/m/d H:i:s - ') . "$id Error archiving test\n", 3, $error_log);
                                             }
                                         }
                                     } elseif (GetSetting('archive_dir')) {
@@ -277,7 +277,7 @@ function RestoreArchive($id) {
                     if (!is_file($zipfile)) {
                         $error_log = GetSetting('error_log');
                         if ($error_log) {
-                            error_log(gmdate('Y/m/d H:i:s - ') . "Error restoring test $id", 3, $error_log);
+                            error_log(gmdate('Y/m/d H:i:s - ') . "$id Error restoring test\n", 3, $error_log);
                         }
                     }
                 } elseif (strlen($url)) {
