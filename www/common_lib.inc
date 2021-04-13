@@ -1591,9 +1591,22 @@ function cp_http_post($url, $body, $cpid, $file=null) {
     if($response !== false) {
       if (isset($headers['wpt_status_code']) && ($headers['wpt_status_code'] == '0' || $headers['wpt_status_code'] == '22')) {
         $result = $response;
+      } else {
+        $error_log = GetSetting('error_log');
+        if ($error_log) {
+          if (isset($headers['wpt_status_code'])) {
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
+          } else {
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : wpt_status_code missing\n", 3, $error_log);
+          }
+        }
       }
     } else {
       $error = curl_error($ch);
+      $error_log = GetSetting('error_log');
+      if ($error_log) {
+        error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : $error\n", 3, $error_log);
+      }
     }
     if ($file_stream) {
       fclose($file_stream);
@@ -1664,6 +1677,10 @@ function cp_http_get_file($url, $cpid, $file) {
         $ret = true;
       } else {
         $error = curl_error($ch);
+        $error_log = GetSetting('error_log');
+        if ($error_log) {
+          error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : $error\n", 3, $error_log);
+        }
         unlink($file_stream);
       }
     }
