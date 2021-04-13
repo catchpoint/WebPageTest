@@ -358,9 +358,9 @@ body.compact .test_results-content #download {
     overflow-wrap: anywhere;
 }
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
-#script_in_results {color: #f1c52e !important; text-decoration: none; font-size: 13px; font-weight: bold; }
-#script_in_results .arrow { margin-left: 5px; font-size: 10px; margin-bottom: 3px; border-left-width: 0.9em; border-left-style: solid; border-left-color: #f1c52e; left: 0.25em; }
-#script_in_results.extended .arrow { border-top-width: 0.9em; border-top-style: solid; border-top-color: #f1c52e; top: 0.25em;  border-left-color: transparent; border-left-width: 0.53em; border-left-style: dashed; left: 0;}
+#script_in_results {color: #f1c52e !important; text-decoration: none;  font-weight: bold; }
+#script_in_results .arrow:after { content: "\1433"; font-size: .9em; font-weight: normal;}
+#script_in_results.extended .arrow:after {content: "\142F"; }
 
 .images{
     overflow-wrap: anywhere;
