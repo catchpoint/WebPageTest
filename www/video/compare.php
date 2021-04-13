@@ -104,6 +104,9 @@ else
                     margin-right: auto;
                     padding-right: 100vw;
                 }
+                #video td{
+                    vertical-align: top;
+                }
                 #videoDiv
                 {
                     overflow-y: hidden;
@@ -174,7 +177,7 @@ else
                     ?>
                     word-wrap: break-word;
                 }
-                .thumb{ border: none; }
+                .thumb{ border: 3px solid #000; }
                 .thumbChanged{border: 3px solid #FFC233;}
                 .thumbLCP{border: 3px solid #FF0000;}
                 .thumbLayoutShifted{border-style: dotted;}
