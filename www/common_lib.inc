@@ -1605,7 +1605,16 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       $error = curl_error($ch);
       $error_log = GetSetting('error_log');
       if ($error_log) {
-        error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : $error\n", 3, $error_log);
+        if ($error ) {
+          error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : $error\n", 3, $error_log);
+        } else {
+          $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+          if ($code) {
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : code $code\n", 3, $error_log);
+          } else {
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url unknown error\n", 3, $error_log);
+          }
+        }
       }
     }
     if ($file_stream) {
