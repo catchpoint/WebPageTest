@@ -758,9 +758,9 @@ function ScreenShotTable()
             <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
             <?php } ?>
             <li><b class="thumbChanged"></b>A visual change occurred in the frame.</li>
-            <li><b class="thumbLCP"></b>Largest Contenful Paint occurred in the frame.</li>
+            <li><b class="thumbLCP"></b>Largest Contentful Paint occurred in the frame.</li>
             <li><b class="thumbChanged thumbLayoutShifted"></b>A visual change and a Layout Shift occurred in the frame.</li>
-            <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contenful Paint and a Layout Shift occurred in the frame.</li>
+            <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint and a Layout Shift occurred in the frame.</li>
         </ul>
         <?php
         echo "<div id=\"image\">";
