@@ -42,6 +42,14 @@ elseif (strlen($pc))
   $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
 else
   $tester = trim($_SERVER['REMOTE_ADDR']);
+
+$block_list = GetSetting('block_pc');
+if ($block_list && strlen($block_list) && strlen($pc)) {
+  $block = explode(',', $block_list);
+  if (in_array($pc, $block)) {
+    header("HTTP/1.1 403 Unauthorized");
+  }
+}
   
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
