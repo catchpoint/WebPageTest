@@ -270,6 +270,10 @@ else
                     padding: 5px;
                     width: 100%;
                 }
+                .max-shift-window{
+                    color: #FFC233;
+                    font-weight: normal;
+                }
                 div.compare-graph {margin:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
@@ -479,6 +483,9 @@ function ScreenShotTable()
             $viewport = null;
             $lcp_events = array();
             $has_lcp_rect = false;
+            $shiftWindows = array();
+            $maxWindow = null;
+
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
                 $layout_shifts = $test['stepResult']->getMetric('LayoutShifts');
                 $cls = $test['stepResult']->getMetric('chromeUserTiming.CumulativeLayoutShift');
@@ -488,7 +495,15 @@ function ScreenShotTable()
                         if (isset($shift['time'])) {
                             $shifts[] = $shift;
                         }
+                        if (isset($shift['shift_window_num'])) {
+                            if (isset($shiftWindows[$shift['shift_window_num']])) {
+                                $shiftWindows[$shift['shift_window_num']] = max($shiftWindows[$shift['shift_window_num']], $shift['window_score']);
+                            } else {
+                                $shiftWindows[$shift['shift_window_num']] = $shift['window_score'];
+                            }
+                        }
                     }
+                    $maxWindow = array_keys($shiftWindows, max($shiftWindows))[0];
                 }
                 usort($shifts, function($a, $b){
                     return $a['time'] - $b['time'];
@@ -583,6 +598,7 @@ function ScreenShotTable()
                     $lcp_candidate_rects = null;
                     $lcp_rects = null;
                     $shift_amount = 0.0;
+                    $shift_window = 0;
                     $changed = false;
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
@@ -601,6 +617,9 @@ function ScreenShotTable()
                                 $shift = array_shift($shifts);
                                 if (isset($shift['score'])) {
                                     $shift_amount += $shift['score'];
+                                }
+                                if (isset($shift['shift_window_num'])) {
+                                    $shift_window = $shift['shift_window_num'];
                                 }
                                 if (isset($viewport) &&
                                         isset($viewport['width']) &&
@@ -694,8 +713,13 @@ function ScreenShotTable()
 
                     if ($show_shifts) {
                         $label = "&nbsp;";
-                        if (isset($shift_amount) && $shift_amount > 0.0 && isset($cls) && $cls > 0.0) {
-                            $label = number_format($shift_amount, 3, ".", "") . ' / ' . number_format($cls, 3, ".", "");
+                        if (isset($shift_amount) && number_format($shift_amount, 3, ".", "") > 0.0 && isset($shift_window) && number_format($shiftWindows[$shift_window], 3, ".", "") > 0.0) {
+                            
+                            $label = number_format($shift_amount, 3, ".", "") . ' / ' . number_format($shiftWindows[$shift_window], 3, ".", "");
+                            $label .= '<br>Window: ' . $shift_window;
+                            if ($shift_window == $maxWindow) {
+                                $label = '<b class="max-shift-window">' . $label . '*</b>';
+                            }
                         }
                     }
                     if (isset($label))
@@ -730,6 +754,9 @@ function ScreenShotTable()
         echo '<div class="page">';
         ?>
         <ul class="key">
+            <?php if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
+            <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
+            <?php } ?>
             <li><b class="thumbChanged"></b>A visual change occurred in the frame.</li>
             <li><b class="thumbLCP"></b>Largest Contenful Paint occurred in the frame.</li>
             <li><b class="thumbChanged thumbLayoutShifted"></b>A visual change and a Layout Shift occurred in the frame.</li>
