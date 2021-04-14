@@ -1093,9 +1093,16 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
         }
       }
 
-      $cumulative_layout_shift = null;
+      $total_layout_shift = null;
+
+      $max_layout_window = 0;
+      $firstShift = 0;
+      $prevShift = 0;
+      $curr = 0;
+      $shiftWindowCount = 0;
+
       if (isset($browser_version) && $browser_version >= 81) {
-        $cumulative_layout_shift = 0.0;
+        $total_layout_shift = 0.0;
         foreach ($events as $event) {
           if (is_array($event) &&
               isset($event['name']) &&
@@ -1122,15 +1129,29 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
                 $event['args']['data']['is_main_frame'] &&
                 isset($event['args']['data']['score'])) {
               if (isset($time)) {
-                if (!isset($cumulative_layout_shift)) {
-                  $cumulative_layout_shift = 0;
+                if (!isset($total_layout_shift)) {
+                  $total_layout_shift = 0;
                 }
-                $cumulative_layout_shift += $event['args']['data']['score'];
+                $total_layout_shift += $event['args']['data']['score'];
+
+                if (($time - $firstShift > 5000) || ($time - $prevShift > 1000)) {
+                  //new shift window
+                  $firstShift = $time;
+                  $curr = 0;
+                  $shiftWindowCount++;
+                }
+                $prevShift = $time;
+                $curr += $event['args']['data']['score'];
+                $max_layout_window = max($curr, $max_layout_window);
+
                 $shift = array(
                   'time' => $time,
                   'score' => $event['args']['data']['score'],
-                  'cumulative_score' => $cumulative_layout_shift
+                  'cumulative_score' => $total_layout_shift,
+                  'window_score' => $curr,
+                  'shift_window_num' => $shiftWindowCount
                 );
+
                 if (isset($event['args']['data']['region_rects'])) {
                   $shift['rects'] = $event['args']['data']['region_rects'];
                 }
@@ -1182,8 +1203,11 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
           }
         }
       }
-      if (isset($cumulative_layout_shift)) {
-        $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $cumulative_layout_shift);
+      if (isset($total_layout_shift)) {
+        $user_timing[] = array('name' => 'TotalLayoutShift', 'value' => $total_layout_shift);
+      }
+      if (isset($max_layout_window)) {
+        $user_timing[] = array('name' => 'CumulativeLayoutShift', 'value' => $max_layout_window);
       }
     }
   }
