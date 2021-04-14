@@ -303,8 +303,6 @@ if (isset($_REQUEST['color'])) {
 $id = '';
 if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_REQUEST['test'];
-} elseif (isset($_COOKIE['tid']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
-    $id = $_COOKIE['tid'];
 }
 
 $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
@@ -316,9 +314,6 @@ if (strlen($id)) {
     if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
-    }
-    if ($id !== @$_COOKIE['tid']) {
-        setcookie('tid', $id);  // update session cookie
     }
     if (!$userIsBot)
       RestoreTest($id);   // restore the test if it is archived (and deleted)

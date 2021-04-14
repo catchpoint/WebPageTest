@@ -164,7 +164,6 @@ if( $interval <= 0 ) {
 $count = count($tests);
 if( $count ) {
     setcookie('fs', urlencode($_REQUEST['tests']));
-    setcookie('tid', $tests[0]['id']);
     $id = $tests[0]['id'];
     LoadTestData();
 }
