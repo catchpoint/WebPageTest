@@ -89,6 +89,8 @@ function ArchiveTest($id, $delete = false) {
                         if (is_dir($testPath) === true) {
                             $count = 0;
                             $zip = new ZipArchive();
+                            $max_zip_size = GetSetting('archive_max_size', 0);
+                            $zip_size = 0;
                             if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
                                 // add the files
                                 $files = scandir($testPath);
@@ -96,16 +98,27 @@ function ArchiveTest($id, $delete = false) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
-                                        $count++;
-                                        $zip->addFile($filePath, $file);
+                                            $count++;
+                                            $zip_size += filesize($filePath);
+                                            $zip->addFile($filePath, $file);
                                         }
-                                    } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                                    }
+                                }
+                                // Add the video directories
+                                $files = scandir($testPath);
+                                foreach ($files as $file) {
+                                    $filePath = "$testPath/$file";
+                                    if ($file != '.' && $file != '..' && is_dir($filePath)) {
                                         $subFiles = scandir($filePath);
                                         if ($subFiles) {
                                             $zip->addEmptyDir($file);
                                             foreach ($subFiles as $subFile) {
-                                                if( is_file("$filePath/$subFile") )
-                                                    $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                                                if( is_file("$filePath/$subFile") ) {
+                                                    if (!$max_zip_size || $zip_size < $max_zip_size) {
+                                                        $zip_size += filesize("$filePath/$subFile");
+                                                        $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                                                    }
+                                                }
                                             }
                                         }
                                     }
