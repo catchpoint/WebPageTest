@@ -45,7 +45,7 @@ if (array_key_exists('test', $_REQUEST)) {
 
     // archive the actual test
     if (!GetSetting("lazyArchive"))
-      ArchiveTest($id, false);
+      ArchiveTest($id);
 
     // post the test to tsview if requested
     $tsviewdb = GetSetting('tsviewdb');

@@ -31,7 +31,7 @@ function ArchiveSkipFile($file) {
 *
 * @param mixed $id
 */
-function ArchiveTest($id, $store_result = true, $delete = false) {
+function ArchiveTest($id, $delete = false) {
     global $api_keys;
 
     // Short-circuit tests that are already archived
@@ -69,13 +69,12 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
             if (GetSetting('archive_dir') == '/dev/null') {
               $ret = true;
             } else {
-                if( is_file("$testPath/.archived") || (isset($testInfo['archived']) && $testInfo['archived']) ) {
+                if( is_file("$testPath/.archived") ) {
                     if (VerifyArchive($id)) {
                         $ret = true;
                     } else {
                         $zipFile = GetArchiveFile($id, true);
                         unlink($zipFile);
-                        $testInfo['archived'] = false;
                         @unlink("$testPath/.archived");
                         SaveTestInfo($id, $testInfo);
                     }
@@ -174,10 +173,6 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                     unlink($zipFile);
                                 if ($ret) {
                                     touch("$testPath/.archived");
-                                    if ($store_result) {
-                                        $testInfo['archived'] = true;
-                                        SaveTestInfo($id, $testInfo);
-                                    }
                                 }
                             }
                         }
@@ -341,10 +336,6 @@ function RestoreArchive($id) {
                   $testInfo = GetTestInfo($id);
                   if ($testInfo) {
                     touch("$testPath/.archived");
-                    $testInfo['archived'] = true;
-                    $testInfo['restored'] = true;
-                    $testInfo['restoredDataOnly'] = false;
-                    SaveTestInfo($id, $testInfo);
                   }
                   if ($deleteZip)
                     @unlink($zipfile);

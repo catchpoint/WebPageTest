@@ -66,7 +66,7 @@ if( isset($_FILES['file']) )
 
   // Archive the test
   if (!GetSetting("lazyArchive"))
-    ArchiveTest($id, false);
+    ArchiveTest($id);
 
   echo $id;
 }

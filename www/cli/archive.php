@@ -176,24 +176,29 @@ function CheckRelay() {
                             }
                           }
                         } else {
-                          //delTree($monthDir);
+                          // More than 10 days old
+                          delTree($monthDir);
                         }
                       } else {
+                        // Not Numeric
                         delTree($monthDir);
                       }
                       @rmdir($monthDir);
                     }
                   }
                 } else {
-                  //delTree($yearDir);
+                  // More than 10 days old
+                  delTree($yearDir);
                 }
               } else {
+                // Not Numeric
                 delTree($yearDir);
               }
               @rmdir($yearDir);
             }
           }
         } else {
+          // Invalud key
           delTree($keydir);
         }
         @rmdir($keydir);
