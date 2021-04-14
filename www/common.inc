@@ -123,7 +123,7 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"]))
   $_SERVER["REMOTE_ADDR"] = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
 
-if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
+if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
     define('FRIENDLY_URLS', true);
     define('VER_TIMELINE', '28/');       // version of the timeline javascript
 } else {
