@@ -147,6 +147,10 @@ function ArchiveTest($id, $delete = false) {
                                         $url = "{$capture_server}hawkcaptureserver/up-wpt.ashx?test=$id&node=$host";
                                         $result = cp_http_post($url, null, $cpid, $zipFile);
                                         if (isset($result)) {
+                                            $archive_log = GetSetting('archive_log');
+                                            if ($archive_log) {
+                                                error_log(gmdate('Y/m/d H:i:s - ') . "$id\n", 3, $error_log);
+                                            }
                                             $ret = true;
                                         } else {
                                             $error_log = GetSetting('error_log');
