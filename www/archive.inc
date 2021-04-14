@@ -225,12 +225,14 @@ function DownloadArchive($id, $testServer) {
         $zipfile = "./tmp/$id.zip";
         $download_url = "{$testServer}download.php?test=$id&s=$secret";
         if (http_fetch_file($download_url, $zipfile)) {
-            $testPath = './' . GetTestPath($id);
-            if (!is_dir($testPath))
-                mkdir( $testPath, 0777, true );
-            ZipExtract($zipfile, $testPath);
-            $ret = true;
-            touch("$testPath/.archived");
+            if (is_file($zipfile) && filesize($zipfile)) {
+                $testPath = './' . GetTestPath($id);
+                if (!is_dir($testPath))
+                    mkdir( $testPath, 0777, true );
+                ZipExtract($zipfile, $testPath);
+                $ret = true;
+                touch("$testPath/.archived");
+            }
             @unlink($zipfile);
         }        
         UnlockTest($lock);
@@ -348,7 +350,7 @@ function RestoreArchive($id) {
                         }
                     }
                 }
-                if (is_file($zipfile)) {
+                if (is_file($zipfile) && filesize($zipfile)) {
                   if (!is_dir($testPath))
                       mkdir( $testPath, 0777, true );
                   ZipExtract($zipfile, $testPath);
