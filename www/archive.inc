@@ -99,35 +99,24 @@ function ArchiveTest($id, $delete = false) {
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
                                             $count++;
-                                            if (strstr($file, '.cap.gz') === FALSE && strstr($file, '.trace.json.gz') === FALSE) {
+                                            if (strstr($file, '.cap.gz') === FALSE && 
+                                                strstr($file, '.trace.json.gz') === FALSE &&
+                                                strstr($file, '.bodies.zip') === FALSE) {
                                                 $zip_size += filesize($filePath);
                                                 $zip->addFile($filePath, $file);
                                             }
                                         }
                                     }
                                 }
-                                // Add trace files
+                                // Add trace, tcpdump and bodies files
                                 foreach ($files as $file) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
                                             $count++;
-                                            if (strstr($file, '.trace.json.gz') !== FALSE) {
-                                                if (!$max_zip_size || $zip_size < $max_zip_size) {
-                                                    $zip_size += filesize($filePath);
-                                                    $zip->addFile($filePath, $file);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                // Add tcpdump captures
-                                foreach ($files as $file) {
-                                    $filePath = "$testPath/$file";
-                                    if (is_file($filePath)) {
-                                        if (!ArchiveSkipFile($file)) {
-                                            $count++;
-                                            if (strstr($file, '.cap.gz') !== FALSE) {
+                                            if (strstr($file, '.cap.gz') !== FALSE ||
+                                                    strstr($file, '.trace.json.gz') !== FALSE ||
+                                                    strstr($file, '.bodies.zip') !== FALSE) {
                                                 if (!$max_zip_size || $zip_size < $max_zip_size) {
                                                     $zip_size += filesize($filePath);
                                                     $zip->addFile($filePath, $file);
