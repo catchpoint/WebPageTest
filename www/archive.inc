@@ -89,7 +89,7 @@ function ArchiveTest($id, $delete = false) {
                         if (is_dir($testPath) === true) {
                             $count = 0;
                             $zip = new ZipArchive();
-                            $max_zip_size = GetSetting('archive_max_size', 0);
+                            $max_zip_size = intval(GetSetting('archive_max_size', 0));
                             $zip_size = 0;
                             if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
                                 // add the files
