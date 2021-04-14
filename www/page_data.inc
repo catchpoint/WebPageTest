@@ -259,7 +259,7 @@ function loadPageStepData($localPaths, $testInfo = null) {
           $ret['LayoutShifts'] = $layout_shifts;
 
           // Count the number of LayoutShifts before first paint
-          if (isset($ret['chromeUserTiming.CumulativeLayoutShift']) && isset($ret['chromeUserTiming.firstPaint'])) {
+          if (isset($ret['chromeUserTiming.TotalLayoutShift']) && isset($ret['chromeUserTiming.firstPaint'])) {
             $count = 0;
             $cls = 0;
             $fraction = 0;
@@ -269,8 +269,8 @@ function loadPageStepData($localPaths, $testInfo = null) {
                 $cls = $shift['cumulative_score'];
               }
             }
-            if ($ret['chromeUserTiming.CumulativeLayoutShift'] > 0) {
-              $fraction = (float)$cls / (float)$ret['chromeUserTiming.CumulativeLayoutShift'];
+            if ($ret['chromeUserTiming.TotalLayoutShift'] > 0) {
+              $fraction = (float)$cls / (float)$ret['chromeUserTiming.TotalLayoutShift'];
             }
           }
 
