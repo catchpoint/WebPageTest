@@ -1183,13 +1183,26 @@ function RestoreTest($id)
   $ret = false;
   if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
+
+    // Get the capture server settings if configured and the test ID specifies a capture server
+    $capture_server = null;
+    $capture_salt = null;
+    if (preg_match('/^\d+[^_+][_ix]([^c_])+c/', $id, $matches)) {
+        $capture_prefix = $matches[1];
+        if ($capture_prefix) {
+            $capture_server = GetSetting("cp_capture_$capture_prefix");
+            $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
+        }
+    }
+
     // Only trigger a restore if the test doesn't exist
     if (!is_file("$testPath/testinfo.ini")) {
       $archive_dir = GetSetting('archive_dir');
       $archive_url = GetSetting('archive_url');
       $archive_s3_url = GetSetting('archive_s3_url');
       $archive_s3_server = GetSetting('archive_s3_server');
-      if (($archive_dir && strlen($archive_dir)) ||
+      if (($capture_server && $capture_salt) ||
+          ($archive_dir && strlen($archive_dir)) ||
           ($archive_url && strlen($archive_url)) ||
           ($archive_s3_url && strlen($archive_s3_url)) ||
           ($archive_s3_server && strlen($archive_s3_server))) {
@@ -1682,10 +1695,17 @@ function cp_http_get_file($url, $cpid, $file) {
         return $len;
       });
       $response = curl_exec($ch);
-      curl_close($ch);
       fclose($file_stream);
       if($response !== false) {
-        $ret = true;
+        if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
+          $ret = true;
+        } else {
+          if (isset($headers['wpt_status_code'])) {
+            error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
+          } else {
+            error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : headers " . json_encode($headers) . "\n", 3, $error_log);
+          }
+        }
       } else {
         $error = curl_error($ch);
         $error_log = GetSetting('error_log');
@@ -1694,6 +1714,10 @@ function cp_http_get_file($url, $cpid, $file) {
         }
         unlink($file_stream);
       }
+      curl_close($ch);
+    }
+    if (!$ret) {
+      @unlink($file);
     }
   }
   return $ret;

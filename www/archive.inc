@@ -296,7 +296,7 @@ function RestoreArchive($id) {
                     $cpid = GetCPID($host, $capture_salt);
                     $cp_url = "{$capture_server}hawkcaptureserver/down-wpt.ashx?test=$id";
                     cp_http_get_file($cp_url, $cpid, $zipfile);
-                    if (!is_file($zipfile)) {
+                    if (!is_file($zipfile) || !filesize($zipfile)) {
                         $error_log = GetSetting('error_log');
                         if ($error_log) {
                             error_log(gmdate('Y/m/d H:i:s - ') . "$id Error restoring test\n", 3, $error_log);
