@@ -176,7 +176,7 @@ function CheckRelay() {
                             }
                           }
                         } else {
-                          delTree($monthDir);
+                          //delTree($monthDir);
                         }
                       } else {
                         delTree($monthDir);
@@ -185,7 +185,7 @@ function CheckRelay() {
                     }
                   }
                 } else {
-                  delTree($yearDir);
+                  //delTree($yearDir);
                 }
               } else {
                 delTree($yearDir);
