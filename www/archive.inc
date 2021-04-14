@@ -207,7 +207,7 @@ function ArchiveTest($id, $delete = false) {
                 }
             }
         }
-        if ($ret && $delete && is_dir($testPath))
+        if ($ret && $delete && is_dir($testPath) && is_file("$testPath/.archived"))
           delTree("$testPath/");
     }
 

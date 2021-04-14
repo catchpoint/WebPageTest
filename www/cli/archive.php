@@ -198,7 +198,7 @@ function CheckRelay() {
             }
           }
         } else {
-          // Invalud key
+          // Invalid key
           delTree($keydir);
         }
         @rmdir($keydir);
@@ -312,7 +312,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   }
 
   if ($delete) {
-    if (VerifyArchive($id)) {
+    if (VerifyArchive($id) && is_file("$testPath/.archived")) {
       delTree("$testPath/");
       $deleted++;
       $logLine .= " Deleted";

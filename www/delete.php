@@ -11,7 +11,7 @@ if( strpos($testPath, 'relay') !== false
     && strpos($testPath, '..') === false
     && is_dir($testPath) ) {
     // delete the test directory
-    DelTree($testPath);
+    delTree($testPath);
     
     // delete empty directories above this one
     while (strpos($testPath, 'relay')) {
