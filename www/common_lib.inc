@@ -1548,6 +1548,7 @@ function GetCPID($host, $salt) {
 
 function cp_http_post($url, $body, $cpid, $file=null) {
   $result = null;
+  $filesize = 0;
   if (function_exists('curl_init')) {
     $ch = curl_init($url);
     $headers = array();
@@ -1561,7 +1562,8 @@ function cp_http_post($url, $body, $cpid, $file=null) {
         curl_setopt($ch, CURLOPT_PUT, 1 );
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST' );
         curl_setopt($ch, CURLOPT_INFILE, $file_stream);
-        curl_setopt($ch, CURLOPT_INFILESIZE, filesize($file));
+        $filesize = filesize($file);
+        curl_setopt($ch, CURLOPT_INFILESIZE, $filesize);
       } else {
         curl_close($ch);
         return null;
@@ -1594,9 +1596,9 @@ function cp_http_post($url, $body, $cpid, $file=null) {
         $error_log = GetSetting('error_log');
         if ($error_log) {
           if (isset($headers['wpt_status_code'])) {
-            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST ($filesize) $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
           } else {
-            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : wpt_status_code missing\n", 3, $error_log);
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST ($filesize) $url : wpt_status_code missing\n", 3, $error_log);
           }
         }
       }
@@ -1605,13 +1607,13 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       $error_log = GetSetting('error_log');
       if ($error_log) {
         if ($error ) {
-          error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : $error\n", 3, $error_log);
+          error_log(gmdate('Y/m/d H:i:s - ') . "POST ($filesize) $url : $error\n", 3, $error_log);
         } else {
           $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
           if ($code) {
-            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url : code $code\n", 3, $error_log);
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST ($filesize) $url : code $code\n", 3, $error_log);
           } else {
-            error_log(gmdate('Y/m/d H:i:s - ') . "POST $url unknown error\n", 3, $error_log);
+            error_log(gmdate('Y/m/d H:i:s - ') . "POST ($filesize) $url unknown error\n", 3, $error_log);
           }
         }
       }
