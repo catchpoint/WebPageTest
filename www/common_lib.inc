@@ -1700,10 +1700,13 @@ function cp_http_get_file($url, $cpid, $file) {
         if (isset($headers['wpt_status_code']) && $headers['wpt_status_code'] == '0') {
           $ret = true;
         } else {
-          if (isset($headers['wpt_status_code'])) {
-            error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
-          } else {
-            error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : headers " . json_encode($headers) . "\n", 3, $error_log);
+          $error_log = GetSetting('error_log');
+          if ($error_log) {
+            if (isset($headers['wpt_status_code'])) {
+              error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : wpt_status_code {$headers['wpt_status_code']}\n", 3, $error_log);
+            } else {
+              error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : headers " . json_encode($headers) . "\n", 3, $error_log);
+            }
           }
         }
       } else {
