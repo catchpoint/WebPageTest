@@ -99,13 +99,44 @@ function ArchiveTest($id, $delete = false) {
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
                                             $count++;
-                                            $zip_size += filesize($filePath);
-                                            $zip->addFile($filePath, $file);
+                                            if (strstr($file, '.cap.gz') === FALSE && strstr($file, '.trace.json.gz') === FALSE) {
+                                                $zip_size += filesize($filePath);
+                                                $zip->addFile($filePath, $file);
+                                            }
+                                        }
+                                    }
+                                }
+                                // Add trace files
+                                foreach ($files as $file) {
+                                    $filePath = "$testPath/$file";
+                                    if (is_file($filePath)) {
+                                        if (!ArchiveSkipFile($file)) {
+                                            $count++;
+                                            if (strstr($file, '.trace.json.gz') !== FALSE) {
+                                                if (!$max_zip_size || $zip_size < $max_zip_size) {
+                                                    $zip_size += filesize($filePath);
+                                                    $zip->addFile($filePath, $file);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                // Add tcpdump captures
+                                foreach ($files as $file) {
+                                    $filePath = "$testPath/$file";
+                                    if (is_file($filePath)) {
+                                        if (!ArchiveSkipFile($file)) {
+                                            $count++;
+                                            if (strstr($file, '.cap.gz') !== FALSE) {
+                                                if (!$max_zip_size || $zip_size < $max_zip_size) {
+                                                    $zip_size += filesize($filePath);
+                                                    $zip->addFile($filePath, $file);
+                                                }
+                                            }
                                         }
                                     }
                                 }
                                 // Add the video directories
-                                $files = scandir($testPath);
                                 foreach ($files as $file) {
                                     $filePath = "$testPath/$file";
                                     if ($file != '.' && $file != '..' && is_dir($filePath)) {
