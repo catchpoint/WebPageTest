@@ -98,10 +98,10 @@ function ArchiveTest($id, $delete = false) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
-                                            $count++;
                                             if (strstr($file, '.cap.gz') === FALSE && 
-                                                strstr($file, 'trace.json.gz') === FALSE &&
-                                                strstr($file, 'bodies.zip') === FALSE) {
+                                                    strstr($file, 'trace.json.gz') === FALSE &&
+                                                    strstr($file, 'bodies.zip') === FALSE) {
+                                                $count++;
                                                 $zip_size += filesize($filePath);
                                                 $zip->addFile($filePath, $file);
                                             }
@@ -113,7 +113,6 @@ function ArchiveTest($id, $delete = false) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
-                                            $count++;
                                             if (strstr($file, '.cap.gz') !== FALSE ||
                                                     strstr($file, 'trace.json.gz') !== FALSE ||
                                                     strstr($file, 'bodies.zip') !== FALSE) {
