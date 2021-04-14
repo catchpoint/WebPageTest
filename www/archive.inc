@@ -100,35 +100,30 @@ function ArchiveTest($id, $delete = false) {
                                         if (!ArchiveSkipFile($file)) {
                                             $count++;
                                             if (strstr($file, '.cap.gz') === FALSE && 
-                                                strstr($file, '.trace.json.gz') === FALSE &&
-                                                strstr($file, '.bodies.zip') === FALSE) {
+                                                strstr($file, 'trace.json.gz') === FALSE &&
+                                                strstr($file, 'bodies.zip') === FALSE) {
                                                 $zip_size += filesize($filePath);
                                                 $zip->addFile($filePath, $file);
                                             }
                                         }
                                     }
                                 }
-                                // Add trace, tcpdump and bodies files
+                                // Add the video directories, trace, tcpdump and bodies files
                                 foreach ($files as $file) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
                                             $count++;
                                             if (strstr($file, '.cap.gz') !== FALSE ||
-                                                    strstr($file, '.trace.json.gz') !== FALSE ||
-                                                    strstr($file, '.bodies.zip') !== FALSE) {
+                                                    strstr($file, 'trace.json.gz') !== FALSE ||
+                                                    strstr($file, 'bodies.zip') !== FALSE) {
                                                 if (!$max_zip_size || $zip_size < $max_zip_size) {
                                                     $zip_size += filesize($filePath);
                                                     $zip->addFile($filePath, $file);
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                // Add the video directories
-                                foreach ($files as $file) {
-                                    $filePath = "$testPath/$file";
-                                    if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                                    } elseif ($file != '.' && $file != '..' && is_dir($filePath)) {
                                         $subFiles = scandir($filePath);
                                         if ($subFiles) {
                                             $zip->addEmptyDir($file);
