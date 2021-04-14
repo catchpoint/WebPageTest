@@ -237,6 +237,9 @@ footer ul li{
     font-weight: bold;
     color: #2F80ED;
 }
+#header_data .url {
+    word-break: break-all;
+}
 .heading_details {
     font-size: 0.875em;
 }

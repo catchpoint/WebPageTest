@@ -31,7 +31,7 @@ function ArchiveSkipFile($file) {
 *
 * @param mixed $id
 */
-function ArchiveTest($id, $store_result = true, $delete = false) {
+function ArchiveTest($id, $delete = false) {
     global $api_keys;
 
     // Short-circuit tests that are already archived
@@ -69,13 +69,12 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
             if (GetSetting('archive_dir') == '/dev/null') {
               $ret = true;
             } else {
-                if( is_file("$testPath/.archived") || (isset($testInfo['archived']) && $testInfo['archived']) ) {
+                if( is_file("$testPath/.archived") ) {
                     if (VerifyArchive($id)) {
                         $ret = true;
                     } else {
                         $zipFile = GetArchiveFile($id, true);
                         unlink($zipFile);
-                        $testInfo['archived'] = false;
                         @unlink("$testPath/.archived");
                         SaveTestInfo($id, $testInfo);
                     }
@@ -90,6 +89,8 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                         if (is_dir($testPath) === true) {
                             $count = 0;
                             $zip = new ZipArchive();
+                            $max_zip_size = intval(GetSetting('archive_max_size', 0));
+                            $zip_size = 0;
                             if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
                                 // add the files
                                 $files = scandir($testPath);
@@ -97,16 +98,41 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
                                         if (!ArchiveSkipFile($file)) {
-                                        $count++;
-                                        $zip->addFile($filePath, $file);
+                                            if (strstr($file, '.cap.gz') === FALSE && 
+                                                    strstr($file, 'trace.json.gz') === FALSE &&
+                                                    strstr($file, 'bodies.zip') === FALSE) {
+                                                $count++;
+                                                $zip_size += filesize($filePath);
+                                                $zip->addFile($filePath, $file);
+                                            }
                                         }
-                                    } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                                    }
+                                }
+                                // Add the video directories, trace, tcpdump and bodies files
+                                foreach ($files as $file) {
+                                    $filePath = "$testPath/$file";
+                                    if (is_file($filePath)) {
+                                        if (!ArchiveSkipFile($file)) {
+                                            if (strstr($file, '.cap.gz') !== FALSE ||
+                                                    strstr($file, 'trace.json.gz') !== FALSE ||
+                                                    strstr($file, 'bodies.zip') !== FALSE) {
+                                                if (!$max_zip_size || $zip_size < $max_zip_size) {
+                                                    $zip_size += filesize($filePath);
+                                                    $zip->addFile($filePath, $file);
+                                                }
+                                            }
+                                        }
+                                    } elseif ($file != '.' && $file != '..' && is_dir($filePath)) {
                                         $subFiles = scandir($filePath);
                                         if ($subFiles) {
                                             $zip->addEmptyDir($file);
                                             foreach ($subFiles as $subFile) {
-                                                if( is_file("$filePath/$subFile") )
-                                                    $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                                                if( is_file("$filePath/$subFile") ) {
+                                                    if (!$max_zip_size || $zip_size < $max_zip_size) {
+                                                        $zip_size += filesize("$filePath/$subFile");
+                                                        $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -121,12 +147,11 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                         $url = "{$capture_server}hawkcaptureserver/up-wpt.ashx?test=$id&node=$host";
                                         $result = cp_http_post($url, null, $cpid, $zipFile);
                                         if (isset($result)) {
-                                            $ret = true;
-                                        } else {
-                                            $error_log = GetSetting('error_log');
-                                            if ($error_log) {
-                                                error_log(gmdate('Y/m/d H:i:s - ') . "$id Error archiving test\n", 3, $error_log);
+                                            $archive_log = GetSetting('archive_log');
+                                            if ($archive_log) {
+                                                error_log(gmdate('Y/m/d H:i:s - ') . "$id\n", 3, $archive_log);
                                             }
+                                            $ret = true;
                                         }
                                     } elseif (GetSetting('archive_dir')) {
                                         $dest = GetArchiveFile($id, true);
@@ -174,10 +199,6 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                     unlink($zipFile);
                                 if ($ret) {
                                     touch("$testPath/.archived");
-                                    if ($store_result) {
-                                        $testInfo['archived'] = true;
-                                        SaveTestInfo($id, $testInfo);
-                                    }
                                 }
                             }
                         }
@@ -186,7 +207,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                 }
             }
         }
-        if ($ret && $delete && is_dir($testPath))
+        if ($ret && $delete && is_dir($testPath) && is_file("$testPath/.archived"))
           delTree("$testPath/");
     }
 
@@ -204,12 +225,14 @@ function DownloadArchive($id, $testServer) {
         $zipfile = "./tmp/$id.zip";
         $download_url = "{$testServer}download.php?test=$id&s=$secret";
         if (http_fetch_file($download_url, $zipfile)) {
-            $testPath = './' . GetTestPath($id);
-            if (!is_dir($testPath))
-                mkdir( $testPath, 0777, true );
-            ZipExtract($zipfile, $testPath);
-            $ret = true;
-            touch("$testPath/.archived");
+            if (is_file($zipfile) && filesize($zipfile)) {
+                $testPath = './' . GetTestPath($id);
+                if (!is_dir($testPath))
+                    mkdir( $testPath, 0777, true );
+                ZipExtract($zipfile, $testPath);
+                $ret = true;
+                touch("$testPath/.archived");
+            }
             @unlink($zipfile);
         }        
         UnlockTest($lock);
@@ -274,12 +297,6 @@ function RestoreArchive($id) {
                     $cpid = GetCPID($host, $capture_salt);
                     $cp_url = "{$capture_server}hawkcaptureserver/down-wpt.ashx?test=$id";
                     cp_http_get_file($cp_url, $cpid, $zipfile);
-                    if (!is_file($zipfile)) {
-                        $error_log = GetSetting('error_log');
-                        if ($error_log) {
-                            error_log(gmdate('Y/m/d H:i:s - ') . "$id Error restoring test\n", 3, $error_log);
-                        }
-                    }
                 } elseif (strlen($url)) {
                     $url .= "/$id.zip";
                 } else {
@@ -333,7 +350,7 @@ function RestoreArchive($id) {
                         }
                     }
                 }
-                if (is_file($zipfile)) {
+                if (is_file($zipfile) && filesize($zipfile)) {
                   if (!is_dir($testPath))
                       mkdir( $testPath, 0777, true );
                   ZipExtract($zipfile, $testPath);
@@ -341,10 +358,6 @@ function RestoreArchive($id) {
                   $testInfo = GetTestInfo($id);
                   if ($testInfo) {
                     touch("$testPath/.archived");
-                    $testInfo['archived'] = true;
-                    $testInfo['restored'] = true;
-                    $testInfo['restoredDataOnly'] = false;
-                    SaveTestInfo($id, $testInfo);
                   }
                   if ($deleteZip)
                     @unlink($zipfile);

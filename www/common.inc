@@ -123,7 +123,7 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"]))
   $_SERVER["REMOTE_ADDR"] = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
 
-if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
+if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
     define('FRIENDLY_URLS', true);
     define('VER_TIMELINE', '28/');       // version of the timeline javascript
 } else {
@@ -152,7 +152,11 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '20.06');   // webpagetest version
+<<<<<<< HEAD
 define('VER_CSS', 120);                // version of the sitewide css file
+=======
+define('VER_CSS', 121);                // version of the sitewide css file
+>>>>>>> master
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 45);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
@@ -303,8 +307,6 @@ if (isset($_REQUEST['color'])) {
 $id = '';
 if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_REQUEST['test'];
-} elseif (isset($_COOKIE['tid']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
-    $id = $_COOKIE['tid'];
 }
 
 $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
@@ -316,9 +318,6 @@ if (strlen($id)) {
     if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
-    }
-    if ($id !== @$_COOKIE['tid']) {
-        setcookie('tid', $id);  // update session cookie
     }
     if (!$userIsBot)
       RestoreTest($id);   // restore the test if it is archived (and deleted)

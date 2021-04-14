@@ -631,6 +631,10 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableWEBP" class="auto_width">Disable WEBP image support</label>
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableJXL" class="auto_width">Disable Jpeg XL image support</label>
+                                    </li>
                                     <?php
                                     if ($admin && GetSetting('wprDesktop')) {
                                     ?>

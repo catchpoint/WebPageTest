@@ -176,24 +176,29 @@ function CheckRelay() {
                             }
                           }
                         } else {
+                          // More than 10 days old
                           delTree($monthDir);
                         }
                       } else {
+                        // Not Numeric
                         delTree($monthDir);
                       }
                       @rmdir($monthDir);
                     }
                   }
                 } else {
+                  // More than 10 days old
                   delTree($yearDir);
                 }
               } else {
+                // Not Numeric
                 delTree($yearDir);
               }
               @rmdir($yearDir);
             }
           }
         } else {
+          // Invalid key
           delTree($keydir);
         }
         @rmdir($keydir);
@@ -307,7 +312,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   }
 
   if ($delete) {
-    if (VerifyArchive($id)) {
+    if (VerifyArchive($id) && is_file("$testPath/.archived")) {
       delTree("$testPath/");
       $deleted++;
       $logLine .= " Deleted";
