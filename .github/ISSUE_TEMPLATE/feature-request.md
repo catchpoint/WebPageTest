@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an enhancment or feature that would help make WebPageTest even better
+about: Suggest an enhancement or feature that would help make WebPageTest even better
 labels: "Type: Enhancement"
 ---
 <!-- before filing a feature request, please search for duplicate issues -->
