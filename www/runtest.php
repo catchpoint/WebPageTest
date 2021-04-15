@@ -425,31 +425,12 @@
             {
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2]))) {
-                    $test['browser'] = trim($matches[2]);
-
-                  /*
-                  if (isset($_REQUEST['custombrowser']) && strlen($_REQUEST['custombrowser']))
-                    $test['browser'] = trim($_REQUEST['custombrowser']);
-
-                  // see if the requested browser is a custom browser
-                  if (is_dir('./browsers') &&
-                      is_file('./browsers/browsers.ini') &&
-                      (is_file("./browsers/{$test['browser']}.zip") ||
-                       is_file("./browsers/{$test['browser']}.apk"))) {
-                    $customBrowsers = parse_ini_file('./browsers/browsers.ini');
-                    if (array_key_exists($test['browser'], $customBrowsers)) {
-                      $protocol = getUrlProtocol();
-                      $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}/browsers/";
-                      if (GetSetting('browsers_url'))
-                          $base_uri = GetSetting('browsers_url');
-                      $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
-                          "$base_uri{$test['browser']}.zip" : "$base_uri{$test['browser']}.apk";
-                      $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
-                      if (is_file("./browsers/{$test['browser']}.json"))
-                        $test['customBrowserSettings'] = json_decode(file_get_contents("./browsers/{$test['browser']}.json"), true);
+                    $parts = explode(';', $matches[2]);
+                    $test['browser'] = trim($parts[0]);
+                    if (count($parts) > 1 && strlen($parts[1])) {
+                      $test['mobile'] = 1;
+                      $test['mobileDevice'] = $parts[1];
                     }
-                  }
-                  */
                 }
                 if (strlen(trim($matches[3])) &&
                     empty($locations[$test['location']]['connectivity'])) {
@@ -1334,7 +1315,7 @@ function ValidateKey(&$test, &$error, $key = null)
           if ($redis->pconnect($redis_server)) {
             $account = CacheFetch("APIkey_$key");
             if (!isset($account)) {
-              $response = $redis->get("APIkey_$key");
+              $response = $redis->get("API_$key");
               if ($response && strlen($response)) {
                 $account = json_decode($response, true);
                 if (isset($account) && is_array($account)) {
