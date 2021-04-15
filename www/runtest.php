@@ -1332,13 +1332,13 @@ function ValidateKey(&$test, &$error, $key = null)
         try {
           $redis = new Redis();
           if ($redis->pconnect($redis_server)) {
-            $account = CacheFetch("API_$key");
+            $account = CacheFetch("APIkey_$key");
             if (!isset($account)) {
-              $response = $redis->get("API_$key");
+              $response = $redis->get("APIkey_$key");
               if ($response && strlen($response)) {
                 $account = json_decode($response, true);
                 if (isset($account) && is_array($account)) {
-                  CacheStore("API_$key", $account, 3600);
+                  CacheStore("APIkey_$key", $account, 60);
                 }
               }
             }
