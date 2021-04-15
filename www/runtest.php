@@ -651,8 +651,8 @@
             $test['priority'] = intval(GetSetting('user_priority', 0));
         }
 
-        if ($test['mobile'] && is_file('./settings/mobile_devices.ini')) {
-          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+        if ($test['mobile']) {
+          $devices = LoadMobileDevices();
           $is_mobile = true;
           if ($devices) {
             if (isset($test['mobileDevice'])) {

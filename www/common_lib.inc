@@ -625,6 +625,17 @@ function CountTests($path)
     return $count;
 }
 
+$MOBILE_DEVICES = null;
+function LoadMobileDevices() {
+  if (isset($MOBILE_DEVICES)) {
+    return $MOBILE_DEVICES;
+  }
+  if (is_file(__DIR__ . '/settings/mobile_devices.ini')) {
+    $MOBILE_DEVICES = parse_ini_file(__DIR__ . '/settings/mobile_devices.ini', true);
+    return $MOBILE_DEVICES;
+  }
+}
+
 /**
 * Build the work queues and other dynamic information tied to the locations
 *
@@ -693,6 +704,16 @@ function BuildLocations( &$locations )
                                             $cfg = $configuration;
                                             $cfg['browser'] = $browser;
                                             $cfg['label'] = $cfg['label'] . " - $browser";
+                                            // Allocate the browser to a group
+                                            $cfg['browser_group'] = 'Desktop';
+                                            if (isset($configuration['mobile']) && $configuration['mobile']) {
+                                              $cfg['browser_group'] = 'Mobile';
+                                            } elseif (substr($browser, 0, 6) == 'iPhone' || substr($browser, 0, 4) == 'iPod') {
+                                              $cfg['browser_group'] = 'Mobile';
+                                            } elseif (substr($browser, 0, 4) == 'iPad') {
+                                              $cfg['browser_group'] = 'Tablet';
+                                            }
+                            
                                             $locations[$label] = $cfg;
                                         }
                                     } else {
@@ -965,6 +986,15 @@ function ParseLocations(&$locations) {
                 $b = array();
                 $b['label'] = $browser;
                 $b['key'] = $browserKey;
+                $b['id'] = $browser;
+                $b['group'] = 'Desktop';
+                if (isset($locations[$config]['mobile']) && $locations[$config]['mobile']) {
+                  $b['group'] = 'Mobile';
+                } elseif (substr($browser, 0, 6) == 'iPhone' || substr($browser, 0, 4) == 'iPod') {
+                  $b['group'] = 'Mobile';
+                } elseif (substr($browser, 0, 4) == 'iPad') {
+                  $b['group'] = 'Tablet';
+                }
                 $loc['browsers'][$browserKey] = $b;
             }
         }

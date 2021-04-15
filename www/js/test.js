@@ -130,14 +130,13 @@ function SaveSettings() {
 /*
     Populate the different browser options for a given location
 */
-function LocationChanged()
-{
+function LocationChanged() {
     $("#current-location").text($('#location option:selected').text());
-    var loc = $('#location').val();
+    let loc = $('#location').val();
     $('#location2').val(loc);
     wptStorage['testLoc'] = loc;
 
-    var marker = locations[loc]['marker'];
+    let marker = locations[loc]['marker'];
     try{
         marker.setIcon('/images/map_green.png');
     }catch(err){}
@@ -146,41 +145,68 @@ function LocationChanged()
     }catch(err){}
     selectedMarker = marker;
 
-    var browsers = [];
-    var defaultConfig = locations[loc]['default'];
+    let defaultConfig = locations[loc]['default'];
     if( defaultConfig == undefined )
         defaultConfig = locations[loc]['1'];
-    var defaultBrowser = locations[defaultConfig]['browser'];
+    let defaultBrowser = locations[defaultConfig]['browser'];
 
+    let groups = ['Desktop', 'Mobile', 'Tablet'];
+    let browsers = {};
+    let has_chrome = false;
     // build the list of browsers for this location
-    for( var key in locations[loc] )
-    {
+    for( var key in locations[loc] ) {
         // only care about the integer indexes
-        if( !isNaN(key) )
-        {
-            var config = locations[loc][key];
-            var browser = locations[config]['browser'];
+        if( !isNaN(key) ) {
+            let config = locations[loc][key];
+            let browser = locations[config]['browser'];
+            let group = 'Desktop';
+            if (locations[config]['browser_group']) {
+                group = locations[config]['browser_group'];
+            }
             if( browser != undefined )
             {
+                if (browser == 'Chrome') {
+                    has_chrome = true;
+                }
                 // see if we already know about this browser
-                var browserKey = browser.replace(" ","");
-                browsers[browserKey] = browser;
+                let browserKey = browser.replace(" ","");
+                if (!browsers[group]) {
+                    browsers[group] = {};
+                }
+                browsers[group][browserKey] = browser;
             }
+        }
+    }
+
+    // Add the emulated Chrome devices
+    if (has_chrome && mobileDevices) {
+        group = 'Chrome Device Emulation';
+        groups.push(group);
+        for (let deviceId in mobileDevices) {
+            let browser = mobileDevices[deviceId]['label'];
+            let browserKey = 'Chrome;' + deviceId.replace(" ","");
+            if (!browsers[group]) {
+                browsers[group] = {};
+            }
+            browsers[group][browserKey] = browser;
         }
     }
 
     // fill in the browser list, selecting the default one
     browserHtml = '';
-    for( var key in browsers )
-    {
-        var browser = browsers[key];
-        var selected = '';
-        if( browser == defaultBrowser )
-            selected = ' selected';
-        var display=browser;
-        if (display == 'Safari')
-            display = 'Safari (Windows)';
-        browserHtml += '<option value="' + htmlEntities(key) + '"' + selected + '>' + htmlEntities(display) + '</option>';
+    for (let group of groups) {
+        if (browsers[group]) {
+            browserHtml += '<optgroup label="' + htmlEntities(group) + '">';
+            for( let key in browsers[group] ) {
+                let browser = browsers[group][key];
+                let selected = '';
+                if( browser == defaultBrowser )
+                    selected = ' selected';
+                let display=browser;
+                browserHtml += '<option value="' + htmlEntities(key) + '"' + selected + '>' + htmlEntities(display) + '</option>';
+            }
+            browserHtml += '</optgroup>';
+        }
     }
     $('#browser').html(browserHtml);
 
@@ -195,41 +221,41 @@ function LocationChanged()
 */
 function BrowserChanged()
 {
-    var loc = $('#location').val();
-    var selectedBrowser = $('#browser').val();
-    var defaultConfig = locations[loc]['default'];
-    var selectedConfig;
+    let loc = $('#location').val();
+    let selectedBrowser = $('#browser').val();
+    let defaultConfig = locations[loc]['default'];
+    let selectedConfig;
     wptStorage['testBrowser'] = selectedBrowser;
+    let deviceID = null;
+    let parts = selectedBrowser.split(';');
+    if (parts.length > 1) {
+        selectedBrowser = parts[0];
+        deviceID = parts[1];
+    }
 
-    var connections = [];
+    let connections = [];
 
     // build the list of connections for this location/browser
-    for( var key in locations[loc] )
+    for( let key in locations[loc] )
     {
         // only care about the integer indexes
         if( !isNaN(key) )
         {
-            var config = locations[loc][key];
-            var browser = locations[config]['browser'].replace(" ","");;
+            let base_config = locations[loc][key];
+            let config = base_config;
+            if (deviceID) {
+                config += ';' + deviceID;
+            }
+            let browser = locations[base_config]['browser'].replace(" ","");;
             if( browser == selectedBrowser )
             {
-                if( locations[config]['connectivity'] != undefined )
+                if( locations[base_config]['connectivity'] != undefined )
                 {
-                    connections[config] = {'label': locations[config]['connectivity']};
-                    if( config == defaultConfig )
+                    connections[config] = {'label': locations[base_config]['connectivity']};
+                    if( base_config == defaultConfig )
                         selectedConfig = config;
-                } else if( locations[config]['connections'] != undefined ) {
-                    for( var conn in locations[config]['connections'] ) {
-                        var conn_id = locations[config]['connections'][conn]['id'];
-                        var conn_group = locations[config]['connections'][conn]['group'];
-                        var conn_label = locations[config]['connections'][conn]['label'];
-                        if( selectedConfig == undefined )
-                            selectedConfig = config + '.' + conn_id;
-                        connections[config + '.' + conn_id] = {'group': conn_group, 'label': conn_group + ' - ' + conn_label};
-                    }
                 } else {
-                    for( var conn in connectivity )
-                    {
+                    for( let conn in connectivity ) {
                         if (connectivity[conn]['hidden'] == undefined || !connectivity[conn]['hidden']) {
                             if( selectedConfig == undefined )
                                 selectedConfig = config + '.' + conn;
@@ -246,10 +272,8 @@ function BrowserChanged()
     }
 
     // if the default configuration couldn't be selected, pick the first one
-    if( selectedConfig == undefined )
-    {
-        for( var config in connections )
-        {
+    if( selectedConfig == undefined ) {
+        for( let config in connections ) {
             selectedConfig = config;
             break;
         }
@@ -257,9 +281,9 @@ function BrowserChanged()
 
     // build the actual list
     connectionHtml = '';
-    var lastGroup = undefined;
-    for( var config in connections ) {
-        var selected = '';
+    let lastGroup = undefined;
+    for( let config in connections ) {
+        let selected = '';
         if( config == selectedConfig )
             selected = ' selected';
         if (connections[config]['group'] != undefined && connections[config]['group'] != lastGroup) {
@@ -276,12 +300,15 @@ function BrowserChanged()
     $('#connection').html(connectionHtml);
 
     if (wptStorage['testConnection'] != undefined) {
-        var connection = wptStorage['testConnection'];
-        $('#connection option:contains(' +  connection + ')').each(function(){
-            if ($(this).text() == connection) {
-                $(this).attr('selected', 'selected');
-            }
-        });
+        let connection = wptStorage['testConnection'];
+        try {
+            $('#connection option:contains(' +  connection + ')').each(function(){
+                if ($(this).text() == connection) {
+                    $(this).attr('selected', 'selected');
+                }
+            });
+        } catch (e) {
+        }
     }
 
     ConnectionChanged();
@@ -297,7 +324,7 @@ function ConnectionChanged()
     if( conn != undefined && conn.length )
     {
         var parts = conn.split('.');
-        var config = parts[0];
+        var config = parts[0].split(';')[0];
         var connection = parts[1];
         var setSpeed = true;
 

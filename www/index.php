@@ -41,6 +41,8 @@ if (file_exists('./settings/common/connectivity.ini'))
 if (file_exists('./settings/server/connectivity.ini'))
     $connectivity_file = './settings/server/connectivity.ini';
 $connectivity = parse_ini_file($connectivity_file, true);
+$mobile_devices = LoadMobileDevices();
+
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
   // move it to the front of the list
   $insert = $connectivity[$_REQUEST['connection']];
@@ -238,12 +240,37 @@ $loc = ParseLocations($locations);
                             <label for="browser">Browser</label>
                             <select name="browser" id="browser">
                                 <?php
-                                foreach( $loc['browsers'] as $key => &$browser )
+                                // Group the browsers by type
+                                $browser_groups = array();
+                                $ungrouped = array();
+                                foreach( $loc['browsers'] as $key => $browser )
+                                {
+                                    if (isset($browser['group'])) {
+                                        if (!isset($browser_groups[$browser['group']])) {
+                                            $browser_groups[$browser['group']] = array();
+                                        }
+                                        $browser_groups[$browser['group']][] = $browser;
+                                    } else {
+                                        $ungrouped[] = $browser;
+                                    }
+                                }
+                                foreach( $ungrouped as $browser )
                                 {
                                     $selected = '';
                                     if( isset($browser['selected']) && $browser['selected'] )
                                         $selected = 'selected';
                                     echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
+                                }
+                                foreach ($browser_groups as $group => $browsers) {
+                                    echo "<optgroup label=\"" . htmlspecialchars($group) . "\">";
+                                    foreach( $browsers as $browser )
+                                    {
+                                        $selected = '';
+                                        if( isset($browser['selected']) && $browser['selected'] )
+                                            $selected = 'selected';
+                                        echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
+                                    }
+                                    echo "</optgroup>";
                                 }
                                 ?>
                             </select>
@@ -546,17 +573,16 @@ $loc = ParseLocations($locations);
                                             Emulate Mobile Browser
                                         </label>
                                         <?php
-                                        if (is_file('./settings/mobile_devices.ini')) {
-                                          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
-                                          if ($devices && count($devices)) {
+                                        if (isset($mobile_devices)) {
+                                          if (is_array($mobile_devices) && count($mobile_devices)) {
                                             $selectedDevice = null;
-                                            if (isset($_COOKIE['mdev']) && isset($devices[$_COOKIE['mdev']]))
+                                            if (isset($_COOKIE['mdev']) && isset($mobile_devices[$_COOKIE['mdev']]))
                                               $selectedDevice = $_COOKIE['mdev'];
-                                            if (isset($_REQUEST['mdev']) && isset($devices[$_REQUEST['mdev']]))
+                                            if (isset($_REQUEST['mdev']) && isset($mobile_devices[$_REQUEST['mdev']]))
                                               $selectedDevice = $_REQUEST['mdev'];
                                             echo '<select name="mobileDevice" id="mobileDevice">';
                                             $lastGroup = null;
-                                            foreach ($devices as $deviceName => $deviceInfo) {
+                                            foreach ($mobile_devices as $deviceName => $deviceInfo) {
                                               if (isset($deviceInfo['label'])) {
                                                 if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
                                                   if (isset($lastGroup))
@@ -857,6 +883,11 @@ $loc = ParseLocations($locations);
             echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
+            if (isset($mobile_devices)) {
+                echo "var mobileDevices = " . json_encode($mobile_devices) . ";\n";
+            } else {
+                echo "var mobileDevices = {};\n";
+            }
             $maps_api_key = GetSetting('maps_api_key');
             if ($maps_api_key) {
                 echo "var mapsApiKey = '$maps_api_key';";
