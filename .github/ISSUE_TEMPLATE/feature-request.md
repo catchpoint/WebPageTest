@@ -1,6 +1,6 @@
 ---
-name: Bug Report
-about: Report something that isn't working correctly
+name: Feature Request
+about: Suggest an enhancment or feature that would help make WebPageTest even better
 labels: "Type: Enhancement"
 ---
 <!-- before filing a feature request, please search for duplicate issues -->
