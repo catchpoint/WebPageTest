@@ -1,0 +1,22 @@
+# Number of days of inactivity before an issue becomes stale
+daysUntilStale: 70
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 20
+# Issues with these labels will never be considered stale
+exemptLabels:
+  - pinned
+  - security
+# Label to use when marking an issue as stale
+staleLabel: "Status: Stale?"
+# Comment to post when marking an issue as stale. Set to `false` to disable
+markComment: >
+  Things have gone a bit quiet!
+
+  We get a lot of issues, so to help us prioritize and keep things neat and tidy, we currently close issues after 90 days of inactivity. It's been at least 70 days since the last update on this one.
+
+  If we missed this issue, or you want to keep it open, please reply here and we'll prioritize it accordingly. Thanks!
+# Comment to post when closing a stale issue. Set to `false` to disable
+closeComment: >
+  Looks like it's been 90 days now since any activity occurred on this issue, so this little bot is going to close it.
+
+  Please feel free to comment on this issue, or create a new one, if you need anything else.
