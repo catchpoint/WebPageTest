@@ -1,0 +1,7 @@
+contact_links:
+  - name: WebPageTest Documentation
+    url: https://docs.webpagetest.org/
+    about: Check out the WebPageTest documentation for answers to common questions
+  - name: WebPageTest Forums
+    url: https://forums.webpagetest.org/
+    about: Ask questions about WebPageTest or performance in general, get help and share what you're learning and working on
