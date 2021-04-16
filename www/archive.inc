@@ -116,8 +116,9 @@ function ArchiveTest($id, $delete = false) {
                                             if (strstr($file, '.cap.gz') !== FALSE ||
                                                     strstr($file, 'trace.json.gz') !== FALSE ||
                                                     strstr($file, 'bodies.zip') !== FALSE) {
-                                                if (!$max_zip_size || $zip_size < $max_zip_size) {
-                                                    $zip_size += filesize($filePath);
+                                                $file_size = filesize($filePath);
+                                                if (!$max_zip_size || $zip_size + $file_size <= $max_zip_size) {
+                                                    $zip_size += $file_size;
                                                     $zip->addFile($filePath, $file);
                                                 }
                                             }
@@ -128,8 +129,9 @@ function ArchiveTest($id, $delete = false) {
                                             $zip->addEmptyDir($file);
                                             foreach ($subFiles as $subFile) {
                                                 if( is_file("$filePath/$subFile") ) {
-                                                    if (!$max_zip_size || $zip_size < $max_zip_size) {
-                                                        $zip_size += filesize("$filePath/$subFile");
+                                                    $file_size = filesize("$filePath/$subFile");
+                                                    if (!$max_zip_size || $zip_size + $file_size <= $max_zip_size) {
+                                                        $zip_size += $file_size;
                                                         $zip->addFile("$filePath/$subFile", "$file/$subFile");
                                                     }
                                                 }
