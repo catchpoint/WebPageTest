@@ -24,6 +24,22 @@ function ArchiveSkipFile($file) {
   return $skip;
 }
 
+function ArchiveFilterLargeFile($file) {
+    $files = array(
+        '.cap.gz',
+        '_trace.json.gz',
+        'bodies.zip',
+        'console_log.json.gz',
+        'netlog.txt.gz'
+    );
+    foreach ($files as $f) {
+        if (strstr($file, $f) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
 * Archive the given test if it hasn't already been archived
 * For now this will just zip and move to a location on disk
@@ -97,14 +113,10 @@ function ArchiveTest($id, $delete = false) {
                                 foreach ($files as $file) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
-                                        if (!ArchiveSkipFile($file)) {
-                                            if (strstr($file, '.cap.gz') === FALSE && 
-                                                    strstr($file, 'trace.json.gz') === FALSE &&
-                                                    strstr($file, 'bodies.zip') === FALSE) {
-                                                $count++;
-                                                $zip_size += filesize($filePath);
-                                                $zip->addFile($filePath, $file);
-                                            }
+                                        if (!ArchiveSkipFile($file) && !ArchiveFilterLargeFile($file)) {
+                                            $count++;
+                                            $zip_size += filesize($filePath);
+                                            $zip->addFile($filePath, $file);
                                         }
                                     }
                                 }
@@ -112,15 +124,11 @@ function ArchiveTest($id, $delete = false) {
                                 foreach ($files as $file) {
                                     $filePath = "$testPath/$file";
                                     if (is_file($filePath)) {
-                                        if (!ArchiveSkipFile($file)) {
-                                            if (strstr($file, '.cap.gz') !== FALSE ||
-                                                    strstr($file, 'trace.json.gz') !== FALSE ||
-                                                    strstr($file, 'bodies.zip') !== FALSE) {
-                                                $file_size = filesize($filePath);
-                                                if (!$max_zip_size || $zip_size + $file_size <= $max_zip_size) {
-                                                    $zip_size += $file_size;
-                                                    $zip->addFile($filePath, $file);
-                                                }
+                                        if (!ArchiveSkipFile($file) && ArchiveFilterLargeFile($file)) {
+                                            $file_size = filesize($filePath);
+                                            if (!$max_zip_size || $zip_size + $file_size <= $max_zip_size) {
+                                                $zip_size += $file_size;
+                                                $zip->addFile($filePath, $file);
                                             }
                                         }
                                     } elseif ($file != '.' && $file != '..' && is_dir($filePath)) {
