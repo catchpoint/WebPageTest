@@ -30,9 +30,7 @@ $url = '';
 if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
 }
-if (!strlen($url)) {
-    $url = 'Enter a website URL...';
-}
+$placeholder = 'Enter a website URL...';
 $connectivity_file = './settings/connectivity.ini.sample';
 if (file_exists('./settings/connectivity.ini'))
     $connectivity_file = './settings/connectivity.ini';
@@ -197,7 +195,13 @@ $loc = ParseLocations($locations);
                     <ul class="input_fields">
                         <li>
                             <label for="url" class="vis-hidden">Enter URL to test</label>
-                            <input type="text" name="url" id="url" inputmode="url" placeholder="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onkeypress="if (event.keyCode == 32) {return false;}">
+                            <?php
+                            if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                                echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                            } else {
+                                echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                            }
+                            ?>
                         <?php
                             if (strlen($siteKey)) {
                             echo "<button data-sitekey=\"$siteKey\" data-callback=\"onRecaptchaSubmit\" class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
