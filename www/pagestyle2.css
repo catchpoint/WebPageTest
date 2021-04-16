@@ -1336,6 +1336,33 @@ table.glossary th{
 .chart{
     margin-bottom: 2.5em;
 }
+/* Overriding classes from https://www.gstatic.com/charts/50/css/table/table.css */ 
+.test_results-content .google-visualization-table-table{
+    border-collapse: collapse;
+    width: 100%;
+    font-size: inherit;
+}
+.test_results-content .google-visualization-table{
+    display: block;
+    margin-top: 1em;
+    font-size: .75em;
+}
+.test_results-content .google-visualization-table-th{
+    background: gainsboro;
+}
+.test_results-content .google-visualization-table-th,
+.test_results-content .google-visualization-table-td{
+    border: 1px solid silver;
+    padding: 0.4em;
+    line-height: 1.4em;
+}
+.test_results-content .google-visualization-table-table td{
+    border: 1px solid silver;
+}
+.test_results-content .google-visualization-table .gradient{
+    background-image: none;
+    background: gainsboro;
+}
 
 /* simple forms */
 .simple_form{
