@@ -1603,6 +1603,7 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       $file_stream = fopen($file, 'rb');
       if ($file_stream) {
         curl_setopt($ch, CURLOPT_PUT, 1 );
+        curl_setopt($ch, CURLOPT_UPLOAD, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST' );
         curl_setopt($ch, CURLOPT_INFILE, $file_stream);
         $filesize = filesize($file);
@@ -1616,7 +1617,8 @@ function cp_http_post($url, $body, $cpid, $file=null) {
       curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
     }
     curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: $contentType",
-                                               "CPID: $cpid"));
+                                               "CPID: $cpid",
+                                               "Transfer-Encoding: chunked"));
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
