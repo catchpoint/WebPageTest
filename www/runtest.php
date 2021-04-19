@@ -2122,7 +2122,7 @@ function CheckIp(&$test)
   global $user;
   global $usingAPI;
   $ok = true;
-  if (!$admin) {
+  if (!$admin && !$usingAPI) {
     $date = gmdate("Ymd");
     $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
