@@ -193,7 +193,6 @@ if (isset($_COOKIE['tzo'])) {
 }
 SetLocaleFromBrowser();
 
-// some myBB integration to get the requesting user
 $USER_EMAIL = null;
 $supportsAuth = false;
 $supportsSaml = GetSetting('saml_login') !== false;
@@ -206,44 +205,8 @@ $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-$mybb_user_info = GetSetting('mybb_user');
-if (!$supportsSaml && $mybb_user_info) {
-  ob_start();
-  $supportsAuth = true;
 
-  if (isset($_COOKIE['mybbuser']) && strlen($_COOKIE['mybbuser'])) {
-    $cache_key = 'mybbuser-' . sha1($_COOKIE['mybbuser']);
-    $userinfo = CacheFetch($cache_key);
-    if (!isset($userinfo) || !is_array($userinfo) || !isset($userinfo['user'])) {
-      $opts = array('http' => array('header'=> 'Cookie: ' . $_SERVER['HTTP_COOKIE']."\r\n"));
-      $context = stream_context_create($opts);
-      $mybb_user_info_raw = file_get_contents($mybb_user_info, false, $context);
-      if ($mybb_user_info_raw) {
-        $userinfo = json_decode($mybb_user_info_raw, true);
-        if (isset($userinfo) && is_array($userinfo) && isset($userinfo['user'])) {
-          CacheStore($cache_key, $userinfo, 3600);
-        }
-      }
-    }
-    if (isset($userinfo) && is_array($userinfo)) {
-      if (isset($userinfo['uid']))
-        $uid = $userinfo['uid'];
-      if (isset($userinfo['user']))
-        $user = $userinfo['user'];
-      if (isset($userinfo['admin']))
-        $admin = $userinfo['admin'];
-      if (isset($userinfo['email']))
-        $USER_EMAIL = $userinfo['email'];
-    }
-  }
-  ob_end_clean();
-}
-if (isset($user)) {
-  $user = preg_replace('/[^a-zA-Z0-9@\.\-_]/', '', $user);
-}
-
-if (isset($user)) {
-} elseif ($supportsSaml) {
+if ($supportsSaml) {
   $USER_EMAIL = GetSamlEmail();
 } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
   $USER_EMAIL = $_COOKIE['google_email'];

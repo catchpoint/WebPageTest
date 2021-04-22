@@ -76,8 +76,6 @@ if ($alert) {
 
             if (GetSetting('forums_url')) {
                 $navTabs['Forums'] = GetSetting('forums_url');
-            } elseif (GetSetting('mybb_user')) {
-                $navTabs['Forums'] = 'https://www.webpagetest.org/forums/';
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
             $blogUrl = GetSetting('blog_url');
@@ -143,14 +141,8 @@ if( $supportsAuth && !defined('EMBED') )
         $logoutUrl = 'javascript:wptLogout();';
         $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-    } else {
-        if (GetSetting('mybb_user')) {
-          echo '<li><a href="https://www.webpagetest.org/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-          echo '<a href="https://www.webpagetest.org/forums/member.php?action=register">Register</a></li> ';
-        }
-        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
-        }
+    } else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+        echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
     }
     echo '</ul>';
 }
