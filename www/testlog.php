@@ -102,7 +102,7 @@ if( $csv )
             ?>
             <h1>Test History</h1>
             <form name="filterLog" method="get" action="/testlog.php">
-                <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. Create an account and log-in to keep your test history for longer and to see test history across multiple browsers.</p>
+                <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. [Create an account and login](https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup) to keep your test history for longer and to see test history across multiple browsers.</p>
                     <label for="filter" class="vis-hidden">Filter test history:</label>
                          <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
                 </form>
