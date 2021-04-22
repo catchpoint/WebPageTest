@@ -20,8 +20,19 @@
             include 'header.inc';
             if( !isset($test) )
             {
-                echo "<h3>Test Not Found</h3>\n";
-                echo "<p>Sorry, the test you requested could not be found.</p>";
+                if (TestArchiveExpired($id)) {
+                    echo "<h3>Test Result Expired</h3>\n";
+                    $retain_months = GetSetting('archive_retention_months', null);
+                    if ($retain_months) {
+                        $retain_months = htmlspecialchars($retain_months);
+                        echo "<p>Sorry, the test you requested has expired. Test results are kept for $retain_months months.</p>";
+                    } else {
+                        echo "<p>Sorry, the test you requested could not be found.</p>";
+                    }
+                } else {
+                    echo "<h3>Test Not Found</h3>\n";
+                    echo "<p>Sorry, the test you requested could not be found.</p>";
+                }
             }
             else
             {

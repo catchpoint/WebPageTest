@@ -257,6 +257,9 @@ function DownloadArchive($id, $testServer) {
 */
 function RestoreArchive($id) {
     $ret = false;
+    if (TestArchiveExpired($id)) {
+        return false;
+    }
     $testServer = GetServerForTest($id);
     if (isset($testServer)) {
         if (DownloadArchive($id, $testServer)) {
