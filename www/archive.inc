@@ -524,6 +524,10 @@ function RestoreVideoArchive($id) {
     $s3_urlstyle = GetSetting('archive_s3_urlstyle');
     $zipFile = "./tmp/video_$id.zip";
 
+    if (TestArchiveExpired($id)) {
+        return;
+    }
+
     $videoPath = './' . GetVideoPath($id);
     if (is_dir($videoPath)) {
         // Update the last time it was accessed
