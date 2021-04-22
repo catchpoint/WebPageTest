@@ -62,7 +62,12 @@ function GetTestStatus($id, $includePosition = true) {
     $elapsed = time() - $startTime;
     $max_run_minutes = GetSetting('max_run_minutes', 60);
     if ($max_run_minutes > 0 && $elapsed > $max_run_minutes * 60) {
-      $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+      if (TestArchiveExpired($id)) {
+        $statusText = 'Test result expired';
+      } else {
+        $statusText = 'Test not found';
+      }
+      $ret = array('statusCode' => 400, 'statusText' => $statusText, 'id' => $id);
       touch("$testPath/test.complete");
       @unlink("$testPath/test.running");
     } else {
@@ -105,7 +110,12 @@ function GetTestStatus($id, $includePosition = true) {
   if (is_file("$testPath/test.waiting")) {
     $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
   } else {
-    $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+    if (TestArchiveExpired($id)) {
+      $statusText = 'Test result expired';
+    } else {
+      $statusText = 'Test not found';
+    }
+    $ret = array('statusCode' => 400, 'statusText' => $statusText, 'id' => $id);
   }
   $now = time();
   RestoreTest($id);

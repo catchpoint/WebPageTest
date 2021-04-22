@@ -690,7 +690,6 @@
         if (isset($req_k))
           $test['key'] = $req_k;
 
-        // some myBB integration to get the requesting user
         if( isset($user) && !array_key_exists('user', $test) )
             $test['user'] = $user;
 

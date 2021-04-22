@@ -257,6 +257,9 @@ function DownloadArchive($id, $testServer) {
 */
 function RestoreArchive($id) {
     $ret = false;
+    if (TestArchiveExpired($id)) {
+        return false;
+    }
     $testServer = GetServerForTest($id);
     if (isset($testServer)) {
         if (DownloadArchive($id, $testServer)) {
@@ -520,6 +523,10 @@ function RestoreVideoArchive($id) {
     $s3_bucket = GetSetting('archive_s3_bucket');
     $s3_urlstyle = GetSetting('archive_s3_urlstyle');
     $zipFile = "./tmp/video_$id.zip";
+
+    if (TestArchiveExpired($id)) {
+        return;
+    }
 
     $videoPath = './' . GetVideoPath($id);
     if (is_dir($videoPath)) {

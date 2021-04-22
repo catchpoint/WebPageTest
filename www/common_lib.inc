@@ -3637,3 +3637,24 @@ function GetServerForTest($id) {
   }
   return $server_url;
 }
+
+// See if the test is beyond the archive retention period (if configured)
+function TestArchiveExpired($id) {
+  $retain_months = GetSetting('archive_retention_months', null);
+  if (isset($retain_months) && is_numeric($retain_months) && isset($id) && is_string($id)) {
+    if (preg_match('/^(\d\d\d\d\d\d)/', $id, $matches)) {
+      $test_date = date_create_from_format('ymd', $matches[1]);
+      if ($test_date) {
+        $now = date_create();
+        if ($now) {
+          $retain_months = intval($retain_months);
+          $elapsed = $now->getTimestamp() - $test_date->getTimestamp();
+          if ($elapsed && $elapsed > $retain_months * 31 * 86400) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
