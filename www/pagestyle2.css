@@ -52,9 +52,8 @@ header {
     }
 }
 header .logo{
-    
     line-height: 0;
-    margin: 1em auto;
+    margin: 1em 0;
     display: block;
     text-align: center;
 }
@@ -71,6 +70,7 @@ header .logo img {
     header .logo{
         grid-column: 2/4;
         align-self: center;
+        justify-self: left;
     }
     header .logo img {
         width: 12rem;
