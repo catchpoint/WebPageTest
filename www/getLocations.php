@@ -147,8 +147,7 @@ function LoadLocations()
 {
   $locations = array();
   $loc = LoadLocationsIni();
-  if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)(?P<key>[\.0-9A-Za-z]*)$/', $_REQUEST['k'], $matches)) {
-    $filter = $matches['prefix'];
+  if (isset($_REQUEST['k'])) {
     foreach ($loc as $name => $location) {
       if (isset($location['browser']) && isset($location['noapi'])) {
         unset($loc[$name]);
