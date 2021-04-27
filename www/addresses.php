@@ -34,9 +34,9 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $title = 'WebPageTest - Tester IP Addresses';
   include 'admin_header.inc';
   echo "<table class=\"table\">\n";
-  echo "<tr><th class=\"header\">Location</th><th>IP Addresses</th></tr>";
+  echo "<tr><th nowrap class=\"header\">Location</th><th nowrap class=\"header\">IP Addresses</th></tr>";
   foreach( $addresses as $name => $location ) {
-    echo "<tr id=\"$name\"><td>" . htmlspecialchars($name);
+    echo "<tr id=\"$name\"><td nowrap>" . htmlspecialchars($name);
     if (isset($location['label'])) {
       echo ' : ' . htmlspecialchars($location['label']);
     }
