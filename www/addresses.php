@@ -44,7 +44,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     $first = true;
     foreach($location['addresses'] as $address) {
         if (!$first)
-            echo ' ';
+            echo ', ';
         echo htmlspecialchars($address);
         $first = false;
     }
