@@ -102,15 +102,15 @@ function GetAllAddresses($include_sensitive = true) {
 
   // Go through and build a list of IP addresses for each location
   $addresses = array();
-  foreach( $locations as $name => &$location ) {
+  foreach( $locations as $name => $location ) {
     $addresses[$name] = array('id' => $name, 'addresses' => array());
     if (isset($location['label'])) {
-      $addresses['label'] = $location['label'];
+      $addresses[$name]['label'] = $location['label'];
     }
     if (isset($location['testers'])) {
       foreach($location['testers'] as $tester) {
-        if (isset($tester['ip']) && !in_array($tester['ip'], $addresses['addresses'])) {
-            $addresses['addresses'][] = $tester['ip'];
+        if (isset($tester['ip']) && !in_array($tester['ip'], $addresses[$name]['addresses'])) {
+            $addresses[$name]['addresses'][] = $tester['ip'];
         }
       }
     }
