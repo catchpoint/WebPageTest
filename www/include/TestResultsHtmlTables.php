@@ -459,7 +459,7 @@ class TestResultsHtmlTables {
         if (gz_is_file($localPaths->debugLogFile())) {
           $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
           $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->debugLogFile());
-          $error_str .= ". <a href=\"$zipUrl\">Debug Log<\a>";
+          $error_str .= ". <a href=\"$zipUrl\">Debug Log</a>";
         }
       }
     }
