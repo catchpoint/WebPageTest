@@ -404,6 +404,7 @@ function VerifyArchive($id) {
     }
     
     if (!isset($capture_server) && !GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
+        $testPath = './' . GetTestPath($id);
         if (GetSetting('archive_dir')) {
             // local
             $valid = false;
