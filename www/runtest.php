@@ -1901,7 +1901,7 @@ function GetRedirect($url, &$rhost, &$rurl) {
 
   if (strlen($url)) {
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-      $url = 'http://' . $url;
+      $url = 'https://' . $url;
     if (array_key_exists($url, $redirect_cache)) {
       $rhost = $redirect_cache[$url]['host'];
       $rurl = $redirect_cache[$url]['url'];
@@ -2171,7 +2171,7 @@ function CheckUrl($url)
   global $is_bulk_test;
   $date = gmdate("Ymd");
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-    $url = 'http://' . $url;
+    $url = 'https://' . $url;
   if ($forceValidate || (!$usingAPI && !$admin)) {
       if (file_exists('./settings/server/blockurl.txt')) {
         $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -2804,7 +2804,7 @@ function GetClosestLocation($url, $browser) {
     if (count($locations)) {
         // figure out the IP address of the server
         if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-            $url = 'http://' . $url;
+            $url = 'https://' . $url;
         $parts = parse_url($url);
         $host = $parts['host'];
         if (strlen($host)) {
@@ -2902,7 +2902,7 @@ function ProcessTestScript($url, &$test) {
     $script = trim($test['script']);
     if (strlen($url)) {
       if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-        $url = 'http://' . $url;
+        $url = 'https://' . $url;
       $script = str_ireplace('%URL%', $url, $script);
       $parts = parse_url($url);
       $host = $parts['host'];
