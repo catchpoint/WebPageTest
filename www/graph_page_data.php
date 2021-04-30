@@ -352,14 +352,17 @@ function InsertChart($metric, $label) {
   $compareTable = array();
   $view_index = 0;
 
-  if (count($pagesData) == 1 && $num_runs >= 3) {
+  if ($num_runs >= 3) {
     echo '<div class="chartStats scrollableTable"><table class="pretty">';
     echo '<tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr>';
     foreach ($views as $cached) {
+      // For each run in that view
       $pageData = reset($pagesData);
+
+    foreach ($pagesData as $key=>$pageData) {
       echo '<tr>';
       $label = ($cached == '1') ? 'Repeat View' : 'First View';
-      echo "<th style=\"text-align: right;\">$label</th>";
+      echo "<th style=\"text-align: right;\">$label<br/>$testsLabel[$key]</th>";
       $values = values($pageData, $cached, $metric, true);
       sort($values, SORT_NUMERIC);
       $sum = array_sum($values);
@@ -384,6 +387,7 @@ function InsertChart($metric, $label) {
         echo "<td></td>";
 
       echo '</tr>';
+    }
     }
     echo '</table></div>';
   }
