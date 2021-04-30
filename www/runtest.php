@@ -1177,6 +1177,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $apiKey;
   global $forceValidate;
   global $server_secret;
+  $invalid_key_message = 'Invalid API key. To continue running tests via the WebPageTest API, you\'ll need to update your current key for the enhanced WebPageTest API. Read more here: https://product.webpagetest.org/api';
 
   if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
@@ -1348,7 +1349,7 @@ function ValidateKey(&$test, &$error, $key = null)
                 $error = 'API key expired';
               }
             } else {
-              $error = 'Invalid API Key';
+              $error = $invalid_key_message;
             }
           } else {
             $error = 'Error validating API Key';
@@ -1357,19 +1358,14 @@ function ValidateKey(&$test, &$error, $key = null)
           $error = 'Error validating API Key';
         }
       } else {
-        $error = 'Invalid API Key';
+        $error = $invalid_key_message;
       }
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
       }
     }elseif (!isset($admin) || !$admin) {
-      $error = 'An error occurred processing your request (missing API key).';
-      if (GetSetting('allow_getkeys')) {
-        $protocol = getUrlProtocol();
-        $url = "$protocol://{$_SERVER['HTTP_HOST']}/getkey.php";
-        $error .= "  If you do not have an API key assigned you can request one at $url";
-      }
+      $error = 'An error occurred processing your request (missing API key). If you do not have an API key you can purchase one here: https://product.webpagetest.org/api';
     }
   }
 }
