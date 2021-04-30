@@ -67,6 +67,9 @@ if ($rv) {
 $median_run = (isset($_REQUEST['median_run'])) ? $_REQUEST['median_run'] : 0;
 $median_value = (isset($_REQUEST['median_value'])) ? $_REQUEST['median_value']  : 0;
 
+//whether to set charts v-axis to 0
+$zero_start = (isset($_REQUEST['zero_start'])) ? "true" : "false";
+
 // TODO(geening): Have a cleaner way to support more than 8 tests with
 // distinct-looking colors.
 $colors = array('#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101');
@@ -144,7 +147,11 @@ $common_label = implode(" ", $common_labels);
                             <?php if ($median_run == '1') echo "checked"; ?> ><label for="median_run">Run with median
                         <?php echo $median_metric; ?></label>
           </fieldset>
-
+          <fieldset>
+                    <legend>Chart customization</legend>
+                    <input type="checkbox" name="zero_start" value="true" <?php if ($zero_start == 'true') echo "checked"; ?>>
+<label for="zero_start">Force Vertical Axis of Charts to Start at Zero</label>
+                    </fieldset>
                     <label for="control">Statistical Comparison Against</label> <select id="control" name="control" size="1" onchange="this.form.submit();">
                     <option value="NOSTAT"<?php if ($statControl === "NOSTAT") echo " selected"; ?>>None</option>
                     <?php
@@ -154,6 +161,7 @@ $common_label = implode(" ", $common_labels);
                     }
                     ?>
                     </select>
+
                     <p>
                     <strong>Tests:</strong>
                     <?php
@@ -289,6 +297,7 @@ $common_label = implode(" ", $common_labels);
                     }
                     echo "var chartData = " . $chartDataJson . ";\n";
                     echo "var runs = $num_runs;\n";
+                    echo "var zeroStart = $zero_start;\n";
                 ?>
             <?php include('graph_page_data.js'); ?>
             </script>

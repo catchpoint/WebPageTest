@@ -45,12 +45,14 @@ function drawChart(chart_metric) {
     }
     data.addRow(row);
   }
+  
   var options = {
       legend: (series.length == 1) ? 'none' : 'right',
       width: 950,
       height: Math.max(500, series.length * 45),
       lineWidth: 1,
       hAxis: {minValue: 1, maxValue: runs, gridlines: {count: runs}},
+      vAxis: (zeroStart) ? {minValue: 0} : {minValue: null},
       series: series,
       chartArea: { width: "60%", left: 70, height: "85%" }
   }
