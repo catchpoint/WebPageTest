@@ -1752,7 +1752,7 @@ function ValidateURL(&$url, &$error)
 
     // make sure the url starts with http://
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-        $url = 'http://' . $url;
+        $url = 'https://' . $url;
 
     $parts = parse_url($url);
     $host = $parts['host'];
