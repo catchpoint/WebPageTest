@@ -174,7 +174,7 @@ $common_label = implode(" ", $common_labels);
                 </form>
             </div>
 
-            <div id="result">
+            <div id="result" class="test_results-content">
             
             <?php
             $web_vitals = array();
