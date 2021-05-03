@@ -67,6 +67,9 @@ if ($rv) {
 $median_run = (isset($_REQUEST['median_run'])) ? $_REQUEST['median_run'] : 0;
 $median_value = (isset($_REQUEST['median_value'])) ? $_REQUEST['median_value']  : 0;
 
+//whether to set charts v-axis to 0
+$zero_start = (isset($_REQUEST['zero_start'])) ? "true" : "false";
+
 // TODO(geening): Have a cleaner way to support more than 8 tests with
 // distinct-looking colors.
 $colors = array('#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101');
@@ -144,7 +147,11 @@ $common_label = implode(" ", $common_labels);
                             <?php if ($median_run == '1') echo "checked"; ?> ><label for="median_run">Run with median
                         <?php echo $median_metric; ?></label>
           </fieldset>
-
+          <fieldset>
+                    <legend>Chart customization</legend>
+                    <input type="checkbox" name="zero_start" value="true" <?php if ($zero_start == 'true') echo "checked"; ?>>
+<label for="zero_start">Force Vertical Axis of Charts to Start at Zero</label>
+                    </fieldset>
                     <label for="control">Statistical Comparison Against</label> <select id="control" name="control" size="1" onchange="this.form.submit();">
                     <option value="NOSTAT"<?php if ($statControl === "NOSTAT") echo " selected"; ?>>None</option>
                     <?php
@@ -154,6 +161,7 @@ $common_label = implode(" ", $common_labels);
                     }
                     ?>
                     </select>
+
                     <p>
                     <strong>Tests:</strong>
                     <?php
@@ -166,7 +174,7 @@ $common_label = implode(" ", $common_labels);
                 </form>
             </div>
 
-            <div id="result">
+            <div id="result" class="test_results-content">
             
             <?php
             $web_vitals = array();
@@ -289,6 +297,7 @@ $common_label = implode(" ", $common_labels);
                     }
                     echo "var chartData = " . $chartDataJson . ";\n";
                     echo "var runs = $num_runs;\n";
+                    echo "var zeroStart = $zero_start;\n";
                 ?>
             <?php include('graph_page_data.js'); ?>
             </script>
@@ -352,14 +361,17 @@ function InsertChart($metric, $label) {
   $compareTable = array();
   $view_index = 0;
 
-  if (count($pagesData) == 1 && $num_runs >= 3) {
+  if ($num_runs >= 3) {
     echo '<div class="chartStats scrollableTable"><table class="pretty">';
     echo '<tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr>';
     foreach ($views as $cached) {
+      // For each run in that view
       $pageData = reset($pagesData);
+
+    foreach ($pagesData as $key=>$pageData) {
       echo '<tr>';
       $label = ($cached == '1') ? 'Repeat View' : 'First View';
-      echo "<th style=\"text-align: right;\">$label</th>";
+      echo "<th style=\"text-align: right;\">$label<br/>$testsLabel[$key]</th>";
       $values = values($pageData, $cached, $metric, true);
       sort($values, SORT_NUMERIC);
       $sum = array_sum($values);
@@ -384,6 +396,7 @@ function InsertChart($metric, $label) {
         echo "<td></td>";
 
       echo '</tr>';
+    }
     }
     echo '</table></div>';
   }

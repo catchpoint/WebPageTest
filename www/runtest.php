@@ -231,7 +231,8 @@
             $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
             if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig']))
               $test['lighthouseConfig'] = $_REQUEST['lighthouseConfig'];
-            if (isset($req_timeline))
+            $test['timeline'] = 1;
+              if (isset($req_timeline))
               $test['timeline'] = $req_timeline;
             if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])
               $test['timeline_fps'] = 1;
