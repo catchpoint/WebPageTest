@@ -29,20 +29,6 @@ if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
           $keys_file = __DIR__ . '/settings/server/keys.ini';
         $keys = parse_ini_file($keys_file, true);
 
-        // Add the list of self-provisioned keys
-        $prefix = 'A';
-        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-          $results = $db->query("SELECT key,email,key_limit FROM keys;");
-          if ($results){
-            while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-              $k = "$prefix.{$row['key']}";
-              $keys[$k] = array('contact' => $row['email'], 'limit' => $row['key_limit']);
-            }
-          }
-          $db->close();
-        }
-
         if( $admin && $key == 'all' ) {
             if (!isset($_REQUEST['days']))
               $days = 1;

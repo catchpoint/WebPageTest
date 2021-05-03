@@ -122,18 +122,6 @@ foreach($counts as $ip => $count) {
       $names = ' (';
       $separator = '';
       foreach ($users[$ip] as $key) {
-        // see if it was an auto-provisioned key
-        if (!isset($keys[$key]) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
-          $prefix = $matches['prefix'];
-          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-            $k = $db->escapeString($matches['key']);
-            $info = $db->querySingle("SELECT email,key_limit FROM keys WHERE key='$k'", true);
-            $db->close();
-            if (isset($info) && is_array($info) && isset($info['key_limit']) && isset($info['email']))
-              $keys[$key] = array('contact' => $info['email'] . "[$prefix]", 'limit' => $info['key_limit']);
-          }
-        }
         if (isset($keys[$key]) && isset($keys[$key]['contact'])) {
           $names .= $separator;
           $names .= $keys[$key]['contact'];
