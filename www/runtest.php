@@ -1312,8 +1312,8 @@ function ValidateKey(&$test, &$error, $key = null)
               }
             }
             if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
-              // Check the expiration
-              if (time() <= $account['expiration'] ) {
+              // Check the expiration (with a 2-day buffer)
+              if (time() <= $account['expiration'] + 172800 ) {
                 // Check the balance
                 $response = $redis->get("C_{$account['accountId']}");
                 if (isset($response) && $response !== FALSE && is_string($response) && strlen($response) && is_numeric($response)) {
