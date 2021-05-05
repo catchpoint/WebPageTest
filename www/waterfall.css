@@ -1,7 +1,7 @@
 
-div.waterfall-container {position: relative; left: 0; top: 0; clear:both;}
-img.waterfall-image {position: relative; left: 0; top: 0;}
-div.request-overlay {cursor:pointer; padding: 0; margin: 0; width: 928px; left: 1px; background-color: #FFF; overflow: hidden; opacity:0.9; filter:alpha(opacity=90);}
+div.waterfall-container {position: relative; left: 0; top: 0; clear:both;text-align: left;}
+img.waterfall-image {position: relative; left: 0; top: 0; width: 100%;}
+div.request-overlay {cursor:pointer; padding: 0; margin: 0; width: 1010px; left: 1px; background-color: #FFF; overflow: hidden; opacity:0.9; filter:alpha(opacity=90);}
 div.request-overlay.selected {opacity:0.4; background-color: #129828;}
 div.transparent {opacity:0.0; filter:alpha(opacity=0);}
 div.dialog-title {display: inline;}

@@ -1386,13 +1386,12 @@ table.glossary th{
 .vitals-diagnostics .frames{
     margin-bottom: 2em;
 }
-.vitals-diagnostics .waterfall-image{
-    width: 100%;
-    padding: 3em 0 0;
-    border-right: 2px dashed #008000;
-}
+
 .vitals-diagnostics .waterfall-container{
     margin-top: 2em;
+    padding-top: 2em;
+    border-right: 2px dashed #008000;
+
 }
 .vitals-diagnostics .waterfall-label {
     padding: .3em;
@@ -1400,7 +1399,6 @@ table.glossary th{
     top: 0;
     float: right;
     margin-bottom: 0;
-    right: -1px;
     position: relative;
 }
 .vitals-diagnostics .waterfall-label abbr{
@@ -1413,4 +1411,29 @@ table.glossary th{
 }
 .vitals-diagnostics .values{
     margin-top: 1.5em;
+    word-break: break-all;
+}
+.vitals-diagnostics .values li li{
+    padding-left: 2em;
+}
+#result.vitals-diagnostics .pretty{
+    font-size: .9em;
+    margin-bottom: 2em;
+}
+.vitals-diagnostics .pretty caption{
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 1em 0;
+    text-align: left;
+}
+.vitals-diagnostics .pretty th{
+    text-align: left;
+    word-break: keep-all;
+    white-space: nowrap;
+}
+.vitals-diagnostics code {
+    display: block;
+    text-align: left;
+    padding: .3em .5em;
+    font-size: 1.1em;
 }

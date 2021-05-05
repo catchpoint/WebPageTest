@@ -193,7 +193,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $width = (int)$options['width'];
     }
     if (!$width || (!$is_thumbnail && $width < 300) || $width > 200000) {
-        $width = 930;
+        $width = 1012;
     }
 
     if ($is_thumbnail) {
@@ -1424,7 +1424,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         'use_cpu' => true,
         'show_labels' => true,
         'is_mime' => $is_mime,
-        'width' => 930
+        'width' => 1012
         );
     $rows = GetRequestRows($requests, false);
     $map = GetWaterfallMap($rows, $url, $options, $page_data);
