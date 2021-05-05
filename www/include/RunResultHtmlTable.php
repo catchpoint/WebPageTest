@@ -120,6 +120,10 @@ class RunResultHtmlTable {
     $out .= $this->_headCell("", "empty", $colspan);
 
     // Count the web vitals metrics that we have
+    $test_id = $this->testInfo->getId();
+    $run = $this->runResults->getRunNumber();
+    $cached = $this->runResults->isCachedRun() ? '1' : '0';
+    $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
     $vitals_count = 0;
     if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
       $vitals_count++;
@@ -131,7 +135,7 @@ class RunResultHtmlTable {
       $vitals_count++;
     }
     if ($vitals_count > 0) {
-      $out .= $this->_headCell('<a href="https://web.dev/vitals/">Web Vitals</a>', "border", $vitals_count);
+      $out .= $this->_headCell("<a href='$vitals_url'>Web Vitals</a>", "border", $vitals_count);
     }
     $out .= $this->_headCell("Document Complete", "border", 3);
     $out .= $this->_headCell("Fully Loaded", "border", 3 + $this->_countRightEnabledColumns());
@@ -150,7 +154,7 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Start<br>Render");
     }
     if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/fcp/">First<br>Contentful<br>Paint</a>');
+      $out .= $this->_headCell('First<br>Contentful<br>Paint');
     }
     if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed<br>Index</a>');
@@ -160,15 +164,15 @@ class RunResultHtmlTable {
     }
     $vitalsBorder = "border";
     if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/lcp/">Largest<br>Contentful<br>Paint</a>', $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest<br>Contentful<br>Paint</a>", $vitalsBorder);
       $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-      $out .= $this->_headCell('<a href="https://web.dev/cls/">Cumulative<br>Layout<br>Shift</a>', $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative<br>Layout<br>Shift</a>", $vitalsBorder);
       $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-      $out .= $this->_headCell('<a href="https://web.dev/tbt/">Total<br>Blocking<br>Time</a>', $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total<br>Blocking<br>Time</a>", $vitalsBorder);
       $vitalsBorder = null;
     }
 
