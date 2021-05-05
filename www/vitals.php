@@ -57,7 +57,7 @@ $page_description = "Web Vitals details$testLabel";
             <?php
             include 'header.inc';
             ?>
-            <div id="result">
+            <div id="result" class="box vitals-diagnostics">
             Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information
             <?php
             if ($isMultistep) {
@@ -130,7 +130,7 @@ function pretty_print($array) {
     if (is_array($array)) {
         echo '<ul>';
         foreach($array as $key => $value) {
-            echo "<li><b>" . htmlspecialchars($key) . "</b> : ";
+            echo "<li><strong>" . htmlspecialchars($key) . "</strong>: ";
             if (is_array($value)) {
                 pretty_print($value);
             } else {
@@ -140,6 +140,15 @@ function pretty_print($array) {
         }
         echo '</ul>';
     }
+}
+function prettyHTML($markup) {
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = true;
+    $dom->formatOutput = true;
+    $dom->loadHTML($markup,LIBXML_HTML_NOIMPLIED);
+
+
+    return $dom->saveXML($dom->documentElement);
 }
 
 function InsertWebVitalsHTML_LCP($stepResult) {
@@ -251,6 +260,25 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 }
             }
 
+            // summary table
+            echo '<h3 align="left">LCP Event Summary</h3>';
+            echo '<p align="left"><small><a href="#lcp-full">See full details</a></small></p>';
+            echo '<table class="pretty" cellspacing="0">';
+            echo "<tr><th align='left'>Time</th><td>{$lcp['time']} ms</td></tr>";
+            echo "<tr><th align='left'>Size</th><td>{$lcp['size']}</td></tr>";
+            echo "<tr><th align='left'>Element Type</th><td>{$lcp['type']}</td></tr>";
+            if (isset($lcp['element']['src'])) {
+                echo "<tr><th align='left'>Src</th><td>{$lcp['element']['src']}</td></tr>";
+            }
+            if (isset($lcp['element']['background-image'])) {
+                echo "<tr><th align='left'>Background Image</th><td>{$lcp['element']['background-image']}</td></tr>";
+            }
+            echo "<tr><th align='left'>Outer HTML</th><td>";
+            echo "<code class='language-html'>";
+            echo htmlentities($lcp['element']['outerHTML']) . '...';
+            echo "</code>";
+            echo "</td>";
+            echo '</table>';
             // Trimmed waterfall
             $label = $stepResult->readableIdentifier($testInfo->getUrl());
             $requests = $stepResult->getRequestsWithInfo(true, true);
@@ -279,10 +307,12 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 $stepResult->getRawResults(),
                 $options,
                 $stepResult->getStepNumber());
+            echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
             echo $out;
 
             // Insert the raw debug details
             echo "<div class='values'>";
+            echo "<h3 id='lcp-full'>Full LCP Event Information</h3>";
             if (isset($lcp['event'])) {
                 unset($lcp['event']);
             }
