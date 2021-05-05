@@ -1383,3 +1383,34 @@ table.glossary th{
 .simple_form p{
     margin: 1.5em auto;
 }
+.vitals-diagnostics .frames{
+    margin-bottom: 2em;
+}
+.vitals-diagnostics .waterfall-image{
+    width: 100%;
+    padding: 3em 0 0;
+    border-right: 2px dashed #008000;
+}
+.vitals-diagnostics .waterfall-container{
+    margin-top: 2em;
+}
+.vitals-diagnostics .waterfall-label {
+    padding: .3em;
+    text-align: right;
+    top: 0;
+    float: right;
+    margin-bottom: 0;
+    right: -1px;
+    position: relative;
+}
+.vitals-diagnostics .waterfall-label abbr{
+    border: 0;
+    text-decoration: none;
+}
+.vitals-diagnostics .waterfall-label-lcp{
+    background: #008000;
+    color: #fff;
+}
+.vitals-diagnostics .values{
+    margin-top: 1.5em;
+}

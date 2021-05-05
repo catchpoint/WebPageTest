@@ -57,7 +57,7 @@ $page_description = "Web Vitals details$testLabel";
             <?php
             include 'header.inc';
             ?>
-            <div id="result">
+            <div id="result" class="box vitals-diagnostics">
             Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information
             <?php
             if ($isMultistep) {
@@ -279,10 +279,12 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 $stepResult->getRawResults(),
                 $options,
                 $stepResult->getStepNumber());
+            echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
             echo $out;
 
             // Insert the raw debug details
             echo "<div class='values'>";
+            echo "<h3>Full LCP Candidate Event Information</h3>";
             if (isset($lcp['event'])) {
                 unset($lcp['event']);
             }
