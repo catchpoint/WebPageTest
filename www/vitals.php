@@ -268,6 +268,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             $options = "&max=$maxTime";
             if ($last_request > 0) {
                 $options .= "&requests=1-$last_request";
+                $_REQUEST['requests'] = "1-$last_request";
             }
             $out = CreateWaterfallHtml(
                 $label,
