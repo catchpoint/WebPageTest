@@ -1431,6 +1431,10 @@ table.glossary th{
     word-break: keep-all;
     white-space: nowrap;
 }
+.vitals-diagnostics .pretty td{
+    white-space: normal;
+    word-break: break-all;
+}
 .vitals-diagnostics code {
     display: block;
     text-align: left;
