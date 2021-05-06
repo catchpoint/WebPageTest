@@ -23,6 +23,8 @@ $quotes = array(
           'author' => 'Andrew Galloni, Engineering Director at Cloudflare'),
     array('quote' => 'WebPage Test measures web performance metrics in real browsers, is highly programmable, and could scale to test millions of sites per day.',
           'author' => 'Yevgen Safranov, Software Engineer at Cloudflare'),
+    array('quote' => 'Snyk uses WebPageTest to perform 3rd party library detection and vulnerability scanning that reveals potential security vulnerabilities in your website pages.',
+          'author' => 'Liran Tal, Developer Relations at Snyk'),
 );
 $quote = $quotes[array_rand($quotes)];
 ?>
