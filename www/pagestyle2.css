@@ -1387,11 +1387,17 @@ table.glossary th{
     margin-bottom: 2em;
 }
 
-.vitals-diagnostics .waterfall-container{
+.vitals-diagnostics .vitals-waterfall{
     margin-top: 2em;
-    padding-top: 2em;
+    position: relative;
+}
+.vitals-diagnostics .vitals-waterfall:after{
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
     border-right: 2px dashed #008000;
-
 }
 .vitals-diagnostics .waterfall-label {
     padding: .3em;
@@ -1400,6 +1406,7 @@ table.glossary th{
     float: right;
     margin-bottom: 0;
     position: relative;
+    margin-bottom: 2em;
 }
 .vitals-diagnostics .waterfall-label abbr{
     border: 0;
