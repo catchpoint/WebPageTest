@@ -149,13 +149,7 @@ $profiles = parse_ini_file($profile_file, true);
             } // $headless
             ?>
           <?php
-          if (is_file('settings/server/home-subsections.inc')) {
-            include('settings/server/home-subsections.inc');
-          } elseif (is_file('settings/common/home-subsections.inc')) {
-            include('settings/common/home-subsections.inc');
-          } elseif (is_file('settings/home-subsections.inc')) {
-            include('settings/home-subsections.inc');
-          }
+          include(__DIR__ . '/include/home-subsections.inc');
           ?>
           <?php include('footer.inc'); ?>
         </div>

@@ -177,13 +177,7 @@ $page_description = "Test network path from multiple locations around the world 
             </div>
             </form>
             <?php
-            if (is_file('settings/server/home-subsections.inc')) {
-                include('settings/server/home-subsections.inc');
-            } elseif (is_file('settings/common/home-subsections.inc')) {
-                include('settings/common/home-subsections.inc');
-            } elseif (is_file('settings/home-subsections.inc')) {
-                include('settings/home-subsections.inc');
-            }
+            include(__DIR__ . '/include/home-subsections.inc');
             ?>
             <?php include('footer.inc'); ?>
         </div>
