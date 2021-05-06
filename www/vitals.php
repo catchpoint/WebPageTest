@@ -307,8 +307,10 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 $stepResult->getRawResults(),
                 $options,
                 $stepResult->getStepNumber());
+            echo "<div class='vitals-waterfall'>";
             echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
             echo $out;
+            echo "</div>";
 
             // Insert the raw debug details
             echo "<div class='values'>";
