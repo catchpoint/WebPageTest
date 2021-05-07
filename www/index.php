@@ -321,7 +321,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chromium</a></li>
-                                <?php if (!GetSetting('no_basic_auth_ui')) { ?>
+                                <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
                                 <li><a href="#auth">Auth</a></li>
                                 <?php } ?>
                                 <li><a href="#script">Script</a></li>
@@ -706,7 +706,7 @@ $loc = ParseLocations($locations);
                                 </ul>
                             </div>
 
-                            <?php if (!GetSetting('no_basic_auth_ui')) { ?>
+                            <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
                                 
 
