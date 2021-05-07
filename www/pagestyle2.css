@@ -440,7 +440,7 @@ body.compact #main {
 }
 @media screen and (min-width: 75em) {
     #main{
-        grid-column: 1 / 12;
+        grid-column: 1 / 13;
         padding-top: 2em;
     }
     .history #main{
