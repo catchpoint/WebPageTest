@@ -55,9 +55,6 @@ date_default_timezone_set('UTC');
 extract($_POST, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 
-// add a CORS header
-header('Access-Control-Allow-Origin: *');
-
 // Prevent embedding except for pages that were explicitly designed to be embedded (video)
 if (!isset($ALLOW_IFRAME) || !$ALLOW_IFRAME) {
   header('X-Frames-Options: sameorigin');
