@@ -294,7 +294,7 @@ else
                 <?php
                 }
                 ?>
-                div.waterfall-container {top: -2em; width:930px; margin: 0 auto;}
+                div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;}
                 <?php
                 if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
                 ?>
