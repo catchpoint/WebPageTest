@@ -266,7 +266,8 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo '<table class="pretty" cellspacing="0">';
             echo "<tr><th align='left'>Time</th><td>{$lcp['time']} ms</td></tr>";
             echo "<tr><th align='left'>Size</th><td>{$lcp['size']}</td></tr>";
-            echo "<tr><th align='left'>Element Type</th><td>{$lcp['type']}</td></tr>";
+            echo "<tr><th align='left'>Type</th><td>{$lcp['type']}</td></tr>";
+            echo "<tr><th align='left'>Element Type</th><td>{$lcp['element']['nodeName']}</td></tr>";
             if (isset($lcp['element']['src'])) {
                 echo "<tr><th align='left'>Src</th><td>{$lcp['element']['src']}</td></tr>";
             }
