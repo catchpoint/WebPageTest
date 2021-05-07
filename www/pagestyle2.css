@@ -1400,7 +1400,7 @@ table.glossary th{
 .vitals-diagnostics .vitals-waterfall:after{
     content: "";
     position: absolute;
-    right: 0;
+    right: 3px;
     top: 0;
     bottom: 0;
     border-right: 2px dashed #008000;
