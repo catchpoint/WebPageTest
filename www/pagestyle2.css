@@ -432,17 +432,20 @@ nav a:hover{
 
 #main{
     padding: 1.5em 1em;
+    width: 1083px;
+    margin: auto;
 }
 body.compact #main {
     padding: 0.5em 1em;
 }
 @media screen and (min-width: 75em) {
     #main{
-        grid-column: 3 / 11;
+        grid-column: 1 / 12;
         padding-top: 2em;
     }
     .history #main{
         grid-column: 2 / 12;
+        min-width: auto;
     }
 }
 .compare{
@@ -453,6 +456,9 @@ body.compact #main {
     grid-column: 1 / 13;
     background: #000;
     padding: 2em;
+    max-width: none;
+    width: auto;
+    min-width: 1083px;
 }
 .key{
     margin-top: 1em;
