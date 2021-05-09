@@ -2457,10 +2457,13 @@ function normalize_keys(&$array) {
  *
  * @param mixed $response
  */
-function json_response(&$response) {
+function json_response(&$response, $allow_crossorigin=true) {
     header("Content-type: application/json; charset=utf-8");
     header("Cache-Control: no-cache, must-revalidate", true);
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    if ($allow_crossorigin) {
+      header('Access-Control-Allow-Origin: *');
+    }
 
     if (isset($_REQUEST['normalizekeys']) && $_REQUEST['normalizekeys']) {
       normalize_keys($response);
