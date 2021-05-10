@@ -329,11 +329,156 @@ function InsertWebVitalsHTML_LCP($stepResult) {
 }
 
 function InsertWebVitalsHTML_CLS($stepResult) {
-    echo "<div class='metric'>";
-    echo "<h2 id='cls'>Cumulative Layout Shift</h2>";
-    echo "<p><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></p>";
-    echo "Coming soon.";
-    echo "</div>"; // metric
+    $cls = null;
+    $windows = array();
+    if ($stepResult) {
+        $cls = $stepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
+        $events = $stepResult->getMetric('LayoutShifts');
+        foreach ($events as $event) {
+            $num = isset($event['shift_window_num']) ? strval($event['shift_window_num']) : '1';
+            if (!isset($windows[$num])) {
+                $windows[$num] = array('num' => $num, 'shifts' => array(), 'cls' => 0.0, 'start' => null, 'end' => null);
+            }
+            $windows[$num]['shifts'][] = $event;
+            if (!$windows[$num]['start'] || $event['time'] < $windows[$num]['start']) {
+                $windows[$num]['start'] = $event['time'];
+            }
+            if (!$windows[$num]['end'] || $event['time'] > $windows[$num]['end']) {
+                $windows[$num]['end'] = $event['time'];
+            }
+            $windows[$num]['cls'] += $event['score'];
+        }
+    }
+    if (isset($cls) && is_numeric($cls)) {
+        $video_frames = $stepResult->getVisualProgress();
+        // reverse-sort, biggest cls first
+        usort($windows, function($a, $b) {
+            if ($a['cls'] == $b['cls']) {
+                return 0;
+            }
+            return ($a['cls'] > $b['cls']) ? -1 : 1;
+        });
+        $cls = round($cls, 3);
+        echo "<div class='metric'>";
+        echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
+        echo "<p><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></p>";
+        foreach ($windows as $window) {
+            InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
+        }
+        echo "</div>"; // metric
+    }
+}
+
+function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
+    global $testInfo;
+    $thumbSize = 320;
+
+    echo "<div class='cls-window'>";
+    $cls = round($window['cls'], 3);
+    echo "<h3>Window {$window['num']} ($cls)</h3>";
+    echo "<ul>";
+    foreach($window['shifts'] as $shift) {
+        $ls = number_format($shift['score'], 5);
+        // Figure out which video frames to use
+        if (isset($video_frames) && is_array($video_frames) && isset($video_frames['frames'])) {
+            $cls_frame = null;
+            // Find the first frame after the layout shift
+            foreach($video_frames['frames'] as $ms => $frame) {
+                $frame['time']  = $ms;
+                if ($ms >= $shift['time']) {
+                    if (!isset($cls_frame)) {
+                        $cls_frame = $frame;
+                    } elseif ($ms < $cls_frame['time']) {
+                        $cls_frame = $frame;
+                    }
+                }
+            }
+            // Fall back to the last frame before the layout shift
+            if (!isset($cls_frame)) {
+                foreach($video_frames['frames'] as $ms => $frame) {
+                    $frame['time']  = $ms;
+                    if (!isset($cls_frame)) {
+                        $cls_frame = $frame;
+                    } elseif ($ms > $cls_frame['time'] && $ms <= $shift['time']) {
+                        $cls_frame = $frame;
+                    }
+                }
+            }
+            if (isset($cls_frame)) {
+                $previous = $cls_frame;
+                $next = $cls_frame;
+                foreach($video_frames['frames'] as $ms => $frame) {
+                    if ($ms < $cls_frame['time'] && ($previous['time'] == $cls_frame['time'] || $ms > $previous['time'])) {
+                        $previous = $frame;
+                        $previous['time'] = $ms;
+                    }
+                    if ($ms > $cls_frame['time'] && ($next['time'] == $cls_frame['time'] || $ms < $next['time'])) {
+                        $next = $frame;
+                        $next['time'] = $ms;
+                    }
+                }
+                $size = getimagesize('.' . $cls_frame['path']);
+                $frame_width = $size[0];
+                $frame_height = $size[1];
+                if ($frame_width > $frame_height) {
+                    $width = min($frame_width, $thumbSize);
+                    $height = intval((floatval($width) / floatval($frame_width)) * floatval($frame_height));
+                } else {
+                    $height = min($frame_height, $thumbSize);
+                    $width = intval((floatval($height) / floatval($frame_height)) * floatval($frame_width));
+                }
+  
+                echo '<div class="frames">';
+                $urlGenerator = $stepResult->createUrlGenerator("", false);
+                $imgUrl = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $thumbSize);
+
+                echo '<figure>';
+                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
+                echo "<figcaption>{$previous['time']} ms</figcaption>";
+                echo '</figure>';
+
+                $imgUrl = $cls_frame['path'];
+                $viewport = $stepResult->getMetric('viewport');
+                $options = '';
+                if (isset($shift['rects']) && isset($viewport)) {
+                    foreach($shift['rects'] as $rect) {
+                        if (is_array($rect) && count($rect) == 4) {
+                            $x = (int)(($rect[0] * 1000) / $viewport['width']);
+                            $y = (int)(($rect[1] * 1000) / $viewport['height']);
+                            $w = (int)(($rect[2] * 1000) / $viewport['width']);
+                            $h = (int)(($rect[3] * 1000) / $viewport['height']);
+                            if ($w > 0 && $h > 0) {
+                                if (strlen($options)) {
+                                    $options .= ',';
+                                }
+                                $options .= "$x.$y.$w.$h";
+                            }
+                        }
+                    }
+                }
+                if (strlen($options)) {
+                    $options = 'rects=FF0000AA-' . $options;
+                    $imgUrl = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $thumbSize, $options);
+                }
+                echo '<figure>';
+                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
+                echo "<figcaption>{$shift['time']} ms ($ls)</figcaption>";
+                echo '</figure>';
+
+                $imgUrl = $urlGenerator->videoFrameThumbnail(basename($next['path']), $thumbSize);
+                echo '<figure>';
+                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
+                echo "<figcaption>{$next['time']} ms</figcaption>";
+                echo '</figure>';
+
+                echo '</div>';
+            }
+        } else {
+            echo "<li>Shift time : {$shift['time']} ms, Shift size: $ls</li>";
+        }
+    }
+    echo "</ul>";
+    echo "</div>"; // cls-window
 }
 
 function InsertWebVitalsHTML_TBT($stepResult) {
