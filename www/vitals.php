@@ -434,7 +434,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
 
                 echo '<figure>';
                 echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                echo "<figcaption>{$previous['time']} ms</figcaption>";
+                echo "<figcaption>&nbsp;</figcaption>";
                 echo '</figure>';
 
                 $imgUrl = $cls_frame['path'];
@@ -468,7 +468,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
                 $imgUrl = $urlGenerator->videoFrameThumbnail(basename($next['path']), $thumbSize);
                 echo '<figure>';
                 echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                echo "<figcaption>{$next['time']} ms</figcaption>";
+                echo "<figcaption>&nbsp;</figcaption>";
                 echo '</figure>';
 
                 echo '</div>';
