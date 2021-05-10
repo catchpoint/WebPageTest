@@ -1392,7 +1392,7 @@ function GetQueueLengths($location) {
         $scheduler = GetSetting('cp_scheduler');
         $scheduler_salt = GetSetting('cp_scheduler_salt');
         if ($scheduler && $scheduler_salt) {
-          $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?queue=1";
+          $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?queue=1&priorityqueue=1";
           $cpid = GetCPID($host, $scheduler_salt);
           $result_text = cp_http_get($url, $cpid);
           if (isset($result_text) && strlen($result_text)) {
@@ -1403,7 +1403,14 @@ function GetQueueLengths($location) {
       }
     }
     if (isset($SCHEDULER_QUEUES) && is_array($SCHEDULER_QUEUES)) {
-      if (isset($SCHEDULER_QUEUES['Queues'][$info['scheduler_node']])) {
+      if (isset($SCHEDULER_QUEUES['PriorityQueues'][$info['scheduler_node']])) {
+        $sq = $SCHEDULER_QUEUES['PriorityQueues'][$info['scheduler_node']];
+        for ($priority = 0; $priority <= 9; $priority++) {
+          if (isset($sq[$priority])) {
+            $queues[$priority] = intval($sq[$priority]);
+          }
+        }
+      } elseif (isset($SCHEDULER_QUEUES['Queues'][$info['scheduler_node']])) {
         $queues[0] = intval($SCHEDULER_QUEUES['Queues'][$info['scheduler_node']]);
       }
     }

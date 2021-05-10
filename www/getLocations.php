@@ -238,7 +238,14 @@ function GetBacklog($dir, $locationId)
             $backlog["p$i"] = $queue[$i];
             $lowCount += $queue[$i];
         }
-    }
+        $ui_priority = intval(GetSetting('user_priority', 0));
+        $backlog['Blocking'] = 0;
+        for ($p = 0; $p <= $ui_priority; $p++) {
+          if (isset($queue[$p])) {
+            $backlog['Blocking'] += $queue[$p];
+          }
+      }
+}
 
     $testers = GetTesters($locationId);
     if (isset($testers) && is_array($testers) && array_key_exists('testers', $testers)) {
@@ -251,6 +258,7 @@ function GetBacklog($dir, $locationId)
     }
 
     $backlog['Total'] = $userCount + $lowCount + $testing;
+    $backlog['Blocking'] += $testing;
     $backlog['HighPriority'] = $userCount;
     $backlog['LowPriority'] = $lowCount;
     $backlog['Testing'] = $testing;

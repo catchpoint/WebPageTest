@@ -918,8 +918,16 @@ function LoadLocations()
         // count the number of tests at each location
         if (isset($loc['scheduler_node'])) {
             $queues = GetQueueLengths($loc['location']);
-            if (isset($queues) && is_array($queues) && isset($queues[0]))
-                $loc['backlog'] = $queues[0];
+            if (isset($queues) && is_array($queues) && isset($queues[0])) {
+                // Sum up the queue lengths for anything higher priority than the UI priority
+                $loc['backlog'] = 0;
+                $ui_priority = intval(GetSetting('user_priority', 0));
+                for ($p = 0; $p <= $ui_priority; $p++) {
+                    if (isset($queues[$p])) {
+                        $loc['backlog'] += $queues[$p];
+                    }
+                }
+            }
         } elseif( isset($loc['localDir']) ) {
             $loc['backlog'] = CountTests($loc['localDir']);
         }
