@@ -290,7 +290,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             $last_request = 0;
             if (isset($raw_requests)) {
                 foreach ($raw_requests as $request) {
-                    if (isset($request['download_end']) && $request['download_end'] <= $lcp['time'] && isset($request['number']) && $request['number'] > $last_request) {
+                    if (isset($request['responseCode']) && $request['responseCode'] > 0 && isset($request['download_end']) && $request['download_end'] <= $lcp['time'] && isset($request['number']) && $request['number'] > $last_request) {
                         $last_request = $request['number'];
                     }
                 }
