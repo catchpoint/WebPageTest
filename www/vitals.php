@@ -51,6 +51,12 @@ $page_description = "Web Vitals details$testLabel";
         .metric {
             padding-bottom: 2em;
         }
+        li.even {
+            background-color: #f2f2f2;
+        }
+        img.autohide:hover {
+            opacity: 0;
+        }
         </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
@@ -377,7 +383,14 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
     $cls = round($window['cls'], 3);
     echo "<h3>Window {$window['num']} ($cls)</h3>";
     echo "<ul>";
+    $even = true;
     foreach($window['shifts'] as $shift) {
+        $even = !$even;
+        if ($even) {
+            echo "<li class='even'>";
+        } else {
+            echo "<li>";
+        }
         $ls = number_format($shift['score'], 5);
         // Figure out which video frames to use
         if (isset($video_frames) && is_array($video_frames) && isset($video_frames['frames'])) {
@@ -431,13 +444,16 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
                 echo '<div class="frames">';
                 $urlGenerator = $stepResult->createUrlGenerator("", false);
                 $imgUrl = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $thumbSize);
+                $background = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $thumbSize);
 
                 echo '<figure>';
-                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
+                echo "<div style='background-image: url(\"$background\");'>";
+                echo "<img width=$width height=$height class='thumbnail autohide' src='$imgUrl'>";
+                echo "</div>";
                 echo "<figcaption>&nbsp;</figcaption>";
                 echo '</figure>';
 
-                $imgUrl = $cls_frame['path'];
+                $imgUrl = $background;
                 $viewport = $stepResult->getMetric('viewport');
                 $options = '';
                 if (isset($shift['rects']) && isset($viewport)) {
@@ -476,6 +492,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
         } else {
             echo "<li>Shift time : {$shift['time']} ms, Shift size: $ls</li>";
         }
+        echo "</li>";
     }
     echo "</ul>";
     echo "</div>"; // cls-window
