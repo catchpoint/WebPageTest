@@ -542,18 +542,18 @@ $loc = ParseLocations($locations);
                                         <input id="time" type="number" class="text short" name="time" value=""> seconds
                                     </li>
                                     <li>
-                                        <label for="customHeaders">
+                                        <label for="customHeaders" class="full">
                                             Custom headers<br>
                                             <small>Add custom headers to all network requests emitted from the browser</small>
                                         </label>
                                         <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
                                     <li>
-                                        <label for="injectScript">
+                                        <label for="injectScript" class="full">
                                             Inject Script<br>
                                             <small>JavaScript to run after the document has started loading</small>
                                         </label>
-                                        <textarea id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
+                                        <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
                                     </li>
                                 </ul>
                             </div>
@@ -741,7 +741,7 @@ $loc = ParseLocations($locations);
                                       $script = '';
                                       if (array_key_exists('script', $_REQUEST))
                                         $script = htmlspecialchars($_REQUEST['script']);
-                                      echo "<textarea name=\"script\" id=\"enter_script\" cols=\"0\" rows=\"0\">$script</textarea>\n";
+                                      echo "<textarea class=\"large\" name=\"script\" id=\"enter_script\" cols=\"0\" rows=\"0\">$script</textarea>\n";
                                     ?>
                                 </div>
                                 <br>
@@ -805,7 +805,7 @@ $loc = ParseLocations($locations);
                                     
 
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
-                                    <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+                                    <textarea name="custom" class="large" id="custom_metrics" cols="0" rows="0"></textarea>
                                 </div>
                                 <div class="notification-container">
                                         <div class="notification"><div class="message">
@@ -821,7 +821,7 @@ $loc = ParseLocations($locations);
                                         List of URLs to test (one URL per line)...
                                     </label>
                                 </p>
-                                <textarea name="bulkurls" id="bulkurls" cols="0" rows="0"></textarea><br>
+                                <textarea class="large" name="bulkurls" id="bulkurls" cols="0" rows="0"></textarea><br>
                                 <b>or</b><br>
                                 upload list of URLs (one per line): <input type="file" name="bulkfile" size="40">
                             </div>
