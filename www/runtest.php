@@ -1179,6 +1179,9 @@ function ValidateKey(&$test, &$error, $key = null)
   global $forceValidate;
   global $server_secret;
   $invalid_key_message = 'Invalid API key. To continue running tests via the WebPageTest API, you\'ll need to update your current key for the enhanced WebPageTest API. Read more here: https://product.webpagetest.org/api';
+  if ($privateInstall) {
+    $invalid_key_message = 'Invalid API key.';
+  }
 
   if( strlen($server_secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
@@ -1353,7 +1356,11 @@ function ValidateKey(&$test, &$error, $key = null)
           $usingAPI = true;
       }
     }elseif (!isset($admin) || !$admin) {
-      $error = 'An error occurred processing your request (missing API key). If you do not have an API key you can purchase one here: https://product.webpagetest.org/api';
+      if ($privateInstall) {
+        $error = 'An error occurred processing your request (missing API key).';
+      } else {
+        $error = 'An error occurred processing your request (missing API key). If you do not have an API key you can purchase one here: https://product.webpagetest.org/api';
+      }
     }
   }
 }
