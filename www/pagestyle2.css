@@ -106,7 +106,12 @@ a.pill{
 img {border: none;}
 input.checkbox, input.radio {margin: 0 10px 0 0;transform: scale(1.3);}
 textarea {font-size: 1em;overflow-x: hidden; height: 8em; width: 35em; padding: 3px; max-width: 99%;}
-
+#advanced_settings-container textarea{
+    width: 100%;
+}
+#advanced_settings-container textarea.large{
+    height: 30em;
+}
 select, input[type="text"], input[type="number"] {
     font-size: 1em;
     padding: 0.6875em 1.3125em;
@@ -798,6 +803,9 @@ body.compact .test_box{
     }
     .input_fields label {
         width: 28%;
+    }
+    .input_fields label.full{
+        width: 100%;
     }
     .input_fields select {
         width: 50%;
