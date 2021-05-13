@@ -54,17 +54,21 @@ $page_description = "Web Vitals details$testLabel";
         li.even {
             background-color: #f2f2f2;
         }
+        table.pretty td {
+            text-align: left;
+        }
         img.autohide:hover {
             opacity: 0;
         }
-        </style>
+    </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             include 'header.inc';
             ?>
             <div id="result" class="box vitals-diagnostics">
-            Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information
+            <p>Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information</p>
+            <p><a href="#lcp">Largest Contentful Paint</a> - <a href="#cls">Cumulative Layout Shift</a> - <a href="#tbt">Total Blocking Time</a></p>
             <?php
             if ($isMultistep) {
                 for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
@@ -375,16 +379,66 @@ function InsertWebVitalsHTML_CLS($stepResult) {
     }
 }
 
+function GenerateOverlayRects($shift, $viewport, $before) {
+    $rects = '';
+    if (isset($shift['sources']) && isset($viewport) && is_array($shift['sources'])) {
+        foreach($shift['sources'] as $source) {
+            $r = null;
+            if ($before && isset($source['previousRect'])) {
+                $r = $source['previousRect'];
+            } elseif (!$before && isset($source['currentRect'])) {
+                $r = $source['currentRect'];
+            }
+            if (isset($r)) {
+                $x = (int)(($r['x'] * 1000) / $viewport['width']);
+                $y = (int)(($r['y'] * 1000) / $viewport['height']);
+                $w = (int)(($r['width'] * 1000) / $viewport['width']);
+                $h = (int)(($r['height'] * 1000) / $viewport['height']);
+                if ($w > 0 && $h > 0) {
+                    if (strlen($rects)) {
+                        $rects .= ',';
+                    }
+                    $rects .= "$x.$y.$w.$h";
+                }
+            }
+        }
+    } elseif (!$before && isset($shift['rects']) && isset($viewport)) {
+        foreach($shift['rects'] as $rect) {
+            if (is_array($rect) && count($rect) == 4) {
+                $x = (int)(($rect[0] * 1000) / $viewport['width']);
+                $y = (int)(($rect[1] * 1000) / $viewport['height']);
+                $w = (int)(($rect[2] * 1000) / $viewport['width']);
+                $h = (int)(($rect[3] * 1000) / $viewport['height']);
+                if ($w > 0 && $h > 0) {
+                    if (strlen($rects)) {
+                        $rects .= ',';
+                    }
+                    $rects .= "$x.$y.$w.$h";
+                }
+            }
+        }
+    }
+    return $rects;
+}
+
 function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
     global $testInfo;
-    $thumbSize = 320;
+    $thumbSize = 500;
 
     echo "<div class='cls-window'>";
     $cls = round($window['cls'], 3);
     echo "<h3>Window {$window['num']} ($cls)</h3>";
+    echo "<p>Hover over any image to see the previous frame and the effect of the layout shift.</p>";
     echo "<ul>";
     $even = true;
-    foreach($window['shifts'] as $shift) {
+    $shifts = $window['shifts'];
+    usort($shifts, function($a, $b) {
+        if ($a['score'] == $b['score']) {
+            return 0;
+        }
+        return ($a['score'] > $b['score']) ? -1 : 1;
+    });
+    foreach($shifts as $shift) {
         $even = !$even;
         if ($even) {
             echo "<li class='even'>";
@@ -433,58 +487,39 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
                 $size = getimagesize('.' . $cls_frame['path']);
                 $frame_width = $size[0];
                 $frame_height = $size[1];
+                $size = min($thumbSize, max($frame_width, $frame_height));
                 if ($frame_width > $frame_height) {
-                    $width = min($frame_width, $thumbSize);
+                    $width = min($frame_width, $size);
                     $height = intval((floatval($width) / floatval($frame_width)) * floatval($frame_height));
                 } else {
-                    $height = min($frame_height, $thumbSize);
+                    $height = min($frame_height, $size);
                     $width = intval((floatval($height) / floatval($frame_height)) * floatval($frame_width));
                 }
   
                 echo '<div class="frames">';
                 $urlGenerator = $stepResult->createUrlGenerator("", false);
-                $imgUrl = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $thumbSize);
-                $background = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $thumbSize);
-
-                echo '<figure>';
-                echo "<div style='background-image: url(\"$background\");'>";
-                echo "<img width=$width height=$height class='thumbnail autohide' src='$imgUrl'>";
-                echo "</div>";
-                echo "<figcaption>&nbsp;</figcaption>";
-                echo '</figure>';
-
-                $imgUrl = $background;
                 $viewport = $stepResult->getMetric('viewport');
-                $options = '';
-                if (isset($shift['rects']) && isset($viewport)) {
-                    foreach($shift['rects'] as $rect) {
-                        if (is_array($rect) && count($rect) == 4) {
-                            $x = (int)(($rect[0] * 1000) / $viewport['width']);
-                            $y = (int)(($rect[1] * 1000) / $viewport['height']);
-                            $w = (int)(($rect[2] * 1000) / $viewport['width']);
-                            $h = (int)(($rect[3] * 1000) / $viewport['height']);
-                            if ($w > 0 && $h > 0) {
-                                if (strlen($options)) {
-                                    $options .= ',';
-                                }
-                                $options .= "$x.$y.$w.$h";
-                            }
-                        }
-                    }
-                }
-                if (strlen($options)) {
-                    $options = 'rects=FF0000AA-' . $options;
-                    $imgUrl = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $thumbSize, $options);
-                }
-                echo '<figure>';
-                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                echo "<figcaption>{$shift['time']} ms ($ls)</figcaption>";
-                echo '</figure>';
 
-                $imgUrl = $urlGenerator->videoFrameThumbnail(basename($next['path']), $thumbSize);
+                // Generate the "before" image
+                $before = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $size);
+                $rects = GenerateOverlayRects($shift, $viewport, true);
+                if (strlen($rects)) {
+                    $before = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $size, "rects=FF0000AA-$rects");
+                }
+
                 echo '<figure>';
-                echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                echo "<figcaption>&nbsp;</figcaption>";
+                echo "<div style='background-image: url(\"$before\");'>";
+
+                // Generate the "after" image
+                $after = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $size);
+                $rects = GenerateOverlayRects($shift, $viewport, false);
+                if (strlen($rects)) {
+                    $after = $urlGenerator->videoFrameThumbnail(basename($cls_frame['path']), $size, "rects=FF0000AA-$rects");
+                }
+
+                echo "<img width=$width height=$height class='thumbnail autohide' src='$after'>";
+                echo "</div>";
+                echo "<figcaption>{$shift['time']} ms ($ls)</figcaption>";
                 echo '</figure>';
 
                 echo '</div>';
