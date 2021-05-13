@@ -181,8 +181,9 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     }
     $p75arrow = '';
     $p75text = '';
+    $maxVal = max($p75, $fvValue, $rvValue);
     if (isset($p75)) {
-        $pos = 5 + GetCruxValuePosition($p75, $histogram, $width, $color);
+        $pos = 5 + GetCruxValuePosition($p75, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
         $p75arrow = "<svg x='5' width='250' y='55' height='15'><polygon points='$start,10 $pos,0 $end,10' fill='$color'/></svg>";
@@ -193,14 +194,14 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     }
     $fvArrow = '';
     if (isset($fvValue)) {
-        $pos = 5 + GetCruxValuePosition($fvValue, $histogram, $width, $color);
+        $pos = 5 + GetCruxValuePosition($fvValue, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
         $fvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#1a1a1a'/></svg>";
     }
     $rvArrow = '';
     if (isset($rvValue)) {
-        $pos = 5 + GetCruxValuePosition($rvValue, $histogram, $width, $color);
+        $pos = 5 + GetCruxValuePosition($rvValue, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
         $rvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#737373'/></svg>";
@@ -227,7 +228,7 @@ EOD;
     echo $svg;
 }
 
-function GetCruxValuePosition($value, $histogram, $width, &$color) {
+function GetCruxValuePosition($value, $maxVal, $histogram, $width, &$color) {
     $pos = null;
     $goodWidth = $histogram[0]['density'] * floatval($width);
     $fairWidth = $histogram[1]['density'] * floatval($width);
@@ -241,7 +242,7 @@ function GetCruxValuePosition($value, $histogram, $width, &$color) {
         $pos = $goodWidth + ($pct * $fairWidth);
         $color = '#ffa400';
     } else {
-        $pct = min(floatval($value - $histogram[1]['start']) / floatval($histogram[1]['start']), 1.0);
+        $pct = min(floatval($value - ($maxVal - $value)) / floatval($maxVal), 1.0);
         $pos = $goodWidth + $fairWidth + ($pct * $poorWidth);
         $color = '#ff4e42';
     }
