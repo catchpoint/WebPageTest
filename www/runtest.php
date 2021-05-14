@@ -323,6 +323,8 @@
               $test['bypass_cpu_normalization'] = $_REQUEST['bypass_cpu_normalization'] ? 1 : 0;
             if (GetSetting('securityInsights') || (isset($_REQUEST['securityInsights']) && $_REQUEST['securityInsights']))
               $test['securityInsights'] = 1;
+            if (isset($_REQUEST['accessibility']))
+              $test['accessibility'] = $_REQUEST['accessibility'] ? 1 : 0;
 
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
@@ -2493,6 +2495,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['bypass_cpu_normalization'] = 1;
             if (isset($test['securityInsights']) && $test['securityInsights'])
               $job['securityInsights'] = 1;
+            if (isset($test['accessibility']) && $test['accessibility'])
+              $job['accessibility'] = 1;
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $job['dpr'] = floatval($test['dpr']);
             if( isset($test['width']) && $test['width'] > 0 )
