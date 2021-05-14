@@ -46,13 +46,9 @@ $page_description = "View Custom Metrics";
                   echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
                   $val = $pageData[$run][$cached][$metric];
                   if (!is_string($val) && !is_numeric($val)) {
-                    $val = json_encode($val, JSON_PRETTY_PRINT);
-                    echo "<pre>";
-                    echo htmlspecialchars($val);
-                    echo "</pre>";
-                  } else {
-                    echo htmlspecialchars($val);
+                    $val = json_encode($val);
                   }
+                  echo htmlspecialchars($val);
                   echo '</td></tr>';
                 }
               }
