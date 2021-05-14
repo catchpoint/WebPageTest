@@ -170,8 +170,6 @@ $loc = ParseLocations($locations);
                 echo '<input type="hidden" name="lighthouseThrottle" value="' . htmlspecialchars($_REQUEST['lighthouseThrottle']) . "\">\n";
               if (isset($_REQUEST['warmup']))
                 echo '<input type="hidden" name="warmup" value="' . htmlspecialchars($_REQUEST['warmup']) . "\">\n";
-              if (isset($_REQUEST['accessibility']))
-                echo '<input type="hidden" name="accessibility" value="' . htmlspecialchars($_REQUEST['accessibility']) . "\">\n";
             }
             ?>
 
