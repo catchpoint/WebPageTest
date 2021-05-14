@@ -358,7 +358,7 @@ else
                       $padding = 30;
                     echo "var padLeft = $padding;\n";
                     ?>
-                    var marker = parseInt(padLeft + ((position / width) * (930 - padLeft)));
+                    var marker = parseInt(padLeft + ((position / width) * (1012 - padLeft)));
                     $('.waterfall_marker').css('left', marker + 'px');
                 }
                 UpdateScrollPosition();
