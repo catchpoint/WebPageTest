@@ -44,7 +44,15 @@ $page_description = "View Custom Metrics";
               foreach ($pageData[$run][$cached]['custom'] as $metric) {
                 if (array_key_exists($metric, $pageData[$run][$cached])) {
                   echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
-                  echo htmlspecialchars($pageData[$run][$cached][$metric]);
+                  $val = $pageData[$run][$cached][$metric];
+                  if (!is_string($val) && !is_numeric($val)) {
+                    $val = json_encode($val, JSON_PRETTY_PRINT);
+                    echo "<pre>";
+                    echo htmlspecialchars($val);
+                    echo "</pre>";
+                  } else {
+                    echo htmlspecialchars($val);
+                  }
                   echo '</td></tr>';
                 }
               }
