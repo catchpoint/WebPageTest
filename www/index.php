@@ -462,30 +462,10 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="noscript" id="noscript" class="checkbox" style="float: left;width: auto;">
-                                        <label for="noscript" class="auto_width">
-                                            Disable JavaScript
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
-                                        <label for="clearcerts" class="auto_width">
-                                            Clear SSL Certificate Caches<br>
-                                            <small>Internet Explorer and Chrome</small>
-                                        </label>
-                                    </li>
-                                    <li>
                                         <input type="checkbox" name="ignoreSSL" id="ignore_ssl_cerificate_errors" class="checkbox" style="float: left;width: auto;">
                                         <label for="ignore_ssl_cerificate_errors" class="auto_width">
                                             Ignore SSL Certificate Errors<br>
                                             <small>e.g. Name mismatch, Self-signed certificates, etc.</small>
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="standards" id="force_standards_mode" class="checkbox" style="float: left;width: auto;">
-                                        <label for="force_standards_mode" class="auto_width">
-                                            Disable Compatibility View (IE Only)<br>
-                                            <small>Forces all pages to load in standards mode</small>
                                         </label>
                                     </li>
                                     <li>
