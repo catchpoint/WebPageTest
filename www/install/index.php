@@ -4,6 +4,12 @@
 // found in the LICENSE.md file.
 chdir ('..');
 include 'common.inc';
+
+if (!$privateInstall && !$admin) {
+    header("HTTP/1.1 403 Unauthorized");
+    exit;
+}
+  
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
