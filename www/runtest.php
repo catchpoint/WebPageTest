@@ -185,6 +185,7 @@
             }
             if (isset($req_notify))
               $test['notify'] = trim($req_notify);
+              $test['video'] = 1;
             if (isset($req_video))
               $test['video'] = $req_video;
             if (isset($_REQUEST['disable_video']) && $_REQUEST['disable_video']) {
