@@ -72,6 +72,7 @@ function GetAllAddresses($include_sensitive = true) {
   }
 
   BuildLocations($loc);
+  FilterLocations($loc, $include_sensitive);
 
   $i = 1;
   while (isset($loc['locations'][$i])) {
