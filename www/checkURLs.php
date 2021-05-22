@@ -50,23 +50,26 @@ for($offset = 0; $offset <= $days; $offset++)
         {
           $url = trim($parts[5]);
           if (strlen($url)) {
-            $urlParts = parse_url($url);
-            $host = trim($urlParts['host']);
-            if (!strlen($host))
-              $host = $url;
-            $count = 1;
-            if (array_key_exists(14, $parts))
-              $count = intval(trim($parts[14]));
-            $count = max(1, $count);
-            if( isset($counts[$host]) )
-              $counts[$host] += $count;
-            else
-              $counts[$host] = $count;
+            $key = @trim($parts[13]);
+            if (isset($_REQUEST['api']) || !strlen($key)) {
+              $urlParts = parse_url($url);
+              $host = trim($urlParts['host']);
+              if (!strlen($host))
+                $host = $url;
+              $count = 1;
+              if (array_key_exists(14, $parts))
+                $count = intval(trim($parts[14]));
+              $count = max(1, $count);
+              if( isset($counts[$host]) )
+                $counts[$host] += $count;
+              else
+                $counts[$host] = $count;
 
-            if( isset($dayCount[$host]) )
-              $dayCount[$host] += $count;
-            else
-              $dayCount[$host] = $count;
+              if( isset($dayCount[$host]) )
+                $dayCount[$host] += $count;
+              else
+                $dayCount[$host] = $count;
+            }
           }
         }
       }

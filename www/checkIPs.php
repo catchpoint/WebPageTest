@@ -61,25 +61,27 @@ for ($offset = 0; $offset <= $days; $offset++) {
         $ip = trim($parts[1]);
         if (strlen($ip)) {
           $key = @trim($parts[13]);
-          $count = 1;
-          if (array_key_exists(14, $parts))
-            $count = intval(trim($parts[14]));
-          $count = max(1, $count);
-          if( ($admin) && strlen($key) && $key != $keys['server']['key'] ) {
-            if (!isset($users[$ip]))
-              $users[$ip] = array();
-            if (!in_array($key, $users[$ip]))
-              $users[$ip][] = $key;
-          }
-          if( isset($counts[$ip]) )
-            $counts[$ip] += $count;
-          else
-            $counts[$ip] = $count;
+          if (isset($_REQUEST['api']) || !strlen($key)) {
+            $count = 1;
+            if (array_key_exists(14, $parts))
+              $count = intval(trim($parts[14]));
+            $count = max(1, $count);
+            if( ($admin) && strlen($key) && $key != $keys['server']['key'] ) {
+              if (!isset($users[$ip]))
+                $users[$ip] = array();
+              if (!in_array($key, $users[$ip]))
+                $users[$ip][] = $key;
+            }
+            if( isset($counts[$ip]) )
+              $counts[$ip] += $count;
+            else
+              $counts[$ip] = $count;
 
-          if( isset($dayCount[$ip]) )
-            $dayCount[$ip] += $count;
-          else
-            $dayCount[$ip] = $count;
+            if( isset($dayCount[$ip]) )
+              $dayCount[$ip] += $count;
+            else
+              $dayCount[$ip] = $count;
+          }
         }
       }
     }
