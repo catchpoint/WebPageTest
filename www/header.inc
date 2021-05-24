@@ -45,7 +45,7 @@ if (!defined('EMBED')) {
 <?php
 $alert = GetSetting('alert');
 if ($alert) {
-    echo '<div class="alert-banner"><p>' . $alert . '</p></div>';
+    echo '<div class="alert-banner">' . $alert . '</div>';
 }
 ?>
 <header>
