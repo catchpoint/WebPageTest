@@ -1193,6 +1193,17 @@ body.compact #header_container {
 .alert-banner p{
     margin: 0 auto;
 }
+.alert-banner-twitch{
+    background: #000;
+}
+.alert-banner-twitch img{
+    max-height: 2.5em;
+    display: inline-block;
+    max-width: 5em;
+    position: relative;
+    top: 1em;
+    margin-top: -1em;
+}
 .alert-banner a {color: #fff;}
 @media screen and (min-width:75em) {
     .alert-banner{
