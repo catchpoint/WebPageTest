@@ -1589,6 +1589,7 @@ function ValidateScript(&$script, &$error)
                 $ok = true;
                 $url = trim($tokens[1]);
                 if (stripos($url, '%URL%') !== false || 
+                        stripos($url, '%ORIGIN%') !== false || 
                         stripos($url, '%HOST%') !== false || 
                         stripos($url, '%HOSTR%') !== false ||
                         stripos($url, '%HOST_REGEX%') !== false) {
@@ -2900,6 +2901,13 @@ function ProcessTestScript($url, &$test) {
       $host = $parts['host'];
       if (strlen($host)) {
         $script = str_ireplace('%HOST%', $host, $script);
+
+        $origin = $parts['scheme'] . '://' . $parts['host'];
+        if ($parts['port']) {
+          $origin .= ':' . $parts['port'];
+        }
+        $script = str_ireplace('%ORIGIN%', $origin, $script);
+
         $script = str_ireplace('%HOST_REGEX%', str_replace('.', '\\.', $host), $script);
         if (stripos($script, '%HOSTR%') !== false) {
           if (GetRedirect($url, $rhost, $rurl)) {
