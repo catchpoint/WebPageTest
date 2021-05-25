@@ -7,7 +7,6 @@ require_once(__DIR__ . '/util.inc');
 
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
-  newrelic_add_custom_tracer('SBL_Check');
 }
 
 define('VIDEO_CODE_VERSION', 20);
@@ -3154,49 +3153,6 @@ function numRunsFromTestInfo($testInfo) {
     $runs -= $testInfo['discard'];
   }
   return $runs;
-}
-
-/**
-* Check an URL against the SBL
-*
-* @param mixed $url
-*/
-function SBL_Check($url, &$message) {
-  $ok = true;
-  $key = GetSetting('sbl_api_key');
-  if ($key && strlen($key)) {
-    $check = array(
-      'client' => array(
-        'clientId' => 'WebPageTest',
-        'clientVersion' => '1.0'
-      ),
-      'threatInfo' => array(
-        'threatTypes' => array('MALWARE'),
-        'platformTypes' => array('ALL_PLATFORMS'),
-        'threatEntryTypes' => array('URL'),
-        'threatEntries' => array(array('url' => $url))
-      )
-    );
-    $data = json_encode($check);
-    $api_url = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=$key";
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $api_url);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json", 'Content-Length: ' . strlen($data)));
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    $raw_response = curl_exec($ch);
-    $response = json_decode($raw_response, true);
-    curl_close ($ch);
-    if (isset($response) && is_array($response) && isset($response['matches'][0]['threatType'])) {
-      $ok = false;
-    }
-  }
-  return $ok;
 }
 
 function ZipExtract($zipFile, $path) {
