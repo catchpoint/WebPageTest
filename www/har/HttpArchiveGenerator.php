@@ -120,15 +120,16 @@ class HttpArchiveGenerator
         $runResult = $this->resultData->getRunResult($runNumber, $cached);
         for ($stepNumber = 1; $stepNumber <= $runResult->countSteps(); $stepNumber++) {
 
-            $stepResult = $runResult->getStepResult($stepNumber)->getRawResults();
+            $stepResult = $runResult->getStepResult($stepNumber);
+            $rawResult = $stepResult->getRawResults();
 
-            $pd = $this->setPageDataFor($stepResult);
-            $this->setEntryDataFor($stepResult, $pd, $entries);
+            $pd = $this->setPageDataFor($rawResult, $stepResult);
+            $this->setEntryDataFor($rawResult, $pd, $entries);
 
         }
     }
 
-    private function setPageDataFor($stepData) {
+    private function setPageDataFor($stepData, $testStepResult) {
         $run = $stepData['run'];
         $cached = $stepData['cached'];
         $stepNumber = $stepData['step'];
@@ -150,6 +151,11 @@ class HttpArchiveGenerator
             $pd["_$name"] = $value;
         }
 
+        $console_log = $testStepResult->getConsoleLog();
+        if (isset($console_log)) {
+          $pd['_consoleLog'] = $console_log;
+        }
+  
         // add the page-level ldata to the result
         $this->harData['log']['pages'][] = $pd;
         return $pd;
