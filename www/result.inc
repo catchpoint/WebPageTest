@@ -137,20 +137,7 @@ $page_description = "Website performance test result$testLabel.";
                     $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
                     echo "<a href='/jsonResult.php?test=$id&pretty=1'>View JSON result</a><br>";
-
-                    // create friendlier (unique) names for the file URLs
-                    $fileUrl = GetFileUrl($url);
-                    if( FRIENDLY_URLS )
-                    {
-                        echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
-                        echo "<a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Raw object data</a>";
-                    }
-                    else
-                    {
-                        echo "<a href=\"/csv.php?test=$id\">Raw page data</a> - ";
-                        echo "<a href=\"/csv.php?test=$id&requests=1\">Raw object data</a>";
-                    }
-                    echo '<br><a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Export HTTP Archive (.har)</a>';
+                    echo '<a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Export HTTP Archive (.har)</a>';
                     if (is_file("$testPath/test.log"))
                         echo "<br><a href=\"/viewlog.php?test=$id\">View Test Log</a>";
                     if (is_file("$testPath/lighthouse.log.gz"))
