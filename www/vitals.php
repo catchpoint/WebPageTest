@@ -6,7 +6,9 @@ include 'common.inc';
 require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
-
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 // Prevent the details page from running out of control.
 set_time_limit(30);
 
@@ -51,6 +53,11 @@ $page_description = "Web Vitals details$testLabel";
         .metric {
             padding-bottom: 2em;
         }
+        .metric h2 + small{
+            margin-top: -1.3em;
+            margin-bottom: 1.5em;
+            display: block;
+        }
         li.even {
             background-color: #f2f2f2;
         }
@@ -60,15 +67,24 @@ $page_description = "Web Vitals details$testLabel";
         img.autohide:hover {
             opacity: 0;
         }
+        .cruxbars{
+            margin-bottom: 1.5em;
+        }
     </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
+            $tab = 'Test Result';
             include 'header.inc';
             ?>
-            <div id="result" class="box vitals-diagnostics">
+            <div id="result" class=" vitals-diagnostics">
             <p>Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information</p>
             <p><a href="#lcp">Largest Contentful Paint</a> - <a href="#cls">Cumulative Layout Shift</a> - <a href="#tbt">Total Blocking Time</a></p>
+            <?php
+            if (isset($testRunResults)) {
+              require_once(__DIR__ . '/include/CrUX.php');
+            }
+            ?>
             <?php
             if ($isMultistep) {
                 for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
@@ -82,7 +98,7 @@ $page_description = "Web Vitals details$testLabel";
             }
             ?>
             </div>
-            <br><br>
+            </div>
             <?php include('footer.inc'); ?>
         </div>
 
@@ -163,7 +179,7 @@ function prettyHTML($markup) {
 
 function InsertWebVitalsHTML_LCP($stepResult) {
     global $testInfo;
-
+    global $testRunResults;
     $thumbSize = 320;
     if ($stepResult) {
         $events = $stepResult->getMetric('largestPaints');
@@ -182,7 +198,8 @@ function InsertWebVitalsHTML_LCP($stepResult) {
         if (isset($lcp)) {
             echo "<div class='metric'>";
             echo "<h2 id='lcp'>Largest Contentful Paint ({$lcp['time']} ms)</h2>";
-            echo "<p><a href='https://web.dev/lcp/'>About Largest Contentful Paint (LCP)</a></p>";
+            echo "<small><a href='https://web.dev/lcp/'>About Largest Contentful Paint (LCP)</a></small>";
+            InsertCruxHTML($testRunResults, null, 'lcp');
 
             // 3-frame filmstrip (if video is available)
             $video_frames = $stepResult->getVisualProgress();
@@ -339,6 +356,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
 }
 
 function InsertWebVitalsHTML_CLS($stepResult) {
+    global $testRunResults;
     $cls = null;
     $windows = array();
     if ($stepResult) {
@@ -371,7 +389,9 @@ function InsertWebVitalsHTML_CLS($stepResult) {
         $cls = round($cls, 3);
         echo "<div class='metric'>";
         echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
-        echo "<p><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></p>";
+        echo "<small><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></small>";
+        InsertCruxHTML($testRunResults, null, 'cls');
+
         foreach ($windows as $window) {
             InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
         }
@@ -534,9 +554,11 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
 }
 
 function InsertWebVitalsHTML_TBT($stepResult) {
+    global $testRunResults;
     echo "<div class='metric'>";
     echo "<h2 id='tbt'>Total Blocking Time</h2>";
-    echo "<p><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></p>";
-    echo "Coming soon.";
+    echo "<small><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></small>";
+    InsertCruxHTML($testRunResults, null, 'fid');
+    echo "<p>Coming soon.</p>";
     echo "</div>"; // metric
 }

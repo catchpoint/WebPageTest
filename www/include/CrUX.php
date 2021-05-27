@@ -1,4 +1,5 @@
 <?php
+$cruxStyles = false;
 // Helper to get the CrUX data for a given URL
 function GetCruxDataForURL($url, $mobile=FALSE) {
     $crux_data = null;
@@ -66,9 +67,10 @@ function PruneCruxCache() {
     }
 }
 
-function InsertCruxHTML($fvRunResults, $rvRunResults) {
+function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '') {
     $pageData = null;
     $rvPageData = null;
+    global $cruxStyles;
     if (isset($fvRunResults)) {
         $stepResult = $fvRunResults->getStepResult(1);
         if ($stepResult) {
@@ -90,26 +92,27 @@ function InsertCruxHTML($fvRunResults, $rvRunResults) {
         is_array($pageData['CrUX']) &&
         isset($pageData['CrUX']['metrics']))
     {
-        ?>
+        if (!$cruxStyles) {?>
         <style>
-            #crux h3 {
+            .crux h3 {
                 padding-top: 1.5em;
                 font-size: 1em;
             }
-            #crux .legend {
+            .crux .legend {
                 font-size: smaller;
                 font-weight: normal;
             }
-            #crux .fvarrow {
+            .crux .fvarrow {
                 color: #1a1a1a;
             }
-            #crux .rvarrow {
+            .crux .rvarrow {
                 color: #737373;
             }
         </style>
         <?php
-        echo '</style>';
-        echo '<div id="crux">';
+        $cruxStyles = true;
+        }
+        echo '<div class="crux">';
         echo '<h3>Chrome Field Performance';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' - <span class="legend"><span class="fvarrow">&#x25BC</span> This test, First View</span>';
@@ -120,11 +123,23 @@ function InsertCruxHTML($fvRunResults, $rvRunResults) {
         echo '</h3>';
 
         // The individual metrics
-        echo '<div id="cruxbars">';
-        InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
-        InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
-        InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
-        InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+        echo '<div class="cruxbars">';
+        if ($metric == ''){
+            //show all
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+        } else if  ($metric == 'fcp') {
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
+        } else if  ($metric == 'lcp') {
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
+        } else if  ($metric == 'cls') {
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
+        } else if  ($metric == 'fid') {
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+        }
+
         echo '</div>';
 
         echo '</div>';
