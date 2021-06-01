@@ -204,7 +204,7 @@ $page_description = "Website performance test result$testLabel.";
             <?php
             if (isset($fvRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
-              InsertCruxHTML($fvRunResults, $rvRunResults);
+              InsertCruxHTML($fvRunResults, $rvRunResults, '');
             }
             ?>
             <script type="text/javascript">
