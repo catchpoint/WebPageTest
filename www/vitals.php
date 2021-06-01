@@ -70,6 +70,54 @@ $page_description = "Web Vitals details$testLabel";
         .cruxbars{
             margin-bottom: 1.5em;
         }
+        .left {text-align:left;}
+        .center {text-align:center;}
+
+        .indented1 {padding-left: 40pt;}
+        .indented2 {padding-left: 80pt;}
+
+        td {
+            white-space:nowrap;
+            text-align:left;
+            vertical-align:middle;
+        }
+
+        td.center {
+            text-align:center;
+        }
+        table.details {
+          margin-left:auto; margin-right:auto;
+          border-collapse: collapse;
+          font-size: larger;
+        }
+        table.details th, table.details td {
+          border: 1px silver solid;
+          padding: 0.2em;
+          text-align: center;
+        }
+        table.details th {
+          background: gainsboro;
+          padding-left: 2em;
+          padding-right: 2em;
+        }
+        table.details caption {
+          padding: 0.5em;
+          margin-left: inherit;
+          margin-right: inherit;
+        }
+        table.details td.domain {
+          text-align: right;
+          max-width: 30em;
+          word-wrap: break-word;
+        }
+        table.details th.reqMime, table.details td.reqMime {
+          max-width: 10em;
+          word-wrap: break-word;
+          overflow: hidden;
+        }
+        .a_request {
+            cursor: pointer;
+        }
     </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
@@ -553,12 +601,179 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
     echo "</div>"; // cls-window
 }
 
+// Merge a start/end window into an existing array of times
+function MergeBlockingTime(&$times, $start, $end) {
+    $merged = false;
+
+    // See if it overlaps with an existing window
+    for($i = 0; $i < count($times) && !$merged; $i++) {
+        $s = $times[0];
+        $e = $times[1];
+        if (($start >= $s && $start <= $e) ||
+                ($end >= $s && $end <= $e) ||
+                ($s >= $start && $s <= $end) ||
+                ($e >= $start && $e <= $end)) {
+            $times[0] = min($start, $s);
+            $times[1] = max($end, $e);
+            $merged = true;
+        }
+    }
+
+    if (!$merged) {
+        $times[] = array($start, $end);
+    }
+}
+
 function InsertWebVitalsHTML_TBT($stepResult) {
     global $testRunResults;
-    echo "<div class='metric'>";
-    echo "<h2 id='tbt'>Total Blocking Time</h2>";
-    echo "<small><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></small>";
-    InsertCruxHTML($testRunResults, null, 'fid');
-    echo "<p>Coming soon.</p>";
-    echo "</div>"; // metric
+    global $testInfo;
+    if ($stepResult) {
+        $tbt = $stepResult->getMetric('TotalBlockingTime');
+        if (isset($tbt)) {
+            echo "<div class='metric'>";
+            echo "<h2 id='tbt'>Total Blocking Time ($tbt ms)</h2>";
+            echo "<small><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></small>";
+            InsertCruxHTML($testRunResults, null, 'fid');
+
+            // Load and filter the JS executions to only the blocking time blocks
+            $long_tasks = null;
+            $timingsFile = $stepResult->createTestPaths()->devtoolsScriptTimingFile();
+            if (isset($timingsFile) && strlen($timingsFile) && gz_is_file($timingsFile)) {
+                $timings = json_decode(gz_file_get_contents($timingsFile), true);
+                if (isset($timings) &&
+                    is_array($timings) &&
+                    isset($timings['main_thread']) &&
+                    isset($timings[$timings['main_thread']]) &&
+                    is_array($timings[$timings['main_thread']])) {
+                  foreach($timings[$timings['main_thread']] as $url => $events) {
+                      foreach($events as $timings) {
+                          foreach($timings as $task) {
+                              if (isset($task) && is_array($task) && count($task) >= 2) {
+                                $start = $task[0];
+                                $end = $task[1];
+                                if ($end - $start > 50) {
+                                    if (!isset($long_tasks[$url])) {
+                                        $long_tasks[$url] = array();
+                                    }
+                                    MergeBlockingTime($long_tasks[$url], $start, $end);
+                                }
+                              }
+                          }
+                      }
+                  }
+                }
+            }
+
+            if (isset($long_tasks)) {
+                $requests_list = null;
+                $maxTime = 0;
+                // Trimmed waterfall
+                $label = $stepResult->readableIdentifier($testInfo->getUrl());
+                $requests = $stepResult->getRequestsWithInfo(true, true);
+                $raw_requests = $requests->getRequests();
+                if (isset($raw_requests)) {
+                    foreach ($raw_requests as $request) {
+                        if (isset($request['full_url']) && isset($long_tasks[$request['full_url']])) {
+                            if (isset($requests_list)) {
+                                $requests_list .= ",{$request['number']}";
+                            } else {
+                                $requests_list = "{$request['number']}";
+                            }
+                            foreach($long_tasks[$request['full_url']] as $times) {
+                                if ($times[1] > $maxTime) {
+                                    $maxTime = $times[1];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $timeline = null;
+                $localPaths = $stepResult->createTestPaths();
+                if (gz_is_file($localPaths->devtoolsTraceFile()) || gz_is_file($localPaths->devtoolsTimelineFile())) {
+                    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+                    $timeline = $urlGenerator->stepDetailPage("chrome/timeline");
+                }
+
+                if (isset($requests_list) && $maxTime > 0) {
+                    // TODO: Make the second waterfall interactive.
+                    $maxTime = floatval($maxTime) / 1000.0;
+                    $options = "&dots=0&bw=0&max=$maxTime";
+                    $options .= "&requests=1,$requests_list";
+                    $id = $testInfo->getId();
+                    $run = $stepResult->getRunNumber();
+                    $cached = $stepResult->isCachedRun();
+                    $step = $stepResult->getStepNumber(); 
+                    echo "<div class='vitals-waterfall'>";
+                    echo '<div class="waterfall-container">';
+                    if (isset($timeline)) {
+                        echo "<a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>";
+                    }
+                    echo "<img class=\"waterfall-image\" alt=\"\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached&step=$step$options\">";
+                    if (isset($timeline)) {
+                        echo '</a>';
+                    }
+                    echo "</div>";
+                    echo "</div>";
+                }
+
+                if (isset($timeline)) {
+                    echo "<br><p><a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>View in Chrome Dev Tools Performance Panel</a></p>\n";
+                }
+
+                // Break down the long tasks by domain
+                $domain_tasks = array();
+                foreach($long_tasks as $url => $times) {
+                    $domain = parse_url($url, PHP_URL_HOST);
+                    if (!isset($domain_tasks[$domain])) {
+                        $domain_tasks[$domain] = array();
+                    }
+                    foreach ($times as $time) {
+                        MergeBlockingTime($domain_tasks[$domain], $time[0], $time[1]);
+                    }
+                }
+
+                // Calculate the blocking time per domain
+                $domains = array();
+                foreach($domain_tasks as $domain => $times) {
+                    $blocking_time = 0;
+                    foreach($times as $time) {
+                        $blocking_time += $time[1] - $time[0] - 50;
+                    }
+                    $domains[$domain] = intval(round($blocking_time));
+                }
+                arsort($domains);
+                if (count($domains)) {
+                    ?>
+                    <div class="center">
+                    <table class="tableDetails details center">
+                        <caption>Main Thread Blocking Time by Script Origin</caption>
+                        <thead>
+                            <tr>
+                                <th class="domain">Script Origin</th>
+                                <th class="blocking">Blocking Time (ms)</th>
+                            </tr>
+                        </thead>
+                    <?php
+                    echo "<tbody>";
+                    foreach($domains as $domain => $blocking) {
+                        echo "<tr>";
+                        echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
+                        echo "<td class='blocking'>$blocking</td>";
+                        echo "</tr>";
+                    }
+                    echo "</tbody></table></div>\n";
+                    ?>
+                    <script>
+                        window.addEventListener('DOMContentLoaded', (event) => {
+                            $(document).find(".tableDetails").tablesorter();
+                        });
+                    </script>
+                    <?php
+                }
+            }
+        
+            echo "</div>"; // metric
+        }
+    }
 }
