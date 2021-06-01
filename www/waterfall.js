@@ -176,6 +176,8 @@ function SelectRequest(step, request) {
             details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
         if (r['cpuTime'] !== undefined && r['cpuTime'] > 0)
             details += '<b>CPU Time: </b>' + r['cpuTime'] + ' ms<br>';
+        if (r['renderBlocking'] !== undefined)
+            details += '<b>Render Blocking Status: </b>' + htmlEncode(r['renderBlocking']) + '<br>';
         var psPageData = wptPageData[stepLabel] !== undefined ? wptPageData[stepLabel]['psPageData'] : undefined;
         if (psPageData !== undefined &&
             psPageData['connections'] !== undefined &&

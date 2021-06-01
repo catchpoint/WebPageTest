@@ -118,6 +118,12 @@ $page_description = "Web Vitals details$testLabel";
         .a_request {
             cursor: pointer;
         }
+        .lcp-image{
+            overflow-x: scroll;
+            max-width: 100%;
+            text-align: left;
+            margin-top: 1em;
+        }
     </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
@@ -188,12 +194,21 @@ $page_description = "Web Vitals details$testLabel";
 
         <?php
         include "waterfall.js";
+        if ($lcp_request != ''){
+
+        ?>
+        var stepLabel = "step1";
+$("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
+
+        <?php
+        }
         ?>
         </script>
     </body>
 </html>
 
 <?php
+$lcp_request = '';
 function InsertWebVitalsHTML($stepResult) {
     InsertWebVitalsHTML_LCP($stepResult);
     InsertWebVitalsHTML_CLS($stepResult);
@@ -227,6 +242,7 @@ function prettyHTML($markup) {
 
 function InsertWebVitalsHTML_LCP($stepResult) {
     global $testInfo;
+    global $lcp_request;
     global $testRunResults;
     $thumbSize = 320;
     if ($stepResult) {
@@ -346,10 +362,16 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 echo "<tr><th align='left'>Element Type</th><td>{$lcp['element']['nodeName']}</td></tr>";
             }
             if (isset($lcp['element']['src'])) {
-                echo "<tr><th align='left'>Src</th><td>{$lcp['element']['src']}</td></tr>";
+                $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
+                echo "<tr><th align='left'>Src</th><td>{$lcpSource}</td></tr>";
             }
             if (isset($lcp['element']['background-image'])) {
                 echo "<tr><th align='left'>Background Image</th><td>{$lcp['element']['background-image']}</td></tr>";
+                preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
+                if ($matches) {
+                     $lcpSource = $matches[3][0];
+                }
+
             }
             echo "<tr><th align='left'>Outer HTML</th><td>";
             echo "<code class='language-html'>";
@@ -357,6 +379,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo "</code>";
             echo "</td>";
             echo '</table>';
+
             // Trimmed waterfall
             $label = $stepResult->readableIdentifier($testInfo->getUrl());
             $requests = $stepResult->getRequestsWithInfo(true, true);
@@ -365,6 +388,11 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             $last_request = 0;
             if (isset($raw_requests)) {
                 foreach ($raw_requests as $request) {
+                    if (isset($lcpSource)) {
+                        if ($request['full_url'] == $lcpSource) {
+                            $lcp_request = $request['number'];
+                        }
+                    }
                     if (isset($request['responseCode']) && $request['responseCode'] > 0 && isset($request['download_end']) && $request['download_end'] <= $lcp['time'] && isset($request['number']) && $request['number'] > $last_request) {
                         $last_request = $request['number'];
                     }
@@ -389,6 +417,11 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
             echo $out;
             echo "</div>";
+
+                //image
+                if ($lcpSource) {
+                    echo "<div class='lcp-image'><h3>LCP Image</h3><img src='" . $lcpSource . "' /></div>";
+                }    
 
             // Insert the raw debug details
             echo "<div class='values'>";
