@@ -18,6 +18,15 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
+            div.table table {
+              max-width: 300px;
+              vertical-align:top;
+            }
+
+            div.table td {
+                max-width: 250px;
+            }
+
             td {
                 text-align:left;
                 vertical-align:top;

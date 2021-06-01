@@ -42,10 +42,30 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <title>WebPageTest Domain Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
+            div.tableRequests table {
+              max-width: 300px;
+              vertical-align:top;
+            }
+
+            div.tableBytes table {
+              max-width: 300px;
+              vertical-align:top;
+            }
+
             td {
                 text-align:center;
                 vertical-align:middle;
                 padding:1em;
+            }
+
+            div.tableRequests td {
+                max-width: 250px;
+                text-align: left;
+            }
+
+            div.tableBytes td {
+                max-width: 250px;
+                text-align: left;
             }
 
             div.bar {

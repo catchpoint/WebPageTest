@@ -30,6 +30,26 @@ if(!$testInfo->isFirstViewOnly()) {
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
+            div.tableRequests table {
+              max-width: 300px;
+              vertical-align:top;
+            }
+
+            div.tableBytes table {
+              max-width: 300px;
+              vertical-align:top;
+            }
+
+            div.tableRequests td {
+                max-width: 250px;
+                text-align: left;
+            }
+
+            div.tableBytes td {
+                max-width: 250px;
+                text-align: left;
+            }
+
             td {
                 text-align:center;
                 vertical-align:middle;
