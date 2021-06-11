@@ -125,12 +125,14 @@ else
                         position: sticky;
                         top: 0;
                         z-index: 5;
-                        <?php
-                            echo "background: #$bgcolor;\n";
-                        ?>
+                        
                     <?php
                     }
                     ?>
+                    <?php
+                            echo "background: #$bgcolor;\n";
+                            echo "color: #$color;\n"
+                        ?>
                     table-layout: fixed;
                     margin-left: auto;
                     margin-right: auto;
