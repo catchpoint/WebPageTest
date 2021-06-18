@@ -42,6 +42,22 @@
         }
       }
     }
+    $wvprofile_file = __DIR__ . '/settings/profiles_webvitals.ini';
+    if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini'))
+      $wvprofile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
+    if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini'))
+      $wvprofile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+    if (isset($_REQUEST['webvital_profile']) && is_file($wvprofile_file)) {
+      $profiles = parse_ini_file($wvprofile_file, true);
+      if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['webvital_profile']])) {
+        foreach($profiles[$_REQUEST['webvital_profile']] as $key => $value) {
+          if ($key !== 'label' && $key !== 'description') {
+            $_REQUEST[$key] = $value;
+            $_GET[$key] = $value;
+          }
+        }
+      }
+    }
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
@@ -1015,10 +1031,14 @@
                         header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
                     } else {
                         // redirect regardless if it is a bulk test or not
+                        $view = '';
+                        if (isset($_REQUEST['webvital_profile'])) {
+                          $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
+                        }
                         if( FRIENDLY_URLS )
-                            header("Location: $protocol://$host$uri/result/{$test['id']}/");
+                            header("Location: $protocol://$host$uri/result/{$test['id']}/$view");
                         else
-                            header("Location: $protocol://$host$uri/results.php?test={$test['id']}");
+                            header("Location: $protocol://$host$uri/results.php?test={$test['id']}$view");
                     }
                 }
             }

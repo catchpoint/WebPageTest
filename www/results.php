@@ -29,7 +29,11 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             } elseif( isset($test['test']['type']) && @$test['test']['type'] == 'lighthouse' ) {
                 include 'lighthouse.php';
             } else {
-                include 'result.inc';
+                if (isset($_REQUEST['view']) && $_REQUEST['view'] == 'webvitals') {
+                    include 'vitals.php';
+                } else {
+                    include 'result.inc';
+                }
             }
         } else {
             include 'running.inc';
