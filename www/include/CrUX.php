@@ -67,7 +67,7 @@ function PruneCruxCache() {
     }
 }
 
-function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels=true) {
+function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels=true, $includeMetricName=true) {
     $pageData = null;
     $rvPageData = null;
     global $cruxStyles;
@@ -114,12 +114,12 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         }
         echo '<div class="crux">';
         if ($includeLabels) {
-            echo '<h3>Chrome Field Performance';
+            echo '<h3 class="cruxlabel">Chrome Field Data';
             if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
-                echo ' - <span class="legend"><span class="fvarrow">&#x25BC</span> This test, First View</span>';
+                echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> This test, First View</span>';
             }
             if (isset($rvPageData) && (isset($rvPageData['chromeUserTiming.firstContentfulPaint']) || isset($rvPageData['chromeUserTiming.LargestContentfulPaint']) || isset($rvPageData['chromeUserTiming.CumulativeLayoutShift']))) {
-                echo ' - <span class="legend"><span class="rvarrow">&#x25BC</span> This test, Repeat View</span>';
+                echo ' &nbsp;<span class="legend"><span class="rvarrow">&#x25BC</span> This test, Repeat View</span>';
             }
             echo '</h3>';
         }
@@ -128,18 +128,18 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         echo '<div class="cruxbars">';
         if ($metric == ''){
             //show all
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeLabels);
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeLabels);
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeLabels);
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
         } else if  ($metric == 'fcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
         } else if  ($metric == 'lcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
         } else if  ($metric == 'cls') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
         } else if  ($metric == 'fid') {
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
         }
 
         echo '</div>';

@@ -139,6 +139,7 @@ $page_description = "Web Vitals details$testLabel";
             border: 1px solid black;
             padding: 10px;
             font-size: 1.5em;
+            overflow: hidden;
         }
         .summary-container .good {
             background: #d4ffd5;
@@ -157,11 +158,13 @@ $page_description = "Web Vitals details$testLabel";
             text-decoration: none;
             color: black;
         }
-        .cruxlabel {
+        .crux .cruxlabel {
             font-size: 0.7em;
             margin: 0;
-            margin-bottom: -15px !important;
             z-index: 99;
+        }
+        .cruxlabel + .cruxbars {
+            margin-top: -15px !important;
         }
         .cruxbars {
             margin: 0;
@@ -170,6 +173,7 @@ $page_description = "Web Vitals details$testLabel";
         .cruxlabel .legend {
             font-size: smaller;
             font-weight: normal;
+            display: block;
         }
         .cruxlabel .fvarrow {
             color: #1a1a1a;
@@ -293,8 +297,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<p>Largest Contentful Paint</p>";
         echo "<p class='metric-value $scoreClass'>{$lcp['time']} ms</p>";
-        echo "<p class='cruxlabel'>Chrome Field Data - <span class='legend'><span class='fvarrow'>&#x25BC</span> This test</span></p>";
-        InsertCruxHTML($testRunResults, null, 'lcp', false);
+        InsertCruxHTML($testRunResults, null, 'lcp', true, false);
         echo "</div></a>";
     }
     // CLS
@@ -336,8 +339,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
         echo "<p>Cumulative Layout Shift</p>";
         echo "<p class='metric-value $scoreClass'>$cls</p>";
-        echo "<p class='cruxlabel'>Chrome Field Data - <span class='legend'><span class='fvarrow'>&#x25BC</span> This test</span></p>";
-        InsertCruxHTML($testRunResults, null, 'cls', false);
+        InsertCruxHTML($testRunResults, null, 'cls', true, false);
         echo "</div></a>";
     }
     // TBT
@@ -352,8 +354,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<p>Total Blocking Time</p>";
         echo "<p class='metric-value $scoreClass'>$tbt ms</p>";
-        echo "<p class='cruxlabel'>Chrome Field Data (FID)</p>";
-        InsertCruxHTML($testRunResults, null, 'fid', false);
+        InsertCruxHTML($testRunResults, null, 'fid', true, false);
         echo "</div></a>";
     }
 
