@@ -183,7 +183,7 @@ $page_description = "Web Vitals details$testLabel";
             include 'header.inc';
             ?>
             <div id="result" class=" vitals-diagnostics">
-            <p>Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information</p>
+            <p>Google <a href="https://web.dev/vitals/">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</p>
             <?php
             if (isset($testRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
@@ -407,7 +407,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
         if (isset($lcp)) {
             echo "<div class='metric'>";
             echo "<h2 id='lcp'>Largest Contentful Paint ({$lcp['time']} ms)</h2>";
-            echo "<small><a href='https://web.dev/lcp/'>About Largest Contentful Paint (LCP)</a></small>";
+            echo "<small><a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/images/icon-external.svg'></a></small>";
 
             // 3-frame filmstrip (if video is available)
             $video_frames = $stepResult->getVisualProgress();
@@ -614,7 +614,7 @@ function InsertWebVitalsHTML_CLS($stepResult) {
         $cls = round($cls, 3);
         echo "<div class='metric'>";
         echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
-        echo "<small><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></small>";
+        echo "<small><a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a></small>";
 
         foreach ($windows as $window) {
             InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
@@ -808,7 +808,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
         if (isset($tbt)) {
             echo "<div class='metric'>";
             echo "<h2 id='tbt'>Total Blocking Time ($tbt ms)</h2>";
-            echo "<small><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></small>";
+            echo "<small><a href='https://web.dev/tbt/' target='_blank' rel='noopener'>About Total Blocking Time (TBT) <img src='/images/icon-external.svg'></a></small>";
 
             // Load and filter the JS executions to only the blocking time blocks
             $long_tasks = null;
@@ -893,7 +893,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
                 }
 
                 if (isset($timeline)) {
-                    echo "<br><p><a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>View in Chrome Dev Tools Performance Panel</a></p>\n";
+                    echo "<br><p><a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>View in Chrome Dev Tools Performance Panel <img src='/images/icon-external.svg'></a></p>\n";
                 }
 
                 // Break down the long tasks by domain
