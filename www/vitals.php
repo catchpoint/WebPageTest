@@ -124,6 +124,56 @@ $page_description = "Web Vitals details$testLabel";
             text-align: left;
             margin-top: 1em;
         }
+        .summary-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .summary-container p {
+            margin-bottom: 15px;
+            line-height: 1em;
+        }
+        .summary-metric {
+            min-width: 300px;
+            border: 1px solid black;
+            padding: 10px;
+            font-size: 1.5em;
+        }
+        .summary-container .good {
+            background: #d4ffd5;
+        }
+        .summary-container .ok {
+            background: #ffe9b0; 
+        }
+        .summary-container .poor {
+            background: #ffbac0;
+        }
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .summary-container a:link, .summary-container a:visited {
+            text-decoration: none;
+            color: black;
+        }
+        .cruxlabel {
+            font-size: 0.7em;
+            margin: 0;
+            margin-bottom: -15px !important;
+            z-index: 99;
+        }
+        .cruxbars {
+            margin: 0;
+            z-index: 1;
+        }
+        .cruxlabel .legend {
+            font-size: smaller;
+            font-weight: normal;
+        }
+        .cruxlabel .fvarrow {
+            color: #1a1a1a;
+        }
     </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
@@ -134,7 +184,6 @@ $page_description = "Web Vitals details$testLabel";
             ?>
             <div id="result" class=" vitals-diagnostics">
             <p>Google <a href="https://web.dev/vitals/">Web Vitals</a> Diagnostic Information</p>
-            <p><a href="#lcp">Largest Contentful Paint</a> - <a href="#cls">Cumulative Layout Shift</a> - <a href="#tbt">Total Blocking Time</a></p>
             <?php
             if (isset($testRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
@@ -211,9 +260,104 @@ $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass(
 <?php
 $lcp_request = '';
 function InsertWebVitalsHTML($stepResult) {
+    InsertWebVitalsHTML_Summary($stepResult);
     InsertWebVitalsHTML_LCP($stepResult);
     InsertWebVitalsHTML_CLS($stepResult);
     InsertWebVitalsHTML_TBT($stepResult);
+}
+
+function InsertWebVitalsHTML_Summary($stepResult) {
+    global $testRunResults;
+    echo '<div class="summary-container">';
+    // LCP
+    $events = $stepResult->getMetric('largestPaints');
+    $lcp = null;
+    if (isset($events) && is_array($events)) {
+        // Find the actual LCP event
+        foreach($events as $event) {
+            if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
+                if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
+                    $lcp = $event;
+                }
+            }
+        }
+        // Find the matching text or image paint event
+    }
+    if (isset($lcp)) {
+        $scoreClass = 'good';
+        if ($lcp['time'] >= 4000) {
+          $scoreClass = 'poor';
+        } elseif ($lcp['time'] >= 2500) {
+          $scoreClass = 'ok';
+        }
+        echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
+        echo "<p>Largest Contentful Paint</p>";
+        echo "<p class='metric-value $scoreClass'>{$lcp['time']} ms</p>";
+        echo "<p class='cruxlabel'>Chrome Field Data - <span class='legend'><span class='fvarrow'>&#x25BC</span> This test</span></p>";
+        InsertCruxHTML($testRunResults, null, 'lcp', false);
+        echo "</div></a>";
+    }
+    // CLS
+    $cls = null;
+    $windows = array();
+    if ($stepResult) {
+        $cls = $stepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
+        $events = $stepResult->getMetric('LayoutShifts');
+        foreach ($events as $event) {
+            $num = isset($event['shift_window_num']) ? strval($event['shift_window_num']) : '1';
+            if (!isset($windows[$num])) {
+                $windows[$num] = array('num' => $num, 'shifts' => array(), 'cls' => 0.0, 'start' => null, 'end' => null);
+            }
+            $windows[$num]['shifts'][] = $event;
+            if (!$windows[$num]['start'] || $event['time'] < $windows[$num]['start']) {
+                $windows[$num]['start'] = $event['time'];
+            }
+            if (!$windows[$num]['end'] || $event['time'] > $windows[$num]['end']) {
+                $windows[$num]['end'] = $event['time'];
+            }
+            $windows[$num]['cls'] += $event['score'];
+        }
+    }
+    if (isset($cls) && is_numeric($cls)) {
+        // reverse-sort, biggest cls first
+        usort($windows, function($a, $b) {
+            if ($a['cls'] == $b['cls']) {
+                return 0;
+            }
+            return ($a['cls'] > $b['cls']) ? -1 : 1;
+        });
+        $cls = round($cls, 3);
+        $scoreClass = 'good';
+        if ($cls >= 0.25) {
+          $scoreClass = 'poor';
+        } elseif ($cls >= 0.1) {
+          $scoreClass = 'ok';
+        }
+        echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
+        echo "<p>Cumulative Layout Shift</p>";
+        echo "<p class='metric-value $scoreClass'>$cls</p>";
+        echo "<p class='cruxlabel'>Chrome Field Data - <span class='legend'><span class='fvarrow'>&#x25BC</span> This test</span></p>";
+        InsertCruxHTML($testRunResults, null, 'cls', false);
+        echo "</div></a>";
+    }
+    // TBT
+    $tbt = $stepResult->getMetric('TotalBlockingTime');
+    if (isset($tbt)) {
+        $scoreClass = 'good';
+        if ($tbt >= 600) {
+          $scoreClass = 'poor';
+        } elseif ($tbt >= 300) {
+          $scoreClass = 'ok';
+        }
+        echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
+        echo "<p>Total Blocking Time</p>";
+        echo "<p class='metric-value $scoreClass'>$tbt ms</p>";
+        echo "<p class='cruxlabel'>Chrome Field Data (FID)</p>";
+        InsertCruxHTML($testRunResults, null, 'fid', false);
+        echo "</div></a>";
+    }
+
+    echo '</div>'; // summary-container
 }
 
 function pretty_print($array) {
@@ -264,7 +408,6 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo "<div class='metric'>";
             echo "<h2 id='lcp'>Largest Contentful Paint ({$lcp['time']} ms)</h2>";
             echo "<small><a href='https://web.dev/lcp/'>About Largest Contentful Paint (LCP)</a></small>";
-            InsertCruxHTML($testRunResults, null, 'lcp');
 
             // 3-frame filmstrip (if video is available)
             $video_frames = $stepResult->getVisualProgress();
@@ -472,7 +615,6 @@ function InsertWebVitalsHTML_CLS($stepResult) {
         echo "<div class='metric'>";
         echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
         echo "<small><a href='https://web.dev/cls/'>About Cumulative Layout Shift (CLS)</a></small>";
-        InsertCruxHTML($testRunResults, null, 'cls');
 
         foreach ($windows as $window) {
             InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
@@ -667,7 +809,6 @@ function InsertWebVitalsHTML_TBT($stepResult) {
             echo "<div class='metric'>";
             echo "<h2 id='tbt'>Total Blocking Time ($tbt ms)</h2>";
             echo "<small><a href='https://web.dev/tbt/'>About Total Blocking Time (TBT)</a></small>";
-            InsertCruxHTML($testRunResults, null, 'fid');
 
             // Load and filter the JS executions to only the blocking time blocks
             $long_tasks = null;

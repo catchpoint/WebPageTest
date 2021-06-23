@@ -67,7 +67,7 @@ function PruneCruxCache() {
     }
 }
 
-function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '') {
+function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels=true) {
     $pageData = null;
     $rvPageData = null;
     global $cruxStyles;
@@ -113,31 +113,33 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '') {
         $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3>Chrome Field Performance';
-        if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' - <span class="legend"><span class="fvarrow">&#x25BC</span> This test, First View</span>';
+        if ($includeLabels) {
+            echo '<h3>Chrome Field Performance';
+            if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
+                echo ' - <span class="legend"><span class="fvarrow">&#x25BC</span> This test, First View</span>';
+            }
+            if (isset($rvPageData) && (isset($rvPageData['chromeUserTiming.firstContentfulPaint']) || isset($rvPageData['chromeUserTiming.LargestContentfulPaint']) || isset($rvPageData['chromeUserTiming.CumulativeLayoutShift']))) {
+                echo ' - <span class="legend"><span class="rvarrow">&#x25BC</span> This test, Repeat View</span>';
+            }
+            echo '</h3>';
         }
-        if (isset($rvPageData) && (isset($rvPageData['chromeUserTiming.firstContentfulPaint']) || isset($rvPageData['chromeUserTiming.LargestContentfulPaint']) || isset($rvPageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' - <span class="legend"><span class="rvarrow">&#x25BC</span> This test, Repeat View</span>';
-        }
-        echo '</h3>';
 
         // The individual metrics
         echo '<div class="cruxbars">';
         if ($metric == ''){
             //show all
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeLabels);
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeLabels);
         } else if  ($metric == 'fcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeLabels);
         } else if  ($metric == 'lcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeLabels);
         } else if  ($metric == 'cls') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
+            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeLabels);
         } else if  ($metric == 'fid') {
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeLabels);
         }
 
         echo '</div>';
@@ -146,7 +148,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '') {
     }
 }
 
-function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $label, $short) {
+function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $label, $short, $includeLabels=true) {
     $fvValue = null;
     $rvValue = null;
     $histogram = null;
@@ -164,11 +166,11 @@ function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $
         $p75 = $fvPageData['CrUX']['metrics'][$crux_metric]['percentiles']['p75'];
     }
     if (isset($histogram) && is_array($histogram) && count($histogram) == 3) {
-        InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue);
+        InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels);
     }
 }
 
-function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue) {
+function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels=true) {
     // Figure out offsets and adjustments to the svg
     $width = 200;
     if (is_float($p75))
@@ -224,7 +226,6 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
 $image_width = $width + 20;
 $svg = <<<EOD
 <svg width='$image_width' height='80' version='1.1' xmlns='http://www.w3.org/2000/svg'>
-<rect width='100%' height='100%' fill='white' />
 <svg x='10' width='$width' y='30' height='25'>
     <rect x='0' width='100%' height='100%' fill='#009316' />
     <rect x='$goodPct%' width='100%' height='100%' fill='#ffa400' />
@@ -237,9 +238,10 @@ $p75arrow
 $rvArrow
 $fvArrow
 $p75text
-<text x='100' y='16' font-size='13' text-anchor="middle" font-family='Arial'>$label ($short)</text>
-</svg>
 EOD;
+if ($includeLabels)
+    $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Arial'>$label ($short)</text>";
+$svg .= '</svg>';
     echo $svg;
 }
 
