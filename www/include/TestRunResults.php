@@ -252,6 +252,18 @@ class TestRunResults {
   }
 
   /**
+   * @return bool True if any step is  optimization-checked, false otherwise
+   */
+  public function hasWebVitals() {
+    foreach ($this->stepResults as $stepResult) {
+      if ($stepResult->getMetric("chromeUserTiming.LargestContentfulPaint")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * @return int lighthouse score
    */
   public function getLighthouseScore() {

@@ -191,6 +191,11 @@ class FriendlyUrlGenerator extends UrlGenerator {
     return $url;
   }
 
+  public function resultPagePHP($page, $extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
+  }
+
   public function thumbnail($image) {
     $dotPos = strrpos($image, ".");
     if ($dotPos === false) {
@@ -235,6 +240,11 @@ class FriendlyUrlGenerator extends UrlGenerator {
 class StandardUrlGenerator extends UrlGenerator {
 
   public function resultPage($page, $extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
+  }
+
+  public function resultPagePHP($page, $extraParams = null) {
     $extraParams = $extraParams ? ("&" . $extraParams) : "";
     return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
   }

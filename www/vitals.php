@@ -129,6 +129,7 @@ $page_description = "Web Vitals details$testLabel";
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = 'Test Result';
+            $subtab = 'Web Vitals';
             include 'header.inc';
             ?>
             <div id="result" class=" vitals-diagnostics">
