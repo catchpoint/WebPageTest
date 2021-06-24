@@ -408,7 +408,14 @@ function InsertWebVitalsHTML_LCP($stepResult) {
         if (isset($lcp)) {
             echo "<div class='metric'>";
             echo "<h2 id='lcp'>Largest Contentful Paint ({$lcp['time']} ms)</h2>";
-            echo "<small><a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/images/icon-external.svg'></a></small>";
+            echo "<small>";
+            $urlGenerator = $stepResult->createUrlGenerator("", false);
+            $filmstripUrl = $urlGenerator->filmstripView();
+            echo "<a href='$filmstripUrl&highlightLCP=1'>View as Filmstrip</a>";
+            $videoUrl = $urlGenerator->createVideo();
+            echo " - <a href='$videoUrl'>View Video</a>";
+            echo " - <a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/images/icon-external.svg'></a>";
+            echo "</small>";
 
             // 3-frame filmstrip (if video is available)
             $video_frames = $stepResult->getVisualProgress();
@@ -615,7 +622,14 @@ function InsertWebVitalsHTML_CLS($stepResult) {
         $cls = round($cls, 3);
         echo "<div class='metric'>";
         echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
-        echo "<small><a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a></small>";
+        echo "<small>";
+        $urlGenerator = $stepResult->createUrlGenerator("", false);
+        $filmstripUrl = $urlGenerator->filmstripView();
+        echo "<a href='$filmstripUrl&highlightCLS=1'>View as Filmstrip</a>";
+        $videoUrl = $urlGenerator->createVideo();
+        echo " - <a href='$videoUrl'>View Video</a>";
+        echo " - <a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a>";
+        echo "</small>";
 
         foreach ($windows as $window) {
             InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);

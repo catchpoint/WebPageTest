@@ -244,6 +244,9 @@ else
                 font-family: arial,sans-serif;
                 padding: 0px 25px;
             }
+            div.box {
+                text-align:center;
+            }
 
             #player
             {
