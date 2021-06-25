@@ -173,7 +173,6 @@ $page_description = "Web Vitals details$testLabel";
         .cruxlabel .legend {
             font-size: smaller;
             font-weight: normal;
-            display: block;
         }
         .cruxlabel .fvarrow {
             color: #1a1a1a;
@@ -297,7 +296,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<p>Largest Contentful Paint</p>";
         echo "<p class='metric-value $scoreClass'>{$lcp['time']} ms</p>";
-        InsertCruxHTML($testRunResults, null, 'lcp', true, false);
+        InsertCruxHTML($testRunResults, null, 'lcp', false, false);
         echo "</div></a>";
     }
     // CLS
@@ -339,7 +338,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
         echo "<p>Cumulative Layout Shift</p>";
         echo "<p class='metric-value $scoreClass'>$cls</p>";
-        InsertCruxHTML($testRunResults, null, 'cls', true, false);
+        InsertCruxHTML($testRunResults, null, 'cls', false, false);
         echo "</div></a>";
     }
     // TBT
@@ -354,7 +353,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<p>Total Blocking Time</p>";
         echo "<p class='metric-value $scoreClass'>$tbt ms</p>";
-        InsertCruxHTML($testRunResults, null, 'fid', true, false);
+        InsertCruxHTML($testRunResults, null, 'fid', false, true);
         echo "</div></a>";
     }
 
