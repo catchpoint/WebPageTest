@@ -55,6 +55,13 @@ if (is_file($profile_file))
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
                     <?php
+                    if (file_exists(__DIR__ . '/../settings/profiles_webvitals.ini') ||
+                            file_exists(__DIR__ . '/../settings/common/profiles_webvitals.ini') ||
+                            file_exists(__DIR__ . '/../settings/server/profiles_webvitals.ini')) {
+                        echo "<li class=\"vitals\"><a href=\"/webvitals\">";
+                        echo file_get_contents('./images/icon-webvitals-testing.svg');
+                        echo "Web Vitals</a></li>";
+                    }
                     if (file_exists(__DIR__ . '/../settings/profiles.ini') ||
                         file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
                         file_exists(__DIR__ . '/../settings/server/profiles.ini')) {

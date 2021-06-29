@@ -30,6 +30,14 @@ $profiles = parse_ini_file($profile_file, true);
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
+        <style>
+        #vitals-content {
+          width: 100%;
+        }
+        #test_box-container {
+          margin-bottom: 2em;
+        }
+        </style>
     </head>
     <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
@@ -53,7 +61,7 @@ $profiles = parse_ini_file($profile_file, true);
             include 'header.inc';
             if (!$headless) {
             ?>
-            <h1 class="attention">Test. Optimize. Repeat.</h1>
+            <h1 class="attention">Run a Core Web Vitals Test</h1>
 
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
@@ -82,7 +90,7 @@ $profiles = parse_ini_file($profile_file, true);
                     </li>
                     <li class="vitals ui-state-default ui-corner-top ui-tabs-selected ui-state-active">
                       <a href="#">
-                        <?php echo file_get_contents('./images/icon-simple-testing.svg'); ?>Web Vitals</a>
+                        <?php echo file_get_contents('./images/icon-webvitals-testing.svg'); ?>Web Vitals</a>
                     </li>
                     <li class="easy_mode">
                       <a href="/easy">
@@ -144,10 +152,11 @@ $profiles = parse_ini_file($profile_file, true);
             <?php
             } // $headless
             ?>
+          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3500" src="https://www.product.webpagetest.org/second"></iframe>
           <?php
-          include(__DIR__ . '/include/home-subsections.inc');
+          //include(__DIR__ . '/include/home-subsections.inc');
+          //include('footer.inc'); 
           ?>
-          <?php include('footer.inc'); ?>
         </div>
 
         <script type="text/javascript">
