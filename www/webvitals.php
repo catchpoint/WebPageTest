@@ -152,7 +152,7 @@ $profiles = parse_ini_file($profile_file, true);
             <?php
             } // $headless
             ?>
-          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3500" src="https://www.product.webpagetest.org/second"></iframe>
+          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="4000" src="https://www.product.webpagetest.org/second"></iframe>
           <?php
           //include(__DIR__ . '/include/home-subsections.inc');
           //include('footer.inc'); 
