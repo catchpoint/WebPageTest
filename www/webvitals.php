@@ -159,7 +159,10 @@ $profiles = parse_ini_file($profile_file, true);
           ?>
         </div>
         <?php
-        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        if (!isset($site_js_loaded) || !$site_js_loaded) {
+          echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+          $hasJquery = true;
+        }
         ?>
 
         <script type="text/javascript">
