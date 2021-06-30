@@ -186,8 +186,8 @@ function GetKeyInfo($key) {
       }
     }
   }
-  if (isset($account) && is_array($account) && isset($account['contactId'])) {
-    $info['contact'] = $account['contactId'];
+  if (isset($account) && is_array($account) && isset($account['email'])) {
+    $info['contact'] = $account['email'];
   }
 
   return $info;
