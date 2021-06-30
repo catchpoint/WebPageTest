@@ -48,6 +48,14 @@ if (file_exists(__DIR__ . '/settings/server/keys.ini'))
   $keys_file = __DIR__ . '/settings/server/keys.ini';
 $keys = parse_ini_file($keys_file, true);
 
+$redis = null;
+if ($redis_server = GetSetting('redis_api_keys')) {
+  $redis = new Redis();
+  if (!$redis->pconnect($redis_server)) {
+    $redis = null;
+  }
+}
+
 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
 for ($offset = 0; $offset <= $days; $offset++) {
   $dayCount = array();
@@ -124,6 +132,10 @@ foreach($counts as $ip => $count) {
       $names = ' (';
       $separator = '';
       foreach ($users[$ip] as $key) {
+        if (!isset($keys[$key])) {
+          // See if we have API key info in redis
+          $keys[$key] = GetKeyInfo($key);
+        }
         if (isset($keys[$key]) && isset($keys[$key]['contact'])) {
           $names .= $separator;
           $names .= $keys[$key]['contact'];
@@ -159,5 +171,25 @@ function IPBlocked($ip) {
     }
   }
   return $blocked;
+}
+
+function GetKeyInfo($key) {
+  global $redis;
+  $info = array();
+  $account = CacheFetch("APIkey_$key");
+  if (!isset($account)) {
+    $response = $redis->get("API_$key");
+    if ($response && strlen($response)) {
+      $account = json_decode($response, true);
+      if (isset($account) && is_array($account)) {
+        CacheStore("APIkey_$key", $account, 60);
+      }
+    }
+  }
+  if (isset($account) && is_array($account) && isset($account['contactId'])) {
+    $info['contact'] = $account['contactId'];
+  }
+
+  return $info;
 }
 ?>
