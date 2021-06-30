@@ -33,10 +33,16 @@ else
     chdir('..');
     include 'common.inc';
     require_once('page_data.inc');
+    //
+    require_once('./include/TestInfo.php');
+    require_once('./include/TestResults.php');
     include 'video/filmstrip.inc.php';  // include the common php shared across the filmstrip code
     require_once('object_detail.inc');
     require_once('waterfall.inc');
-
+    //
+    $testPath = GetTestPath($tests[0]['id']);
+    $testInfo = TestInfo::fromFiles($testPath);
+    $testResults = TestResults::fromFiles($testInfo);
     $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
     $page_description = "Visual comparison of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 
@@ -173,11 +179,12 @@ else
                 .pagelink,
                 .pagelinks a
                 {
-                    text-decoration: none;
                     <?php
                         echo "color: #$color;\n"
                     ?>
                     word-wrap: break-word;
+                    text-decoration: none;
+
                 }
                 .thumb{ border: 3px solid #000; }
                 .thumbChanged{border: 3px solid #FFC233;}
@@ -280,6 +287,26 @@ else
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
+                .compare footer a, .compare-all-link{
+                    <?php
+                    echo "color: #$color;\n";
+                    ?>
+                    text-decoration: underline;
+                }
+                .compare-all-link{
+                    padding: 5px;
+                    background: #1151bb;
+                    color: #fff;
+                    text-decoration: none;
+                    margin: .5em 5px;
+                    padding: 0.6875em 2.625em;
+                    border-radius: 4px;
+                    font-size: .9em;
+                    display: inline-block;
+                }
+                .compare-all-link:hover {
+                    background: #296ee1;
+                }
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -327,6 +354,20 @@ else
                 } elseif( $ready ) {
                     if (isset($location) && strlen($location)) {
                         echo "<div id=\"location\">Tested From: $location</div>";
+                    }
+                    //build out an expanded link
+                    if ($testResults->countRuns() > 1 && count($tests) == 1) {
+                        $link = '/video/compare.php?tests=';
+                        $cnt = 1;
+                        do {
+                            $link .= $tests[0]['id'] . '-r:' . $cnt . '-c:0';
+                            if ($tests[0]['step']) {
+                                $link .= '-s:' . $test['step'];
+                            }
+                            $link .= ',';
+                            $cnt++;
+                        } while ($cnt <= $testResults->countRuns());
+                        echo '<a class="compare-all-link" href="' . $link . '">Compare all runs</a>';
                     }
                     ScreenShotTable();
                     DisplayGraphs();
