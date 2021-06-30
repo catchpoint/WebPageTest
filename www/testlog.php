@@ -89,8 +89,26 @@ if( $csv )
             .history thead {text-align:left;}
             .history th {white-space:nowrap; text-decoration:underline;}
             .history td.date {white-space:nowrap;}
-            .history td.location {white-space:nowrap;}
-            .history td.url {white-space:nowrap;}
+            .history th.location {
+                padding-left: 1em;
+            }
+            .history td {
+                white-space:nowrap;
+                max-width: 20em;
+                overflow: hidden;
+            }
+            .history td.location {
+                padding-left: 1em;
+                white-space: normal;
+            }
+            .history td.url {
+                padding-left: 1em;
+                white-space: normal;
+                word-break: all;
+            }
+            .history .date {
+                padding-left: 1em;
+            }
             .history td.ip {white-space:nowrap;}
             .history td.uid {white-space:nowrap;}
         </style>
@@ -113,9 +131,9 @@ if( $csv )
                     <thead>
                         <tr>
                             <th><span class="vis-hidden">Compare</span></th>
-                            <th>URL</th>
-                            <th>Run From</th>
-                            <th>Label</th>
+                            <th class="url">URL</th>
+                            <th class="location">Run From</th>
+                            <th class="label">Label</th>
                             <th class="date">Run Date</th>
                         </tr>
                     </thead>

@@ -55,6 +55,7 @@ open.onsuccess = () => {
                 const link = document.createElement('a');
                 link.href = '/result/' + entry.id + '/';
                 link.innerText = entry.url;
+                link.title = entry.url;
                 url.appendChild(link);
                 tr.appendChild(url);
         
