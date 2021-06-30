@@ -29,7 +29,7 @@ $profiles = parse_ini_file($profile_file, true);
 <html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
-        <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Main'; include ('head.inc');?>
         <style>
         #vitals-content {
           width: 100%;
@@ -158,6 +158,9 @@ $profiles = parse_ini_file($profile_file, true);
           //include('footer.inc'); 
           ?>
         </div>
+        <?php
+        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        ?>
 
         <script type="text/javascript">
         <?php
