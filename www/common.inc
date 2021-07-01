@@ -148,7 +148,7 @@ if (!$privateInstall) {
 }
 
 // constants
-define('VER_WEBPAGETEST', '20.06');   // webpagetest version
+define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_CSS', 135);                // version of the sitewide css file
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
