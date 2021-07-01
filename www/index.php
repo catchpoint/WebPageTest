@@ -652,6 +652,10 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
                                         <label for="disableJXL" class="auto_width">Disable JPEG XL image support</label>
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" style="float: left;width: auto;">
+                                        <label for="dtShaper" class="auto_width">Use Chrome dev tools traffic-shaping (not recommended)</label>
+                                    </li>
                                     <?php
                                     if ($admin && GetSetting('wprDesktop')) {
                                     ?>
