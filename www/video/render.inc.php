@@ -26,7 +26,7 @@ function BuildRenderTests() {
     foreach($compTests as $t)
     {
         $parts = explode('-', $t);
-        if( count($parts) >= 1 )
+        if( count($parts) >= 1 && $parts[0] != '' )
         {
             $test = array();
             $test['id'] = $parts[0];

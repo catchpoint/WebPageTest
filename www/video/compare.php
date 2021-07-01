@@ -367,7 +367,7 @@ else
                             $link .= ',';
                             $cnt++;
                         } while ($cnt <= $testResults->countRuns());
-                        echo '<a class="compare-all-link" href="' . $link . '">Compare all runs</a>';
+                        echo '<a class="compare-all-link" href="' . substr($link,0,-1) . '">Compare all runs</a>';
                     }
                     ScreenShotTable();
                     DisplayGraphs();
