@@ -1325,7 +1325,7 @@ function ValidateKey(&$test, &$error, $key = null)
         // Check the redis-based API keys if it wasn't a local key
         try {
           $redis = new Redis();
-          if ($redis->pconnect($redis_server)) {
+          if ($redis->connect($redis_server, 6379, 30)) {
             $account = CacheFetch("APIkey_$key");
             if (!isset($account)) {
               $response = $redis->get("API_$key");
@@ -2079,7 +2079,7 @@ function LogTest(&$test, $testId, $url)
         $message = json_encode($logEntry);
         try {
           $redis = new Redis();
-          if ($redis->pconnect($redis_server)) {
+          if ($redis->connect($redis_server, 6379, 30)) {
             $redis->multi(Redis::PIPELINE)
               ->lPush('testHistory', $message)
               ->publish('testHistoryAlert', 'wakeup')

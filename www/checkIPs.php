@@ -51,7 +51,7 @@ $keys = parse_ini_file($keys_file, true);
 $redis = null;
 if ($redis_server = GetSetting('redis_api_keys')) {
   $redis = new Redis();
-  if (!$redis->pconnect($redis_server)) {
+  if (!$redis->connect($redis_server, 6379, 30)) {
     $redis = null;
   }
 }
