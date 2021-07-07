@@ -2063,7 +2063,7 @@ function LogTest(&$test, $testId, $url)
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
-        'key' => @$test['key'],
+        'key' => $key,
         'count' => @$pageLoads,
         'runs' => @$pageLoads,
         'priority' => @$test['priority'],
