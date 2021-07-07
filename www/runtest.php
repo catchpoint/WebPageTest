@@ -2414,8 +2414,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['thumbsize'] = $test['thumbsize'];
             if( isset($test['blockads']) && $test['blockads'] )
                 $job['blockads'] = 1;
-            if( isset($test['video']) && $test['video'] )
+            if( isset($test['video']) && $test['video'] ) {
                 $job['Capture Video'] = 1;
+            } else {
+                $job['Capture Video'] = 0;
+            }
             if (isset($test['disable_video']) && $test['disable_video'])
                 $job["disable_video"] = 1;
             if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
