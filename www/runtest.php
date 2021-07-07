@@ -2020,7 +2020,11 @@ function LogTest(&$test, $testId, $url)
     }
 
     $redis_server = GetSetting('redis_test_history');
-  
+    
+    $key = isset($test['key']) ? $test['key'] : null;
+    if ($key == GetServerKey()) {
+      $key = null;
+    }
     $line_data = array(
         'date' => gmdate("Y-m-d G:i:s"),
         'ip' => @$ip,
@@ -2033,7 +2037,7 @@ function LogTest(&$test, $testId, $url)
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
-        'key' => @$test['key'],
+        'key' => $key,
         'count' => @$pageLoads,
         'priority' => @$test['priority'],
         'email' => $USER_EMAIL,
