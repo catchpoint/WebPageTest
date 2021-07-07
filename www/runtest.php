@@ -2368,8 +2368,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // build up the actual test commands
             if (isset($test['priority']))
               $job["priority"] = $test['priority'];
-            if( isset($test['fvonly']) && $test['fvonly'] )
+            if( isset($test['fvonly']) && $test['fvonly'] ) {
                 $job['fvonly'] = 1;
+            } else {
+                $job['fvonly'] = 0;
+            }
             if( $timeout )
                 $job['timeout'] = intval($timeout);
             if (isset($test['run_time_limit']))
