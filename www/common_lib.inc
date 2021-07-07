@@ -3495,6 +3495,9 @@ function SignString($string) {
 
 function GetSamlAttribute($index) {
   $saml_cookie = GetSetting('saml_cookie', 'samlu');
+  if (isset($_REQUEST['samlu'])) {
+    $_COOKIE[$saml_cookie] = $_REQUEST['samlu'];
+  }
   if (isset($_COOKIE[$saml_cookie])) {
     $parts = explode('.', $_COOKIE[$saml_cookie]);
     if (count($parts) == 2) {
