@@ -258,6 +258,7 @@ function GetBacklog($dir, $locationId)
     }
 
     $backlog['Total'] = $userCount + $lowCount + $testing;
+    $backlog['Queued'] = $userCount + $lowCount;
     $backlog['Blocking'] += $testing;
     $backlog['HighPriority'] = $userCount;
     $backlog['LowPriority'] = $lowCount;
