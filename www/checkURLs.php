@@ -4,12 +4,10 @@
 // found in the LICENSE.md file.
 
 require_once('common.inc');
-/*
 if (!$privateInstall && !$admin) {
   header("HTTP/1.1 403 Unauthorized");
   exit;
 }
-*/
 
 error_reporting(0);
 if (file_exists('./settings/server/blockurl.txt')) {
@@ -42,7 +40,7 @@ for($offset = 0; $offset <= $days; $offset++)
 
     // figure out the name of the logfile
     $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
-    $dates[] = $targetDate->format("m/d/Y");
+    $dates[] = $targetDate->format("M j");
 
     // load the logfile into an array of lines
     $lines = file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
