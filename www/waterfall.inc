@@ -845,11 +845,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             } else {
                 $label_x = $column_x + intval($font_width / 2);
                 $label_max_len = $max_len - 1;
-                if ($is_secure && $show_labels) {
-                    $lock_width = 12;
-                    DrawLock($im, $label_x, $y, $lock_width, $row_height);
-                    $label_x += $lock_width;
-                    $label_max_len -= $lock_width / $font_width;
+                if (!$is_secure && $show_labels) {
+                    $icon_width = 17;
+                    DrawNotSecure($im, $label_x, $y, $icon_width, $row_height);
+                    $label_x += $icon_width;
+                    $label_max_len -= $icon_width / $font_width;
                 }
                 imagestring($im, $font, $label_x, $y,
                             FitText($request_label, $label_max_len), $text_color);
