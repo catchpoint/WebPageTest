@@ -105,7 +105,8 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
             'start' => $request['all_start'],
             'end' => $request['all_end'],
             'is_secure' => $request['is_secure'],
-            'requests' => array($request)
+            'requests' => array($request),
+            'contentType' => $request['contentType']
         );
 
         $last_request_number = $request['number'];
@@ -831,6 +832,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         // Draw the request labels.
         foreach ($rows as $row) {
             $is_secure = $row['is_secure'];
+            $contentType = $row['contentType'];
             $request_label = $row['label'];
             $text_color = $black;
             if (isset($document_url) && isset($row['requests']) && count($row['requests']) == 1 && 
@@ -845,11 +847,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             } else {
                 $label_x = $column_x + intval($font_width / 2);
                 $label_max_len = $max_len - 1;
-                if ($is_secure && $show_labels) {
-                    $lock_width = 12;
-                    DrawLock($im, $label_x, $y, $lock_width, $row_height);
-                    $label_x += $lock_width;
-                    $label_max_len -= $lock_width / $font_width;
+                if (!$is_secure && $show_labels && !($contentType == "application/ocsp-response")) {
+                    $icon_width = 17;
+                    DrawNotSecure($im, $label_x, $y, $icon_width, $row_height);
+                    $label_x += $icon_width;
+                    $label_max_len -= $icon_width / $font_width;
                 }
                 imagestring($im, $font, $label_x, $y,
                             FitText($request_label, $label_max_len), $text_color);

@@ -281,13 +281,13 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
 
 
 /**
-* Draw a lock icon
+* Draw an insecure icon
 *
 * @param mixed $im
 * @param mixed $x
 * @param mixed $y
 */
-function DrawLock($im, $x, $y, $width, $height)
+function DrawNotSecure($im, $x, $y, $width, $height)
 {
     // give it some margins
     $width -= 4;
@@ -296,11 +296,18 @@ function DrawLock($im, $x, $y, $width, $height)
     $boxHeight = ($height - ($top - $y)) - ($height * .1);
     $lock = GetColor($im, 255, 216, 0);
     $black = GetColor($im, 0, 0, 0);
-    imageellipse($im, $x + ($width / 2), $top, $width - 2, $width, $black);
-    imageellipse($im, $x + ($width / 2), $top, $width - 3, $width - 1, $black);
-    imageellipse($im, $x + ($width / 2), $top, $width - 4, $width - 2, $black);
-    imagefilledrectangle($im, $x, $top, $x + $width, $top + $boxHeight, $lock);
-    imagerectangle($im, $x, $top, $x + $width, $top + $boxHeight, $black);
+    $red = GetColor($im, 255, 0, 0);
+    $white = GetColor($im, 255, 255, 255);
+    $values = array(
+        $x + ($width/2), $y - height,
+        $x, $y + $height,
+        $x + $width, $y + $height
+    );
+    imagefilledpolygon($im, $values, 3, $red);
+    imagesetthickness($im, 2);
+    imageline($im, $x + ($width/2) + 1, $top + 6, $x + ($width/2) +1,$y + $height - 3, $white);
+    imageline($im, $x + ($width/2) + .5, $top -1, $x + ($width/2) +.5,$y + $height - 6, $white);
+    imagesetthickness($im,1);
 }
 
 /**
