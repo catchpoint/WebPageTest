@@ -281,7 +281,7 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
 
 
 /**
-* Draw a lock icon
+* Draw an insecure icon
 *
 * @param mixed $im
 * @param mixed $x
