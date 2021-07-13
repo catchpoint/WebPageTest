@@ -2281,24 +2281,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $locationShard = isset($test['locationShard']) ? $test['locationShard'] : null;
 
         // generate the test ID
-        $test_num;
-        $id = uniqueId($test_num);
-        if( $test['private'] )
-            $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
-        else
-            $id = ShardKey($test_num, $locationShard) . $id;
-        $today = new DateTime("now", new DateTimeZone('UTC'));
-        $testId = $today->format('ymd_') . $id;
+        $testId = GenerateTestID($test['private'], $locationShard);
         $test['path'] = './' . GetTestPath($testId);
-
-        // make absolutely CERTAIN that this test ID doesn't already exist
-        while( is_dir($test['path']) )
-        {
-            // fall back to random ID's
-            $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
-            $testId = $today->format('ymd_') . $id;
-            $test['path'] = './' . GetTestPath($testId);
-        }
 
         // create the folder for the test results
         if( !is_dir($test['path']) ) 

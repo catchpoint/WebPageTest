@@ -3627,3 +3627,29 @@ function TestArchiveExpired($id) {
   }
   return false;
 }
+
+/**
+ * Generate a unique test ID
+ */
+function GenerateTestID($private=true, $locationShard=null) {
+  $test_num;
+  $id = uniqueId($test_num);
+  if( $private )
+      $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
+  else
+      $id = ShardKey($test_num, $locationShard) . $id;
+  $today = new DateTime("now", new DateTimeZone('UTC'));
+  $testId = $today->format('ymd_') . $id;
+  $path = __DIR__ . '/' . GetTestPath($testId);
+
+  // make absolutely CERTAIN that this test ID doesn't already exist
+  while( is_dir($path) )
+  {
+      // fall back to random ID's
+      $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
+      $testId = $today->format('ymd_') . $id;
+      $path = __DIR__ . '/' . GetTestPath($testId);
+  }
+
+  return $testId;
+}
