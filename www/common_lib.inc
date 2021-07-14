@@ -3653,3 +3653,79 @@ function GenerateTestID($private=true, $locationShard=null) {
 
   return $testId;
 }
+
+/**
+* Add a single entry to ini-style files
+* @param mixed $ini
+* @param mixed $key
+* @param mixed $value
+*/
+function AddIniLine(&$ini, $key, $value) {
+  if (isset($value) && strpos($value, "\n") === false && strpos($value, "\r") === false) {
+    $ini .= "$key=$value\r\n";
+  }
+}
+
+/**
+ * Geterate a testingo.ini and testinfo.json for an uploaded job file
+ */
+function ProcessUploadedTest($id) {
+  if (ValidateTestId($id)) {
+    $testPath = __DIR__ . '/' . GetTestPath($id);
+    if (gz_is_file("$testPath/job.json")) {
+      $job = json_decode(gz_file_get_contents("$testPath/job.json"), true);
+      $test = $job;
+      $test['id'] = $id;
+      $test['Test ID'] = $id;
+      $test['completed'] = time();
+      if (!isset($test['started']))
+        $test['started'] = $test['completed'];
+      if (isset($test['Capture Video']) && $test['Capture Video'])
+        $test['video'] = 1;
+      if ((isset($test['pngScreenShot']) && $test['pngScreenShot']))
+        $test['pngss'] = 1;
+      if (isset($test['imageQuality']) && $test['imageQuality'])
+        $test['test'] = $test['imageQuality'];
+      if (isset($test['clearRV']) && $test['clearRV'])
+        $test['clear_rv'] = 1;
+      $test['published'] = 1;
+
+      // Figure out the location text
+      $locations = LoadLocationsIni();
+      if (isset($test['location']) && isset($locations[$test['location']]['label'])) {
+        $test['locationText'] = $locations[$test['location']]['label'];
+      }
+
+      // Generate a testinfo.ini
+      $ini = "[test]\r\n";
+      AddIniLine($ini, "fvonly", $test['fvonly']);
+      AddIniLine($ini, "timeout", $test['timeout']);
+      AddIniLine($ini, "runs", $test['runs']);
+      AddIniLine($ini, "location", "\"{$test['locationText']}\"");
+      AddIniLine($ini, "loc", $test['location']);
+      AddIniLine($ini, "id", $test['id']);
+      AddIniLine($ini, "sensitive", $test['sensitive']);
+      if( isset($test['login']) && strlen($test['login']) )
+          AddIniLine($ini, "authenticated", "1");
+      AddIniLine($ini, "connections", $test['connections']);
+      if( isset($test['script']) && strlen($test['script']) )
+          AddIniLine($ini, "script", "1");
+      AddIniLine($ini, "notify", $test['notify']);
+      AddIniLine($ini, "video", "1");
+      AddIniLine($ini, "disable_video", $test['disable_video']);
+      AddIniLine($ini, "uid", $test['uid']);
+      AddIniLine($ini, "owner", $test['owner']);
+      AddIniLine($ini, "type", $test['type']);
+      AddIniLine($ini, "connectivity", $test['connectivity']);
+      AddIniLine($ini, "bwIn", $test['bwIn']);
+      AddIniLine($ini, "bwOut", $test['bwOut']);
+      AddIniLine($ini, "latency", $test['latency']);
+      AddIniLine($ini, "plr", $test['plr']);
+      AddIniLine($ini, "completeTime", gmdate("m/d/y G:i:s", $test['completed']));
+      file_put_contents("$testPath/testinfo.ini",  $ini);
+
+      // Generate the testinfo.json
+      gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+    }
+  }
+}

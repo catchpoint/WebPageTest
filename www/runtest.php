@@ -2251,18 +2251,6 @@ function CheckUrl($url)
 }
 
 /**
-* Add a single entry to ini-style files
-* @param mixed $ini
-* @param mixed $key
-* @param mixed $value
-*/
-function AddIniLine(&$ini, $key, $value) {
-  if (strpos($value, "\n") === false && strpos($value, "\r") === false) {
-    $ini .= "$key=$value\r\n";
-  }
-}
-
-/**
 * Create a single test and return the test ID
 *
 * @param mixed $test
