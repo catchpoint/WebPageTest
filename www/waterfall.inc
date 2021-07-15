@@ -29,7 +29,8 @@ function GetConnectionRows(&$requests, $show_labels = true) {
               'is_secure' => $request['is_secure'],
               'start' => $request['all_start'],
               'end' => $request['all_end'],
-              'requests' => array($request)
+              'requests' => array($request),
+              'renderBlocking' => $request['renderBlocking']
               );
         } else {
           $host_connections[$host][$socket]['end'] = $request['all_end'];
@@ -81,7 +82,8 @@ function _GetDotsRow() {
         'start' => null,
         'end' => null,
         'is_secure' => FALSE,
-        'requests' => array()
+        'requests' => array(),
+        'renderBlocking' => null
         );
 }
 
@@ -106,7 +108,8 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
             'end' => $request['all_end'],
             'is_secure' => $request['is_secure'],
             'requests' => array($request),
-            'contentType' => $request['contentType']
+            'contentType' => $request['contentType'],
+            'renderBlocking' => $request['renderBlocking']
         );
 
         $last_request_number = $request['number'];
@@ -455,7 +458,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             'default' => $white,
             'alt' =>     GetColor($im, 240, 240, 240),  // light-grey
             'error' =>   GetColor($im, 255, 96, 96),
-            'warning' => GetColor($im, 255, 255, 96)
+            'warning' => GetColor($im, 255, 255, 96),
+            'blocking' => GetColor($im, 255, 203, 65)
             );
         SetRowColors($rows, $page_events['load'], $bg_colors);
 
@@ -834,6 +838,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             $is_secure = $row['is_secure'];
             $contentType = $row['contentType'];
             $request_label = $row['label'];
+            $blocking = $row['renderBlocking'];
             $text_color = $black;
             if (isset($document_url) && isset($row['requests']) && count($row['requests']) == 1 && 
                     isset($row['requests'][0]['documentURL']) && 
@@ -852,7 +857,19 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     DrawNotSecure($im, $label_x, $y, $icon_width, $row_height);
                     $label_x += $icon_width;
                     $label_max_len -= $icon_width / $font_width;
+
+                    if ($blocking == 'blocking' && $show_labels) {
+                        DrawBlocking($im, $label_x, $y, $icon_width, $row_height);
+                        $label_x += $icon_width;
+                        $label_max_len -= ($icon_width * 2) / $font_width;
+                    }
+                } else if ($blocking == 'blocking' && $show_labels) {
+                    $icon_width = 17;
+                    DrawBlocking($im, $label_x, $y, $icon_width, $row_height);
+                    $label_x += $icon_width;
+                    $label_max_len -= $icon_width / $font_width;
                 }
+
                 imagestring($im, $font, $label_x, $y,
                             FitText($request_label, $label_max_len), $text_color);
             }
@@ -1096,11 +1113,14 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors) {
             // This is a request view and not a connection view.
             $request = current($row['requests']);
             $code = $request['responseCode'];
+            $blocking = $request['renderBlocking'];
             if ($code != 401 && ($code >= 400 || ($code < 0 && !$is_page_loaded))) {
                 $row['bg_color'] = $bg_colors['error'];
             } elseif ($code >= 300) {
                 $row['bg_color'] = $bg_colors['warning'];
-            }
+            }/* elseif ($blocking == 'blocking') {
+                $row['bg_color'] = $bg_colors['blocking'];
+            }*/
         }
     }
 }
