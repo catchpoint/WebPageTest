@@ -1497,9 +1497,14 @@ EOT;
     // script support
     $nolinks = GetSetting('nolinks', 0);
     $out .= "<script type=\"text/javascript\">\n";
+    $out .= "function decodeUnicode(str) {\n";
+    $out .=  "return decodeURIComponent(atob(str).split('').map(function (c) {\n";
+    $out .=  "return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);\n";
+    $out .= "}).join(''));\n";
+    $out .= "}";
     $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
-    $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";
-    $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
+    $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {}, wptRawRequestData = {};\n";
+    $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {}, wptRawPageData = {};\n";
     $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks=$nolinks;\n";
     $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
     $request_data = json_encode($requests, 0, 1024);
@@ -1508,8 +1513,10 @@ EOT;
       $jsonLib = new Services_JSON();
       $request_data = $jsonLib->encode($requests);
     }
-    $out .= "wptRequestData['step$step']=" . $request_data . ";\n";
-    $out .= "wptPageData['step$step']=" . json_encode($page_data) . ";\n";
+    $out .= "wptRawRequestData['step$step']='" . base64_encode($request_data) . "';\n";
+    $out .= "wptRawPageData['step$step']='" . base64_encode(json_encode($page_data)) . "';\n";
+    $out .= "wptRequestData['step$step']=JSON.parse(window.atob(wptRawRequestData['step$step']));\n";
+    $out .= "wptPageData['step$step']=JSON.parse(window.atob(wptRawPageData['step$step']));\n";
     $out .= "</script>";
     return $out;
 }
