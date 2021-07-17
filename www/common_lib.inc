@@ -658,6 +658,20 @@ function BuildLocations( &$locations )
                 $loc['location'] = $name;
                 if( !is_dir($loc['localDir']) )
                     mkdir($loc['localDir'], 0777, true);
+                if (isset($loc['browser'])) {
+                    $browser = $loc['browser'];
+                    // Allocate the browser to a group
+                    $loc['browser_group'] = 'Desktop';
+                    if (isset($loc['mobile']) && $loc['mobile']) {
+                      $loc['browser_group'] = 'Mobile';
+                    } elseif (substr($browser, 0, 4) == 'Moto') {
+                      $loc['browser_group'] = 'Mobile';
+                    } elseif (substr($browser, 0, 6) == 'iPhone' || substr($browser, 0, 4) == 'iPod') {
+                      $loc['browser_group'] = 'Mobile';
+                    } elseif (substr($browser, 0, 4) == 'iPad') {
+                      $loc['browser_group'] = 'Tablet';
+                    }
+                }
                 $locations[$name] = $loc;
             } else {
                 if ($name == 'locations') {
