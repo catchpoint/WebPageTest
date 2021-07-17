@@ -707,6 +707,8 @@ function BuildLocations( &$locations )
                                             $cfg['browser_group'] = 'Desktop';
                                             if (isset($configuration['mobile']) && $configuration['mobile']) {
                                               $cfg['browser_group'] = 'Mobile';
+                                            } elseif (substr($browser, 0, 4) == 'Moto') {
+                                              $cfg['browser_group'] = 'Mobile';
                                             } elseif (substr($browser, 0, 6) == 'iPhone' || substr($browser, 0, 4) == 'iPod') {
                                               $cfg['browser_group'] = 'Mobile';
                                             } elseif (substr($browser, 0, 4) == 'iPad') {
