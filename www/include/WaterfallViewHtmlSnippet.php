@@ -22,23 +22,23 @@ class WaterfallViewHtmlSnippet {
     $this->requests = $stepResult->getRequestsWithInfo(true, true);
   }
 
-  public function create() {
-    $out = $this->_createLegend();
-
-    $label = $this->stepResult->readableIdentifier($this->testInfo->getUrl());
-    $out .= CreateWaterfallHtml($label, $this->requests->getRequests(), $this->testInfo->getId(),
-      $this->stepResult->getRunNumber(), $this->stepResult->isCachedRun(), $this->stepResult->getRawResults(),
-      '', $this->stepResult->getStepNumber());
-
-    $urlGenerator = $this->stepResult->createUrlGenerator("", false);
-    $out .=  "<br><a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
-    $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->stepDetailPage("pageimages") . "\">View all Images</a>";
-    $out .=  " &#8226; <a id=\"http2-dependencies\" href=\"" . $urlGenerator->stepDetailPage("http2_dependencies") . "\">View HTTP/2 Dependency Graph</a>";
-    $out .=  " &#8226; <a href=\"" . $urlGenerator->filmstripView() . "\">Filmstrip</a>";
+  public function create($legendOnly = false, $waterfallOptions = '') {
+    $out = $this->_createLegend($waterfallOptions);
+    if (!$legendOnly) {
+      $label = $this->stepResult->readableIdentifier($this->testInfo->getUrl());
+      $out .= CreateWaterfallHtml($label, $this->requests->getRequests(), $this->testInfo->getId(),
+        $this->stepResult->getRunNumber(), $this->stepResult->isCachedRun(), $this->stepResult->getRawResults(),
+        $waterfallOptions, $this->stepResult->getStepNumber());
+        $urlGenerator = $this->stepResult->createUrlGenerator("", false);
+        $out .=  "<br><a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
+        $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->stepDetailPage("pageimages") . "\">View all Images</a>";
+        $out .=  " &#8226; <a id=\"http2-dependencies\" href=\"" . $urlGenerator->stepDetailPage("http2_dependencies") . "\">View HTTP/2 Dependency Graph</a>";
+        $out .=  " &#8226; <a href=\"" . $urlGenerator->filmstripView() . "\">Filmstrip</a>";
+    }
     return $out;
   }
 
-    private function _legendBarTableCell($color, $label, $width, $dashed = false) {
+  private function _legendBarTableCell($color, $label, $width, $dashed = false) {
     $style = "style=\"width: {$width}px;";
     if ($dashed) {
       $style .= " background-image: linear-gradient(0deg, $color 25%, #ffffff 25%, #ffffff 50%, $color 50%, $color 75%, #ffffff 75%, #ffffff 100%);";
@@ -54,8 +54,11 @@ class WaterfallViewHtmlSnippet {
     return "<td style=\"vertical-align:middle; padding: 4px;\"><div ". $style . ">&nbsp;" . $label . "&nbsp;</div></td>";
   }
 
-  private function _createLegend() {
+  private function _createLegend($waterfall_options = '') {
     $out = '';
+    $show_ut = (bool)GetSetting('waterfall_show_user_timing');
+    if (strpos($waterfall_options, 'ut=1') !== false)
+      $show_ut = true;
     if (!GetSetting('mime_waterfalls', 1)) {
       $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
         'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
@@ -94,7 +97,7 @@ class WaterfallViewHtmlSnippet {
     if ((float)$this->stepResult->getMetric("loadEventStart"))
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 4);
-    if (GetSetting('waterfall_show_user_timing') && $this->stepResult->getMetric('userTime'))
+    if ($show_ut && $this->stepResult->getMetric('userTime'))
       $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
     $out .= "</tr>\n</table>\n<br>";
     return $out;
