@@ -3,6 +3,9 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
+$rbIcon = imagecreatefrompng('./images/render-block-icon.png');
+$nsIcon = imagecreatefrompng('./images/not-secure-icon.png');
+
 /**
 * Draw label next to a request like "10 ms (404)".
 */
@@ -289,27 +292,34 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
 */
 function DrawNotSecure($im, $x, $y, $width, $height)
 {
+    global $nsIcon;
+    
     // give it some margins
     $width -= 4;
     $height -= 4;
-    $top = $y + ($height * .4);
-    $boxHeight = ($height - ($top - $y)) - ($height * .1);
-    $lock = GetColor($im, 255, 216, 0);
-    $black = GetColor($im, 0, 0, 0);
-    $red = GetColor($im, 255, 0, 0);
-    $white = GetColor($im, 255, 255, 255);
-    $values = array(
-        $x + ($width/2), $y - height,
-        $x, $y + $height,
-        $x + $width, $y + $height
-    );
-    imagefilledpolygon($im, $values, 3, $red);
-    imagesetthickness($im, 2);
-    imageline($im, $x + ($width/2) + 1, $top + 6, $x + ($width/2) +1,$y + $height - 3, $white);
-    imageline($im, $x + ($width/2) + .5, $top -1, $x + ($width/2) +.5,$y + $height - 6, $white);
-    imagesetthickness($im,1);
-}
 
+    imagecopyresampled($im, $nsIcon, $x, $y, 0, 0, $width, $height, 17, 17);
+    
+}
+/**
+* Draw a render blocking icon
+*
+* @param mixed $im
+* @param mixed $x
+* @param mixed $y
+*/
+function DrawBlocking($im, $x, $y, $width, $height)
+{
+    global $rbIcon;
+    // give it some margins
+    $width -= 4;
+    $height -= 4;
+
+    $rbIcon = imagecreatefrompng('./images/render-block-icon.png');
+    imagecopyresampled($im, $rbIcon, $x, $y, 0, 0, $width, $height, 17, 17);
+    
+
+}
 /**
 * Fake some lines to make it look like text in a thumbnail
 *
