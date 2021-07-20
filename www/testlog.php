@@ -310,6 +310,7 @@ exit;
                                       $key        = isset($line_data['key']) ? $line_data['key'] : NULL;
                                       $count      = @$line_data['count'];
                                       $test_priority   = @$line_data['priority'];
+                                      $email      = @$line_data['email'];
 
                                       if (!$location) {
                                           $location = '';
@@ -409,10 +410,13 @@ exit;
 
                                                   if( $admin )
                                                   {
-                                                      if( isset($testUID) )
+                                                      if( isset($testUID) ) {
                                                           echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
-                                                      else
+                                                      } elseif( isset($email) ) {
+                                                        echo '<td class="uid">' . htmlspecialchars($email) . '</td>';
+                                                      } else {
                                                           echo '<td class="uid"></td>';
+                                                      }
                                                       echo "<td class=\"count\">$count</td>";
                                                   }
                                                   $link = "/results.php?test=$guid";
