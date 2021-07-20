@@ -2852,6 +2852,11 @@ function GetClosestLocation($url, $browser) {
 }
 
 function ErrorPage($error) {
+    global $privateInstall;
+    global $supportsAuth;
+    global $supportsSaml;
+    global $USER_EMAIL;
+    global $user;
     ?>
     <!DOCTYPE html>
     <html lang="en-us">
