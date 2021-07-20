@@ -733,10 +733,6 @@
             }
         }
 
-        if (!strlen($error)) {
-          CheckRateLimit($test, $error);
-        }
-
         if( !strlen($error) && (!isset($test['batch']) || !$test['batch'])) {
           ValidateParameters($test, $locations, $error);
         }
@@ -745,7 +741,7 @@
         if (!strlen($error)) {
           ValidateKey($test, $error);
         }
-        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
+        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) )
         {
 
             if( !array_key_exists('id', $test) )
@@ -3056,20 +3052,21 @@ function ReportAnalytics(&$test, $testId)
 
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
+  $ret = true;
 
   // Only check when we have a valid remote IP
   if (!isset($test['ip']) || $test['ip'] == '127.0.0.1') {
-    return;
+    return true;
   }
 
   // Allow API tests
   if (isset($test['key'])) {
-    return;
+    return true;
   }
 
   // let logged-in users pass
   if (isset($USER_EMAIL) && strlen($USER_EMAIL)) {
-    return;
+    return true;
   }
 
   // Enforce per-IP rate limits for testing
@@ -3085,8 +3082,11 @@ function CheckRateLimit($test, &$error) {
       CacheStore($cache_key, $count, 1800);
     } else {
       $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+      $ret = false;
     }
   }
+
+  return $ret;
 }
 
 ?>
