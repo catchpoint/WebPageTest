@@ -3057,6 +3057,7 @@ function ReportAnalytics(&$test, $testId)
 
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
+  global $supportsSaml;
   $ret = true;
 
   // Only check when we have a valid remote IP
@@ -3086,7 +3087,13 @@ function CheckRateLimit($test, &$error) {
       $count++;
       CacheStore($cache_key, $count, 1800);
     } else {
-      $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+      $register = GetSetting('saml_register');
+      $apiUrl = GetSetting('api_url');
+      if ($supportsSaml && $register && $apiUrl) {
+        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please <a href='/saml/login.php'>log in</a> with a <a href='$register'>registered account</a> or wait an hour before retrying.<br>If you need to run tests programmatically there is also the <a href='$apiUrl'>WebPageTest API</a>.";
+      } else {
+        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+      }
       $ret = false;
     }
   }
