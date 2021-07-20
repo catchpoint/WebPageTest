@@ -1118,9 +1118,7 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors) {
                 $row['bg_color'] = $bg_colors['error'];
             } elseif ($code >= 300) {
                 $row['bg_color'] = $bg_colors['warning'];
-            }/* elseif ($blocking == 'blocking') {
-                $row['bg_color'] = $bg_colors['blocking'];
-            }*/
+            }
         }
     }
 }
