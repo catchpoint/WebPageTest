@@ -915,7 +915,7 @@ a.btn-primary{
 .history .logged-out-history {
     display: grid;
     grid-template-columns: 4fr 12em;
-    grid-column-gap: 1em;
+    grid-column-gap: 4em;
     align-items: center;
 }
 .history .logged-out-history p{

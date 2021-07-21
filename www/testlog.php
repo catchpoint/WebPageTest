@@ -122,7 +122,7 @@ if( $csv )
             
             <form name="filterLog" method="get" action="/testlog.php">
             <div class="box logged-out-history">
-                <p>Test history for non-registed users is available for up to 30 days as long as your storage isn’t cleared. <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup">Create a free account</a> to keep test history for longer, access your test history from anywhere, and post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a>.</p>
+                <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
                     <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup" class="btn-primary">Get Free Access</a>
                 </div>
                     <label for="filter" class="vis-hidden">Filter test history:</label>
