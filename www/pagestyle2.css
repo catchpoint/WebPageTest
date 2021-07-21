@@ -220,7 +220,6 @@ footer ul li{
 .bold {font-weight: bold;}
 .notes {background-color: yellow;}
 
-.arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
 .position-container {position: relative; left: 0; top: 0;}
 .position-background {position: absolute; left: 0; top: 0;}
 
@@ -1518,7 +1517,8 @@ table.glossary th{
     vertical-align: middle;
 }
 .waterfall-legend .bar,
-.waterfall-legend img{
+.waterfall-legend img,
+.waterfall-legend .arrow-down{
     float: left;
     margin-right: .5em;
 }
@@ -1528,4 +1528,13 @@ table.glossary th{
 .waterfall-legend img{
     position: relative;
     top: .2em;
+}
+.waterfall-legend .arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 10px solid #69009E;
+    position:relative;
+    top: .5em;
 }
