@@ -1506,3 +1506,26 @@ table.glossary th{
     padding: .3em .5em;
     font-size: 1.1em;
 }
+
+.waterfall-legend{
+    font-size: 0.6875em;
+    margin: auto;
+}
+.waterfall-legend,
+.waterfall-legend td{
+    border: 1px solid silver;
+    border-collapse: collapse;
+    vertical-align: middle;
+}
+.waterfall-legend .bar,
+.waterfall-legend img{
+    float: left;
+    margin-right: .5em;
+}
+.waterfall-legend td{
+    padding: 2px 5px;
+}
+.waterfall-legend img{
+    position: relative;
+    top: .2em;
+}
