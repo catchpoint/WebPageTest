@@ -193,9 +193,9 @@ function LoadLocations()
 
               if (isset($loc[$group[$j]]['scheduler_node']))
                 $locations[$loc_name]['node'] = $loc[$group[$j]]['scheduler_node'];
-                if (isset($loc[$group[$j]]['relayServer']))
+              if (isset($loc[$group[$j]]['relayServer']))
                 $locations[$loc_name]['relayServer'] = $loc[$group[$j]]['relayServer'];
-                if (isset($loc[$group[$j]]['relayLocation']))
+              if (isset($loc[$group[$j]]['relayLocation']))
                 $locations[$loc_name]['relayLocation'] = $loc[$group[$j]]['relayLocation'];
 
               if ($default == $loc['locations'][$i] && $def == $group[$j])
