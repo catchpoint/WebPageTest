@@ -58,6 +58,13 @@ open.onsuccess = () => {
                 link.title = entry.url;
                 url.appendChild(link);
                 tr.appendChild(url);
+
+                const datetime = document.createElement('td');
+                datetime.className = 'date';
+                const runDate = new Date(entry.created * 1000);
+                datetime.innerText = months[runDate.getMonth()] + " " + runDate.getDate()
+                    + ', ' + runDate.getFullYear() + ' '+ runDate.toLocaleTimeString();
+                tr.appendChild(datetime);
         
 
                 const location = document.createElement('td');
@@ -72,13 +79,6 @@ open.onsuccess = () => {
                 label.appendChild(labelContain)
 
                 tr.appendChild(label);
-
-                const datetime = document.createElement('td');
-                datetime.className = 'date';
-                const runDate = new Date(entry.created * 1000);
-                datetime.innerText = months[runDate.getMonth()] + " " + runDate.getDate()
-                    + ', ' + runDate.getFullYear() + ' '+ runDate.toLocaleTimeString();
-                tr.appendChild(datetime);
 
         
 

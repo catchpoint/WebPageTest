@@ -449,8 +449,11 @@ body.compact #main {
         padding-top: 2em;
     }
     .history #main{
-        grid-column: 2 / 12;
+        grid-column: 1 / 13;
         min-width: auto;
+        width: auto;
+        padding-left: 5%;
+        padding-right: 5%;
     }
 }
 .compare{
@@ -593,10 +596,19 @@ form[name=filterLog] select {
     margin-bottom: 2em;
 }
 
+.history-controls {
+    background: #f4f4f4;
+    border: 1px solid #c8c8c8;
+    border-width: 1px 0;
+    margin-left: -1.875em;
+    margin-right: -1.875em;
+    padding-left: 1.875em;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    margin-bottom: 1em;
+}
 #CompareBtn {
     position: relative;
-    top: -5.8em;
-    left: 13em;
     background: url('/images/icon-compare.svg') 0 .5em no-repeat transparent;
     padding: .5em;
     border: 0;
@@ -865,16 +877,20 @@ body.compact #url{
 }
 
 input[type="submit"],
-button.start_test {
+button.start_test,
+a.btn-primary {
     border: 0;
     border-radius: 4px;
     padding: 0.6875em 2.625em;
     background: #F9D856;
     font-size: 1em;
     cursor:pointer;
+    color: #111;
+    text-decoration: none;
 }
 input[type="submit"].start_test,
-button.start_test{
+button.start_test,
+a.btn-primary{
     border-radius: 4px;
     height: 100%;
     font-size: 1.25em;
@@ -885,7 +901,8 @@ button.start_test{
     -webkit-appearance: none;
 }
 input[type="submit"]:hover,
-button.start_test:hover{
+button.start_test:hover,
+a.btn-primary{
     background: #fbe076;
 }
 @media screen and (min-width: 50em) {
@@ -895,6 +912,20 @@ button.start_test:hover{
     input + button.start_test {
         border-radius: 0 4px 4px 0;
     }
+}
+.history .logged-out-history {
+    display: grid;
+    grid-template-columns: 4fr 12em;
+    grid-column-gap: 1em;
+    align-items: center;
+}
+.history .logged-out-history p{
+    margin-bottom: 0;
+}
+.history .logged-out-history .btn-primary{
+    height: auto;
+    font-size: 1em;
+    text-align: center;
 }
 
 #change-location-btn {

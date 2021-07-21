@@ -90,7 +90,7 @@ if( $csv )
             .history th {white-space:nowrap; text-decoration:underline;}
             .history td.date {white-space:nowrap;}
             .history th.location {
-                padding-left: 1em;
+                padding-left: 1.5em;
             }
             .history td {
                 white-space:nowrap;
@@ -98,7 +98,7 @@ if( $csv )
                 overflow: hidden;
             }
             .history td.location {
-                padding-left: 1em;
+                padding-left: 1.5em;
                 white-space: normal;
             }
             .history td.url {
@@ -119,22 +119,28 @@ if( $csv )
             include 'header.inc';
             ?>
             <h1>Test History</h1>
+            
             <form name="filterLog" method="get" action="/testlog.php">
-                <p>Up to 30 days of test history from the local browser is available as long as storage isn't cleared. <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup">Create an account and login</a> to keep your test history for longer and to see test history across multiple browsers.</p>
+            <div class="box logged-out-history">
+                <p>Test history for non-registed users is available for up to 30 days as long as your storage isn’t cleared. <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup">Create a free account</a> to keep test history for longer, access your test history from anywhere, and post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a>.</p>
+                    <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup" class="btn-primary">Get Free Access</a>
+                </div>
                     <label for="filter" class="vis-hidden">Filter test history:</label>
                          <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
                 </form>
             <div class="box">
                 <form name="compare" method="get" action="/video/compare.php">
+                <div class="history-controls">
                 <input id="CompareBtn" type="submit" value="Compare">
+                </div>
                 <table id="history" class="history" border="0" cellpadding="5px" cellspacing="0">
                     <thead>
                         <tr>
                             <th><span class="vis-hidden">Compare</span></th>
                             <th class="url">URL</th>
+                            <th class="date">Run Date</th>
                             <th class="location">Run From</th>
                             <th class="label">Label</th>
-                            <th class="date">Run Date</th>
                         </tr>
                     </thead>
                 </table>
