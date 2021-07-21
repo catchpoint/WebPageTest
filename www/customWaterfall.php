@@ -3,6 +3,19 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
+require_once('object_detail.inc');
+require_once('page_data.inc');
+require_once('waterfall.inc');
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/RunResultHtmlTable.php';
+require_once __DIR__ . '/include/UserTimingHtmlTable.php';
+require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
+
+$testInfo = TestInfo::fromFiles($testPath);
+$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
+$data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
+
 $page_keywords = array('Custom','Waterfall','WebPageTest','Website Speed Test');
 $page_description = "Website speed test custom waterfall$testLabel";
 ?>
@@ -11,6 +24,14 @@ $page_description = "Website speed test custom waterfall$testLabel";
     <head>
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
+        <style>
+            div.bar {
+            height:20px;
+            margin-top:auto;
+            margin-bottom:auto;
+        }
+            <?php include "waterfall.css";?>
+        </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
@@ -41,7 +62,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 </form>
             </div>
             <div class="box">
+                
             <?php
+
+$waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                        echo $waterfallSnippet->create(true, '&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1');
+
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
