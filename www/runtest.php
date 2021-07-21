@@ -741,7 +741,7 @@
         if (!strlen($error)) {
           ValidateKey($test, $error);
         }
-        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
+        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) )
         {
 
             if( !array_key_exists('id', $test) )
@@ -2852,6 +2852,11 @@ function GetClosestLocation($url, $browser) {
 }
 
 function ErrorPage($error) {
+    global $privateInstall;
+    global $supportsAuth;
+    global $supportsSaml;
+    global $USER_EMAIL;
+    global $user;
     ?>
     <!DOCTYPE html>
     <html lang="en-us">
@@ -3048,6 +3053,52 @@ function ReportAnalytics(&$test, $testId)
     curl_exec($ch);
     curl_close($ch);
   }
+}
+
+function CheckRateLimit($test, &$error) {
+  global $USER_EMAIL;
+  global $supportsSaml;
+  $ret = true;
+
+  // Only check when we have a valid remote IP
+  if (!isset($test['ip']) || $test['ip'] == '127.0.0.1') {
+    return true;
+  }
+
+  // Allow API tests
+  if (isset($test['key'])) {
+    return true;
+  }
+
+  // let logged-in users pass
+  if (isset($USER_EMAIL) && strlen($USER_EMAIL)) {
+    return true;
+  }
+
+  // Enforce per-IP rate limits for testing
+  $limit = GetSetting('rate_limit_anon', null);
+  if (isset($limit) && $limit > 0) {
+    $cache_key = 'rladdr_' . $test['ip'];
+    $count = CacheFetch($cache_key);
+    if (!isset($count)) {
+      $count = 0;
+    }
+    if ($count < $limit) {
+      $count++;
+      CacheStore($cache_key, $count, 1800);
+    } else {
+      $register = GetSetting('saml_register');
+      $apiUrl = GetSetting('api_url');
+      if ($supportsSaml && $register && $apiUrl) {
+        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please <a href='/saml/login.php'>log in</a> with a <a href='$register'>registered account</a> or wait an hour before retrying.<br>If you need to run tests programmatically there is also the <a href='$apiUrl'>WebPageTest API</a>.";
+      } else {
+        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+      }
+      $ret = false;
+    }
+  }
+
+  return $ret;
 }
 
 ?>

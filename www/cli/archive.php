@@ -10,13 +10,15 @@ require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
 error_reporting(E_ALL);
-if (php_sapi_name() == "cli" && function_exists('proc_nice'))
+$is_cli = php_sapi_name() == "cli";
+if ($is_cli && function_exists('proc_nice'))
   proc_nice(19);
 
 // bail if we are already running
 $lock = Lock("Archive", false, 3600);
 if (!isset($lock)) {
-  echo "Archive process is already running\n";
+  if ($is_cli)
+    echo "Archive process is already running\n";
   exit(0);
 }
 
@@ -109,7 +111,8 @@ if (isset($archive_kept_days) && isset($archive_dir) && strlen($archive_dir)) {
   }
 }
 
-echo "\nDone\n\n";
+if ($is_cli)
+  echo "\nDone\n\n";
 
 if( $log ) {
     fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\nArchives deleted: $archivesDeletedCount\n" . gmdate('r') . "\n");;
@@ -141,6 +144,7 @@ function DeleteArchivedFiles($dir) {
 *
 */
 function CheckRelay() {
+  global $is_cli;
   $dirs = scandir('./results/relay');
   $keys_file = __DIR__ . '/settings/keys.ini';
   if (file_exists(__DIR__ . '/settings/common/keys.ini'))
@@ -153,7 +157,8 @@ function CheckRelay() {
       $keydir = "./results/relay/$key";
       if (is_dir($keydir)) {
         if (array_key_exists($key, $keys)) {
-          echo "\rChecking relay tests for $key";
+          if ($is_cli)
+            echo "\rChecking relay tests for $key";
           $years = scandir($keydir);
           foreach( $years as $year ) {
             if ($year != '.' && $year != '..') {
@@ -272,9 +277,11 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   global $kept;
   global $log;
   global $MIN_DAYS;
+  global $is_cli;
   $logLine = "$id ($elapsedDays): ";
 
-  echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
+  if ($is_cli)
+    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
   if (is_file("$testPath/test.waiting")) {
