@@ -3084,7 +3084,10 @@ function CheckRateLimit($test, &$error) {
       $count = 0;
     }
     if ($count < $limit) {
-      $count++;
+      $runcount = max(1, $test['runs']);
+      if (!$test['fvonly'])
+        $runcount *= 2;
+      $count += $runcount;
       CacheStore($cache_key, $count, 1800);
     } else {
       $register = GetSetting('saml_register');
