@@ -33,7 +33,7 @@ function GetTestStatus($id, $includePosition = true) {
   $testPath = './' . GetTestPath($id);
 
   // Fast-path for pending tests when we don't need to know the queue position (avoid test and location locks)
-  if (file_exists("$testPath/test.scheduled")) {
+  if (file_exists("$testPath/test.scheduled") && !file_exists("$testPath/.archived")) {
     $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
     $status = GetSchedulerTestStatus($id);
     if (isset($status) && is_array($status)) {
@@ -55,9 +55,9 @@ function GetTestStatus($id, $includePosition = true) {
       }
     }
     return $ret;
-  } elseif (!$includePosition && is_file("$testPath/test.waiting")) {
+  } elseif (!$includePosition && is_file("$testPath/test.waiting") && !file_exists("$testPath/.archived")) {
     return array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
-  } elseif (is_file("$testPath/test.running")) {
+  } elseif (is_file("$testPath/test.running") && !file_exists("$testPath/.archived")) {
     $startTime = filemtime("$testPath/test.running");
     $elapsed = time() - $startTime;
     $max_run_minutes = GetSetting('max_run_minutes', 60);
@@ -98,7 +98,7 @@ function GetTestStatus($id, $includePosition = true) {
     if (isset($ret)) {
       return $ret;
     }
-  } elseif (is_file("$testPath/test.complete")) {
+  } elseif (is_file("$testPath/test.complete") || file_exists("$testPath/.archived")) {
     $ret = array('statusCode' => 200, 
                     'statusText' => 'Test Complete',
                     'id' => $id,
@@ -108,7 +108,7 @@ function GetTestStatus($id, $includePosition = true) {
     return $ret;
   }
 
-  if (is_file("$testPath/test.waiting")) {
+  if (is_file("$testPath/test.waiting") && !file_exists("$testPath/.archived")) {
     $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
   } else {
     if (TestArchiveExpired($id)) {

@@ -371,6 +371,9 @@ function RestoreArchive($id) {
                   $testInfo = GetTestInfo($id);
                   if ($testInfo) {
                     touch("$testPath/.archived");
+                    if (!file_exists("$testPath/test.complete"))
+                        touch("$testPath/test.complete");
+                    @unlink("$testPath/test.running");
                   }
                   if ($deleteZip)
                     @unlink($zipfile);
