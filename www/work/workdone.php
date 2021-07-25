@@ -275,6 +275,7 @@ if (ValidateTestId($id)) {
 
     touch("$testPath/test.complete");
     @unlink("$testPath/test.running");
+    @unlink("$testPath/test.requeued");
     @unlink("$testPath/test.waiting");
     @unlink("$testPath/test.scheduled");
 

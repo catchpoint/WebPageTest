@@ -24,18 +24,25 @@ if (isset($_REQUEST['id']) && isset($_REQUEST['sig']) && isset($_REQUEST['locati
         if ($signature_matches) {
             $testPath = './' . GetTestPath($testId);
             if (is_dir($testPath)) {
-                $job = file_get_contents('php://input');
-                if (isset($job) && is_string($job) && strlen($job)) {
-                    if (RequeueJob($testId, $job)) {
-                        if (!file_exists("$testPath/test.waiting")) {
-                            touch("$testPath/test.waiting");
-                            logTestMsg($testId, "Requeued test");
+                if (!file_exists("$testPath/test.requeued")) {
+                    $job = file_get_contents('php://input');
+                    if (isset($job) && is_string($job) && strlen($job)) {
+                        if (RequeueJob($testId, $job)) {
+                            if (!file_exists("$testPath/test.waiting")) {
+                                touch("$testPath/test.waiting");
+                                logTestMsg($testId, "Requeued test");
+                            }
+                            if (isset($_REQUEST['node'])) {
+                                touch("$testPath/test.scheduled");
+                            }
+                            touch("$testPath/test.requeued");
+                            @unlink("$testPath/test.running");
                         }
-                        if (isset($_REQUEST['node'])) {
-                            touch("$testPath/test.scheduled");
-                        }
-                        @unlink("$testPath/test.running");
                     }
+                } else {
+                    touch("$testPath/test.complete");
+                    @unlink("$testPath/test.requeued");
+                    @unlink("$testPath/test.running");
                 }
             }
         }

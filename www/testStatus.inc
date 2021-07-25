@@ -69,6 +69,7 @@ function GetTestStatus($id, $includePosition = true) {
       }
       $ret = array('statusCode' => 400, 'statusText' => $statusText, 'id' => $id);
       touch("$testPath/test.complete");
+      @unlink("$testPath/test.requeued");
       @unlink("$testPath/test.running");
     } else {
       $ret = array('statusCode' => 100,
@@ -217,6 +218,7 @@ function GetTestStatus($id, $includePosition = true) {
                           $ret['statusText'] = 'Test Complete';
                           $ret['completeTime'] = $date;
                           touch("$testPath/test.complete");
+                          @unlink("$testPath/test.requeued");
                           @unlink("$testPath/test.running");
 
                           SendCallback($testInfoJson);
