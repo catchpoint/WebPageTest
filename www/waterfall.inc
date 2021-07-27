@@ -81,7 +81,7 @@ function _GetDotsRow() {
         'label' => '...',
         'start' => null,
         'end' => null,
-        'is_secure' => FALSE,
+        'is_secure' => true,
         'requests' => array(),
         'renderBlocking' => null
         );
@@ -851,7 +851,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                               $request_label, $font_width, $border_color);
             } else {
                 $label_x = $column_x + intval($font_width / 2);
-                $label_max_len = $max_len - 1;
+                $label_max_len = $max_len - 1; 
+
                 if (!$is_secure && $show_labels && !($contentType == "application/ocsp-response")) {
                     $icon_width = 17;
                     DrawNotSecure($im, $label_x, $y, $icon_width, $row_height);
