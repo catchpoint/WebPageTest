@@ -243,8 +243,6 @@
               $test['tcpdump'] = $req_tcpdump;
             if (isset($req_lighthouse))
               $test['lighthouse'] = $req_lighthouse;
-            if (isset($_REQUEST['lighthouse_devtools']) && $_REQUEST['lighthouse_devtools'])
-              $test['lighthouse_devtools'] = 1;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
             $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
             $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
@@ -2466,8 +2464,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['mobile'] = 1;
             if( isset($test['lighthouse']) && $test['lighthouse'] )
                 $job['lighthouse'] = 1;
-            if( isset($test['lighthouse_devtools']) && $test['lighthouse_devtools'] )
-                $job['lighthouse_devtools'] = 1;
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 $job['lighthouseTrace'] = 1;
             if( isset($test['lighthouseScreenshots']) && $test['lighthouseScreenshots'] )

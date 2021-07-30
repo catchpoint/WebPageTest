@@ -554,12 +554,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="lighthouse_devtools" id="lighthouse_devtools" class="checkbox" style="float: left;width: auto;">
-                                        <label for="lighthouse_devtools" class="auto_width">
-                                            Lighthouse: Use accurate Network and CPU Emulation <small>(Lighthouse may fail to run)</small>
-                                        </label>
-                                    </li>
-                                    <li>
                                         <?php
                                         $checked = '';
                                         if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
