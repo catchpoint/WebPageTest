@@ -34,6 +34,9 @@ require_once('breakdown.inc');
 require_once('devtools.inc.php');
 require_once('./video/visualProgress.inc.php');
 require_once __DIR__ . '/../include/ResultProcessing.php';
+require_once __DIR__ . '/../include/JsonResultGenerator.php';
+require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestResults.php';
 
 $key  = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
 $location = isset($_REQUEST['location']) ? $_REQUEST['location'] : null;
@@ -287,6 +290,18 @@ if (ValidateTestId($id)) {
           unlink($file);
         }
       }
+    }
+
+    if (isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id']) && isset($testInfo['saas_node_id'])) {
+      $saasTestInfo = TestInfo::fromFiles($testPath);
+      $saasTestResults = TestResults::fromFiles($saasTestInfo);
+      $infoFlags = array(JsonResultGenerator::WITHOUT_AVERAGE, JsonResultGenerator::WITHOUT_STDDEV, JsonResultGenerator::WITHOUT_MEDIAN, JsonResultGenerator::WITHOUT_REPEAT_VIEW);
+      $jsonResultGenerator = new JsonResultGenerator($saasTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
+      $test_json = $jsonResultGenerator->resultDataArray($saasTestResults, $median_metric);
+      if (isset($test_json) && is_array($test_json)) {
+          $txt = json_encode($test_json);
+          ReportSaaSTest($txt, $testInfo['saas_node_id']);
+      }      
     }
 
     // send an async request to the post-processing code so we don't block
