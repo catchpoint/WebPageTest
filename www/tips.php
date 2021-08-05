@@ -15,14 +15,17 @@ $page_description = "Website performance optimization tips.";
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Tips'; include ('head.inc'); ?>
+        <style type="text/css">
+        .tip {
+            margin-bottom: 3em;
+            </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
-        <div class="page">
             <?php
             $tab = 'Tips';
             include 'header.inc';
             ?>
-
+<div class="box">
             <h2 class="centered">Tips and Tricks<br><span class="centered small">(all links open in a new window/tab)</span></h2>
             <?php
             $files = glob('./tips_data/*.html');
@@ -43,7 +46,7 @@ $page_description = "Website performance optimization tips.";
                 }
             }
             ?>
-
+    </div>
             <?php include('footer.inc'); ?>
         </div>
     </body>
