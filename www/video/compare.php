@@ -329,8 +329,9 @@ else
                 ?>
                     div.waterfall-sliders {
                         position: sticky;
-                        clear: none;
+                        clear: both;
                         margin-top: 3em;
+                        padding: 1em 0;
                         top: 0;
                         z-index: 3;
                         <?php
