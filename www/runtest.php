@@ -499,7 +499,7 @@
             if( isset($test['login']) && strlen($test['login']) )
                 $test['private'] = 1;
 
-            if (!$test['browser_width'] || !$test['browser_height']) {
+            if (!$test['mobile'] && (!$test['browser_width'] || !$test['browser_height'])) {
               $browser_size = GetSetting('default_browser_size');
               if ($browser_size) {
                 $parts = explode('x', $browser_size);
