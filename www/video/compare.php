@@ -205,6 +205,7 @@ else
                     position: relative;
                     top: -8em;
                     z-index: 4;
+                    margin-bottom: -3em;
                 }
                 #layoutTable
                 {
