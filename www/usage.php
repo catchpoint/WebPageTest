@@ -3,6 +3,10 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
+if (!$privateInstall && !$admin) {
+  header("HTTP/1.1 403 Unauthorized");
+  exit;
+}
 set_time_limit(0);
 $admin = true;
 // parse the logs for the counts
