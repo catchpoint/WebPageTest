@@ -564,8 +564,11 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 $stepResult->getRawResults(),
                 $options,
                 $stepResult->getStepNumber());
+            $waterfallLegend = new WaterfallViewHtmlSnippet($testInfo, $stepResult);
+            
             echo "<div class='vitals-waterfall'>";
             echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
+            echo $waterfallLegend->create(true);
             echo $out;
             echo "</div>";
 

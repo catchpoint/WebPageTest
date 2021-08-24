@@ -1445,8 +1445,11 @@ table.glossary th{
 }
 
 .vitals-diagnostics .vitals-waterfall{
-    margin-top: 2em;
+    margin-top: 4em;
     position: relative;
+}
+.vitals-diagnostics .vitals-waterfall .waterfall-legend{
+    margin: auto 0;
 }
 .vitals-diagnostics .vitals-waterfall:after{
     content: "";
