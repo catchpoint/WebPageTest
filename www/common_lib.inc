@@ -1147,9 +1147,7 @@ function GetScriptBlock() {
             $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
             $html .= '</div>';
             $html .= '</div>';
-        } else {
-          $html .= '<b>Scripted</b>';
-        }      
+        } 
     }
     return $html;
 }
