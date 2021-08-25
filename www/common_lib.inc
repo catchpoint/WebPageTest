@@ -1149,7 +1149,9 @@ function GetScriptBlock() {
             $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
             $html .= '</div>';
             $html .= '</div>';
-        }           
+        } else {
+          $html .= '<b>Scripted</b>';
+        }      
     }
     return $html;
 }
@@ -1195,18 +1197,7 @@ function GetTestInfoHtml($includeScript = true)
     }
     if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
     {
-        $show = false;
-        if ($includeScript) {
-            $showscript = GetSetting('show_script_in_results');
-            if ($admin || $showscript) {
-                $show = true;
-            } elseif ($isOwner && !$test['testinfo']['sensitive']) {
-                $show = true;
-            }
-        }
-        if (!$show) {
-          $html .= '<b>Scripted test</b><br>';
-        }
+      $html .= '<b>Scripted test</b><br>';
     }
     
     return $html;
