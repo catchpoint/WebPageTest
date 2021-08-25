@@ -1133,13 +1133,11 @@ function GetScriptBlock() {
   if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
     {
         $show = false;
-        if ($includeScript) {
-            $showscript = GetSetting('show_script_in_results');
-            if ($admin || $showscript) {
-                $show = true;
-            } elseif ($isOwner && !$test['testinfo']['sensitive']) {
-                $show = true;
-            }
+        $showscript = GetSetting('show_script_in_results');
+        if ($admin || $showscript) {
+            $show = true;
+        } elseif ($isOwner && !$test['testinfo']['sensitive']) {
+            $show = true;
         }
         if ($show)
         {
