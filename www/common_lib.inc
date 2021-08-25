@@ -1118,6 +1118,41 @@ function ParseLocations(&$locations) {
 
     return $loc;
 }
+/**
+* Get the script block for the test, if applicable
+*/
+function GetScriptBlock() {
+  global $test;
+  global $isOwner;
+  global $admin;
+  $html = '';
+  $run = null;
+  if (array_key_exists('run', $_REQUEST))
+    $run = intval($_REQUEST['run']);
+
+  if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
+    {
+        $show = false;
+        if ($includeScript) {
+            $showscript = GetSetting('show_script_in_results');
+            if ($admin || $showscript) {
+                $show = true;
+            } elseif ($isOwner && !$test['testinfo']['sensitive']) {
+                $show = true;
+            }
+        }
+        if ($show)
+        {
+            $html .= '<div class="script-block">';
+            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
+            $html .= '<div id="script_in_results-container" class="hidden">';
+            $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
+            $html .= '</div>';
+            $html .= '</div>';
+        }           
+    }
+    return $html;
+}
 
 /**
 * Get the text block of the test info that we want to display
@@ -1169,16 +1204,11 @@ function GetTestInfoHtml($includeScript = true)
                 $show = true;
             }
         }
-        if ($show)
-        {
-            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
-            $html .= '<div id="script_in_results-container" class="hidden">';
-            $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
-            $html .= '</div>';
+        if (!$show) {
+          $html .= '<b>Scripted test</b><br>';
         }
-        else
-            $html .= '<b>Scripted test</b><br>';
     }
+    
     return $html;
 }
 

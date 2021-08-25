@@ -426,8 +426,11 @@ footer ul li{
 .test_results-content #headers {
     overflow-wrap: anywhere;
 }
+.script-block{
+    text-align: left;
+}
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
-#script_in_results {color: #f1c52e !important; text-decoration: none;  font-weight: bold; }
+#script_in_results {color: #003b5a !important; text-decoration: none;  font-weight: bold; }
 #script_in_results .arrow:after { content: "\1433"; font-size: .9em; font-weight: normal;}
 #script_in_results.extended .arrow:after {content: "\142F"; }
 
