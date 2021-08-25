@@ -162,6 +162,9 @@ $page_description = "Website performance test result$testLabel.";
                 </ul>
                 </div>
             </div>
+            <?php
+            echo GetScriptBlock();
+            ?>
             <div id="average">
                 <?php
                 $is_test_error = $testInfo->isTestError();
