@@ -31,6 +31,7 @@ $page_description = "Website performance test result$testLabel.";
 <html lang="en-us">
     <head>
         <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
+        <script>document.documentElement.classList.add('has-js');</script>
         <style type="text/css">
             tr.stepResultRow.jkActive td.resultCell {
                 border-left: 2px #181741 solid;
@@ -82,11 +83,15 @@ $page_description = "Website performance test result$testLabel.";
             else
             {
             ?>
-            <div id="download">
-                <div id="testinfo">
+            <div class="testinfo_command-bar">
+                <div class="testinfo_meta">
                     <?php
                     $show_sensitive = false;
                     echo GetTestInfoHtml();
+                    ?>
+                </div>
+                <div class="testinfo_forms">
+                <?php
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
@@ -132,20 +137,30 @@ $page_description = "Website performance test result$testLabel.";
                     }
                     ?>
                 </div>
+                <div class="testinfo_artifacts" tabindex="0">
+                <h3>Export Files</h3>
+                <ul class="testinfo_artifacts-list">
                 <?php
                     $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                     $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
-                    echo "<a href='/jsonResult.php?test=$id&pretty=1'>View JSON result</a><br>";
-                    echo '<a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Export HTTP Archive (.har)</a>';
+                    echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View JSON</a></li>";
                     if (is_file("$testPath/test.log"))
-                        echo "<br><a href=\"/viewlog.php?test=$id\">View Test Log</a>";
+                        echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
                     if (is_file("$testPath/lighthouse.log.gz"))
-                        echo " - <a href=\"/viewlog.php?test=$id&lighthouse=1\">Lighthouse Test Log</a>";
+                        echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\">View Lighthouse Log</a></li>";
                     $publish = GetSetting('publishTo');
                     if( $publish && GetSetting('host') != 'www.webpagetest.org' )
-                        echo "<br><a href=\"/publish.php?test=$id\">Publish to $publish</a>";
+                        echo "<li><a href=\"/publish.php?test=$id\">Publish to $publish</a></li>";
+                    echo "<li data-artifact-json=\"download\"><a href='/jsonResult.php?test=$id&pretty=1' download>Download JSON</a></li>";
+                    echo '<li><a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Download HAR</a></li>';
+                    if (is_file("$testPath/test.log"))
+                      echo "<li><a href=\"/viewlog.php?test=$id\" download>Download Test Log</a></li>";
+                    if (is_file("$testPath/lighthouse.log.gz"))
+                      echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\" download>Download Lighthouse Log</a></li>";
                 ?>
+                </ul>
+                </div>
             </div>
             <div id="average">
                 <?php

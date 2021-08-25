@@ -326,24 +326,86 @@ footer ul li{
     color: #000;
     border-bottom: 3px solid #F9D856;
 }
-
-.test_results-content #download {
-    overflow: hidden;
+.testinfo_command-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 4fr;
     margin-bottom: 1em;
-}
-body.compact .test_results-content #download {
-    margin-bottom: 0em;
-}
-.test_results-content #download{
-    text-align: right;
-}
-.test_results-content #testinfo {
+    background: #f9f9f9;
+    margin: -1.25em -1.875em 0 -1.875em;
+    padding: 0 1.875em;
+    border-bottom: 1px solid #E9E9E9;
     text-align: left;
-    float: left;
+    grid-column-gap: 1em;
+    align-items: center;
+    margin-bottom: 1.3125em;
 }
-.test_results-content #testinfo form{
-    margin-top: 1em;
+.testinfo_meta{
+    border-right: 1px solid #e9e9e9;
 }
+.testinfo_artifacts{
+    justify-self: right;
+    font-size: .8em;
+    position: relative;
+}
+.testinfo_meta, .testinfo_forms {
+    padding: 1em 0;
+}
+.testinfo_artifacts-list{
+    padding: .2em 0;
+    background: #fff;
+    width: 100%;
+}
+.testinfo_artifacts-list li{
+    white-space: nowrap;
+}
+.testinfo_artifacts-list a{
+    text-decoration: none;
+    color: #333333;
+    display: block;
+    padding: .75em 1em;
+
+}
+.testinfo_artifacts-list a:hover{
+    text-decoration: underline;
+    background: #f9f9f9;
+}
+.testinfo_artifacts-list [data-artifact-json="download"] {
+    border-top: 1px solid #e9e9e9;
+}
+.testinfo_artifacts h3{
+    font-weight: normal;
+    border-radius: 2px;
+    border: 1px solid #999;
+    font-size: 1rem;
+    padding: .5em 1em;
+}
+.has-js .testinfo_artifacts h3:after{
+    background-image: url('data:image/svg+xml;utf-8,%3Csvg%20width%3D%2216%22%20height%3D%2210%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M14.354%202.354a.5.5%200%2001-.708%200l.708.708v-.708zM8%208l-.354.354L8%208zm5.646-6.354l-6%206%20.708.708%206-6-.708-.708zm-5.292%206l-6-6-.708.708%206%206%20.708-.708z%22%20fill%3D%22%23111%22%20fill-rule%3D%22nonzero%22%20stroke%3D%22%23000%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat, repeat;
+    background-size: contain;
+    background-color: #fff;
+    margin-left: .5em;
+    top: .3em;
+    position: relative;
+    content: " ";
+    display: inline-block;
+    height: .8em;
+    width: .8em;
+}
+.has-js .testinfo_artifacts:hover h3:after{
+    transform: rotate(180deg);
+    top: -.1em;
+}
+.has-js .testinfo_artifacts .testinfo_artifacts-list {
+    position: absolute;
+    box-shadow: 0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.11);
+    display: none;
+}
+.has-js .testinfo_artifacts:hover .testinfo_artifacts-list,
+.has-js .testinfo_artifacts:focus .testinfo_artifacts-list{
+    display: block;
+}
+
 .test_results-content #headers div,
 .test_results-content div.details{
     text-align: left;
