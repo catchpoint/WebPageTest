@@ -406,9 +406,14 @@ $page_description = "Website performance test details$testLabel";
                     scrollToNode = $("#step" + stepNum + "_all");
                     expandAll(stepNum);
                 } else {
+                  if (scrollToNode.length > 0) {
                     expandRequest(scrollToNode);
+                  }
+                    
                 }
-                scrollTo(scrollToNode);
+                if (scrollToNode.length > 0) {
+                  scrollTo(scrollToNode);
+                }
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
