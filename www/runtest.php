@@ -142,6 +142,9 @@
             unset($test['started']);
             unset($test['tester']);
             unset($test['batch']);
+            if (isset($req_block)) {
+              $test['block'] .= ' ' . $req_block;
+            }
           } else {
             unset($test);
           }
