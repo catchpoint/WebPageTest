@@ -186,7 +186,7 @@ $page_description = "Web Vitals details$testLabel";
             include 'header.inc';
             ?>
             <div id="result" class=" vitals-diagnostics">
-            <p>Google <a href="https://web.dev/vitals/">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</p>
+            <p>Google <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</p>
             <?php
             if (isset($testRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
