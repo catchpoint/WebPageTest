@@ -1176,7 +1176,7 @@ function GetTestInfoHtml($includeScript = true)
         $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
     if( $test['test']['fvonly'] )
         $html .= '<b>First View only</b><br>';
-    if( isset($test['test']['runs']) && ((int)$test['test']['runs'] > 1) )
+    if( isset($test['test']['runs']) )
         $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
     if( isset($test['test']['authenticated']) && (int)$test['test']['authenticated'] == 1)
         $html .= '<b>Authenticated: ' . htmlspecialchars($login) . '</b><br>';
