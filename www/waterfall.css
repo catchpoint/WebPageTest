@@ -148,6 +148,9 @@ div.bar {
     cursor: pointer;
     color: #111;
     text-decoration: none;
+    
+}
+#experimentForm{
     margin-top: 2em;
 }
 #experimentSettings a[data-remove-field]{

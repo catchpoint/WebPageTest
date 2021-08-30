@@ -283,22 +283,22 @@ $('.waterfall-container').on("click", "a[data-spof]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block]", function (e) {
-    if ($('#urlEntry input[name=block]').length > 0) {
-        var fieldVal = $('#urlEntry input[name=block]').val();
-        if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
-            return false;
-        }
-        else {
-            $('#urlEntry input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
-        }
-        
-    } else {
-        $('#urlEntry').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
-    }
     if ($('#experimentSettings').length <= 0) {
         createExperimentSettingsBox();
     } else {
         $('#experimentSettings').removeClass('inactive');
+    }
+    if ($('#experimentForm input[name=block]').length > 0) {
+        var fieldVal = $('#experimentForm input[name=block]').val();
+        if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
+            return false;
+        }
+        else {
+            $('#experimentForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
+        }
+        
+    } else {
+        $('#experimentForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
     }
     $('#experimentSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
 
@@ -306,39 +306,41 @@ $('.waterfall-container').on("click", "a[data-block]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-    if ($('#urlEntry input[name=blockDomains]').length > 0) {
-        var fieldVal = $('#urlEntry input[name=blockDomains]').val();
-        if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
-            return false;
-        } else {
-            $('#urlEntry input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
-        }
-        
-    } else {
-        var curVal = $('#urlEntry').val
-        $('#urlEntry').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
-    }
     if ($('#experimentSettings').length <= 0) {
         createExperimentSettingsBox();
     } else {
         $('#experimentSettings').removeClass('inactive');
+    }
+    if ($('#experimentForm input[name=blockDomains]').length > 0) {
+        var fieldVal = $('#experimentForm input[name=blockDomains]').val();
+        if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
+            return false;
+        } else {
+            $('#experimentForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
+        }
+        
+    } else {
+        $('#experimentForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
     }
     $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
 
 
     return false;
 })
-$('body').on("click", "#experimentSettings button", function(e) {
-    $('#urlEntry').submit();
-})
 function createExperimentSettingsBox() {
-    var siteKey = $('#urlEntry button').attr('data-sitekey');
-    $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul><button data-sitekey='" + siteKey + "' data-callback='onRecaptchaSubmit'>Re-Run the Test</button></div>");
+    $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul></div>");
+    $('#urlEntry')
+        .clone()
+        .attr('id', 'experimentForm')
+        .attr('name', 'experimentForm')
+        .insertAfter($('#experimentSettings ul').last());
+    $('#experimentForm button').innerHTML = "Run Experiment";
+    $('#experimentForm input[type=submit]').val("Run Experiment");
 }
 $('body').on("click", "a[data-remove-field]", function (e) {
     var remove = $(this).attr('data-remove-field');
-    var fieldVal = $('#urlEntry input[name=' + remove + ']').val();
-    $('#urlEntry input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
+    var fieldVal = $('#experimentForm input[name=' + remove + ']').val();
+    $('#experimentForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
     $(this).closest('li').remove();
     //check to see if any li, if not, hide the field
     if ($('#experimentSettings li').length <= 0) {
