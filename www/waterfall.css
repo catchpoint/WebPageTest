@@ -8,7 +8,7 @@ div.transparent {opacity:0.0; filter:alpha(opacity=0);}
 div.dialog-title {display: inline;}
 div.dialog-title a {color: #fff;}
 div.request-dialog-radio {display:inline; padding-left: 20px; font-weight: normal; }
-.request-headers, .response-headers, .response-body, .request-raw-details {display:none;}
+.request-headers, .response-headers, .response-body, .request-raw-details, .experiment {display:none;}
 .request-details a {word-break: break-all;}
 .jqmWindow {display: none; position: fixed; top: 17%; left: 50%; margin-left: -300px; width: 600px; background-color: #dfdfdf; color: #333; border: 1px solid black; padding: 12px; }
 .jqmOverlay { background-color: #000; }
@@ -112,4 +112,54 @@ div.bar {
     height:20px;
     margin-top:auto;
     margin-bottom:auto;
+}
+
+#experimentSettings{
+    position: fixed;
+    bottom: 1.5em;
+    left: 1.5em;
+    background: #121D35;
+    max-width: 25em;
+    color: #fff;
+    padding: 1em;
+    border-radius: 3px;
+    font-size: .9em;
+    box-shadow: 0px 6.4px 14.4px rgb(0 0 0 / 13%), 0px 1.2px 3.6px rgb(0 0 0 / 11%);
+}
+#experimentSettings.inactive{
+    display: none;
+}
+#experimentSettings h2{
+    font-size: 1em;
+}
+#experimentSettings ul + h2{
+    margin-top: 2em;
+}
+#experimentSettings li{
+    word-break: break-word;
+    font-size: .9em;
+}
+#experimentSettings button{
+    border: 0;
+    border-radius: 4px;
+    padding: 0.6875em 2.625em;
+    background: #F9D856;
+    font-size: 1em;
+    cursor: pointer;
+    color: #111;
+    text-decoration: none;
+    margin-top: 2em;
+}
+#experimentSettings a[data-remove-field]{
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 1em;
+    display: inline-block;
+}
+#experimentSettings .remove-block:hover{
+    text-decoration: underline;
+}
+.experiments{
+    margin-bottom: 2em;
 }
