@@ -29,7 +29,7 @@ $page_keywords = array('Performance Test','Details','WebPageTest','Website Speed
 $page_description = "Website performance test details$testLabel";
 
 function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteKey) {
-  echo "<form name='experimentForm' id='experimentForm' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+  echo "<form name='$formName' id='$formName' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
   echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
   echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
   if( strlen($secret) ){
