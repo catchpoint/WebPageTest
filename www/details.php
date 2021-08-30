@@ -27,6 +27,31 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
+
+function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteKey) {
+  echo "<form name='experimentForm' id='experimentForm' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+  echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
+  echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+  if( strlen($secret) ){
+    $hashStr = $secret;
+    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+    $hashStr .= $owner;
+
+    $now = gmdate('c');
+    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+    $hashStr .= $now;
+
+    $hmac = sha1($hashStr);
+    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+  }
+  if (strlen($siteKey)) {
+    echo "<button data-sitekey=\"$siteKey\" data-callback='$callback' class=\"g-recaptcha\">$btnText</button>";
+  } else {
+    echo "<input type=\"submit\" value=\"$btnText\">";
+  }
+  echo "\n</form>\n";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -163,28 +188,8 @@ $page_description = "Website performance test details$testLabel";
                         $secret = GetServerSecret();
                         if (!isset($secret))
                             $secret = '';
-
-                        echo "<form name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
-                        echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
-                        echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-                        if( strlen($secret) ){
-                          $hashStr = $secret;
-                          $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-                          $hashStr .= $owner;
-
-                          $now = gmdate('c');
-                          echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-                          $hashStr .= $now;
-
-                          $hmac = sha1($hashStr);
-                          echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-                        }
-                        if (strlen($siteKey)) {
-                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha\">Re-run the test</button>";
-                        } else {
-                          echo '<input type="submit" value="Re-run the test">';
-                        }
-                        echo "\n</form>\n";
+                        createForm('urlEntry', 'Re-run Test', 'onRecaptchaSubmit', $id, $owner, $secret, $siteKey);
+                        
                     }
                     ?>
                 </div>
@@ -343,33 +348,13 @@ $page_description = "Website performance test details$testLabel";
                           </script>
                           <?php
                         }
+
                         // load the secret key (if there is one)
                         $secret = GetServerSecret();
                         if (!isset($secret))
                             $secret = '';
-
-                        echo "<form name='experimentForm' id='experimentForm' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
-                        echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
-                        echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-                        if( strlen($secret) ){
-                          $hashStr = $secret;
-                          $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-                          $hashStr .= $owner;
-
-                          $now = gmdate('c');
-                          echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-                          $hashStr .= $now;
-
-                          $hmac = sha1($hashStr);
-                          echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-                        }
-                        if (strlen($siteKey)) {
-                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmitExperiment' class=\"g-recaptcha\">Run Experiment</button>";
-                        } else {
-                          echo '<input type="submit" value="Run Experiment">';
-                        }
-                        echo "\n</form>\n";
-                    }
+                            createForm('experimentForm', 'Run Experiment', 'onRecaptchaSubmitExperiment', $id, $owner, $secret, $siteKey);
+                          }
                     ?>
               </div>
         <?php
