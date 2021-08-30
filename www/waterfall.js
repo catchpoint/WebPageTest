@@ -334,7 +334,7 @@ function createExperimentSettingsBox() {
         .attr('id', 'experimentForm')
         .attr('name', 'experimentForm')
         .insertAfter($('#experimentSettings ul').last());
-    $('#experimentForm button').innerHTML = "Run Experiment";
+    $('#experimentForm button').html('Run Experiment');
     $('#experimentForm input[type=submit]').val("Run Experiment");
 }
 $('body').on("click", "a[data-remove-field]", function (e) {
