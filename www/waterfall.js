@@ -283,11 +283,13 @@ $('.waterfall-container').on("click", "a[data-spof]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block]", function (e) {
-    console.log($(this).attr("data-block"));
     if ($('#urlEntry input[name=block]').length > 0) {
         var fieldVal = $('#urlEntry input[name=block]').val();
         if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
             return false;
+        }
+        else {
+            $('#urlEntry input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
         }
         
     } else {
@@ -304,14 +306,16 @@ $('.waterfall-container').on("click", "a[data-block]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-    console.log($(this).attr("data-block-domain"));
     if ($('#urlEntry input[name=blockDomains]').length > 0) {
         var fieldVal = $('#urlEntry input[name=blockDomains]').val();
         if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
             return false;
+        } else {
+            $('#urlEntry input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
         }
         
     } else {
+        var curVal = $('#urlEntry').val
         $('#urlEntry').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
     }
     if ($('#experimentSettings').length <= 0) {
