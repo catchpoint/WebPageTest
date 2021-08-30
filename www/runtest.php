@@ -145,6 +145,9 @@
             if (isset($req_block)) {
               $test['block'] .= ' ' . $req_block;
             }
+            if (isset($req_blockDomains)) {
+              $test['blockDomains'] .= ' ' . $req_blockDomains;
+            }
           } else {
             unset($test);
           }

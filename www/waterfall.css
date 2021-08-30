@@ -119,12 +119,15 @@ div.bar {
     bottom: 1.5em;
     left: 1.5em;
     background: #121D35;
-    max-width: 30em;
+    max-width: 25em;
     color: #fff;
     padding: 1em;
     border-radius: 3px;
     font-size: .9em;
     box-shadow: 0px 6.4px 14.4px rgb(0 0 0 / 13%), 0px 1.2px 3.6px rgb(0 0 0 / 11%);
+}
+#experimentSettings.inactive{
+    display: none;
 }
 #experimentSettings h2{
     font-size: 1em;
@@ -134,6 +137,7 @@ div.bar {
 }
 #experimentSettings li{
     word-break: break-word;
+    font-size: .9em;
 }
 #experimentSettings button{
     border: 0;
@@ -145,4 +149,17 @@ div.bar {
     color: #111;
     text-decoration: none;
     margin-top: 2em;
+}
+#experimentSettings a[data-remove-field]{
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 1em;
+    display: inline-block;
+}
+#experimentSettings .remove-block:hover{
+    text-decoration: underline;
+}
+.experiments{
+    margin-bottom: 2em;
 }

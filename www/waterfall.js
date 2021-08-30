@@ -85,7 +85,7 @@ function SelectRequest(step, request) {
     var details='';
     var requestHeaders='';
     var responseHeaders='';
-    var experiment = '<ul class="experiements">';
+    var experiment = '<ul class="experiments">';
     let json = '';
     $("#response-body-" + stepLabel).html('');
     try {
@@ -114,7 +114,7 @@ function SelectRequest(step, request) {
             details += '<b>Document: </b>' + htmlEncode(r['documentURL']) + '<br>';
         if (r['host'] !== undefined)
             details += '<b>Host: </b>' + htmlEncode(r['host']) + '<br>';
-            experiment += '<li><a href="#" data-block-domain="' + htmlEncode(r['full_url']) + '">Block Request Domain</a></li>';
+            experiment += '<li><a href="#" data-block-domain="' + htmlEncode(r['host']) + '">Block Request Domain</a></li>';
         if (r['ip_addr'])
             details += '<b>IP: </b>' + htmlEncode(r['ip_addr']) + '<br>';
         if (r['location'] !== undefined && r['location'] !== null && r['location'].length)
@@ -183,7 +183,7 @@ function SelectRequest(step, request) {
             details += '<b>Render Blocking Status: </b>' + htmlEncode(r['renderBlocking']) + '<br>';
 
             if (r['renderBlocking']=== 'blocking') {
-                experiment += '<li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
+                experiment += '</ul><ul class="experiments"><li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
             }
         }
             
@@ -285,29 +285,41 @@ $('.waterfall-container').on("click", "a[data-spof]", function (e) {
 $('.waterfall-container').on("click", "a[data-block]", function (e) {
     console.log($(this).attr("data-block"));
     if ($('#urlEntry input[name=block]').length > 0) {
-        $('#urlEntry input[name=block]').val($(this).attr("data-block") + ' ');
+        var fieldVal = $('#urlEntry input[name=block]').val();
+        if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
+            return false;
+        }
+        
     } else {
         $('#urlEntry').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
     }
     if ($('#experimentSettings').length <= 0) {
         createExperimentSettingsBox();
+    } else {
+        $('#experimentSettings').removeClass('inactive');
     }
-    $('#experimentSettings .block-list').append('<li>' + $(this).attr("data-block") + '</li>');
+    $('#experimentSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
 
 
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
     console.log($(this).attr("data-block-domain"));
-    if ($('#urlEntry input[name=blockDomain]').length > 0) {
-        $('#urlEntry input[name=blockDomain]').val($(this).attr("data-block-domain") + ' ');
+    if ($('#urlEntry input[name=blockDomains]').length > 0) {
+        var fieldVal = $('#urlEntry input[name=blockDomains]').val();
+        if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
+            return false;
+        }
+        
     } else {
-        $('#urlEntry').append('<input type="hidden" name="blockDomaine" value="' + $(this).attr("data-block-domain") + ' "/>');
+        $('#urlEntry').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
     }
     if ($('#experimentSettings').length <= 0) {
         createExperimentSettingsBox();
+    } else {
+        $('#experimentSettings').removeClass('inactive');
     }
-    $('#experimentSettings .blockDomain-list').append('<li>' + $(this).attr("data-block-domain") + '</li>');
+    $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
 
 
     return false;
@@ -318,3 +330,14 @@ $('body').on("click", "#experimentSettings button", function(e) {
 function createExperimentSettingsBox() {
     $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul><button>Re-Run the Test</button></div>");
 }
+$('body').on("click", "a[data-remove-field]", function (e) {
+    var remove = $(this).attr('data-remove-field');
+    var fieldVal = $('#urlEntry input[name=' + remove + ']').val();
+    $('#urlEntry input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
+    $(this).closest('li').remove();
+    //check to see if any li, if not, hide the field
+    if ($('#experimentSettings li').length <= 0) {
+        $('#experimentSettings').addClass('inactive');
+    }
+    return false;
+})
