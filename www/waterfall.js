@@ -328,7 +328,8 @@ $('body').on("click", "#experimentSettings button", function(e) {
     $('#urlEntry').submit();
 })
 function createExperimentSettingsBox() {
-    $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul><button data-callback='onRecaptchaSubmit'>Re-Run the Test</button></div>");
+    var siteKey = $('#urlEntry button').attr('data-sitekey');
+    $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul><button data-sitekey='" + siteKey + "' data-callback='onRecaptchaSubmit'>Re-Run the Test</button></div>");
 }
 $('body').on("click", "a[data-remove-field]", function (e) {
     var remove = $(this).attr('data-remove-field');
