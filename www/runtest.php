@@ -148,6 +148,9 @@
             if (isset($req_blockDomains)) {
               $test['blockDomains'] .= ' ' . $req_blockDomains;
             }
+            if (isset($req_label)) {
+              $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
+            }
           } else {
             unset($test);
           }

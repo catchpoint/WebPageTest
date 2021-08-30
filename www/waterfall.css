@@ -166,3 +166,10 @@ div.bar {
 .experiments{
     margin-bottom: 2em;
 }
+#experimentSettings label{
+    display: block;
+    font-weight: bold;
+}
+#experimentSettings input[type="text"] {
+    margin-bottom: 1em;
+}

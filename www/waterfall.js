@@ -327,11 +327,11 @@ $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
     }
     $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
 
-
     return false;
 })
 function createExperimentSettingsBox() {
     $('#experimentSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
+    $('#experimentSettings form').prepend('<label for="label">Label</label><input type="text" name="label" />');
 }
 $('body').on("click", "a[data-remove-field]", function (e) {
     var remove = $(this).attr('data-remove-field');
