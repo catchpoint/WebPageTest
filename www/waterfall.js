@@ -283,11 +283,10 @@ $('.waterfall-container').on("click", "a[data-spof]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block]", function (e) {
-    if ($('#experimentSettings').length <= 0) {
+    if ($('#experimentSettings h2').length <= 0) {
         createExperimentSettingsBox();
-    } else {
-        $('#experimentSettings').removeClass('inactive');
     }
+    $('#experimentSettings').removeClass('inactive');
     if ($('#experimentForm input[name=block]').length > 0) {
         var fieldVal = $('#experimentForm input[name=block]').val();
         if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
@@ -306,11 +305,10 @@ $('.waterfall-container').on("click", "a[data-block]", function (e) {
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-    if ($('#experimentSettings').length <= 0) {
+    if ($('#experimentSettings h2').length <= 0) {
         createExperimentSettingsBox();
-    } else {
-        $('#experimentSettings').removeClass('inactive');
     }
+    $('#experimentSettings').removeClass('inactive');
     if ($('#experimentForm input[name=blockDomains]').length > 0) {
         var fieldVal = $('#experimentForm input[name=blockDomains]').val();
         if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
@@ -328,14 +326,7 @@ $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
     return false;
 })
 function createExperimentSettingsBox() {
-    $('body').append("<div id='experimentSettings'><h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul></div>");
-    $('#urlEntry')
-        .clone()
-        .attr('id', 'experimentForm')
-        .attr('name', 'experimentForm')
-        .insertAfter($('#experimentSettings ul').last());
-    $('#experimentForm button').html('Run Experiment');
-    $('#experimentForm input[type=submit]').val("Run Experiment");
+    $('#experimentSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
 }
 $('body').on("click", "a[data-remove-field]", function (e) {
     var remove = $(this).attr('data-remove-field');

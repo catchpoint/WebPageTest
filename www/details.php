@@ -323,9 +323,55 @@ $page_description = "Website performance test details$testLabel";
                 ?>
             </div>
                 </div>
+              
             <?php include('footer.inc'); ?>
         </div>
+        <div id="experimentSettings" class="inactive">
+              <?php
+                    if( !$headless && gz_is_file("$testPath/testinfo.json")
+                        && !array_key_exists('published', $test['testinfo'])
+                        && ($isOwner || !$test['testinfo']['sensitive'])
+                        && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
+                    {
+                        $siteKey = GetSetting("recaptcha_site_key", "");
+                        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
+                          ?>
+                          <script>
+                          function onRecaptchaSubmitExperiment(token) {
+                            document.getElementById("experimentForm").submit();
+                          }
+                          </script>
+                          <?php
+                        }
+                        // load the secret key (if there is one)
+                        $secret = GetServerSecret();
+                        if (!isset($secret))
+                            $secret = '';
 
+                        echo "<form name='experimentForm' id='experimentForm' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+                        echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
+                        echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+                        if( strlen($secret) ){
+                          $hashStr = $secret;
+                          $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                          $hashStr .= $owner;
+
+                          $now = gmdate('c');
+                          echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                          $hashStr .= $now;
+
+                          $hmac = sha1($hashStr);
+                          echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                        }
+                        if (strlen($siteKey)) {
+                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmitExperiment' class=\"g-recaptcha\">Run Experiment</button>";
+                        } else {
+                          echo '<input type="submit" value="Run Experiment">';
+                        }
+                        echo "\n</form>\n";
+                    }
+                    ?>
+              </div>
         <?php
         if ($isMultistep) {
           echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
@@ -464,5 +510,6 @@ $page_description = "Website performance test details$testLabel";
         include "waterfall.js";
         ?>
         </script>
+        
     </body>
 </html>
