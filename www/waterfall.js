@@ -279,7 +279,12 @@ $(".waterfall-transparency").on('input', function() {
 $('.waterfall-container').on("click", "a[data-spof]", function (e) {
     $('#urlEntry').append('<input type="hidden" name="spof" value="' + $(this).attr("data-spof") + '"/>');
     $('#urlEntry').attr('target', "_blank");
-    $('#urlEntry').submit();
+    if (window.grecaptcha) {
+        grecaptcha.execute();
+    } else {
+        $('#urlEntry').submit();
+    }
+    
     return false;
 })
 $('.waterfall-container').on("click", "a[data-block]", function (e) {
