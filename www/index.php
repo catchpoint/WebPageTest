@@ -611,7 +611,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="v8rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">
                                         <label for="v8rcs" class="auto_width">
-                                            Capture <a href="https://v8.dev/docs/rcs">V8 Runtime Call Stats</a>
+                                            Capture <a href="https://v8.dev/docs/rcs" target="_blank" rel="noopener">V8 Runtime Call Stats</a>
                                         </label>
                                     </li>
                                     <li>
@@ -682,7 +682,7 @@ $loc = ParseLocations($locations);
                                     ?>
                                     <li>
                                         <label for="hostResolverRules">
-                                        <a href="https://peter.sh/experiments/chromium-command-line-switches/#host-resolver-rules">Host Resolver Rules</a><br>
+                                        <a href="https://peter.sh/experiments/chromium-command-line-switches/#host-resolver-rules" target="_blank" rel="noopener">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
                                         <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;" autocomplete="off">
@@ -752,7 +752,7 @@ $loc = ParseLocations($locations);
                                 </ul>
                                 <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            Check out <a href="https://docs.webpagetest.org/scripting/">the documentation</a> for more information on this feature
+                                            Check out <a href="https://docs.webpagetest.org/scripting/" target="_blank" rel="noopener">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
                             </div>
@@ -777,7 +777,7 @@ $loc = ParseLocations($locations);
                             <div id="spof" class="test_subbox ui-tabs-hide">
                                 <p>
                                     Simulate failure of specified domains.  This is done by re-routing all requests for
-                                    the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html">blackhole.webpagetest.org</a> which will silently drop all requests.
+                                    the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html" target="_blank" rel="noopener">blackhole.webpagetest.org</a> which will silently drop all requests.
                                 </p>
                                 <p>
                                     <label for="spof_hosts" class="full_width">
@@ -800,7 +800,7 @@ $loc = ParseLocations($locations);
                                 </div>
                                 <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            See <a href="https://docs.webpagetest.org/custom-metrics/">the documentation</a> for details on how to specify custom metrics to be captured.
+                                            See <a href="https://docs.webpagetest.org/custom-metrics/" target="_blank" rel="noopener">the documentation</a> for details on how to specify custom metrics to be captured.
                                         </div></div>
                                     </div>
                             </div>
