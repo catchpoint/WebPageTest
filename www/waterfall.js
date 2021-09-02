@@ -250,7 +250,18 @@ function SelectRequest(step, request) {
     $("#request-details-" + stepLabel).html(details);
     $("#request-headers-" + stepLabel).html(requestHeaders);
     $("#response-headers-" + stepLabel).html(responseHeaders);
-    $("#experiment-" + stepLabel).html(experiment + "</ul>");
+    if (document.getElementById('urlEntry')) {
+        //only do experiments if on a page where we can resubmit the test
+        $("#experiment-" + stepLabel).html(experiment + "</ul>");
+    } else {
+        var experimentButtons = document.querySelectorAll("[id^='experiment-button']");
+        if (experimentButtons) {
+            for (var i = 0, len = experimentButtons.length; i < len; i++) {
+                experimentButtons[i].style.display = "none";
+            }
+        }
+    }
+    
     $("#request-raw-details-json-" + stepLabel).text(json);
     $('#request-dialog-' + stepLabel).jqmShow();
 
@@ -276,71 +287,73 @@ $(".waterfall-transparency").on('input', function() {
     $("#" + id).css({ opacity: newValue });
 });
 
-$('.waterfall-container').on("click", "a[data-spof]", function (e) {
-    $('#urlEntry').append('<input type="hidden" name="spof" value="' + $(this).attr("data-spof") + '"/>');
-    $('#urlEntry').attr('target', "_blank");
-    if (window.grecaptcha) {
-        grecaptcha.execute();
-    } else {
-        $('#urlEntry').submit();
-    }
-    
-    return false;
-})
-$('.waterfall-container').on("click", "a[data-block]", function (e) {
-    if ($('#experimentSettings h2').length <= 0) {
-        createExperimentSettingsBox();
-    }
-    $('#experimentSettings').removeClass('inactive');
-    if ($('#experimentForm input[name=block]').length > 0) {
-        var fieldVal = $('#experimentForm input[name=block]').val();
-        if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
-            return false;
-        }
-        else {
-            $('#experimentForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
-        }
-        
-    } else {
-        $('#experimentForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
-    }
-    $('#experimentSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
-
-
-    return false;
-})
-$('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-    if ($('#experimentSettings h2').length <= 0) {
-        createExperimentSettingsBox();
-    }
-    $('#experimentSettings').removeClass('inactive');
-    if ($('#experimentForm input[name=blockDomains]').length > 0) {
-        var fieldVal = $('#experimentForm input[name=blockDomains]').val();
-        if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
-            return false;
+if (document.getElementById('urlEntry')) {
+    $('.waterfall-container').on("click", "a[data-spof]", function (e) {
+        $('#urlEntry').append('<input type="hidden" name="spof" value="' + $(this).attr("data-spof") + '"/>');
+        $('#urlEntry').attr('target', "_blank");
+        if (window.grecaptcha) {
+            grecaptcha.execute();
         } else {
-            $('#experimentForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
+            $('#urlEntry').submit();
         }
         
-    } else {
-        $('#experimentForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
-    }
-    $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
+        return false;
+    })
+    $('.waterfall-container').on("click", "a[data-block]", function (e) {
+        if ($('#experimentSettings h2').length <= 0) {
+            createExperimentSettingsBox();
+        }
+        $('#experimentSettings').removeClass('inactive');
+        if ($('#experimentForm input[name=block]').length > 0) {
+            var fieldVal = $('#experimentForm input[name=block]').val();
+            if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
+                return false;
+            }
+            else {
+                $('#experimentForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
+            }
+            
+        } else {
+            $('#experimentForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
+        }
+        $('#experimentSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
 
-    return false;
-})
-function createExperimentSettingsBox() {
-    $('#experimentSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
-    $('#experimentSettings form').prepend('<label for="label">Label</label><input type="text" name="label" />');
-}
-$('body').on("click", "a[data-remove-field]", function (e) {
-    var remove = $(this).attr('data-remove-field');
-    var fieldVal = $('#experimentForm input[name=' + remove + ']').val();
-    $('#experimentForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
-    $(this).closest('li').remove();
-    //check to see if any li, if not, hide the field
-    if ($('#experimentSettings li').length <= 0) {
-        $('#experimentSettings').addClass('inactive');
+
+        return false;
+    })
+    $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
+        if ($('#experimentSettings h2').length <= 0) {
+            createExperimentSettingsBox();
+        }
+        $('#experimentSettings').removeClass('inactive');
+        if ($('#experimentForm input[name=blockDomains]').length > 0) {
+            var fieldVal = $('#experimentForm input[name=blockDomains]').val();
+            if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
+                return false;
+            } else {
+                $('#experimentForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
+            }
+            
+        } else {
+            $('#experimentForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
+        }
+        $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
+
+        return false;
+    })
+    function createExperimentSettingsBox() {
+        $('#experimentSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
+        $('#experimentSettings form').prepend('<label for="label">Label</label><input type="text" name="label" />');
     }
-    return false;
-})
+    $('body').on("click", "a[data-remove-field]", function (e) {
+        var remove = $(this).attr('data-remove-field');
+        var fieldVal = $('#experimentForm input[name=' + remove + ']').val();
+        $('#experimentForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
+        $(this).closest('li').remove();
+        //check to see if any li, if not, hide the field
+        if ($('#experimentSettings li').length <= 0) {
+            $('#experimentSettings').addClass('inactive');
+        }
+        return false;
+    })
+}
