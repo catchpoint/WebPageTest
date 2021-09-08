@@ -353,7 +353,7 @@ footer ul li{
 .testinfo_artifacts-list{
     padding: .2em 0;
     background: #fff;
-    width: 100%;
+    min-width: 100%;
 }
 .testinfo_artifacts-list li{
     white-space: nowrap;
