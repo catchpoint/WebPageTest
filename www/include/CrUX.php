@@ -113,7 +113,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3 class="cruxlabel">Chrome Field Data';
+        echo '<h3 class="cruxlabel">Real User Data from <abbr title="Chrome User Experience Report">CrUX</abbr></h3>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> This test';
             if ($includeLabels) {
