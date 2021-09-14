@@ -96,6 +96,15 @@ function SelectRequest(step, request) {
     if (wptRequestData[stepLabel][request - 1] !== undefined) {
         var r = wptRequestData[stepLabel][request - 1];
         json = JSON.stringify(r, null, 4);
+        const PRIORITY_MAP = {
+            'VeryHigh': 'Highest',
+            'HIGHEST': 'Highest',
+            'MEDIUM': 'High',
+            'LOW': 'Medium',
+            'LOWEST': 'Low',
+            'IDLE': 'Lowest',
+            'VeryLow': 'Lowest'
+        }
         if (r['full_url'] !== undefined) {
             if (wptNoLinks) {
                 details += '<b>URL:</b> ' + htmlEncode(r['full_url']) + '<br>';
@@ -121,8 +130,16 @@ function SelectRequest(step, request) {
             details += '<b>Location: </b>' + htmlEncode(r['location']) + '<br>';
         if (r['responseCode'] !== undefined)
             details += '<b>Error/Status Code: </b>' + htmlEncode(r['responseCode']) + '<br>';
-        if (r['priority'] !== undefined && r['priority'].length > 0)
-            details += '<b>Priority: </b>' + htmlEncode(r['priority']) + '<br>';
+        const initial_priority = PRIORITY_MAP[r['initial_priority']] || r['initial_priority'];
+        const requested_priority = PRIORITY_MAP[r['priority']] || r['priority'];
+        if (requested_priority !== undefined && requested_priority.length > 0) {
+            if (initial_priority !== undefined && initial_priority.length > 0 && initial_priority != requested_priority) {
+                details += '<b>Initial Priority: </b>' + htmlEncode(initial_priority) + '<br>';
+                details += '<b>Requested Priority: </b>' + htmlEncode(requested_priority) + '<br>';
+            } else {
+                details += '<b>Priority: </b>' + htmlEncode(requested_priority) + '<br>';
+            }
+        }
         if (r['protocol'] !== undefined)
             details += '<b>Protocol: </b>' + htmlEncode(r['protocol']) + '<br>';
         if (r['http2_stream_id'] !== undefined && r['http2_stream_id'] > 0) {
