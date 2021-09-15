@@ -39,14 +39,15 @@ $page_description = "Website speed test custom waterfall$testLabel";
             $tab = null;
             include 'header.inc';
             ?>
-            <h1>Generate a Custom Waterfall</h1>
-            <div class="box customwaterfall_settings">
-                <h2 class="customwaterfall_settings_hed">Waterfall Settings</h2>
-                <form name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
-                    <fieldset>
-                        <legend>Chart Type</legend>
-                            <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
-                            <label><input type="radio" name="type" value="connection"> Connection View</label>
+            <div class="customwaterfall_hed">
+                <h1>Generate a Custom Waterfall</h1>
+                <details open class="box customwaterfall_settings">
+                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed">Waterfall Settings</summary>
+                    <form aria-labelledby="customwaterfall_settings_title" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
+                        <fieldset>
+                            <legend>Chart Type</legend>
+                                <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
+                                <label><input type="radio" name="type" value="connection"> Connection View</label>
                         </fieldset>
                         <fieldset>
                             <legend>Chart Coloring</legend>
@@ -58,8 +59,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
                             <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
                             <label>Requests <em>(i.e. 1,2,3,4-9,8)</em>: <input id="requests" type="text" name="requests" value=""></label>
                         </fieldset>
-                        <details>
-                            <summary>Show/Hide Extras</summary>
+                        <fieldset>
+                            <legend>Show/Hide Extras</legend>
                             <label><input id="showUT" type="checkbox" checked>Lines for User Timing Marks</label>
                             <label><input id="showCPU" type="checkbox" checked>CPU Utilization</label>
                             <label><input id="showBW" type="checkbox" checked>Bandwidth Utilization</label>
@@ -68,9 +69,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
                             <label><input id="showChunks" type="checkbox" checked>Download chunks</label>
                             <label><input id="showJS" type="checkbox" checked>JS Execution chunks</label>
                             <label><input id="showWait" type="checkbox" checked>Wait Time</label>
-                        </details>
+                         </fieldset>
                         <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
-                </form>
+                    </form>
+                </details>
             </div>
             <div class="box">
                 

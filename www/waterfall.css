@@ -177,25 +177,51 @@ div.bar {
 /* custom waterfall settings */
 
 @media (min-width: 60em) {
+    .customwaterfall_hed {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
     .customwaterfall_settings {
-        position: fixed;
-        overflow: auto;
-        right: 1vw;
-        top: 20vh;
-        bottom: 1vh;
-        width: 20vw;
-        background: rgba(18, 29, 53, .9);
-        color: #fff;
+        padding: 1.3rem 2rem;
+        transition: all .5s ease-out;
+        border: 1px solid transparent;
+        box-shadow: none;
+        background: transparent;
+        margin: 0;
+    }
+    .customwaterfall_settings:hover,
+    .customwaterfall_settings:focus-within {
+        border-color: #ccc;
+    }
+    
+    .customwaterfall_settings[open] {
         border: 1px solid #2F80ED;
         box-shadow: 0 0 30px rgb(47 128 237 / 50%);
+        background: rgba(18, 29, 53, .9);
+        color: #fff;
+        min-height: 20rem;
+        position: fixed;
+        z-index: 999;
+        right: 2vw;
+        top: auto;
+        width: 20vw;
+    }
+    .customwaterfall_settings form {
+        overflow: auto;
+        max-height: 65vh;
+        min-height: 20rem;
     }
 }
 .customwaterfall_settings_hed {
     font-size: .9rem;
-    margin: 0 0 .8rem;
-    font-weight: normal;
-    padding: 0 0 .8em;
+    font-weight: bold;
+    cursor: pointer;
+}
+.customwaterfall_settings[open] .customwaterfall_settings_hed {
     border-bottom: 1px solid rgba(255,255,255,.2);
+    margin: 0 0 .8rem;
+    padding: 0 0 .8em;
 }
 .customwaterfall_settings fieldset {
     border: 0;
@@ -207,9 +233,6 @@ div.bar {
     margin: 0;
     display: block;
     padding: 0;
-}
-.customwaterfall_settings summary {
-    font-weight: bold;
 }
 .customwaterfall_settings label,
 .customwaterfall_settings label input[type=text] {
