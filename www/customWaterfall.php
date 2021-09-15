@@ -26,10 +26,11 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
         <style>
             div.bar {
-            height:20px;
-            margin-top:auto;
-            margin-bottom:auto;
-        }
+                height:20px;
+                margin-top:auto;
+                margin-bottom:auto;
+            }
+            
             <?php include "waterfall.css";?>
         </style>
     </head>
@@ -39,26 +40,36 @@ $page_description = "Website speed test custom waterfall$testLabel";
             include 'header.inc';
             ?>
             <h1>Generate a Custom Waterfall</h1>
-            <div class="box">
+            <div class="box customwaterfall_settings">
+                <h2 class="customwaterfall_settings_hed">Waterfall Settings</h2>
                 <form name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
-                    Chart Type:
-                        <label><input type="radio" name="type" value="waterfall" checked="checked">Waterfall</label>
-                     &nbsp; <label><input type="radio" name="type" value="connection"> Connection View</label><br>
-                    Chart Coloring:
-                        <label><input type="radio" name="coloring" value="classic"> Classic</label>
-                     &nbsp; <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label><br>
-                     <label>Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)</label><br>
-                     <label>Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)</label><br>
-                     <label>Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value=""></label>
-                    <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
-                    <label><input id="showUT" type="checkbox" checked> Draw lines for User Timing Marks</label>
-                    <label><input id="showCPU" type="checkbox" checked> Show CPU Utilization</label>
-                    <label><input id="showBW" type="checkbox" checked> Show Bandwidth Utilization</label> <br>
-                    <label><input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items</label>
-                    <label><input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)</label>
-                    <label><input id="showChunks" type="checkbox" checked> Show download chunks</label>
-                    <label><input id="showJS" type="checkbox" checked> Show JS Execution chunks</label>
-                    <label><input id="showWait" type="checkbox" checked> Show Wait Time</label>
+                    <fieldset>
+                        <legend>Chart Type</legend>
+                            <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
+                            <label><input type="radio" name="type" value="connection"> Connection View</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Chart Coloring</legend>
+                            <label><input type="radio" name="coloring" value="classic"> Classic</label>
+                            <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label>
+                        </fieldset> 
+                        <fieldset>
+                            <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="930"></label>
+                            <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
+                            <label>Requests <em>(i.e. 1,2,3,4-9,8)</em>: <input id="requests" type="text" name="requests" value=""></label>
+                        </fieldset>
+                        <details>
+                            <summary>Show/Hide Extras</summary>
+                            <label><input id="showUT" type="checkbox" checked>Lines for User Timing Marks</label>
+                            <label><input id="showCPU" type="checkbox" checked>CPU Utilization</label>
+                            <label><input id="showBW" type="checkbox" checked>Bandwidth Utilization</label>
+                            <label><input id="showDots" type="checkbox" checked>Ellipsis (...) for missing items</label>
+                            <label><input id="showLabels" type="checkbox" checked>Labels for requests (URL)</label>
+                            <label><input id="showChunks" type="checkbox" checked>Download chunks</label>
+                            <label><input id="showJS" type="checkbox" checked>JS Execution chunks</label>
+                            <label><input id="showWait" type="checkbox" checked>Wait Time</label>
+                        </details>
+                        <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
                 </form>
             </div>
             <div class="box">

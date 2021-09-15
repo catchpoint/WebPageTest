@@ -173,3 +173,59 @@ div.bar {
 #experimentSettings input[type="text"] {
     margin-bottom: 1em;
 }
+
+/* custom waterfall settings */
+
+@media (min-width: 60em) {
+    .customwaterfall_settings {
+        position: fixed;
+        overflow: auto;
+        right: 1vw;
+        top: 20vh;
+        bottom: 1vh;
+        width: 20vw;
+        background: rgba(18, 29, 53, .9);
+        color: #fff;
+        border: 1px solid #2F80ED;
+        box-shadow: 0 0 30px rgb(47 128 237 / 50%);
+    }
+}
+.customwaterfall_settings_hed {
+    font-size: .9rem;
+    margin: 0 0 .8rem;
+    font-weight: normal;
+    padding: 0 0 .8em;
+    border-bottom: 1px solid rgba(255,255,255,.2);
+}
+.customwaterfall_settings fieldset {
+    border: 0;
+    padding: .3rem 0 0;
+    margin: 0 0 1rem;
+}
+.customwaterfall_settings legend {
+    font-weight: bold;
+    margin: 0;
+    display: block;
+    padding: 0;
+}
+.customwaterfall_settings summary {
+    font-weight: bold;
+}
+.customwaterfall_settings label,
+.customwaterfall_settings label input[type=text] {
+    display: block;
+    margin-bottom: .5rem;
+}
+.customwaterfall_settings label input[type=text] {
+    margin: .2rem 0 1rem;
+}
+.customwaterfall_settings label em {
+    font-size: .8em;
+}
+.customwaterfall_settings label {
+    margin: .3rem 0 .5rem;
+    line-height: 1.2
+}
+.customwaterfall_settings button {
+    display: none; /* necessary button? does non-js work anyway? */
+}
