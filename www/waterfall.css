@@ -258,6 +258,9 @@ div.bar {
     position: absolute;
     right: 0;
 }
+.customwaterfall_download {
+    margin: 3rem 0;
+}
 /* at 60em and up, the settings are displayed as a fixed panel */
 @media (min-width: 60em) {
     .customwaterfall_hed {
