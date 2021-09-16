@@ -26,10 +26,11 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
         <style>
             div.bar {
-            height:20px;
-            margin-top:auto;
-            margin-bottom:auto;
-        }
+                height:20px;
+                margin-top:auto;
+                margin-bottom:auto;
+            }
+            
             <?php include "waterfall.css";?>
         </style>
     </head>
@@ -38,28 +39,40 @@ $page_description = "Website speed test custom waterfall$testLabel";
             $tab = null;
             include 'header.inc';
             ?>
-            <h1>Generate a Custom Waterfall</h1>
-            <div class="box">
-                <form name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
-                    Chart Type:
-                        <label><input type="radio" name="type" value="waterfall" checked="checked">Waterfall</label>
-                     &nbsp; <label><input type="radio" name="type" value="connection"> Connection View</label><br>
-                    Chart Coloring:
-                        <label><input type="radio" name="coloring" value="classic"> Classic</label>
-                     &nbsp; <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label><br>
-                     <label>Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)</label><br>
-                     <label>Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)</label><br>
-                     <label>Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value=""></label>
-                    <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
-                    <label><input id="showUT" type="checkbox" checked> Draw lines for User Timing Marks</label>
-                    <label><input id="showCPU" type="checkbox" checked> Show CPU Utilization</label>
-                    <label><input id="showBW" type="checkbox" checked> Show Bandwidth Utilization</label> <br>
-                    <label><input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items</label>
-                    <label><input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)</label>
-                    <label><input id="showChunks" type="checkbox" checked> Show download chunks</label>
-                    <label><input id="showJS" type="checkbox" checked> Show JS Execution chunks</label>
-                    <label><input id="showWait" type="checkbox" checked> Show Wait Time</label>
-                </form>
+            <div class="customwaterfall_hed">
+                <h1>Generate a Custom Waterfall</h1>
+                <details open class="box customwaterfall_settings">
+                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
+                    <form aria-labelledby="customwaterfall_settings_title" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
+                        <fieldset>
+                            <legend>Chart Type</legend>
+                                <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
+                                <label><input type="radio" name="type" value="connection"> Connection View</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Chart Coloring</legend>
+                            <label><input type="radio" name="coloring" value="classic"> Classic</label>
+                            <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label>
+                        </fieldset> 
+                        <fieldset>
+                            <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="930"></label>
+                            <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
+                            <label>Requests <em>(i.e. 1,2,3,4-9,8)</em>: <input id="requests" type="text" name="requests" value=""></label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Show/Hide Extras</legend>
+                            <label><input id="showUT" type="checkbox" checked>Lines for User Timing Marks</label>
+                            <label><input id="showCPU" type="checkbox" checked>CPU Utilization</label>
+                            <label><input id="showBW" type="checkbox" checked>Bandwidth Utilization</label>
+                            <label><input id="showDots" type="checkbox" checked>Ellipsis (...) for missing items</label>
+                            <label><input id="showLabels" type="checkbox" checked>Labels for requests (URL)</label>
+                            <label><input id="showChunks" type="checkbox" checked>Download chunks</label>
+                            <label><input id="showJS" type="checkbox" checked>JS Execution chunks</label>
+                            <label><input id="showWait" type="checkbox" checked>Wait Time</label>
+                         </fieldset>
+                        <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
+                    </form>
+                </details>
             </div>
             <div class="box">
                 
@@ -72,7 +85,9 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                 if( FRIENDLY_URLS )
                     $extension = 'png';
                 echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">";
-            ?>
+                echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
+
+?>
             </div>
             <?php include('footer.inc'); ?>
         
@@ -92,13 +107,8 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                     UpdateWaterfall();
                 });
 
-                $("input[name=coloring]").click(function(){
-                    UpdateWaterfall();
-                });
-
-                $("input[type=checkbox]").click(function(){
-                    UpdateWaterfall();
-                });
+                $("input[name=coloring], input[type=checkbox]").click( UpdateWaterfall );
+                $("input[type=text]").on( "input", UpdateWaterfall );
 
                 // reset the wait cursor when the image loads
                 $('#waterfallImage').load(function(){

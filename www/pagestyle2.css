@@ -101,6 +101,7 @@ a.pill{
     padding: 0.6875em 1.4375em;
     line-height: 1em;
     text-decoration: none;
+    color: #fff;
 }
 .home a {color: #fff;}
 img {border: none;}
