@@ -42,7 +42,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
             <div class="customwaterfall_hed">
                 <h1>Generate a Custom Waterfall</h1>
                 <details open class="box customwaterfall_settings">
-                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed">Waterfall Settings</summary>
+                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed"><i class="icon_plus"></i>Waterfall Settings</summary>
                     <form aria-labelledby="customwaterfall_settings_title" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                         <fieldset>
                             <legend>Chart Type</legend>
@@ -105,13 +105,8 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                     UpdateWaterfall();
                 });
 
-                $("input[name=coloring]").click(function(){
-                    UpdateWaterfall();
-                });
-
-                $("input[type=checkbox]").click(function(){
-                    UpdateWaterfall();
-                });
+                $("input[name=coloring], input[type=checkbox]").click( UpdateWaterfall );
+                $("input[type=text]").on( "input", UpdateWaterfall );
 
                 // reset the wait cursor when the image loads
                 $('#waterfallImage').load(function(){

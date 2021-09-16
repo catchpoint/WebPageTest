@@ -175,44 +175,6 @@ div.bar {
 }
 
 /* custom waterfall settings */
-
-@media (min-width: 60em) {
-    .customwaterfall_hed {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    }
-    .customwaterfall_settings {
-        padding: 1.3rem 2rem;
-        transition: all .5s ease-out;
-        border: 1px solid transparent;
-        box-shadow: none;
-        background: transparent;
-        margin: 0;
-    }
-    .customwaterfall_settings:hover,
-    .customwaterfall_settings:focus-within {
-        border-color: #ccc;
-    }
-    
-    .customwaterfall_settings[open] {
-        border: 1px solid #2F80ED;
-        box-shadow: 0 0 30px rgb(47 128 237 / 50%);
-        background: rgba(18, 29, 53, .9);
-        color: #fff;
-        min-height: 20rem;
-        position: fixed;
-        z-index: 999;
-        right: 2vw;
-        top: auto;
-        width: 20vw;
-    }
-    .customwaterfall_settings form {
-        overflow: auto;
-        max-height: 65vh;
-        min-height: 20rem;
-    }
-}
 .customwaterfall_settings_hed {
     font-size: .9rem;
     font-weight: bold;
@@ -251,4 +213,91 @@ div.bar {
 }
 .customwaterfall_settings button {
     display: none; /* necessary button? does non-js work anyway? */
+}
+.customwaterfall_settings_hed {
+    list-style-type: none;
+}
+.customwaterfall_settings_hed::-webkit-details-marker {
+    display: none;
+}
+.customwaterfall_settings_hed {
+    position: relative;
+    display: flex;
+    gap: .5rem;
+}
+.customwaterfall_settings_hed .icon_plus {
+    background: rgba(255,255,255,1);
+    border-radius: 100%;
+    display: inline-block;
+    width: 1.3em;
+    height: 1.3em;
+    position: relative;
+}
+.customwaterfall_settings_hed .icon_plus:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    margin-top: -.1rem;
+    left: 25%;
+    right: 25%;
+    height: .2em;
+    background: #555;
+}
+.customwaterfall_settings_hed .icon_plus:after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    margin-left: -.1rem;
+    top: 25%;
+    bottom: 25%;
+    width: .2em;
+    background: #555;
+}
+.customwaterfall_settings[open] > .customwaterfall_settings_hed .icon_plus {
+    transform: rotate(45deg);
+    position: absolute;
+    right: 0;
+}
+/* at 60em and up, the settings are displayed as a fixed panel */
+@media (min-width: 60em) {
+    .customwaterfall_hed {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .customwaterfall_settings {
+        padding: 1rem 1.5rem;
+        transition: all .5s ease-out;
+        border: 1px solid transparent;
+        box-shadow: none;
+        background: transparent;
+        margin: 0;
+        font-size: .9rem;
+    }
+    .customwaterfall_settings:hover,
+    .customwaterfall_settings:focus-within {
+        border: 1px solid #2F80ED;
+        box-shadow: 0 0 30px rgb(47 128 237 / 50%);
+    }
+    .customwaterfall_settings:focus-within summary:focus {
+        outline: none;
+    }
+    .customwaterfall_settings[open] {
+        border: 1px solid #2F80ED;
+        box-shadow: 0 0 30px rgb(47 128 237 / 50%);
+        background: rgba(18, 29, 53, .9);
+        color: #fff;
+        min-height: 20rem;
+        position: fixed;
+        z-index: 999;
+        right: 2vw;
+        top: auto;
+        width: 20vw;
+        max-width: 20rem;
+    }
+    .customwaterfall_settings form {
+        overflow: auto;
+        max-height: 65vh;
+        min-height: 20rem;
+    }
 }
