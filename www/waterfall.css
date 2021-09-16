@@ -220,7 +220,7 @@ div.bar {
 .customwaterfall_settings_hed::-webkit-details-marker {
     display: none;
 }
-.customwaterfall_settings_hed {
+.customwaterfall_settings_hed > span {
     position: relative;
     display: flex;
     gap: .5rem;
