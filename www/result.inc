@@ -129,15 +129,14 @@ $page_description = "Website performance test result$testLabel.";
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
 
-                        // if TTFB is extra slow, perhaps something fishy is going on with the site's bot detection.
-                        // Show a message that offers an option to re-run with a default UA
-                        $slowttfb_threshold = 3000;
-                        // TODO: The following array lookup is placeholder! 
-                        // We need a public function to get median TTFB here in a stable manner instead.
-                        if( $pageData[1][0][ "TTFB" ] > $slowttfb_threshold ) { 
+                        // if TTFB is extra slow (all runs had a ttfb greater than thresold below), then perhaps a site/cdn is purposefully slowing responsse times for bots.
+                        // Show a message that offers an option to re-run the tests with a default UA
+                        $slowttfbThreshold = 3000;
+                        $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
+                        if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold ) { 
                           echo <<<EOT
                             <details>
-                              <summary>Note! This test had an unusually high first-byte time. Check for accuracy...</summary> 
+                              <summary><strong>Note:</strong> This test had an unusually-high first-byte time. Check for accuracy...</summary> 
                               <div>
                               <p>Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
                               <p><label><input type="checkbox" name="keepua"> Preserve original User Agent string in re-run</label></p>

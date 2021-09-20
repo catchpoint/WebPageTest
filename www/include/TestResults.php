@@ -316,7 +316,7 @@ class TestResults {
     return $runResults;
   }
 
-  private function getMetricFromRuns($metric, $cached, $successfulOnly) {
+  public function getMetricFromRuns($metric, $cached, $successfulOnly) {
     $values = array();
     foreach ($this->filterRunResults($cached, $successfulOnly) as $run) {
       $value = $run->aggregateMetric($metric, $successfulOnly);
