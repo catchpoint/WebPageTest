@@ -128,6 +128,23 @@ $page_description = "Website performance test result$testLabel.";
                           $hmac = sha1($hashStr);
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
+
+                        // if TTFB is extra slow, perhaps something fishy is going on with the site's bot detection.
+                        // Show a message that offers an option to re-run with a default UA
+                        $slowttfb_threshold = 3000;
+                        // TODO: The following array lookup is placeholder! 
+                        // We need a public function to get median TTFB here in a stable manner instead.
+                        if( $pageData[1][0][ "TTFB" ] > $slowttfb_threshold ) { 
+                          echo <<<EOT
+                            <details>
+                              <summary>Note! This test had an unusually high first-byte time. Check for accuracy...</summary> 
+                              <div>
+                              <p>Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
+                              <p><label><input type="checkbox" name="keepua"> Preserve original User Agent string in re-run</label></p>
+                            </details>
+                          EOT;
+                        }
+
                         if (strlen($siteKey)) {
                           echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha\">Re-run the test</button>";
                         } else {

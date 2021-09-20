@@ -329,7 +329,7 @@ footer ul li{
 }
 .testinfo_command-bar {
     display: grid;
-    grid-template-columns: 1fr 1fr 4fr;
+    grid-template-columns: 1fr 4fr 1fr;
     margin-bottom: 1em;
     background: #f9f9f9;
     margin: -1.25em -1.875em 0 -1.875em;
@@ -350,6 +350,12 @@ footer ul li{
 }
 .testinfo_meta, .testinfo_forms {
     padding: 1em 0;
+}
+.testinfo_forms summary {
+    font-weight: bold;
+}
+.testinfo_forms details {
+    margin-bottom: 1rem;
 }
 .testinfo_artifacts-list{
     padding: .2em 0;
