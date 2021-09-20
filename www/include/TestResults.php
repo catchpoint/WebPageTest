@@ -316,6 +316,11 @@ class TestResults {
     return $runResults;
   }
 
+  /**
+   * @param string $metric Name of the metric to consider
+   * @param bool $cached False if first views should be considered for selecting, true for repeat views
+   * @param bool $successfulOnly True if only successful runs should be returned
+   */
   public function getMetricFromRuns($metric, $cached, $successfulOnly) {
     $values = array();
     foreach ($this->filterRunResults($cached, $successfulOnly) as $run) {
