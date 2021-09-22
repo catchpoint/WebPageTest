@@ -22,7 +22,7 @@ body {
     margin: 0 0 40px;
     color: #111;
     font: 100%/1.4em 'Open Sans', sans-serif;
-    background-color: #F4F4F4;
+    background-color: #fff;
     grid-column-gap: 1.25em;
     grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, minmax(0, 1fr)) calc(50vw - 45em) [gutter-end];
     width: 100%;

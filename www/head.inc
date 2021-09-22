@@ -24,6 +24,7 @@ if( strlen($page_description) )
          url('/fonts/opensans-light-webfont.woff') format('woff');
     font-weight: 300;
     font-style: normal;
+    font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
@@ -31,6 +32,7 @@ if( strlen($page_description) )
          url('/fonts/opensans-regular-webfont.woff') format('woff');
     font-weight: 500;
     font-style: normal;
+    font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
@@ -38,6 +40,7 @@ if( strlen($page_description) )
          url('/fonts/opensans-bold-webfont.woff') format('woff');
     font-weight: 700;
     font-style: normal;
+    font-display: swap;
 }
 </style>
 <?php 
