@@ -16,6 +16,30 @@ if( strlen($page_description) )
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
 
+
+<style>
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-light-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-light-webfont.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-regular-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-regular-webfont.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-bold-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-bold-webfont.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+</style>
 <?php 
     if(!isset($noanalytics) && extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_header();
