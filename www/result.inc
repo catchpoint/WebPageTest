@@ -187,7 +187,8 @@ $page_description = "Website performance test result$testLabel.";
                 if ($fvMedian)
                 {
                     if ($testResults->countRuns() > 1)
-                        echo '<h2>Performance Results (Median Run - ' . htmlspecialchars($median_metric) . ')</h2>';
+                        echo '<h2>Performance Results</h2>';
+                        echo '<h3 class="hed_sub">Median Run based on ' . htmlspecialchars($median_metric) . '</h3>';
                     $fvRunResults = $testResults->getRunResult($fvMedian, false);
                     $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
@@ -202,7 +203,7 @@ $page_description = "Website performance test result$testLabel.";
                     echo $resultTable->create();
 
                     if ($testResults->countRuns() > 1) {
-                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\">Plot Full Results</a>";
+                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
                     }
                     ?>
                     <br>
@@ -246,11 +247,16 @@ $page_description = "Website performance test result$testLabel.";
             </script>
             <?php } ?>
             <div id="tables" style="text-align:left;">
+            <h3 class="hed_sub">Individual Runs</h3>
+
+            <div class="scrollableTable">
+
             <?php
             $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpView);
             echo $resultTables->create();
             ?>
+            </div>
             </div>
             </div>
 

@@ -30,7 +30,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 			.indented2 {padding-left: 80pt;}
             h1
             {
-                font-size: larger;
+                /* font-size: larger; */
             }
 
             #opt

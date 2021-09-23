@@ -60,7 +60,6 @@ if ($alert) {
                 $resultUrl = "/result/$id/";
         }
         if (!isset($navTabs) || !count($navTabs)) {
-            $navTabs = array(  'Home' => '/' );
 
             if (!GetSetting('disableTestlog')) {
               $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
@@ -179,7 +178,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         }
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
         $firstRunResults = $testResults->getRunResult(1, false);
-        echo '<div id="header_container" class="box">';
+        echo '<div id="header_container">';
         // Only include optimization data for normal tests
         $data_class = '';
         if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
