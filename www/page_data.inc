@@ -101,7 +101,6 @@ function loadPageStepData($localPaths, $testInfo = null) {
     }
     //set top level FCP
     TopLevelFCP($ret);
-    
     if (!empty($ret) && !$basic_results) {
       $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
       loadUserTimingData($ret, $localPaths->userTimedEventsFile());
@@ -1091,6 +1090,25 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
             }
           }
         }
+        //let's grab the element timing stuff while we're here to avoid a separate loop
+        if (is_array($event) &&
+            isset($event['name']) &&
+            isset($event['ts']) &&
+            isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
+            $event['name'] === 'PerformanceElementTiming') {                
+              if (!isset($page_data['elementTiming'])) {
+                $page_data['elementTiming'] = array();
+              }
+              $elementTimingArr = array();
+              $elementTimingArr['identifier'] = $event['args']['data']['identifier'];
+              $elementTimingArr['time'] = $event['args']['data']['renderTime'];
+              $elementTimingArr['elementType'] = $event['args']['data']['elementType'];
+              $elementTimingArr['url'] = $event['args']['data']['url'];
+
+              $page_data['elementTiming'][] = $elementTimingArr;
+              $page_data['elementTiming.' . $event['args']['data']['identifier']] = $event['args']['data']['renderTime'];
+
+            }
       }
 
       $total_layout_shift = null;
