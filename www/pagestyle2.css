@@ -79,7 +79,10 @@ header .logo img {
 
 @media screen and (min-width:60em) {
     header .logo {
-        grid-column: 2 / 6;
+        grid-column: 1 / 7;
+        border-bottom: 1px solid rgba(255, 255, 255, .3);
+        padding-bottom: 1.5rem;
+        margin-bottom: 0;
     }
 }
 
@@ -88,6 +91,9 @@ header .logo img {
         grid-column: 2/4;
         align-self: center;
         justify-self: left;
+        padding-bottom: 0;
+        margin-bottom: 1em;
+        border: 0;
     }
     header .logo img {
         width: 12rem;
@@ -327,7 +333,7 @@ footer {
 
 footer ul {
     gap: 1rem;
-    color: #444;
+    color: inherit;
 }
 
 footer a {
@@ -338,12 +344,10 @@ footer ul li {
     margin-bottom: 1em;
 }
 
-@media screen and (min-width: 50em) {
-    footer ul {
-        margin: auto;
-        display: flex;
-        justify-content: flex-end;
-    }
+footer ul {
+    margin: auto;
+    display: flex;
+    justify-content: flex-end;
 }
 
 
@@ -899,7 +903,7 @@ h1.attention {
     font-weight: 700;
     font-size: 2.125em;
     text-align: center;
-    margin: .4em auto 1.4em;
+    margin: .4em auto 1.1em;
     line-height: 1.4;
     padding: 0 1rem;
 }
@@ -1111,11 +1115,6 @@ body.compact #test_box-container {
     line-height: 1.3em;
 }
 
-.ui-tabs-nav li:last-child {
-    border-right: 1px solid #2F80ED;
-    border-top-right-radius: 10px;
-}
-
 .ui-tabs-nav svg {
     width: 2em;
     display: block;
@@ -1126,9 +1125,10 @@ body.compact #test_box-container {
     text-decoration: none;
     background: #395583;
     display: block;
+    font-weight: 700;
     width: 100%;
     padding: 1.1875em 1em 1.4875em;
-    border-left: 1px solid #121D35;
+    border-bottom: 1px solid #121D35;
     transition: background .1s ease-in-out;
 }
 
@@ -1150,19 +1150,21 @@ body.compact #test_box-container {
     }
 }
 
-.ui-tabs-nav li:first-child a {
-    border-left: 0px;
-}
-
-.ui-tabs-nav li:last-child a {
-    margin-right: 1px;
-}
-
 @media (min-width: 35em) {
+    .ui-tabs-nav a {
+        border-bottom: 0;
+        border-left: 1px solid #121D35;
+    }
+    .ui-tabs-nav li:last-child {
+        border-right: 1px solid #2F80ED;
+        border-top-right-radius: 10px;
+    }
     .ui-tabs-nav li:first-child a {
+        border-left: 0px;
         border-top-left-radius: 10px;
     }
     .ui-tabs-nav li:last-child a {
+        margin-right: 1px;
         border-top-right-radius: 10px;
     }
 }
