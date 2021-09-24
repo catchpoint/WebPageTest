@@ -192,7 +192,8 @@ a:not([href]) {
     color: #111;
 }
 
-a.pill {
+a.pill,
+input.pill {
     background: #1151bb;
     border-radius: 6.25em;
     padding: 0.6875em 1.4375em;
@@ -965,29 +966,71 @@ h2.light {
 
 /* Test log */
 
+.history_hed {
+    padding: 0 2rem;
+}
+
 table.history {
     border-collapse: collapse;
     font-size: 0.875em;
-    width: 100%;
+    margin: 0;
+}
+
+table.history.pretty {
+    margin: 0;
+    min-width: 100%;
 }
 
 table.history th {
-    color: #595959;
-    text-decoration: none;
-    font-weight: normal;
+    /* text-decoration: none; */
+    /* font-weight: normal; */
 }
 
-table.history thead th {
-    border-bottom: 1px solid #F1F1F1;
-    padding-bottom: 1em;
-}
+table.history thead th {}
 
 table.history tbody td {
-    padding: 1em 0;
+    padding: 1em;
 }
 
 table.history tbody tr {
-    border-bottom: 1px solid #f1f1f1;
+    /* border-bottom: 1px solid #f1f1f1; */
+}
+
+h4 {
+    text-align: center;
+}
+
+.history table {
+    text-align: left;
+}
+
+.history thead {
+    text-align: left;
+}
+
+.history th {
+    white-space: nowrap;
+    /* text-decoration: underline; */
+}
+
+.history td.date {
+    white-space: nowrap;
+}
+
+.history td.location {
+    white-space: nowrap;
+}
+
+.history td.url {
+    white-space: nowrap;
+}
+
+.history td.ip {
+    white-space: nowrap;
+}
+
+.history td.uid {
+    white-space: nowrap;
 }
 
 table.history .label b:not(:empty) {
@@ -1019,29 +1062,47 @@ form[name=filterLog] select {
     margin-bottom: 2em;
 }
 
+.history_filter {
+    margin: 1em 0;
+    border-top: 1px solid #eee;
+    padding: 1em 0;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+}
+
+form[name=filterLog] .history_filter input[type=text] {
+    width: auto;
+}
+
+.history tbody th input {
+    text-align: center;
+    display: inline-block;
+    margin: 0 auto;
+}
+
 .history-controls {
-    background: #f4f4f4;
-    border: 1px solid #c8c8c8;
-    border-width: 1px 0;
-    margin-left: -1.875em;
-    margin-right: -1.875em;
+    border-bottom: 1px solid #ddd;
     padding-left: 1.875em;
     padding-top: .5em;
     padding-bottom: .5em;
-    margin-bottom: 1em;
 }
 
 #CompareBtn {
     position: relative;
-    background: url('/images/icon-compare.svg') 0 .5em no-repeat transparent;
-    padding: .5em;
-    border: 0;
+    background: #fff url('/images/icon-compare.svg') 1em center no-repeat;
+    border-radius: 2em;
+    border: 1px solid #ddd;
+    padding: .6em 1.5em .6em 1.8em;
+    margin: .5em 0;
     text-indent: 1em;
+    display: inline-block;
     cursor: pointer;
 }
 
 #CompareBtn:hover {
-    text-decoration: underline;
+    background-color: #eee;
+    border-color: #ccc;
 }
 
 
@@ -1409,21 +1470,27 @@ a.btn-primary {
     }
 }
 
-.history .logged-out-history {
-    display: grid;
-    grid-template-columns: 4fr 12em;
-    grid-column-gap: 4em;
-    align-items: center;
-}
-
-.history .logged-out-history p {
-    margin-bottom: 0;
-}
-
 .history .logged-out-history .btn-primary {
     height: auto;
     font-size: 1em;
     text-align: center;
+    margin: 1em 0;
+    display: inline-block;
+}
+
+@media (min-width: 60em) {
+    .history .logged-out-history {
+        display: grid;
+        grid-template-columns: 4fr 12em;
+        grid-column-gap: 4em;
+        align-items: center;
+    }
+    .history .logged-out-history p {
+        margin-bottom: 0;
+    }
+    .history .logged-out-history .btn-primary {
+        margin: 0;
+    }
 }
 
 #change-location-btn {
@@ -1584,6 +1651,20 @@ a.btn-primary {
 
 body.compact .box {
     margin-bottom: 0.5em;
+}
+
+.about h1 {
+    margin-left: 3rem;
+}
+
+@media (max-width: 60em) {
+    .about h1 {
+        margin-left: 3rem;
+    }
+}
+
+.about .box {
+    padding: 3rem;
 }
 
 body.compact #header_container {

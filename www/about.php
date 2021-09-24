@@ -24,6 +24,7 @@ $page_description = "More information about WebPageTest website speed testing an
             $tab = 'About';
             include 'header.inc';
             ?>
+            <div class="about">
             <h1>About WebPageTest</h1>
             <div class="box">
                 <p>Building high quality web experiences for users is at the core of all our efforts. With WebPageTest, 
@@ -51,6 +52,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 <p>If you are having any problems or just have questions about the site, please feel free to 
                 <a href="mailto:info@webpagetest.org">contact us</a>. If you are considering sending advertising opportunities, 
                 SEO/SEM solicitations, link sharing, etc....don't. We won't respond and will mark it as spam.</p>
+            </div>
             </div>
             <?php include('footer.inc'); ?>
         </div>
