@@ -118,9 +118,14 @@ class UserTimingHtmlTable {
   private function _userTimingsForStep($stepResult) {
     $data = $stepResult->getRawResults();
     $userTimings = array();
-    foreach($data as $metric => $value)
-      if (substr($metric, 0, 9) == 'userTime.')
+    foreach($data as $metric => $value) {
+      if (substr($metric, 0, 9) == 'userTime.') {
         $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
+      }
+      if (substr($metric, 0, 14) == 'elementTiming.') {
+        $userTimings[substr($metric, 14)] = number_format($value / 1000, 3) . 's';
+      }
+    }
     if (isset($data['custom']) && count($data['custom'])) {
       foreach($data['custom'] as $metric) {
         if (isset($data[$metric]) && !is_array($data[$metric])) {

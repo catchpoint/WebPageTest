@@ -319,13 +319,20 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
     // get any user timings
     if (!isset($options['show_user_timing']) || $options['show_user_timing']) {
-      if (isset($page_data) && array_key_exists('userTime', $page_data)) {
-        foreach ($page_data as $key => $value) {
-          if (substr($key, 0, 9) == 'userTime.') {
-            $label = substr($key, 9);
-            if (!isset($user_times))
-              $user_times = array();
-            $user_times[$label] = $value;
+      if (isset($page_data)) {
+        if (array_key_exists('userTime', $page_data) || array_key_exists('elementTiming', $page_data)) {
+          foreach ($page_data as $key => $value) {
+            if (substr($key, 0, 9) == 'userTime.') {
+              $label = substr($key, 9);
+              if (!isset($user_times))
+                $user_times = array();
+              $user_times[$label] = $value;
+            } else if (substr($key, 0, 14) == 'elementTiming.') {
+              $label = substr($key, 14);
+              if (!isset($user_times))
+                $user_times = array();
+              $user_times[$label] = $value;
+            }
           }
         }
       }
