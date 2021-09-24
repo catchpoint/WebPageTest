@@ -566,6 +566,7 @@ footer ul {
     position: relative;
     border: 0;
     z-index: 200000;
+    cursor: pointer;
 }
 
 @media (max-width: 60em) {
@@ -994,10 +995,6 @@ table.history tbody td {
 
 table.history tbody tr {
     /* border-bottom: 1px solid #f1f1f1; */
-}
-
-h4 {
-    text-align: center;
 }
 
 .history table {
@@ -1647,6 +1644,7 @@ a.btn-primary {
     box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.2);
     */ padding: 1em 1em;
     margin: 1em 0;
+    padding-bottom: 2em;
 }
 
 body.compact .box {
@@ -1882,19 +1880,18 @@ body.compact #header_container {
 .grades {
     /* float: right; */
     line-height: 1.2em;
-    display: flex;
-    flex-flow: row wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    gap: 1rem;
+    grid-auto-flow: dense;
     /* max-width: 55%; */
     font-size: 0.625em;
     /* 10px */
-    gap: 1em;
     text-align: center;
-    justify-content: flex-start;
 }
 
 .grades li {
     white-space: nowrap;
-    flex: 0 0 10em;
 }
 
 .grades h2 {
@@ -1911,14 +1908,10 @@ body.compact #header_container {
 
 @media (max-width: 60em) {
     .grades {
-        gap: 1em;
-        width: 100%;
-        flex: 0 0 auto
+        grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
     }
     .grades li {
         white-space: nowrap;
-        flex: 1 0 33%;
-        max-width: 50%;
         display: flex;
         align-items: center;
         gap: .5rem;

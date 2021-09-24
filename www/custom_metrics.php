@@ -40,7 +40,7 @@ $page_description = "View Custom Metrics";
                 is_array($pageData[$run][$cached]['custom']) &&
                 count($pageData[$run][$cached]['custom'])) {
               echo '<h1>Custom Metrics</h1>';
-              echo '<table class="pretty">';
+              echo '<div class="scrollableTable"><table class="pretty">';
               foreach ($pageData[$run][$cached]['custom'] as $metric) {
                 if (array_key_exists($metric, $pageData[$run][$cached])) {
                   echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
@@ -52,7 +52,7 @@ $page_description = "View Custom Metrics";
                   echo '</td></tr>';
                 }
               }
-              echo '</table>';
+              echo '</table></div>';
             } else {
               echo '<h1>No custom metrics reported</h1>';
             }
