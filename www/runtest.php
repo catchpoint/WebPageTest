@@ -145,6 +145,9 @@
             if (isset($req_block)) {
               $test['block'] .= ' ' . $req_block;
             }
+            if (isset($req_keepua)) {
+              $test['keepua'] = 1;
+            }
             if (isset($req_blockDomains)) {
               $test['blockDomains'] .= ' ' . $req_blockDomains;
             }
