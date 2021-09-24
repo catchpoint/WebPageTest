@@ -52,6 +52,7 @@ header {
     header {
         display: grid;
         grid-template-columns: 1em repeat(4, 1fr) 1em;
+        align-items: center;
     }
 }
 
@@ -83,6 +84,7 @@ header .logo img {
         border-bottom: 1px solid rgba(255, 255, 255, .3);
         padding-bottom: 1.5rem;
         margin-bottom: 0;
+        margin-top: 1.3em;
     }
 }
 
@@ -92,7 +94,7 @@ header .logo img {
         align-self: center;
         justify-self: left;
         padding-bottom: 0;
-        margin-bottom: 1em;
+        margin: 1.3em 0;
         border: 0;
     }
     header .logo img {
