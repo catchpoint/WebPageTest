@@ -36,7 +36,8 @@ select {
 }
 
 .home {
-    background-color: #121D35;
+    background-color: #1b2a4a;
+    /* slight value variation in blues here from nav to body */
     color: #fff;
 }
 
@@ -896,15 +897,22 @@ body.compact #main {
 h1.attention {
     text-align: center;
     font-weight: 700;
-    font-size: 3.125em/*50px*/
-    ;
+    font-size: 2.125em;
     text-align: center;
     margin: .4em auto 1.4em;
+    line-height: 1.4;
+    padding: 0 1rem;
 }
 
 body.compact h1.attention {
     font-size: 2.5em;
     margin: .4em auto 1em;
+}
+
+@media (min-width: 40em) {
+    h1.attention {
+        font-size: 3.125em;
+    }
 }
 
 h2.alt {
@@ -1036,13 +1044,31 @@ form[name=filterLog] select {
 #test_box-container {
     grid-column: 3 / 10;
     border: 1px solid #2F80ED;
-    border-radius: 10px;
+    border-right-width: 0;
+    border-left-width: 0;
     box-shadow: 0 0 30px rgba(47, 128, 237, .5);
     margin-bottom: 12.5em;
 }
 
 body.compact #test_box-container {
     box-shadow: none;
+}
+
+@media (min-width: 35em) {
+    #test_box-container {
+        border-radius: 10px;
+        border-right-width: 1px;
+        border-left-width: 1px;
+        margin-right: 1rem;
+        margin-left: 1rem;
+    }
+}
+
+@media (min-width: 75em) {
+    #test_box-container {
+        margin-right: 0;
+        margin-left: 0;
+    }
 }
 
 #test_box-container .test_subbox {
@@ -1070,7 +1096,7 @@ body.compact #test_box-container {
     width: 100%;
 }
 
-@media screen and (min-width: 25em) {
+@media screen and (min-width: 35em) {
     .ui-tabs-nav {
         display: flex;
         align-items: stretch;
@@ -1125,13 +1151,20 @@ body.compact #test_box-container {
 }
 
 .ui-tabs-nav li:first-child a {
-    border-top-left-radius: 10px;
     border-left: 0px;
 }
 
 .ui-tabs-nav li:last-child a {
-    border-top-right-radius: 10px;
     margin-right: 1px;
+}
+
+@media (min-width: 35em) {
+    .ui-tabs-nav li:first-child a {
+        border-top-left-radius: 10px;
+    }
+    .ui-tabs-nav li:last-child a {
+        border-top-right-radius: 10px;
+    }
 }
 
 .ui-tabs-nav li.ui-tabs-selected a {
