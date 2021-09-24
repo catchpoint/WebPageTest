@@ -1095,10 +1095,9 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
             isset($event['name']) &&
             isset($event['ts']) &&
             isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
-            $event['name'] === 'PerformanceElementTiming') {
-              
-              if (!isset($page_data['ElementTiming'])) {
-                $page_data['ElementTiming'] = array();
+            $event['name'] === 'PerformanceElementTiming') {                
+              if (!isset($page_data['elementTiming'])) {
+                $page_data['elementTiming'] = array();
               }
               $elementTimingArr = array();
               $elementTimingArr['identifier'] = $event['args']['data']['identifier'];
@@ -1106,7 +1105,8 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data) 
               $elementTimingArr['elementType'] = $event['args']['data']['elementType'];
               $elementTimingArr['url'] = $event['args']['data']['url'];
 
-              $page_data['ElementTiming'][] = $elementTimingArr;
+              $page_data['elementTiming'][] = $elementTimingArr;
+              $page_data['elementTiming.' . $event['args']['data']['identifier']] = $event['args']['data']['renderTime'];
 
             }
       }
