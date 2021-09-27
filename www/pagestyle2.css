@@ -982,8 +982,14 @@ a.btn-primary{
 }
 input[type="submit"]:hover,
 button.start_test:hover,
-a.btn-primary{
+a.btn-primary:hover{
     background: #fbe076;
+}
+a.btn-primary-compact {
+    font-size: 1em;
+    padding: 0.3125em 1.25em;
+    display: inline-block;
+    margin: 0 1em;
 }
 @media screen and (min-width: 50em) {
     input +input[type="submit"].start_test,
@@ -1122,6 +1128,12 @@ body.compact .box {
 }
 body.compact #header_container {
     padding: 1em;
+}
+#header_container .cta-banner{
+    text-align: center;
+    font-size: .9em;
+    border-bottom: 1px solid #E9E9E9;
+    margin: -1em -2.083333333em 1.428571429em -2.083333333em;
 }
 @media screen and (min-width: 50em) {
     .box {
