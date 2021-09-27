@@ -180,6 +180,20 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
         $firstRunResults = $testResults->getRunResult(1, false);
         echo '<div id="header_container" class="box">';
+        //if not logged in, let's encourage sign-up
+        if( $supportsAuth && !defined('EMBED') )
+        {
+            if ($supportsSaml) {
+                if (!isset($USER_EMAIL) || !GetSetting('saml_account')) {
+                    ?>
+                    <div class="cta-banner">
+                        <p><strong>Save Test Results</strong> with a <strong>Free Account</strong>
+                         <a class="btn-primary btn-primary-compact" href="https://app.webpagetest.org/ui/entry/wpt/signup">Sign Up &amp; Save Test Result</a></p>
+                    </div>
+                    <?php
+                }
+            }
+        }
         // Only include optimization data for normal tests
         $data_class = '';
         if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
