@@ -70,8 +70,8 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
         .left {text-align:left;}
         .center {text-align:center;}
 
-        .indented1 {padding-left: 40pt;}
-        .indented2 {padding-left: 80pt;}
+        .indented1 {padding-left: 1rem;}
+        .indented2 {padding-left: 2rem;}
 
         td {
             white-space:nowrap;
@@ -138,6 +138,30 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
         }
         .header_details {
             display: none;
+        }
+
+        .headers_list h4 {
+          font-weight: 500;
+          font-size: .8em;
+          border-top: 1px solid #eee;
+          padding: .8rem 0;
+          line-height: 1.3;
+
+        }
+        .headers_list h4 strong {
+          display: block;
+          font-weight: 700;
+          padding: .5rem 0;
+          font-size: 1.1em;
+        }
+        .headers_list h4 strong:before {
+          content: "+";
+          width: 1em;
+          display: inline-block;
+        }
+        .headers_list h4 span[data-expanded] strong:before {
+          content: "-";
+          
         }
         .a_request {
             cursor: pointer;
@@ -320,7 +344,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                         $snippet = $requestHeadersSnippet->create();
                         if ($snippet) {
                             echo '<div id="headers">';
-                            echo '<br><hr><h3>Request Headers</h3>';
+                            echo '<hr><h3>Request Headers</h3>';
                             echo $snippet;
                             echo '</div>';
                         }
@@ -329,8 +353,9 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
             </div>
                 </div>
               
-            <?php include('footer.inc'); ?>
         </div>
+        <?php include('footer.inc'); ?>
+
         <div id="experimentSettings" class="inactive">
               <?php
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
@@ -375,10 +400,12 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
 
             if (div_to_expand.is(":visible")) {
                 div_to_expand.hide();
-                targetNode.html('+' + targetNode.html().substring(1));
+                targetNode.removeAttr("data-expanded");
+                //targetNode.html('+' + targetNode.html().substring(1));
             } else {
                 div_to_expand.show();
-                targetNode.html('-' + targetNode.html().substring(1));
+                targetNode.attr("data-expanded", "true");
+                //targetNode.html('-' + targetNode.html().substring(1));
             }
           }
         }

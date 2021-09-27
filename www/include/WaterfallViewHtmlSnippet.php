@@ -103,7 +103,7 @@ class WaterfallViewHtmlSnippet {
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 4);
     if ($show_ut && $this->stepResult->getMetric('userTime'))
       $out .= '<td><div class="arrow-down"></div>User Timings</td>';
-    $out .= "</tr>\n</table>\n<br>";
+    $out .= "</tr>\n</table>\n";
     $out .= '<table class="waterfall-legend" cellspacing="0">';
     $out .= "\n<tr>\n";
     $out .= $this->_legendImageTableCell("/images/render-block-icon.png", "Render Blocking Resource", 4);
@@ -111,7 +111,7 @@ class WaterfallViewHtmlSnippet {
     $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
     $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
     $out .= $this->_legendTextTableCell("#3030ff", "Doesn't Belong to Main Doc");
-    $out .= "</tr>\n</table>\n<br>";
+    $out .= "</tr>\n</table>\n";
     return $out;
   }
 }

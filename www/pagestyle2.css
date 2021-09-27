@@ -1661,7 +1661,8 @@ body.compact .box {
     }
 }
 
-.about .box {
+.about .box,
+.video .box {
     padding: 3rem;
 }
 
@@ -1881,7 +1882,7 @@ body.compact #header_container {
     /* float: right; */
     line-height: 1.2em;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
     gap: 1rem;
     grid-auto-flow: dense;
     /* max-width: 55%; */
@@ -2464,7 +2465,7 @@ table.glossary th {
 
 .waterfall-legend {
     font-size: 0.6875em;
-    margin: auto;
+    margin: 1em auto;
 }
 
 .waterfall-legend,
@@ -2498,4 +2499,32 @@ table.glossary th {
     border-top: 10px solid #69009E;
     position: relative;
     top: .5em;
+}
+
+@media (max-width: 1012px) {
+    .waterfall-legend {
+        margin: 0;
+        border: 0;
+    }
+    .waterfall-legend tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    .waterfall-legend tbody td {
+        padding: .5rem .5rem .5rem 0;
+        border: 0;
+    }
+    div.waterfall-container {
+        position: relative;
+        left: 0;
+        top: 0;
+        clear: both;
+        text-align: left;
+        width: 100% !important;
+        margin: auto;
+        overflow: auto;
+    }
+    div.waterfall-container img.waterfall-image {
+        width: 1012px;
+    }
 }
