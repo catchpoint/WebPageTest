@@ -75,7 +75,7 @@ header .logo {
 
 header .logo img {
     width: 15em;
-    max-width: 100%;
+    max-width: 50vw;
 }
 
 @media screen and (min-width:60em) {

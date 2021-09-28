@@ -90,7 +90,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
         }
         table.details th, table.details td {
           border: 1px silver solid;
-          padding: 0.2em;
+          padding: 0.5em;
           text-align: center;
           font-size: smaller;
         }
@@ -138,6 +138,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
         }
         .header_details {
             display: none;
+            font-size: .9em
         }
 
         .headers_list h4 {

@@ -196,8 +196,8 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createLegendCell($color, $label) {
-    $out = '<td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:' . $color . '"></div></td>';
-    $out .= "<td>" . $label . "</td></tr></tbody></table></td>\n";
+    $out = '<td><div class="bar" style="display: inline-block; width:15px; background-color:' . $color . '"></div>';
+    $out .= "" . $label . "</td>\n";
     return $out;
   }
 
