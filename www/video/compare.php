@@ -309,7 +309,6 @@ else
                     background: #296ee1;
                 }
                 <?php
-                include "waterfall.css";
                 if (defined('EMBED')) {
                 ?>
                 #location {display: none;}

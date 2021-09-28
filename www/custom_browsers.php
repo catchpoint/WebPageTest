@@ -77,15 +77,6 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php include ('head.inc'); ?>
-        <style type="text/css">
-        .browsers td {
-          text-align: left !important;
-          padding-right: 20px !important;
-        }
-        .browsers {
-          margin-left: 0 !important;
-        }
-        </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
         <div class="page">

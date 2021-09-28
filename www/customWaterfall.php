@@ -24,17 +24,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
     <head>
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
-        <style>
-            div.bar {
-                height:20px;
-                margin-top:auto;
-                margin-bottom:auto;
-            }
-            
-            <?php include "waterfall.css";?>
-        </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-waterfall" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = null;
             include 'header.inc';
@@ -84,7 +75,7 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">";
+                echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\"></div>";
                 echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
 
 ?>

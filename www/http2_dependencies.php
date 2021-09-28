@@ -150,17 +150,7 @@ function get_short_path($path) {
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-    <style type="text/css">
-      .chart_node {
-          text-align: center;
-          vertical-align: middle;
-          font-family: arial,helvetica;
-          cursor: default;
-          border: 2px solid #b5d9ea;
-          background-color: #edf7ff;
-          white-space: nowrap;
-      }
-    </style>
+    
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
       google.charts.load('current', {packages:["orgchart"]});

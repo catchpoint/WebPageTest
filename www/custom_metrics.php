@@ -14,15 +14,8 @@ $page_description = "View Custom Metrics";
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php include ('head.inc'); ?>
-        <style>
-        table.pretty td, table.pretty th {
-            overflow: hidden;
-            text-align: left;
-            max-width: 800px;
-        }
-        </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-metrics" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = 'Test Result';
             include 'header.inc';

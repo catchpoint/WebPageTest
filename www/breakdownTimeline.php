@@ -17,44 +17,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
     <head>
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
-        <style type="text/css">
-            div.table table {
-              max-width: 300px;
-              vertical-align:top;
-            }
-
-            div.table td {
-                max-width: 250px;
-            }
-
-            td {
-                text-align:left;
-                vertical-align:top;
-                padding:1em;
-            }
-
-            div.bar {
-                height:20px;
-                margin-top:auto;
-                margin-bottom:auto;
-            }
-
-            div.table {
-              margin-left: auto;
-              margin-right: auto;
-            }
-
-            td.legend {
-                white-space:nowrap;
-                text-align:left;
-                vertical-align:top;
-                padding:0;
-            }
-
-            th.header {
-              font-weight: normal;
-            }
-        </style>
+       
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
