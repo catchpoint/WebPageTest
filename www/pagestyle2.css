@@ -397,7 +397,7 @@ footer ul {
 
 #optimization {
     order: 2;
-    flex: 1 1 50%;
+    flex: 1 1 40%;
     margin-top: 1em;
 }
 
@@ -410,6 +410,12 @@ footer ul {
     font-weight: 700;
     line-height: 1.5em;
     margin-bottom: 0;
+}
+
+@media (min-width: 50em) {
+    #header_data h2 {
+        font-size: 1.3em;
+    }
 }
 
 #header_data .page-tested {
@@ -2265,9 +2271,8 @@ th.header {
     /* float: right; */
     line-height: 1.2em;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 1rem;
-    grid-auto-flow: dense;
     /* max-width: 55%; */
     font-size: 0.625em;
     /* 10px */
