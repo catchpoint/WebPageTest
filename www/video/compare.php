@@ -95,8 +95,8 @@ else
             ?>
             <style type="text/css">
             <?php
-                $bgcolor = '000000';
-                $color = 'ffffff';
+                $bgcolor = 'ffffff';
+                $color = '222222';
                 if (array_key_exists('bg', $_GET)) {
                     $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
@@ -353,9 +353,31 @@ else
                 if( $error ) {
                     echo "<h1>$error</h1>";
                 } elseif( $ready ) {
+                    echo '<div class="box"><div class="test_results-content">';
+                    echo '<div class="test_results_header">';
+                    echo '<div class="compare_meta">';
+                    echo '<h2>Filmstrip View</h2>';
                     if (isset($location) && strlen($location)) {
-                        echo "<div id=\"location\">Tested From: $location</div>";
+                        echo "<p class=\"compare_location\">Tested From: $location</p>";
                     }
+                    echo '</div>';
+                        
+                    echo '<div class="compare_key">
+                    <h3>Filmstrip key:</h3>
+                    <ul class="key">';
+                    if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
+                    <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
+                    <?php }
+                    echo '
+                        <li><b class="thumbChanged"></b>Visual change</li>
+                        <li><b class="thumbLCP"></b>Largest Contentful Paint</li>
+                        <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
+                        <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint + Layout Shift</li>
+                    </ul>
+                    </div>
+                    </div>';
+            
+                    
                     //build out an expanded link
                     if ($testResults->countRuns() > 1 && count($tests) == 1) {
                         $link = '/video/compare.php?tests=';
@@ -372,6 +394,7 @@ else
                     }
                     ScreenShotTable();
                     DisplayGraphs();
+                    echo '</div></div>';
                 } else {
                     DisplayStatus();
                 }
@@ -460,45 +483,7 @@ function ScreenShotTable()
 
         echo '<table id="videoContainer"><tr>';
 
-        // build a table with the labels
-        echo '<td id="labelContainer"><table id="videoLabels"><tr><th>&nbsp;</th></tr>';
-        foreach( $tests as &$test ) {
-            // figure out the height of this video
-            $height = 100;
-            if( $test['video']['width'] && $test['video']['height'] ) {
-                if( $test['video']['width'] > $test['video']['height'] ) {
-                    $height = 22 + (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
-                } else {
-                    $height = 22 + $thumbSize;
-                }
-            }
 
-            $break = '';
-            if( !strpos($test['name'], ' ') )
-                $break = ' style="word-break: break-all;"';
-            echo "<tr width=10% height={$height}px ><td$break class=\"pagelinks\">";
-
-            // Print the index outside of the link tag
-            echo $test['index'] . ': ';
-
-            if (!defined('EMBED')) {
-                $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
-                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
-                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
-            } else {
-                echo WrapableString(htmlspecialchars($test['name']));
-            }
-
-            // Print out a link to edit the test
-            echo '<br/>';
-            echo '<a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
-            if (class_exists("SQLite3"))
-              echo '(Edit)';
-            echo '</a>';
-
-            echo "</td></tr>\n";
-        }
-        echo '</table></td>';
 
         // the actual video frames
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
@@ -516,6 +501,28 @@ function ScreenShotTable()
         $firstFrame = 0;
         $maxThumbWidth = 0;
         foreach($tests as &$test) {
+            // first, let's print a run label row
+            echo "<tr class=\"video_runlabel\"><th colspan=\"$frameCount\"><span class=\"video_runlabel_text\"";
+            // Print the index outside of the link tag
+            echo $test['index'] . ': ';
+            
+            if (!defined('EMBED')) {
+                $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
+                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
+                echo " <a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
+            } else {
+                echo WrapableString(htmlspecialchars($test['name']));
+            }
+
+            // Print out a link to edit the test
+            echo ' <a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
+            if (class_exists("SQLite3"))
+              echo '(Edit title)';
+            echo '</a>';
+
+            echo "</span></td></tr>";
+
+
             $aft = (int)$test['aft'] / 100;
             $hasStepResult = isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult");
             $lcp = null;
@@ -591,6 +598,7 @@ function ScreenShotTable()
                 }
             }
             $maxThumbWidth = max($maxThumbWidth, $width);
+            
             echo "<tr>";
 
             $testEnd = ceil($test['video']['end'] / $interval) * $interval;
@@ -797,15 +805,7 @@ function ScreenShotTable()
         }
         echo '<div class="page">';
         ?>
-        <ul class="key">
-            <?php if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-            <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
-            <?php } ?>
-            <li><b class="thumbChanged"></b>A visual change occurred in the frame.</li>
-            <li><b class="thumbLCP"></b>Largest Contentful Paint occurred in the frame.</li>
-            <li><b class="thumbChanged thumbLayoutShifted"></b>A visual change and a Layout Shift occurred in the frame.</li>
-            <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint and a Layout Shift occurred in the frame.</li>
-        </ul>
+        
         <?php
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";

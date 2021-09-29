@@ -882,22 +882,27 @@ body.compact #main {
 }
 
 .compare {
-    background: #000;
-    color: #fff;
+    /* background: #000; */
+    /* color: #fff; */
 }
 
 .compare #main {
-    grid-column: 2 / 12;
-    background: #000;
+    /* grid-column: 2 / 12;
+    /* background: #000; */
     padding: 2em 0;
     max-width: none;
     width: auto;
+    */
     /* min-width: 1083px; */
 }
 
+.compare .test_results_header {
+    padding-top: 1.5rem;
+}
+
 .key {
-    margin-top: 1em;
-    clear: both;
+    margin: 1em 0;
+    font-size: .8em;
 }
 
 .key b {
@@ -907,12 +912,27 @@ body.compact #main {
     margin-right: .5em;
 }
 
+.compare_key h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
 @media screen and (min-width: 50em) {
+    .compare .test_results_header {
+        padding-top: 1.5rem;
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        justify-content: space-between;
+    }
+    .compare_key {
+        border-left: 1px solid #ddd;
+        padding-left: 3vw;
+    }
     .key {
+        flex: 1 1 50%;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-column-gap: 1.5em;
-        max-width: 60%;
+        gap: 1rem;
         margin: 1em auto;
     }
     .key li {
@@ -1727,6 +1747,26 @@ body.compact .box {
     #page-images .box {
         padding: 1em 1.5em;
     }
+}
+
+
+/* compare page styles */
+
+.video_runlabel {
+    text-align: left;
+}
+
+.video_runlabel_text {
+    position: sticky;
+    font-weight: 700;
+    padding: .5rem;
+    display: inline-block;
+    left: 1rem;
+}
+
+.video_runlabel a {
+    color: inherit;
+    font-weight: 500;
 }
 
 body.compact #header_container {
@@ -2615,9 +2655,9 @@ div.tableBytes td {
 }
 
 td {
-    text-align: center;
-    vertical-align: middle;
-    padding: 1em;
+    /* text-align: center;
+    vertical-align: middle; */
+    /* padding: 1em; */
 }
 
 div.bar {
@@ -2910,7 +2950,7 @@ div.tableBytes table {
 td {
     text-align: center;
     vertical-align: middle;
-    padding: 1em;
+    /* padding: 1em; */
 }
 
 div.tableRequests td {

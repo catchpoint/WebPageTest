@@ -246,6 +246,9 @@ $page_description = "Website performance test result$testLabel.";
               markUserTime('aft.Result Data Table');
             </script>
             <?php } ?>
+
+           
+
             <div id="tables" style="text-align:left;">
             <h3 class="hed_sub">Individual Runs</h3>
 
