@@ -1545,20 +1545,22 @@ EOT;
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   require_once('./object_detail.inc');
   $opacity = number_format(1.0 / count($waterfalls), 2, '.', '');
-  echo '<div class="waterfall-container waterfall-sliders" style="text-align: left;">';
-  echo 'Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):<br>';
-  echo '<table>';
+  echo '<div class="waterfall-sliders">';
+  echo '<p>Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):</p>';
+  echo '<div>';
   if (count($waterfalls) == 2) {
-    echo "<tr><td>{$waterfalls[0]['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\"></td><td>{$waterfalls[1]['label']}</tr></td>";
+    echo "<label>{$waterfalls[0]['label']}<input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\">{$waterfalls[1]['label']}</label>";
+   // echo "<tr><td>{$waterfalls[0]['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\"></td><td>{$waterfalls[1]['label']}</tr></td>";
   } else {
     foreach($waterfalls as $index => &$waterfall) {
       $o = $index ? $opacity : '1.0';
-      echo '<tr>';
-      echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
-      echo '</tr>';
+   //echo '<tr>';
+   echo "<label>{$waterfall['label']}<input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></label>";
+      //echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
+     // echo '</tr>';
     }
   }
-  echo '</table>';
+  echo '</div>';
   echo '</div>';
 
   $row_count = 0;

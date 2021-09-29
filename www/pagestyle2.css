@@ -917,6 +917,20 @@ body.compact #main {
     font-weight: 700;
 }
 
+.waterfall-sliders {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    border-top: 1px solid #eee;
+    margin: 1rem 0;
+}
+
+.waterfall-sliders div {
+    display: flex;
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+}
+
 @media screen and (min-width: 50em) {
     .compare .test_results_header {
         padding-top: 1.5rem;
@@ -2137,6 +2151,7 @@ th.header {
 #videoContainer {
     background: #000;
     color: #fff;
+    margin: 3rem 0;
 }
 
 #createForm #image {
@@ -3977,6 +3992,15 @@ div.bar {
     font-size: .9rem;
     font-weight: bold;
     cursor: pointer;
+}
+
+.compare .customwaterfall_settings {
+    display: inline-block;
+    padding: 1rem;
+}
+
+.compare .customwaterfall_settings form * {
+    color: #fff !important
 }
 
 .customwaterfall_settings[open] .customwaterfall_settings_hed {

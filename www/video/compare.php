@@ -323,15 +323,13 @@ else
                 <?php
                 }
                 ?>
-                div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;}
+                /* div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;} */
                 <?php
                 if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
                 ?>
                     div.waterfall-sliders {
                         position: sticky;
                         clear: both;
-                        margin-top: 3em;
-                        padding: 1em 0;
                         top: 0;
                         z-index: 3;
                         <?php
@@ -356,10 +354,17 @@ else
                     echo '<div class="box"><div class="test_results-content">';
                     echo '<div class="test_results_header">';
                     echo '<div class="compare_meta">';
+                    
                     echo '<h2>Filmstrip View</h2>';
                     if (isset($location) && strlen($location)) {
                         echo "<p class=\"compare_location\">Tested From: $location</p>";
+                        
                     }
+                    
+                    echo '</div>';
+
+                    echo '<div class="compare_settings">';
+                    include 'video/filmstrip_settings.php';
                     echo '</div>';
                         
                     echo '<div class="compare_key">
@@ -374,9 +379,33 @@ else
                         <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
                         <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint + Layout Shift</li>
                     </ul>
-                    </div>
+                    </div><!--compare_key-->
                     </div>';
-            
+                    ?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <?php
                     
                     //build out an expanded link
                     if ($testResults->countRuns() > 1 && count($tests) == 1) {
@@ -394,7 +423,7 @@ else
                     }
                     ScreenShotTable();
                     DisplayGraphs();
-                    echo '</div></div>';
+                    echo '</div>';
                 } else {
                     DisplayStatus();
                 }
@@ -477,9 +506,9 @@ function ScreenShotTable()
                 $end = $test['video']['end'];
         }
 
-        if (!defined('EMBED')) {
-            echo '<br>';
-        }
+        // if (!defined('EMBED')) {
+        //     echo '<br>';
+        // }
 
         echo '<table id="videoContainer"><tr>';
 
@@ -789,197 +818,42 @@ function ScreenShotTable()
         echo "</tbody></table></div>\n";
 
         // end of the container table
-        echo "</td></tr></table>\n";
+        echo "</td></tr></table>\n";?>
 
-        echo '<form id="createForm" name="create" method="get" action="/video/view.php">';
-        echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
-        echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
-        echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
-        echo "<input type=\"hidden\" name=\"text\" value=\"$color\">";
-        if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
-            echo '<input type="hidden" name="labelHeight" value="' . htmlspecialchars($_REQUEST['labelHeight']) . '">"';
-        if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
-            echo '<input type="hidden" name="timeHeight" value="' . htmlspecialchars($_REQUEST['timeHeight']) . '">"';
-        if (isset($location) && strlen($location)) {
-            echo '<input type="hidden" name="loc" value="' . htmlspecialchars(strip_tags($location)) . '">';
-        }
-        echo '<div class="page">';
-        ?>
+
         
-        <?php
-        echo "<div id=\"image\">";
-        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
-        echo "</div>";
-        echo '<div id="bottom"><input type="checkbox" id="slow" name="slow" value="1"> <label for="slow">Slow Motion</label><br><br>';
-        echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
-        echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
-        echo "</div></div></form>";
-        if (!defined('EMBED')) {
-        ?>
-        <div class="page">
-        <div id="layout">
-            <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
-            <?php
-                echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
-            ?>
-                <div id="filmstripOptions">
-                    <fieldset>
-                        <legend>Filmstrip Options</legend>
-                <?php
-                if ($has_layout_shifts) {
-                    $checked = '';
-                    if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
-                        $checked = ' checked=checked';
-                    echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                    echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label><br>";
-                }
-                if ($has_lcp_rect) {
-                    $checked = '';
-                    if( isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'] )
-                        $checked = ' checked=checked';
-                    echo "<input type=\"checkbox\" id=\"highlightLCP\" name=\"highlightLCP\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                    echo "<label for=\"highlightLCP\"> Highlight Largest Contentful Paints</label><br>";
-                }
 
-                $checked = '';
-                if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] )
-                    $checked = ' checked=checked';
-                echo "<input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                echo "<label for=\"sticky\"> Make Filmstrip Sticky</label>";
-                
-                ?>
-                </fieldset>
-                    <?php
-                        // fill in the thumbnail size selection
-                        echo "<fieldset>";
-                        echo "<legend>Thumbnail Size</legend>";
-                        $checked = '';
-                        if( $thumbSize <= 100 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize100\" name=\"thumbSize\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize100\">Small</label><br>";
-                        $checked = '';
-                        if( $thumbSize <= 150 && $thumbSize > 100 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize150\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize150\">Medium</label><br>";
-                        $checked = '';
-                        if( $thumbSize <= 200 && $thumbSize > 150 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize200\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize200\">Large</label><br>";
-                        $checked = '';
-                        if( $thumbSize > 200)
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize600\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize600\">Huge</label>";
-                        echo "</fieldset>";
-
-                        // fill in the interval selection
-                        echo "<fieldset>";
-                        echo "<legend>Thumbnail Interval</legend>";
-                        if ($supports60fps) {
-                          $checked = '';
-                          if( $interval < 100 )
-                              $checked = ' checked=checked';
-                          echo "<input type=\"radio\" id=\"ival60fps\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> <label for=\"ival60fps\">60 FPS</label><br>";
-                        }
-                        $checked = '';
-                        if( ($supports60fps && $interval == 100) || (!$supports60fps && $interval < 500) )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival100\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"ival100\">0.1 sec</label><br>";
-                        $checked = '';
-                        if( $interval == 500 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival500\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> <label for=\"ival500\">0.5 sec</label><br>";
-                        $checked = '';
-                        if( $interval == 1000 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival1000\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival1000\">1 sec</label><br>";
-                        $checked = '';
-                        if( $interval > 1000 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival5000\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival5000\">5 sec</label><br>";
-                        echo "</fieldset>";
-
-                        // fill in the endpoint selection
-                        echo "<fieldset>";
-                        echo "<legend>Comparison Endpoint</legend>";
-                        if( !strcasecmp($endTime, 'aft') )
-                            $endTime = 'visual';
-                        $checked = '';
-                        if( !strcasecmp($endTime, 'visual') )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endVisuallyComplete\" value=\"visual\"$checked onclick=\"this.form.submit();\"> <label for=\"endVisuallyComplete\">Visually Complete</label><br>";
-                        $checked = '';
-                        if( !strcasecmp($endTime, 'all') )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endLastChange\" value=\"all\"$checked onclick=\"this.form.submit();\"> <label for=\"endLastChange\">Last Change</label><br>";
-                        $checked = '';
-                        if( !strcasecmp($endTime, 'doc') )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endDocComplete\" value=\"doc\"$checked onclick=\"this.form.submit();\"> <label for=\"endDocComplete\">Document Complete</label><br>";
-                        $checked = '';
-                        if( !strcasecmp($endTime, 'full') )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> <label for=\"endFullyLoaded\">Fully Loaded</label><br>";
-                        echo "</fieldset>";
-                    ?>
-                </div>
-            </form>
-        </div>
-        <?php
-        // display the waterfall if there is only one test
-        $end_seconds = $filmstrip_end_time / 1000;
-        if( count($tests) == 1 ) {
-            /* @var TestStepResult $stepResult */
-            $stepResult = $tests[0]["stepResult"];
-            $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
-            echo CreateWaterfallHtml('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $stepResult->getRawResults(),
-                                     "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1", $tests[0]['step']);
-            echo '<br><br>';
-        } else {
-          $waterfalls = array();
-          foreach ($tests as &$test) {
-            $waterfalls[] = array('id' => $test['id'],
-                                  'label' => htmlspecialchars($test['name']),
-                                  'run' => $test['run'],
-                                  'step' => $test['step'],
-                                  'cached' => $test['cached']);
-          }
-          $labels='';
-          if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
-            $labels = '&labels=0';
-          InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
-        }
+        <?php if (!defined('EMBED')) {
+            // display the waterfall if there is only one test
+            $end_seconds = $filmstrip_end_time / 1000;
+            if( count($tests) == 1 ) {
+                /* @var TestStepResult $stepResult */
+                $stepResult = $tests[0]["stepResult"];
+                $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
+                echo CreateWaterfallHtml('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $stepResult->getRawResults(),
+                                        "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1", $tests[0]['step']);
+                // echo '<br><br>';
+            } else {
+            $waterfalls = array();
+            foreach ($tests as &$test) {
+                $waterfalls[] = array('id' => $test['id'],
+                                    'label' => htmlspecialchars($test['name']),
+                                    'run' => $test['run'],
+                                    'step' => $test['step'],
+                                    'cached' => $test['cached']);
+            }
+            $labels='';
+            if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
+                $labels = '&labels=0';
+            InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
+            }
         ?>
 
-        <div id="advanced" style="display:none;">
-            <h3>Advanced Visual Comparison Configuration</h3>
-            <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
-            <p>URL structure: ...compare.php?tests=&lt;Test 1 ID&gt;,&lt;Test 2 ID&gt;...</p>
-            <p>The tests are displayed in the order listed and can be customized with options:</p>
-            <table>
-            <tr><td>Custom label</td><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
-            <tr><td>Specific run</td><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
-            <tr><td>Repeat view</td><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
-            <tr><td>Specific step</td><td>-s:3</td><td>110606_MJ_RZEY-s:3</td></tr>
-            <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
-            </table>
-            <br>
-            <p>You can also customize the background and text color by passing HTML color values to <b>bg</b> and <b>text</b> query parameters.</p>
-            <p>Examples:</p>
-            <ul>
-            <li><b>Customizing labels:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
-            <li><b>Compare First vs. Repeat view:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
-            <li><b>Second step of first run vs. Second step of second run:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-r:1-s:2,110606_MJ_RZEY-r:2-s:2</li>
-            <li><b>White background with black text:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
-            </ul>
-            <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
+        
         </div>
-        </div>
+        <?php   } // EMBED?>
+
         <?php
-        } // EMBED
         // scroll the table to show the first thumbnail change
         $scrollPos = $firstFrame * ($maxThumbWidth + 6);
         ?>
