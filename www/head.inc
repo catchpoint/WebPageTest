@@ -10,6 +10,8 @@ if( strlen($page_description) )
 ?>
 <meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 
 <link rel="apple-touch-icon" sizes="192x192" href="/images/icons-192.png">
 <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
