@@ -134,6 +134,7 @@ h3.hed_sub {
     font-weight: 700;
     margin: 1.5em 0 1.1em;
     font-style: normal;
+    line-height: 1.4;
 }
 
 @media (max-width: 50em) {
@@ -1712,8 +1713,11 @@ body.compact .box {
 
 @media (max-width: 60em) {
     .about h1 {
-        margin-left: 3rem;
+        margin-left: 1.5rem;
     }
+    #custom-waterfall .box,
+    .about .box,
+    .video .box,
     #page-images .box {
         padding: 1em 1.5em;
     }
@@ -1748,21 +1752,18 @@ body.compact #header_container {
     border: 1px solid #999;
 }
 
-.test_results-content .pretty,
-#result .pretty {
+.test_results-content .pretty {
     width: 100%;
     font-size: .75em;
     line-height: 1.4em;
     overflow-x: auto;
 }
 
-#result,
 .test_results-content {
     padding: 0 1.5em;
 }
 
 @media (min-width: 50em) {
-    #result,
     .test_results-content {
         padding: 0 3em;
     }
@@ -2363,6 +2364,10 @@ th.header {
     margin-top: -1em;
 }
 
+.alert-banner-twitch a {
+    display: block;
+}
+
 .alert-banner a {
     color: #fff;
 }
@@ -2370,6 +2375,9 @@ th.header {
 @media screen and (min-width:75em) {
     .alert-banner {
         grid-column: 1 / 13;
+    }
+    .alert-banner-twitch a {
+        display: inline-block;
     }
 }
 
