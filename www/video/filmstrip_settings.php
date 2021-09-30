@@ -18,11 +18,11 @@ echo ' <details class="box details_panel">
                     echo '<input type="hidden" name="loc" value="' . htmlspecialchars(strip_tags($location)) . '">';
                 }
 
-                echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
+                echo "<a id=\"export\" class=\"pill\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
                 // echo "</div>";
                 echo '<label for="slow"><input type="checkbox" id="slow" name="slow" value="1"> Slow Motion</label>';
                 echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
-                echo '<a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
+                echo '<a href="javascript:ShowAdvanced()">Advanced customization options...</a>';
                 echo "</form>";?>
 
 
@@ -46,22 +46,19 @@ echo ' <details class="box details_panel">
                     $checked = '';
                     if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
                         $checked = ' checked=checked';
-                    echo "<input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                    echo "<label for=\"highlightCLS\"> Highlight Layout Shifts</label><br>";
+                    echo "<label for=\"highlightCLS\"><input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\"> Highlight Layout Shifts</label><br>";
                 }
                 if ($has_lcp_rect) {
                     $checked = '';
                     if( isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'] )
                         $checked = ' checked=checked';
-                    echo "<input type=\"checkbox\" id=\"highlightLCP\" name=\"highlightLCP\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                    echo "<label for=\"highlightLCP\"> Highlight Largest Contentful Paints</label><br>";
+                    echo "<label for=\"highlightLCP\"><input type=\"checkbox\" id=\"highlightLCP\" name=\"highlightLCP\" value=\"1\"$checked onclick=\"this.form.submit();\"> Highlight Largest Contentful Paints</label><br>";
                 }
 
                 $checked = '';
                 if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] )
                     $checked = ' checked=checked';
-                echo "<input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\">";
-                echo "<label for=\"sticky\"> Make Filmstrip Sticky</label>";
+                echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\"> Make Filmstrip Sticky</label>";
                 
                 ?>
                 </fieldset>
@@ -72,19 +69,19 @@ echo ' <details class="box details_panel">
                         $checked = '';
                         if( $thumbSize <= 100 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize100\" name=\"thumbSize\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize100\">Small</label><br>";
+                        echo "<label for=\"thumbSize100\"><input type=\"radio\" id=\"thumbSize100\" name=\"thumbSize\" value=\"100\"$checked onclick=\"this.form.submit();\"> Small</label><br>";
                         $checked = '';
                         if( $thumbSize <= 150 && $thumbSize > 100 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize150\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize150\">Medium</label><br>";
+                        echo "<label for=\"thumbSize150\"><input type=\"radio\" id=\"thumbSize150\" name=\"thumbSize\" value=\"150\"$checked onclick=\"this.form.submit();\"> Medium</label><br>";
                         $checked = '';
                         if( $thumbSize <= 200 && $thumbSize > 150 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize200\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize200\">Large</label><br>";
+                        echo "<label for=\"thumbSize200\"><input type=\"radio\" id=\"thumbSize200\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> Large</label><br>";
                         $checked = '';
                         if( $thumbSize > 200)
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"thumbSize600\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> <label for=\"thumbSize600\">Huge</label>";
+                        echo "<label for=\"thumbSize600\"><input type=\"radio\" id=\"thumbSize600\" name=\"thumbSize\" value=\"600\"$checked onclick=\"this.form.submit();\"> Huge</label>";
                         echo "</fieldset>";
 
                         // fill in the interval selection
@@ -94,24 +91,24 @@ echo ' <details class="box details_panel">
                           $checked = '';
                           if( $interval < 100 )
                               $checked = ' checked=checked';
-                          echo "<input type=\"radio\" id=\"ival60fps\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> <label for=\"ival60fps\">60 FPS</label><br>";
+                          echo "<label for=\"ival60fps\"><input type=\"radio\" id=\"ival60fps\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> 60 FPS</label><br>";
                         }
                         $checked = '';
                         if( ($supports60fps && $interval == 100) || (!$supports60fps && $interval < 500) )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival100\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> <label for=\"ival100\">0.1 sec</label><br>";
+                        echo "<label for=\"ival100\"><input type=\"radio\" id=\"ival100\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> 0.1 sec</label><br>";
                         $checked = '';
                         if( $interval == 500 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival500\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> <label for=\"ival500\">0.5 sec</label><br>";
+                        echo "<label for=\"ival500\"><input type=\"radio\" id=\"ival500\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> 0.5 sec</label><br>";
                         $checked = '';
                         if( $interval == 1000 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival1000\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival1000\">1 sec</label><br>";
+                        echo "<label for=\"ival1000\"><input type=\"radio\" id=\"ival1000\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> 1 sec</label><br>";
                         $checked = '';
                         if( $interval > 1000 )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" id=\"ival5000\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> <label for=\"ival5000\">5 sec</label><br>";
+                        echo "<label for=\"ival1000\"><input type=\"radio\" id=\"ival5000\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec</label><br>";
                         echo "</fieldset>";
 
                         // fill in the endpoint selection
@@ -122,19 +119,19 @@ echo ' <details class="box details_panel">
                         $checked = '';
                         if( !strcasecmp($endTime, 'visual') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endVisuallyComplete\" value=\"visual\"$checked onclick=\"this.form.submit();\"> <label for=\"endVisuallyComplete\">Visually Complete</label><br>";
+                        echo "<label for=\"endVisuallyComplete\"><input type=\"radio\" name=\"end\" id=\"endVisuallyComplete\" value=\"visual\"$checked onclick=\"this.form.submit();\"> Visually Complete</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'all') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endLastChange\" value=\"all\"$checked onclick=\"this.form.submit();\"> <label for=\"endLastChange\">Last Change</label><br>";
+                        echo "<label for=\"endLastChange\"><input type=\"radio\" name=\"end\" id=\"endLastChange\" value=\"all\"$checked onclick=\"this.form.submit();\"> Last Change</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'doc') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endDocComplete\" value=\"doc\"$checked onclick=\"this.form.submit();\"> <label for=\"endDocComplete\">Document Complete</label><br>";
+                        echo "<label for=\"endDocComplete\"><input type=\"radio\" name=\"end\" id=\"endDocComplete\" value=\"doc\"$checked onclick=\"this.form.submit();\"> Document Complete</label><br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'full') )
                             $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> <label for=\"endFullyLoaded\">Fully Loaded</label><br>";
+                        echo "<label for=\"endFullyLoaded\"><input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded</label><br>";
                         echo "</fieldset>";
                     ?>
             </form>

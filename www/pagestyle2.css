@@ -3266,18 +3266,23 @@ td.legend {
     top: .5em;
 }
 
+.waterfall-legend tbody td {
+    padding: .8em;
+}
+
 @media (max-width: 1012px) {
     .waterfall-legend {
         margin: 0;
         border: 0;
     }
     .waterfall-legend tbody tr {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        display: flex;
+        flex-flow: row wrap;
+        /* grid-template-columns: 1fr 1fr 1fr; */
     }
     .waterfall-legend tbody td {
-        padding: .5rem .5rem .5rem 0;
-        border: 0;
+        /* padding: .5rem .5rem .5rem 0;
+        border: 0; */
     }
     div.waterfall-container,
     div.overflow-container {
