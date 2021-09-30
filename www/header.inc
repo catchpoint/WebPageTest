@@ -188,7 +188,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     ?>
                     <div class="cta-banner">
                         <p><strong>Save Test Results</strong> with a <strong>Free Account</strong>
-                         <a class="btn-primary btn-primary-compact" href="https://app.webpagetest.org/ui/entry/wpt/signup">Sign Up &amp; Save Test Result</a></p>
+                         <a class="btn-primary btn-primary-compact" href="https://app.webpagetest.org/ui/entry/wpt/signup?&utm_source=WPT_Test_Results&utm_content=button&utm_term=Sign_Up">Sign Up &amp; Save Test Result</a></p>
                     </div>
                     <?php
                 }
