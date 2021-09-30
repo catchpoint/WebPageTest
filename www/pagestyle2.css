@@ -22,7 +22,7 @@ body {
     margin: 0 0 40px;
     color: #111;
     font: 100%/1.4em 'Open Sans', sans-serif;
-    background-color: #fff;
+    background-color: #F4F4F4;
     grid-column-gap: 1.25em;
     grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, minmax(0, 1fr)) calc(50vw - 45em) [gutter-end];
     width: 100%;
@@ -859,8 +859,11 @@ nav a:hover {
 
 #main {
     padding: 1.5em 0;
-    /* width: 1083px; */
-    /* margin: auto; */
+}
+
+.home #main {
+    max-width: 1083px;
+    margin: auto;
 }
 
 body.compact #main {
@@ -920,7 +923,6 @@ body.compact #main {
 .waterfall-sliders {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #eee;
-    border-top: 1px solid #eee;
     margin: 1rem 0;
 }
 
@@ -941,6 +943,7 @@ body.compact #main {
     .compare_key {
         border-left: 1px solid #ddd;
         padding-left: 3vw;
+        margin-bottom: 1rem;
     }
     .key {
         flex: 1 1 50%;
@@ -1745,7 +1748,7 @@ body.compact .box {
     margin-left: 3rem;
 }
 
-#custom-waterfall .box,
+#custom-waterfall .box:not(.details_panel),
 .about .box,
 .video .box {
     padding: 3rem;
@@ -1793,7 +1796,7 @@ body.compact #header_container {
     padding: 1em 1.5em;
 }
 
-@media screen and (min-width: 50em) {
+@media screen and (min-width: 75em) {
     .box {
         border-radius: 10px;
     }
@@ -2149,9 +2152,10 @@ th.header {
 /* perf optimization page styles */
 
 #videoContainer {
-    background: #000;
+    background: #222;
     color: #fff;
-    margin: 3rem 0;
+    margin: 0;
+    padding: 1rem;
 }
 
 #createForm #image {
@@ -3275,7 +3279,8 @@ td.legend {
         padding: .5rem .5rem .5rem 0;
         border: 0;
     }
-    div.waterfall-container {
+    div.waterfall-container,
+    div.overflow-container {
         position: relative;
         left: 0;
         top: 0;
@@ -3988,79 +3993,75 @@ div.bar {
 
 /* custom waterfall settings */
 
-.customwaterfall_settings_hed {
+.details_panel_hed {
     font-size: .9rem;
     font-weight: bold;
     cursor: pointer;
 }
 
-.compare .customwaterfall_settings {
+.compare .details_panel {
     display: inline-block;
     padding: 1rem;
 }
 
-.compare .customwaterfall_settings form * {
-    color: #fff !important
-}
-
-.customwaterfall_settings[open] .customwaterfall_settings_hed {
+.details_panel[open] .details_panel_hed {
     border-bottom: 1px solid rgba(255, 255, 255, .2);
     margin: 0 0 .8rem;
     padding: 0 0 .8em;
 }
 
-.customwaterfall_settings fieldset {
+.details_panel fieldset {
     border: 0;
     padding: .3rem 0 0;
     margin: 0 0 1rem;
 }
 
-.customwaterfall_settings legend {
+.details_panel legend {
     font-weight: bold;
     margin: 0;
     display: block;
     padding: 0;
 }
 
-.customwaterfall_settings label,
-.customwaterfall_settings label input[type=text] {
+.details_panel label,
+.details_panel label input[type=text] {
     display: block;
     margin-bottom: .5rem;
 }
 
-.customwaterfall_settings label input[type=text] {
+.details_panel label input[type=text] {
     margin: .2rem 0 1rem;
 }
 
-.customwaterfall_settings label em {
+.details_panel label em {
     font-size: .8em;
 }
 
-.customwaterfall_settings label {
+.details_panel label {
     margin: .3rem 0 .5rem;
     line-height: 1.2
 }
 
-.customwaterfall_settings button {
+.details_panel button {
     display: none;
     /* necessary button? does non-js work anyway? */
 }
 
-.customwaterfall_settings_hed {
+.details_panel_hed {
     list-style-type: none;
+    position: relative;
 }
 
-.customwaterfall_settings_hed::-webkit-details-marker {
+.details_panel_hed::-webkit-details-marker {
     display: none;
 }
 
-.customwaterfall_settings_hed>span {
-    position: relative;
+.details_panel_hed>span {
     display: flex;
     gap: .5rem;
 }
 
-.customwaterfall_settings_hed .icon_plus {
+.details_panel_hed .icon_plus {
     background: rgba(255, 255, 255, 1);
     border-radius: 100%;
     display: inline-block;
@@ -4069,7 +4070,7 @@ div.bar {
     position: relative;
 }
 
-.customwaterfall_settings_hed .icon_plus:before {
+.details_panel_hed .icon_plus:before {
     content: '';
     position: absolute;
     top: 50%;
@@ -4080,7 +4081,7 @@ div.bar {
     background: #555;
 }
 
-.customwaterfall_settings_hed .icon_plus:after {
+.details_panel_hed .icon_plus:after {
     content: '';
     position: absolute;
     left: 50%;
@@ -4091,7 +4092,7 @@ div.bar {
     background: #555;
 }
 
-.customwaterfall_settings[open]>.customwaterfall_settings_hed .icon_plus {
+.details_panel[open]>.details_panel_hed .icon_plus {
     transform: rotate(45deg);
     position: absolute;
     right: 0;
@@ -4110,27 +4111,34 @@ div.bar {
         justify-content: space-between;
         align-items: flex-start;
     }
-    .customwaterfall_settings {
+    /* .details_panel_hed {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    } */
+    .details_panel {
         padding: 1rem 1.5rem;
         transition: all .5s ease-out;
         border: 1px solid transparent;
         box-shadow: none;
         background: transparent;
-        margin: 0;
         font-size: .9rem;
     }
-    .customwaterfall_settings:hover,
-    .customwaterfall_settings:focus-within {
+    .customwaterfall_hed .details_panel {
+        margin-top: 3rem;
+    }
+    .details_panel:hover,
+    .details_panel:focus-within {
         border: 1px solid #2F80ED;
         box-shadow: 0 0 30px rgb(47 128 237 / 50%);
     }
-    .customwaterfall_settings:focus-within summary:focus {
+    .details_panel:focus-within summary:focus {
         outline: none;
     }
-    .customwaterfall_settings[open] {
+    .details_panel[open] {
         border: 1px solid #2F80ED;
         box-shadow: 0 0 30px rgb(47 128 237 / 50%);
-        background: rgba(18, 29, 53, .9);
+        background: rgba(18, 29, 53, .95);
         color: #fff;
         min-height: 20rem;
         position: fixed;
@@ -4140,7 +4148,7 @@ div.bar {
         width: 20vw;
         max-width: 20rem;
     }
-    .customwaterfall_settings form {
+    .details_panel_content {
         overflow: auto;
         max-height: 65vh;
         min-height: 20rem;

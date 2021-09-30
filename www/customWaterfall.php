@@ -32,9 +32,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
             ?>
             <div class="customwaterfall_hed">
                 <h1>Generate a Custom Waterfall</h1>
-                <details open class="box customwaterfall_settings">
-                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
-                    <form aria-labelledby="customwaterfall_settings_title" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
+                <details open class="box details_panel">
+                    <summary  class="details_panel_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
+                    <form class="details_panel_content" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                         <fieldset>
                             <legend>Chart Type</legend>
                                 <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>

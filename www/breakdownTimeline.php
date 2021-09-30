@@ -94,15 +94,12 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             }
             ?>
 
-            <table align="center">
-                <tr>
-                    <th class="header" colspan="2">
-                    <h2>Main-thread processing breakdown</h2>
-                    Where the browser's main thread was busy, not including idle time waiting for resources <?php
+          <h2>Main-thread processing breakdown</h2>
+          <p>Where the browser's main thread was busy, not including idle time waiting for resources <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
-                    ?>.
-                    </th>
-                </tr>
+                    ?>.</p>
+
+            <table align="center">
                 <tr>
                     <td>
                         <div id="pieGroups" style="width:450px; height:300px;"></div>

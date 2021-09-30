@@ -95,8 +95,8 @@ else
             ?>
             <style type="text/css">
             <?php
-                $bgcolor = 'ffffff';
-                $color = '222222';
+                $bgcolor = '222222';
+                $color = 'ffffff';
                 if (array_key_exists('bg', $_GET)) {
                     $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
@@ -288,12 +288,7 @@ else
                 div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
-                .compare footer a, .compare-all-link{
-                    <?php
-                    echo "color: #$color;\n";
-                    ?>
-                    text-decoration: underline;
-                }
+                
                 .compare-all-link{
                     padding: 5px;
                     background: #1151bb;
@@ -351,11 +346,16 @@ else
                 if( $error ) {
                     echo "<h1>$error</h1>";
                 } elseif( $ready ) {
-                    echo '<div class="box"><div class="test_results-content">';
+                    echo '<div class=""><div class="test_results-content">';
                     echo '<div class="test_results_header">';
                     echo '<div class="compare_meta">';
+                    if (count($tests) > 1 ) {
+                        echo '<h2>Filmstrip Comparison</h2>';
+                    }
+                    else {
+                        echo '<h2>Filmstrip View</h2>';
+                    }
                     
-                    echo '<h2>Filmstrip View</h2>';
                     if (isset($location) && strlen($location)) {
                         echo "<p class=\"compare_location\">Tested From: $location</p>";
                         
@@ -382,27 +382,6 @@ else
                     </div><!--compare_key-->
                     </div>';
                     ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             <?php
@@ -1008,36 +987,36 @@ function DisplayGraphs() {
         }
         if ($progress_end % 100)
             $progress_end = intval((intval($progress_end / 100) + 1) * 100);
-        echo '<div id="compare_visual_progress" class="compare-graph-progress"></div>';
+        echo '<div class="overflow-container"><div id="compare_visual_progress" class="compare-graph-progress"></div></div>';
     }
     if ($layout_shifts_end) {
         if ($layout_shifts_end % 100)
             $layout_shifts_end = intval((intval($layout_shifts_end / 100) + 1) * 100);
     }
     if (count($tests) <= 4) {
-      echo '<div id="compare_times" class="compare-graph-timings"></div>';
+      echo '<div class="overflow-container"><div id="compare_times" class="compare-graph-timings"></div></div>';
       if ($has_cls) {
-        echo '<div id="compare_cls" class="compare-graph-cls"></div>';
+        echo '<div class="overflow-container"><div id="compare_cls" class="compare-graph-cls"></div></div>';
       }
       if ($layout_shifts_end) {
-        echo '<div id="compare_layout_shifts" class="compare-graph-progress"></div>';
+        echo '<div class="overflow-container"><div id="compare_layout_shifts" class="compare-graph-progress"></div></div>';
       }
-      echo '<div id="compare_requests" class="compare-graph"></div>';
-      echo '<div id="compare_bytes" class="compare-graph"></div>';
+      echo '<div class="overflow-container"><div id="compare_requests" class="compare-graph"></div></div>';
+      echo '<div class="overflow-container"><div id="compare_bytes" class="compare-graph"></div></div>';
     } else {
       foreach($timeMetrics as $metric => $label) {
         $metricKey = str_replace('.', '', $metric);
-        echo "<div id=\"compare_times_$metricKey\" class=\"compare-graph\"></div>";
+        echo "<div class=\"overflow-container\"><div id=\"compare_times_$metricKey\" class=\"compare-graph\"></div></div>";
       }
       if ($has_cls) {
-        echo '<div id="compare_cls" class="compare-graph-cls"></div>';
+        echo '<div class="overflow-container"><div id="compare_cls" class="compare-graph-cls"></div></div>';
       }
       if ($layout_shifts_end) {
-        echo '<div id="compare_layout_shifts" class="compare-graph-progress"></div>';
+        echo '<div class="overflow-container"><div id="compare_layout_shifts" class="compare-graph-progress"></div></div>';
       }
       foreach($mimeTypes as $type) {
-        echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
-        echo "<div id=\"compare_bytes_$type\" class=\"compare-graph\"></div>";
+        echo "<div class=\"overflow-container\"><div id=\"compare_requests_$type\" class=\"compare-graph\"></div></div>";
+        echo "<div class=\"overflow-container\"><div id=\"compare_bytes_$type\" class=\"compare-graph\"></div></div>";
       }
     }
     ?>

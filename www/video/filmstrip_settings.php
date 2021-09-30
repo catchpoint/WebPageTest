@@ -1,10 +1,11 @@
 <?php
 
-echo ' <details class="box customwaterfall_settings">
-            <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed"><span><i class="icon_plus"></i> <span>Filmstrip Settings</span></span></summary>
+echo ' <details class="box details_panel">
+            <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Filmstrip Settings</span></span></summary>
              
+            <div class="details_panel_content">
             
-            <form id="createForm" name="create" aria-labelledby="customwaterfall_settings_title" method="get" action="/video/view.php">';
+            <form id="createForm" name="create" method="get" action="/video/view.php">';
                 echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
                 echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
                 echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
@@ -31,16 +32,13 @@ echo ' <details class="box customwaterfall_settings">
 
 <?php
         // START TIMELINE OPTIONS
-        
         if (!defined('EMBED')) {
         ?>
-        <div class="page">
-        <div id="layout">
-            <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
+       
+            <form name="layout" method="get" action="/video/compare.php">
             <?php
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
-                <div id="filmstripOptions">
                     <fieldset>
                         <legend>Filmstrip Options</legend>
                 <?php
@@ -139,9 +137,7 @@ echo ' <details class="box customwaterfall_settings">
                         echo "<input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> <label for=\"endFullyLoaded\">Fully Loaded</label><br>";
                         echo "</fieldset>";
                     ?>
-                </div>
             </form>
-            </div>
        
 
         <div id="advanced" style="display:none;">
@@ -174,6 +170,7 @@ echo ' <details class="box customwaterfall_settings">
 
         <?php } //embed 
         
+
         
-    echo '</details>'; ?>
+    echo '</div></details>'; ?>
                     
