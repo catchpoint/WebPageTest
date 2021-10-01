@@ -1567,6 +1567,17 @@ a.btn-primary {
     background: #fbe076;
 }
 
+a.btn-primary:hover {
+    background: #fbe076;
+}
+
+a.btn-primary-compact {
+    font-size: 1em;
+    padding: 0.3125em 1.25em;
+    display: inline-block;
+    margin: 0 1em;
+}
+
 @media screen and (min-width: 50em) {
     input+input[type="submit"].start_test,
     input+div+input[type="submit"].start_test,
@@ -1812,7 +1823,16 @@ body.compact #header_container {
     padding: 1em 1.5em;
 }
 
-@media screen and (min-width: 75em) {
+.cta-banner {
+    text-align: center;
+    font-size: .9em;
+    background-color: #fff;
+    padding: 1rem 1.5rem 0;
+    border-bottom: 1px solid #E9E9E9;
+    margin: 0;
+}
+
+@media screen and (min-width: 50em) {
     .box {
         border-radius: 10px;
     }

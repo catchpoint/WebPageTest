@@ -44,63 +44,54 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret = array();
   $ret['statusCode'] = 200;
   $ret['statusText'] = 'Ok';
-  $ret['data'] = $locations;
+  if (array_key_exists('location', $_REQUEST)) {
+    if ($locations[$_REQUEST['location']]) {
+      $ret['data'] = $locations[$_REQUEST['location']];
+    } else {
+      $ret['data']['error'] = "Invalid location specified.";
+    }
+  } else {
+    $ret['data'] = $locations;
+  }
+  
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
   $refresh = 240;
   $title = 'WebPageTest - Location Status';
   include 'admin_header.inc';
+  if (array_key_exists('location', $_REQUEST) && !$locations[$_REQUEST['location']]) {
+      echo "Invalid location";
+  } else {
+    echo "<table class=\"table\">\n";
+    echo "<tr>
+            <th class=\"location\">Location ID</th>
+            <th>Description</th>
+            <th>Idle Testers</th>
+            <th>Total Tests</th>
+            <th>Being Tested</th>
+            <th>High Priority</th>
+            <th>P1</th>
+            <th>P2</th>
+            <th>P3</th>
+            <th>P4</th>
+            <th>P5</th>
+            <th>P6</th>
+            <th>P7</th>
+            <th>P8</th>
+            <th>P9</th>
+          </tr>\n";
+      if (array_key_exists('location', $_REQUEST)) {
+        outputHTMLRow($locations[$_REQUEST['location']]);
+      } else {
+        foreach( $locations as $name => &$location ) {
+          outputHTMLRow($location);
+        }
+      }   
 
-  echo "<table class=\"table\">\n";
-  echo "<tr>
-          <th class=\"location\">Location ID</th>
-          <th>Description</th>
-          <th>Idle Testers</th>
-          <th>Total Tests</th>
-          <th>Being Tested</th>
-          <th>High Priority</th>
-          <th>P1</th>
-          <th>P2</th>
-          <th>P3</th>
-          <th>P4</th>
-          <th>P5</th>
-          <th>P6</th>
-          <th>P7</th>
-          <th>P8</th>
-          <th>P9</th>
-        </tr>\n";
-  foreach( $locations as $name => &$location ) {
-    $error = '';
-    if (isset($location['PendingTests']['Total']) && $location['PendingTests']['Total'] > 1)
-      $error = ' warning';
-    if (!isset($location['status']) || $location['status'] == 'OFFLINE')
-      $error = ' danger';
-    echo "<tr id=\"$name\" class=\"$error\">";
-    echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
-    $label = $location['labelShort'];
-    if (isset($location['node'])) {
-      $label .= " ({$location['node']})";
-    }
-    echo "<td>" . @htmlspecialchars($label) . "</td>" . PHP_EOL;
-    if (array_key_exists('PendingTests', $location)) {
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Testing']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['HighPriority']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p1']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p2']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p3']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p4']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p5']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p6']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p7']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p8']) . "</td>" . PHP_EOL;
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p9']) . "</td>" . PHP_EOL;
-    }
-    echo "</tr>";
+    echo "</table>\n";
+    include 'admin_footer.inc';
   }
-  echo "</table>\n";
-  include 'admin_footer.inc';
+  
 } else {
   header ('Content-type: text/xml');
   echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -111,34 +102,82 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   if( isset($_REQUEST['r']) && strlen($_REQUEST['r']) )
       echo "<requestId>{$_REQUEST['r']}</requestId>\n";
   echo "<data>\n";
-
-  foreach ($locations as $name => &$location) {
-    echo "<location>\n";
-    echo "<id>$name</id>\n";
-    foreach ($location as $key => &$value) {
-      if (is_array($value)) {
-        echo "<$key>\n";
-        foreach ($value as $k => &$v) {
-          if (htmlspecialchars($v)!=$v)
-            echo "<$k><![CDATA[$v]]></$k>\n";
-          else
-            echo "<$k>$v</$k>\n";
-        }
-        echo "</$key>\n";
-      } else {
-        if (htmlspecialchars($value)!=$value)
-          echo "<$key><![CDATA[$value]]></$key>\n";
-        else
-          echo "<$key>$value</$key>\n";
-      }
+  if (array_key_exists('location', $_REQUEST) && !$locations[$_REQUEST['location']]) {
+    echo "<error>\n";
+    echo "Invalid location\n";
+    echo "</error>\n";
+  } else if (array_key_exists('location', $_REQUEST)) {
+    outputXMLRow($locations[$_REQUEST['location']]);
+  } else {
+    foreach ($locations as $name => &$location) {
+      outputXMLRow($location);
     }
-    echo "</location>\n";
   }
+  
 
   echo "</data>\n";
   echo "</response>\n";
 }
 
+/**
+ * Output XML row for locations
+ */
+function outputXMLRow($location) {
+  echo "<location>\n";
+  echo "<id>$name</id>\n";
+  foreach ($location as $key => &$value) {
+    if (is_array($value)) {
+      echo "<$key>\n";
+      foreach ($value as $k => &$v) {
+        if (htmlspecialchars($v)!=$v)
+          echo "<$k><![CDATA[$v]]></$k>\n";
+        else
+          echo "<$k>$v</$k>\n";
+      }
+      echo "</$key>\n";
+    } else {
+      if (htmlspecialchars($value)!=$value)
+        echo "<$key><![CDATA[$value]]></$key>\n";
+      else
+        echo "<$key>$value</$key>\n";
+    }
+  }
+  echo "</location>\n";
+}
+
+/**
+ * Output table row for HTML view of locations
+ */
+function outputHTMLRow($location) {
+  $error = '';
+  if (isset($location['PendingTests']['Total']) && $location['PendingTests']['Total'] > 1)
+    $error = ' warning';
+  if (!isset($location['status']) || $location['status'] == 'OFFLINE')
+    $error = ' danger';
+  echo "<tr id=\"$name\" class=\"$error\">";
+  echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
+  $label = $location['labelShort'];
+  if (isset($location['node'])) {
+    $label .= " ({$location['node']})";
+  }
+  echo "<td>" . @htmlspecialchars($label) . "</td>" . PHP_EOL;
+  if (array_key_exists('PendingTests', $location)) {
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['Testing']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['HighPriority']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p1']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p2']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p3']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p4']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p5']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p6']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p7']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p8']) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['PendingTests']['p9']) . "</td>" . PHP_EOL;
+  }
+  echo "</tr>";
+}
 /**
 * Load the location information and extract just the end nodes
 *

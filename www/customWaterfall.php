@@ -168,6 +168,7 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                           '&wait=' + showWait +
                           '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
+                $('.customwaterfall_download a').attr("href", src);
             };
         </script>
     </body>

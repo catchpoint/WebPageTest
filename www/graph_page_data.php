@@ -228,6 +228,7 @@ $common_label = implode(" ", $common_labels);
             );
             $customMetrics = null;
             $userTimings = null;
+            $elementTimings = null;
             $userMeasures = null;
             foreach ($pagesData as &$pageData) {
               foreach ($pageData as &$pageRun)
@@ -251,8 +252,14 @@ $common_label = implode(" ", $common_labels);
                       if (!isset($userMeasures))
                         $userMeasures = array();
                       $userMeasures[$metric] = 'User Timing Measure - ' . substr($metric, 18);
+                    } else if (substr($metric, 0, 14) == 'elementTiming.') {
+                      if (!isset($elementTimings))
+                        $elementTimings = array();
+                      $elementTimings[$metric] = 'Element Timing - ' . substr($metric,14);
                     }
                   }
+
+                  $elementTimingCount = count($elementTimings);
                   $timingCount = count($userTimings);
                   $measuresCount = count($userMeasures);
                 }
@@ -268,6 +275,12 @@ $common_label = implode(" ", $common_labels);
             if (isset($customMetrics) && is_array($customMetrics) && count($customMetrics)) {
               echo '<h1 id="custom">Custom Metrics</h1>';
               foreach($customMetrics as $metric => $label) {
+                InsertChart($metric, $label);
+              }
+            }
+            if (isset($elementTimings) && is_array($elementTimings) && count($elementTimings)) {
+              echo '<h1 id="ElementTiming"><a href="https://wicg.github.io/element-timing/" target="_blank" rel="noopener">Element Timings</a></h1>';
+              foreach($elementTimings as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }

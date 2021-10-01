@@ -101,9 +101,9 @@ class WaterfallViewHtmlSnippet {
     if ((float)$this->stepResult->getMetric("loadEventStart"))
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 4);
-    if ($show_ut && $this->stepResult->getMetric('userTime'))
-      $out .= '<td><div class="arrow-down"></div>User Timings</td>';
-    $out .= "</tr>\n</table>\n";
+    if ($show_ut && ($this->stepResult->getMetric('userTime') || $this->stepResult->getMetric('elementTiming')))
+      $out .= '<td><div class="arrow-down"></div>User & Element Timings</td>';
+    $out .= "</tr>\n</table>\n<br>";
     $out .= '<table class="waterfall-legend" cellspacing="0">';
     $out .= "\n<tr>\n";
     $out .= $this->_legendImageTableCell("/images/render-block-icon.png", "Render Blocking Resource", 4);
