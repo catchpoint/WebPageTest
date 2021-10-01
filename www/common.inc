@@ -239,13 +239,17 @@ $owner = null;
 if ($supportsSaml) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
-} elseif( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
-  $isFirstVisit = false;
-  $owner = $_COOKIE['google_id'];
-} else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
-  $isFirstVisit = false;
-  $owner = $_COOKIE['o'];
+} 
+if (!$owner) {
+  if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+    $isFirstVisit = false;
+    $owner = $_COOKIE['google_id'];
+  } elseif(isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+    $isFirstVisit = false;
+    $owner = $_COOKIE['o'];
+  }
 }
+
 if (!isset($owner)) {
   $owner = sha1(uniqid(uniqid('', true), true));
 }
