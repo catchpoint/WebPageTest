@@ -1546,7 +1546,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   require_once('./object_detail.inc');
   $opacity = number_format(1.0 / count($waterfalls), 2, '.', '');
   echo '<div class="waterfall-sliders">';
-  echo '<p>Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):</p>';
+  echo '<p>Waterfall Opacity <em>(adjust sliders to adjust the transparency of the given waterfall)</em></p>';
   echo '<div>';
   if (count($waterfalls) == 2) {
     echo "<label>{$waterfalls[0]['label']}<input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\">{$waterfalls[1]['label']}</label>";

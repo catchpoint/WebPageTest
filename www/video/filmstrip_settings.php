@@ -1,7 +1,7 @@
 <?php
 
 echo ' <details class="box details_panel">
-            <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Filmstrip Settings</span></span></summary>
+            <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Adjust Filmstrip Settings</span></span></summary>
              
             <div class="details_panel_content">';
             
@@ -111,7 +111,7 @@ echo ' <details class="box details_panel">
                     ?>
             </form>
 
-            <form id="createForm" name="create" method="get" action="/video/view.php">';
+            <form id="createForm" name="create" method="get" action="/video/view.php">
             <?php
                 echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
                 echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';

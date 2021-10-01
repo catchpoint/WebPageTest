@@ -911,8 +911,14 @@ body.compact #main {
 }
 
 .key {
-    margin: 1em 0;
+    margin: .5em 0 0;
     font-size: .8em;
+}
+
+.key li {
+    padding: .4em 0;
+    display: flex;
+    align-items: center;
 }
 
 .key b {
@@ -923,14 +929,25 @@ body.compact #main {
 }
 
 .compare_key h3 {
-    font-size: 1rem;
+    font-size: .9rem;
     font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0;
 }
 
 .waterfall-sliders {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #aaa;
     margin: 1rem 0;
+}
+
+.waterfall-sliders p {
+    font-weight: 700;
+}
+
+.waterfall-sliders em {
+    font-weight: 500;
+    font-style: normal;
 }
 
 .waterfall-sliders div {
@@ -940,6 +957,10 @@ body.compact #main {
     justify-content: space-between;
 }
 
+.waterfall-sliders label {
+    font-weight: 700;
+}
+
 @media screen and (min-width: 50em) {
     .compare .test_results_header {
         padding-top: 1.5rem;
@@ -947,31 +968,19 @@ body.compact #main {
         border-bottom: 1px solid #ddd;
         justify-content: space-between;
     }
+    .compare_settings {
+        padding-top: 2rem;
+        border-left: 1px solid #ddd;
+        padding-left: 3vw;
+        margin-bottom: 1rem;
+    }
     .compare_key {
         border-left: 1px solid #ddd;
         padding-left: 3vw;
         margin-bottom: 1rem;
     }
-    .key {
-        flex: 1 1 50%;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin: 1em auto;
-    }
-    .key li {
-        padding-left: 1.8em;
-        position: relative;
-        padding-bottom: .2em;
-    }
-    .key li b {
-        position: absolute;
-        left: 0;
-        margin-right: 0;
-    }
-    .key .full {
-        grid-column: 1 / 3;
-        text-align: center;
+    .compare_key h3 {
+        margin-top: 0;
     }
 }
 
@@ -1765,7 +1774,7 @@ body.compact .box {
     .about h1 {
         margin-left: 1.5rem;
     }
-    #custom-waterfall .box,
+    #custom-waterfall .box:not(.details_panel),
     .about .box,
     .video .box,
     #page-images .box {
@@ -4005,63 +4014,39 @@ div.bar {
 
 /* custom waterfall settings */
 
+.details_panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    margin: 0;
+    border-radius: 10px;
+}
+
+.details_panel:not([open]) {
+    display: inline-block;
+}
+
 .details_panel_hed {
     font-size: .9rem;
     font-weight: bold;
     cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    list-style-type: none;
+    padding: 1rem 1.5rem;
+    transition: all .5s ease-out;
+    box-shadow: none;
 }
 
-.compare .details_panel {
-    display: inline-block;
-    padding: 1rem;
+.details_panel:not([open]) .details_panel_hed {
+    border: 1px solid #ddd;
+    border-radius: 10px;
 }
 
 .details_panel[open] .details_panel_hed {
     border-bottom: 1px solid rgba(255, 255, 255, .2);
-    margin: 0 0 .8rem;
-    padding: 0 0 .8em;
-}
-
-.details_panel fieldset {
-    border: 0;
-    padding: .3rem 0 0;
-    margin: 0 0 1rem;
-}
-
-.details_panel legend {
-    font-weight: bold;
     margin: 0;
-    display: block;
-    padding: 0;
-}
-
-.details_panel label,
-.details_panel label input[type=text] {
-    display: block;
-    margin-bottom: .5rem;
-}
-
-.details_panel label input[type=text] {
-    margin: .2rem 0 1rem;
-}
-
-.details_panel label em {
-    font-size: .8em;
-}
-
-.details_panel label {
-    margin: .3rem 0 .5rem;
-    line-height: 1.2
-}
-
-.details_panel button {
-    display: none;
-    /* necessary button? does non-js work anyway? */
-}
-
-.details_panel_hed {
-    list-style-type: none;
-    position: relative;
+    /* padding: 0 0 .8em; */
 }
 
 .details_panel_hed::-webkit-details-marker {
@@ -4071,6 +4056,17 @@ div.bar {
 .details_panel_hed>span {
     display: flex;
     gap: .5rem;
+}
+
+.details_panel:not([open]):hover .details_panel_hed,
+.details_panel:not([open]):focus-within .details_panel_hed {
+    border: 1px solid #888;
+    outline: none;
+    /* box-shadow: 0 0 30px rgb(47 128 237 / 50%); */
+}
+
+.details_panel:focus-within summary:focus {
+    outline: none;
 }
 
 .details_panel_hed .icon_plus {
@@ -4107,11 +4103,58 @@ div.bar {
 .details_panel[open]>.details_panel_hed .icon_plus {
     transform: rotate(45deg);
     position: absolute;
-    right: 0;
+    right: 1rem;
+}
+
+.details_panel_content {
+    padding: 1.5rem;
 }
 
 .customwaterfall_download {
     margin: 3rem 0;
+}
+
+.details_panel fieldset {
+    border: 0;
+    padding: .3rem 0 0;
+    margin: 0 0 1rem;
+}
+
+.details_panel legend {
+    font-weight: bold;
+    margin: 0;
+    display: block;
+    padding: 0;
+}
+
+.details_panel label,
+.details_panel label input[type=text] {
+    display: block;
+    margin-bottom: .5rem;
+}
+
+.details_panel label input[type=text] {
+    margin: .2rem 0 1rem;
+}
+
+.details_panel label em {
+    font-size: .8em;
+}
+
+.details_panel label {
+    margin: .3rem 0 .5rem;
+    line-height: 1.2
+}
+
+.details_panel a {
+    color: inherit;
+    display: block;
+    margin: 1rem 0;
+}
+
+.details_panel button {
+    display: none;
+    /* necessary button? does non-js work anyway? */
 }
 
 
@@ -4121,31 +4164,7 @@ div.bar {
     .customwaterfall_hed {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-    }
-    /* .details_panel_hed {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    } */
-    .details_panel {
-        padding: 1rem 1.5rem;
-        transition: all .5s ease-out;
-        border: 1px solid transparent;
-        box-shadow: none;
-        background: transparent;
-        font-size: .9rem;
-    }
-    .customwaterfall_hed .details_panel {
-        margin-top: 3rem;
-    }
-    .details_panel:hover,
-    .details_panel:focus-within {
-        border: 1px solid #2F80ED;
-        box-shadow: 0 0 30px rgb(47 128 237 / 50%);
-    }
-    .details_panel:focus-within summary:focus {
-        outline: none;
+        align-items: baseline;
     }
     .details_panel[open] {
         border: 1px solid #2F80ED;
@@ -4158,6 +4177,7 @@ div.bar {
         right: 2vw;
         top: auto;
         width: 20vw;
+        bottom: 2rem;
         max-width: 20rem;
     }
     .details_panel_content {

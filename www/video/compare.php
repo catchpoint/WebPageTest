@@ -360,32 +360,7 @@ else
                         echo "<p class=\"compare_location\">Tested From: $location</p>";
                         
                     }
-                    
-                    echo '</div>';
 
-                    echo '<div class="compare_settings">';
-                    include 'video/filmstrip_settings.php';
-                    echo '</div>';
-                        
-                    echo '<div class="compare_key">
-                    <h3>Filmstrip key:</h3>
-                    <ul class="key">';
-                    if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-                    <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
-                    <?php }
-                    echo '
-                        <li><b class="thumbChanged"></b>Visual change</li>
-                        <li><b class="thumbLCP"></b>Largest Contentful Paint</li>
-                        <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
-                        <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint + Layout Shift</li>
-                    </ul>
-                    </div><!--compare_key-->
-                    </div>';
-                    ?>
-
-
-            <?php
-                    
                     //build out an expanded link
                     if ($testResults->countRuns() > 1 && count($tests) == 1) {
                         $link = '/video/compare.php?tests=';
@@ -400,6 +375,35 @@ else
                         } while ($cnt <= $testResults->countRuns());
                         echo '<a class="compare-all-link" href="' . substr($link,0,-1) . '">Compare all runs</a>';
                     }
+                    
+                    echo '</div>';
+
+                    echo '<div class="compare_settings">';
+                    include 'video/filmstrip_settings.php';
+
+                    
+                    echo '</div>';
+                        
+                    echo '<div class="compare_key">
+                    <h3>Filmstrip key:</h3>
+                    <ul class="key">';
+                    if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
+                    <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
+                    <?php }
+                    echo '
+                        <li><b class="thumbChanged"></b>Visual change</li>
+                        <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
+                        <li><b class="thumbLCP"></b>Largest Contentful Paint</li>
+                        <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint + Layout Shift</li>
+                    </ul>
+                    </div><!--compare_key-->
+                    </div>';
+                    ?>
+
+
+            <?php
+                    
+                    
                     ScreenShotTable();
                     DisplayGraphs();
                     echo '</div>';
