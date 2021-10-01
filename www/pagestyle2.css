@@ -48,7 +48,7 @@ header {
     padding-top: 1px;
 }
 
-@media screen and (min-width: 60em) {
+@media screen and (min-width: 50em) {
     header {
         display: grid;
         grid-template-columns: 1em repeat(4, 1fr) 1em;
@@ -78,7 +78,7 @@ header .logo img {
     max-width: 50vw;
 }
 
-@media screen and (min-width:60em) {
+@media screen and (min-width:40em) {
     header .logo {
         grid-column: 1 / 7;
         border-bottom: 1px solid rgba(255, 255, 255, .3);
@@ -296,7 +296,7 @@ h2 .medium {
     text-align: center;
     max-width: 20em;
     display: block;
-    margin: auto auto 10.5em;
+    margin: auto auto 6em;
 }
 
 .feature-callouts p {
@@ -455,6 +455,7 @@ footer ul {
     text-decoration: none;
     margin: 1.5em 1.3em;
     display: inline-block;
+    white-space: nowrap;
 }
 
 #wptAuthBar li {
@@ -798,7 +799,7 @@ nav {
     justify-self: flex-start;
 }
 
-@media (max-width:60em) {
+@media (max-width:50em) {
     nav {
         grid-row: 2;
         grid-column: 2 / 5;
@@ -847,6 +848,12 @@ nav li.current a {
 
 nav a:hover {
     text-decoration: underline;
+}
+
+@media screen and (min-width:50em) {
+    nav a {
+        padding: 1.5em .2em;
+    }
 }
 
 @media screen and (min-width:60em) {
@@ -3006,7 +3013,7 @@ td.legend {
     text-align: center;
     box-shadow: 1px 1px 70px rgba(0, 0, 0, 0.5);
     border-radius: 10px;
-    margin-bottom: 13.125em;
+    margin-bottom: 6em;
 }
 
 .testimonial blockquote {
