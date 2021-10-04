@@ -107,7 +107,7 @@ header a {
 }
 
 h1 {
-    font-size: 2em;
+    font-size: 1.7em;
     font-family: "Open Sans", sans-serif;
     line-height: 1em;
     font-weight: 700;
@@ -871,6 +871,7 @@ nav a:hover {
 .home #main {
     max-width: 1083px;
     margin: auto;
+    width: 100%;
 }
 
 body.compact #main {
@@ -1771,22 +1772,26 @@ body.compact .box {
     margin-bottom: 0.5em;
 }
 
-.about h1 {
+.about h1,
+.common h1 {
     margin-left: 3rem;
 }
 
 #custom-waterfall .box:not(.details_panel),
 .about .box,
+.common .box,
 .video .box {
     padding: 3rem;
 }
 
 @media (max-width: 60em) {
-    .about h1 {
+    .about h1,
+    .common h1 {
         margin-left: 1.5rem;
     }
     #custom-waterfall .box:not(.details_panel),
     .about .box,
+    .common .box,
     .video .box,
     #page-images .box {
         padding: 1em 1.5em;
@@ -2222,7 +2227,13 @@ th.header {
 
 .runningStatusIndicator {
     display: flex;
-    max-width: 40%;
+    flex-flow: row wrap;
+}
+
+@media (min-width: 40em) {
+    .runningStatusIndicator {
+        max-width: 40%;
+    }
 }
 
 .runningStatusIndicator li {

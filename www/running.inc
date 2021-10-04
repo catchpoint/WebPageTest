@@ -13,7 +13,7 @@
             include ('head.inc');
         ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="common <?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
             require_once('testStatus.inc');
             $tab = 'Test Result';
