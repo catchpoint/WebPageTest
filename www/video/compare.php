@@ -514,7 +514,7 @@ function ScreenShotTable()
         $maxThumbWidth = 0;
         foreach($tests as &$test) {
             // first, let's print a run label row
-            echo "<tr class=\"video_runlabel\"><th colspan=\"$frameCount\"><span class=\"video_runlabel_text\"";
+            echo "<tr class=\"video_runlabel\"><th colspan=\"$frameCount\"><span class=\"video_runlabel_text\">";
             // Print the index outside of the link tag
             echo $test['index'] . ': ';
             
