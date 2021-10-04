@@ -2199,6 +2199,25 @@ th.header {
     padding: 1rem;
 }
 
+#videoContainer:before,
+.waterfall_marker:before {
+    content: "";
+    border: 1px solid #f00;
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    left: auto;
+    top: auto;
+    position: absolute;
+    z-index: 99999;
+    margin: -4px;
+    background: #fff;
+}
+
+.waterfall_marker:before {
+    margin: -5px;
+}
+
 #createForm #image {
     margin-top: 2.5em;
     margin-bottom: 1em;
