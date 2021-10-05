@@ -907,6 +907,9 @@ body.compact #main {
 .waterfall-sliders label {
     font-weight: 700;
 }
+.compare_meta h2 {
+    margin-top: 0;
+}
 @media screen and (min-width: 50em) {
     .compare .test_results_header {
         padding-top: 1.5rem;

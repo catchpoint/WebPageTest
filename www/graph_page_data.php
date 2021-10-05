@@ -94,10 +94,7 @@ $common_label = implode(" ", $common_labels);
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Graph'; include ('head.inc'); ?>
         <style type="text/css">
-        h2 {
-          text-align: left;
-          font-size:  large;
-        }
+       
         .chartStats {
           clear: both;
           text-align: left;
