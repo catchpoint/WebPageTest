@@ -512,9 +512,9 @@ function dumpOptimizationGlossary()
 {
 ?>
     <hr>
-    <h2>Glossary:</h2>
-    <p></p>
-    <table class="glossary" cellpadding="5px" cellspacing="0" style="width:100%">
+    <h3>Glossary:</h3>
+    <div class="scrollableTable">
+    <table class="glossary pretty" cellpadding="5px" cellspacing="0" style="width:100%">
 
         <tr><th class="nowrap" rowspan=2 colspan=1>First Byte Time</th>
             <td class="nowrap">Applicable Objects</td>
@@ -591,8 +591,8 @@ function dumpOptimizationGlossary()
             <td class="nowrap">What is checked</td>
             <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN. The current list of known CDN's is <a href="https://github.com/WPO-Foundation/wptagent/blob/master/internal/optimization_checks.py#L48">here</a></td>
         </tr>
-
     </table>
+    </div>
 <?php
 }
 ?>

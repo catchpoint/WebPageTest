@@ -93,41 +93,12 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         isset($pageData['CrUX']['metrics']))
     {
         if (!$cruxStyles) {?>
-        <style>
-            .cruxbars {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-            }
-            @media (min-width: 60em){
-                .cruxbars {
-                    grid-template-columns: 1fr 1fr 1fr 1fr;
-                }
-            }
-            /* .crux h3 {
-                padding-top: 1.5em;
-                font-size: 1em;
-            } */
-            .crux .legend {
-                font-size: smaller;
-                font-weight: normal;
-                font-weight: normal;
-                margin: 0 0 2em;
-                display: inline-block;
-                text-align: right;
-            }
-            .crux .fvarrow {
-                color: #1a1a1a;
-            }
-            .crux .rvarrow {
-                color: #737373;
-            }
-        </style>
+        
         <?php
         $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3 class="hed_sub">Real User Data <span>from <abbr title="Chrome User Experience Report">CrUX</abbr></span></h3>';
+        echo '<h3 class="crux_hed">Real User Data <span>from <abbr title="Chrome User Experience Report">CrUX</abbr></span></h3>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> This test';
             if ($includeLabels) {

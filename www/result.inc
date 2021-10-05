@@ -236,10 +236,13 @@ $page_description = "Website performance test result$testLabel.";
                 }
                 ?>
             </div>
+            
             <?php
             if (isset($fvRunResults)) {
+              echo '<div class="cruxembed">';
               require_once(__DIR__ . '/include/CrUX.php');
               InsertCruxHTML($fvRunResults, $rvRunResults, '');
+              echo '</div>';
             }
             ?>
             <script type="text/javascript">

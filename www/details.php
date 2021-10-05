@@ -144,12 +144,14 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create();
                 if (isset($testRunResults)) {
+                  echo '<div class="cruxembed">';
                   require_once(__DIR__ . '/include/CrUX.php');
                   if ($cached) {
                     InsertCruxHTML(null, $testRunResults);
                   } else {
                     InsertCruxHTML($testRunResults, null);
                   }
+                  echo '</div>';
                 }
                 ?>
                 <script type="text/javascript">
