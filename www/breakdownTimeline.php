@@ -98,49 +98,38 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
           <p>Where the browser's main thread was busy, not including idle time waiting for resources <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
                     ?>.</p>
+          
+          <div class="breakdownFrame">
+            <div class="breakdownFrame_item">
+              <div id="pieGroups" ></div>
+              <div class="table visualization_table" id="tableGroups" ></div>
+            </div>
+            <div class="breakdownFrame_item">
+              <div id="pieEvents" ></div>
+              <div class="table visualization_table" id="tableEvents"></div>
+            </div>
+          </div>
 
-            <table align="center">
-                <tr>
-                    <td>
-                        <div id="pieGroups" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieEvents" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="table" id="tableGroups" style="width: 200px;"></div>
-                    </td>
-                    <td>
-                        <div class="table" id="tableEvents" style="width: 400px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <th class="header" colspan="2">
-                    <h2>Main-thread time breakdown</h2>
-                    All of the main-thread activity including idle (waiting for resources usually) <?php
+          <h2>Main-thread time breakdown</h2>
+          <p>All of the main-thread activity including idle (waiting for resources usually) <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
-                    ?>.
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="pieGroupsIdle" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieEventsIdle" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="table" id="tableGroupsIdle" style="width: 200px;"></div>
-                    </td>
-                    <td>
-                        <div class="table" id="tableEventsIdle" style="width: 400px;"></div>
-                    </td>
-                </tr>
-            </table>
+                    ?>.</p>
+          
+
+          <div class="breakdownFrame">
+          <div class="breakdownFrame_item">
+            <div id="pieGroupsIdle" ></div>
+            <div class="table visualization_table" id="tableGroupsIdle"></div>
+          </div>
+          <div class="breakdownFrame_item">
+            <div id="pieEventsIdle"></div>
+            <div class="table visualization_table" id="tableEventsIdle"></div>
+          </div>
+          </div>
+
+
+
+            
         </div>
         <?php include('footer.inc'); ?>
 

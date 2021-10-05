@@ -121,6 +121,15 @@ h1 {
     text-align: left;
 }
 
+h2,
+h3,
+h4,
+h5,
+h6 {
+    padding: 0.5em 0;
+    margin: 0 0 .5em;
+}
+
 h2 {
     font-size: 1.6em;
     line-height: 1.4em;
@@ -129,12 +138,12 @@ h2 {
 
 h3,
 .h3 {
-    font-size: 1.4em;
+    font-size: 1.3em;
     line-height: 1em;
 }
 
 h3.hed_sub {
-    font-size: 1.4em;
+    font-size: 1.3em;
     font-weight: 500;
     margin: 1em 0 1.1em;
     font-style: normal;
@@ -176,6 +185,16 @@ h4,
     line-height: 1.4em;
     font-weight: 700;
 }
+#tables h4 {
+    background: #444;
+    color: #fff;
+    padding: .5em 1em;
+}
+h4 a,
+h4 a:not([href]),
+.h4 a {
+    color: inherit;
+}
 h5 {
     font-size: 1em;
     line-height: 1.4em;
@@ -183,14 +202,6 @@ h5 {
 h6 {
     font-size: 0.83em;
     line-height: 1.4em;
-}
-h2,
-h3,
-h4,
-h5,
-h6 {
-    padding: 0.5em 0;
-    margin: 0 0 .5em;
 }
 .test_results-content h2,
 .test_results-content h3,
@@ -2799,26 +2810,33 @@ td.legend {
 }
 
 /* Overriding classes from https://www.gstatic.com/charts/50/css/table/table.css */
-.test_results-content .google-visualization-table-table {
+.test_results-content .google-visualization-table-table,
+.visualization_table {
     border-collapse: collapse;
     width: 100%;
     font-size: inherit;
+    font-size: 1em !important;
 }
-.test_results-content .google-visualization-table {
+.test_results-content .google-visualization-table,
+.visualization_table {
     display: block;
     margin-top: 1em;
     font-size: .75em;
 }
-.test_results-content .google-visualization-table-th {
+.test_results-content .google-visualization-table-th,
+.visualization_table th {
     background: gainsboro;
 }
 .test_results-content .google-visualization-table-th,
-.test_results-content .google-visualization-table-td {
+.test_results-content .google-visualization-table-td,
+.visualization_table th,
+.visualization_table td {
     border: 1px solid silver;
     padding: 0.4em;
     line-height: 1.4em;
 }
-.test_results-content .google-visualization-table-table td {
+.test_results-content .google-visualization-table-table td,
+.visualization_table td {
     border: 1px solid silver;
 }
 .test_results-content .google-visualization-table .gradient {
