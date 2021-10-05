@@ -247,7 +247,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $console_log = $testStepResult->getConsoleLog();
     if (isset($console_log) && count($console_log)) {
         echo "\n<br><br><a name=\"console-log" . $linkSuffix . "\"><h2>Console Log</h2></a>\n";
-        echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
+        echo "<div class=\"overflow-container\"><table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
         foreach ($console_log as &$log_entry) {
             $row++;
             $rowClass = '';
@@ -260,7 +260,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
               "\">" . htmlspecialchars($log_entry['url']) .
               "</a></div></td><td class=\"line\">" . htmlspecialchars($log_entry['line']) . "</td></tr>\n";
         }
-        echo "</table>\n";
+        echo "</table></div>\n";
     }
 }
 

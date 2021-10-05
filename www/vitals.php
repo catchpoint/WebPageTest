@@ -362,7 +362,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             // summary table
             echo '<h3 align="left">LCP Event Summary</h3>';
             echo '<p align="left"><small><a href="#lcp-full">See full details</a></small></p>';
-            echo '<table class="pretty" cellspacing="0">';
+            echo '<div class="scrollableTable"><table class="pretty" cellspacing="0">';
             echo "<tr><th align='left'>Time</th><td>{$lcp['time']} ms</td></tr>";
             echo "<tr><th align='left'>Size</th><td>{$lcp['size']}px²</td></tr>";
             echo "<tr><th align='left'>Type</th><td>{$lcp['type']}</td></tr>";
@@ -386,7 +386,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo htmlentities($lcp['element']['outerHTML']) . '...';
             echo "</code>";
             echo "</td>";
-            echo '</table>';
+            echo '</table></div>';
 
             // Trimmed waterfall
             $label = $stepResult->readableIdentifier($testInfo->getUrl());

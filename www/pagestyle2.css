@@ -432,7 +432,7 @@ footer ul {
     line-height: 1.5em;
     margin-bottom: 0;
 }
-@media (min-width: 50em) {
+@media (min-width: 30em) {
     #header_data h2 {
         font-size: 1.3em;
     }
@@ -2874,26 +2874,31 @@ td.legend {
 .vitals-diagnostics .vitals-waterfall {
     margin-top: 4em;
     position: relative;
+    /* margin: 4em auto 0;
+    max-width: 1012px; */
 }
 .vitals-diagnostics .vitals-waterfall .waterfall-legend {
     margin: auto 0;
 }
-.vitals-diagnostics .vitals-waterfall:after {
+
+/* .vitals-diagnostics .vitals-waterfall .waterfall-container :after {
     content: "";
     position: absolute;
     right: 3px;
     top: 0;
     bottom: 0;
     border-right: 2px dashed #008000;
-}
+} */
 .vitals-diagnostics .waterfall-label {
-    padding: .3em;
+    /* padding: .3em;
     text-align: right;
     top: 0;
     float: right;
     margin-bottom: 0;
     position: relative;
-    margin-bottom: 2em;
+    margin-bottom: 2em; */
+    
+    display: none;
 }
 .vitals-diagnostics .waterfall-label abbr {
     border: 0;
