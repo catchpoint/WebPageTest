@@ -23,10 +23,13 @@ body {
     color: #111;
     font: 100%/1.4em 'Open Sans', sans-serif;
     background-color: #F4F4F4;
-    background: linear-gradient(180deg, #f4f4f4, #ffffff);
     grid-column-gap: 1.25em;
     grid-template-columns: [gutter-start] calc(50vw - 45em) repeat( 10, minmax(0, 1fr)) calc(50vw - 45em) [gutter-end];
     width: 100%;
+}
+
+body:not(.home) {
+    background: linear-gradient(180deg, #f4f4f4, #ffffff);
 }
 
 body,
@@ -119,19 +122,19 @@ h1 {
 }
 
 h2 {
-    font-size: 1.8em;
-    line-height: 1em;
+    font-size: 1.6em;
+    line-height: 1.4em;
     font-weight: 700;
 }
 
 h3,
 .h3 {
-    font-size: 1.25em;
+    font-size: 1.4em;
     line-height: 1em;
 }
 
 h3.hed_sub {
-    font-size: 1.2em;
+    font-size: 1.4em;
     font-weight: 500;
     margin: 1em 0 1.1em;
     font-style: normal;
@@ -147,20 +150,39 @@ h3.hed_sub {
         font-size: 1em;
         margin: .5em 0 0;
     }
+    
+    h2 {
+        font-size: 1.2em;
+    }
+    
+    h3,
+    .h3 {
+        font-size: 1.1em;
+    }
+    
+    h3.hed_sub {
+        font-size: 1.2em;
+        font-weight: 500;
+        margin: 1em 0 1.1em;
+        font-style: normal;
+        line-height: 1.4;
+        text-transform: uppercase;
+        color: #222;
+    }
 }
 h4,
 .h4 {
     font-size: 1em;
-    line-height: 1em;
+    line-height: 1.4em;
     font-weight: 700;
 }
 h5 {
     font-size: 1em;
-    line-height: 1em;
+    line-height: 1.4em;
 }
 h6 {
     font-size: 0.83em;
-    line-height: 1em;
+    line-height: 1.4em;
 }
 h2,
 h3,
@@ -169,6 +191,11 @@ h5,
 h6 {
     padding: 0.5em 0;
     margin: 0 0 .5em;
+}
+.test_results-content h2,
+.test_results-content h3,
+.test_results-content h4 {
+    margin-top: 1.5em;
 }
 body.compact h2,
 body.compact h3,
@@ -315,15 +342,15 @@ body.compare footer {
     margin-top: 5em;
 }
 footer {
-    text-align: center;
     display: block;
-    width: 100%;
     border-top: 1px solid #eee;
     margin-top: 4rem;
-    padding-top: 2rem;
+    padding: 2rem 1.5rem;
+    color: #333;
 }
 footer ul {
     gap: 1rem;
+    font-size: .8em;
     color: inherit;
 }
 footer a {
@@ -336,6 +363,15 @@ footer ul {
     margin: auto;
     display: flex;
     justify-content: flex-end;
+}
+@media (min-width: 50em) {
+    footer {
+        padding-right: 0;
+    }
+    
+    footer ul {
+        font-size: 1em;
+    }
 }
 
 /*
@@ -2430,6 +2466,18 @@ table.legend td {
 .breakdownFramePies td {
     padding: 0;
 }
+.breakdownFrame {
+    display: flex;
+    flex-flow: row wrap;
+}
+.breakdownFrame_item {
+    width: 100%;
+    flex: 0 1 50%;
+}
+.breakdownFrame_item>div {
+    width: 100%;
+    overflow: auto;
+}
 #quicklinks_table {
     margin: 0 auto;
     line-height: 1.5em;
@@ -2643,11 +2691,11 @@ table.details td.error {
     }
 }
 div.tableRequests table {
-    max-width: 300px;
+    max-width: 450px;
     vertical-align: top;
 }
 div.tableBytes table {
-    max-width: 300px;
+    max-width: 450px;
     vertical-align: top;
 }
 td {

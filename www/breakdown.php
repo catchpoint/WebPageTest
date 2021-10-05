@@ -57,7 +57,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
-            <h1>Content breakdown by MIME type (First View)</h1>
+            <h2>Content breakdown by MIME type (First View)</h2>
             <?php
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -71,7 +71,7 @@ if(!$testInfo->isFirstViewOnly()) {
             ?>
             <?php if ($repeatViewResults) { ?>
                 <br><hr><br>
-                <h1>Content breakdown by MIME type (Repeat View)</h1>
+                <h2>Content breakdown by MIME type (Repeat View)</h2>
                 <?php
                     if ($isMultistep) {
                         $accordionHelper = new AccordionHtmlHelper($repeatViewResults);

@@ -159,7 +159,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
 
     echo "<a name=\"step_" . $testStepResult->getStepNumber() . "\">";
-    echo "<h1 class='stepName'>" . $testStepResult->readableIdentifier() . "</h1>";
+    echo "<h2 class='stepName'>" . $testStepResult->readableIdentifier() . "</h2>";
     echo "</a>";
 
     if ($fileHandler->dirExists($localPaths->videoDir())) {
