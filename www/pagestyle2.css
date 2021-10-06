@@ -1928,8 +1928,13 @@ table.details td.reqMime {
 /* these are for crux embeds */
 .cruxembed .cruxbars {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 30em) {
+    .cruxembed .cruxbars {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 @media (min-width: 60em) {
     .cruxembed .cruxbars {
