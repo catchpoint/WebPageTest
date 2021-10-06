@@ -324,7 +324,7 @@ $loc = ParseLocations($locations);
                     ?>
 
                         <div id="test_subbox-container">
-                            <ul class="ui-tabs-nav">
+                            <ul class="ui-tabs-nav ui-tabs-nav-advanced">
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chromium</a></li>
