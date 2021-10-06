@@ -1562,9 +1562,23 @@ a.btn-primary-compact {
     background-color: #000;
 }
 #simplemodal-container {
-    background-color: #fff;
-    border: 2px solid #444;
-    padding: 4px;
+    background-color: #fff !important;
+    /* border: 2px solid #444; */
+    
+    padding: 5vh 5vw;
+    position: fixed;
+    z-index: 999999999 !important;
+    height: 80vh !important;
+    width: 80vw !important;
+    left: 5vw !important;
+    top: 5vh !important;
+    border: 0;
+    overflow: auto !important;
+    bottom: 5vh !important;
+}
+#simplemodal-container #advanced {
+    background-color: #fff !important;
+    color: #111 !important;
 }
 #location-dialog {
     width: 970px;

@@ -255,8 +255,8 @@ else
                         echo "background: #$bgcolor;\n";
                         echo "color: #$color;\n"
                     ?>
-                    font-family: arial,sans-serif;
-                    padding: 20px;
+                    /* font-family: arial,sans-serif;
+                    padding: 20px; */
                 }
                 #advanced td
                 {
