@@ -1670,7 +1670,11 @@ body.compact #header_container {
     background-color: #fff;
     padding: 1rem 1.5rem 0;
     border-bottom: 1px solid #E9E9E9;
-    margin: 0;
+    margin: 0 1.5rem;
+}
+.cta-banner a {
+    display: inline-block;
+    margin: .5em 1em .5em;
 }
 @media screen and (min-width: 50em) {
     .box {
