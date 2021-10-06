@@ -246,7 +246,6 @@ input.pill {
 }
 img {
     border: none;
-    max-width: 100%;
 }
 input.checkbox,
 input.radio {
@@ -751,6 +750,9 @@ footer ul {
 }
 .script-block {
     text-align: left;
+}
+.result_screenshot {
+    max-width: 100%;
 }
 #script_in_results-container {
     clear: both;

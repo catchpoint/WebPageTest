@@ -182,7 +182,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center" alt="Screenshot" src="' . $screenShotUrl .'">';
+        echo '<img class="center result_screenshot" alt="Screenshot" src="' . $screenShotUrl .'">';
         echo '</a>';
     }
 
@@ -201,21 +201,21 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
         if (isset($pageRunData) && isset($pageRunData['render']))
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Start Render Screenshot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
+        echo '<img class="center result_screenshot" alt="Start Render Screenshot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
         echo '<br><br><a name="dom_element' . $linkSuffix . '"><h2>DOM Element';
         if (isset($pageRunData) && isset($pageRunData['domTime']))
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="DOM Element Screenshot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
+        echo '<img class="center result_screenshot" alt="DOM Element Screenshot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
         echo '<br><br><a name="doc_complete' . $linkSuffix . '"><h2>Document Complete';
         if (isset($pageRunData) && isset($pageRunData['docTime']))
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Document Complete Screenshot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
+        echo '<img class="center result_screenshot" alt="Document Complete Screenshot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
         echo '<br><br><a name="aft' . $linkSuffix . '"><h2>AFT Details';
@@ -223,11 +223,11 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
             echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
         echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
-        echo '<img class="center" alt="AFT Diagnostic image" src="' . $urlPaths->aftDiagnosticImageFile() . '">';
+        echo '<img class="center result_screenshot" alt="AFT Diagnostic image" src="' . $urlPaths->aftDiagnosticImageFile() . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("responsive"))) {
         echo '<br><br><h2 id="responsive">Responsive Site Check</h2>';
-        echo '<img class="center" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
+        echo '<img class="center result_screenshot" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
     }
 
     // display all of the status messages
