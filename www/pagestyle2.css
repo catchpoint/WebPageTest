@@ -905,6 +905,7 @@ body.compact #main {
 }
 .compare .test_results_header {
     padding-top: 1.5rem;
+    padding-bottom: 1rem;
 }
 .key {
     margin: .5em 0 0;
@@ -969,7 +970,6 @@ body.compact #main {
     .compare_key {
         border-left: 1px solid #ddd;
         padding-left: 3vw;
-        margin-bottom: 1rem;
     }
     
     .compare_key h3 {
