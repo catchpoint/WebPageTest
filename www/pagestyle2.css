@@ -246,6 +246,7 @@ input.pill {
 }
 img {
     border: none;
+    max-width: 100%;
 }
 input.checkbox,
 input.radio {

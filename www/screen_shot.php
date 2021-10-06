@@ -182,7 +182,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center" alt="Screenshot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
+        echo '<img class="center" alt="Screenshot" src="' . $screenShotUrl .'">';
         echo '</a>';
     }
 
