@@ -140,10 +140,10 @@ class TestResultsHtmlTables {
     }
     $out = "<tr>\n";
 
-    $out .= "<td align=\"left\" valign=\"middle\">\n";
+    $out .= "<th align=\"left\" valign=\"middle\">\n";
     $breakdownUrl = $urlGenerator->resultPage("breakdown");
     $out .= "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-    $out .= "</td>";
+    $out .= "</th>";
 
     $span = $tableColumns - 1;
     $out .= "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
