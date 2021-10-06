@@ -2301,6 +2301,7 @@ th.header {
     max-height: 2.5em;
     display: inline-block;
     max-width: 5em;
+    margin-right: .5em;
     position: relative;
     top: 1em;
     margin-top: -1em;
@@ -2311,7 +2312,7 @@ th.header {
 .alert-banner a {
     color: #fff;
 }
-@media screen and (min-width:75em) {
+@media screen and (min-width:35em) {
     .alert-banner {
         grid-column: 1 / 13;
     }
