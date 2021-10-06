@@ -3784,6 +3784,9 @@ div.bar {
     display: none;
     /* necessary button? does non-js work anyway? */
 }
+.customwaterfall_hed {
+    padding: 0 1.5rem;
+}
 
 /* at 60em and up, the settings are displayed as a fixed panel */
 @media (min-width: 60em) {
@@ -3791,6 +3794,7 @@ div.bar {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
+        padding: 0 3rem;
     }
     
     .details_panel[open] {
