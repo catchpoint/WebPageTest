@@ -136,8 +136,8 @@ else
                     }
                     ?>
                     <?php
-                            echo "background: #$bgcolor;\n";
-                            echo "color: #$color;\n"
+                            echo "background: #$bgcolor !important;\n";
+                            echo "color: #$color !important;\n"
                         ?>
                     table-layout: fixed;
                     margin-left: auto;
@@ -171,8 +171,8 @@ else
                 {
                     text-align:center;
                     <?php
-                        echo "background: #$bgcolor;\n";
-                        echo "color: #$color;\n"
+                        //echo "background: #$bgcolor;\n";
+                        //echo "color: #$color;\n"
                     ?>
                     font-family: arial,sans-serif
                 }
@@ -180,7 +180,7 @@ else
                 .pagelinks a
                 {
                     <?php
-                        echo "color: #$color;\n"
+                        //echo "color: #$color;\n"
                     ?>
                     word-wrap: break-word;
                     text-decoration: none;
@@ -252,8 +252,8 @@ else
                 #advanced
                 {
                     <?php
-                        echo "background: #$bgcolor;\n";
-                        echo "color: #$color;\n"
+                        //echo "background: #$bgcolor;\n";
+                        //echo "color: #$color;\n"
                     ?>
                     /* font-family: arial,sans-serif;
                     padding: 20px; */
@@ -328,7 +328,7 @@ else
                         top: 0;
                         z-index: 3;
                         <?php
-                            echo "background: #$bgcolor;\n";
+                            //echo "background: #$bgcolor;\n";
                         ?>
                 <?php
                 }
