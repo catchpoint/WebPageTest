@@ -270,7 +270,7 @@ else
                     display: block;
                 }
                 .waterfall_marker {
-                    position: absolute; top: 0; left: 250px;
+                    position: absolute; top: 10px; left: 250px;
                     height: 100%;
                     width: 2px;
                     background-color: #D00;
@@ -441,6 +441,7 @@ else
                     ?>
                     var marker = parseInt(padLeft + ((position / width) * (1012 - padLeft)));
                     $('.waterfall_marker').css('left', marker + 'px');
+                    $('.waterfall_marker').parent()[0].scrollTo( {left: marker - (viewable - 50) } )
                 }
                 UpdateScrollPosition();
 

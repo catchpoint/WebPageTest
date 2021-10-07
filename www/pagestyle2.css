@@ -3140,6 +3140,7 @@ td.legend {
         width: 100% !important;
         margin: auto;
         overflow: auto;
+        padding-top: 1em;
     }
     
     div.waterfall-container img.waterfall-image {
