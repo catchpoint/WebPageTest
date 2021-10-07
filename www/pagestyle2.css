@@ -1993,15 +1993,15 @@ table.details td.reqMime {
     margin-bottom: 1rem;
 }
 .summary-container .summary-metric.good {
-    background: #f4ffed;
+    background: #eaf8e2;
     border: 1px solid #5ec14c;
 }
 .summary-container .summary-metric.ok {
-    background: #fff9eb;
+    background: #fcf5e7;
     border: 1px solid #df9f5e;
 }
 .summary-container .summary-metric.poor {
-    background: #fbe1e1;
+    background: #fdefef;
     border: 1px solid #dd5a65;
 }
 .metric-value {
@@ -2470,6 +2470,8 @@ th.header {
     position: sticky;
     left: 0;
     z-index: 1000;
+    max-width: 40vw;
+    overflow: auto;
 }
 .scrollableTable tbody {
     z-index: 10;
@@ -2488,8 +2490,6 @@ table.pretty td {
     padding: 1.2em 0.4em;
     text-align: center;
     vertical-align: top;
-    max-width: 30vw;
-    overflow: auto;
 }
 #custom-metrics table.pretty td,
 #custom-metrics table.pretty th {
@@ -2545,13 +2545,13 @@ table.pretty td.even {
     background: #eee;
 }
 table.pretty td.good {
-    background: #A1FFA4;
+    background: #b8e17e;
 }
 table.pretty td.ok {
-    background: #FFB342;
+    background: #fbda67;
 }
 table.pretty td.poor {
-    background: #FF7580;
+    background: #eb6565;
 }
 a.result_plot {
     display: inline-block;
