@@ -109,6 +109,8 @@ echo ' <details class="box details_panel">
                         echo "<label for=\"endFullyLoaded\"><input type=\"radio\" name=\"end\" id=\"endFullyLoaded\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded</label>";
                         echo "</fieldset>";
                     ?>
+                    <a class="" href="javascript:ShowAdvanced()">Advanced options...</a>
+
             </form>
 
             <form id="createForm" name="create" method="get" action="/video/view.php">
@@ -127,9 +129,8 @@ echo ' <details class="box details_panel">
 
                 echo "<a id=\"export\" class=\"\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
                 // echo "</div>";
-                echo '<label for="slow"><input type="checkbox" id="slow" name="slow" value="1"> Slow Motion</label>';
-                echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
-                echo '<a class="" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
+                echo '<div class="compare_video_form"><label for="slow"><input type="checkbox" id="slow" name="slow" value="1"> Slow Motion</label>';
+                echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\"></div>";
                 echo "</form>"; ?>
        
 
@@ -138,13 +139,17 @@ echo ' <details class="box details_panel">
             <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
             <p>URL structure: ...compare.php?tests=&lt;Test 1 ID&gt;,&lt;Test 2 ID&gt;...</p>
             <p>The tests are displayed in the order listed and can be customized with options:</p>
-            <table>
-            <tr><td>Custom label</td><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
-            <tr><td>Specific run</td><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
-            <tr><td>Repeat view</td><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
-            <tr><td>Specific step</td><td>-s:3</td><td>110606_MJ_RZEY-s:3</td></tr>
-            <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
+            <div class="scrollableTable">
+            <table class="pretty">
+                <tbody>
+                <tr><th>Custom label</th><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
+                <tr><th>Specific run</th><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
+                <tr><th>Repeat view</th><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
+                <tr><th>Specific step</th><td>-s:3</td><td>110606_MJ_RZEY-s:3</td></tr>
+                <tr><th>Specific End Time</th><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
+            </tbody>
             </table>
+            </div>
             
             <p>You can also customize the background and text color by passing HTML color values to <b>bg</b> and <b>text</b> query parameters.</p>
             <p>Examples:</p>
@@ -158,7 +163,7 @@ echo ' <details class="box details_panel">
             <li><b>White background with black text:</b>
             https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
             </ul>
-            <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
+            <input id="advanced-ok" type=button class="simplemodal-close pill" value="OK">
         </div>
 
         <?php } //embed 

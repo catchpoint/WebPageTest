@@ -1580,6 +1580,17 @@ a.btn-primary-compact {
     background-color: #fff !important;
     color: #111 !important;
 }
+#simplemodal-container #advanced table {
+    margin: 1rem 0;
+}
+#simplemodal-container #advanced li {
+    line-height: 1.4;
+    margin-bottom: .5em;
+}
+#simplemodal-container #advanced .pill {
+    border: 0;
+    cursor: pointer;
+}
 #location-dialog {
     width: 970px;
     height: 590px;
