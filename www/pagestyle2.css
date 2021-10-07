@@ -2205,6 +2205,7 @@ th.header {
 }
 .compare_contain_wrap {
     background: #fff;
+    padding: 1rem;
 }
 .runningStatusIndicator li.is-active::after {
     border-left-color: #1151bb;
@@ -2493,6 +2494,7 @@ table.pretty td {
     overflow: hidden;
     text-align: left;
     white-space: normal;
+    word-wrap: break-word;
 }
 table.pretty th a {
     color: inherit;
