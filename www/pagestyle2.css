@@ -189,6 +189,8 @@ h4,
     background: #444;
     color: #fff;
     padding: .5em 1em;
+    position: sticky;
+    left: 0;
 }
 h4 a,
 h4 a:not([href]),
