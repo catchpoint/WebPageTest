@@ -3139,7 +3139,8 @@ td.legend {
         text-align: left;
         width: 100% !important;
         margin: auto;
-        overflow: auto;
+        overflow: hidden;
+        overflow-x: auto;
         padding-top: 1em;
     }
     
