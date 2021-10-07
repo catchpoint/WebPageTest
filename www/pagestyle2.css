@@ -964,7 +964,6 @@ body.compact #main {
     .compare .test_results_header {
         padding-top: 1.5rem;
         display: flex;
-        border-bottom: 1px solid #ddd;
         justify-content: space-between;
     }
     
@@ -1738,6 +1737,13 @@ body.compact .box {
 .video_runlabel {
     text-align: left;
 }
+.video_runlabel th {
+    border-top: 1px solid #666;
+    padding-top: .5em;
+}
+#videoContainer thead th {
+    padding-bottom: .5em;
+}
 .video_runlabel_text {
     position: sticky;
     font-weight: 700;
@@ -1747,7 +1753,11 @@ body.compact .box {
 }
 .video_runlabel a {
     color: inherit;
+    font-weight: 700;
+}
+.video_runlabel a.editLabel {
     font-weight: 500;
+    font-size: .9em;
 }
 body.compact #header_container {
     padding: 0 1.5em;
@@ -2107,6 +2117,8 @@ th.header {
     color: #fff;
     margin: 0;
     padding: 1rem;
+    border: 2px solid #222;
+    border-radius: 10px;
 }
 #videoContainer:before,
 .waterfall_marker:before {
@@ -2121,6 +2133,9 @@ th.header {
     z-index: 99999;
     margin: -4px;
     background: #fff;
+}
+#videoContainer thead th {
+    font-weight: 700;
 }
 .waterfall_marker:before {
     margin: -5px;

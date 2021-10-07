@@ -95,8 +95,8 @@ else
             ?>
             <style type="text/css">
             <?php
-                $bgcolor = '222222';
-                $color = 'ffffff';
+                $bgcolor = 'ffffff';
+                $color = '222222';
                 if (array_key_exists('bg', $_GET)) {
                     $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
@@ -136,8 +136,8 @@ else
                     }
                     ?>
                     <?php
-                            echo "background: #$bgcolor !important;\n";
-                            echo "color: #$color !important;\n"
+                            echo "background: #$bgcolor;\n";
+                            echo "color: #$color;\n"
                         ?>
                     table-layout: fixed;
                     margin-left: auto;
