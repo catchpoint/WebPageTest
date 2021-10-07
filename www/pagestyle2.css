@@ -952,6 +952,14 @@ body.compact #main {
 .compare_meta h2 {
     margin-top: 0;
 }
+.compare_video_form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, .3);
+    padding: 1rem 0;
+    margin: 1rem 0;
+}
 @media screen and (min-width: 50em) {
     .compare .test_results_header {
         padding-top: 1.5rem;
@@ -965,6 +973,8 @@ body.compact #main {
         border-left: 1px solid #ddd;
         padding-left: 3vw;
         margin-bottom: 1rem;
+        flex: 0 1 20%;
+        order: 3;
     }
     
     .compare_key {
@@ -3700,7 +3710,7 @@ div.bar {
     display: inline-block;
 }
 .details_panel_hed {
-    font-size: .9rem;
+    font-size: .8rem;
     font-weight: bold;
     cursor: pointer;
     position: relative;
@@ -3728,7 +3738,7 @@ div.bar {
 }
 .details_panel:not([open]):hover .details_panel_hed,
 .details_panel:not([open]):focus-within .details_panel_hed {
-    border: 1px solid #888;
+    border: 1px solid #aaa;
     outline: none;
     /* box-shadow: 0 0 30px rgb(47 128 237 / 50%); */
 }
@@ -3832,7 +3842,7 @@ div.bar {
         z-index: 999;
         right: 2vw;
         top: auto;
-        width: 20vw;
+        width: 50vw;
         bottom: 2rem;
         max-width: 20rem;
     }

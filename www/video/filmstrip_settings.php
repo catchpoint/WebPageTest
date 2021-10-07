@@ -127,10 +127,10 @@ echo ' <details class="box details_panel">
                     echo '<input type="hidden" name="loc" value="' . htmlspecialchars(strip_tags($location)) . '">';
                 }
 
-                echo "<a id=\"export\" class=\"\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
+                echo "<a id=\"export\" class=\"\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\" download>Download filmstrip image...</a>";
                 // echo "</div>";
                 echo '<div class="compare_video_form"><label for="slow"><input type="checkbox" id="slow" name="slow" value="1"> Slow Motion</label>';
-                echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\"></div>";
+                echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"View Video\"></div>";
                 echo "</form>"; ?>
        
 
