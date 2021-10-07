@@ -99,7 +99,9 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                 });
 
                 $("input[name=coloring], input[type=checkbox]").click( UpdateWaterfall );
-                $("input[type=text]").on( "input", UpdateWaterfall );
+                $("input[type=text]:not(#requests)").on( "input", UpdateWaterfall );
+                $("input#requests").on( "change", UpdateWaterfall );
+
 
                 // reset the wait cursor when the image loads
                 $('#waterfallImage').load(function(){
