@@ -367,6 +367,9 @@ footer ul {
 footer a {
     color: inherit;
 }
+.home footer {
+    color: #fff;
+}
 footer ul li {
     margin-bottom: 1em;
 }
@@ -1235,6 +1238,10 @@ body.compact #test_box-container {
         display: flex;
         align-items: stretch;
     }
+    
+    .ui-tabs-nav svg {
+        height: 2em;
+    }
 }
 .ui-tabs-nav li {
     flex-grow: 1;
@@ -1245,6 +1252,7 @@ body.compact #test_box-container {
 }
 .ui-tabs-nav svg {
     width: 2em;
+    height: 2em;
     display: block;
     margin: auto auto 1em auto;
 }
@@ -2119,6 +2127,7 @@ th.header {
     padding: 1rem;
     border: 2px solid #222;
     border-radius: 10px;
+    margin-bottom: 1rem;
 }
 #videoContainer:before,
 .waterfall_marker:before {
@@ -2193,6 +2202,9 @@ th.header {
     top: 0;
     bottom: 0;
     right: -1.2em;
+}
+.compare_contain_wrap {
+    background: #fff;
 }
 .runningStatusIndicator li.is-active::after {
     border-left-color: #1151bb;

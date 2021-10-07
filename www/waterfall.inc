@@ -1588,7 +1588,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
     $data_header_height = intval($row_height * 3 / 2);
     $data_footer_height = $row_height * 3;
     $height = ($data_header_height + ($row_height * $row_count) +
-              $data_footer_height + 2) + 100;
+              $data_footer_height + 2) + 150;
     $height += (2 * $row_height) + 2;
     $height_style = "height:{$height}px;";
   }

@@ -284,10 +284,10 @@ else
                     color: #FFC233;
                     font-weight: normal;
                 }
-                div.compare-graph {margin:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-progress {margin:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-timings {margin:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-cls {margin:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
+                div.compare-graph {padding:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-progress {padding:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-timings {padding:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
+                div.compare-graph-cls {padding:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
                 
                 .compare-all-link{
                     padding: 5px;
@@ -405,7 +405,9 @@ else
                     
                     
                     ScreenShotTable();
+                    echo '<div class="compare_contain_wrap">';
                     DisplayGraphs();
+                    echo '</div>';
                     echo '</div>';
                 } else {
                     DisplayStatus();
@@ -804,7 +806,7 @@ function ScreenShotTable()
         echo "</td></tr></table>\n";?>
 
 
-        
+        <div class="compare_contain_wrap">
 
         <?php if (!defined('EMBED')) {
             // display the waterfall if there is only one test
@@ -832,9 +834,9 @@ function ScreenShotTable()
             }
         ?>
 
-        
-        </div>
+       
         <?php   } // EMBED?>
+        </div>
 
         <?php
         // scroll the table to show the first thumbnail change
