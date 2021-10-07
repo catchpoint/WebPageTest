@@ -374,7 +374,7 @@ function InsertChart($metric, $label) {
 
   if ($num_runs >= 3) {
     echo '<div class="chartStats scrollableTable"><table class="pretty">';
-    echo '<thead><tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr></thead>';
+    echo '<thead><tr><th class="pin"></th><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr></thead>';
     foreach ($views as $cached) {
       // For each run in that view
       $pageData = reset($pagesData);

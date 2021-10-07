@@ -2488,6 +2488,8 @@ table.pretty td {
     padding: 1.2em 0.4em;
     text-align: center;
     vertical-align: top;
+    max-width: 30vw;
+    overflow: auto;
 }
 #custom-metrics table.pretty td,
 #custom-metrics table.pretty th {
@@ -2985,6 +2987,7 @@ td.legend {
 /* simple forms */
 .simple_form {
     margin-bottom: 1.5em;
+    word-break: break-word;
 }
 .simple_form fieldset {
     border: 0;
