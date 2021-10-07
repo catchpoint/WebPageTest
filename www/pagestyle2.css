@@ -3389,10 +3389,11 @@ div.jqmdBC button {
 .ui-state-default,
 .ui-widget-content .ui-state-default,
 .ui-widget-header .ui-state-default {
-    /* border: 0; */
-    
     background-color: none;
-    /* color: #1c94c4; */
+}
+div.request-dialog-radio .ui-state-default {
+    color: #1c94c4;
+    border: 0;
 }
 .ui-state-default a,
 .ui-state-default a:link,
@@ -3406,13 +3407,15 @@ div.jqmdBC button {
     border: none;
     /* background-color: #777; */
 }
-.ui-state-active,
-.ui-widget-content .ui-state-active,
-.ui-widget-header .ui-state-active {
-    /* background-color: #ffffff; */
-    /* font-weight: bold; */
-    /* color: #c00; */
-    /* border-radius: 20px; */
+div.request-dialog-radio .ui-state-hover {
+    background-color: #777;
+}
+div.request-dialog-radio .ui-state-active,
+div.request-dialog-radio .ui-widget-header .ui-state-active {
+    background-color: #ffffff;
+    font-weight: bold;
+    color: #c00;
+    border-radius: 20px;
 }
 .ui-state-active a,
 .ui-state-active a:link,
