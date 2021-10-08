@@ -1918,6 +1918,9 @@ img.autohide:hover {
 .cruxbars {
     margin-bottom: 1.5em;
 }
+svg {
+    max-width: 100%;
+}
 .left {
     text-align: left;
 }
