@@ -513,6 +513,24 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableAVIF" class="auto_width">Disable AVIF image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableWEBP" class="auto_width">Disable WEBP image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableJXL" class="auto_width">Disable JPEG XL image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
                                     <?php if ( GetSetting('fullSizeVideoOn') ) { ?>
                                     <li>
                                         <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( GetSetting('fullSizeVideoDefault') )  echo 'checked=checked'; ?> style="float: left;width: auto;">
@@ -639,18 +657,6 @@ $loc = ParseLocations($locations);
                                             Enable Data Reduction<br>
                                             <small>Chrome 34+ on Android</small>
                                         </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
-                                        <label for="disableAVIF" class="auto_width">Disable AVIF image support</label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
-                                        <label for="disableWEBP" class="auto_width">Disable WEBP image support</label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
-                                        <label for="disableJXL" class="auto_width">Disable JPEG XL image support</label>
                                     </li>
                                     <li>
                                         <input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" style="float: left;width: auto;">
