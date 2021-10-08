@@ -255,14 +255,13 @@ $page_description = "Website performance test result$testLabel.";
             <div id="tables" style="text-align:left;">
             <h3 class="hed_sub">Individual Runs</h3>
 
-            <div class="scrollableTable">
+            
 
             <?php
             $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpView);
             echo $resultTables->create();
             ?>
-            </div>
             </div>
             </div>
 
