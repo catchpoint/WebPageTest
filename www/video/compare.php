@@ -130,7 +130,7 @@ else
                     ?>
                         position: sticky;
                         top: 0;
-                        z-index: 5;
+                        z-index: 999999;
                         
                     <?php
                     }
@@ -324,12 +324,9 @@ else
                 ?>
                     div.waterfall-sliders {
                         position: sticky;
-                        clear: both;
                         top: 0;
                         z-index: 3;
-                        <?php
-                            //echo "background: #$bgcolor;\n";
-                        ?>
+                    }
                 <?php
                 }
                 ?>
@@ -1220,13 +1217,21 @@ function DisplayGraphs() {
     ?>
         <script>
           var videoContainer = document.querySelector("#videoContainer");
-          var waterfallSliders = document.querySelector(".waterfall-sliders");
+          var waterfallSliders = document.querySelector(".waterfall-sliders").parentNode;
 
-          console.log(videoContainer);
-          console.log(waterfallSliders);
-          console.log(videoContainer.offsetHeight);
+        //   console.log(videoContainer);
+        //   console.log(waterfallSliders);
+        //   console.log(videoContainer.offsetHeight);
+          function setTop(){
+            waterfallSliders.style.top = (videoContainer.offsetHeight ).toString() + "px";
+            waterfallSliders.style.position = "sticky";
+            waterfallSliders.style.zIndex = "999999";
+            waterfallSliders.style.background = "rgba(255,255,255,0.9)";
 
-          waterfallSliders.style.top = videoContainer.offsetHeight.toString() + "px";
+            waterfallSliders.style.paddingBottom = "0";
+          }
+          setTop();
+          window.addEventListener( "resize", setTop )
         </script>
     <?php
     }
