@@ -149,7 +149,7 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', 152.9);                // version of the sitewide css file
+define('VER_CSS', 153.1);                // version of the sitewide css file
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
@@ -239,19 +239,23 @@ $owner = null;
 if ($supportsSaml) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
-} elseif( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
-  $isFirstVisit = false;
-  $owner = $_COOKIE['google_id'];
-} else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
-  $isFirstVisit = false;
-  $owner = $_COOKIE['o'];
+} 
+if (!$owner) {
+  if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+    $isFirstVisit = false;
+    $owner = $_COOKIE['google_id'];
+  } elseif(isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+    $isFirstVisit = false;
+    $owner = $_COOKIE['o'];
+  }
 }
+
 if (!isset($owner)) {
   $owner = sha1(uniqid(uniqid('', true), true));
 }
 // Sanitize the owner string
 $owner = preg_replace('/[^a-zA-Z0-9]/', '', $owner);
-setcookie('o', $owner, time()+60*60*24*365, '/');
+setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
 
 // set their color selection as a cookie
 if (isset($_REQUEST['color'])) {

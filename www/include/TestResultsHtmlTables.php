@@ -64,7 +64,7 @@ class TestResultsHtmlTables {
 
   private function _createTableForRun($run) {
     $fvMedian = $this->firstViewMedianRun;
-    $out = "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
+    $out = "<div class=\"scrollableTable\"><table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $columns = $this->_countTableColumns();
     $out .= '<thead>' . $this->_createTableHead() . '</thead>';
 
@@ -87,7 +87,7 @@ class TestResultsHtmlTables {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
-    $out .= "</table>\n<br>\n";
+    $out .= "</table>\n</div>\n";
     return $out;
   }
 
