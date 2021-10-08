@@ -246,6 +246,9 @@ maxNavigateCount=20
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
+;Number of days to wait for tests to successfully complete before archiving or deleting
+;max_days_before_archive=30
+
 ;Run archive script hourly automatically as agents poll for work
 ;cron_archive=1
 
