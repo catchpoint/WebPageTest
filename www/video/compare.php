@@ -280,9 +280,12 @@ else
                     padding: 5px;
                     width: 100%;
                 }
-                .max-shift-window{
+                .max-shift-window b {
                     color: #FFC233;
+                    font-weight: 700;
+                    font-size: 1.2em;
                     font-weight: normal;
+                    line-height: 1.3;
                 }
                 div.compare-graph {padding:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-progress {padding:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
@@ -333,7 +336,7 @@ else
             </style>
         </head>
         <body class="compare<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
-                <?php
+                <?php 
                 $tab = 'Test Result';
                 $nosubheader = true;
                 $headerType = 'video';
@@ -385,7 +388,7 @@ else
                     <h3>Filmstrip key:</h3>
                     <ul class="key">';
                     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-                    <li class="max-shift-window full">*Layout shift occurs in the maximum shift window</li>
+                    <li class="max-shift-window full"><b>*</b> Layout shift occurs in the maximum shift window</li>
                     <?php }
                     echo '
                         <li><b class="thumbChanged"></b>Visual change</li>
@@ -466,7 +469,13 @@ function ScreenShotTable()
     global $bgcolor;
     global $supports60fps;
     global $location;
+    
     $has_layout_shifts = false;
+
+
+
+
+
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = htmlspecialchars(trim($_REQUEST['end']));
@@ -695,7 +704,8 @@ function ScreenShotTable()
                                         count($shift['rects']) &&
                                         isset($shift['score']) &&
                                         $shift['score'] > 0) {
-                                    $has_layout_shifts = true;
+                                    $has_layout_shifts = true; 
+                                    
                                     // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
                                     foreach($shift['rects'] as $rect) {
                                         if (is_array($rect) && count($rect) == 4) {
@@ -802,7 +812,6 @@ function ScreenShotTable()
 
         // end of the container table
         echo "</td></tr></table>\n";?>
-
 
         <div class="compare_contain_wrap">
 

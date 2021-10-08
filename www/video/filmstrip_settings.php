@@ -1,5 +1,40 @@
 <?php
 
+// NOTE: this up-front logic is borrowed from lower down in compare.php but settings form needs it as well.
+// TODO: centralize this stuff.
+// we'll set this here so that the settings panel can use it as it's now earlier in the page
+$has_layout_shifts = false;
+if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
+    $layout_shifts = $test['stepResult']->getMetric('LayoutShifts');
+    if (isset($layout_shifts) && is_array($layout_shifts) && count($layout_shifts)) {
+        $has_layout_shifts = true;
+    }
+}
+
+
+
+$has_lcp_rect = false;
+$lcp = null;
+if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
+    $lcp = $test['stepResult']->getMetric('chromeUserTiming.LargestContentfulPaint');
+}
+if (isset($lcp)) {
+    $lcp_time = $lcp;
+    $paint_events = $test['stepResult']->getMetric('largestPaints');
+    if (isset($paint_events) && is_array($paint_events) && count($paint_events)) {
+        foreach($paint_events as $paint) {
+            if (isset($paint['event']) &&
+                $paint['event'] == 'LargestContentfulPaint' &&
+                isset($paint['time']) &&
+                isset($paint['element']['boundingRect'])) {
+                if ($paint['time'] == $lcp) {
+                    $has_lcp_rect = true;
+                }
+            }
+        }
+    }
+}
+
 echo ' <details class="box details_panel">
             <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Adjust Filmstrip Settings</span></span></summary>
              
@@ -19,21 +54,24 @@ echo ' <details class="box details_panel">
                 <?php
                 if ($has_layout_shifts) {
                     $checked = '';
-                    if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] )
+                    if( isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'] ){
                         $checked = ' checked=checked';
+                    }
                     echo "<label for=\"highlightCLS\"><input type=\"checkbox\" id=\"highlightCLS\" name=\"highlightCLS\" value=\"1\"$checked onclick=\"this.form.submit();\"> Highlight Layout Shifts</label>";
                 }
                 if ($has_lcp_rect) {
                     $checked = '';
-                    if( isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'] )
+                    if( isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP'] ){
                         $checked = ' checked=checked';
+                    }
                     echo "<label for=\"highlightLCP\"><input type=\"checkbox\" id=\"highlightLCP\" name=\"highlightLCP\" value=\"1\"$checked onclick=\"this.form.submit();\"> Highlight Largest Contentful Paints</label>";
                 }
 
                 $checked = '';
-                if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] )
+                if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] ){
                     $checked = ' checked=checked';
-               // echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\"> Make Filmstrip Sticky</label>";
+                }
+                echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\"> Make Filmstrip Sticky</label>";
                 
                 ?>
                 </fieldset>
