@@ -394,7 +394,7 @@ else
                     <h3>Filmstrip key:</h3>
                     <ul class="key">';
                     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-                    <li class="max-shift-window full"><b>*</b> Layout shift occurs in the maximum shift window</li>
+                    <li class="max-shift-window full"><b>*</b> Shift impacts LCP Score</li>
                     <?php }
                     echo '
                         <li><b class="thumbChanged"></b>Visual change</li>
