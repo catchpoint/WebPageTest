@@ -68,6 +68,12 @@ else
             $labels .= htmlspecialchars($test['name']);
         }
     }
+
+    $stickyFilmstrip = true; 
+    if( array_key_exists('filmstripScrollWithPage', $_GET) && strlen($_GET['filmstripScrollWithPage'])) {
+        $stickyFilmstrip = false; 
+    }
+
     if( strlen($labels) )
         $title .= ' - ' . $labels;
     ?>
@@ -126,7 +132,7 @@ else
                 #videoContainer
                 {
                     <?php
-                    if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+                    if ( $stickyFilmstrip ) {
                     ?>
                         position: sticky;
                         top: 0;
@@ -323,12 +329,12 @@ else
                 ?>
                 /* div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;} */
                 <?php
-                if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+                if ( $stickyFilmstrip ) {
                 ?>
                     div.waterfall-sliders {
                         position: sticky;
                         top: 0;
-                        z-index: 3;
+                        z-index: 999999;
                     }
                 <?php
                 }
@@ -1222,7 +1228,7 @@ function DisplayGraphs() {
         }
     </script>
     <?php
-    if (array_key_exists('sticky', $_GET) && strlen($_GET['sticky'])) {
+    if ( $stickyFilmstrip ) {
     ?>
         <script>
           var videoContainer = document.querySelector("#videoContainer");

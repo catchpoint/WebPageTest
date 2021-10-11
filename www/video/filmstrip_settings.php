@@ -68,10 +68,10 @@ echo ' <details class="box details_panel">
                 }
 
                 $checked = '';
-                if( isset($_REQUEST['sticky']) && $_REQUEST['sticky'] ){
+                if( !$stickyFilmstrip ){
                     $checked = ' checked=checked';
                 }
-                echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"sticky\" value=\"1\"$checked onclick=\"this.form.submit();\"> Make Filmstrip Sticky</label>";
+                echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"filmstripScrollWithPage\" value=\"1\"$checked onclick=\"this.form.submit();\"> Scroll filmstrips with Page</label>";
                 
                 ?>
                 </fieldset>
