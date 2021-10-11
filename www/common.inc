@@ -276,6 +276,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
 
 $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
 $testLabel = '';
+$page_title = 'WebPageTest Test';
 if (strlen($id)) {
     if(extension_loaded('newrelic')) {
         newrelic_add_custom_parameter ('testID', $id);
@@ -327,24 +328,38 @@ if (strlen($id)) {
       $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
       $blockDomainsString = array_key_exists('blockDomains', $test['testinfo']) ? htmlspecialchars($test['testinfo']['blockDomains']) : null;
       $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
+      $browser = array_key_exists('browser', $test['testinfo']) ? htmlspecialchars($test['testinfo']['browser']) : null;
+      $connectivity = array_key_exists('connectivity', $test['testinfo']) ? htmlspecialchars($test['testinfo']['connectivity']) : null;
+      $locationLabel = array_key_exists('locationLabel', $test['testinfo']) ? htmlspecialchars($test['testinfo']['locationLabel']) : null;
     }
 
-    // build a common label to add to the title of each of the results pages
+    // build a common label and title to add to the each of the results pages
     if (isset($test["test"]) && isset($test["test"]["location"])) {
         $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]);
         $locscitypos =  strpos($locs, ",");
         if ($locscitypos)
             $locs = substr($locs,0,strpos($locs, ","));
         $url_temp = $url;
-        if (substr($url,0,7) == 'http://')
+        if (substr($url,0,7) == 'http://') {
             $url_temp = substr($url,7);
-        elseif (substr($url,0,8) == 'https://')
+        } elseif (substr($url,0,8) == 'https://') {
             $url_temp = substr($url,8);
+        }
+
+        $stripped_url = $url_temp;
+        if (substr($stripped_url, 0, 4) == 'www.') {
+            $stripped_url = substr($stripped_url,4);
+        }
+        if (substr($stripped_url, -1) == '/') {
+            $stripped_url = substr($stripped_url,0,-1);
+        }
         if ($label)
             $label = $label . " : ";
         $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
-        if( isset($testDate) && strlen($testDate) )
+        $page_title = FitText($stripped_url . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
+        if( isset($testDate) && strlen($testDate) ) {
             $testLabel .= " - $testDate";
+        }
     }
 
     if (!isset($test)) {

@@ -33,7 +33,7 @@ $page_description = "Web Vitals details$testLabel";
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>Web Vitals  Details<?php echo $testLabel; ?></title>
+        <title><?php echo "$page_title - Web Vitals Details"; ?></title>
         <?php $gaTemplate = 'Vitals'; include ('head.inc'); ?>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>

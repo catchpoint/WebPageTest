@@ -15,7 +15,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
+        <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
        
     </head>
