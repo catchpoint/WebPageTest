@@ -14,9 +14,7 @@ $page_description = "More information about WebPageTest website speed testing an
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
-        <style type="text/css">
-        #logo {float:right;}
-        </style>
+        
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
@@ -24,6 +22,7 @@ $page_description = "More information about WebPageTest website speed testing an
             $tab = 'About';
             include 'header.inc';
             ?>
+            <div class="about">
             <h1>About WebPageTest</h1>
             <div class="box">
                 <p>Building high quality web experiences for users is at the core of all our efforts. With WebPageTest, 
@@ -51,6 +50,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 <p>If you are having any problems or just have questions about the site, please feel free to 
                 <a href="mailto:info@webpagetest.org">contact us</a>. If you are considering sending advertising opportunities, 
                 SEO/SEM solicitations, link sharing, etc....don't. We won't respond and will mark it as spam.</p>
+            </div>
             </div>
             <?php include('footer.inc'); ?>
         </div>

@@ -108,15 +108,16 @@ class RunResultHtmlTable {
   public function create() {
     $out = '<div class="scrollableTable">';
     $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
-    $out .= $this->_createHead();
+    $out .= '<thead>' . $this->_createHead() . '</thead>';
     $out .= $this->_createBody();
     $out .= "</table></div>\n";
     return $out;
   }
 
   private function _createHead() {
-    $colspan = 2 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
-    $out = "<tr>\n";
+    $colspan = 1 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
+    $out = "<tr class=\"metric_groups\">\n";
+    $out .= $this->_headCell("", "empty pin");
     $out .= $this->_headCell("", "empty", $colspan);
 
     // Count the web vitals metrics that we have
@@ -135,18 +136,18 @@ class RunResultHtmlTable {
       $vitals_count++;
     }
     if ($vitals_count > 0) {
-      $out .= $this->_headCell("<a href='$vitals_url'>Web Vitals</a>", "border", $vitals_count);
+      $out .= $this->_headCell("<span><a href='$vitals_url'>Web Vitals</a></span>", "border", $vitals_count);
     }
-    $out .= $this->_headCell("Document Complete", "border", 3);
-    $out .= $this->_headCell("Fully Loaded", "border", 3 + $this->_countRightEnabledColumns());
+    $out .= $this->_headCell("<span>Document Complete</span>", "border", 3);
+    $out .= $this->_headCell("<span>Fully Loaded</span>", "border", 3 + $this->_countRightEnabledColumns());
     $out .= "</tr>\n";
 
-    $out .= "<tr>";
+    $out .= "<tr class=\"metric_labels\">";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
       if ($this->isMultistep) {
         $out .= $this->_headCell("Step");
       } else {
-        $out .= $this->_headCell("", "empty", 1);
+        $out .= $this->_headCell("", "empty pin", 1);
       }
     }
     $out .= $this->_headCell("First<br>Byte");
@@ -240,7 +241,7 @@ class RunResultHtmlTable {
     $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
     $out = "<tr>\n";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $out .= $this->_bodyCell("", $this->_labelColumnText($stepResult), $class);
+      $out .= $this->_bodyCell("", $this->_labelColumnText($stepResult), $class, true );
     }
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
     if ($this->isColumnEnabled(self::COL_START_RENDER)) {
@@ -339,7 +340,15 @@ class RunResultHtmlTable {
     return '<th align="center" ' . $attributes . 'valign="middle">' . $innerHtml . "</th>\n";
   }
 
-  private function _bodyCell($id, $innerHtml, $classNames = null) {
+  private function _bodyCell($id, $innerHtml, $classNames = null, $isRowHeading = false) {
+    $attributes = '';
+    $attributes .= $id ? 'id="' . $id . '" ' : '';
+    $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
+    $tag = $isRowHeading ? "th" : "td";
+    return '<' . $tag . ' '. $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
+  }
+
+  private function _bodyHeadCell($id, $innerHtml, $classNames = null) {
     $attributes = '';
     $attributes .= $id ? 'id="' . $id . '" ' : '';
     $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';

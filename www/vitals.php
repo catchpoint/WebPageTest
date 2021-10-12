@@ -35,149 +35,6 @@ $page_description = "Web Vitals details$testLabel";
     <head>
         <title>Web Vitals  Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Vitals'; include ('head.inc'); ?>
-        <style type="text/css">
-        <?php
-        include __DIR__ . "/css/accordion.css";
-        include "waterfall.css";
-        ?>
-        .values {
-            text-align: left;
-        }
-        .values li {
-            padding-left: 4em;
-        }
-        figure {
-            display: inline-block;
-            margin: 5px;
-        }
-        .metric {
-            padding-bottom: 2em;
-        }
-        .metric h2 + small{
-            margin-top: -1.3em;
-            margin-bottom: 1.5em;
-            display: block;
-        }
-        li.even {
-            background-color: #f2f2f2;
-        }
-        table.pretty td {
-            text-align: left;
-        }
-        img.autohide:hover {
-            opacity: 0;
-        }
-        .cruxbars{
-            margin-bottom: 1.5em;
-        }
-        .left {text-align:left;}
-        .center {text-align:center;}
-
-        .indented1 {padding-left: 40pt;}
-        .indented2 {padding-left: 80pt;}
-
-        td {
-            white-space:nowrap;
-            text-align:left;
-            vertical-align:middle;
-        }
-
-        td.center {
-            text-align:center;
-        }
-        table.details {
-          margin-left:auto; margin-right:auto;
-          border-collapse: collapse;
-          font-size: larger;
-        }
-        table.details th, table.details td {
-          border: 1px silver solid;
-          padding: 0.2em;
-          text-align: center;
-        }
-        table.details th {
-          background: gainsboro;
-          padding-left: 2em;
-          padding-right: 2em;
-        }
-        table.details caption {
-          padding: 0.5em;
-          margin-left: inherit;
-          margin-right: inherit;
-        }
-        table.details td.domain {
-          text-align: right;
-          max-width: 30em;
-          word-wrap: break-word;
-        }
-        table.details th.reqMime, table.details td.reqMime {
-          max-width: 10em;
-          word-wrap: break-word;
-          overflow: hidden;
-        }
-        .a_request {
-            cursor: pointer;
-        }
-        .lcp-image{
-            overflow-x: scroll;
-            max-width: 100%;
-            text-align: left;
-            margin-top: 1em;
-        }
-        .summary-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            width: 100%;
-        }
-        .summary-container p {
-            margin-bottom: 15px;
-            line-height: 1em;
-        }
-        .summary-metric {
-            min-width: 300px;
-            border: 1px solid black;
-            padding: 10px;
-            font-size: 1.5em;
-            overflow: hidden;
-        }
-        .summary-container .good {
-            background: #d4ffd5;
-        }
-        .summary-container .ok {
-            background: #ffe9b0; 
-        }
-        .summary-container .poor {
-            background: #ffbac0;
-        }
-        .metric-value {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
-        .summary-container a:link, .summary-container a:visited {
-            text-decoration: none;
-            color: black;
-        }
-        .crux .cruxlabel {
-            font-size: 0.7em;
-            margin: 0;
-            z-index: 99;
-        }
-        .cruxlabel + .cruxbars {
-            margin-top: -15px !important;
-        }
-        .cruxbars {
-            margin: 0;
-            z-index: 1;
-        }
-        .cruxlabel .legend {
-            font-size: smaller;
-            font-weight: normal;
-        }
-        .cruxlabel .fvarrow {
-            color: #1a1a1a;
-        }
-    </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
@@ -186,7 +43,7 @@ $page_description = "Web Vitals details$testLabel";
             include 'header.inc';
             ?>
             <div id="result" class=" vitals-diagnostics">
-            <p>Google <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</p>
+            <h3>Google <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</h3>
             <?php
             if (isset($testRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
@@ -505,7 +362,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             // summary table
             echo '<h3 align="left">LCP Event Summary</h3>';
             echo '<p align="left"><small><a href="#lcp-full">See full details</a></small></p>';
-            echo '<table class="pretty" cellspacing="0">';
+            echo '<div class="scrollableTable"><table class="pretty" cellspacing="0">';
             echo "<tr><th align='left'>Time</th><td>{$lcp['time']} ms</td></tr>";
             echo "<tr><th align='left'>Size</th><td>{$lcp['size']}px²</td></tr>";
             echo "<tr><th align='left'>Type</th><td>{$lcp['type']}</td></tr>";
@@ -529,7 +386,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo htmlentities($lcp['element']['outerHTML']) . '...';
             echo "</code>";
             echo "</td>";
-            echo '</table>';
+            echo '</table></div>';
 
             // Trimmed waterfall
             $label = $stepResult->readableIdentifier($testInfo->getUrl());

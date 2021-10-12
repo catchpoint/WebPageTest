@@ -23,24 +23,10 @@ abstract class BreakdownHtmlSnippet {
     $id = $this->breakdownId;
     return <<<EOT
       <div id="$id">
-      <table align="center" data-breakdown-id="$id" class="breakdownFrame">
-          <tr class="breakdownFramePies">
-              <td>
-                  <div class="pieRequests" style="width:450px; height:300px;"></div>
-              </td>
-              <td>
-                  <div class="pieBytes" style="width:450px; height:300px;"></div>
-              </td>
-          </tr>
-          <tr>
-              <td>
-                  <div class="tableRequests" style="width: 100%;"></div>
-              </td>
-              <td>
-                  <div class="tableBytes" style="width: 100%;"></div>
-              </td>
-          </tr>
-      </table>
+        <div data-breakdown-id="$id" class="breakdownFrame">
+          <div class="breakdownFrame_item"><div class="pieRequests" ></div><div class="tableRequests"></div></div>
+          <div class="breakdownFrame_item"><div class="pieBytes" ></div><div class="tableBytes"></div></div>
+        </div>
       </div>
 EOT;
   }

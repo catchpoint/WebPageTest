@@ -60,94 +60,6 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
         <script>document.documentElement.classList.add('has-js');</script>
 
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
-        <style type="text/css">
-        div.bar {
-            height:20px;
-            margin-top:auto;
-            margin-bottom:auto;
-        }
-
-        .left {text-align:left;}
-        .center {text-align:center;}
-
-        .indented1 {padding-left: 40pt;}
-        .indented2 {padding-left: 80pt;}
-
-        td {
-            white-space:nowrap;
-            text-align:left;
-            vertical-align:middle;
-        }
-
-        td.center {
-            text-align:center;
-        }
-
-        table.details {
-          margin-left:auto; margin-right:auto;
-          background: whitesmoke;
-          border-collapse: collapse;
-        }
-        table.details th, table.details td {
-          border: 1px silver solid;
-          padding: 0.2em;
-          text-align: center;
-          font-size: smaller;
-        }
-        table.details th {
-          background: gainsboro;
-        }
-        table.details caption {
-          margin-left: inherit;
-          margin-right: inherit;
-          background: whitesmoke;
-        }
-        table.details th.reqUrl, table.details td.reqUrl {
-          text-align: left;
-          width: 30em;
-          word-wrap: break-word;
-        }
-        table.details th.reqMime, table.details td.reqMime {
-          max-width: 10em;
-          word-wrap: break-word;
-          overflow: hidden;
-        }
-        table.details td.even {
-          background: gainsboro;
-        }
-        table.details td.odd {
-          background: whitesmoke;
-        }
-        table.details td.evenRender {
-          background: #dfffdf;
-        }
-        table.details td.oddRender {
-          background: #ecffec;
-        }
-        table.details td.evenDoc {
-          background: #dfdfff;
-        }
-        table.details td.oddDoc {
-          background: #ececff;
-        }
-        table.details td.warning {
-          background: #ffff88;
-        }
-        table.details td.error {
-          background: #ff8888;
-        }
-        .header_details {
-            display: none;
-        }
-        .a_request {
-            cursor: pointer;
-        }
-
-        <?php
-        include __DIR__ . "/css/accordion.css";
-        include "waterfall.css";
-        ?>
-        </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
@@ -232,12 +144,14 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create();
                 if (isset($testRunResults)) {
+                  echo '<div class="cruxembed">';
                   require_once(__DIR__ . '/include/CrUX.php');
                   if ($cached) {
                     InsertCruxHTML(null, $testRunResults);
                   } else {
                     InsertCruxHTML($testRunResults, null);
                   }
+                  echo '</div>';
                 }
                 ?>
                 <script type="text/javascript">
@@ -320,7 +234,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                         $snippet = $requestHeadersSnippet->create();
                         if ($snippet) {
                             echo '<div id="headers">';
-                            echo '<br><hr><h3>Request Headers</h3>';
+                            echo '<hr><h3>Request Headers</h3>';
                             echo $snippet;
                             echo '</div>';
                         }
@@ -329,8 +243,9 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
             </div>
                 </div>
               
-            <?php include('footer.inc'); ?>
         </div>
+        <?php include('footer.inc'); ?>
+
         <div id="experimentSettings" class="inactive">
               <?php
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
@@ -375,10 +290,12 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
 
             if (div_to_expand.is(":visible")) {
                 div_to_expand.hide();
-                targetNode.html('+' + targetNode.html().substring(1));
+                targetNode.removeAttr("data-expanded");
+                //targetNode.html('+' + targetNode.html().substring(1));
             } else {
                 div_to_expand.show();
-                targetNode.html('-' + targetNode.html().substring(1));
+                targetNode.attr("data-expanded", "true");
+                //targetNode.html('-' + targetNode.html().substring(1));
             }
           }
         }

@@ -23,7 +23,7 @@ $page_description = "WebPageTest Terms of Service.";
         </style>
         <?php $gaTemplate = 'Terms'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="common <?php if ($COMPACT_MODE) {echo ' compact';} ?>"">
             <?php
             include 'header.inc';
             if( is_file('settings/server/terms.inc') ) {

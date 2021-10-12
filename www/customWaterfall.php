@@ -24,26 +24,17 @@ $page_description = "Website speed test custom waterfall$testLabel";
     <head>
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
-        <style>
-            div.bar {
-                height:20px;
-                margin-top:auto;
-                margin-bottom:auto;
-            }
-            
-            <?php include "waterfall.css";?>
-        </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-waterfall" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = null;
             include 'header.inc';
             ?>
             <div class="customwaterfall_hed">
                 <h1>Generate a Custom Waterfall</h1>
-                <details open class="box customwaterfall_settings">
-                    <summary id="customwaterfall_settings_title" class="customwaterfall_settings_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
-                    <form aria-labelledby="customwaterfall_settings_title" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
+                <details open class="box details_panel">
+                    <summary  class="details_panel_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
+                    <form class="details_panel_content" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                         <fieldset>
                             <legend>Chart Type</legend>
                                 <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
@@ -84,7 +75,7 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">";
+                echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\"></div>";
                 echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
 
 ?>
@@ -108,7 +99,9 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
                 });
 
                 $("input[name=coloring], input[type=checkbox]").click( UpdateWaterfall );
-                $("input[type=text]").on( "input", UpdateWaterfall );
+                $("input[type=text]:not(#requests)").on( "input", UpdateWaterfall );
+                $("input#requests").on( "change", UpdateWaterfall );
+
 
                 // reset the wait cursor when the image loads
                 $('#waterfallImage').load(function(){

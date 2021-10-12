@@ -29,63 +29,6 @@ if(!$testInfo->isFirstViewOnly()) {
     <head>
         <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
-        <style type="text/css">
-            div.tableRequests table {
-              max-width: 300px;
-              vertical-align:top;
-            }
-
-            div.tableBytes table {
-              max-width: 300px;
-              vertical-align:top;
-            }
-
-            div.tableRequests td {
-                max-width: 250px;
-                text-align: left;
-            }
-
-            div.tableBytes td {
-                max-width: 250px;
-                text-align: left;
-            }
-
-            td {
-                text-align:center;
-                vertical-align:middle;
-                padding:1em;
-            }
-
-            div.bar {
-                height:20px;
-                margin-top:auto;
-                margin-bottom:auto;
-            }
-
-            table.legend td {
-                white-space:nowrap;
-                text-align:left;
-                vertical-align:top;
-                padding:0;
-            }
-
-            h1 {
-                text-align: center;
-                font-size: 2.5em;
-            }
-
-            h3 {
-                text-align: center;
-            }
-
-            .breakdownFramePies td {
-                padding: 0;
-            }
-
-            <?php
-            include __DIR__ . "/css/accordion.css";
-            ?>
-        </style>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
@@ -114,7 +57,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
-            <h1>Content breakdown by MIME type (First View)</h1>
+            <h2>Content breakdown by MIME type (First View)</h2>
             <?php
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -128,7 +71,7 @@ if(!$testInfo->isFirstViewOnly()) {
             ?>
             <?php if ($repeatViewResults) { ?>
                 <br><hr><br>
-                <h1>Content breakdown by MIME type (Repeat View)</h1>
+                <h2>Content breakdown by MIME type (Repeat View)</h2>
                 <?php
                     if ($isMultistep) {
                         $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
