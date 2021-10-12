@@ -140,12 +140,12 @@ $profiles = parse_ini_file($profile_file, true);
                         </li>
                         <li id="description"></li>
                         <li>
-                            <label for="rv">Include Repeat View:<br></label>
-                            <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)
+                            <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View<br></label>
+                            (Loads the page, closes the browser and then loads the page again)
                         </li>
                         <li>
-                            <label for="lighthouse">Run Lighthouse Audit:<br></label>
-                            <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()">
+                            <label for="lighthouse"><input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()"> Run Lighthouse Audit</label>
+                            
                         </li>
                     </ul>
                 </div>
