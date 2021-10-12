@@ -3437,13 +3437,13 @@ div.jqmdBC button {
     background-color: none;
 }
 div.request-dialog-radio .ui-state-default {
-    color: #1c94c4;
+    color: #ffffff;
     border: 0;
 }
 .ui-state-default a,
 .ui-state-default a:link,
 .ui-state-default a:visited {
-    color: #1c94c4;
+    color: #ffffff;
     text-decoration: none;
 }
 .ui-state-hover,
@@ -3453,7 +3453,7 @@ div.request-dialog-radio .ui-state-default {
     /* background-color: #777; */
 }
 div.request-dialog-radio .ui-state-hover {
-    background-color: #777;
+    background-color: #555;
 }
 div.request-dialog-radio .ui-state-active,
 div.request-dialog-radio .ui-widget-header .ui-state-active {
