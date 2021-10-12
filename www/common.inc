@@ -356,7 +356,11 @@ if (strlen($id)) {
         if ($label)
             $label = $label . " : ";
         $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
-        $page_title = FitText($stripped_url . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
+        if ($label) {
+          $page_title = FitText($label . $stripped_url, 40);
+        } else {
+          $page_title = FitText($stripped_url . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
+        }
         if( isset($testDate) && strlen($testDate) ) {
             $testLabel .= " - $testDate";
         }
