@@ -1699,14 +1699,26 @@ a.btn-primary-compact {
         margin: 0 auto;
     }
 }
-#visual_comparison .urldiv input:first-of-type {
-    margin-right: 2.5em;
-    margin-left: .3em;
+#visual_comparison .urldiv input:first-of-type,
+#visual_comparison .urldiv input:last-of-type {
+    margin-top: .3em;
 }
 #visual_comparison .urldiv input:last-of-type {
-    width: 26.9375em;
-    margin-right: .5em;
-    margin-left: .3em;
+    width: 80%;
+    max-width: 26.9375em;
+}
+@media (min-width: 50em) {
+    #visual_comparison .urldiv input:first-of-type {
+        margin-right: 2.5em;
+        margin-left: .3em;
+        margin-top: 0;
+    }
+    
+    #visual_comparison .urldiv input:last-of-type {
+        width: 26.9375em;
+        margin-right: .5em;
+        margin-left: .3em;
+    }
 }
 #visual_comparison .urldiv a {
     background: url('/images/icon-close.svg') left no-repeat transparent;
