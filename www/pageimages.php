@@ -26,15 +26,8 @@ $userImages = true;
   <head>
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>
-    <style type="text/css">
-      .images td
-      {
-        vertical-align: top;
-        padding-bottom: 1em;
-      }
-    </style>
   </head>
-  <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+  <body id="page-images" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
       <?php
       $tab = 'Test Result';
       $subtab = null;
@@ -49,7 +42,7 @@ $userImages = true;
         }
         ?>
         <p>Images are currently being served from the given URL, and might not necessarily match what was loaded at the time of the test.</p>
-        <table class="images">
+        <div class="scrollableTable"><table class="images pretty">
           <?php
           foreach( $requests as &$request ) {
             if( array_key_exists('contentType', $request) &&
@@ -87,7 +80,7 @@ $userImages = true;
             }
           }
           ?>
-        </table>
+        </table></div>
       </div>
       </div>
 

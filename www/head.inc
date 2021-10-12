@@ -10,12 +10,41 @@ if( strlen($page_description) )
 ?>
 <meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 
 <link rel="apple-touch-icon" sizes="192x192" href="/images/icons-192.png">
 <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
 
+
+<style>
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-light-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-light-webfont.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-regular-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-regular-webfont.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/opensans-bold-webfont.woff2') format('woff2'),
+         url('/fonts/opensans-bold-webfont.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+</style>
 <?php 
     if(!isset($noanalytics) && extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_header();

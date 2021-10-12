@@ -93,27 +93,12 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         isset($pageData['CrUX']['metrics']))
     {
         if (!$cruxStyles) {?>
-        <style>
-            .crux h3 {
-                padding-top: 1.5em;
-                font-size: 1em;
-            }
-            .crux .legend {
-                font-size: smaller;
-                font-weight: normal;
-            }
-            .crux .fvarrow {
-                color: #1a1a1a;
-            }
-            .crux .rvarrow {
-                color: #737373;
-            }
-        </style>
+        
         <?php
         $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3 class="cruxlabel">Real User Data from <abbr title="Chrome User Experience Report">CrUX</abbr></h3>';
+        echo '<h3 class="crux_hed">Real User Data <span>from <abbr title="Chrome User Experience Report">CrUX</abbr></span></h3>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> This test';
             if ($includeLabels) {
@@ -190,17 +175,17 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     $goodText = '';
     if ($goodPct >= 7) {
         $pos = $goodPct / 2;
-        $goodText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Arial' fill='white'>$goodPct%</text>";
+        $goodText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='white'>$goodPct%</text>";
     }
     $fairText = '';
     if ($fairPct >= 7) {
         $pos = $goodPct + ($fairPct / 2);
-        $fairText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Arial' fill='black'>$fairPct%</text>";
+        $fairText = "<text x='$pos%' y='16' text-anchor='middle' font-size='14' font-family='Open Sans, sans-serif' fill='black'>$fairPct%</text>";
     }
     $poorText = '';
     if ($poorPct >= 7) {
         $pos = $goodPct + $fairPct + ($poorPct / 2);
-        $poorText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Arial' fill='white'>$poorPct%</text>";
+        $poorText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='white'>$poorPct%</text>";
     }
     $p75arrow = '';
     $p75text = '';
@@ -213,7 +198,7 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
         $text = "p75 ($p75)";
         $anchor = $pos < 90 ? 'start' : 'end';
         $textPos = $pos < 90 ? $pos + 12 : $pos - 5;
-        $p75text = "<text x='$textPos' y='67' font-size='12' text-anchor='$anchor' font-family='Arial'>$text</text>";
+        $p75text = "<text x='$textPos' y='67' font-size='12' text-anchor='$anchor' font-family='Open Sans, sans-serif'>$text</text>";
     }
     $fvArrow = '';
     if (isset($fvValue)) {
@@ -231,7 +216,7 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     }
 $image_width = $width + 20;
 $svg = <<<EOD
-<svg width='$image_width' height='80' version='1.1' xmlns='http://www.w3.org/2000/svg'>
+<svg viewBox="0 0 $image_width 80" version='1.1' xmlns='http://www.w3.org/2000/svg'>
 <svg x='10' width='$width' y='30' height='25'>
     <rect x='0' width='100%' height='100%' fill='#009316' />
     <rect x='$goodPct%' width='100%' height='100%' fill='#ffa400' />
@@ -246,7 +231,7 @@ $fvArrow
 $p75text
 EOD;
 if ($includeLabels)
-    $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Arial'>$label ($short)</text>";
+    $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Open Sans, sans-serif'>$label ($short)</text>";
 $svg .= '</svg>';
     echo $svg;
 }

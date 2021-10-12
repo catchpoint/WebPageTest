@@ -324,7 +324,7 @@ $loc = ParseLocations($locations);
                     ?>
 
                         <div id="test_subbox-container">
-                            <ul class="ui-tabs-nav">
+                            <ul class="ui-tabs-nav ui-tabs-nav-advanced">
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chromium</a></li>
@@ -428,20 +428,18 @@ $loc = ParseLocations($locations);
                                         if (isset($_REQUEST['fvonly']))
                                           $fvOnly = (int)$_REQUEST['fvonly'];
                                         ?>
-                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0"><label for="viewBoth">First View and Repeat View</label>
-                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1"><label for="viewFirst">First View Only</label>
+                                        <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View</label>
+                                        <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only</label>
                                         </fieldset>
                                     </li>
                                     <li>
-                                      <label for="videoCheck">Capture Video</label>
-                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked>
+                                      <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
                                     </li>
                                     <?php
                                     if (!GetSetting('forcePrivate')) {
                                     ?>
                                     <li>
-                                        <label for="keep_test_private">Keep Test Private</label>
-                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>>
+                                        <label for="keep_test_private"><input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>> Keep Test Private</label>
                                     </li>
                                     <?php
                                     } else {
@@ -461,41 +459,40 @@ $loc = ParseLocations($locations);
                             </div>
                             <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                 <ul class="input_fields">
-                                    <li>
+                                    <li><label for="stop_test_at_document_complete" class="auto_width">
                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
-                                        <label for="stop_test_at_document_complete" class="auto_width">
                                             Stop Test at Document Complete<br>
                                             <small>Typically, tests run until all activity stops.</small>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="ignoreSSL" id="ignore_ssl_cerificate_errors" class="checkbox" style="float: left;width: auto;">
                                         <label for="ignore_ssl_cerificate_errors" class="auto_width">
+                                        <input type="checkbox" name="ignoreSSL" id="ignore_ssl_cerificate_errors" class="checkbox" style="float: left;width: auto;">
                                             Ignore SSL Certificate Errors<br>
                                             <small>e.g. Name mismatch, Self-signed certificates, etc.</small>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="tcpdump" id="tcpdump" class="checkbox" style="float: left;width: auto;">
                                         <label for="tcpdump" class="auto_width">
+                                        <input type="checkbox" name="tcpdump" id="tcpdump" class="checkbox" style="float: left;width: auto;">
                                             Capture network packet trace (tcpdump)
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
+                                        <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                             Save response bodies<br>
                                             <small>For text resources (HTML, CSS, etc.)</small>
                                         </label>
                                     </li>
                                     <li>
+                                        <label for="keepua" class="auto_width">
                                         <?php
                                         $checked = '';
                                         if (GetSetting('keepua') || (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
                                             $checked = ' checked=checked';
                                         echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
                                         ?>
-                                        <label for="keepua" class="auto_width">
                                             Preserve original User Agent string<br>
                                             <small>Do not add PTST to the browser UA string</small>
                                         </label>
@@ -533,8 +530,8 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <?php if ( GetSetting('fullSizeVideoOn') ) { ?>
                                     <li>
-                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( GetSetting('fullSizeVideoDefault') )  echo 'checked=checked'; ?> style="float: left;width: auto;">
                                         <label for="full_size_video" class="auto_width">
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( GetSetting('fullSizeVideoDefault') )  echo 'checked=checked'; ?> style="float: left;width: auto;">
                                             Capture Full Size Video<br>
                                             <small>Enables full size screenshots in the filmstrip</small>
                                         </label>
@@ -566,19 +563,18 @@ $loc = ParseLocations($locations);
                                 <p>Chrome-specific advanced settings:</p>
                                 <ul class="input_fields">
                                     <li>
-                                        <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
+                                        <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;"> Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                         </label>
                                     </li>
-                                    <li>
+                                    <li><label for="mobile">
                                         <?php
                                         $checked = '';
                                         if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
                                           $checked = ' checked';
                                         echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
                                         ?>
-                                        <label for="mobile">
+                                        
                                             Emulate Mobile Browser
                                         </label>
                                         <?php
@@ -614,27 +610,27 @@ $loc = ParseLocations($locations);
                                         
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" checked=checked style="float: left;width: auto;">
                                         <label for="timeline" class="auto_width">
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" checked=checked style="float: left;width: auto;">
                                             Capture Dev Tools Timeline
                                         </label>
                                         
                                     </li>
                                     <li>
-                                    <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
                                         <label for="profiler" class="auto_width">
+                                        <input type="checkbox" name="profiler" id="profiler" class="checkbox" style="float: left;width: auto;">
                                             Enable v8 Sampling Profiler (much larger traces)
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="v8rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">
                                         <label for="v8rcs" class="auto_width">
+                                        <input type="checkbox" name="v8rcs" id="v8rcs" class="checkbox" style="float: left;width: auto;">
                                             Capture <a href="https://v8.dev/docs/rcs" target="_blank" rel="noopener">V8 Runtime Call Stats</a>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
                                         <label for="trace" class="auto_width">
+                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
                                             Capture Chrome Trace (about://tracing)
                                         </label>
                                     </li>
@@ -646,28 +642,28 @@ $loc = ParseLocations($locations);
                                         <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats" autocomplete="off">
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
                                         <label for="netlog" class="auto_width">
+                                        <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
                                             Capture Network Log
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="dataReduction" id="dataReduction" class="checkbox" style="float: left;width: auto;">
                                         <label for="dataReduction" class="auto_width">
+                                        <input type="checkbox" name="dataReduction" id="dataReduction" class="checkbox" style="float: left;width: auto;">
                                             Enable Data Reduction<br>
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" style="float: left;width: auto;">
-                                        <label for="dtShaper" class="auto_width">Use Chrome dev tools traffic-shaping (not recommended)</label>
+                                        <label for="dtShaper" class="auto_width"><input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" > Use Chrome dev tools traffic-shaping (not recommended)</label>
                                     </li>
                                     <?php
                                     if ($admin && GetSetting('wprDesktop')) {
                                     ?>
                                     <li>
-                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        
                                         <label for="wprDesktop" class="auto_width">
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
                                             Use Web Page Replay-recorded Desktop Page<br>
                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                         </label>
@@ -677,8 +673,8 @@ $loc = ParseLocations($locations);
                                     if ($admin && GetSetting('wprMobile')) {
                                     ?>
                                     <li>
-                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="wprMobile" class="auto_width">
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" >
                                             Use Web Page Replay recorded Mobile Page<br>
                                             <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                         </label>
@@ -744,14 +740,14 @@ $loc = ParseLocations($locations);
                                 <br>
                                 <ul class="input_fields">
                                     <li>
-                                        <input type="checkbox" name="sensitive" id="sensitive" class="checkbox" style="float: left;width: auto;">
                                         <label for="sensitive" class="auto_width">
+                                        <input type="checkbox" name="sensitive" id="sensitive" class="checkbox" style="float: left;width: auto;">
                                             Script includes sensitive data<br><small>The script will be discarded and the HTTP headers will not be available in the results</small>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="noheaders" id="noheaders" class="checkbox" style="float: left;width: auto;">
                                         <label for="noheaders" class="auto_width">
+                                        <input type="checkbox" name="noheaders" id="noheaders" class="checkbox" style="float: left;width: auto;">
                                             Discard all HTTP headers
                                         </label>
                                     </li>

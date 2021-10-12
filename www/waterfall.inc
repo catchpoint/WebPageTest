@@ -1552,20 +1552,22 @@ EOT;
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   require_once('./object_detail.inc');
   $opacity = number_format(1.0 / count($waterfalls), 2, '.', '');
-  echo '<div class="waterfall-container waterfall-sliders" style="text-align: left;">';
-  echo 'Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):<br>';
-  echo '<table>';
+  echo '<details class="waterfall-sliders">';
+  echo '<summary>Waterfall Opacity <em>(Adjust the transparency of each run\'s waterfall)</em></summary>';
+  echo '<div>';
   if (count($waterfalls) == 2) {
-    echo "<tr><td>{$waterfalls[0]['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\"></td><td>{$waterfalls[1]['label']}</tr></td>";
+    echo "<label><span>{$waterfalls[0]['label']}</span> <input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\">{$waterfalls[1]['label']}</label>";
+   // echo "<tr><td>{$waterfalls[0]['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\"></td><td>{$waterfalls[1]['label']}</tr></td>";
   } else {
     foreach($waterfalls as $index => &$waterfall) {
       $o = $index ? $opacity : '1.0';
-      echo '<tr>';
-      echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
-      echo '</tr>';
+   //echo '<tr>';
+   echo "<label><span>{$waterfall['label']}</span> <input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></label>";
+      //echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
+     // echo '</tr>';
     }
   }
-  echo '</table>';
+  echo '</div>';
   echo '</div>';
 
   $row_count = 0;
@@ -1586,18 +1588,18 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
     $data_header_height = intval($row_height * 3 / 2);
     $data_footer_height = $row_height * 3;
     $height = ($data_header_height + ($row_height * $row_count) +
-              $data_footer_height + 2) + 100;
+              $data_footer_height + 2) + 150;
     $height += (2 * $row_height) + 2;
     $height_style = "height:{$height}px;";
   }
-  echo "<div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
+  echo "<div class=\"compare_contain_wrap\"><div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
   foreach($waterfalls as $index => &$waterfall) {
     $o = $index ? $opacity : '1.0';
     $waterfallUrl = "/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&step={$waterfall['step']}&rowcount=$row_count$waterfall_options";
     echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"$waterfallUrl\">";
   }
   echo '<div class="waterfall_marker"></div>';
-  echo '</div>';
+  echo '</div></div>';
 }
 
 function LoadPcapSlices($slices_file, $max_bw) {

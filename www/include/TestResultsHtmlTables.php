@@ -64,9 +64,9 @@ class TestResultsHtmlTables {
 
   private function _createTableForRun($run) {
     $fvMedian = $this->firstViewMedianRun;
-    $out = "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
+    $out = "<div class=\"scrollableTable\"><table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $columns = $this->_countTableColumns();
-    $out .= $this->_createTableHead();
+    $out .= '<thead>' . $this->_createTableHead() . '</thead>';
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
     $hasRepeatView = !$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true);
@@ -87,7 +87,7 @@ class TestResultsHtmlTables {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
-    $out .= "</table>\n<br>\n";
+    $out .= "</table>\n</div>\n";
     return $out;
   }
 
@@ -140,10 +140,10 @@ class TestResultsHtmlTables {
     }
     $out = "<tr>\n";
 
-    $out .= "<td align=\"left\" valign=\"middle\">\n";
+    $out .= "<th align=\"left\" valign=\"middle\">\n";
     $breakdownUrl = $urlGenerator->resultPage("breakdown");
     $out .= "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-    $out .= "</td>";
+    $out .= "</th>";
 
     $span = $tableColumns - 1;
     $out .= "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
@@ -162,7 +162,7 @@ class TestResultsHtmlTables {
 
   private function _createTableHead() {
     $out =  "<tr>\n";
-    $out .=  "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
+    $out .=  "<th align=\"center\" class=\"empty pin\" valign=\"middle\"></th>\n";
     $out .=  "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
     if ($this->hasScreenshots) {
       $out .=  '<th align="center" valign="middle">Screenshot</th>';
@@ -201,7 +201,7 @@ class TestResultsHtmlTables {
    */
   private function _createResultCell($stepResult, $even) {
     $evenClass = $even ? " even" : "";
-    $out = "<td align=\"left\" valign=\"middle\" class='resultCell$evenClass'>\n";
+    $out = "<th align=\"left\" class='resultCell$evenClass'>\n";
     if ($this->isMultistep) {
       $out .= FitText($stepResult->readableIdentifier(), 30);
     } else {
@@ -214,7 +214,7 @@ class TestResultsHtmlTables {
     $out .=  $this->_getTraceLinks($stepResult);
     $out .=  $this->_getNetlogLinks($stepResult);
     $out .=  $this->_getDebuglogLinks($stepResult);
-    $out .=  '</td>';
+    $out .=  '</th>';
     return $out;
   }
 
@@ -226,7 +226,7 @@ class TestResultsHtmlTables {
     $localPaths = $stepResult->createTestPaths();
     $nameOnlyPaths = $stepResult->createTestPaths("");
     $class = $even ? 'class="even"' : '';
-    $out = "<td align=\"center\" valign=\"middle\" $class>";
+    $out = "<td align=\"center\"  $class>";
     if (is_dir($localPaths->videoDir())) {
       $urlGenerator = $stepResult->createUrlGenerator("", false);
       $end = $this->getRequestEndParam($stepResult);
@@ -265,7 +265,7 @@ class TestResultsHtmlTables {
     $class = $even ? 'class="even"' : '';
     $onload =  $this->waterfallDisplayed ? "" : " onload=\"markUserTime('aft.First Waterfall')\"";
 
-    $out = "<td align=\"center\" $class valign=\"middle\">\n";
+    $out = "<td align=\"center\" >\n";
     $out .=  "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\" $onload></a>\n";
     $out .=  "</td>\n";
 
@@ -295,7 +295,7 @@ class TestResultsHtmlTables {
     $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screenshot')\"";
     $screenShotUrl = $urlGenerator->resultPage("screen_shot") . "#step_" . $stepResult->getStepNumber();
     $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
-    $out = "<td align=\"center\" valign=\"middle\" $class>\n";
+    $out = "<td align=\"center\"  $class>\n";
     $out .= "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
     $out .= "</td>\n";
     return $out;
