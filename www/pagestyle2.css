@@ -1405,11 +1405,17 @@ body.compact .test_box {
     margin-top: .2em;
 }
 .input_fields li input[type="radio"] {
-    margin-right: .3em;
+    /* margin-right: .3em; */
+    
     margin-left: 0;
 }
 .input_fields li input[type="radio"]:nth-of-type(2n) {
-    margin-left: 2em;
+    /* margin-left: 2em; */
+}
+.input_fields label input[type="radio"],
+.input_fields label input[type="checkbox"] {
+    display: inline-block;
+    margin-right: .5rem;
 }
 .input_fields select {
     max-width: 100%;
@@ -1423,10 +1429,14 @@ body.compact .test_box {
     width: 100%;
     display: flex;
     flex: 1;
+    flex-flow: row wrap;
 }
 .input_fields legend {
     padding: 0;
     margin-bottom: .5em;
+}
+.input_fields fieldset label {
+    flex: 1 1 auto;
 }
 @media screen and (min-width: 50em) {
     .input_fields li {
