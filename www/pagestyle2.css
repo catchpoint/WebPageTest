@@ -1610,7 +1610,7 @@ a.btn-primary-compact {
     
     padding: 5vh 5vw;
     position: fixed;
-    z-index: 999999999 !important;
+    z-index: 9999999 !important;
     height: 80vh !important;
     width: 80vw !important;
     left: 5vw !important;
@@ -2180,7 +2180,7 @@ th.header {
     left: auto;
     top: auto;
     position: absolute;
-    z-index: 99999;
+    z-index: 999;
     margin: -4px;
     background: #fff;
 }
@@ -3903,7 +3903,7 @@ div.bar {
 }
 
 /* at 60em and up, the settings are displayed as a fixed panel */
-@media (min-width: 60em) {
+@media (min-width: 50em) {
     .customwaterfall_hed {
         display: flex;
         justify-content: space-between;
@@ -3918,7 +3918,7 @@ div.bar {
         color: #fff;
         min-height: 20rem;
         position: fixed;
-        z-index: 9999999;
+        z-index: 999999;
         right: 2vw;
         top: auto;
         width: 50vw;

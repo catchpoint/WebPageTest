@@ -136,7 +136,7 @@ else
                     ?>
                         position: sticky;
                         top: 0;
-                        z-index: 999999;
+                        z-index: 9999;
                         
                     <?php
                     }
@@ -334,7 +334,7 @@ else
                     div.waterfall-sliders {
                         position: sticky;
                         top: 0;
-                        z-index: 999999;
+                        z-index: 9999;
                     }
                 <?php
                 }
