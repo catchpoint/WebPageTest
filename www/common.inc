@@ -255,7 +255,12 @@ if (!isset($owner)) {
 }
 // Sanitize the owner string
 $owner = preg_replace('/[^a-zA-Z0-9]/', '', $owner);
-setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
+if ($privateInstall) {
+  setcookie('o', $owner, time()+60*60*24*365, '/');
+} else {
+  setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
+}
+
 
 // set their color selection as a cookie
 if (isset($_REQUEST['color'])) {

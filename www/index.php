@@ -510,6 +510,24 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input type="text" name="appendua" id="appendua" class="text" style="width: 350px;">
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableAVIF" class="auto_width">Disable AVIF image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableWEBP" class="auto_width">Disable WEBP image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableJXL" class="auto_width">Disable JPEG XL image support<br />
+                                            <small>Firefox and Chromium-based browsers only</small>
+                                        </label>
+                                    </li>
                                     <?php if ( GetSetting('fullSizeVideoOn') ) { ?>
                                     <li>
                                         <label for="full_size_video" class="auto_width">
@@ -637,18 +655,7 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="disableAVIF" class="auto_width"><input type="checkbox" name="disableAVIF" id="disableAVIF" class="checkbox" style="float: left;width: auto;"> Disable AVIF image support</label>
-                                    </li>
-                                    <li>
-                                        <label for="disableWEBP" class="auto_width">
-                                        <input type="checkbox" name="disableWEBP" id="disableWEBP" class="checkbox" style="float: left;width: auto;">
-                                        Disable WEBP image support</label>
-                                    </li>
-                                    <li>
-                                        <label for="disableJXL" class="auto_width"><input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;"> Disable JPEG XL image support</label>
-                                    </li>
-                                    <li>
-                                        <label for="dtShaper" class="auto_width"><input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" style="float: left;width: auto;"> Use Chrome dev tools traffic-shaping (not recommended)</label>
+                                        <label for="dtShaper" class="auto_width"><input type="checkbox" name="dtShaper" id="dtShaper" class="checkbox" > Use Chrome dev tools traffic-shaping (not recommended)</label>
                                     </li>
                                     <?php
                                     if ($admin && GetSetting('wprDesktop')) {
