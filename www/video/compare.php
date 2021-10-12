@@ -398,9 +398,8 @@ else
                     <?php }
                     echo '
                         <li><b class="thumbChanged"></b>Visual change</li>
-                        <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
                         <li><b class="thumbLCP"></b>Largest Contentful Paint</li>
-                        <li><b class="thumbLCP thumbLayoutShifted"></b>Largest Contentful Paint + Layout Shift</li>
+                        <li><b class="thumbLayoutShifted"></b>Layout Shift</li>
                     </ul>
                     </div><!--compare_key-->
                     </div>';
