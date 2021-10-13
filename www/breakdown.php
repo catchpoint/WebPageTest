@@ -27,7 +27,7 @@ if(!$testInfo->isFirstViewOnly()) {
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Content Breakdown<?php echo $testLabel; ?></title>
+        <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
     </head>
     <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>

@@ -30,7 +30,7 @@ $page_description = "Website performance test result$testLabel.";
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
+        <title><?php echo "$page_title - WebPageTest Result"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
         <style type="text/css">
             tr.stepResultRow.jkActive td.resultCell {
