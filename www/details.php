@@ -56,7 +56,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Test Details<?php echo $testLabel; ?></title>
+        <title><?php echo "$page_title - WebPageTest Details"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
