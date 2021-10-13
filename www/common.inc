@@ -346,20 +346,18 @@ if (strlen($id)) {
             $url_temp = substr($url,8);
         }
 
-        $stripped_url = $url_temp;
-        if (substr($stripped_url, 0, 4) == 'www.') {
-            $stripped_url = substr($stripped_url,4);
+        $url_hostname = parse_url($url, PHP_URL_HOST);
+        if (substr($url_hostname, 0, 4) == 'www.') {
+            $url_hostname = substr($url_hostname,4);
         }
-        if (substr($stripped_url, -1) == '/') {
-            $stripped_url = substr($stripped_url,0,-1);
-        }
+
         if ($label)
             $label = $label . " : ";
         $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
         if ($label) {
-          $page_title = FitText($label . $stripped_url, 40);
+          $page_title = FitText($label . $url_hostname, 40);
         } else {
-          $page_title = FitText($stripped_url . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
+          $page_title = FitText($url_hostname . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
         }
         if( isset($testDate) && strlen($testDate) ) {
             $testLabel .= " - $testDate";
