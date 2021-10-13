@@ -114,7 +114,7 @@ else
                 {
                     margin-left: auto;
                     margin-right: auto;
-                    padding-right: 100vw;
+                    padding-right: 100%;
                 }
                 #video td{
                     vertical-align: top;
