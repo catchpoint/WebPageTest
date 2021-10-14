@@ -12,6 +12,8 @@ jobs:
       - uses: php-actions/composer@v5
 
       - name: PHPUnit Tests
-        uses: php-actions/phpunit@v2
+        uses: php-actions/phpunit@v3
         with:
           configuration: tests/phpunit.xml
+          php_version: 7.4
+          php_extensions: gd

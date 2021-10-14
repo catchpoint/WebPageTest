@@ -3,6 +3,6 @@
         "phpunit/phpunit": "^9"
     },
     "scripts": {
-      "test": "phpunit tests"
+      "test": "phpunit --configuration tests/phpunit.xml"
     }
 }

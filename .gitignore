@@ -114,3 +114,4 @@ www/settings/server
 www/robots.txt
 
 vendor
+tests/*.cache
