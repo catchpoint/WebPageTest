@@ -27,6 +27,13 @@ There are two examples using the [Restful API](https://docs.webpagetest.org/dev/
 
 There are 2 separate lies of development under different licenses and pull requests are accepted to either of them. The master branch where most active development is occurring is under the [Polyform Shield 1.0.0 license](LICENSE.md) and there is an "apache" branch which is under the more permissive Apache 2.0 license.
 
+## Testing the code
+
+WebPageTest uses [PHPUnit](https://phpunit.de/index.html) to run unit tests. In
+order to install PHPUnit and run the unit tests, you'll first need to install
+[Composer](https://getcomposer.org/). From there, you can run `composer install`
+and `composer test` to run the tests.
+
 # Change Log
 
 View the [WebPageTest Change Log](https://docs.webpagetest.org/change-log)

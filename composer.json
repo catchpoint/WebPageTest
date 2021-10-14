@@ -1,5 +1,8 @@
 {
     "require-dev": {
         "phpunit/phpunit": "^9"
+    },
+    "scripts": {
+      "test": "phpunit tests"
     }
 }
