@@ -132,16 +132,6 @@ else
                 #videoContainer
                 {
                     <?php
-                    if ( $stickyFilmstrip ) {
-                    ?>
-                        position: sticky;
-                        top: 0;
-                        z-index: 9999;
-                        
-                    <?php
-                    }
-                    ?>
-                    <?php
                             echo "background: #$bgcolor;\n";
                             echo "color: #$color;\n"
                         ?>
@@ -150,6 +140,14 @@ else
                     margin-right: auto;
                     width: 100%;
                 }
+                <?php if ( $stickyFilmstrip ) { ?>
+                    body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
+                        position: sticky;
+                        top: 0;
+                        z-index: 9999;
+                    }
+                <?php } ?>
+
                 #videoContainer td
                 {
                     margin: 2px;
@@ -454,6 +452,22 @@ else
                 <?php
                 include "waterfall.js";
                 ?>
+
+                const VIEWPORT_TO_FILMSTRIP_THRESHOLD = 100 / 60
+                function UpdateFilmstripStickyness(viewportTooShort) {
+                    document.body.classList.toggle('viewport-too-short-for-sticky-filmstrip', viewportTooShort)
+                }
+                function WatchViewportToFilmstripThreshold(callback) {
+                    const filmstrip = document.getElementById('videoContainer')
+                    const viewportHeightThreshold = filmstrip.offsetHeight * VIEWPORT_TO_FILMSTRIP_THRESHOLD
+
+                    const shortViewport = window.matchMedia(`(max-height: ${viewportHeightThreshold}px)`)
+                    shortViewport.addEventListener('change', shortViewport =>
+                        callback(shortViewport.matches)
+                    )
+                    callback(shortViewport.matches)
+                }
+                WatchViewportToFilmstripThreshold(UpdateFilmstripStickyness)
             </script>
         </body>
     </html>
