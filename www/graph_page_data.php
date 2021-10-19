@@ -119,7 +119,9 @@ $common_label = implode(" ", $common_labels);
             
             if (count($testsId) != 1) {
               ?>
-              <div class="box">
+              <div id="test_results-container" class="box">
+                <div class="test_results">
+                  <div class="test_results-content">
               <?php
             }
             ?>
@@ -296,6 +298,15 @@ $common_label = implode(" ", $common_labels);
             ?>
             </div>
           </div>
+          <?php
+          // this is not great, admittedly. Right now some divs are opened in header and closed in footer
+          // if a single test is being viewed. We'll need to pull that out at some point to clean this up.
+          if (count($testsId) != 1) {
+              ?>
+              </div></div>
+              <?php
+}
+              ?>
             <?php include('footer.inc'); ?>
             <script type="text/javascript" src="//www.google.com/jsapi"></script>
             <script type="text/javascript">
