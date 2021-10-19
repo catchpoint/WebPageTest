@@ -94,10 +94,7 @@ $common_label = implode(" ", $common_labels);
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Graph'; include ('head.inc'); ?>
         <style type="text/css">
-        h2 {
-          text-align: left;
-          font-size:  large;
-        }
+       
         .chartStats {
           clear: both;
           text-align: left;
@@ -122,7 +119,9 @@ $common_label = implode(" ", $common_labels);
             
             if (count($testsId) != 1) {
               ?>
-              <div class="box">
+              <div id="test_results-container" class="box">
+                <div class="test_results">
+                  <div class="test_results-content">
               <?php
             }
             ?>
@@ -174,7 +173,7 @@ $common_label = implode(" ", $common_labels);
                 </form>
             </div>
 
-            <div id="result" class="test_results-content">
+            <div id="result" class="">
             
             <?php
             $web_vitals = array();
@@ -193,13 +192,13 @@ $common_label = implode(" ", $common_labels);
               }
             }
             if (count($web_vitals)) {
-              echo '<h1>Web Vitals</h1>';
+              echo '<h2>Web Vitals</h2>';
               foreach($web_vitals as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
             if (count($common_labels) > 0) {
-              echo "<h2 style='text-align: center'>${common_label}</h2>";
+              echo "<h3>${common_label}</h3>";
             }
             ?>
             <?php
@@ -273,25 +272,25 @@ $common_label = implode(" ", $common_labels);
                 InsertChart($metric, $label);
             }
             if (isset($customMetrics) && is_array($customMetrics) && count($customMetrics)) {
-              echo '<h1 id="custom">Custom Metrics</h1>';
+              echo '<h2 id="custom">Custom Metrics</h2>';
               foreach($customMetrics as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
             if (isset($elementTimings) && is_array($elementTimings) && count($elementTimings)) {
-              echo '<h1 id="ElementTiming"><a href="https://wicg.github.io/element-timing/" target="_blank" rel="noopener">Element Timings</a></h1>';
+              echo '<h2 id="ElementTiming"><a href="https://wicg.github.io/element-timing/" target="_blank" rel="noopener">Element Timings</a></h2>';
               foreach($elementTimings as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
             if (isset($userTimings) && is_array($userTimings) && count($userTimings)) {
-              echo '<h1 id="UserTiming"><a href="http://www.w3.org/TR/user-timing/" target="_blank" rel="noopener">W3C User Timing marks</a></h1>';
+              echo '<h2 id="UserTiming"><a href="http://www.w3.org/TR/user-timing/" target="_blank" rel="noopener">W3C User Timing marks</a></h2>';
               foreach($userTimings as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
             if (isset($userMeasures) && is_array($userMeasures) && count($userMeasures)) {
-              echo '<h1 id="UserTimingMeasure"><a href="http://www.w3.org/TR/user-timing/#dom-performance-measure" target="_blank" rel="noopener">W3C User Timing measures</a></h1>';
+              echo '<h2 id="UserTimingMeasure"><a href="http://www.w3.org/TR/user-timing/#dom-performance-measure" target="_blank" rel="noopener">W3C User Timing measures</a></h2>';
               foreach($userMeasures as $metric => $label) {
                 InsertChart($metric, $label);
               }
@@ -299,6 +298,15 @@ $common_label = implode(" ", $common_labels);
             ?>
             </div>
           </div>
+          <?php
+          // this is not great, admittedly. Right now some divs are opened in header and closed in footer
+          // if a single test is being viewed. We'll need to pull that out at some point to clean this up.
+          if (count($testsId) != 1) {
+              ?>
+              </div></div>
+              <?php
+}
+              ?>
             <?php include('footer.inc'); ?>
             <script type="text/javascript" src="//www.google.com/jsapi"></script>
             <script type="text/javascript">
@@ -366,7 +374,8 @@ function InsertChart($metric, $label) {
 
   // Write HTML for chart
   $div = "{$metric}Chart";
-  echo "<h2 id=\"$metric\">" . htmlspecialchars($label) . "</h2>";
+  
+  echo "<h4 id=\"$metric\">" . htmlspecialchars($label) . "</h4>";
   if (!$testsInfo) {
     return;
   }
@@ -376,13 +385,13 @@ function InsertChart($metric, $label) {
 
   if ($num_runs >= 3) {
     echo '<div class="chartStats scrollableTable"><table class="pretty">';
-    echo '<tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr>';
+    echo '<thead><tr><th class="pin"></th><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr></thead>';
     foreach ($views as $cached) {
       // For each run in that view
       $pageData = reset($pagesData);
 
     foreach ($pagesData as $key=>$pageData) {
-      echo '<tr>';
+      echo '<tbody><tr>';
       $label = ($cached == '1') ? 'Repeat View' : 'First View';
       echo "<th style=\"text-align: right;\">$label<br/>$testsLabel[$key]</th>";
       $values = values($pageData, $cached, $metric, true);
@@ -408,7 +417,7 @@ function InsertChart($metric, $label) {
       else
         echo "<td></td>";
 
-      echo '</tr>';
+      echo '</tr></tbody>';
     }
     }
     echo '</table></div>';
@@ -484,6 +493,7 @@ function InsertChart($metric, $label) {
   }
   $chart = new Chart($div, $chartColumns, $compareTable);
   $chartData[$metric] = $chart;
-  echo "<div id=\"$div\" class=\"chart\"></div>\n";
+  echo '<div class="overflow-container">';
+  echo "<div id=\"$div\" class=\"chart\"></div></div>\n";
 }
 ?>

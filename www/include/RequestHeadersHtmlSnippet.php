@@ -25,7 +25,7 @@ class RequestHeadersHtmlSnippet {
     }
     $stepNumber = $this->stepResult->getStepNumber();
     $out = '<p><a id="step' . $stepNumber . '_all" href="javascript:expandAll(' . $stepNumber . ');">+ Expand All</a></p>';
-    $out .= '<div id="header_details_step' . $stepNumber . '">';
+    $out .= '<div class="headers_list" id="header_details_step' . $stepNumber . '">';
     foreach ($this->requests as $reqNum => $request) {
       if ($request) {
         $requestNum = $reqNum + 1;
@@ -39,7 +39,7 @@ class RequestHeadersHtmlSnippet {
   private function _createRequestSnippet($requestNum, $request) {
     $stepNum = $this->stepResult->getStepNumber();
     $out = "<h4><span class=\"a_request\" id=\"step${stepNum}_request$requestNum\" data-target-id=\"step${stepNum}_headers_$requestNum\">";
-    $out .= "+ Request $requestNum: " . htmlspecialchars($request['full_url']) . "</span></h4>";
+    $out .= "<strong>Request $requestNum:</strong> " . htmlspecialchars($request['full_url']) . "</span></h4>";
     $out .= '<div class="header_details" id="step' . $stepNum . '_headers_' . $requestNum . '">';
     $out .= "<p class=\"indented2\">\n";
     if (!$this->useLinks)

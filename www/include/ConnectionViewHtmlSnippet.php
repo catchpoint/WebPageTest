@@ -27,13 +27,12 @@ class ConnectionViewHtmlSnippet {
   public function create() {
     $out = $this->_createMap();
     $out .= $this->_createLegend();
-    $out .= "<br>\n";
 
     $friendlyUrls = defined("FRIENDLY_URLS") && FRIENDLY_URLS;
     $urlGenerator = $this->stepResult->createUrlGenerator("", $friendlyUrls);
     $waterfallImage = $urlGenerator->waterfallImage(true, 930, true);
-    $out .= '<img class="progress" alt="Connection View waterfall diagram"' .
-            ' usemap="' . $this->mapName . '" id="' . $this->imageId .'" src="' . $waterfallImage . '">';
+    $out .= '<div class="waterfall-container"><img class="progress" alt="Connection View waterfall diagram"' .
+            ' usemap="' . $this->mapName . '" id="' . $this->imageId .'" src="' . $waterfallImage . '"></div>';
 
     return $out;
   }
@@ -70,8 +69,7 @@ class ConnectionViewHtmlSnippet {
   }
 
   private function _createLegend() {
-    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" class="legend" ' .
-           'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+    $out = '<table class="waterfall-legend" >';
     $out .= "\n<tr>\n";
     $out .= $this->_legendBarTableCell("#007B84", "DNS Lookup", 15);
     $out .= $this->_legendBarTableCell("#FF7B00", "Initial Connection", 15);
@@ -95,7 +93,7 @@ class ConnectionViewHtmlSnippet {
 
   private function _legendBarTableCell($color, $label, $width) {
     $style = "style=\"width:" . $width . "px; background-color:" . $color . "\"";
-    return "<td><table><tr><td><div class=\"bar\" " . $style . "></div></td><td>" . $label . "</td></tr></table></td>\n";
+    return "<td><div class=\"bar\" " . $style . "></div>" . $label . "</td>\n";
   }
 
 }

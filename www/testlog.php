@@ -84,7 +84,7 @@ if( $csv )
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
         <style type="text/css">
-            h4 {text-align: center;}
+            /* h4 {text-align: center;}
             .history table {text-align:left;}
             .history thead {text-align:left;}
             .history th {white-space:nowrap; text-decoration:underline;}
@@ -110,7 +110,7 @@ if( $csv )
                 padding-left: 1em;
             }
             .history td.ip {white-space:nowrap;}
-            .history td.uid {white-space:nowrap;}
+            .history td.uid {white-space:nowrap;} */
         </style>
     </head>
     <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
@@ -118,25 +118,30 @@ if( $csv )
             $tab = 'Test History';
             include 'header.inc';
             ?>
+            <div class="history_hed">
             <h1>Test History</h1>
             
             <form name="filterLog" method="get" action="/testlog.php">
-            <div class="box logged-out-history">
+            <div class="logged-out-history">
                 <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
                     <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup" class="btn-primary">Get Free Access</a>
                 </div>
-                    <label for="filter" class="vis-hidden">Filter test history:</label>
+                <div class="history_filter">
+                    <label for="filter">Filter test history:</label>
                          <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
-                </form>
+                </div>
+            </form>
+            </div>
             <div class="box">
                 <form name="compare" method="get" action="/video/compare.php">
                 <div class="history-controls">
-                <input id="CompareBtn" type="submit" value="Compare">
+                <input id="CompareBtn" type="submit" value="Compare Selected Tests">
                 </div>
-                <table id="history" class="history" border="0" cellpadding="5px" cellspacing="0">
+                <div class="scrollableTable">
+                <table id="history" class="history pretty" border="0" cellpadding="5px" cellspacing="0">
                     <thead>
                         <tr>
-                            <th><span class="vis-hidden">Compare</span></th>
+                            <th class="pin"><span>Select to compare</span></th>
                             <th class="url">URL</th>
                             <th class="date">Run Date</th>
                             <th class="location">Run From</th>
@@ -144,6 +149,7 @@ if( $csv )
                         </tr>
                     </thead>
                 </table>
+                </div>
                 <?php
                 // Hidden form fields
                 if (isset($_REQUEST['local']) && $_REQUEST['local'])
@@ -167,17 +173,6 @@ exit;
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-        <style type="text/css">
-            h4 {text-align: center;}
-            .history table {text-align:left;}
-            .history thead {text-align:left;}
-            .history th {white-space:nowrap; text-decoration:underline;}
-            .history td.date {white-space:nowrap;}
-            .history td.location {white-space:nowrap;}
-            .history td.url {white-space:nowrap;}
-            .history td.ip {white-space:nowrap;}
-            .history td.uid {white-space:nowrap;}
-        </style>
     </head>
     <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
         <?php
@@ -216,10 +211,11 @@ exit;
                     </div>
             <div class="box">
             <form name="compare" method="get" action="/video/compare.php">
-            <input style="top:-1em; left:2em;" id="CompareBtn" type="submit" value="Compare">
-            <table class="history" border="0" cellpadding="5px" cellspacing="0">
+            <input id="CompareBtn" type="submit" value="Compare">
+            <table class="history pretty" >
+                <thead>
                 <tr>
-                    <th></th>
+                    <th>Select to Compare</th>
                     <th>Date/Time</th>
                     <th>From</th>
                     <?php
@@ -233,6 +229,7 @@ exit;
                     <th>Label</th>
                     <th>URL</th>
                 </tr>
+                </thead>
                 <?php
     }  // if( $csv )
                     // loop through the number of days we are supposed to display
@@ -392,14 +389,14 @@ exit;
                                               else
                                               {
                                                   echo '<tr>';
-                                                  echo '<td>';
+                                                  echo '<th>';
                                                   if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) ) {
                                                       echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
                                                       if($repeat) {
                                                           echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
                                                       }
                                                   }
-                                                  echo '</td>';
+                                                  echo '</th>';
                                                   echo '<td class="date">';
                                                   if( $private )
                                                       echo '<b>';

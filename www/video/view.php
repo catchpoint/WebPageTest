@@ -306,7 +306,7 @@ else
             }
         </script>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="video <?php if ($COMPACT_MODE) {echo ' compact';} ?>">
             <?php
             if( !$embed ) {
                 $tab = '';
@@ -314,6 +314,12 @@ else
                 include 'header.inc';
             }
 ?>
+
+            <div>
+                <h1>Video of page loading process</h1>
+                
+            </div>
+
             <div class="box">
 
 <?php

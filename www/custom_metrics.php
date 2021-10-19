@@ -14,15 +14,8 @@ $page_description = "View Custom Metrics";
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php include ('head.inc'); ?>
-        <style>
-        table.pretty td, table.pretty th {
-            overflow: hidden;
-            text-align: left;
-            max-width: 800px;
-        }
-        </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-metrics" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
             <?php
             $tab = 'Test Result';
             include 'header.inc';
@@ -40,7 +33,7 @@ $page_description = "View Custom Metrics";
                 is_array($pageData[$run][$cached]['custom']) &&
                 count($pageData[$run][$cached]['custom'])) {
               echo '<h1>Custom Metrics</h1>';
-              echo '<table class="pretty">';
+              echo '<div class="scrollableTable"><table class="pretty">';
               foreach ($pageData[$run][$cached]['custom'] as $metric) {
                 if (array_key_exists($metric, $pageData[$run][$cached])) {
                   echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
@@ -52,7 +45,7 @@ $page_description = "View Custom Metrics";
                   echo '</td></tr>';
                 }
               }
-              echo '</table>';
+              echo '</table></div>';
             } else {
               echo '<h1>No custom metrics reported</h1>';
             }

@@ -30,7 +30,7 @@ $page_description = "Website performance test result$testLabel.";
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
+        <title><?php echo "$page_title - WebPageTest Result"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
         <style type="text/css">
             tr.stepResultRow.jkActive td.resultCell {
@@ -187,7 +187,8 @@ $page_description = "Website performance test result$testLabel.";
                 if ($fvMedian)
                 {
                     if ($testResults->countRuns() > 1)
-                        echo '<h2>Performance Results (Median Run - ' . htmlspecialchars($median_metric) . ')</h2>';
+                        echo '<h2>Performance Results</h2>';
+                        echo '<h3 class="hed_sub">Median Run based on ' . htmlspecialchars($median_metric) . '</h3>';
                     $fvRunResults = $testResults->getRunResult($fvMedian, false);
                     $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
@@ -202,7 +203,7 @@ $page_description = "Website performance test result$testLabel.";
                     echo $resultTable->create();
 
                     if ($testResults->countRuns() > 1) {
-                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\">Plot Full Results</a>";
+                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
                     }
                     ?>
                     <br>
@@ -235,17 +236,27 @@ $page_description = "Website performance test result$testLabel.";
                 }
                 ?>
             </div>
+            
             <?php
             if (isset($fvRunResults)) {
+              echo '<div class="cruxembed">';
               require_once(__DIR__ . '/include/CrUX.php');
               InsertCruxHTML($fvRunResults, $rvRunResults, '');
+              echo '</div>';
             }
             ?>
             <script type="text/javascript">
               markUserTime('aft.Result Data Table');
             </script>
             <?php } ?>
+
+           
+
             <div id="tables" style="text-align:left;">
+            <h3 class="hed_sub">Individual Runs</h3>
+
+            
+
             <?php
             $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpView);

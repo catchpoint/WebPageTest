@@ -37,7 +37,7 @@ class UserTimingHtmlTable {
     }
     $out = '<div class="scrollableTable">';
     $out .= '<table id="tableW3CTiming" class="pretty scrollable" align="center" border="1" cellpadding="10" cellspacing="0">';
-    $out .= $this->_createHead();
+    $out .= '<thead>' . $this->_createHead() . '</thead>';
     $out .= $this->_createBody();
     $out .= "</table></div><br>\n";
     return $out;

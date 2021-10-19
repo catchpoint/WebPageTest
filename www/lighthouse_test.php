@@ -79,11 +79,13 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             <input type="hidden" name="mobile" value="1">
             <input type="hidden" name="type" value="lighthouse">
 
-            <h2 class="cufon-dincond_black">Run a Chrome Lighthouse Test</h2>
-            <p>Run <a href="https://developers.google.com/web/tools/lighthouse/" target="_blank" rel="noopener">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
+            <h1 class="attention">Run a Chrome Lighthouse Test</h1>
 
             <div id="test_box-container">
+
                 <div id="analytical-review" class="test_box">
+                <p>Run <a href="https://developers.google.com/web/tools/lighthouse/" target="_blank" rel="noopener">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
+
                     <ul class="input_fields">
                         <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
                         <?php

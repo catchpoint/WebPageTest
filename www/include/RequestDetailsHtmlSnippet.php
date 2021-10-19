@@ -44,7 +44,7 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createTable() {
-    $out = "<table class=\"tableDetails details center\">\n";
+    $out = "<div class=\"scrollableTable\"><table class=\"tableDetails details center pretty\"></div>\n";
     $out .= "<caption>Request Details</caption>\n";
     $out .= $this->_createTableHead();
     $out .= $this->_createTableBody();
@@ -54,7 +54,7 @@ class RequestDetailsHtmlSnippet {
 
   private function _createTableHead() {
     $out = "<thead>\n<tr>\n";
-    $out .= "<th class=\"reqNum\">#</th>\n";
+    $out .= "<th class=\"reqNum pin\">#</th>\n";
     $out .= "<th class=\"reqUrl\">Resource</th>\n";
     $out .= "<th class=\"reqMime\">Content Type</th>\n";
     $out .= "<th class=\"reqStart\">Request Start</th>\n";
@@ -95,7 +95,7 @@ class RequestDetailsHtmlSnippet {
     $highlight = $this->_getRowHighlightClass($requestNum, $request);
 
     $reqNumValue = $this->useLinks ? ('<a href="#step' . $stepNum . '_request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
-    $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight);
+    $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight, "th");
 
     $reqUrl = $this->_createRequestUrlLink($request, $requestNum);
     $out .= $this->_createDataCell($reqUrl, "reqUrl", $highlight);
@@ -134,9 +134,9 @@ class RequestDetailsHtmlSnippet {
     return $out;
   }
 
-  private function _createDataCell($value, $class, $highlight) {
+  private function _createDataCell($value, $class, $highlight, $tag = "td") {
     $value = empty($value) ? "-" : $value;
-    return "<td class=\"" . $class . " " . $highlight . "\">" . $value . "</td>\n";
+    return "<" . $tag . " class=\"" . $class . " " . $highlight . "\">" . $value . "</" . $tag .  ">\n";
   }
 
   private function _getRowHighlightClass($requestNum, $request) {
@@ -196,8 +196,8 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createLegendCell($color, $label) {
-    $out = '<td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:' . $color . '"></div></td>';
-    $out .= "<td>" . $label . "</td></tr></tbody></table></td>\n";
+    $out = '<td><div class="bar" style="display: inline-block; width:15px; background-color:' . $color . '"></div>';
+    $out .= "" . $label . "</td>\n";
     return $out;
   }
 
