@@ -2177,7 +2177,7 @@ th.header {
     margin-bottom: 1rem;
 }
 #videoContainer:before,
-.waterfall_marker:before {
+.compare_contain_wrap .waterfall_marker:before {
     content: "";
     border: 1px solid #f00;
     width: 10px;
