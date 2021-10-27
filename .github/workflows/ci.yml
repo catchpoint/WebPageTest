@@ -9,11 +9,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: php-actions/composer@v5
-
-      - name: PHPUnit Tests
-        uses: php-actions/phpunit@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          configuration: tests/phpunit.xml
-          php_version: 7.4
-          php_extensions: gd apcu
+          php-version: 7.4
+          ini-values: apc.enable_cli=On
+          tools: pecl, phpunit
+          extensions: gd, apcu
+
+      - name: Install deps
+        run: composer install
+
+      - name: Run tests
+        run: composer test
