@@ -18,7 +18,7 @@ The cross-platform browser agent is [here](https://github.com/WPO-Foundation/wpt
 
 # API Examples
 
-There are two examples using the [Restful API](https://docs.webpagetest.org/dev/api/):
+There are two examples using the [Restful API](https://docs.webpagetest.org/api/):
 
 - /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
 - /batchtool - A python project that can submit a bulk set of tests and gather the results.
