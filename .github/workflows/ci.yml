@@ -16,4 +16,4 @@ jobs:
         with:
           configuration: tests/phpunit.xml
           php_version: 7.4
-          php_extensions: gd
+          php_extensions: gd apcu
