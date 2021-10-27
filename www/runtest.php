@@ -61,6 +61,7 @@
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
+    require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
     set_time_limit(300);
 
     $redirect_cache = array();
@@ -3085,6 +3086,14 @@ function CheckRateLimit($test, &$error) {
   // let logged-in users pass
   if (isset($USER_EMAIL) && strlen($USER_EMAIL)) {
     return true;
+  }
+
+  $cmrl = new CheckMonthlyRateLimit($test['ip']);
+  $passesMonthly = $cmrl->check();
+
+  if(!$passesMonthly) {
+    $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account.";
+    return false;
   }
 
   // Enforce per-IP rate limits for testing
