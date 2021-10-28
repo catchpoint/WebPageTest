@@ -2,9 +2,9 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once('./common_lib.inc');
-require_once('./plugins.php.inc');
-require_once('./util.inc');
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/plugins.php.inc');
+require_once(__DIR__ . '/util.inc');
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
