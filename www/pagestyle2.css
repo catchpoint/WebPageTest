@@ -1780,9 +1780,15 @@ body.compact .box {
 }
 
 /* error page styles */
+.testerror {
+    text-align: left;
+    max-width: 34rem;
+    margin: 0 auto;
+    padding: 3rem;
+}
 .testerror h1 {
     color: #dc9739;
-    text-align: center;
+    text-align: left;
     margin: 1em 0;
 }
 .testerror h1 em {
@@ -1798,7 +1804,27 @@ body.compact .box {
 .testerror_login {
     margin: 0 auto;
     justify-content: center;
-    max-width: 20em;
+}
+.testerror_loginperks {
+    list-style: disc;
+    padding: 0 0 0 3em;
+}
+.testerror p,
+.testerror_loginperks {
+    line-height: 1.4;
+    margin: 0 0 1.5em;
+}
+.testerror_loginperks li {
+    margin-bottom: 0.5em;
+}
+.testerror_login {
+    margin: 3rem 0 0;
+    justify-content: center;
+    display: flex;
+    gap: 2em;
+    background: #f6f6f6;
+    padding: 1.5em;
+    border-radius: 8px;
 }
 
 /* compare page styles */

@@ -2882,7 +2882,7 @@ function ErrorPage($error) {
                 include 'header.inc';
               ?>
               
-              <div class="testerror box" style="text-align: center; max-width: 34rem; margin: 0 auto;padding: 3rem;">
+              <div class="testerror box">
                 <h1>Oops! <em>There was a problem with the test.</em></h1>
                 <?php
                 echo $error;
@@ -3069,13 +3069,22 @@ function ReportAnalytics(&$test, $testId)
 }
 
 function loggedOutLoginForm(){
-  $ret = '<ul class="testerror_login><li><a href="/saml/login.php">Login</a></li>';
+  $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
   $reg .= GetSetting('saml_register');
   if ($reg) {
       $ret .= "<li><a class='pill' href='$reg'>Sign-up</a></li>";
   }
   $ret .= "</ul>";
   return $ret;
+}
+
+function loggedInPerks(){
+  $msg = '<ul class="testerror_loginperks">';
+  $msg .= '<li>Access to 13 months of saved tests (<em>including this one!</em>), making it easier to compare tests and analyze trends.</li>';
+  $msg .= '<li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>';
+  $msg .= '<li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>';
+  $msg .= '</ul>';
+  return $msg;
 }
 
 function CheckRateLimit($test, &$error) {
@@ -3102,7 +3111,9 @@ function CheckRateLimit($test, &$error) {
   $passesMonthly = $cmrl->check();
 
   if(!$passesMonthly) {
-    $error = '<p><strong>You\'ve hit the max on logged-out tests this month, but don\'t worry! You can keep testing...</strong> You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no hourly rate limits as well.</p>' . loggedOutLoginForm();
+    $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+    $error .= loggedInPerks();
+    $error .= loggedOutLoginForm();
     return false;
   }
 
@@ -3123,7 +3134,10 @@ function CheckRateLimit($test, &$error) {
     } else {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
-      $error = '<p><strong>You\'ve hit the max on logged-out tests this hour, but don\'t worry! You can keep testing...</strong>You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no monthly rate limits as well.</p>';
+      $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+
+      $error .= loggedInPerks();
+
 
       if ($supportsSaml && $register && $apiUrl) {
         $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
