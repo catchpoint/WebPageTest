@@ -2881,10 +2881,10 @@ function ErrorPage($error) {
                 <?php
                 include 'header.inc';
               ?>
-              <h1>There was an error with the test</h1>
-                        <div class="box">
-
-              <?php
+              
+              <div class="testerror box" style="text-align: center; max-width: 34rem; margin: 0 auto;padding: 3rem;">
+                <h1>Oops! <em>There was a problem with the test.</em></h1>
+                <?php
                 echo $error;
                 ?>
           </div>
@@ -3068,6 +3068,15 @@ function ReportAnalytics(&$test, $testId)
   }
 }
 
+function loggedOutLoginForm(){
+  $ret = '<ul class="testerror_login><li><a href="/saml/login.php">Login</a></li>';
+  $reg .= GetSetting('saml_register');
+  if ($reg) {
+      $ret .= "<li><a class='pill' href='$reg'>Sign-up</a></li>";
+  }
+  return $ret;
+}
+
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
   global $supportsSaml;
@@ -3092,7 +3101,7 @@ function CheckRateLimit($test, &$error) {
   $passesMonthly = $cmrl->check();
 
   if(!$passesMonthly) {
-    $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account.";
+    $error = '<p><strong>You\'ve hit the max on anonymous tests this month, but don\'t worry! You can keep testing...</strong> You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no hourly rate limits as well.</p>' . loggedOutLoginForm();
     return false;
   }
 
@@ -3113,11 +3122,12 @@ function CheckRateLimit($test, &$error) {
     } else {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
+      $error = '<p><strong>You\'ve hit the max on anonymous tests this hour, but don\'t worry! You can keep testing...</strong>You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no monthly rate limits as well.</p>';
+
       if ($supportsSaml && $register && $apiUrl) {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please <a href='/saml/login.php'>log in</a> with a <a href='$register'>registered account</a> or wait an hour before retrying.<br>If you need to run tests programmatically there is also the <a href='$apiUrl'>WebPageTest API</a>.";
-      } else {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+        $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
       }
+      $error .= loggedOutLoginForm();
       $ret = false;
     }
   }

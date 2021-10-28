@@ -1779,6 +1779,28 @@ body.compact .box {
     }
 }
 
+/* error page styles */
+.testerror h1 {
+    color: #dc9739;
+    text-align: center;
+    margin: 1em 0;
+}
+.testerror h1 em {
+    display: block;
+    font-style: normal;
+    font-weight: 500;
+    font-size: .8em;
+    color: #333;
+    margin: .3em 0 .5em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1em;
+}
+.testerror_login {
+    margin: 0 auto;
+    justify-content: center;
+    max-width: 20em;
+}
+
 /* compare page styles */
 .video_runlabel {
     text-align: left;
@@ -1850,14 +1872,15 @@ body.compact #header_container {
 .test_results-content {
     padding: 1em 1.5em;
 }
-.test_menu + .test_results-content {
+.test_menu+.test_results-content {
     padding-top: 0;
 }
 @media (min-width: 50em) {
     .test_results-content {
         padding: 1em 3em 0;
     }
-    .test_menu + .test_results-content {
+    
+    .test_menu+.test_results-content {
         padding-top: 0;
     }
 }
