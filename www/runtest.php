@@ -3074,6 +3074,7 @@ function loggedOutLoginForm(){
   if ($reg) {
       $ret .= "<li><a class='pill' href='$reg'>Sign-up</a></li>";
   }
+  $ret .= "</ul>";
   return $ret;
 }
 
@@ -3101,7 +3102,7 @@ function CheckRateLimit($test, &$error) {
   $passesMonthly = $cmrl->check();
 
   if(!$passesMonthly) {
-    $error = '<p><strong>You\'ve hit the max on anonymous tests this month, but don\'t worry! You can keep testing...</strong> You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no hourly rate limits as well.</p>' . loggedOutLoginForm();
+    $error = '<p><strong>You\'ve hit the max on logged-out tests this month, but don\'t worry! You can keep testing...</strong> You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no hourly rate limits as well.</p>' . loggedOutLoginForm();
     return false;
   }
 
@@ -3122,7 +3123,7 @@ function CheckRateLimit($test, &$error) {
     } else {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
-      $error = '<p><strong>You\'ve hit the max on anonymous tests this hour, but don\'t worry! You can keep testing...</strong>You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no monthly rate limits as well.</p>';
+      $error = '<p><strong>You\'ve hit the max on logged-out tests this hour, but don\'t worry! You can keep testing...</strong>You\'ll just need to <a href="/saml/login.php">log in</a>, which gives you access to other nice features like saved test history and no monthly rate limits as well.</p>';
 
       if ($supportsSaml && $register && $apiUrl) {
         $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
