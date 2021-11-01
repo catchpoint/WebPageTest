@@ -32,8 +32,8 @@ $page_description = "More information about WebPageTest website speed testing an
                 The online version at <a href="https://www.webpagetest.org/">www.webpagetest.org</a> is run for the benefit 
                 of the performance community.</p>
 
-                <p>WebPageTest was acquired in September of 2020 by Catchpoint, the leading Digital Experience Monitoring 
-                platform providing Synthetic Monitoring, Real User Measurement, Network Monitoring, and Endpoint Monitoring products.</p>
+                <p>WebPageTest was acquired in September of 2020 by <a href="https://www.catchpoint.com/">Catchpoint</a>, the leading Digital Experience Monitoring 
+                platform providing <a href="https://www.catchpoint.com/guide-to-synthetic-monitoring">Synthetic Monitoring</a>, Real User Measurement, Network Monitoring, and Endpoint Monitoring products.</p>
 
                 <p>The acquisition starts a new and exciting chapter as we plan to expand WebPageTest’s capabilities and WebPageTest.org’s 
                 geographical performance testing footprint, leveraging Catchpoint’s best-in-class infrastructure, adding capacity and 
