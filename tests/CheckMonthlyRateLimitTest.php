@@ -10,7 +10,7 @@ final class CheckMonthlyRateLimitTest extends TestCase {
     $cmrl = new CheckMonthlyRateLimit($ip);
     $this->assertEquals('127.0.0.1', $cmrl->ip);
     $this->assertEquals(50, $cmrl->limit);
-    $this->assertEquals(2678400, $cmrl->day_cycle_ttl);
+    $this->assertEquals(2419200, $cmrl->day_cycle_ttl);
     $this->assertEquals('rladdr_per_month_127.0.0.1', $cmrl->cache_key);
   }
 

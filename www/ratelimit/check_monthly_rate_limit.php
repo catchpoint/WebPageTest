@@ -3,7 +3,7 @@
 require_once(__DIR__ . '/../common/cache_utils.php');
 
 class CheckMonthlyRateLimit {
-  function __construct (string $ip, int $limit = 50, int $days = 31) {
+  function __construct (string $ip, int $limit = 50, int $days = 28) {
     $this->ip = $ip;
     $this->limit = $limit;
     $this->day_cycle_ttl = $days * (24 * 60 * 60);
