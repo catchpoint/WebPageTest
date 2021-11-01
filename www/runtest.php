@@ -2881,10 +2881,10 @@ function ErrorPage($error) {
                 <?php
                 include 'header.inc';
               ?>
-              <h1>There was an error with the test</h1>
-                        <div class="box">
-
-              <?php
+              
+              <div class="testerror box">
+                <h1>Oops! <em>There was a problem with the test.</em></h1>
+                <?php
                 echo $error;
                 ?>
           </div>
@@ -3068,6 +3068,25 @@ function ReportAnalytics(&$test, $testId)
   }
 }
 
+function loggedOutLoginForm(){
+  $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
+  $reg .= GetSetting('saml_register');
+  if ($reg) {
+      $ret .= "<li><a class='pill' href='$reg'>Sign-up</a></li>";
+  }
+  $ret .= "</ul>";
+  return $ret;
+}
+
+function loggedInPerks(){
+  $msg = '<ul class="testerror_loginperks">';
+  $msg .= '<li>Access to 13 months of saved tests (<em>including this one!</em>), making it easier to compare tests and analyze trends.</li>';
+  $msg .= '<li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>';
+  $msg .= '<li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>';
+  $msg .= '</ul>';
+  return $msg;
+}
+
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
   global $supportsSaml;
@@ -3092,7 +3111,9 @@ function CheckRateLimit($test, &$error) {
   $passesMonthly = $cmrl->check();
 
   if(!$passesMonthly) {
-    $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account.";
+    $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+    $error .= loggedInPerks();
+    $error .= loggedOutLoginForm();
     return false;
   }
 
@@ -3113,11 +3134,15 @@ function CheckRateLimit($test, &$error) {
     } else {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
+      $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+
+      $error .= loggedInPerks();
+
+
       if ($supportsSaml && $register && $apiUrl) {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please <a href='/saml/login.php'>log in</a> with a <a href='$register'>registered account</a> or wait an hour before retrying.<br>If you need to run tests programmatically there is also the <a href='$apiUrl'>WebPageTest API</a>.";
-      } else {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+        $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
       }
+      $error .= loggedOutLoginForm();
       $ret = false;
     }
   }
