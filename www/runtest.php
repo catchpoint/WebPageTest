@@ -3080,7 +3080,7 @@ function loggedOutLoginForm(){
 
 function loggedInPerks(){
   $msg = '<ul class="testerror_loginperks">';
-  $msg .= '<li>Access to 13 months of saved tests (<em>including this one!</em>), making it easier to compare tests and analyze trends.</li>';
+  $msg .= '<li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>';
   $msg .= '<li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>';
   $msg .= '<li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>';
   $msg .= '</ul>';
