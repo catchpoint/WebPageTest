@@ -2,9 +2,9 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once('./common_lib.inc');
-require_once('./plugins.php.inc');
-require_once('./util.inc');
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/plugins.php.inc');
+require_once(__DIR__ . '/util.inc');
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -149,7 +149,7 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', 153.2);                // version of the sitewide css file
+define('VER_CSS', 153.4);                // version of the sitewide css file
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
