@@ -5,6 +5,7 @@
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
+require_once(__DIR__ . '/models/user.php');
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -191,6 +192,7 @@ if (isset($_COOKIE['tzo'])) {
 SetLocaleFromBrowser();
 
 $USER_EMAIL = null;
+$current_user = new User();
 $supportsAuth = false;
 $supportsSaml = GetSetting('saml_login') !== false;
 if ($supportsSaml) {
@@ -209,6 +211,10 @@ if ($supportsSaml) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
+if (isset($USER_EMAIL)) {
+  $current_user->set_email($USER_EMAIL);
+}
+
 if (!$admin) {
   $this_user = null;
   if (isset($user)) {
@@ -223,6 +229,7 @@ if (!$admin) {
       if (is_array($admin_users) && count($admin_users)) {
         foreach($admin_users as $substr) {
           if (stripos($this_user, $substr) !== false) {
+            $current_user->set_admin(true);
             $admin = true;
             break;
           }
@@ -239,6 +246,7 @@ $owner = null;
 if ($supportsSaml) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
+  $current_user->set_owner_id($owner);
 } 
 if (!$owner) {
   if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
@@ -260,6 +268,7 @@ if ($privateInstall) {
 } else {
   setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
 }
+
 
 
 // set their color selection as a cookie
