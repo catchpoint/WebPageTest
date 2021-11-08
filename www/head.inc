@@ -64,6 +64,11 @@ if( strlen($page_description) )
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
     echo "<style type=\"text/css\">\n";
     
+    // Put user's IP address into js global for use
+    echo "<script type=\"test/javascript\">\n";
+    echo "window.wpt = window.wpt || {};\n";
+    echo 'window.wpt.userIp = "' . htmlentities($_SERVER['REMOTE_ADDR']) . '";' . "\n";
+    echo "</script>";
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;
     if( stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false )

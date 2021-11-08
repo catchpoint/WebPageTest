@@ -130,7 +130,7 @@ if( $supportsAuth && !defined('EMBED') )
             echo '</a></li>';
             $register = GetSetting('saml_register');
             if ($register) {
-                echo "<li><a class='pill' href='$register'>Sign-up</a></li>";
+                echo "<li><a class='pill' href='$register' id='sign-up-link'>Sign-up</a></li>";
             }
         }
     } elseif( isset($user) ) {
