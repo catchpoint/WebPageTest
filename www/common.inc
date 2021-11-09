@@ -211,9 +211,7 @@ if ($supportsSaml) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
-if (isset($USER_EMAIL)) {
-  $current_user->set_email($USER_EMAIL);
-}
+$current_user->set_email($USER_EMAIL);
 
 if (!$admin) {
   $this_user = null;
