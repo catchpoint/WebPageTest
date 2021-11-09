@@ -3112,6 +3112,7 @@ function CheckRateLimit($test, &$error) {
 
   if(!$passesMonthly) {
     $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+    $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "MonthlyLimitHit", "' . $test['ip'] . '");</script>';
     $error .= loggedInPerks();
     $error .= loggedOutLoginForm();
     return false;
