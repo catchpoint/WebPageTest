@@ -1088,11 +1088,7 @@
                 {
                   $tpl = new Template('errors');
                   echo $tpl->render('runtest', array(
-                    'error' => $error,
-                    'compact_mode' => $COMPACT_MODE,
-                    'email' => $current_user->get_email(),
-                    'supports_auth' => $supportsAuth,
-                    'supports_saml' => $supportsSaml
+                    'error' => $error
                   ));
                 }
             }
@@ -1119,11 +1115,7 @@
             } elseif (strlen($error)) {
                 $tpl = new Template('errors');
                 echo $tpl->render('runtest', array(
-                  'error' => $error,
-                  'compact_mode' => $COMPACT_MODE,
-                  'email' => $current_user->get_email(),
-                  'supports_auth' => $supportsAuth,
-                  'supports_saml' => $supportsSaml
+                  'error' => $error
                 ));
             } else {
                 include 'blocked.php';
