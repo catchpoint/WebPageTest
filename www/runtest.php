@@ -62,6 +62,7 @@
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
     require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
+    require_once(__DIR__ . '/helpers/template.php');
     set_time_limit(300);
 
     $redirect_cache = array();
@@ -1085,7 +1086,10 @@
                 }
                 else
                 {
-                    ErrorPage($error);
+                  $tpl = new Template('errors');
+                  echo $tpl->render('runtest', array(
+                    'error' => $error
+                  ));
                 }
             }
         }
@@ -1109,7 +1113,10 @@
                 header ("Content-type: application/json");
                 echo json_encode($ret);
             } elseif (strlen($error)) {
-                ErrorPage($error);
+                $tpl = new Template('errors');
+                echo $tpl->render('runtest', array(
+                  'error' => $error
+                ));
             } else {
                 include 'blocked.php';
             }
@@ -2862,36 +2869,6 @@ function GetClosestLocation($url, $browser) {
         }
     }
     return $location;
-}
-
-function ErrorPage($error) {
-    global $privateInstall;
-    global $supportsAuth;
-    global $supportsSaml;
-    global $USER_EMAIL;
-    global $user;
-    ?>
-    <!DOCTYPE html>
-    <html lang="en-us">
-        <head>
-            <title>WebPageTest - Test Error</title>
-            <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
-        </head>
-        <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
-                <?php
-                include 'header.inc';
-              ?>
-              
-              <div class="testerror box">
-                <h1>Oops! <em>There was a problem with the test.</em></h1>
-                <?php
-                echo $error;
-                ?>
-          </div>
-                <?php include('footer.inc'); ?>
-        </body>
-    </html>
-    <?php
 }
 
 /**
