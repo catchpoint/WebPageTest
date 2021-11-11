@@ -2,11 +2,16 @@
 <html>
   <head>
 <?php
+require_once __DIR__ . '/../../common.inc';
+
 global $USER_EMAIL;
 global $supportsAuth;
 global $supportsSaml;
 global $COMPACT_MODE;
+
+$page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
+  <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
   </head>
   <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
