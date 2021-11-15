@@ -28,9 +28,9 @@ final class CheckMonthlyRateLimitTest extends TestCase {
    * @requires extension apcu
    */
   public function testCheckFirstTime() : void {
-    $ip = '127.0.0.0';
+    $ip = '127.0.0.2';
     $cmrl = new CheckMonthlyRateLimit($ip, 40, 20);
-    $passes = $cmrl->check();
+    $passes = $cmrl->check(1);
     $this->assertTrue($passes);
   }
 
@@ -39,11 +39,38 @@ final class CheckMonthlyRateLimitTest extends TestCase {
    * @requires extension apcu
    */
   public function testCheckPastLimit() : void {
-    $ip = '127.0.0.0';
+    $ip = '127.0.0.3';
     $cmrl = new CheckMonthlyRateLimit($ip, 2, 20);
-    $passes = $cmrl->check();
-    $passes = $cmrl->check();
-    $passes = $cmrl->check();
+    $passes = $cmrl->check(1);
+    $passes = $cmrl->check(1);
+    $passes = $cmrl->check(1);
+    $this->assertFalse($passes);
+  }
+
+  /**
+   *
+   * @requires extension apcu
+   */
+  public function testCheckLastNumberGoesPastButStillPasses() : void {
+    $ip = '127.0.0.4';
+    $cmrl = new CheckMonthlyRateLimit($ip, 40, 20);
+    $passes = $cmrl->check(20);
+    $passes = $cmrl->check(19);
+    $passes = $cmrl->check(20);
+    $this->assertTrue($passes);
+  }
+
+  /**
+   *
+   * @requires extension apcu
+   */
+  public function testCheckPastLimitLargeNumbers() : void {
+    $ip = '127.0.0.5';
+    $cmrl = new CheckMonthlyRateLimit($ip, 40, 20);
+    $passes = $cmrl->check(20);
+    $passes = $cmrl->check(19);
+    $passes = $cmrl->check(20);
+    $passes = $cmrl->check(1);
     $this->assertFalse($passes);
   }
 }
