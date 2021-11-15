@@ -303,6 +303,8 @@ maxNavigateCount=20
 ; Don't forget to also set the EC2.default region to enable auto-scaling.
 ;EC2.us-east-1.min=0
 ;EC2.us-east-1.max=1
+;EC2.us-east-1.spotInstance=1
+;EC2.us-east-1.spotPrice=0.1
 
 ; Per-location Security Group, Subnet IDs and Key Name to enable launching into VPCs
 ; (note that this will pin your instances to the availability zone associated with

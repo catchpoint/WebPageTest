@@ -554,7 +554,8 @@ function EC2_TerminateInstance($region, $id) {
   }
 }
 
-function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
+function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc)
+{
   EC2Log("Launching $size ami $ami in $region for $loc with user data: $user_data");
   $ret = false;
   $key = GetSetting('ec2_key');
@@ -562,12 +563,10 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   if ($key && $secret) {
     try {
       $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-      $ec2_options = array (
+      $ec2_options = array(
         'ImageId' => $ami,
-        'MinCount' => 1,
-        'MaxCount' => 1,
         'InstanceType' => $size,
-        'UserData' => base64_encode ( $user_data )
+        'UserData' => base64_encode($user_data)
       );
 
       // add/modify IAM instance profile(s) if present in config
@@ -592,17 +591,37 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       if ($subnetId) {
         $ec2_options['SubnetId'] = $subnetId;
       }
-	    
+      
       //add/modify the KeyName if present in config
       $keyName = GetSetting("EC2.$region.keyName");
       if ($keyName) {
         $ec2_options['KeyName'] = $keyName;
       }
 
-      $response = $ec2->runInstances ( $ec2_options );
-      $ret = true;
-      if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
+      $spotInstance = GetSetting("EC2.$region.spotInstance");
+      if ($spotInstance) {
+        $response = $ec2->requestSpotInstances(array('SpotPrice' => GetSetting("EC2.$region.spotPrice"), 'InstanceCount' => 1, 'LaunchSpecification' => $ec2_options));
+        sleep(2);
+        $spotResult    = $response->getPath('SpotInstanceRequests');
+        $spotRequestId = $spotResult[0]['SpotInstanceRequestId'];
+
+        $status = "";
+        do{
+          $response = $ec2->describeSpotInstanceRequests(['SpotInstanceRequestIds' => [$spotRequestId]]);
+          $status = $response['SpotInstanceRequests'][0]['Status']['Code'];
+          EC2Log("Wait for the spot instance... $status");
+          sleep(2);
+        } while ($status != 'fulfilled');
+        $instance_id = $response['SpotInstanceRequests'][0]['InstanceId'];
+      } else {
+        $ec2_options['MinCount'] = 1;
+        $ec2_options['MaxCount'] = 1;
+        $response = $ec2->runInstances($ec2_options);
         $instance_id = $response['Instances'][0]['InstanceId'];
+      }
+
+      $ret = true;
+      if (isset($loc) && strlen($loc)) {
         EC2Log("Instance $instance_id started: $size ami $ami in $region for $loc with user data: $user_data");
         $tags = "Name=>WebPagetest Agent|WPTLocations=>$loc";
         $static_tags = GetSetting("EC2.tags");
@@ -619,7 +638,7 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       EC2LogError("Launching EC2 instance. Region: $region, AMI: $ami, error: $error");
     }
   } else {
-      EC2LogError("Launching EC2 instance. Missing key or secret");
+    EC2LogError("Launching EC2 instance. Missing key or secret");
   }
   return $ret;
 }
