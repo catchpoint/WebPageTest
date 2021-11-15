@@ -3084,8 +3084,11 @@ function CheckRateLimit($test, &$error) {
     return true;
   }
 
+  $runcount = max(1, $test['runs']);
+  $multiplier = $test['fvonly'] ? 1 : 2;
+  $total_runs = $runcount * $multiplier;
   $cmrl = new CheckMonthlyRateLimit($test['ip']);
-  $passesMonthly = $cmrl->check();
+  $passesMonthly = $cmrl->check($total_runs);
 
   if(!$passesMonthly) {
     $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
@@ -3104,10 +3107,7 @@ function CheckRateLimit($test, &$error) {
       $count = 0;
     }
     if ($count < $limit) {
-      $runcount = max(1, $test['runs']);
-      if (!$test['fvonly'])
-        $runcount *= 2;
-      $count += $runcount;
+      $count += $total_runs;
       CacheStore($cache_key, $count, 1800);
     } else {
       $register = GetSetting('saml_register');

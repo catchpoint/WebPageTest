@@ -11,12 +11,15 @@ class CheckMonthlyRateLimit {
     $this->bucket = array();
   }
 
-  function check () : bool {
+  function check (?int $run_count) : bool {
+    $times_to_add = $run_count ? $run_count : 1;
     $bucket = $this->fetch_bucket();
     if (count($bucket) >= $this->limit) {
       return false;
     } else {
-      $bucket[] = time();
+      for ($i = 0; $i < $times_to_add; $i++) {
+        $bucket[] = time();
+      }
       $this->store_bucket($bucket);
     }
     return true;
