@@ -61,7 +61,6 @@ foreach ($locations as $loc) {
         $testerInfo['winver'] = $winver;
         $testerInfo['isWinServer'] = $isWinServer;
         $testerInfo['isWin64'] = $isWin64;
-        $testerInfo['test'] = $testId;
         UpdateTester($location, $tester, $testerInfo, $cpu);
     }
 }
