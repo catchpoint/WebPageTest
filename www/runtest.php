@@ -3049,7 +3049,7 @@ function loggedOutLoginForm(){
   $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
   $reg .= GetSetting('saml_register');
   if ($reg) {
-      $ret .= "<li><a class='pill' href='$reg'>Sign-up</a></li>";
+    $ret .= "<li><a class='pill' href='$reg' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
   }
   $ret .= "</ul>";
   return $ret;
@@ -3113,6 +3113,7 @@ function CheckRateLimit($test, &$error) {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
       $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+      $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "HourlyLimitHit", "' . $test['ip'] . '");</script>';
 
       $error .= loggedInPerks();
 
