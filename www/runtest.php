@@ -61,6 +61,8 @@
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
+    require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
+    require_once(__DIR__ . '/helpers/template.php');
     set_time_limit(300);
 
     $redirect_cache = array();
@@ -1084,7 +1086,10 @@
                 }
                 else
                 {
-                    ErrorPage($error);
+                  $tpl = new Template('errors');
+                  echo $tpl->render('runtest', array(
+                    'error' => $error
+                  ));
                 }
             }
         }
@@ -1108,7 +1113,10 @@
                 header ("Content-type: application/json");
                 echo json_encode($ret);
             } elseif (strlen($error)) {
-                ErrorPage($error);
+                $tpl = new Template('errors');
+                echo $tpl->render('runtest', array(
+                  'error' => $error
+                ));
             } else {
                 include 'blocked.php';
             }
@@ -2863,36 +2871,6 @@ function GetClosestLocation($url, $browser) {
     return $location;
 }
 
-function ErrorPage($error) {
-    global $privateInstall;
-    global $supportsAuth;
-    global $supportsSaml;
-    global $USER_EMAIL;
-    global $user;
-    ?>
-    <!DOCTYPE html>
-    <html lang="en-us">
-        <head>
-            <title>WebPageTest - Test Error</title>
-            <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
-        </head>
-        <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
-                <?php
-                include 'header.inc';
-              ?>
-              <h1>There was an error with the test</h1>
-                        <div class="box">
-
-              <?php
-                echo $error;
-                ?>
-          </div>
-                <?php include('footer.inc'); ?>
-        </body>
-    </html>
-    <?php
-}
-
 /**
 * Automatically create a script if we have test options that need to be translated
 *
@@ -3067,6 +3045,25 @@ function ReportAnalytics(&$test, $testId)
   }
 }
 
+function loggedOutLoginForm(){
+  $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
+  $reg .= GetSetting('saml_register');
+  if ($reg) {
+    $ret .= "<li><a class='pill' href='$reg' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+  }
+  $ret .= "</ul>";
+  return $ret;
+}
+
+function loggedInPerks(){
+  $msg = '<ul class="testerror_loginperks">';
+  $msg .= '<li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>';
+  $msg .= '<li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>';
+  $msg .= '<li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>';
+  $msg .= '</ul>';
+  return $msg;
+}
+
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
   global $supportsSaml;
@@ -3087,6 +3084,20 @@ function CheckRateLimit($test, &$error) {
     return true;
   }
 
+  $runcount = max(1, $test['runs']);
+  $multiplier = $test['fvonly'] ? 1 : 2;
+  $total_runs = $runcount * $multiplier;
+  $cmrl = new CheckMonthlyRateLimit($test['ip']);
+  $passesMonthly = $cmrl->check($total_runs);
+
+  if(!$passesMonthly) {
+    $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+    $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "MonthlyLimitHit", "' . $test['ip'] . '");</script>';
+    $error .= loggedInPerks();
+    $error .= loggedOutLoginForm();
+    return false;
+  }
+
   // Enforce per-IP rate limits for testing
   $limit = GetSetting('rate_limit_anon', null);
   if (isset($limit) && $limit > 0) {
@@ -3096,19 +3107,21 @@ function CheckRateLimit($test, &$error) {
       $count = 0;
     }
     if ($count < $limit) {
-      $runcount = max(1, $test['runs']);
-      if (!$test['fvonly'])
-        $runcount *= 2;
-      $count += $runcount;
+      $count += $total_runs;
       CacheStore($cache_key, $count, 1800);
     } else {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
+      $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+      $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "HourlyLimitHit", "' . $test['ip'] . '");</script>';
+
+      $error .= loggedInPerks();
+
+
       if ($supportsSaml && $register && $apiUrl) {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please <a href='/saml/login.php'>log in</a> with a <a href='$register'>registered account</a> or wait an hour before retrying.<br>If you need to run tests programmatically there is also the <a href='$apiUrl'>WebPageTest API</a>.";
-      } else {
-        $error = "The test has been blocked for exceeding the volume of testing allowed by anonymous users from your IP address.<br>Please log in with a registered account or wait an hour before retrying.";
+        $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
       }
+      $error .= loggedOutLoginForm();
       $ret = false;
     }
   }

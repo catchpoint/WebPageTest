@@ -23,7 +23,7 @@ $userImages = true;
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest Screenshots<?php echo $testLabel; ?></title>
+        <title><?php echo $page_title; ?> - WebPageTest Screenshots</title>
         <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
         <style type="text/css">
         img.center {

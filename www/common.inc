@@ -2,9 +2,10 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once('./common_lib.inc');
-require_once('./plugins.php.inc');
-require_once('./util.inc');
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/plugins.php.inc');
+require_once(__DIR__ . '/util.inc');
+require_once(__DIR__ . '/models/user.php');
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -149,7 +150,7 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', 153.1);                // version of the sitewide css file
+define('VER_CSS', 154);                // version of the sitewide css file
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
@@ -191,6 +192,7 @@ if (isset($_COOKIE['tzo'])) {
 SetLocaleFromBrowser();
 
 $USER_EMAIL = null;
+$current_user = new User();
 $supportsAuth = false;
 $supportsSaml = GetSetting('saml_login') !== false;
 if ($supportsSaml) {
@@ -209,6 +211,8 @@ if ($supportsSaml) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
+$current_user->set_email($USER_EMAIL);
+
 if (!$admin) {
   $this_user = null;
   if (isset($user)) {
@@ -223,6 +227,7 @@ if (!$admin) {
       if (is_array($admin_users) && count($admin_users)) {
         foreach($admin_users as $substr) {
           if (stripos($this_user, $substr) !== false) {
+            $current_user->set_admin(true);
             $admin = true;
             break;
           }
@@ -239,6 +244,7 @@ $owner = null;
 if ($supportsSaml) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
+  $current_user->set_owner_id($owner);
 } 
 if (!$owner) {
   if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
@@ -255,7 +261,13 @@ if (!isset($owner)) {
 }
 // Sanitize the owner string
 $owner = preg_replace('/[^a-zA-Z0-9]/', '', $owner);
-setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
+if ($privateInstall) {
+  setcookie('o', $owner, time()+60*60*24*365, '/');
+} else {
+  setcookie('o', $owner, time()+60*60*24*365, '/', 'webpagetest.org');
+}
+
+
 
 // set their color selection as a cookie
 if (isset($_REQUEST['color'])) {
@@ -271,6 +283,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
 
 $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
 $testLabel = '';
+$page_title = 'WebPageTest Test';
 if (strlen($id)) {
     if(extension_loaded('newrelic')) {
         newrelic_add_custom_parameter ('testID', $id);
@@ -322,24 +335,40 @@ if (strlen($id)) {
       $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
       $blockDomainsString = array_key_exists('blockDomains', $test['testinfo']) ? htmlspecialchars($test['testinfo']['blockDomains']) : null;
       $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
+      $browser = array_key_exists('browser', $test['testinfo']) ? htmlspecialchars($test['testinfo']['browser']) : null;
+      $connectivity = array_key_exists('connectivity', $test['testinfo']) ? htmlspecialchars($test['testinfo']['connectivity']) : null;
+      $locationLabel = array_key_exists('locationLabel', $test['testinfo']) ? htmlspecialchars($test['testinfo']['locationLabel']) : null;
     }
 
-    // build a common label to add to the title of each of the results pages
+    // build a common label and title to add to the each of the results pages
     if (isset($test["test"]) && isset($test["test"]["location"])) {
         $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]);
         $locscitypos =  strpos($locs, ",");
         if ($locscitypos)
             $locs = substr($locs,0,strpos($locs, ","));
         $url_temp = $url;
-        if (substr($url,0,7) == 'http://')
+        if (substr($url,0,7) == 'http://') {
             $url_temp = substr($url,7);
-        elseif (substr($url,0,8) == 'https://')
+        } elseif (substr($url,0,8) == 'https://') {
             $url_temp = substr($url,8);
+        }
+
+        $url_hostname = parse_url($url, PHP_URL_HOST);
+        if (substr($url_hostname, 0, 4) == 'www.') {
+            $url_hostname = substr($url_hostname,4);
+        }
+
         if ($label)
             $label = $label . " : ";
         $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
-        if( isset($testDate) && strlen($testDate) )
+        if ($label) {
+          $page_title = FitText($label . $url_hostname, 40);
+        } else {
+          $page_title = FitText($url_hostname . ' : ' . $browser . ' - ' . $connectivity . ' : ' . $locationLabel, 40);
+        }
+        if( isset($testDate) && strlen($testDate) ) {
             $testLabel .= " - $testDate";
+        }
     }
 
     if (!isset($test)) {

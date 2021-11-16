@@ -130,7 +130,7 @@ if( $supportsAuth && !defined('EMBED') )
             echo '</a></li>';
             $register = GetSetting('saml_register');
             if ($register) {
-                echo "<li><a class='pill' href='$register'>Sign-up</a></li>";
+                echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
             }
         }
     } elseif( isset($user) ) {
@@ -240,6 +240,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
+
             echo "<h2>Web page performance test result for<br>";
             if (GetSetting('nolinks')) {
                 echo "<span class=\"page-tested\">$shortUrl</span>";
@@ -248,7 +249,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
             echo "</h2>";
 
-            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}";
+            echo "<p class=\"heading_details\">";
+            echo "<strong>From:</strong> {$test['test']['location']}";
             if (isset($test['testinfo']['mobile']) && $test['testinfo']['mobile'] === 1)
             {
             	echo " - Mobile";
@@ -292,6 +294,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 }
                 echo '<br>';
             }
+            if ( $test['testinfo']['label'] ) {
+                echo '<strong>Test Label: </strong>' . $test['testinfo']['label']  . '</strong>';
+              }
         echo '</div>';
         echo '</div>';
 

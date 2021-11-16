@@ -32,7 +32,7 @@ if ($result_code == 0 && isset($output) && is_array($output) && count($output))
 $days      = (int)$_GET["days"];
 $from      = (isset($_GET["from"]) && strlen($_GET["from"])) ? $_GET["from"] : 'now';
 $filter    = $_GET["filter"];
-$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
+$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \@\/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
 $onlyVideo = !empty($_REQUEST['video']);
 $all       = !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);

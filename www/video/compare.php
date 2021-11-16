@@ -114,7 +114,7 @@ else
                 {
                     margin-left: auto;
                     margin-right: auto;
-                    padding-right: 100vw;
+                    padding-right: 100%;
                 }
                 #video td{
                     vertical-align: top;
@@ -132,16 +132,6 @@ else
                 #videoContainer
                 {
                     <?php
-                    if ( $stickyFilmstrip ) {
-                    ?>
-                        position: sticky;
-                        top: 0;
-                        z-index: 999999;
-                        
-                    <?php
-                    }
-                    ?>
-                    <?php
                             echo "background: #$bgcolor;\n";
                             echo "color: #$color;\n"
                         ?>
@@ -150,6 +140,14 @@ else
                     margin-right: auto;
                     width: 100%;
                 }
+                <?php if ( $stickyFilmstrip ) { ?>
+                    body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
+                        position: sticky;
+                        top: 0;
+                        z-index: 9999;
+                    }
+                <?php } ?>
+
                 #videoContainer td
                 {
                     margin: 2px;
@@ -334,7 +332,7 @@ else
                     div.waterfall-sliders {
                         position: sticky;
                         top: 0;
-                        z-index: 999999;
+                        z-index: 9999;
                     }
                 <?php
                 }
@@ -394,7 +392,7 @@ else
                     <h3>Filmstrip key:</h3>
                     <ul class="key">';
                     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-                    <li class="max-shift-window full"><b>*</b> Layout shift occurs in the maximum shift window</li>
+                    <li class="max-shift-window full"><b>*</b> Shift impacts LCP Score</li>
                     <?php }
                     echo '
                         <li><b class="thumbChanged"></b>Visual change</li>
@@ -454,6 +452,22 @@ else
                 <?php
                 include "waterfall.js";
                 ?>
+
+                const VIEWPORT_TO_FILMSTRIP_THRESHOLD = 100 / 60
+                function UpdateFilmstripStickyness(viewportTooShort) {
+                    document.body.classList.toggle('viewport-too-short-for-sticky-filmstrip', viewportTooShort)
+                }
+                function WatchViewportToFilmstripThreshold(callback) {
+                    const filmstrip = document.getElementById('videoContainer')
+                    const viewportHeightThreshold = filmstrip.offsetHeight * VIEWPORT_TO_FILMSTRIP_THRESHOLD
+
+                    const shortViewport = window.matchMedia(`(max-height: ${viewportHeightThreshold}px)`)
+                    shortViewport.addEventListener('change', shortViewport =>
+                        callback(shortViewport.matches)
+                    )
+                    callback(shortViewport.matches)
+                }
+                WatchViewportToFilmstripThreshold(UpdateFilmstripStickyness)
             </script>
         </body>
     </html>

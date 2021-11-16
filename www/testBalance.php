@@ -24,7 +24,6 @@ if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
 }
 $ret = array();
 
-
 if ($redis_server = GetSetting('redis_api_keys')) {
     // Check the redis-based API keys if it wasn't a local key
     try {
@@ -46,13 +45,9 @@ if ($redis_server = GetSetting('redis_api_keys')) {
             // Check the balance
             $response = $redis->get("C_{$account['accountId']}");
             if (isset($response) && $response !== FALSE && is_string($response) && strlen($response) && is_numeric($response)) {
-              if (intval($response)) {
-                $runs = array();
-                $runs['remaining'] = intval($response);
-                $ret['data'] = $runs;
-              } else {
-                $error = 'Error validating API Key Account';
-              }
+              $runs = array();
+              $runs['remaining'] = intval($response);
+              $ret['data'] = $runs;
             } else {
               $error = 'Error validating API Key Account';
             }
@@ -69,6 +64,7 @@ if ($redis_server = GetSetting('redis_api_keys')) {
       $error = 'Error validating API Key Account';
     }
 }
+
 if ($error !== NULL)
   $ret['data']['error'] =  $error;
 // spit out the response in the correct format
@@ -76,7 +72,6 @@ if( isset($_REQUEST['f']) && $_REQUEST['f'] == 'xml' )
 {
     header ('Content-type: text/xml');
     print_r( array2xml( $ret, false ));
-
 }
 else
 {

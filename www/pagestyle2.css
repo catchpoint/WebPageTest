@@ -1405,11 +1405,17 @@ body.compact .test_box {
     margin-top: .2em;
 }
 .input_fields li input[type="radio"] {
-    margin-right: .3em;
+    /* margin-right: .3em; */
+    
     margin-left: 0;
 }
 .input_fields li input[type="radio"]:nth-of-type(2n) {
-    margin-left: 2em;
+    /* margin-left: 2em; */
+}
+.input_fields label input[type="radio"],
+.input_fields label input[type="checkbox"] {
+    display: inline-block;
+    margin-right: .5rem;
 }
 .input_fields select {
     max-width: 100%;
@@ -1423,10 +1429,14 @@ body.compact .test_box {
     width: 100%;
     display: flex;
     flex: 1;
+    flex-flow: row wrap;
 }
 .input_fields legend {
     padding: 0;
     margin-bottom: .5em;
+}
+.input_fields fieldset label {
+    flex: 1 1 auto;
 }
 @media screen and (min-width: 50em) {
     .input_fields li {
@@ -1600,7 +1610,7 @@ a.btn-primary-compact {
     
     padding: 5vh 5vw;
     position: fixed;
-    z-index: 999999999 !important;
+    z-index: 9999999 !important;
     height: 80vh !important;
     width: 80vw !important;
     left: 5vw !important;
@@ -1689,14 +1699,26 @@ a.btn-primary-compact {
         margin: 0 auto;
     }
 }
-#visual_comparison .urldiv input:first-of-type {
-    margin-right: 2.5em;
-    margin-left: .3em;
+#visual_comparison .urldiv input:first-of-type,
+#visual_comparison .urldiv input:last-of-type {
+    margin-top: .3em;
 }
 #visual_comparison .urldiv input:last-of-type {
-    width: 26.9375em;
-    margin-right: .5em;
-    margin-left: .3em;
+    width: 80%;
+    max-width: 26.9375em;
+}
+@media (min-width: 50em) {
+    #visual_comparison .urldiv input:first-of-type {
+        margin-right: 2.5em;
+        margin-left: .3em;
+        margin-top: 0;
+    }
+    
+    #visual_comparison .urldiv input:last-of-type {
+        width: 26.9375em;
+        margin-right: .5em;
+        margin-left: .3em;
+    }
 }
 #visual_comparison .urldiv a {
     background: url('/images/icon-close.svg') left no-repeat transparent;
@@ -1755,6 +1777,54 @@ body.compact .box {
     #page-images .box {
         padding: 1em 1.5em;
     }
+}
+
+/* error page styles */
+.testerror {
+    text-align: left;
+    max-width: 34rem;
+    margin: 0 auto;
+    padding: 3rem;
+}
+.testerror h1 {
+    color: #dc9739;
+    text-align: left;
+    margin: 1em 0;
+}
+.testerror h1 em {
+    display: block;
+    font-style: normal;
+    font-weight: 500;
+    font-size: .8em;
+    color: #333;
+    margin: .3em 0 .5em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1em;
+}
+.testerror_login {
+    margin: 0 auto;
+    justify-content: center;
+}
+.testerror_loginperks {
+    list-style: disc;
+    padding: 0 0 0 3em;
+}
+.testerror p,
+.testerror_loginperks {
+    line-height: 1.4;
+    margin: 0 0 1.5em;
+}
+.testerror_loginperks li {
+    margin-bottom: 0.5em;
+}
+.testerror_login {
+    margin: 3rem 0 0;
+    justify-content: center;
+    display: flex;
+    gap: 2em;
+    background: #f6f6f6;
+    padding: 1.5em;
+    border-radius: 8px;
 }
 
 /* compare page styles */
@@ -1826,11 +1896,18 @@ body.compact #header_container {
     overflow-x: auto;
 }
 .test_results-content {
-    padding: 0 1.5em;
+    padding: 1em 1.5em;
+}
+.test_menu+.test_results-content {
+    padding-top: 0;
 }
 @media (min-width: 50em) {
     .test_results-content {
-        padding: 0 3em;
+        padding: 1em 3em 0;
+    }
+    
+    .test_menu+.test_results-content {
+        padding-top: 0;
     }
 }
 
@@ -2149,7 +2226,7 @@ th.header {
     margin-bottom: 1rem;
 }
 #videoContainer:before,
-.waterfall_marker:before {
+.compare_contain_wrap .waterfall_marker:before {
     content: "";
     border: 1px solid #f00;
     width: 10px;
@@ -2158,7 +2235,7 @@ th.header {
     left: auto;
     top: auto;
     position: absolute;
-    z-index: 99999;
+    z-index: 999;
     margin: -4px;
     background: #fff;
 }
@@ -3415,13 +3492,13 @@ div.jqmdBC button {
     background-color: none;
 }
 div.request-dialog-radio .ui-state-default {
-    color: #1c94c4;
+    color: #ffffff;
     border: 0;
 }
 .ui-state-default a,
 .ui-state-default a:link,
 .ui-state-default a:visited {
-    color: #1c94c4;
+    color: #ffffff;
     text-decoration: none;
 }
 .ui-state-hover,
@@ -3431,7 +3508,7 @@ div.request-dialog-radio .ui-state-default {
     /* background-color: #777; */
 }
 div.request-dialog-radio .ui-state-hover {
-    background-color: #777;
+    background-color: #555;
 }
 div.request-dialog-radio .ui-state-active,
 div.request-dialog-radio .ui-widget-header .ui-state-active {
@@ -3881,7 +3958,7 @@ div.bar {
 }
 
 /* at 60em and up, the settings are displayed as a fixed panel */
-@media (min-width: 60em) {
+@media (min-width: 50em) {
     .customwaterfall_hed {
         display: flex;
         justify-content: space-between;
@@ -3896,7 +3973,7 @@ div.bar {
         color: #fff;
         min-height: 20rem;
         position: fixed;
-        z-index: 9999999;
+        z-index: 999999;
         right: 2vw;
         top: auto;
         width: 50vw;
