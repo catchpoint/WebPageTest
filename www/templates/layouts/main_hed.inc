@@ -130,6 +130,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
                 echo "Blocked: <b>$blockString</b><br>";
+            if( strlen($blockDomainsString) )
+                echo "Blocked Domains: <b>$blockDomainsString</b><br>";
             if (isset($test['testinfo']['context']) && strlen($test['testinfo']['context']))
             {
                 echo 'Context: ';
