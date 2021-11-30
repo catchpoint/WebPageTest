@@ -1,22 +1,24 @@
 <?php declare(strict_types=1);
 
 class User {
-  private string $email;
+  private ?string $email;
   private bool $is_admin;
   private int $owner_id;
 
   function __construct () {
-    $this->email = "";
+    $this->email = null;
     $this->is_admin = false;
     $this->owner_id = 2445; // owner id of 2445 is for unpaid users
   }
 
-  public function get_email () : string {
+  public function get_email () : ?string {
     return $this->email;
   }
 
-  public function set_email (string $email) : void {
-    $this->email = $email;
+  public function set_email (?string $email) : void {
+    if (isset($email)) {
+      $this->email = $email;
+    }
   }
 
   public function set_admin (bool $is_admin) : void {
@@ -46,7 +48,7 @@ class User {
   }
 
   public function is_anon () : bool {
-    return $this->email == "";
+    return $this->email == null;
   }
 
 }

@@ -211,9 +211,7 @@ if ($supportsSaml) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
-if (isset($USER_EMAIL)) {
-  $current_user->set_email($USER_EMAIL);
-}
+$current_user->set_email($USER_EMAIL);
 
 if (!$admin) {
   $this_user = null;
@@ -335,7 +333,13 @@ if (strlen($id)) {
       $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
       $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
       $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
+      // there could be some domains blocked by default, mostly crytpo-miner stuff (this is why we can't have nice things)
+      // so we need to compare what our domain string is to what our default list is
+      $blockDomains = GetSetting('blockDomains');
       $blockDomainsString = array_key_exists('blockDomains', $test['testinfo']) ? htmlspecialchars($test['testinfo']['blockDomains']) : null;
+      if (strlen($blockDomainsString) && strlen($blockDomains)) {
+        $blockDomainsString = str_replace($blockDomains, '', $blockDomainsString);
+      }
       $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
       $browser = array_key_exists('browser', $test['testinfo']) ? htmlspecialchars($test['testinfo']['browser']) : null;
       $connectivity = array_key_exists('connectivity', $test['testinfo']) ? htmlspecialchars($test['testinfo']['connectivity']) : null;
