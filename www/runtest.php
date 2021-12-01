@@ -3132,6 +3132,7 @@ HTML;
     }, 500);
 </script>
 HTML;
+
       $error .= loggedInPerks();
       if ($supportsSaml && $register && $apiUrl) {
         $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
