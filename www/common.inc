@@ -2,6 +2,11 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
+// Load composer-based dependencies
+require_once(__DIR__ . '/../vendor/autoload.php');
+
+// Load local deps
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
