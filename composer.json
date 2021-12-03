@@ -4,5 +4,8 @@
     },
     "scripts": {
       "test": "phpunit --configuration tests/phpunit.xml"
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.4"
     }
 }
