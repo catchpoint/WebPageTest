@@ -113,5 +113,4 @@ www/settings/common
 www/settings/server
 www/robots.txt
 
-vendor
 tests/*.cache

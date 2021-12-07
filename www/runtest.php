@@ -3092,7 +3092,16 @@ function CheckRateLimit($test, &$error) {
 
   if(!$passesMonthly) {
     $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
-    $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "MonthlyLimitHit", "' . $test['ip'] . '");</script>';
+    $error .= <<<HTML
+<script>
+    var intervalId = setInterval(function () {
+        if(window["_gaq"]) {
+            clearInterval(intervalId);
+            window["_gaq"].push("_trackEvent", "Error", "RateLimit", "MonthlyLimitHit");
+        }
+    }, 500);
+</script>
+HTML;
     $error .= loggedInPerks();
     $error .= loggedOutLoginForm();
     return false;
@@ -3113,11 +3122,18 @@ function CheckRateLimit($test, &$error) {
       $register = GetSetting('saml_register');
       $apiUrl = GetSetting('api_url');
       $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
-      $error .= '<script>window["_gaq"] && window["_gaq"].push("_trackEvent", "Error", "RateLimit", "HourlyLimitHit", "' . $test['ip'] . '");</script>';
+      $error .= <<<HTML
+<script>
+    var intervalId = setInterval(function () {
+        if(window["_gaq"]) {
+            clearInterval(intervalId);
+            window["_gaq"].push("_trackEvent", "Error", "RateLimit", "HourlyLimitHit");
+        }
+    }, 500);
+</script>
+HTML;
 
       $error .= loggedInPerks();
-
-
       if ($supportsSaml && $register && $apiUrl) {
         $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
       }
