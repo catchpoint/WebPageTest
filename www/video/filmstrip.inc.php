@@ -19,7 +19,7 @@ $error = null;
 $endTime = 'visual';
 $supports60fps = false;
 if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
-    $endTime = trim($_REQUEST['end']);
+    $endTime = htmlspecialchars(trim($_REQUEST['end']));
 
 $compTests = explode(',', $_REQUEST['tests']);
 foreach($compTests as $t) {
