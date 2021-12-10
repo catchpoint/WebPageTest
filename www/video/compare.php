@@ -492,14 +492,6 @@ function ScreenShotTable()
     
     $has_layout_shifts = false;
 
-
-
-
-
-    $endTime = 'visual';
-    if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
-        $endTime = htmlspecialchars(trim($_REQUEST['end']));
-    
     $show_shifts = false;
     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS'])
         $show_shifts = true;
