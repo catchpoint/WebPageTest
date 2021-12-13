@@ -3087,7 +3087,8 @@ function CheckRateLimit($test, &$error) {
   $runcount = max(1, $test['runs']);
   $multiplier = $test['fvonly'] ? 1 : 2;
   $total_runs = $runcount * $multiplier;
-  $cmrl = new CheckMonthlyRateLimit($test['ip']);
+  $monthly_limit = GetSetting('rate_limit_anon_monthly') ? GetSetting('rate_limit_anon_monthly') : 50;
+  $cmrl = new CheckMonthlyRateLimit($test['ip'], $monthly_limit);
   $passesMonthly = $cmrl->check($total_runs);
 
   if(!$passesMonthly) {
