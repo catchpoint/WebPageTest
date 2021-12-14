@@ -39,7 +39,7 @@ $profiles = parse_ini_file($profile_file, true);
         }
         </style>
     </head>
-    <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="home">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
             if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {

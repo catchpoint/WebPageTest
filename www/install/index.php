@@ -54,7 +54,7 @@ if (!$privateInstall && !$admin) {
         }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
         <h1>WebPageTest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
         <h2>PHP</h2><ul>
         <?php CheckPHP(); ?>

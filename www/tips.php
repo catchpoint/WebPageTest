@@ -20,7 +20,7 @@ $page_description = "Website performance optimization tips.";
             margin-bottom: 3em;
             </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Tips';
             include 'header.inc';

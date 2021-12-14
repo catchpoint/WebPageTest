@@ -177,7 +177,7 @@ function get_short_path($path) {
       }
     </script>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
     <div id="chart_div"></div>
     </body>
 </html>
