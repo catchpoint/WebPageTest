@@ -210,18 +210,8 @@ h6 {
 .test_results-content h4 {
     margin-top: 1.5em;
 }
-body.compact h2,
-body.compact h3,
-body.compact h4,
-body.compact h5,
-body.compact h6 {
-    padding: 0.4em 0;
-}
 p {
     margin: 0 0 1em;
-}
-body.compact p {
-    margin: 0 0 0.25em;
 }
 ul {
     list-style: none;
@@ -877,9 +867,6 @@ nav a:hover {
     margin: auto;
     width: 100%;
 }
-body.compact #main {
-    padding: 0.5em 0;
-}
 @media screen and (min-width: 75em) {
     #main {
         grid-column: 2 / 12;
@@ -1012,10 +999,6 @@ h1.attention {
     margin: .4em auto 1.1em;
     line-height: 1.4;
     padding: 0 1rem;
-}
-body.compact h1.attention {
-    font-size: 2.5em;
-    margin: .4em auto 1em;
 }
 @media (min-width: 40em) {
     h1.attention {
@@ -1201,9 +1184,6 @@ form[name=filterLog] .history_filter input[type=text] {
     box-shadow: 0 0 30px rgba(47, 128, 237, .5);
     margin-bottom: 8em;
 }
-body.compact #test_box-container {
-    box-shadow: none;
-}
 @media (min-width: 35em) {
     #test_box-container {
         border-radius: 10px;
@@ -1336,9 +1316,6 @@ body.compact #test_box-container {
 }
 .test_box {
     padding: 5.625em 2.5em 2.5em;
-}
-body.compact .test_box {
-    padding: 2.5em 2.5em 2.5em;
 }
 #advanced_settings {
     color: #F9D856;
@@ -1499,9 +1476,6 @@ body.compact .test_box {
     box-sizing: border-box;
     border-radius: 4px;
     margin-top: 0;
-}
-body.compact #url {
-    margin-bottom: 0em;
 }
 @media screen and (min-width: 50em) {
     #url {
@@ -1751,9 +1725,6 @@ a.btn-primary-compact {
     margin: 1em 0;
     padding-bottom: 2em;
 }
-body.compact .box {
-    margin-bottom: 0.5em;
-}
 .about h1,
 .common h1 {
     margin-left: 3rem;
@@ -1852,9 +1823,6 @@ body.compact .box {
 .video_runlabel a.editLabel {
     font-weight: 500;
     font-size: .9em;
-}
-body.compact #header_container {
-    padding: 0 1.5em;
 }
 #header_container {
     display: flex;
