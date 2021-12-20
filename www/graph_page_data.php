@@ -110,7 +110,7 @@ $common_label = implode(" ", $common_labels);
         }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
     <?php
             if (count($testsId) == 1) {
               $tab = 'Test Result';

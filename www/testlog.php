@@ -113,7 +113,7 @@ if( $csv )
             .history td.uid {white-space:nowrap;} */
         </style>
     </head>
-    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="history">
             <?php
             $tab = 'Test History';
             include 'header.inc';
@@ -174,7 +174,7 @@ exit;
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
     </head>
-    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="history">
         <?php
         $tab = 'Test History';
         include 'header.inc';
