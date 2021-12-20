@@ -27,7 +27,7 @@ $userImages = true;
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>
   </head>
-  <body id="page-images" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+  <body id="page-images">
       <?php
       $tab = 'Test Result';
       $subtab = null;

@@ -30,7 +30,7 @@ if(!$testInfo->isFirstViewOnly()) {
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Content';

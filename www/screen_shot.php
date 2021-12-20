@@ -87,7 +87,7 @@ $userImages = true;
         }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Screenshot';

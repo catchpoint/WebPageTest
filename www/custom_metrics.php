@@ -15,7 +15,7 @@ $page_description = "View Custom Metrics";
         <meta name="author" content="Patrick Meenan">
         <?php include ('head.inc'); ?>
     </head>
-    <body id="custom-metrics" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-metrics">
             <?php
             $tab = 'Test Result';
             include 'header.inc';

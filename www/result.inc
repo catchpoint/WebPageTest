@@ -49,7 +49,7 @@ $page_description = "Website performance test result$testLabel.";
         <?php } ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Summary';

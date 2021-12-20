@@ -306,7 +306,7 @@ else
             }
         </script>
     </head>
-    <body class="video <?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="video">
             <?php
             if( !$embed ) {
                 $tab = '';

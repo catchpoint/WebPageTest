@@ -10,7 +10,7 @@
             require_once('testStatus.inc');
         ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $nosubheader = true;

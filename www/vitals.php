@@ -36,7 +36,7 @@ $page_description = "Web Vitals details$testLabel";
         <title><?php echo "$page_title - Web Vitals Details"; ?></title>
         <?php $gaTemplate = 'Vitals'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Web Vitals';

@@ -40,7 +40,7 @@ else
             }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
         <div class="page">
             <?php
             $tab = null;

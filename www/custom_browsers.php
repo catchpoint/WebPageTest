@@ -78,7 +78,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
         <meta name="author" content="Patrick Meenan">
         <?php include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
         <div class="page">
             <?php
             $tab = 'custom';

@@ -61,7 +61,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
 
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Details';

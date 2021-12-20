@@ -42,7 +42,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <title><?php echo $page_title; ?> - WebPageTest Domain Breakdown</title>
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Domains';

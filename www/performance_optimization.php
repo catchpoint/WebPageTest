@@ -23,7 +23,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
         <title><?php echo "$page_title - WebPageTest Optimization Check Results"; ?></title>
         <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Performance';

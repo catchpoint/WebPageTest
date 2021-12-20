@@ -17,7 +17,7 @@ $page_description = "More information about WebPageTest website speed testing an
         
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'About';
             include 'header.inc';
