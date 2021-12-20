@@ -2,6 +2,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
 // Do a really quick check for a pending test to significantly reduce overhead
 if (isset($_REQUEST['noposition']) &&
     $_REQUEST['noposition'] &&
@@ -61,6 +62,27 @@ if (isset($test['test']['batch']) && $test['test']['batch']) {
 
       $testInfo = TestInfo::fromValues($id, $testPath, $test);
       $testResults = TestResults::fromFiles($testInfo);
+
+      // Is this a CP saas test? verify token sent
+      $isCPSaas = isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id']) && isset($testInfo['saas_node_id']);
+
+      if ($isCPSaas) {
+        if(!isset($_SERVER["HTTP_X_CP_SAAS_TOKEN"])) {
+          http_response_code(404);
+          die();
+        }
+        $sentToken = $_SERVER["HTTP_X_CP_SAAS_TOKEN"];
+        $pepper = GetSetting('cp_saas_token_pepper');
+        $cost = GetSetting('cp_saas_token_cost');
+        $pepperedToken = hash_hmac("sha256", $sentToken, $pepper);
+        $encryptedToken = password_hash($pepperedToken, PASSWORD_BCRYPT, ["cost" => $cost]);
+        $tokenSecret = GetSetting('cp_saas_token_secret');
+        $isValid = password_verify($encryptedToken, $tokenSecret);
+        if (!$isValid) {
+          http_response_code(404);
+          die();
+        }
+      }
 
       $infoFlags = getRequestInfoFlags();
 
