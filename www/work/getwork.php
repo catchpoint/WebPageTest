@@ -164,9 +164,10 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
       if (strlen($ec2)) {
         foreach($testers['testers'] as $index => $testerInfo) {
           if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
-              isset($testerInfo['offline']) && $testerInfo['offline'])
+              isset($testerInfo['offline']) && $testerInfo['offline']) {
             $offline = true;
             break;
+          }
         }
       }
       foreach($testers['testers'] as $index => $testerInfo)
@@ -373,31 +374,30 @@ function GetJob() {
           $ok = true;
         }
       }
-
-      // keep track of the last time this location reported in
-      $testerInfo = array();
-      $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-      $testerInfo['pc'] = $pc;
-      $testerInfo['ec2'] = $ec2;
-      $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
-      $testerInfo['freedisk'] = @$_GET['freedisk'];
-      $testerInfo['upminutes'] = @$_GET['upminutes'];
-      $testerInfo['ie'] = @$_GET['ie'];
-      $testerInfo['dns'] = $dnsServers;
-      $testerInfo['video'] = @$_GET['video'];
-      $testerInfo['GPU'] = @$_GET['GPU'];
-      $testerInfo['screenwidth'] = $screenwidth;
-      $testerInfo['screenheight'] = $screenheight;
-      $testerInfo['winver'] = $winver;
-      $testerInfo['isWinServer'] = $isWinServer;
-      $testerInfo['isWin64'] = $isWin64;
-      $testerInfo['test'] = '';
-      if (isset($browsers) && count(array_filter($browsers, 'strlen')))
-        $testerInfo['browsers'] = $browsers;
-      if (isset($testId))
-        $testerInfo['test'] = $testId;
-      UpdateTester($location, $tester, $testerInfo);
     }
+    // keep track of the last time this location reported in
+    $testerInfo = array();
+    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+    $testerInfo['pc'] = $pc;
+    $testerInfo['ec2'] = $ec2;
+    $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
+    $testerInfo['freedisk'] = @$_GET['freedisk'];
+    $testerInfo['upminutes'] = @$_GET['upminutes'];
+    $testerInfo['ie'] = @$_GET['ie'];
+    $testerInfo['dns'] = $dnsServers;
+    $testerInfo['video'] = @$_GET['video'];
+    $testerInfo['GPU'] = @$_GET['GPU'];
+    $testerInfo['screenwidth'] = $screenwidth;
+    $testerInfo['screenheight'] = $screenheight;
+    $testerInfo['winver'] = $winver;
+    $testerInfo['isWinServer'] = $isWinServer;
+    $testerInfo['isWin64'] = $isWin64;
+    $testerInfo['test'] = '';
+    if (isset($browsers) && count(array_filter($browsers, 'strlen')))
+      $testerInfo['browsers'] = $browsers;
+    if (isset($testId))
+      $testerInfo['test'] = $testId;
+    UpdateTester($location, $tester, $testerInfo);
   }
   
   return $is_done;

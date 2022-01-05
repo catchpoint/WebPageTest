@@ -55,6 +55,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>";
       echo "<th>IP</th><th>DNS Server(s)</th>";
       if ($admin) {
+        echo "<th>Flag as offline</th>";
         echo "<th>Current Test</th>";
       }
       echo "</tr>\n";
@@ -91,6 +92,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<td nowrap>" . @htmlspecialchars($tester['ip']) . "</td>";
         echo "<td nowrap>" . @htmlspecialchars($tester['dns']) . "</td>";
         if ($admin) {
+          echo "<td nowrap>" . @htmlspecialchars($tester['offline']) . "</td>";
           echo "<td nowrap>" . @htmlspecialchars($tester['test']) . "</td>";
         }
         echo "</tr>";

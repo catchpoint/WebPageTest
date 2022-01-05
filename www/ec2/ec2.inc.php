@@ -207,7 +207,7 @@ function EC2_TerminateIdleInstances() {
                   $lastWork = $tester['last'];
                 if (isset($tester['elapsed']) && $tester['elapsed'] < $lastCheck)
                   $lastCheck = $tester['elapsed'];
-                if (isset($tester['test']) && strlen($tester['test'])) {
+                if (!isset($tester['offline']) || !$tester['offline']) {
                   // don't terminate an instance that is busy with a test
                   $terminate = false;
                 }
@@ -297,7 +297,7 @@ function EC2_SendInstancesOffline() {
     // See if we have any online testers that we need to make offline
     $online_target = max($info['min'], intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
     foreach ($info['locations'] as $location) {
-      $testers = GetTesters($location);
+      $testers = GetTesters($location, true);
       if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
         $online = 0;
         foreach ($testers['testers'] as $tester) {
@@ -374,7 +374,7 @@ function EC2_StartNeededInstances() {
       // See if we have any offline testers that we need to bring online
       $online_target = max($target, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
       foreach ($info['locations'] as $location) {
-        $testers = GetTesters($location);
+        $testers = GetTesters($location, true);
         if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
           $online = 0;
           foreach ($testers['testers'] as $tester) {
