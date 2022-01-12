@@ -3955,3 +3955,10 @@ div.bar {
         min-height: 20rem;
     }
 }
+
+.terms-of-service ul{
+    list-style-type: disc;
+    margin-left: 1em;
+    padding-left: 1em;
+    margin-bottom: 1.5em;
+}
