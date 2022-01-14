@@ -5,17 +5,6 @@
 $DevToolsCacheVersion = '1.7';
 require_once __DIR__ . '/include/TestPaths.php';
 
-if(extension_loaded('newrelic')) { 
-    newrelic_add_custom_tracer('GetTimeline');
-    newrelic_add_custom_tracer('GetDevToolsRequests');
-    newrelic_add_custom_tracer('GetDevToolsEventsForStep');
-    newrelic_add_custom_tracer('DevToolsGetConsoleLog');
-    newrelic_add_custom_tracer('DevToolsGetCPUSlicesForStep');
-    newrelic_add_custom_tracer('GetDevToolsCPUTime');
-    newrelic_add_custom_tracer('ParseDevToolsEvents');
-    newrelic_add_custom_tracer('DevToolsMatchEvent');
-}
-
 /**
 * Load the timeline data for the given test run (from a timeline file or a raw dev tools dump)
 * 

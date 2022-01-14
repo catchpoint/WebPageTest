@@ -163,8 +163,6 @@ if (isset($_REQUEST['embed'])) {
     define('BARE_UI', true);
     define('NAV_NO_SHARE', true);
     $noanalytics = true;
-    if (extension_loaded('newrelic'))
-      @newrelic_disable_autorum();
 }
 $is_ssl = isSslConnection();
 $GLOBALS['cdnPath'] = '';
@@ -272,9 +270,6 @@ $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'load
 $testLabel = '';
 $page_title = 'WebPageTest Test';
 if (strlen($id)) {
-    if(extension_loaded('newrelic')) {
-        newrelic_add_custom_parameter ('testID', $id);
-    }  
     if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
