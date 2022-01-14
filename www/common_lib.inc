@@ -5,10 +5,6 @@
 require_once(__DIR__ . '/archive.inc');
 require_once(__DIR__ . '/util.inc');
 
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_tracer('RestoreTest');
-}
-
 define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');

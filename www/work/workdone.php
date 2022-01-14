@@ -2,25 +2,6 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_tracer('ProcessRun');
-  newrelic_add_custom_tracer('loadAllPageData');
-  newrelic_add_custom_tracer('getRequestsForStep');
-  newrelic_add_custom_tracer('LockTest');
-  newrelic_add_custom_tracer('UpdateTester');
-  newrelic_add_custom_tracer('GetVisualProgressForStep');
-  newrelic_add_custom_tracer('GetDevToolsCPUTimeForStep');
-  newrelic_add_custom_tracer('GetDevToolsRequestsForStep');
-  newrelic_add_custom_tracer('loadUserTimingData');
-  newrelic_add_custom_tracer('GetVisualProgress');
-  newrelic_add_custom_tracer('DevToolsGetConsoleLog');
-  newrelic_add_custom_tracer('SecureDir');
-  newrelic_add_custom_tracer('loadPageRunData');
-  newrelic_add_custom_tracer('loadPageStepData');
-  newrelic_add_custom_tracer('ParseUserTiming');
-  newrelic_add_custom_tracer('CalculateTimeToInteractive');
-
-}
 
 chdir('..');
 //$debug = true;
@@ -69,10 +50,6 @@ if (!isset($id)) {
 echo $id;
 ob_flush();
 flush();
-
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_parameter('test', $id);
-}
 
 $workdone_start = microtime(true);
 

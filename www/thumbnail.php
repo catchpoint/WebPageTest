@@ -2,15 +2,6 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-if(extension_loaded('newrelic')) {
-    newrelic_add_custom_tracer('tbnDrawWaterfall');
-    newrelic_add_custom_tracer('tbnDrawChecklist');
-    newrelic_add_custom_tracer('tbnLoadImage');
-    newrelic_add_custom_tracer('GenerateThumbnail');
-    newrelic_add_custom_tracer('SendImage');
-    newrelic_add_custom_tracer('getRequests');
-    newrelic_add_custom_tracer('loadPageRunData');
-}
 
 if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['HTTP_IF_MODIFIED_SINCE'])))
 {
