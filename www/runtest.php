@@ -435,6 +435,16 @@
               $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
             }
 
+            // Store an opaque metadata string/JSON object if one was provided (up to 10KB)
+            if (isset($_REQUEST['metadata']) && is_string($_REQUEST['metadata']) && strlen($_REQUEST['metadata'] <= 10240)) {
+              $metadata = $_REQUEST['metadata'];
+              $metadata_json = json_decode($metadata, true);
+              if (isset($metadata_json) && is_array($metadata_json)) {
+                $metadata = $metadata_json;
+              }
+              $test['metadata'] = $metadata;
+            }
+
             // see if we need to process a template for these requests	
             if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
               if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {	
