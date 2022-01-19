@@ -1,4 +1,7 @@
 {
+    "autoload": {
+        "psr-4": {"WebPageTest\\": "www/models/"}
+    },
     "require-dev": {
         "phpunit/phpunit": "^9"
     },

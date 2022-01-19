@@ -3,14 +3,16 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-// Load composer-based dependencies
+// Load models and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // Load local deps
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
-require_once(__DIR__ . '/models/user.php');
+
+use WebPageTest\User;
+use WebPageTest\RequestContext;
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -388,3 +390,6 @@ if (array_key_exists('medianMetric', $_REQUEST)) {
 if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
+
+// Create global request context for future use
+$request = new RequestContext($_REQUEST);
