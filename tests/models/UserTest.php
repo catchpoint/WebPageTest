@@ -1,8 +1,7 @@
 <?php declare(strict_types=1);
 
-require_once __DIR__ . '/../../www/models/user.php';
-
 use PHPUnit\Framework\TestCase;
+use WebPageTest\User;
 
 final class UserTest extends TestCase {
   public function testConstructorSetsValues() : void {

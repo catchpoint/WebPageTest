@@ -24,6 +24,7 @@ class ComposerStaticInit14af0ddfbc16c4126602920a26b812c3
         'W' => 
         array (
             'Webmozart\\Assert\\' => 17,
+            'WebPageTest\\' => 12,
         ),
         'S' => 
         array (
@@ -59,6 +60,10 @@ class ComposerStaticInit14af0ddfbc16c4126602920a26b812c3
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
+        ),
+        'WebPageTest\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/www/models',
         ),
         'Symfony\\Polyfill\\Ctype\\' => 
         array (
