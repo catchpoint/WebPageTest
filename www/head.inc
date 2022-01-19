@@ -46,8 +46,6 @@ if( strlen($page_description) )
 }
 </style>
 <?php 
-    if(!isset($noanalytics) && extension_loaded('newrelic'))
-        echo @newrelic_get_browser_timing_header();
     if (file_exists('./settings/server/customhead.inc.php')) {
         include('./settings/server/customhead.inc.php');
     } elseif (file_exists('./settings/common/customhead.inc.php')) {

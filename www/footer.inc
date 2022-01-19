@@ -51,9 +51,5 @@
         include('./settings/customfooter.inc.php');
     }
     ?>
-    <?php
-    if(!isset($noanalytics) && extension_loaded('newrelic'))
-        echo @newrelic_get_browser_timing_footer();
-    ?>
 
     <div id="experiment-timing" style="color: #77A;"></div>

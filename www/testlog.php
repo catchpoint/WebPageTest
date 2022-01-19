@@ -51,13 +51,6 @@ if (isset($USER_EMAIL) && !isset($user))
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
 
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_parameter('filter', $filter);
-  newrelic_add_custom_parameter('days', $days);
-  newrelic_add_custom_parameter('all', $all);
-  newrelic_add_custom_parameter('nolimit', $nolimit);
-}
-
 $includeip      = false;
 $includePrivate = false;
 if ($admin) {
