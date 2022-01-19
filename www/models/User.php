@@ -13,43 +13,43 @@ class User {
     $this->owner_id = 2445; // owner id of 2445 is for unpaid users
   }
 
-  public function get_email () : ?string {
+  public function getEmail () : ?string {
     return $this->email;
   }
 
-  public function set_email (?string $email) : void {
+  public function setEmail (?string $email) : void {
     if (isset($email)) {
       $this->email = $email;
     }
   }
 
-  public function set_admin (bool $is_admin) : void {
+  public function setAdmin (bool $is_admin) : void {
     $this->is_admin = $is_admin;
   }
 
-  public function get_owner_id () : int {
+  public function getOwnerId () : int {
     return $this->owner_id;
   }
 
   /**
    * @var string|int $owner_id
    */
-  public function set_owner_id ($owner_id) : void {
+  public function setOwnerId ($owner_id) : void {
     $this->owner_id = intval($owner_id);
   }
 
   /**
    * 2445 is the owner id for any user that is unpaid
    */
-  public function is_paid_api_user () : bool {
+  public function isPaidApiUser () : bool {
     return $this->owner_id != 2445;
   }
 
-  public function is_admin () : bool {
+  public function isAdmin () : bool {
     return $this->is_admin;
   }
 
-  public function is_anon () : bool {
+  public function isAnon () : bool {
     return $this->email == null;
   }
 
