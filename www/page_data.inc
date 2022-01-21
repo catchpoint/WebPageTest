@@ -471,6 +471,11 @@ function loadPageStepData($localPaths, $testInfo = null) {
       }
     }
 
+    // See if there is metadata that needs to be added
+    if (isset($testInfo) && isset($testInfo['metadata'])) {
+      $ret['metadata'] = $testInfo['metadata'];
+    }
+
     // see if there is test-level lighthouse data to attach
     // Don't cache the lighthouse bit because the file may come in after other results are cached
     $lighthouse_audits_file = $localPaths->lighthouseAuditsFile();
