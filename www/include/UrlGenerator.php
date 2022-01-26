@@ -135,6 +135,18 @@ abstract class UrlGenerator {
     $tests .= $end ? "-e:$end" : "";
     return $this->baseUrl . "/video/compare.php?tests=" . $tests;
   }
+  
+
+   /**
+   * @param string $end Optional. A specific "end" to use for filmstrip view
+   * @return string The generated URL for the filmstrip view
+   */
+  public function filmstripImage($end = null) {
+    $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
+    $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
+    $tests .= $end ? "-e:$end" : "";
+    return $this->baseUrl . "/video/filmstrip.php?tests=" . $tests;
+  }
 
   /**
    * @param string $frame The thumbnail name

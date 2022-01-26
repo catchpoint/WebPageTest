@@ -16,10 +16,12 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
 <html lang="en-us">
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
+        <script>document.documentElement.classList.add('has-js');</script>
+
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
        
     </head>
-    <body>
+    <body class="result">
             <?php
             $tab = 'Test Result';
             $subtab = 'Processing';
@@ -94,10 +96,26 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             }
             ?>
 
-          <h2>Main-thread processing breakdown</h2>
-          <p>Where the browser's main thread was busy, not including idle time waiting for resources <?php
+<div class="results_main_contain">
+            <div class="results_main">
+
+            <div class="results_and_command">
+
+            <div class="results_header">
+                <h2>Main-thread Processing</h2>
+                <p>Where the browser's main thread was busy, not including idle time waiting for resources <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
                     ?>.</p>
+            </div>
+
+            <?php include("testinfo_command-bar.inc"); ?>
+
+            </div>
+
+            <div id="result" class="results_body">
+              <h3 class="hed_sub">Processing Breakdown</h3>
+
+          
           
           <div class="breakdownFrame">
             <div class="breakdownFrame_item">
@@ -110,7 +128,8 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             </div>
           </div>
 
-          <h2>Main-thread time breakdown</h2>
+          <h3 class="hed_sub">Timing Breakdown</h3>
+
           <p>All of the main-thread activity including idle (waiting for resources usually) <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
                     ?>.</p>
@@ -126,12 +145,13 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             <div class="table visualization_table" id="tableEventsIdle"></div>
           </div>
           </div>
-
+          </div>
 
 
             
         </div>
         <?php include('footer.inc'); ?>
+        </div></div></div>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="//www.google.com/jsapi"></script>

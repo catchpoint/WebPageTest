@@ -49,7 +49,13 @@ $page_description = "Test network path from multiple locations around the world 
             $tab = 'Home';
             include 'header.inc';
             ?>
-            <h1 class="attention">Test. Optimize. Repeat.</h1>
+
+<?php include("home_header.php"); ?>
+
+            <div class="home_content_contain">
+             <div class="home_content">
+
+
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
             <input type="hidden" name="type" value="traceroute">
@@ -70,94 +76,95 @@ $page_description = "Test network path from multiple locations around the world 
             ?>
 
 
-            <div id="test_box-container">
-                <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
-                    <?php
-                    if (file_exists(__DIR__ . '/settings/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
-                        echo "<li class=\"vitals\"><a href=\"/webvitals\">";
-                        echo file_get_contents('./images/icon-webvitals-testing.svg');
-                        echo "Web Vitals</a></li>";
-                    }
-                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
-                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
-                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                        echo "<li class=\"easy_mode\"><a href=\"/easy\">";
-                        echo file_get_contents('./images/icon-simple-testing.svg');
-                        echo "Simple Testing</a></li>";
-                    }
-                    ?>
-                    <li class="visual_comparison"><a href="/video/"><?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
-                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
-                </ul>
+            <div id="test_box-container" class="home_responsive_test">
+                <?php 
+                $currNav = "Traceroute";
+                include("testTypesNav.php");
+                ?>
+
+                
                 <div id="analytical-review" class="test_box">
-                    <ul class="input_fields">
+                    <ul class="input_fields home_responsive_test_top">
                         <li>
                         <label for="url" class="vis-hidden">Enter URL to test</label>    
                         <input type="text" name="url" id="url" required placeholder="Host Name/IP Address" class="text large" onkeypress="if (event.keyCode == 32) {return false;}">
-                        <?php
+                        </li>
+
+
+                        <li class="test_main_config">
+
+                          <div class="test_presets">
+
+                                <div class="fieldrow">
+                                    <label for="location">Test Location</label>
+                                    <select name="where" id="location">
+                                        <?php
+                                        foreach($loc['locations'] as &$location)
+                                        {
+                                            $selected = '';
+                                            if( $location['checked'] )
+                                                $selected = 'selected';
+
+                                            echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <?php if( GetSetting('map') ) { ?>
+                                    <button id="change-location-btn" type=button onclick="SelectLocation();" title="Select from Map">Select from Map</button>
+                                    <?php } ?>
+                                    <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
+                                    <span class="cleared"></span>
+                                </div>
+                                <div class="fieldrow">
+                                    <label for="browser">Browser</label>
+                                    <select name="browser" id="browser">
+                                        <?php
+                                        foreach( $loc['browsers'] as $key => &$browser )
+                                        {
+                                            $selected = '';
+                                            if( $browser['selected'] )
+                                                $selected = 'selected';
+                                            echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="hidden">
+                                    <select name="location" id="connection">
+                                        <?php
+                                        foreach( $loc['connections'] as $key => &$connection )
+                                        {
+                                            $selected = '';
+                                            if( $connection['selected'] )
+                                                $selected = 'selected';
+                                            echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="fieldrow">
+                                    <label for="number_of_tests">
+                                        Number of Tests to Run<br>
+                                        <small>Up to <?php echo GetSetting('maxruns', 9); ?></small>
+                                    </label>
+                                    <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
+                                </div>
+
+
+
+
+                            </div>
+                            <div>
+                       <?php
                             if (strlen($siteKey)) {
                                 echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
                             } else {
                                 echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
                             }
-                            ?></li>
-                        <li>
-                            <label for="location">Test Location</label>
-                            <select name="where" id="location">
-                                <?php
-                                foreach($loc['locations'] as &$location)
-                                {
-                                    $selected = '';
-                                    if( $location['checked'] )
-                                        $selected = 'selected';
-
-                                    echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
-                                }
-                                ?>
-                            </select>
-                            <?php if( GetSetting('map') ) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
-                            <?php } ?>
-                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
-                            <span class="cleared"></span>
+                            ?>
+                            </div>
                         </li>
-                        <li>
-                            <label for="browser">Browser</label>
-                            <select name="browser" id="browser">
-                                <?php
-                                foreach( $loc['browsers'] as $key => &$browser )
-                                {
-                                    $selected = '';
-                                    if( $browser['selected'] )
-                                        $selected = 'selected';
-                                    echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
-                                }
-                                ?>
-                            </select>
-                        </li>
-                        <li class="hidden">
-                            <select name="location" id="connection">
-                                <?php
-                                foreach( $loc['connections'] as $key => &$connection )
-                                {
-                                    $selected = '';
-                                    if( $connection['selected'] )
-                                        $selected = 'selected';
-                                    echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
-                                }
-                                ?>
-                            </select>
-                        </li>
-                        <li>
-                            <label for="number_of_tests">
-                                Number of Tests to Run<br>
-                                <small>Up to <?php echo GetSetting('maxruns', 9); ?></small>
-                            </label>
-                            <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
-                        </li>
+                        
                     </ul>
                 </div>
             </div>
@@ -183,10 +190,13 @@ $page_description = "Test network path from multiple locations around the world 
                 </p>
             </div>
             </form>
+            
             <?php
             include(__DIR__ . '/include/home-subsections.inc');
             ?>
             <?php include('footer.inc'); ?>
+            </div><!--home_content_contain-->
+        </div><!--home_content-->
         </div>
 
         <script type="text/javascript">

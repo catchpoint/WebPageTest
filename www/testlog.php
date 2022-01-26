@@ -152,9 +152,11 @@ if( $csv )
                 }
                 ?>
                 </form>
-        <script type="text/javascript">
+            </div>
+<script type="text/javascript">
         <?php include(__DIR__ . '/js/history.js'); ?>
         </script>
+        <?php include('footer.inc'); ?>
     </body>
 </html>
 <?php

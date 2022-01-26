@@ -12,13 +12,12 @@ if (GetSetting('headless')) {
 $secret = GetServerSecret();
 if (!isset($secret))
     $secret = '';
+
 $url = '';
-if (isset($req_url)) {
-  $url = htmlspecialchars($req_url);
-}
-if (!strlen($url)) {
-  $url = 'Enter a Website URL';
-}
+    if (isset($req_url)) {
+      $url = htmlspecialchars($req_url);
+    }
+    $placeholder = 'Enter a website URL...';
 if (file_exists('./settings/server/lighthouse.ini')) {
   $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);  
 } elseif (file_exists('./settings/common/lighthouse.ini')) {
@@ -57,6 +56,13 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             include 'header.inc';
             if (!$headless) {
             ?>
+
+
+        <?php include("home_header.php"); ?>
+
+<div class="home_content_contain">
+             <div class="home_content">
+
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
             <?php
@@ -79,39 +85,56 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             <input type="hidden" name="mobile" value="1">
             <input type="hidden" name="type" value="lighthouse">
 
-            <h1 class="attention">Run a Chrome Lighthouse Test</h1>
+           
 
-            <div id="test_box-container">
+
+
+            <div id="test_box-container" class="home_responsive_test">
+                <?php 
+                $currNav = "Lighthouse";
+                include("testTypesNav.php");
+                ?>
 
                 <div id="analytical-review" class="test_box">
                 <p>Run <a href="https://developers.google.com/web/tools/lighthouse/" target="_blank" rel="noopener">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
 
-                    <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
-                        <?php
-                if (strlen($siteKey)) {
-                  echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                } else {
-                  echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                }
-                ?></li>
-                        <li>
-                            <label for="location">Test Location:</label>
-                            <select name="location" id="location" onchange="profileChanged()">
-                                <?php
-                                if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['locations']) && count($lighthouse['locations'])) {
-                                  foreach($lighthouse['locations'] as $id => $label) {
-                                    $selected = '';
-                                    if ($id === $_COOKIE['lhloc'])
-                                      $selected = 'selected';
-                                    echo "<option value=\"$id\" $selected>{$label}</option>";
-                                  }
-                                  if (isset($lastGroup))
-                                      echo "</optgroup>";
-                                }
-                                ?>
-                            </select>
+                    <ul class="input_fields home_responsive_test_top">
+                        <li><input type="text" name="url" id="url" class="text large" <?php echo " placeholder='$placeholder'"; ?> onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
                         </li>
+                        <li>
+
+                        <li class="test_main_config">
+
+                          <div class="test_presets">
+                                <div class="fieldrow">
+                                <label for="location">Test Location:</label>
+                                  <select name="location" id="location" onchange="profileChanged()">
+                                      <?php
+                                      if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['locations']) && count($lighthouse['locations'])) {
+                                        foreach($lighthouse['locations'] as $id => $label) {
+                                          $selected = '';
+                                          if ($id === $_COOKIE['lhloc'])
+                                            $selected = 'selected';
+                                          echo "<option value=\"$id\" $selected>{$label}</option>";
+                                        }
+                                        if (isset($lastGroup))
+                                            echo "</optgroup>";
+                                      }
+                                      ?>
+                                  </select>
+                              </div>
+                            </div>
+                            <div>
+                                <?php
+                                    if (strlen($siteKey)) {
+                                      echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
+                                    } else {
+                                      echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
+                                    }
+                                    ?>
+                              </div>
+                        </li>
+
                     </ul>
                 </div>
 
@@ -119,11 +142,14 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 
             
             </form>
+            
             <?php
             } // $headless
             ?>
 
             <?php include('footer.inc'); ?>
+            </div><!--home_content_contain-->
+        </div><!--home_content-->
         </div>
 
         <script type="text/javascript">

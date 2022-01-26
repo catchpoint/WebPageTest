@@ -28,14 +28,33 @@ if(!$testInfo->isFirstViewOnly()) {
 <html lang="en-us">
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
+        <script>document.documentElement.classList.add('has-js');</script>
+ 
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
     </head>
-    <body>
+    <body class="result">
             <?php
             $tab = 'Test Result';
             $subtab = 'Content';
             include 'header.inc';
             ?>
+
+            
+<div class="results_main_contain">
+        <div class="results_main">
+
+        <div class="results_and_command">
+
+            <div class="results_header">
+                <h2>Content Breakdown</h2>
+                <p>TODO intro about that here.</p>
+            </div>
+
+            <?php include("testinfo_command-bar.inc"); ?>
+
+            </div>
+
+            <div id="result" class="results_body">
             <?php
             if ($isMultistep) {
                 echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
@@ -57,7 +76,8 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
-            <h2>Content breakdown by MIME type (First View)</h2>
+            <h3 class="hed_sub">Breakdown by MIME type</h3>
+            <h4>First View:</h4>
             <?php
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -70,8 +90,8 @@ if(!$testInfo->isFirstViewOnly()) {
                 }
             ?>
             <?php if ($repeatViewResults) { ?>
-                <br><hr><br>
-                <h2>Content breakdown by MIME type (Repeat View)</h2>
+
+            <h4>Repeat View:</h4>
                 <?php
                     if ($isMultistep) {
                         $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
@@ -84,6 +104,9 @@ if(!$testInfo->isFirstViewOnly()) {
             <?php } ?>
                 </div>
         <?php include('footer.inc'); ?>
+                </div>
+                </div>
+                </div>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="//www.google.com/jsapi"></script>
