@@ -8,8 +8,18 @@
             ?>
 
 
+    
+
+
     <footer>
+        <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
+
         <ul>
+        <li class="footer_social"><span>Find us on: </span>
+            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/images/github.svg" alt="Github"></a>
+            <a href="https://twitter.com/RealWebPageTest"><img src="/images/twitter.svg" alt="Twitter"></a>
+            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/images/youtube.svg" alt="Youtube"></a>
+        </li>
         <?php
         if (is_file('settings/common/terms.inc') || is_file('settings/server/terms.inc') || is_file('settings/terms.inc')) {
             echo '<li><a href="/terms.php">Terms of Service</a></li>';
@@ -53,3 +63,5 @@
     ?>
 
     <div id="experiment-timing" style="color: #77A;"></div>
+
+

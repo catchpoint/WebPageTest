@@ -31,12 +31,8 @@ $profiles = parse_ini_file($profile_file, true);
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc');?>
         <style>
-        #vitals-content {
-          width: 100%;
-        }
-        #test_box-container {
-          margin-bottom: 2em;
-        }
+        
+
         </style>
     </head>
     <body class="home">
@@ -61,7 +57,10 @@ $profiles = parse_ini_file($profile_file, true);
             include 'header.inc';
             if (!$headless) {
             ?>
-            <h1 class="attention">Run a Core Web Vitals Test</h1>
+            <?php include("home_header.php"); ?>
+
+        <div class="home_content_contain">
+        <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
@@ -82,31 +81,14 @@ $profiles = parse_ini_file($profile_file, true);
             ?>
 
 
-            <div id="test_box-container">
-                <ul class="ui-tabs-nav">
-                    <li class="analytical_review">
-                      <a href="/">
-                        <?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a>
-                    </li>
-                    <li class="vitals ui-state-default ui-corner-top ui-tabs-selected ui-state-active">
-                      <a href="#">
-                        <?php echo file_get_contents('./images/icon-webvitals-testing.svg'); ?>Web Vitals</a>
-                    </li>
-                    <li class="easy_mode">
-                      <a href="/easy">
-                        <?php echo file_get_contents('./images/icon-simple-testing.svg'); ?>Simple Testing</a>
-                    </li>
-                    <li class="visual_comparison">
-                      <a href="/video/">
-                        <?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison
-                      </a></li>
-                    <li class="traceroute">
-                      <a href="/traceroute">
-                        <?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute
-                      </a></li>
-                </ul>
+            <div id="test_box-container" class="home_responsive_test">
+                <?php 
+                $currNav = "Core Web Vitals";
+                include("testTypesNav.php");
+                ?>              
+                
                 <div id="analytical-review" class="test_box">
-                    <ul class="input_fields">
+                    <ul class="input_fields home_responsive_test_top">
                         <li>
                         <label for="url" class="vis-hidden">Enter URL to test</label>
                         <?php
@@ -116,47 +98,68 @@ $profiles = parse_ini_file($profile_file, true);
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
                             }
                         ?>
-                        <?php
-                            if (strlen($siteKey)) {
-                              echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                            } else {
-                              echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                            }
-                            ?>
-                      </li>
-                        <li>
-                            <label for="webvital_profile">Test Configuration:</label>
-                            <select name="webvital_profile" id="webvital_profile" onchange="profileChanged()">
-                                <?php
-                                if (isset($profiles) && count($profiles)) {
-                                  foreach($profiles as $name => $profile) {
-                                    $selected = '';
-                                    if ($name == $_COOKIE['wvProfile'])
-                                      $selected = 'selected';
-                                    echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
-                                  }
-                                  if (isset($lastGroup))
-                                      echo "</optgroup>";
-                                }
-                                ?>
-                            </select>
                         </li>
-                        <li id="description"></li>
+                        <li class="test_main_config">
+
+                          <div class="test_presets">
+                                <div class="fieldrow">
+                                  <label for="webvital_profile">Test Configuration:</label>
+                                  <select name="webvital_profile" id="webvital_profile" onchange="profileChanged()">
+                                      <?php
+                                      if (isset($profiles) && count($profiles)) {
+                                        foreach($profiles as $name => $profile) {
+                                          $selected = '';
+                                          if ($name == $_COOKIE['wvProfile'])
+                                            $selected = 'selected';
+                                          echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                                        }
+                                        if (isset($lastGroup))
+                                            echo "</optgroup>";
+                                      }
+                                      ?>
+                                  </select>
+                              </div>
+                              <div class="fieldrow" id="description"></div>
+                            </div>
+                            <div>
+                                <?php
+                                    if (strlen($siteKey)) {
+                                      echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
+                                    } else {
+                                      echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
+                                    }
+                                    ?>
+                              </div>
+                        </li>
                     </ul>
                 </div>
             </div>
 
 
             </form>
+            
 
+
+        
             <?php
             } // $headless
             ?>
-          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="4050" src="https://www.product.webpagetest.org/second"></iframe>
-          <?php
-          //include(__DIR__ . '/include/home-subsections.inc');
-          //include('footer.inc'); 
+
+</div><!--home_content_contain-->
+        </div><!--home_content-->
+
+        <div class="home_content_contain">
+          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3250" src="https://www.product.webpagetest.org/second"></iframe>
+            </div><!--home_content_contain-->
+          
+            <div class="home_content_contain">
+        <div class="home_content">
+          
+        <?php
+          include('footer.inc'); 
           ?>
+          </div><!--home_content_contain-->
+        </div><!--home_content-->
         </div>
         <?php
         if (!isset($site_js_loaded) || !$site_js_loaded) {

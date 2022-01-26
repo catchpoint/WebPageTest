@@ -98,22 +98,24 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3 class="crux_hed">Real User Data <span>from <abbr title="Chrome User Experience Report">CrUX</abbr></span></h3>';
+        echo '<h3 class="hed_sub">Real User Measurements <em>(Collected anonymously by Chrome browser via Chrome User Experience Report.)</em></h3>';
+        echo '<div class="crux_legends"><strong>WPT\'s Metrics for comparison:</strong>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> This test';
+            echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> ';
             if ($includeLabels) {
-                echo ", First View";
+                echo "First View";
             }
             echo '</span>';
         }
         if (isset($rvPageData) && (isset($rvPageData['chromeUserTiming.firstContentfulPaint']) || isset($rvPageData['chromeUserTiming.LargestContentfulPaint']) || isset($rvPageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' &nbsp;<span class="legend"><span class="rvarrow">&#x25BC</span> This test';
+            echo ' &nbsp;<span class="legend"><span class="rvarrow">&#x25BC</span>';
             if ($includeLabels) {
-                echo ", Repeat View";
+                echo "Repeat View";
             }
             echo '</span>';
         }
-        echo '</h3>';
+        echo '</div>';
+        
 
         // The individual metrics
         echo '<div class="cruxbars">';

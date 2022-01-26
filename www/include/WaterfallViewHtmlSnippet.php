@@ -30,7 +30,7 @@ class WaterfallViewHtmlSnippet {
         $this->stepResult->getRunNumber(), $this->stepResult->isCachedRun(), $this->stepResult->getRawResults(),
         $waterfallOptions, $this->stepResult->getStepNumber());
         $urlGenerator = $this->stepResult->createUrlGenerator("", false);
-        $out .=  "<br><a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
+        $out .=  "<a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
         $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->stepDetailPage("pageimages") . "\">View all Images</a>";
         $out .=  " &#8226; <a id=\"http2-dependencies\" href=\"" . $urlGenerator->stepDetailPage("http2_dependencies") . "\">View HTTP/2 Dependency Graph</a>";
         $out .=  " &#8226; <a href=\"" . $urlGenerator->filmstripView() . "\">Filmstrip</a>";
@@ -54,8 +54,8 @@ class WaterfallViewHtmlSnippet {
   }
 
   private function _legendHighlightTableCell($color, $label) {
-    $style = "style=\"background-color:" . $color . "\"";
-    return "<td style=\"vertical-align:middle; padding: 4px;\"><div ". $style . ">&nbsp;" . $label . "&nbsp;</div></td>";
+    $style = "background-color:" . $color . ";";
+    return "<td style=\"" . $style . "\">" . $label . "</td>";
   }
   private function _legendTextTableCell($color, $label) {
     $style = "style=\"color:" . $color . "\"";
@@ -103,7 +103,7 @@ class WaterfallViewHtmlSnippet {
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 4);
     if ($show_ut && ($this->stepResult->getMetric('userTime') || $this->stepResult->getMetric('elementTiming')))
       $out .= '<td><div class="arrow-down"></div>User & Element Timings</td>';
-    $out .= "</tr>\n</table>\n<br>";
+    $out .= "</tr>\n</table>\n";
     $out .= '<table class="waterfall-legend" cellspacing="0">';
     $out .= "\n<tr>\n";
     $out .= $this->_legendImageTableCell("/images/render-block-icon.png", "Render Blocking Resource", 4);

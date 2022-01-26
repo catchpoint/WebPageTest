@@ -18,13 +18,13 @@
 <?php
 $quotes = array(
     array('quote' => 'The best professional web performance investigators I know use WPT as a critical part of their workflows, and it\'s the center of mine.',
-          'author' => 'Alex Russell, Software Engineer, Google Chrome'),
+          'author' => 'Alex Russell <span>Program Manager, Microsoft Edge</span>'),
     array('quote' => 'One of the cool features of WebPageTest is that it can generate a filmstrip of screen snapshots taken during a web page load, enabling us to quantify how a page loads, visually. This view makes it significantly easier to determine how long the page is blank for, and how long it takes for the most important content to render.</p><p>Being able to look at the results in this way, provides the ability to empathise with the user.',
-          'author' => 'Andrew Galloni, Engineering Director at Cloudflare'),
+          'author' => 'Andrew Galloni <span>Engineering Director at Cloudflare</span>'),
     array('quote' => 'WebPage Test measures web performance metrics in real browsers, is highly programmable, and could scale to test millions of sites per day.',
-          'author' => 'Yevgen Safranov, Software Engineer at Cloudflare'),
+          'author' => 'Yevgen Safranov <span>Software Engineer at Cloudflare</span>'),
     array('quote' => 'Snyk uses WebPageTest to perform 3rd party library detection and vulnerability scanning that reveals potential security vulnerabilities in your website pages.',
-          'author' => 'Liran Tal, Developer Relations at Snyk'),
+          'author' => 'Liran Tal <span>Developer Relations at Snyk</span>'),
 );
 $quote = $quotes[array_rand($quotes)];
 ?>
@@ -34,13 +34,13 @@ $quote = $quotes[array_rand($quotes)];
     </blockquote>
     <figcaption><cite><?php echo $quote['author']; ?></cite></figcaption>
 </figure>
-<h2 class="light">Featured Content</h2>
+<h2 class="light">Featured Posts from the WebPageTest Blog</h2>
 <div class="tri-col">
     <div class="resource-block">
-        <a href="https://blog.webpagetest.org/posts/why-first-contentful-paint-doesnt-work-as-a-cross-browser-metric/">
-            <img src="/images/tiles/FCP.png" alt="">
-            <h3>Why First Contentful Paint Doesn't Work As a Cross-Browser Metric</h3>
-            <p>Learn why First Contentful Paint isn't exactly apples-to-apples from one browser to the next</p>
+        <a href="https://blog.webpagetest.org/posts/full-throttle-comparing-packet-level-and-dev-tools-throttling/">
+            <img src="/images/tiles/blog-throttling.png" alt="">
+            <h3>Full Throttle: Comparing packet-level and DevTools throttling</h3>
+            <p>Learn why packet-level throttling is better than DevTools throttling and the gold standard in accuracy for WebPerf measurements.</p>
         </a>
     </div>
     <div class="resource-block">
@@ -51,10 +51,10 @@ $quote = $quotes[array_rand($quotes)];
         </a>
     </div>
     <div class="resource-block">
-        <a href="https://blog.webpagetest.org/posts/extending-webpagetest-with-custom-metrics/">
-            <img src="/images/tiles/CustomMetrics.png" alt="">
-            <h3>Extending WebPageTest With Custom Metrics</h3>
-            <p>Check out a few examples of powerful custom metrics you can pull from WebPageTest</p>
+        <a href="https://blog.webpagetest.org/posts/new-render-blocking-indicator-in-chrome-and-webpagetest/">
+            <img src="/images/tiles/blog-renderblock.png" alt="">
+            <h3>New Render Blocking Indicator in Chrome and WebPageTest</h3>
+            <p>How to use WebPageTest's render-blocking indicator to improve on one of the most common performance bottlenecks.</p>
         </a>
     </div>
 </div>
@@ -62,6 +62,7 @@ $quote = $quotes[array_rand($quotes)];
 if (is_file('tmp/feeds.dat')) {
     $feeds = json_decode(file_get_contents('tmp/feeds.dat'), true);
     if ($feeds) {
+        echo '<div class="feedcontain">';
         foreach ($feeds as $category => $items) {
             if (count($items)) {
                 rsort($items);
@@ -83,6 +84,7 @@ if (is_file('tmp/feeds.dat')) {
                 echo '</ul></div>';
             }
         }
+        echo '</div>';
     }
 }
 ?>
