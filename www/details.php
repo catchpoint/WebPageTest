@@ -93,10 +93,10 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                   <?php 
                   echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ( $cached ? ', Repeat View' : '' ) . ')</em></h3>';
              
-         
-                    if( $testResults->countRuns() > 1 ){
+                    $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
+                    if( $testResults->countRuns() > 1 || $hasRepeats  ){
                       $runs = $testResults->countRuns() + 1;
-                      $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
+                      
                       $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
                       $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
