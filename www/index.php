@@ -260,13 +260,7 @@ $loc = ParseLocations($locations);
 
                             
                             <div class="test_presets_easy_submit">
-                            <?php
-                                if (strlen($siteKey)) {
-                                echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                                } else {
-                                echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                                }
-                                ?>
+                            <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                         </div>
                         </div>
                             </li>
