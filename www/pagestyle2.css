@@ -4009,6 +4009,12 @@ th.header {
     color: #111;
 }
 
+#runningHeader ul:first-of-type {
+    padding: 1em;
+    line-height: 1.4;
+    background: #fafafa;
+}
+
 #runningHeader form {
     float: right;
 }
