@@ -47,7 +47,7 @@ if(!$testInfo->isFirstViewOnly()) {
 
             <div class="results_header">
                 <h2>Content Breakdown</h2>
-                <p>TODO intro about that here.</p>
+                <p>How this site's assets are comprised by content type.</p>
             </div>
 
             <?php include("testinfo_command-bar.inc"); ?>
