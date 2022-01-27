@@ -1713,12 +1713,17 @@ label small {
     font-size: 0.875rem;
 }
 .test_preset_profile strong {
-    min-width: 4em;
+    min-width: 5em;
     /* flex: 1 1 10em; */
 }
 @media (max-width: 28em) {
     .test_presets_easy .profiles input {
         align-self: flex-start
+    }
+    
+    .test_preset_profile strong {
+        min-width: 4em;
+        /* flex: 1 1 10em; */
     }
     
     .test_preset_profile strong {
