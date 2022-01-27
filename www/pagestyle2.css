@@ -862,13 +862,7 @@ details.details_custommetrics summary {
     padding: .2em 0;
     background: #fff;
     min-width: 100%;
-}
-
-@media (max-width: 50em) {
-    .has-js .testinfo_artifacts .testinfo_artifacts-list {
-        right: 0;
-        left: auto;
-    }
+    text-align: left;
 }
 
 .testinfo_artifacts-list li {
@@ -926,20 +920,13 @@ details.details_custommetrics summary {
     position: absolute;
     box-shadow: 0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.11);
     display: none;
-    right: auto;
-    left: 0;
+    right: 0;
+    left: auto;
 }
 
 .has-js .testinfo_artifacts:hover .testinfo_artifacts-list,
 .has-js .testinfo_artifacts:focus .testinfo_artifacts-list {
     display: block;
-}
-
-@media (max-width: 50em) {
-    .has-js .testinfo_artifacts .testinfo_artifacts-list {
-        right: 0;
-        left: auto;
-    }
 }
 
 @media (max-width: 80em) {
@@ -2105,6 +2092,7 @@ label small {
     .key {
         flex-flow: column;
         gap: .5em;
+        margin-bottom: 1em;
     }
 }
 
@@ -6212,6 +6200,12 @@ div.bar {
     box-shadow: none;
     margin: 0;
     border-radius: 10px;
+}
+
+.details_panel summary::-webkit-details-marker,
+.testinfo_forms summary::-webkit-details-marker,
+.test_presets_more summary::-webkit-details-marker {
+    display: none;
 }
 
 .details_panel:not([open]) {
