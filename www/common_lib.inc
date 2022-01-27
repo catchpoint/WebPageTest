@@ -2580,7 +2580,7 @@ function formatMsInterval($val, $digits) {
 }
 
 function removeLeadingZero($in){
-  return preg_replace('/^0*([^0]*)/i', '${1}', $in);
+  return preg_replace('/^0*([^0]+)/i', '${1}', $in);
 }
 
 /**
