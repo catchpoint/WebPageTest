@@ -1137,12 +1137,8 @@ function GetScriptBlock() {
         }
         if ($show)
         {
-            $html .= '<div class="script-block">';
-            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
-            $html .= '<div id="script_in_results-container" class="hidden">';
+            $html .= 'Scripted Test:';
             $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
-            $html .= '</div>';
-            $html .= '</div>';
         } 
     }
     return $html;
@@ -1160,37 +1156,44 @@ function GetTestInfoHtml($includeScript = true)
     global $login;
     global $admin;
     global $privateInstall;
-    $html = '';
+    $html = '<ul>';
     $run = null;
     if (array_key_exists('run', $_REQUEST))
       $run = intval($_REQUEST['run']);
     if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester']))
-      $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
+      $html .= '<li>Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '</li>';
     elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester']) )
-      $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
+      $html .= '<li>Tester: ' . $test['testinfo']['tester'] . '</li>';
     if( $dom )
-        $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
+        $html .= '<li>DOM Element: ' . htmlspecialchars($dom) . '</li>';
     if( $test['test']['fvonly'] )
-        $html .= '<b>First View only</b><br>';
+        $html .= '<li>First View only</li>';
     if( isset($test['test']['runs']) )
-        $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
+        $html .= '<li>Test runs: ' . $test['test']['runs'] . '</li>';
     if( isset($test['test']['authenticated']) && (int)$test['test']['authenticated'] == 1)
-        $html .= '<b>Authenticated: ' . htmlspecialchars($login) . '</b><br>';
+        $html .= '<li>Authenticated: ' . htmlspecialchars($login) . '</li>';
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine']))
-        $html .= '<b>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</b><br>';
+        $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
+    
     if( isset($test['testinfo']['connectivity']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
     {
-        $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
+        $html .= "<li>Connectivity: {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
             $html .= ", {$test['testinfo']['plr']}% Packet Loss";
         if( $test['testinfo']['shaperLimit'] )
             $html .= ", shaperLimit {$test['testinfo']['shaperLimit']}";
-        $html .= '<br>';
+        $html .= '</li>';
     }
     if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
     {
-      $html .= '<b>Scripted test</b><br>';
+      $html .= '<li>';
+      $html .= GetScriptBlock();
+      $html .= '</li>';
     }
+    // TODO FIND CUSTOM METRICS HERE
+    if (array_key_exists('customMetrics', $test['testinfo']) && is_array($test['testinfo']['customMetrics']) && count($test['testinfo']['customMetrics']))
+         $html .= '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
+    $html .= '</ul>';
     
     return $html;
 }
@@ -2573,7 +2576,11 @@ function formatMsInterval($val, $digits) {
   if ($val == UNKNOWN_TIME)
     return '-';
 
-  return number_format($val / 1000.0, $digits) . 's';
+  return removeLeadingZero(number_format($val / 1000.0, $digits) . '<span class="units">S</span>');
+}
+
+function removeLeadingZero($in){
+  return preg_replace('/^0*([^0]+)/i', '${1}', $in);
 }
 
 /**

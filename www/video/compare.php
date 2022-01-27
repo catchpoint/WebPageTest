@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -18,6 +19,9 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
                 $tests .= "-r:{$parts[1]}";
         }
     }
+
+    
+
     $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
@@ -76,11 +80,17 @@ else
 
     if( strlen($labels) )
         $title .= ' - ' . $labels;
+        
+
     ?>
+
+   
     <!DOCTYPE html>
     <html lang="en-us">
         <head>
             <title>WebPageTest - Visual Comparison</title>
+            <script>document.documentElement.classList.add('has-js');</script>
+
             <?php
                 if( !$ready )
                 {
@@ -339,48 +349,67 @@ else
                 ?>
             </style>
         </head>
-        <body class="compare">
+        <body class="result compare">
                 <?php 
                 $tab = 'Test Result';
-                $nosubheader = true;
-                $headerType = 'video';
+                //$nosubheader = false;
+                $subtab = 'Filmstrip';
+
+                //$headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
-                include 'header.inc';
+
+                include __DIR__ . '/../header.inc';
 
                 if( $error ) {
                     echo "<h1>$error</h1>";
                 } elseif( $ready ) {
+
+                    ?>
+                    <div class="results_main_contain">
+                    <div class="results_main">
+            
+                    
+                    <div class="results_and_command">
+            
+                       <div class="results_header">
+                            <?php 
+                                if (count($tests) > 1 ) {
+                                    echo '<h2>Filmstrip Comparison</h2>';
+                                }
+                                else {
+                                    echo '<h2>Filmstrip View</h2>';
+                                }
+                            ?>
+                            <p>Use this page to explore and compare timing and request details from one or more tests.</p>
+                    <?php
+                    // //build out an expanded link
+                     if ($testResults->countRuns() > 1 && count($tests) == 1) {
+                         $link = '/video/compare.php?tests=';
+                         $cnt = 1;
+                         do {
+                             $link .= $tests[0]['id'] . '-r:' . $cnt . '-c:0';
+                             if ($tests[0]['step']) {
+                                 $link .= '-s:' . $test['step'];
+                             }
+                             $link .= ',';
+                             $cnt++;
+                         } while ($cnt <= $testResults->countRuns());
+                         echo '<a class="compare-all-link" href="' . substr($link,0,-1) . '">Compare all runs</a>';
+                     }
+                     ?>
+                        </div>
+            
+                        <?php include("testinfo_command-bar.inc"); ?>
+            
+                        </div>
+            
+            
+                        <div id="result" class="results_body">
+<?php
+
                     echo '<div class=""><div class="test_results-content">';
                     echo '<div class="test_results_header">';
-                    echo '<div class="compare_meta">';
-                    if (count($tests) > 1 ) {
-                        echo '<h2>Filmstrip Comparison</h2>';
-                    }
-                    else {
-                        echo '<h2>Filmstrip View</h2>';
-                    }
                     
-                    if (isset($location) && strlen($location)) {
-                        echo "<p class=\"compare_location\">Tested From: $location</p>";
-                        
-                    }
-
-                    //build out an expanded link
-                    if ($testResults->countRuns() > 1 && count($tests) == 1) {
-                        $link = '/video/compare.php?tests=';
-                        $cnt = 1;
-                        do {
-                            $link .= $tests[0]['id'] . '-r:' . $cnt . '-c:0';
-                            if ($tests[0]['step']) {
-                                $link .= '-s:' . $test['step'];
-                            }
-                            $link .= ',';
-                            $cnt++;
-                        } while ($cnt <= $testResults->countRuns());
-                        echo '<a class="compare-all-link" href="' . substr($link,0,-1) . '">Compare all runs</a>';
-                    }
-                    
-                    echo '</div>';
 
                     echo '<div class="compare_settings">';
                     include 'video/filmstrip_settings.php';
@@ -416,9 +445,13 @@ else
                 } else {
                     DisplayStatus();
                 }
+
+                echo '</div>';
                 ?>
                 <?php include('footer.inc'); ?>
+                
                 </div>
+                </div></div>
                 </div>
 
             <script type="text/javascript">
@@ -540,9 +573,7 @@ function ScreenShotTable()
             echo $test['index'] . ': ';
             
             if (!defined('EMBED')) {
-                $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
-                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
-                echo " <a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
+                echo " <span id=\"label_{$test['id']}\">" . WrapableString(htmlspecialchars($test['name'])) . "</span>";
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
             }
@@ -550,8 +581,14 @@ function ScreenShotTable()
             // Print out a link to edit the test
             echo ' <a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
             if (class_exists("SQLite3"))
-              echo '(Edit title)';
+              echo 'Edit title';
             echo '</a>';
+
+            if (!defined('EMBED')) {
+                $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
+                $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
+                echo "<a class=\"video_runlabel_backlink\" href=\"$href\">Test Run Details</a>";
+            }
 
             echo "</span></td></tr>";
 
@@ -878,8 +915,11 @@ function DisplayStatus()
 {
     global $tests;
 
-    echo "<h1>Please wait while the tests are run...</h1>\n";
-    echo "<table id=\"statusTable\"><tr><th>Test</th><th>Status</th></tr><tr>";
+    echo '<div class="results_main_contain">
+    <div class="results_main">
+    <div class="results_header"><h2>Filmstrip Comparison</h2><p>Please wait while the tests are run...</p></div>
+    <div id="result" class="results_body">';
+    echo "<div class='scrollableTable'><table id=\"statusTable\" class=\"pretty\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {
         echo "<tr><td><a href=\"/result/{$test['id']}/\">" . htmlspecialchars($test['name']) . "</a></td><td>";
@@ -892,7 +932,7 @@ function DisplayStatus()
 
         echo "</td></tr>";
     }
-    echo "</table>";
+    echo "</table></div>";
 }
 
 /**

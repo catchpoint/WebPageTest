@@ -107,6 +107,10 @@ class TestInfo {
     return !empty($this->rawData['test']['aft']);
   }
 
+
+  public function getRawData () { return $this->rawData; }
+
+  
   /**
    * @return bool True if the test is complete, false otherwise
    */

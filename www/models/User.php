@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 
+namespace WebPageTest;
+
 class User {
   private ?string $email;
   private bool $is_admin;

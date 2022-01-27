@@ -24,8 +24,9 @@
       $profile_file = __DIR__ . '/settings/common/profiles.ini';
     if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
       $profile_file = __DIR__ . '/settings/server/profiles.ini';
-    if (isset($_REQUEST['profile']) && is_file($profile_file)) {
-      $profiles = parse_ini_file($profile_file, true);
+    // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile
+    if (isset($_REQUEST['profile']) && isset($_REQUEST['simpleadvanced']) && $_REQUEST['simpleadvanced'] === 'simple' && is_file($profile_file)) {
+        $profiles = parse_ini_file($profile_file, true);
       if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
         foreach($profiles[$_REQUEST['profile']] as $key => $value) {
           if ($key !== 'label' && $key !== 'description') {
@@ -433,6 +434,16 @@
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
               $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
+            }
+
+            // Store an opaque metadata string/JSON object if one was provided (up to 10KB)
+            if (isset($_REQUEST['metadata']) && is_string($_REQUEST['metadata']) && strlen($_REQUEST['metadata'] <= 10240)) {
+              $metadata = $_REQUEST['metadata'];
+              $metadata_json = json_decode($metadata, true);
+              if (isset($metadata_json) && is_array($metadata_json)) {
+                $metadata = $metadata_json;
+              }
+              $test['metadata'] = $metadata;
             }
 
             // see if we need to process a template for these requests	
