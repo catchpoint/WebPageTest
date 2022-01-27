@@ -588,7 +588,7 @@ footer ul {
     body.result footer,
     footer {
         flex-flow: column;
-        padding: 0 1.5rem;
+        padding: 2rem 1.5rem;
     }
     footer ul {
         text-align: left;
