@@ -598,9 +598,10 @@ footer ul {
 }
 
 #header_data {
-    flex: 1 1 auto;
+    flex: 1 1 50%;
     padding-top: 1rem;
     padding-bottom: 1.5rem;
+    min-width: 60%;
 }
 
 .header_screenshots {
@@ -1686,9 +1687,10 @@ nav.link_select {
         line-height: 1.5;
     }
     nav.link_select {
-        min-width: 15em;
-        max-width: 80%;
-        font-size: .9em
+        min-width: 20em;
+        max-width: 70%;
+        font-size: .9em;
+        /* width: 100%; */
     }
 }
 
@@ -1969,6 +1971,10 @@ label small {
 .test_preset_profile strong {
     min-width: 5em;
     /* flex: 1 1 10em; */
+}
+
+.result .test_presets li {
+    flex-flow: row wrap;
 }
 
 @media (max-width: 50em) {
@@ -3362,7 +3368,7 @@ label.test_preset_profile.test_preset_profile-Mobile span:after {
 
 @media (max-width: 50em) {
     .cta-banner {
-        margin: 0 1.5em;
+        margin: 0 auto;
     }
     .cta-banner p {
         font-size: .9em
