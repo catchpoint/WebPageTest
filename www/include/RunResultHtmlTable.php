@@ -128,10 +128,7 @@ class RunResultHtmlTable {
     // $out .= $this->_headCell("", "empty", $colspan);
 
     // // Count the web vitals metrics that we have
-    // $test_id = $this->testInfo->getId();
-    // $run = $this->runResults->getRunNumber();
-    // $cached = $this->runResults->isCachedRun() ? '1' : '0';
-    // $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
+
     // $vitals_count = 0;
     // if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
     //   $vitals_count++;
@@ -173,6 +170,16 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Result (error&nbsp;code)");
     }
     $vitalsBorder = "border";
+    //for now, only provide a link to vitals if all metrics are collected
+    if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT) &&
+        $this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT) &&
+        $this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
+        $test_id = $this->testInfo->getId();
+        $run = $this->runResults->getRunNumber();
+        $cached = $this->runResults->isCachedRun() ? '1' : '0';
+        $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
+      }
+    
     if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
       $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title='Largest Contentful Paint'>LCP</abbr></a>", $vitalsBorder);
       $vitalsBorder = null;
