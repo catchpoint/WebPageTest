@@ -3701,6 +3701,17 @@ table.details td.reqMime {
     -webkit-text-stroke: 0.04em currentColor;
 }
 
+@media (max-width: 50em) {
+    .summary-container {
+        flex-flow: column;
+        gap: 2rem;
+    }
+    .metric-value {
+        font-size: 3em;
+        display: block;
+    }
+}
+
 .summary-container .summary-metric.good .metric-value {
     color: #6ca71a;
 }
