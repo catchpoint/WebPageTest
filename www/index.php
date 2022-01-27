@@ -197,7 +197,9 @@ $loc = ParseLocations($locations);
                             
                             <label for="url" class="vis-hidden">Enter URL to test</label>
                             <?php
+
                             if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                                $url = htmlentities($_REQUEST['url']);
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
                             } else {
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";

@@ -1282,6 +1282,18 @@ body.result #main {
     }
 }
 
+@media (min-width:125em) {
+    .home_feature_hed_contain {
+        background-position: bottom -2.7vw left 50%, bottom -50px left 50%;
+    }
+}
+
+@media (min-width:195em) {
+    .home_feature_hed_contain {
+        background-position: bottom -200px left 50%, bottom -50px left 50%;
+    }
+}
+
 .home_feature_hed {
     gap: 2rem;
 }
