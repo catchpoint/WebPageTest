@@ -2056,6 +2056,44 @@ label small {
     max-height: none;
 }
 
+.test_preset_profile>span.test_preset_profile_tt {
+    position: absolute;
+    background: rgb(255 255 255 / 93%);
+    bottom: 110%;
+    display: block;
+    color: #1a2a4a;
+    width: 40em;
+    right: 0;
+    padding: 1.5em;
+    display: none;
+    box-shadow: 0 0 5px #a90da5;
+    border: 1px solid a90da5;
+    font-size: 1rem;
+    max-width: 80vw;
+}
+
+span.test_preset_profile_tt:after {
+    border-top: .6em solid rgb(255 255 255 / 93%);
+    border-right: .6em solid transparent;
+    border-left: .6em solid transparent;
+    content: "";
+    width: 0;
+    height: 0;
+    left: 2em;
+    position: absolute;
+    bottom: -.6em;
+    background-repeat: no-repeat;
+}
+
+.home .test_preset_profile {
+    position: relative;
+}
+
+.test_preset_profile:hover span.test_preset_profile_tt,
+.test_preset_profile input:focus+span+span.test_preset_profile_tt {
+    display: block;
+}
+
 .fieldrow .test_presets .test_preset_profile input[type=radio] {
     align-self: center;
 }
@@ -2908,7 +2946,8 @@ label.test_preset_profile {
     padding: .5rem 0;
 }
 
-label.test_preset_profile.test_preset_profile-Mobile span:after {
+
+/* label.test_preset_profile.test_preset_profile-Mobile span:after {
     background: url(/images/test_icons/chrome.svg) left center no-repeat;
     width: 100%;
     display: inline-block;
@@ -2916,7 +2955,7 @@ label.test_preset_profile.test_preset_profile-Mobile span:after {
     content: "";
     width: 35rem;
     height: 100%;
-}
+} */
 
 #change-location-btn {
     border: 1px solid #fff;
