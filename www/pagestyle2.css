@@ -1690,13 +1690,6 @@ nav.link_select {
     }
 }
 
-@media (max-width: 40em) {
-    .home_responsive_test h2,
-    .home_responsive_test h2 span:first-child {
-        display: block;
-    }
-}
-
 .home_responsive_test .home_test_select ul,
 nav.link_select ul {
     visibility: hidden;
@@ -1720,6 +1713,19 @@ nav.link_select ul a {
     font-weight: 500;
     padding: .2em 1em;
     font-size: .8em;
+}
+
+@media (max-width: 40em) {
+    .home_responsive_test h2,
+    .home_responsive_test h2 span:first-child {
+        display: block;
+    }
+}
+
+@media (max-width: 60em) {
+    .home_responsive_test .home_test_select ul a {
+        padding: .5em 1em;
+    }
 }
 
 nav.link_select ul a {
@@ -1787,7 +1793,7 @@ nav.link_select:hover ul {
     overflow: visible;
     border: 1px solid #4A6699;
     border-top: 0;
-    top: 1.7em;
+    top: 100%;
     background: #fff;
     padding: 0;
     margin: 0;
