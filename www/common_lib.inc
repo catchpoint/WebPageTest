@@ -1192,8 +1192,8 @@ function GetTestInfoHtml($includeScript = true)
     }
     // TODO FIND CUSTOM METRICS HERE
     if (array_key_exists('customMetrics', $test['testinfo']) && is_array($test['testinfo']['customMetrics']) && count($test['testinfo']['customMetrics']))
-         echo '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
-    $html .= '</ol>';
+         $html .= '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
+    $html .= '</ul>';
     
     return $html;
 }
