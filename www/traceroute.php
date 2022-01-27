@@ -30,22 +30,6 @@ $page_description = "Test network path from multiple locations around the world 
     </head>
     <body class="home">
             <?php
-            $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
-              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
-              ?>
-              <script>
-              function onRecaptchaSubmit(token) {
-                var form = document.getElementById("urlEntry");
-                if (ValidateInput(form)) {
-                  form.submit();
-                } else {
-                  grecaptcha.reset();
-                }
-              }
-              </script>
-              <?php
-            }
             $tab = 'Home';
             include 'header.inc';
             ?>
@@ -155,13 +139,7 @@ $page_description = "Test network path from multiple locations around the world 
 
                             </div>
                             <div>
-                       <?php
-                            if (strlen($siteKey)) {
-                                echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                            } else {
-                                echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                            }
-                            ?>
+                              <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                             </div>
                         </li>
                         

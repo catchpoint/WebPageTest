@@ -7,17 +7,6 @@
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
-                        $siteKey = GetSetting("recaptcha_site_key", "");
-                        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
-                          echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
-                          ?>
-                          <script>
-                          function onRecaptchaSubmit(token) {
-                            document.getElementById("urlEntry").submit();
-                          }
-                          </script>
-                          <?php
-                        }
                         // load the secret key (if there is one)
                         $secret = GetServerSecret();
                         if (!isset($secret))
