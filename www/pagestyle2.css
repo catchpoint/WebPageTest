@@ -1713,7 +1713,7 @@ label small {
     font-size: 0.875rem;
 }
 .test_preset_profile strong {
-    min-width: 5em;
+    min-width: 4em;
     /* flex: 1 1 10em; */
 }
 @media (max-width: 28em) {
