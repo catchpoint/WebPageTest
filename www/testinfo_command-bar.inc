@@ -55,11 +55,7 @@
                         }
 
 
-                        if (strlen($siteKey)) {
-                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha\">Re-run the test</button>";
-                        } else {
-                          echo '<input type="submit" value="Re-run the test">';
-                        }
+                         echo '<input type="submit" value="Re-run the test">';
                         echo "\n</form>\n";
                     }
                     ?>
