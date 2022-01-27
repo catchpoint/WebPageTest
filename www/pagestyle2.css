@@ -2062,8 +2062,9 @@ label small {
     bottom: 110%;
     display: block;
     color: #1a2a4a;
-    width: 40em;
-    right: 0;
+    width: auto;
+    min-width: 20em;
+    left: 1.5em;
     padding: 1.5em;
     display: none;
     box-shadow: 0 0 5px #a90da5;
