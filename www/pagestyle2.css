@@ -1925,7 +1925,7 @@ label small {
     background: #2a3c64;
     width: 30rem;
     padding: 1rem;
-    z-index: 999999;
+    z-index: 9999999;
     box-shadow: 0 0 5px #00000073;
     border-radius: .5rem;
     max-width: 80vw;
