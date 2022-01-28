@@ -68,7 +68,7 @@ function drawChart(chart_metric) {
 function signifString(pValue) {
   if (pValue === null) {
     return "";
-  } else if (pValue < 0.05) {
+  } else if (pValue < 0.05 && pValue != 0.000) {
     return "TRUE";
   } else {
     return "FALSE";
