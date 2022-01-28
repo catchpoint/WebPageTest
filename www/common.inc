@@ -394,3 +394,8 @@ if (is_file('./settings/custom_common.inc.php')) {
 // Create global request context for future use
 $request = new RequestContext($_REQUEST);
 $request->setUser($current_user);
+
+if (GetSetting('cp_auth')) {
+  require_once __DIR__ . '/common/AttachClient.php';
+}
+
