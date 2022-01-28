@@ -831,7 +831,7 @@ $loc = ParseLocations($locations);
                             <div id="spof" class="test_subbox ui-tabs-hide">
                                 <p>
                                     Simulate failure of specified domains.  This is done by re-routing all requests for
-                                    the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html" target="_blank" rel="noopener">blackhole.webpagetest.org</a> which will silently drop all requests.
+                                    the domains to <a href="https://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html" target="_blank" rel="noopener">blackhole.webpagetest.org</a> which will silently drop all requests.
                                 </p>
                                 <p>
                                     <label for="spof_hosts" class="full_width">
