@@ -279,9 +279,11 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             $locationSimple = explode( "-", $test['testinfo']['locationLabel'] )[ 0 ];
             $connectivity = $test['test']['connectivity'];
-            $browser = $test['testinfo']['browser'];
+
+            $browser = $testResults->getBrowser();
+
             //check to make sure we have a browser icon
-            if (file_exists(__DIR__.'/images/test_icons/' . strtolower($browser) . '.svg')) {
+            if (file_exists(__DIR__.'/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
                 //exists so let's use it
                 $browserIcon = true;
             } else {
@@ -299,14 +301,20 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 <ul>
                     <?php 
                     echo '<li><strong>'.$device.'</strong>';
+                    //browser and version
+                    echo '<span class="test_presets_tag">';
                     if ($browserIcon) {
-                        echo '<img src="/images/test_icons/'. strtolower($browser) . '.svg" alt="'. $browser . '">';
+                        echo '<img src="/images/test_icons/'. strtolower($browser->getName()) . '.svg" alt="'. $browser->getName() . '">';
                     } else {
-                        echo '<span class="test_presets_tag">'.$browser.'</span>';
+                        echo $browser->getName();
                     }
-                    
+                    if ($browser->getVersion()) {
+                        echo 'v' . strtok($browser->getVersion(), '.');
+                    }
+                    echo '</span>';
+                    //connectivity
                     echo '<span class="test_presets_tag">'. $connectivity . '</span>';
-
+                    //location
                     echo '<span class="test_presets_tag">';
 
                     if( $flags[$test['test']['loc']] ){
