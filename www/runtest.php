@@ -1247,21 +1247,6 @@ function ValidateKey(&$test, &$error, $key = null)
 
       if( $hmac != $test['vh'] || $elapsed > 86400 ) {
         $error = 'Your test request could not be validated (this can happen if you leave the browser window open for over a day before submitting a test).  Please try submitting it again.';
-      } else {
-        // if recaptcha is enabled, verify the response
-        $secret = GetSetting("recaptcha_secret_key", "");
-        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($secret)) {
-          $passed = false;
-          if (isset($_REQUEST['g-recaptcha-response'])) {
-            $captcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secret) . "&response=" . urlencode($_REQUEST['g-recaptcha-response']);
-            $response = json_decode(http_fetch($captcha_url), true);
-            if (isset($response["success"]) && $response["success"])
-              $passed = true;
-          }
-          if (!$passed) {
-            $error = "Failed recaptcha validation.  Please go back and try submitting your test again";
-          }
-        }
       }
     } elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )

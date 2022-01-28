@@ -31,7 +31,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 $page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
 
-function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteKey) {
+function createForm($formName, $btnText, $id, $owner, $secret) {
   echo "<form name='$formName' id='$formName' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
   echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
   echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
@@ -47,11 +47,7 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
     $hmac = sha1($hashStr);
     echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
   }
-  if (strlen($siteKey)) {
-    echo "<button data-sitekey=\"$siteKey\" data-callback='$callback' class=\"g-recaptcha\">$btnText</button>";
-  } else {
-    echo "<input type=\"submit\" value=\"$btnText\">";
-  }
+  echo "<input type=\"submit\" value=\"$btnText\">";
   echo "\n</form>\n";
 }
 
@@ -278,22 +274,11 @@ function createForm($formName, $btnText, $callback, $id, $owner, $secret, $siteK
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
-                        $siteKey = GetSetting("recaptcha_site_key", "");
-                        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
-                          ?>
-                          <script>
-                          function onRecaptchaSubmitExperiment(token) {
-                            document.getElementById("experimentForm").submit();
-                          }
-                          </script>
-                          <?php
-                        }
-
                         // load the secret key (if there is one)
                         $secret = GetServerSecret();
                         if (!isset($secret))
                             $secret = '';
-                            createForm('experimentForm', 'Run Experiment', 'onRecaptchaSubmitExperiment', $id, $owner, $secret, $siteKey);
+                            createForm('experimentForm', 'Run Experiment', $id, $owner, $secret);
                           }
                     ?>
               </div>
