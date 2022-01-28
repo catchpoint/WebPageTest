@@ -225,7 +225,7 @@ $loc = ParseLocations($locations);
                                         $selected = '';
                                         if ($name == $_COOKIE['testProfile'] || (!$_COOKIE['testProfile'] && $pIndex == 0))
                                         $selected = 'checked';
-                                        echo "<label class=\"test_preset_profile test_preset_profile-$name\"><input type=\"radio\" name=\"profile\" aria-labeledby=\"tt-$name\" value=\"$name\" $selected><span>{$profile['label']}</span><span role=\"tooltip\" id=\"tt-$name\" class=\"test_preset_profile_tt\">{$profile['description']}</span></label>";
+                                        echo "<label class=\"test_preset_profile test_preset_profile-$name\"><input type=\"radio\" name=\"profile\" aria-labelledby=\"tt-$name\" value=\"$name\" $selected><span>{$profile['label']}</span><span role=\"tooltip\" id=\"tt-$name\" class=\"test_preset_profile_tt\">{$profile['description']}</span></label>";
                                         $pIndex++;
                                     }
                                     }
