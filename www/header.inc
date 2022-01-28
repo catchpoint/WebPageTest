@@ -246,7 +246,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     'ec2-us-west-1' => 'US',
                     'ec2-ca-central-1' => 'CA',
                     'ec2-sa-east-1' => 'BR',
-                    'ec2-eu-west-1' => 'IR',
+                    'ec2-eu-west-1' => 'IE',
                     'London_EC2_Loc' => 'GB',
                     'ec2-eu-west-3' => 'FR',
                     'gce-europe-west4' => 'NL',
