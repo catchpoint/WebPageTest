@@ -4445,7 +4445,7 @@ div.overflow-container,
 }
 .scrollableTable table, 
 .results-filmstrip-container img,
-div.waterfall-container img,
+div:not(.compare_contain_wrap) > div.waterfall-container img,
 div.overflow-container > *,
 .breakdownFrame_item > div > *,
 #videoDiv > * {
