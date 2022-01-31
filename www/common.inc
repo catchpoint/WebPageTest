@@ -139,7 +139,7 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', 164);                // version of the sitewide css file
+define('VER_CSS', 165);                // version of the sitewide css file
 define('VER_JS', 40);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
@@ -198,7 +198,7 @@ if ($supportsSaml) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
-$current_user->set_email($USER_EMAIL);
+$current_user->setEmail($USER_EMAIL);
 
 if (!$admin) {
   $this_user = null;
@@ -214,7 +214,7 @@ if (!$admin) {
       if (is_array($admin_users) && count($admin_users)) {
         foreach($admin_users as $substr) {
           if (stripos($this_user, $substr) !== false) {
-            $current_user->set_admin(true);
+            $current_user->setAdmin(true);
             $admin = true;
             break;
           }
@@ -231,7 +231,7 @@ $owner = null;
 if ($supportsSaml) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
-  $current_user->set_owner_id($owner);
+  $current_user->setOwnerId($owner);
 } 
 if (!$owner) {
   if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
@@ -393,3 +393,9 @@ if (is_file('./settings/custom_common.inc.php')) {
 
 // Create global request context for future use
 $request = new RequestContext($_REQUEST);
+$request->setUser($current_user);
+
+if (GetSetting('cp_auth')) {
+  require_once __DIR__ . '/common/AttachClient.php';
+}
+

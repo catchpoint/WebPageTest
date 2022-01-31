@@ -4426,7 +4426,6 @@ th.header {
 .scrollableTable {
     overflow: auto;
     scroll-snap-type: both mandatory;
-    max-height: 80vh;
     width: 100%;
     max-width: 100%;
     padding-bottom: .8em;
@@ -4446,7 +4445,7 @@ div.overflow-container,
 }
 .scrollableTable table, 
 .results-filmstrip-container img,
-div.waterfall-container img,
+div:not(.compare_contain_wrap) > div.waterfall-container img,
 div.overflow-container > *,
 .breakdownFrame_item > div > *,
 #videoDiv > * {
@@ -4489,7 +4488,8 @@ div.overflow-container > *,
     left: 0;
     z-index: 1000;
     max-width: 40vw;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .scrollableTable #tableResults tbody th {
@@ -4534,6 +4534,15 @@ table#tableResults.pretty td {
     text-align: left;
     vertical-align: middle;
     border: 29px solid #fff;
+}
+.result-details #tableResults.pretty tr:not(.metric_groups) th {
+    padding-right: 1rem;
+    font-size: .8em;
+}
+
+.result-details table#tableResults.pretty td {
+    font-size: 2rem;
+    padding-right: 1rem;
 }
 
 #custom-metrics table.pretty td,
@@ -4588,7 +4597,7 @@ table.pretty .metric_groups th {
     border: 0px solid #fff;
     font-weight: 700;
     color: #686868;
-    padding: 0 0 4px;
+    padding: 0 2rem 4px 0;
     /* display: block; */
     padding-top: 24px;
     font-size: .9em;

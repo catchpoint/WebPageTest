@@ -60,7 +60,7 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
 
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
     </head>
-    <body class="result">
+    <body class="result result-details">
             <?php
             $tab = 'Test Result';
             $subtab = 'Details';
@@ -122,12 +122,15 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                
                 <?php
                $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
-                  $htmlTable->disableColumns(array(
-                    RunResultHtmlTable::COL_VISUAL_COMPLETE,
-                    RunResultHtmlTable::COL_COST,
+                $htmlTable->disableColumns(array(
+                  RunResultHtmlTable::COL_RESULT
+                ));
+                  $htmlTable->enableColumns(array(
+                    RunResultHtmlTable::COL_DOC_COMPLETE,
+                    RunResultHtmlTable::COL_DOC_REQUESTS,
+                    RunResultHtmlTable::COL_DOC_BYTES,
                     RunResultHtmlTable::COL_FULLYLOADED,
-                    RunResultHtmlTable::COL_REQUESTS,
-                    RunResultHtmlTable::COL_RESULT
+                    RunResultHtmlTable::COL_REQUESTS
                   ));
                   echo $htmlTable->create(true);
                 ?>

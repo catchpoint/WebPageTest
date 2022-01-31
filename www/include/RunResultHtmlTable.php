@@ -24,6 +24,10 @@ class RunResultHtmlTable {
   const COL_CUMULATIVE_LAYOUT_SHIFT = 'chromeUserTiming.CumulativeLayoutShift';
   const COL_TOTAL_BLOCKING_TIME = 'TotalBlockingTime';
   const COL_TIME_TO_INTERACTIVE = 'TimeToInteractive';
+  const COL_DOC_COMPLETE = 'DocComplete';
+  const COL_DOC_REQUESTS = 'RequestsDoc';
+  const COL_DOC_BYTES = 'BytesInDoc';
+  
 
   /* @var TestInfo */
   private $testInfo;
@@ -193,6 +197,16 @@ class RunResultHtmlTable {
       $vitalsBorder = null;
     }
 
+    if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Time', "border");
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Requests', "border");
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Bytes', "border");
+    }
+
     for ($i = 1; $i < 2; $i++) {
       if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
         $out .= $this->_headCell("Time", "border");
@@ -203,6 +217,7 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Total Bytes");
       
     }
+    
 
     if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
       $out .= $this->_headCell("Certificates");
@@ -346,10 +361,15 @@ class RunResultHtmlTable {
       $vitalsClass = $class;
     }
 
-    //$out .= $this->_bodyCell($idPrefix . "DocComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), $borderClass);
-    //$out .= $this->_bodyCell($idPrefix . "RequestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"), $class);
-    //$out .= $this->_bodyCell($idPrefix . "BytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"), $class);
-
+    if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
+      $out .= $this->_bodyCell($idPrefix . "DocComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), $borderClass);
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
+      $out .= $this->_bodyCell($idPrefix . "RequestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"), $class);
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
+      $out .= $this->_bodyCell($idPrefix . "BytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"), $class);
+    }
     if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
       $out .= $this->_bodyCell($idPrefix . "FullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), $borderClass);
     }
