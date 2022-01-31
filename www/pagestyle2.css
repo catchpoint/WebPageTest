@@ -4426,7 +4426,6 @@ th.header {
 .scrollableTable {
     overflow: auto;
     scroll-snap-type: both mandatory;
-    max-height: 80vh;
     width: 100%;
     max-width: 100%;
     padding-bottom: .8em;
