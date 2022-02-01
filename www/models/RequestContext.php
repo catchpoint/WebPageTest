@@ -3,14 +3,17 @@
 namespace WebPageTest;
 
 use WebPageTest\User;
+use WebPageTest\CPClient;
 
 class RequestContext {
   private array $raw;
   private ?User $user;
+  private ?CPClient $client;
 
   function __construct (array $global_request) {
     $this->raw = $global_request;
     $this->user = null;
+    $this->client = null;
   }
 
   function getRaw () : array {
@@ -27,5 +30,14 @@ class RequestContext {
     }
   }
 
+  function getClient () : ?CPClient {
+    return $this->client;
+  }
+
+  function setClient (?CPClient $client) : void {
+    if (isset($client)) {
+      $this->client = $client;
+    }
+  }
 }
 ?>
