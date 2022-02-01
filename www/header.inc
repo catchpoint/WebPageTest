@@ -404,7 +404,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         if( !isset($run) )
             $run = $gradeRun;
         $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
-        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $run, !empty($cached));
+
+        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $gradeRun, !empty($cached));
         $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
         $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
@@ -414,7 +415,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
 
         $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
-
 
 
         if ($gradedRunResults->hasWebVitals())
