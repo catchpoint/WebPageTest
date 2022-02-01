@@ -1034,6 +1034,8 @@ use WebPageTest\RateLimiter;
                 {
                     if (isset($spofTests) && count($spofTests) > 1) {
                         header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
+                    } else if (isset($recipeTests) && count($recipeTests) > 1) {
+                        header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $recipeTests));
                     } else {
                         // redirect regardless if it is a bulk test or not
                         $view = '';
