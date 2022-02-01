@@ -4,6 +4,7 @@
 // found in the LICENSE.md file.
 chdir('..');
 $MIN_DAYS = 2;
+$MAX_DAYS = null;
 
 require_once('common.inc');
 require_once('archive.inc');
@@ -28,10 +29,13 @@ if (GetSetting('archive_kept_days')) {
 }
 
 if (GetSetting('archive_days')) {
-    $MIN_DAYS = GetSetting('archive_days');
+  $MIN_DAYS = GetSetting('archive_days');
 }
 $MIN_DAYS = max($MIN_DAYS,0.1);
-$MAX_DAYS = 30;
+
+if (GetSetting('max_days_before_archive')) {
+  $MAX_DAYS = GetSetting('max_days_before_archive');
+}
 
 $archive_dir = null;
 if (GetSetting('archive_dir')) {
@@ -277,6 +281,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
   global $kept;
   global $log;
   global $MIN_DAYS;
+  global $MAX_DAYS;
   global $is_cli;
   $logLine = "$id ($elapsedDays): ";
 
@@ -284,7 +289,18 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
     echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
-  if (is_file("$testPath/test.waiting")) {
+  
+  if (isset($MAX_DAYS) && ($elapsedDays > $MAX_DAYS)) {
+    if (!is_file("$testPath/testinfo.ini") &&
+       !is_file("$testPath/testinfo.json.gz") &&
+       !is_file("$testPath/testinfo.json")) {
+     $delete = true;
+     $logLine .= " Invalid old test";
+    } else {
+     $needs_archive = true;
+     $logLine .= " Archiving old test";
+    }
+  } elseif (is_file("$testPath/test.waiting")) {
     // Skip tests that are still queued
   } elseif (is_file("$testPath/test.running")) {
     // Skip tests that are still running
@@ -307,14 +323,15 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
         }
       }
     }
-    if ($needs_archive) {
-      if (ArchiveTest($id) ) {
-        $archiveCount++;
-        $logLine .= " Archived";
-        $delete = true;
-      } else {
-        $logLine .= " Failed to archive";
-      }
+  }
+
+  if ($needs_archive) {
+    if (ArchiveTest($id) ) {
+      $archiveCount++;
+      $logLine .= " Archived";
+      $delete = true;
+    } else {
+      $logLine .= " Failed to archive";
     }
   }
 
