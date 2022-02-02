@@ -1,14 +1,18 @@
 {
     "autoload": {
-        "psr-4": {"WebPageTest\\": "www/models/"}
+        "psr-4": {"WebPageTest\\": "www/src/"}
     },
     "require-dev": {
+        "squizlabs/php_codesniffer": "^3",
         "phpunit/phpunit": "^9"
     },
     "scripts": {
-      "test": "phpunit --configuration tests/phpunit.xml"
+      "test": "phpunit --configuration tests/phpunit.xml",
+      "lint": "phpcs --standard=PSR12 www/src",
+      "format": "phpcbf --standard=PSR12 www/src"
     },
     "require": {
-        "guzzlehttp/guzzle": "^7.4"
+        "guzzlehttp/guzzle": "^7.4",
+        "gmostafa/php-graphql-client": "^1.13"
     }
 }

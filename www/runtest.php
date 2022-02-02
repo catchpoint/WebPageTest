@@ -3,6 +3,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
+
     // deal with magic quotes being enabled
     if (get_magic_quotes_gpc()) {
         function DealWithMagicQuotes(&$arr) {
@@ -53,10 +54,14 @@
       }
     }
     require_once('common.inc');
+
+use WebPageTest\Template;
+
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
     require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
-    require_once(__DIR__ . '/helpers/template.php');
+
+
     set_time_limit(300);
 
     $redirect_cache = array();

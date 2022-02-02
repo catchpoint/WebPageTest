@@ -3,7 +3,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-// Load models and composer-based dependencies
+
+// NO THIS IS NOT HOW WE HANDLE THIS KIND OF THING
+set_exception_handler(function($e){
+  echo var_dump($e);
+  exit();
+});
+
+// Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // Load local deps
@@ -11,8 +18,15 @@ require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
 
+use WebPageTest\Util;
 use WebPageTest\User;
 use WebPageTest\RequestContext;
+
+
+if (Util::getSetting('cp_auth')) {
+  // Start session handling for this request
+  session_start();
+}
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -179,28 +193,29 @@ if (isset($_COOKIE['tzo'])) {
 SetLocaleFromBrowser();
 
 $USER_EMAIL = null;
-$current_user = new User();
+
+// Supported Authentication types
 $supportsAuth = false;
-$supportsSaml = GetSetting('saml_login') !== false;
-if ($supportsSaml) {
-  $supportsAuth = true;
-} elseif (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-  $supportsAuth = true;
-}
+$supportsSaml = Util::getSetting('saml_login') !== false;
+$supportsCPAuth = Util::getSetting('cp_auth') !== false;
+$supportsGoogleOAuth = Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret');
+$supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
+
 $uid = NULL;
 $user = NULL;
+$saml_user = null;
 $admin = false;
 $api_keys;
 
-if ($supportsSaml) {
+if ($supportsSaml && !$supportsCPAuth) {
   $USER_EMAIL = GetSamlEmail();
+  $saml_user = new User();
+  $saml_user->setEmail($USER_EMAIL);
 } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
   $USER_EMAIL = $_COOKIE['google_email'];
 }
 
-$current_user->setEmail($USER_EMAIL);
-
-if (!$admin) {
+if (!$admin && !$supportsCPAuth) {
   $this_user = null;
   if (isset($user)) {
     $this_user = $user;
@@ -214,8 +229,10 @@ if (!$admin) {
       if (is_array($admin_users) && count($admin_users)) {
         foreach($admin_users as $substr) {
           if (stripos($this_user, $substr) !== false) {
-            $current_user->setAdmin(true);
             $admin = true;
+            if ($supportsSaml) {
+              $saml_user->setAdmin(true);
+            }
             break;
           }
         }
@@ -228,10 +245,10 @@ if (!$admin) {
 $isFirstVisit = true;
 $isOwner = false;
 $owner = null;
-if ($supportsSaml) {
+if ($supportsSaml && !$supportsCPAuth) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
-  $current_user->setOwnerId($owner);
+  $saml_user->setOwnerId($owner);
 } 
 if (!$owner) {
   if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
@@ -393,9 +410,11 @@ if (is_file('./settings/custom_common.inc.php')) {
 
 // Create global request context for future use
 $request = new RequestContext($_REQUEST);
-$request->setUser($current_user);
-
-if (GetSetting('cp_auth')) {
-  require_once __DIR__ . '/common/AttachClient.php';
+if ($supportsSaml && !$supportsCPAuth) {
+  $request->setUser($saml_user);
 }
 
+if ($supportsCPAuth) {
+  require_once __DIR__ . '/common/AttachClient.php';
+  require_once __DIR__ . '/common/AttachUser.php';
+}
