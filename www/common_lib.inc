@@ -3667,7 +3667,7 @@ function TestArchiveExpired($id) {
 /**
  * Generate a unique test ID
  */
-function GenerateTestID($private=true, $locationShard=null) {
+function GenerateTestID($private=false, $locationShard=null) {
   $test_num;
   $id = uniqueId($test_num);
   if( $private )

@@ -487,17 +487,6 @@ $loc = ParseLocations($locations);
                                     <li>
                                       <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
                                     </li>
-                                    <?php
-                                    if (!GetSetting('forcePrivate')) {
-                                    ?>
-                                    <li>
-                                        <label for="keep_test_private"><input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>> Keep Test Private</label>
-                                    </li>
-                                    <?php
-                                    } else {
-                                      echo "<li>All test results are configured to be private by default.</li>";
-                                    }
-                                    ?>
                                     <li>
                                         <label for="label">Label</label>
                                         <?php
