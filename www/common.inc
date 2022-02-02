@@ -3,13 +3,6 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-
-// NO THIS IS NOT HOW WE HANDLE THIS KIND OF THING
-set_exception_handler(function($e){
-  echo var_dump($e);
-  exit();
-});
-
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
 
