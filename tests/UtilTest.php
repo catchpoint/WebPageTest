@@ -20,6 +20,13 @@ final class UtilTest extends TestCase
         $this->assertEquals('WebPagetest', $value);
     }
 
+    public function testGetSettingWithNullDefault(): void
+    {
+        $override_settings_file = __DIR__ . '/fixtures/settings.ini';
+        $value = Util::getSetting('product', null, $override_settings_file);
+        $this->assertEquals('WebPagetest', $value);
+    }
+
     public function testCacheFetch(): void
     {
         $value = 'silly-thing';
