@@ -191,8 +191,6 @@ exit;
                             <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                             <?php
                         }
-                        if ($includePrivate)
-                        echo '<input id="private" type="hidden" name="private" value="1">';
                     if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
                         echo '<input type="hidden" name="ip" value="1">';
                     if (isset($_REQUEST['local']) && $_REQUEST['local'])
