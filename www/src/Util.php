@@ -11,7 +11,7 @@ class Util
 
     public function __construct()
     {
-       throw new \Exception("Util should not be instantiated. It only has static methods.");
+        throw new \Exception("Util should not be instantiated. It only has static methods.");
     }
 
     public static function getSetting(string $setting, $default = false, string $override_settings_file = "")
