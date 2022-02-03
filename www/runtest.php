@@ -25,8 +25,8 @@
       $profile_file = __DIR__ . '/settings/common/profiles.ini';
     if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
       $profile_file = __DIR__ . '/settings/server/profiles.ini';
-    // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile
-    if (isset($_REQUEST['profile']) && isset($_REQUEST['simpleadvanced']) && $_REQUEST['simpleadvanced'] === 'simple' && is_file($profile_file)) {
+    // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile, or if it's not there at all.
+    if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQUEST['simpleadvanced'] === 'simple') && is_file($profile_file)) {
         $profiles = parse_ini_file($profile_file, true);
       if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
         foreach($profiles[$_REQUEST['profile']] as $key => $value) {
