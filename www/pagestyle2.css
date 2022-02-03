@@ -270,21 +270,21 @@ span.lh-flag {
 
 span.lh-flag {
     font-size: .8em;
-    border-radius: 100%;
     font-weight: 700;
     color: #222;
+    border: 1px solid #ddd;
 }
 
 span.lh-flag.good {
-    background-color: #9bce54;
+    border-color: #9bce54;
 }
 
 span.lh-flag.ok {
-    background-color: #f1c52e;
+    border-color: #f1c52e;
 }
 
 span.lh-flag.poor {
-    background-color: #e33535;
+    border-color: #e33535;
 }
 
 .results_body {
