@@ -273,6 +273,7 @@ span.lh-flag {
     font-weight: 700;
     color: #222;
     border: 1px solid #ddd;
+    background-color: #fff;
 }
 
 span.lh-flag.good {
