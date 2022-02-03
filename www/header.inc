@@ -461,6 +461,22 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
+          
+        if (isset($firstRunResults)){
+            $lighthouse = $firstRunResults->getLighthouseScore();
+            $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
+            
+            if (isset($lighthouse)) {
+                $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
+                $lhClass = 'poor';
+                if ($lighthouse >= 90)
+                    $lhClass = 'good';
+                elseif ($lighthouse >= 50)
+                    $lhClass = 'ok';
+                
+            echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag ". $lhClass ."\">". $lighthouse ."</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            }
+        }
 
         // Add the "Image Analysis" link
         if (isset($id) && strlen($id)) {
