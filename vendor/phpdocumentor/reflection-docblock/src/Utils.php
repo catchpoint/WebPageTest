@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace phpDocumentor\Reflection;
 
 use phpDocumentor\Reflection\Exception\PcreException;
+use Webmozart\Assert\Assert;
+
 use function preg_last_error;
 use function preg_split as php_preg_split;
 
@@ -28,7 +30,7 @@ abstract class Utils
      *
      * @param string $pattern The pattern to search for, as a string.
      * @param string $subject The input string.
-     * @param int|null $limit If specified, then only substrings up to limit are returned with the
+     * @param int $limit If specified, then only substrings up to limit are returned with the
      *      rest of the string being placed in the last substring. A limit of -1 or 0 means "no limit".
      * @param int $flags flags can be any combination of the following flags (combined with the | bitwise operator):
      * *PREG_SPLIT_NO_EMPTY*
@@ -41,16 +43,19 @@ abstract class Utils
      *      Note that this changes the return value in an array where every element is an array consisting of the
      *      matched string at offset 0 and its string offset into subject at offset 1.
      *
-     * @return string[] Returns an array containing substrings of subject split along boundaries matched by pattern
+     * @return string[] Returns an array containing substrings of subject
+     *                                                      split along boundaries matched by pattern
      *
      * @throws PcreException
      */
-    public static function pregSplit(string $pattern, string $subject, ?int $limit = -1, int $flags = 0) : array
+    public static function pregSplit(string $pattern, string $subject, int $limit = -1, int $flags = 0): array
     {
         $parts = php_preg_split($pattern, $subject, $limit, $flags);
         if ($parts === false) {
             throw PcreException::createFromPhpError(preg_last_error());
         }
+
+        Assert::allString($parts);
 
         return $parts;
     }

@@ -3,6 +3,9 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
+use WebPageTest\Util;
+
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
@@ -104,17 +107,29 @@ if ($alert) {
                 } else {
                     echo "<li$current><a href=\"$tabUrl\"$target>$tabName</a></li>";
                 }
-                
             }
         }
 ?></ul>
     </nav>
 <?php
 
-if( $supportsAuth && !defined('EMBED') )
-{
-    echo '<ul id="wptAuthBar">';
-    if ($supportsSaml) {
+        if ($supportsAuth && !defined('EMBED')) {
+            echo '<ul id="wptAuthBar">';
+            if ($supportsCPAuth) {
+                $is_logged_in = isset($request) && !is_null($request->getUser()) && !is_null($request->getUser()->getAccessToken());
+                if ($is_logged_in) {
+                  echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
+                  echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
+                } else {
+                    echo '<li><a href="/login">Login';
+                    echo file_get_contents('./images/icon-login.svg');
+                    echo '</a></li>';
+                    $register = Util::getSetting('saml_register');
+                    if ($register) {
+                        echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+                    }
+                }
+            } else if ($supportsSaml) {
         if (isset($USER_EMAIL) && GetSetting('saml_account')) {
             $saml_account = GetSetting('saml_account');
             $saml_logout = GetSetting('saml_logout');

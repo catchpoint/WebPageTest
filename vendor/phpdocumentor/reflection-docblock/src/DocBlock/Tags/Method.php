@@ -22,6 +22,7 @@ use phpDocumentor\Reflection\Types\Context as TypeContext;
 use phpDocumentor\Reflection\Types\Mixed_;
 use phpDocumentor\Reflection\Types\Void_;
 use Webmozart\Assert\Assert;
+
 use function array_keys;
 use function explode;
 use function implode;
@@ -58,7 +59,6 @@ final class Method extends BaseTag implements Factory\StaticMethod
 
     /**
      * @param array<int, array<string, Type|string>> $arguments
-     *
      * @phpstan-param array<int, array{name: string, type: Type}|string> $arguments
      */
     public function __construct(
@@ -86,7 +86,7 @@ final class Method extends BaseTag implements Factory\StaticMethod
         ?TypeResolver $typeResolver = null,
         ?DescriptionFactory $descriptionFactory = null,
         ?TypeContext $context = null
-    ) : ?self {
+    ): ?self {
         Assert::stringNotEmpty($body);
         Assert::notNull($typeResolver);
         Assert::notNull($descriptionFactory);
@@ -100,8 +100,9 @@ final class Method extends BaseTag implements Factory\StaticMethod
         // 5. then a word with underscores, followed by ( and any character
         //    until a ) and whitespace : as method name with signature
         // 6. any remaining text : as description
-        if (!preg_match(
-            '/^
+        if (
+            !preg_match(
+                '/^
                 # Static keyword
                 # Declares a static method ONLY if type is also present
                 (?:
@@ -131,9 +132,10 @@ final class Method extends BaseTag implements Factory\StaticMethod
                 # Description
                 (.*)
             $/sux',
-            $body,
-            $matches
-        )) {
+                $body,
+                $matches
+            )
+        ) {
             return null;
         }
 
@@ -176,17 +178,16 @@ final class Method extends BaseTag implements Factory\StaticMethod
     /**
      * Retrieves the method name.
      */
-    public function getMethodName() : string
+    public function getMethodName(): string
     {
         return $this->methodName;
     }
 
     /**
      * @return array<int, array<string, Type|string>>
-     *
      * @phpstan-return array<int, array{name: string, type: Type}>
      */
-    public function getArguments() : array
+    public function getArguments(): array
     {
         return $this->arguments;
     }
@@ -196,17 +197,17 @@ final class Method extends BaseTag implements Factory\StaticMethod
      *
      * @return bool TRUE if the method declaration is for a static method, FALSE otherwise.
      */
-    public function isStatic() : bool
+    public function isStatic(): bool
     {
         return $this->isStatic;
     }
 
-    public function getReturnType() : Type
+    public function getReturnType(): Type
     {
         return $this->returnType;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         $arguments = [];
         foreach ($this->arguments as $argument) {
@@ -225,7 +226,7 @@ final class Method extends BaseTag implements Factory\StaticMethod
 
         $returnType = (string) $this->returnType;
 
-        $methodName = (string) $this->methodName;
+        $methodName = $this->methodName;
 
         return $static
             . ($returnType !== '' ? ($static !== '' ? ' ' : '') . $returnType : '')
@@ -236,13 +237,12 @@ final class Method extends BaseTag implements Factory\StaticMethod
 
     /**
      * @param mixed[][]|string[] $arguments
+     * @phpstan-param array<int, array{name: string, type: Type}|string> $arguments
      *
      * @return mixed[][]
-     *
-     * @phpstan-param array<int, array{name: string, type: Type}|string> $arguments
      * @phpstan-return array<int, array{name: string, type: Type}>
      */
-    private function filterArguments(array $arguments = []) : array
+    private function filterArguments(array $arguments = []): array
     {
         $result = [];
         foreach ($arguments as $argument) {
@@ -268,7 +268,7 @@ final class Method extends BaseTag implements Factory\StaticMethod
         return $result;
     }
 
-    private static function stripRestArg(string $argument) : string
+    private static function stripRestArg(string $argument): string
     {
         if (strpos($argument, '...') === 0) {
             $argument = trim(substr($argument, 3));
