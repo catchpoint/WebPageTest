@@ -253,7 +253,8 @@ h6 {
     line-height: 1;
 }
 
-.test_results-content h2 em.flag {
+.test_results-content h2 em.flag,
+span.lh-flag {
     font-size: .3em;
     font-weight: 500;
     text-transform: uppercase;
@@ -265,6 +266,25 @@ h6 {
     align-self: flex-start;
     font-style: normal;
     margin: 0 1em;
+}
+
+span.lh-flag {
+    font-size: .8em;
+    border-radius: 100%;
+    font-weight: 700;
+    color: #222;
+}
+
+span.lh-flag.good {
+    background-color: #9bce54;
+}
+
+span.lh-flag.ok {
+    background-color: #f1c52e;
+}
+
+span.lh-flag.poor {
+    background-color: #e33535;
 }
 
 .results_body {
