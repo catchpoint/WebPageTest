@@ -212,55 +212,6 @@ $page_description = "Website performance test result$testLabel.";
 
 
 
-                    function ReturnWebVitalsHTML_CLS($testStepResult) {
-                      global $testRunResults;
-                      $cls = null;
-                      $windows = array();
-                      if ($stepResult) {
-                          $cls = $stepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
-                          $events = $stepResult->getMetric('LayoutShifts');
-                          foreach ($events as $event) {
-                              $num = isset($event['shift_window_num']) ? strval($event['shift_window_num']) : '1';
-                              if (!isset($windows[$num])) {
-                                  $windows[$num] = array('num' => $num, 'shifts' => array(), 'cls' => 0.0, 'start' => null, 'end' => null);
-                              }
-                              $windows[$num]['shifts'][] = $event;
-                              if (!$windows[$num]['start'] || $event['time'] < $windows[$num]['start']) {
-                                  $windows[$num]['start'] = $event['time'];
-                              }
-                              if (!$windows[$num]['end'] || $event['time'] > $windows[$num]['end']) {
-                                  $windows[$num]['end'] = $event['time'];
-                              }
-                              $windows[$num]['cls'] += $event['score'];
-                          }
-                      }
-                      if (isset($cls) && is_numeric($cls)) {
-                          $video_frames = $stepResult->getVisualProgress();
-                          // reverse-sort, biggest cls first
-                          usort($windows, function($a, $b) {
-                              if ($a['cls'] == $b['cls']) {
-                                  return 0;
-                              }
-                              return ($a['cls'] > $b['cls']) ? -1 : 1;
-                          });
-                          $cls = round($cls, 3);
-                          echo "<div class='metric'>";
-                          echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
-                          echo "<small>";
-                          $urlGenerator = $stepResult->createUrlGenerator("", false);
-                          $filmstripUrl = $urlGenerator->filmstripView();
-                          echo "<a href='$filmstripUrl&highlightCLS=1'>View as Filmstrip</a>";
-                          $videoUrl = $urlGenerator->createVideo();
-                          echo " - <a href='$videoUrl'>View Video</a>";
-                          echo " - <a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a>";
-                          echo "</small>";
-                    
-                          foreach ($windows as $window) {
-                              InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
-                          }
-                          echo "</div>"; // metric
-                      }
-                    }
                     
 
 
@@ -376,6 +327,16 @@ $page_description = "Website performance test result$testLabel.";
                   }
 
 
+
+                  include(__DIR__ . '/experiments/lcp.inc');
+                  
+
+
+
+
+
+
+
                     echo '</ol></div>';
 
 
@@ -395,87 +356,87 @@ $page_description = "Website performance test result$testLabel.";
                           ]);
                           */
 
-                        array_push($recipes, (object) [
-                            'value' => 'asyncjs',
-                            'label' => 'Async Blocking Scripts',
-                            'required' => false,
-                            'hint' => 'site.js,site2.js'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'asyncjs',
+                        //     'label' => 'Async Blocking Scripts',
+                        //     'required' => false,
+                        //     'hint' => 'site.js,site2.js'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'asynccss',
-                            'label' => 'Load Stylesheets Async',
-                            'required' => false,
-                            'hint' => 'site.css,site2.css'
-                          ]);
-                        array_push($recipes, (object) [
-                            'value' => 'imageaspectratio',
-                            'label' => 'Add image aspect ratios',
-                            'required' => true,
-                            'hint' => 'foo.jpg|w500|h600,bar.jpg|w400|h900,baz.jpg|w300|h800'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'asynccss',
+                        //     'label' => 'Load Stylesheets Async',
+                        //     'required' => false,
+                        //     'hint' => 'site.css,site2.css'
+                        //   ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'imageaspectratio',
+                        //     'label' => 'Add image aspect ratios',
+                        //     'required' => true,
+                        //     'hint' => 'foo.jpg|w500|h600,bar.jpg|w400|h900,baz.jpg|w300|h800'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'inline',
-                            'label' => 'Inline external JS or CSS',
-                            'required' => true,
-                            'hint' => 'site.css,site2.js'
-                          ]);
-                        array_push($recipes, (object) [
-                            'value' => 'preload',
-                            'label' => 'Preload files',
-                            'required' => true,
-                            'hint' => 'https://www.webpagetest.org,site.css,site.js'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'inline',
+                        //     'label' => 'Inline external JS or CSS',
+                        //     'required' => true,
+                        //     'hint' => 'site.css,site2.js'
+                        //   ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'preload',
+                        //     'label' => 'Preload files',
+                        //     'required' => true,
+                        //     'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'removepreload',
-                            'label' => 'Remove preloads for files',
-                            'required' => true,
-                            'hint' => 'https://www.webpagetest.org,site.css,site.js'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'removepreload',
+                        //     'label' => 'Remove preloads for files',
+                        //     'required' => true,
+                        //     'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'preconnect',
-                            'label' => 'Preconnect domains',
-                            'required' => true,
-                            'hint' => 'https://www.webpagetest.org,site.css,site.js'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'preconnect',
+                        //     'label' => 'Preconnect domains',
+                        //     'required' => true,
+                        //     'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'addloadinglazy',
-                            'label' => 'Add loading=lazy to images',
-                            'required' => true,
-                            'hint' => 'myimage.jpg,myimage2.jpg'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'addloadinglazy',
+                        //     'label' => 'Add loading=lazy to images',
+                        //     'required' => true,
+                        //     'hint' => 'myimage.jpg,myimage2.jpg'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'removeloadinglazy',
-                            'label' => 'Remove loading=lazy from images',
-                            'required' => true,
-                            'hint' => 'myimage.jpg,myimage2.jpg'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'removeloadinglazy',
+                        //     'label' => 'Remove loading=lazy from images',
+                        //     'required' => true,
+                        //     'hint' => 'myimage.jpg,myimage2.jpg'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'minifycss',
-                            'label' => 'Minify all CSS',
-                            'required' => false,
-                            'hint' => 'no value necessary'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'minifycss',
+                        //     'label' => 'Minify all CSS',
+                        //     'required' => false,
+                        //     'hint' => 'no value necessary'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'addimportance',
-                            'label' => 'add importance=high or low to an image script or link by url',
-                            'required' => true,
-                            'hint' => 'foo.jpg|i_high,baz.js|i_low'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'addimportance',
+                        //     'label' => 'add importance=high or low to an image script or link by url',
+                        //     'required' => true,
+                        //     'hint' => 'foo.jpg|i_high,baz.js|i_low'
+                        //   ]);
 
-                        array_push($recipes, (object) [
-                            'value' => 'removeimportance',
-                            'label' => 'remove importance attribute on an image script or link by url',
-                            'required' => true,
-                            'hint' => 'foo.jpg,baz.js'
-                          ]);
+                        // array_push($recipes, (object) [
+                        //     'value' => 'removeimportance',
+                        //     'label' => 'remove importance attribute on an image script or link by url',
+                        //     'required' => true,
+                        //     'hint' => 'foo.jpg,baz.js'
+                        //   ]);
 
 
                        
@@ -503,8 +464,35 @@ $page_description = "Website performance test result$testLabel.";
                 </div>
 
                 <div class="experiments_bottlenecks">
-                        <p>Relevant Opportunities...</p>
-                        <p>TBD...</p>
+                        <p>Relevant Bottlenecks...</p><ol>
+                        <?php
+                        // print_r($testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift'));
+                        // print_r($testStepResult->getMetric('chromeUserTiming.LargestContentfulPaint'));
+
+
+                            // $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
+                            // $cls = round($cls, 3);
+                                
+                            // $echo = $cls;
+
+                            // if( count($blockingJSReqs) > 0 ){
+                            //     echo observationHTML(
+                            //         count($blockingJSReqs) . " externally-referenced JavaScript file". (count($blockingJSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
+                            //         "By default, references to external JavaScript files will block the page from rendering while they are fetched and executed. Often, these files can be loaded in a different manner, freeing up the page to visually render sooner.",
+                            //         $blockingJSReqs,
+                            //         array(
+                            //             (object) [
+                            //                 'title' => 'Defer all render-blocking scripts.',
+                            //                 "desc" => 'This experiment will add a defer attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a>',
+                            //                 "expvar" => 'deferjs',
+                            //                 "expval" => implode(",", $blockingJSReqs)
+                            //               ]
+                            //         )
+                            //     );
+                            // }
+
+                        ?>
+                        </ol>
                 </div>
 
 
