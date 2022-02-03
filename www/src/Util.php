@@ -14,7 +14,7 @@ class Util
        throw new \Exception("Util should not be instantiated. It only has static methods.");
     }
 
-    public static function getSetting(string $setting, bool $default = false, $override_settings_file = "")
+    public static function getSetting(string $setting, $default = false, string $override_settings_file = "")
     {
         if (empty(self::$SETTINGS)) {
             self::$SETTINGS = self::cacheFetch(self::SETTINGS_KEY) ?? [];
