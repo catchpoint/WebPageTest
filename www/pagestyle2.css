@@ -320,7 +320,7 @@ h3.grade_heading {
     font-weight: 900;
     margin: 0;
     flex: 0 1 16rem;
-    padding: 0 0 0 3.3rem;
+    padding: 0 0 0;
     text-align: left;
 }
 
@@ -362,7 +362,7 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks {
-    margin: 2em 1em 4rem 4em;
+    margin: 2em 0 4rem 0rem;
 }
 
 .experiments_bottlenecks>ol {
