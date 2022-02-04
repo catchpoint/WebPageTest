@@ -1156,8 +1156,6 @@ function GetTestInfoHtml($includeScript = true)
       }
       $html .= '</pre></li>';
     }
-    $html .= 'Scripted Test:';
-    $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
     // TODO FIND CUSTOM METRICS HERE
     if (array_key_exists('customMetrics', $test['testinfo']) && is_array($test['testinfo']['customMetrics']) && count($test['testinfo']['customMetrics']))
          $html .= '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
