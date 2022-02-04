@@ -26,8 +26,8 @@ if ($request_method === 'POST') {
     }
 
     try {
-        $auth_token = $request->getClient()->login($email, $password);
-        $request->getClient()->authenticate($auth_token->access_token);
+        $auth_token = $request_context->getClient()->login($email, $password);
+        $request_context->getClient()->authenticate($auth_token->access_token);
     } catch (Exception $e) {
         throw new ClientException($e->getMessage(), 403);
     }

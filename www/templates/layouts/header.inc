@@ -125,7 +125,7 @@ if( $supportsAuth && !defined('EMBED') )
 {
     echo '<ul id="wptAuthBar">';
     if ($supportsCPAuth) {
-        $is_logged_in = isset($request) && !is_null($request->getUser()) && !is_null($request->getUser()->getAccessToken());
+        $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
         if ($is_logged_in) {
           echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
           echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
