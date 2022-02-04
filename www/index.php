@@ -389,6 +389,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#auth">Auth</a></li>
                                 <?php } ?>
                                 <li><a href="#script">Script</a></li>
+                                <li><a href="#experiments">Experiments</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
                                 <li><a href="#custom-metrics">Custom</a></li>
@@ -803,6 +804,113 @@ $loc = ParseLocations($locations);
                                             Check out <a href="https://docs.webpagetest.org/scripting/" target="_blank" rel="noopener">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
+                            </div>
+
+                            <div id="experiments" class="test_subbox ui-tabs-hide">
+
+                                <h3>Manually add experiments to your test here. </h3>
+                                <p>Note: These will add scripting to the test and conflict with existing scripts</p>
+					
+                                <?php
+
+                                $recipes = array(
+                                    (object) [
+                                    'value' => 'deferjs',
+                                    'label' => 'Defer Blocking Scripts',
+                                    'required' => false,
+                                    'hint' => 'site.js,site2.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'asyncjs',
+                                    'label' => 'Async Blocking Scripts',
+                                    'required' => false,
+                                    'hint' => 'site.js,site2.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'asynccss',
+                                    'label' => 'Load Stylesheets Async',
+                                    'required' => false,
+                                    'hint' => 'site.css,site2.css'
+                                    ],
+                                    (object) [
+                                    'value' => 'imageaspectratio',
+                                    'label' => 'Add image aspect ratios',
+                                    'required' => true,
+                                    'hint' => 'foo.jpg|w500|h600,bar.jpg|w400|h900,baz.jpg|w300|h800'
+                                    ],
+                                    (object) [
+                                    'value' => 'inline',
+                                    'label' => 'Inline external JS or CSS',
+                                    'required' => true,
+                                    'hint' => 'site.css,site2.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'preload',
+                                    'label' => 'Preload files',
+                                    'required' => true,
+                                    'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'removepreload',
+                                    'label' => 'Remove preloads for files',
+                                    'required' => true,
+                                    'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'preconnect',
+                                    'label' => 'Preconnect domains',
+                                    'required' => true,
+                                    'hint' => 'https://www.webpagetest.org,site.css,site.js'
+                                    ],
+                                    (object) [
+                                    'value' => 'addloadinglazy',
+                                    'label' => 'Add loading=lazy to images',
+                                    'required' => true,
+                                    'hint' => 'myimage.jpg,myimage2.jpg'
+                                    ],
+                                    (object) [
+                                    'value' => 'removeloadinglazy',
+                                    'label' => 'Remove loading=lazy from images',
+                                    'required' => true,
+                                    'hint' => 'myimage.jpg,myimage2.jpg'
+                                    ],
+                                    (object) [
+                                    'value' => 'minifycss',
+                                    'label' => 'Minify all CSS',
+                                    'required' => false,
+                                    'hint' => 'no value necessary'
+                                    ],
+                                    (object) [
+                                    'value' => 'addimportance',
+                                    'label' => 'add importance=high or low to an image script or link by url',
+                                    'required' => true,
+                                    'hint' => 'foo.jpg|i_high,baz.js|i_low'
+                                    ],
+                                    (object) [
+                                    'value' => 'removeimportance',
+                                    'label' => 'remove importance attribute on an image script or link by url',
+                                    'required' => true,
+                                    'hint' => 'foo.jpg,baz.js'
+                                    ]
+                                );
+
+
+                                foreach( $recipes as $recipe ) {
+                                    echo <<<EOT
+                                    <div style="border-top: 1px solid rgba(255,255,255,.1); padding: 2em 0; align-items: center; display: flex; gap: 2rem;">
+                                        <label style="display:block; flex: 0 1 20em">
+                                            <input type="checkbox" name="recipes[]" value="{$recipe->value}"> {$recipe->label}
+                                        </label>
+                                        <label>Instructions: 
+                                        <input style="margin-left: .5em;" type="text" name="{$recipe->value}" value="" placeholder="{$recipe->hint}">
+                                        </label>
+                                    </div>
+                                    EOT;
+                                } 
+
+                                ?>
+
+
                             </div>
 
                             <div id="block" class="test_subbox ui-tabs-hide">
