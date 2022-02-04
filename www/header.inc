@@ -315,7 +315,12 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             <div class="test_presets">
                 <ul>
                     <?php 
-                    echo '<li><strong>'.$device.'</strong>';
+                    if ( $test['testinfo']['label'] ) {
+                        echo '<li><strong>'.$test['testinfo']['label'].'</strong>';
+                    } else {
+                        echo '<li><strong>'.$device.'</strong>';
+                    }
+                    
                     //browser and version
                     echo '<span class="test_presets_tag">';
                     if ($browserIcon) {
@@ -349,18 +354,12 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     
                 </ul>
             </div>
+        </div>
 
 
 
     <?php
     
-             echo "<details class=\"heading_details\"><summary>More info</summary><p>";
-
-            if ( $test['testinfo']['label'] ) {
-                echo '<strong>Test Label: </strong>' . $test['testinfo']['label']  . '</strong>';
-              }
-
-        echo '</p></details></div>';
         echo '<div class="header_screenshots">';
         
         require_once __DIR__ . '/screen_shot_embed.php';
