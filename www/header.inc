@@ -437,7 +437,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
         if ($gradedRunResults->isOptimizationChecked())
-            $tabs['Performance'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+            $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
 
         $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
