@@ -1,11 +1,19 @@
 <?php
+
+declare(strict_types=1);
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+require_once __DIR__ . '/../../common.inc';
+
+use WebPageTest\Util;
+
 require_once __DIR__ . '/../../page_data.inc';
 require_once __DIR__ . '/../../include/TestInfo.php';
 require_once __DIR__ . '/../../include/TestResults.php';
 require_once __DIR__ . '/../../include/TestRunResults.php';
+
+
 
 if(isset($testPath) ) {
   $testInfo = TestInfo::fromFiles($testPath);
@@ -40,10 +48,13 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
+// If $tab is null, make it an empty string for strcasecmp
+$tab = $tab ?? "";
+
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = GetSetting('alert');
+$alert = Util::getSetting('alert');
 if ($alert) {
     echo '<div class="alert-banner">' . $alert . '</div>';
 }
@@ -61,23 +72,23 @@ if ($alert) {
         }
         if (!isset($navTabs) || !count($navTabs)) {
 
-            if (!GetSetting('disableTestlog')) {
+            if (!Util::getSetting('disableTestlog')) {
               $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
             }
 
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            $apiUrl = GetSetting('api_url');
+            $apiUrl = Util::getSetting('api_url');
             if ($apiUrl) {
                 $navTabs['API'] = $apiUrl;
             }
 
-            if (GetSetting('forums_url')) {
-                $navTabs['Forums'] = GetSetting('forums_url');
+            if (Util::getSetting('forums_url')) {
+                $navTabs['Forums'] = Util::getSetting('forums_url');
             }
             $navTabs['Docs'] = 'https://docs.webpagetest.org/';
-            $blogUrl = GetSetting('blog_url');
+            $blogUrl = Util::getSetting('blog_url');
             if ($blogUrl) {
                 $navTabs['Blog'] = $blogUrl;
             }
@@ -113,10 +124,24 @@ if ($alert) {
 if( $supportsAuth && !defined('EMBED') )
 {
     echo '<ul id="wptAuthBar">';
-    if ($supportsSaml) {
-        if (isset($USER_EMAIL) && GetSetting('saml_account')) {
-            $saml_account = GetSetting('saml_account');
-            $saml_logout = GetSetting('saml_logout');
+    if ($supportsCPAuth) {
+        $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
+        if ($is_logged_in) {
+          echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
+          echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
+        } else {
+            echo '<li><a href="/login">Login';
+            echo file_get_contents('./images/icon-login.svg');
+            echo '</a></li>';
+            $register = Util::getSetting('saml_register');
+            if ($register) {
+                echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+            }
+        }
+    } else if ($supportsSaml) {
+        if (isset($USER_EMAIL) && Util::getSetting('saml_account')) {
+            $saml_account = Util::getSetting('saml_account');
+            $saml_logout = Util::getSetting('saml_logout');
             if ($saml_logout) {
                 $saml_logout = htmlspecialchars($saml_logout);
                 $logoutUrl = "javascript:wptLogout('$saml_logout');";
@@ -128,7 +153,7 @@ if( $supportsAuth && !defined('EMBED') )
             echo '<li><a href="/saml/login.php">Login';
             echo file_get_contents(__DIR__ . '/../../images/icon-login.svg');
             echo '</a></li>';
-            $register = GetSetting('saml_register');
+            $register = Util::getSetting('saml_register');
             if ($register) {
                 echo "<li><a class='pill' href='$register'>Sign-up</a></li>";
             }
@@ -140,7 +165,7 @@ if( $supportsAuth && !defined('EMBED') )
         $logoutUrl = 'javascript:wptLogout();';
         $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-    } else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+    } else if (Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret')) {
         echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
     }
     echo '</ul>';

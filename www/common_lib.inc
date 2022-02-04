@@ -8,6 +8,19 @@ require_once(__DIR__ . '/util.inc');
 define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
+use WebPageTest\Util;
+
+function GetSetting($setting, $default = false) {
+  return Util::getSetting($setting, $default);
+}
+
+function CacheFetch($key) {
+  return Util::cacheFetch($key);
+}
+
+function CacheStore($key, $value, $ttl=0) {
+  return Util::cacheStore($key, $value, $ttl);
+}
 
 /**
 * Figure out the test path (relative) for the given test ID
@@ -170,73 +183,6 @@ function LoadLocationsIni() {
     }
   }
   return $locations;
-}
-
-/**
-* Get a setting from settings.ini (and cache it for up to a minute)
-*/
-$SETTINGS = null;
-function GetSetting($setting, $default = FALSE) {
-  global $SETTINGS;
-  $ret = $default;
-
-  // Pull the settings from apc cache if possible if they are not in the memory cache
-  if (!isset($SETTINGS)) {
-    $SETTINGS = CacheFetch('settings');
-    if (!isset($SETTINGS)) {
-      $SETTINGS = array();
-      // Load the global settings
-      if (file_exists(__DIR__ . '/settings/settings.ini')) {
-        $SETTINGS = parse_ini_file(__DIR__ . '/settings/settings.ini');
-      }
-      // Load common settings as overrides
-      if (file_exists(__DIR__ . '/settings/common/settings.ini')) {
-        $common = parse_ini_file(__DIR__ . '/settings/common/settings.ini');
-        $SETTINGS = array_merge($SETTINGS, $common);
-      }
-      // Load server-specific settings as overrides
-      if (file_exists(__DIR__ . '/settings/server/settings.ini')) {
-        $server = parse_ini_file(__DIR__ . '/settings/server/settings.ini');
-        $SETTINGS = array_merge($SETTINGS, $server);
-      }
-      CacheStore('settings', $SETTINGS, 60);
-    }
-  }
-
-  if (isset($SETTINGS) && is_array($SETTINGS) && isset($SETTINGS[$setting])) {
-    $ret = $SETTINGS[$setting];
-  }
-  return $ret;
-}
-
-function CacheFetch($key) {
-  $ret = null;
-  // namespace the keys by installation
-  $key = sha1(__DIR__) . $key;
-  if (function_exists('apcu_fetch')) {
-    $ret = apcu_fetch($key, $success);
-    if (!$success) {
-      $ret = null;
-    }
-  } elseif (function_exists('apc_fetch')) {
-    $ret = apc_fetch($key, $success);
-    if (!$success) {
-      $ret = null;
-    }
-  }
-  return $ret;
-}
-
-function CacheStore($key, $value, $ttl=0) {
-  // namespace the keys by installation
-  $key = sha1(__DIR__) . $key;
-  if (isset($value)) {
-    if (function_exists('apcu_store')) {
-      apcu_store($key, $value, $ttl);
-    } elseif (function_exists('apc_store')) {
-      apc_store($key, $value, $ttl);
-    }
-  }
 }
 
 /**
@@ -3667,7 +3613,7 @@ function TestArchiveExpired($id) {
 /**
  * Generate a unique test ID
  */
-function GenerateTestID($private=true, $locationShard=null) {
+function GenerateTestID($private=false, $locationShard=null) {
   $test_num;
   $id = uniqueId($test_num);
   if( $private )
