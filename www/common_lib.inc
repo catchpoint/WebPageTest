@@ -1529,9 +1529,12 @@ function AddTestJob($location, $job, $test, $testId) {
           if ($test['runs'] > 1 && substr($job, 0, 1) == '{') {
             $json = json_decode($job, true);
           }
-          for ($run = 1; $run <= $test['runs']; $run++) {
+          $submit_count = $test['runs'];
+          if (GetSetting('disable_sharding'))
+            $submit_count = 1;
+          for ($run = 1; $run <= $submit_count; $run++) {
             // Submit multiple job files for a multi-run test so they can run in parallel
-            if (isset($json)) {
+            if ($submit_count > 1 && isset($json)) {
               $json['run'] = $run;
               $job = json_encode($json);
             }
