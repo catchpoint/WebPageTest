@@ -355,33 +355,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     <?php
     
              echo "<details class=\"heading_details\"><summary>More info</summary><p>";
-            
-            if( $dom )
-                echo 'DOM Element: <b>' . $dom . '</b><br>';
-            if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
-                echo '<b>Authenticated: ' . $login . '</b><br>';
-            if( (int)$test['test']['connections'] !== 0)
-                 echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-            if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) )
-                echo '<b>Scripted test</b><br>';
-            if( strlen($blockString) )
-                echo "Blocked: <b>$blockString</b><br>";
-            if (isset($test['testinfo']['context']) && strlen($test['testinfo']['context']))
-            {
-                echo 'Context: ';
-                $contextText = htmlspecialchars($test['testinfo']['context']);
-                if (isset($test['testinfo']['context_url']) && strlen($test['testinfo']['context_url'])) {
-                    $contextUrl = $test['testinfo']['context_url'];
-                    if (GetSetting('nolinks')) {
-                        echo "<span class=\"medium colored\">$contextText</span>";
-                    } else {
-                        echo "<a class=\"url\" rel=\"nofollow\" title=\"$contextUrl\" href=\"$contextUrl\">$contextText</a>";
-                    }
-                } else {
-                    echo $contextText;
-                }
-                echo '<br>';
-            }
+
             if ( $test['testinfo']['label'] ) {
                 echo '<strong>Test Label: </strong>' . $test['testinfo']['label']  . '</strong>';
               }

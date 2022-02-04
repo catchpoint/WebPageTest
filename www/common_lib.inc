@@ -1099,6 +1099,8 @@ function GetTestInfoHtml($includeScript = true)
     global $test;
     global $isOwner;
     global $dom;
+    global $blockDomainsString;
+    global $blockString;
     global $login;
     global $admin;
     global $privateInstall;
@@ -1118,6 +1120,8 @@ function GetTestInfoHtml($includeScript = true)
         $html .= '<li>Test runs: ' . $test['test']['runs'] . '</li>';
     if( isset($test['test']['authenticated']) && (int)$test['test']['authenticated'] == 1)
         $html .= '<li>Authenticated: ' . htmlspecialchars($login) . '</li>';
+    if( (int)$test['test']['connections'] !== 0)
+        echo '<li>Browser Connections: ' . $test['test']['connections'] . '</li>';
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine']))
         $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
     
@@ -1136,6 +1140,24 @@ function GetTestInfoHtml($includeScript = true)
       $html .= GetScriptBlock();
       $html .= '</li>';
     }
+    if( strlen($blockString) ) {
+      $html .= '<li>Blocked:<pre>';
+      $blockedStrings = explode(",",$blockString);
+      foreach ($blockedStrings as $string) {
+        $html .= $string . "\n";
+      }
+      $html .= '</pre></li>';
+    }
+    if( strlen($blockDomainsString) ) {
+      $html .= '<li>Blocked Domains:<pre>';
+      $blockedStrings = explode(",",$blockDomainsString);
+      foreach ($blockedStrings as $string) {
+        $html .= $string . "\n";
+      }
+      $html .= '</pre></li>';
+    }
+    $html .= 'Scripted Test:';
+    $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
     // TODO FIND CUSTOM METRICS HERE
     if (array_key_exists('customMetrics', $test['testinfo']) && is_array($test['testinfo']['customMetrics']) && count($test['testinfo']['customMetrics']))
          $html .= '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
