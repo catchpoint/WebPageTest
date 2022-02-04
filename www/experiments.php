@@ -167,122 +167,8 @@ $page_description = "Website performance test result$testLabel.";
 
 
 					
-					
 
-
-					   $recipes = array();
-
-					   
-					   /* TODO offer these for customizing experiments ideally
-					   array_push($recipes, (object) [
-							'value' => 'deferjs',
-							'label' => 'Defer Blocking Scripts',
-							'required' => false,
-							'hint' => 'site.js,site2.js'
-						  ]);
-						  */
-
-						// array_push($recipes, (object) [
-						//     'value' => 'asyncjs',
-						//     'label' => 'Async Blocking Scripts',
-						//     'required' => false,
-						//     'hint' => 'site.js,site2.js'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'asynccss',
-						//     'label' => 'Load Stylesheets Async',
-						//     'required' => false,
-						//     'hint' => 'site.css,site2.css'
-						//   ]);
-						// array_push($recipes, (object) [
-						//     'value' => 'imageaspectratio',
-						//     'label' => 'Add image aspect ratios',
-						//     'required' => true,
-						//     'hint' => 'foo.jpg|w500|h600,bar.jpg|w400|h900,baz.jpg|w300|h800'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'inline',
-						//     'label' => 'Inline external JS or CSS',
-						//     'required' => true,
-						//     'hint' => 'site.css,site2.js'
-						//   ]);
-						// array_push($recipes, (object) [
-						//     'value' => 'preload',
-						//     'label' => 'Preload files',
-						//     'required' => true,
-						//     'hint' => 'https://www.webpagetest.org,site.css,site.js'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'removepreload',
-						//     'label' => 'Remove preloads for files',
-						//     'required' => true,
-						//     'hint' => 'https://www.webpagetest.org,site.css,site.js'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'preconnect',
-						//     'label' => 'Preconnect domains',
-						//     'required' => true,
-						//     'hint' => 'https://www.webpagetest.org,site.css,site.js'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'addloadinglazy',
-						//     'label' => 'Add loading=lazy to images',
-						//     'required' => true,
-						//     'hint' => 'myimage.jpg,myimage2.jpg'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'removeloadinglazy',
-						//     'label' => 'Remove loading=lazy from images',
-						//     'required' => true,
-						//     'hint' => 'myimage.jpg,myimage2.jpg'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'minifycss',
-						//     'label' => 'Minify all CSS',
-						//     'required' => false,
-						//     'hint' => 'no value necessary'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'addimportance',
-						//     'label' => 'add importance=high or low to an image script or link by url',
-						//     'required' => true,
-						//     'hint' => 'foo.jpg|i_high,baz.js|i_low'
-						//   ]);
-
-						// array_push($recipes, (object) [
-						//     'value' => 'removeimportance',
-						//     'label' => 'remove importance attribute on an image script or link by url',
-						//     'required' => true,
-						//     'hint' => 'foo.jpg,baz.js'
-						//   ]);
-
-
-					   
-
-
-
-
-
-						// echo '<h3>Manual Experiments</h3>';
-
-						//     foreach( $recipes as $recipe ) {
-						//         echo <<<EOT
-						//           <div style="border-bottom: 1px solid #ddd; padding: 1em 0 1em;">
-						//             <label style="display:block;margin-bottom: .5em;"><input type="checkbox" name="recipes[]" value="{$recipe->value}"> {$recipe->label}</label>
-						//             <label>Instructions: <small >Example: {$recipe->hint}</small> <input style="margin-top: .5em; display: block;" type="text" name="{$recipe->value}" value="" placeholder=""></label>
-						//           </div>
-						//         EOT;
-						//     }
-
-						?>
+				?>
 
 				<div class="grade_header">
 					<h3 class="grade_heading grade-c">Usable: <span>6/10</span></h3>
@@ -292,31 +178,7 @@ $page_description = "Website performance test result$testLabel.";
 				<div class="experiments_bottlenecks">
 						<p>Relevant Bottlenecks...</p><ol>
 						<?php
-						// print_r($testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift'));
-						// print_r($testStepResult->getMetric('chromeUserTiming.LargestContentfulPaint'));
-
-
-							// $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
-							// $cls = round($cls, 3);
-								
-							// $echo = $cls;
-
-							// if( count($blockingJSReqs) > 0 ){
-							//     echo observationHTML(
-							//         count($blockingJSReqs) . " externally-referenced JavaScript file". (count($blockingJSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
-							//         "By default, references to external JavaScript files will block the page from rendering while they are fetched and executed. Often, these files can be loaded in a different manner, freeing up the page to visually render sooner.",
-							//         $blockingJSReqs,
-							//         array(
-							//             (object) [
-							//                 'title' => 'Defer all render-blocking scripts.',
-							//                 "desc" => 'This experiment will add a defer attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a>',
-							//                 "expvar" => 'deferjs',
-							//                 "expval" => implode(",", $blockingJSReqs)
-							//               ]
-							//         )
-							//     );
-							// }
-
+							include(__DIR__ . '/experiments/layout-shifts.inc');
 						?>
 						</ol>
 				</div>

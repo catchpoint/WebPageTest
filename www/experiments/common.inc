@@ -50,4 +50,19 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 	$out .= '<ul></div></details></li>';
 	return $out;
 }
+
+
+// define $lcp for future experiments
+$events = $testStepResult->getMetric('largestPaints');
+    $lcp = null;
+    if (isset($events) && is_array($events)) {
+        // Find the actual LCP event
+        foreach($events as $event) {
+            if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
+                if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
+                    $lcp = $event;
+                }
+            }
+        }
+    }
 ?>
