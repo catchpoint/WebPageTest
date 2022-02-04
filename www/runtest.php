@@ -781,6 +781,48 @@ use WebPageTest\RateLimiter;
                             }
                         }
                     }
+                } else if (isset($req_recipes) && count($req_recipes) > 0 )
+                {
+                  $test['script'] .= "overrideHost\t%HOST%\trecipes.webpagetest.workers.dev\r\n";
+                  //$test['script'] .= "setHeader\tx-recipes:\t$recipeScript\r\n";
+                  $scriptNavigate = "navigate\t%URL%\r\n";
+                  $test['script'] .= $scriptNavigate;
+
+
+                  // RECIPES!
+                  if(isset($req_recipes) && count($req_recipes) > 0 ){
+                    // this is for re-running a test with recipes enabled
+                    $recipeScript = '';
+                    foreach( $req_recipes as $key=>$value ){
+                      $recipeScript .= $value;
+                      if( $_REQUEST[$value] ){
+                        $recipeScript .= ":=" . $_REQUEST[$value];
+                      }
+                      $recipeScript .= ";";
+                    }
+                  }
+
+
+                  // Recipes need a control to compare to. 
+                  // The control runs over the proxy without any recipes.
+                  // We need to build the 2 tests and
+                  // redirect to the comparison page
+                  $recipeTests = array();
+                  $test['video'] = 1;
+                  $test['label'] = 'Control (Original with Proxy)';
+                  $id = CreateTest($test, $test['url']);
+                  if( isset($id) ) {
+                      $recipeTests[] = $id;
+                      $test['label'] = 'Experiments: ' . implode(", ", $req_recipes);
+
+                      //replace last step with last step plus recipes
+                      $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
+
+                      $id = CreateTest($test, $test['url']);
+                      if( isset($id) ) {
+                          $recipeTests[] = $id;
+                      }
+                  }
                 }
                 else if( isset($test['batch_locations']) && $test['batch_locations'] && count($test['multiple_locations']) )
                 {
