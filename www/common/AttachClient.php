@@ -38,6 +38,6 @@ use WebPageTest\Util;
   }
 
     $request->setClient($client);
-})($request);
+})($request_context);
 
 ?>

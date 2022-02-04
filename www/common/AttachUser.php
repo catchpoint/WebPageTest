@@ -50,6 +50,6 @@ use WebPageTest\Util;
   }
 
   $request->setUser($user);
-})($request);
+})($request_context);
 
 ?>

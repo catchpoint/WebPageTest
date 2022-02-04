@@ -11,8 +11,8 @@ if ($request_method === 'POST') {
   $protocol = getUrlProtocol();
   $host = Util::getSetting('host');
 
-  $access_token = $request->getUser()->getAccessToken();
-  $request->getClient()->revokeToken($access_token);
+  $access_token = $request_context->getUser()->getAccessToken();
+  $request_context->getClient()->revokeToken($access_token);
 
   setcookie("cp_access_token", "", time() - 3600, "/", $host);
   setcookie("cp_refresh_token", "", time() - 3600, "/", $host);
