@@ -74,7 +74,7 @@ def RunBatch(options):
   """Run one-off batch processing of WebpageTest testing."""
 
   test_params = {'f': 'xml',
-                 'private': 1,
+                 'private': 0,
                  'priority': 6,
                  'video': options.video,
                  'fvonly': options.fvonly,

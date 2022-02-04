@@ -3,6 +3,9 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
+use WebPageTest\Util;
+
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
@@ -104,17 +107,29 @@ if ($alert) {
                 } else {
                     echo "<li$current><a href=\"$tabUrl\"$target>$tabName</a></li>";
                 }
-                
             }
         }
 ?></ul>
     </nav>
 <?php
 
-if( $supportsAuth && !defined('EMBED') )
-{
-    echo '<ul id="wptAuthBar">';
-    if ($supportsSaml) {
+        if ($supportsAuth && !defined('EMBED')) {
+            echo '<ul id="wptAuthBar">';
+            if ($supportsCPAuth) {
+                $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
+                if ($is_logged_in) {
+                  echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
+                  echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
+                } else {
+                    echo '<li><a href="/login">Login';
+                    echo file_get_contents('./images/icon-login.svg');
+                    echo '</a></li>';
+                    $register = Util::getSetting('saml_register');
+                    if ($register) {
+                        echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+                    }
+                }
+            } else if ($supportsSaml) {
         if (isset($USER_EMAIL) && GetSetting('saml_account')) {
             $saml_account = GetSetting('saml_account');
             $saml_logout = GetSetting('saml_logout');
@@ -300,7 +315,12 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             <div class="test_presets">
                 <ul>
                     <?php 
-                    echo '<li><strong>'.$device.'</strong>';
+                    if ( $test['testinfo']['label'] ) {
+                        echo '<li><strong>'.$test['testinfo']['label'].'</strong>';
+                    } else {
+                        echo '<li><strong>'.$device.'</strong>';
+                    }
+                    
                     //browser and version
                     echo '<span class="test_presets_tag">';
                     if ($browserIcon) {
@@ -334,44 +354,12 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     
                 </ul>
             </div>
+        </div>
 
 
 
     <?php
     
-             echo "<details class=\"heading_details\"><summary>More info</summary><p>";
-            
-            if( $dom )
-                echo 'DOM Element: <b>' . $dom . '</b><br>';
-            if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
-                echo '<b>Authenticated: ' . $login . '</b><br>';
-            if( (int)$test['test']['connections'] !== 0)
-                 echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-            if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) )
-                echo '<b>Scripted test</b><br>';
-            if( strlen($blockString) )
-                echo "Blocked: <b>$blockString</b><br>";
-            if (isset($test['testinfo']['context']) && strlen($test['testinfo']['context']))
-            {
-                echo 'Context: ';
-                $contextText = htmlspecialchars($test['testinfo']['context']);
-                if (isset($test['testinfo']['context_url']) && strlen($test['testinfo']['context_url'])) {
-                    $contextUrl = $test['testinfo']['context_url'];
-                    if (GetSetting('nolinks')) {
-                        echo "<span class=\"medium colored\">$contextText</span>";
-                    } else {
-                        echo "<a class=\"url\" rel=\"nofollow\" title=\"$contextUrl\" href=\"$contextUrl\">$contextText</a>";
-                    }
-                } else {
-                    echo $contextText;
-                }
-                echo '<br>';
-            }
-            if ( $test['testinfo']['label'] ) {
-                echo '<strong>Test Label: </strong>' . $test['testinfo']['label']  . '</strong>';
-              }
-
-        echo '</p></details></div>';
         echo '<div class="header_screenshots">';
         
         require_once __DIR__ . '/screen_shot_embed.php';
@@ -422,7 +410,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
         if ($gradedRunResults->isOptimizationChecked())
-            $tabs['Performance'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+            $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
 
         $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
@@ -444,6 +432,22 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 if( !strcasecmp($tabName, $subtab) )
                     $current = ' class="current"';
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
+            }
+        }
+          
+        if (isset($firstRunResults)){
+            $lighthouse = $firstRunResults->getLighthouseScore();
+            $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
+            
+            if (isset($lighthouse)) {
+                $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
+                $lhClass = 'poor';
+                if ($lighthouse >= 90)
+                    $lhClass = 'good';
+                elseif ($lighthouse >= 50)
+                    $lhClass = 'ok';
+                
+            echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag ". $lhClass ."\">". $lighthouse ."</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
             }
         }
 
