@@ -70,8 +70,8 @@
                       echo "<li><a href=\"/viewlog.php?test=$id\" download>Download Test Log</a></li>";
                     if (is_file("$testPath/lighthouse.log.gz"))
                       echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\" download>Download Lighthouse Log</a></li>";
-                    echo '<li><a href="/csv.php?test=$id">Download Page CSV</a></li>';
-                    echo '<li><a href="/csv.php?test=$id&requests=1">Download Request CSV</a></li>';
+                    echo "<li><a href=\"/csv.php?test=$id\">Download Page CSV</a></li>";
+                    echo "<li><a href=\"/csv.php?test=$id&requests=1\">Download Request CSV</a></li>";
                 ?>
                 </ul>
                 </div>
