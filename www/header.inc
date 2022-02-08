@@ -483,7 +483,26 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
         "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
 
-    
+    if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+
+        // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
+        $securityScoreIncludesVulnerabilities = true;
+        if ($gradeRunResults) {
+            $detected = $gradeRunResults->getStepResult(1)->getRawResults()['detected'];
+            if (isset($detected) && isset($detected['CMS'])) {
+                if (stripos($detected['CMS'], "WordPress") >= 0) {
+                    $securityScoreIncludesVulnerabilities = false;
+                }
+            }
+        }
+        require_once('security_checks.php');
+        $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
+
+        $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Snyk']);}}catch(err){}";
+        $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
+        echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+
+    }
 
         echo '</ul></span></div></div>';
 
