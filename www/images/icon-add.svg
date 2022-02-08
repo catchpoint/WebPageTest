@@ -1,1 +1,3 @@
-<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path shape-rendering="crispEdges" d="M19 9a1 1 0 110 2h-8v8a1 1 0 11-2 0v-8H1a1 1 0 110-2h8V1a1 1 0 112 0v8h8z" fill="#75ADF5" fill-rule="nonzero"/></svg>
+<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+  <path shape-rendering="crispEdges" d="M10 1V19M1 10H19" stroke="#75adf5" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>
