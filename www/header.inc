@@ -415,6 +415,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
         $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
+          
+        $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);    
+
 
         $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
 
