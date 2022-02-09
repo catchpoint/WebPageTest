@@ -15,7 +15,7 @@ time {
 }
 
 header {
-    margin: 2em 0;
+    margin: 2em 0 1em;
     text-align: center;
 }
 
@@ -74,11 +74,12 @@ header nav ul a {
     padding: 1em 1em 0;
     font-family: sans-serif;
     text-decoration: none;
+    font-size: .9rem;
 }
 
 @media (min-width: 60em) {
     p.logo {
-        font-size: 4rem;
+        font-size: 3rem;
     }
     p.logosub {
         font-size: 1.1em;
@@ -140,7 +141,7 @@ main a {
         gap: 5rem;
     }
     h1 {
-        font-size: 2.7em;
+        font-size: 2.5em;
     }
     h2 {
         font-size: 1.4rem;

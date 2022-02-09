@@ -58,7 +58,7 @@
 			</article>
 			<article>
 			<h2>Service Workers Respond as Requests Increasingly Mount</h2>
-			<img src="https://picsum.photos/400/200" importance="low" alt="">
+			<img src="https://picsum.photos/400/100" importance="low" alt="">
 			</article>
 		</section>
 
