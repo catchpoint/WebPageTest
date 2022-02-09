@@ -13,7 +13,7 @@
 	<script src="site.js"></script>
 	<script src="site2.js"></script>
 	<script src="site3.js" defer></script>
-	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.js" crossorigin="anonymous"></script>
 	<script src="https://example.com/this-will-fail.js"></script>
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0-rc.3/themes/smoothness/jquery-ui.css">
 	<link rel="preload" href="foo/bar/baz.css" as="style">
@@ -70,7 +70,9 @@
 
 
 		<script>
-			document.querySelector('#holder').innerHTML = "<h3>We give up! Several stories will rotate in this carousel because we must include them all on the homepage. <a href=\"#\">Full Story</a><h3> </p>";
+			setTimeout(function(){
+			jQuery("#holder").html("<h3>We give up! Several stories will rotate in this carousel because we must include them all on the homepage. <a href=\"#\">Full Story</a><h3> </p>");
+			}, 1000);
 		</script>
 
 
