@@ -190,12 +190,12 @@ echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
 
                        
 
-if( isset($tests) && !isset($compTests) ){
-    // See if all tests are the same ID or not
+if( isset($tests) ){
+    // See if all tests are the same ID or from a compared recipe not
 
     $sameIDs = true;
     foreach($tests as $key=>$value) {
-        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id']){
+        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id'] && $value['url'] !== $tests[$key - 1]['url']){
             $sameIDs = false;
         }
     }
@@ -380,7 +380,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     
         echo '<div class="header_screenshots">';
         
-        require_once __DIR__ . '/screen_shot_embed.php';
+            require_once __DIR__ . '/screen_shot_embed.php';
+
+        
         echo '</div></div>';
 
 

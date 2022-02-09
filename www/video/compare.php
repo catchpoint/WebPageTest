@@ -373,15 +373,25 @@ else
             
                        <div class="results_header">
                             <?php 
-                                if (count($tests) > 1 ) {
-                                    echo '<h2>Filmstrip Comparison</h2>';
-                                }
-                                else {
-                                    echo '<h2>Filmstrip View</h2>';
+
+
+                                include __DIR__ . '/../experiments/findings.inc';
+
+                                if( !$experiment ){
+                                    if (count($tests) > 1 ) {
+                                        echo '<h2>Filmstrip Comparison</h2>';
+                                    }
+                                    else {
+                                        echo '<h2>Filmstrip View</h2>';
+                                    }
+                                    echo '<p>Use this page to explore and compare timing and request details from one or more tests.</p>';
                                 }
                             ?>
-                            <p>Use this page to explore and compare timing and request details from one or more tests.</p>
+                            
                     <?php
+
+
+
                     // //build out an expanded link
                      if ($testResults->countRuns() > 1 && count($tests) == 1) {
                          $link = '/video/compare.php?tests=';

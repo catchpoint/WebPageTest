@@ -1281,7 +1281,8 @@ details.details_custommetrics summary {
     align-items: flex-start;
 }
 
-.header_screenshots img {
+.header_screenshots img,
+.header_screenshots video {
     max-width: 100%;
     max-height: 100%;
     border-radius: 0.7rem;
@@ -1311,7 +1312,8 @@ details.details_custommetrics summary {
         max-height: 150px !important;
         justify-content: flex-start;
     }
-    .header_screenshots img {
+    .header_screenshots img,
+    .header_screenshots video {
         max-width: auto;
         max-height: 150px !important;
         box-shadow: none;
@@ -4703,25 +4705,29 @@ th.header {
     max-width: 100%;
     padding-bottom: .8em;
 }
+
+
 /* overflow shadows */
-.scrollableTable, 
+
+.scrollableTable,
 .results-filmstrip-container,
 div.waterfall-container,
 div.overflow-container,
-.breakdownFrame_item > div,
+.breakdownFrame_item>div,
 #videoDiv {
-    background: linear-gradient(90deg,#fff 33%,rgba(255,255,255,0)),linear-gradient(90deg,rgba(255,255,255,0),#fff 66%) 0 100%,radial-gradient(farthest-side at 0 50%,rgb(106 106 106 / 40%),transparent),radial-gradient(farthest-side at 100% 50%,rgba(106 106 106 / 40%),transparent) 0 100%;
+    background: linear-gradient(90deg, #fff 33%, rgba(255, 255, 255, 0)), linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 66%) 0 100%, radial-gradient(farthest-side at 0 50%, rgb(106 106 106 / 40%), transparent), radial-gradient(farthest-side at 100% 50%, rgba(106 106 106 / 40%), transparent) 0 100%;
     background-repeat: no-repeat;
-    background-size: 50px 100%,50px 100%,10px 100%,10px 100%;
-    background-position: 0 0,100%,0 0,100%;
-    background-attachment: local,local,scroll,scroll;
+    background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
+    background-position: 0 0, 100%, 0 0, 100%;
+    background-attachment: local, local, scroll, scroll;
 }
-.scrollableTable table, 
+
+.scrollableTable table,
 .results-filmstrip-container img,
-div:not(.compare_contain_wrap) > div.waterfall-container img,
-div.overflow-container > *,
-.breakdownFrame_item > div > *,
-#videoDiv > * {
+div:not(.compare_contain_wrap)>div.waterfall-container img,
+div.overflow-container>*,
+.breakdownFrame_item>div>*,
+#videoDiv>* {
     mix-blend-mode: multiply
 }
 
@@ -4808,6 +4814,7 @@ table#tableResults.pretty td {
     vertical-align: middle;
     border: 29px solid #fff;
 }
+
 .result-details #tableResults.pretty tr:not(.metric_groups) th {
     padding-right: 1rem;
     font-size: .8em;
