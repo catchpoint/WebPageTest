@@ -5,7 +5,7 @@
 
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<title>WebPageTest's Performance AntiPattern Test Page</title>
+	<title>The Metric Times. Your source of performance antipattern test pages since 2022! WebPageTest's Performance AntiPattern Test Page</title>
 	<meta name="Description" content="WebPageTest Recipe Testing Page" />
 	<!-- <meta name="viewport" content="width=device-width" /> -->
 	<link href="https://fonts.googleapis.com/css2?family=Roboto" rel="stylesheet">
