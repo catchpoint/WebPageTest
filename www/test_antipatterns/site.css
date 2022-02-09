@@ -86,11 +86,6 @@ header nav ul a {
     }
 }
 
-img {
-    max-width: 100%;
-    height: auto;
-}
-
 main section:first-child {
     flex: 0 0 65%;
 }
