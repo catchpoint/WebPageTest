@@ -131,7 +131,7 @@ $common_label = implode(" ", $common_labels);
 
                <div class="results_header">
                     <h2>Graph Page Data Comparison</h2>
-                    <p>Use this page to compare TODO</p>
+                    <p>Use this page to plot the results for each run in your test to help you spot outliers and patterns.</p>
                 </div>
                       <?php include("testinfo_command-bar.inc"); ?>
                 </div>
