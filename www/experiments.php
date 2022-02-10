@@ -215,6 +215,10 @@ $page_description = "Website performance test result$testLabel.";
         <script type="text/javascript" src="/js/jk-navigation.js"></script>
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
+            // collapse later opps
+            document.querySelectorAll("li:first-child + li details").forEach(deet => {
+                deet.open = false;
+            });
         </script>
 
         <?php
@@ -291,10 +295,7 @@ $page_description = "Website performance test result$testLabel.";
             }
             setTimeout('UpdateStatus()', 15000);
 
-            // collapse later opps
-            document.querySelectorAll("li:first-child + li details").forEach(deet => {
-                deet.open = false;
-            });
+    
           </script>
             <?php
         }
