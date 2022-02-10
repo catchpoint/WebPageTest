@@ -199,7 +199,7 @@ $page_description = "Website performance test result$testLabel.";
                         "Snyk has found 2 security vulnerabilities, 1 high priority, and 1 low.",
                         array(
                             "<strong>Strict Transport Security:</strong>A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains.",
-                            "<strong>X Content Type Options:</strong> The only defined value, \"nosniff\", prevents Internet Explorer from MIME-sniffing a response away from the declared content-type. This also applies to Google Chrome, when downloading extensions"
+                            "<strong>X Content Type Options:</strong> The only defined value, \"nosniff\", prevents Internet Explorer from MIME-sniffing a response away from the declared content-type. "
                         ),
                         array(
                             (object) [
