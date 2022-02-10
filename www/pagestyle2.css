@@ -417,7 +417,7 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks p {
-    font-size: 1em;
+    font-size: .9em;
     margin: .5em 0 1em;
     max-width: 40em;
     line-height: 1.4;
@@ -457,10 +457,11 @@ h4.experiments_list_hed {
 }
 
 .experiments_list li {
-    border: 1px solid #f1f1f1;
-    padding: 1rem;
-    background: #fefefe;
-    margin: 0 0 .5rem;
+    border: 1px solid #c8d4c3;
+    padding: 1.5rem;
+    background: #fff;
+    margin: 1rem 0;
+    border-radius: .3em;
 }
 
 .experiment_description {
@@ -472,15 +473,16 @@ h4.experiments_list_hed {
 
 .experiment_description_text h5 {
     font-size: 1rem;
-    color: #4E8F37;
+    color: #383838;
     margin-bottom: 0;
     padding: 0;
-    font-weight: 500;
+    font-weight: 700;
+    margin: 0;
 }
 
 .experiment_description_text p {
     color: #555;
-    margin: .2em 0;
+    margin: .5em 0 0;
 }
 
 .experiment_description_go {
@@ -491,12 +493,14 @@ h4.experiments_list_hed {
 .experiment_description_go label {
     padding: .9em 1.5em .9em 1.1em;
     background: #fff;
-    box-shadow: 0 0 3px rgba(0, 0, 0, .3);
+    box-shadow: 0 0 3px rgb(0 0 0 / 10%);
     color: #4E8F37;
     font-weight: 900;
     border: 1px solid #ccc;
     cursor: pointer;
     border-radius: 2rem;
+    vertical-align: middle;
+    /* display: flex; */
 }
 
 .experiment_description_go label:hover {
