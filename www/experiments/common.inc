@@ -1,9 +1,14 @@
 <?php
-function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples, $relevantExperiments ){
+function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples, $relevantExperiments, $good = true ){
 	$out = '';
 	
 	// todo move this summary heading broader for all recs
-	$out .= "<li><details open><summary>$bottleneckTitle</summary>";
+	$goodbadClass = "experiments_details-good";
+	if( $good !== true ){
+		$goodbadClass = "experiments_details-bad";
+	}
+	
+	$out .= "<li class=\"$goodbadClass\"><details open><summary>$bottleneckTitle</summary>";
 	$out .= "<div class=\"experiments_details_body\">";
 	
 	$out .= "<div class=\"experiments_details_desc\">";
@@ -54,15 +59,24 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 
 // define $lcp for future experiments
 $events = $testStepResult->getMetric('largestPaints');
-    $lcp = null;
-    if (isset($events) && is_array($events)) {
-        // Find the actual LCP event
-        foreach($events as $event) {
-            if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
-                if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
-                    $lcp = $event;
-                }
-            }
-        }
-    }
+$lcp = null;
+if (isset($events) && is_array($events)) {
+	// Find the actual LCP event
+	foreach($events as $event) {
+		if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
+			if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
+				$lcp = $event;
+			}
+		}
+	}
+}
+
+// for custom metrics
+$rawResultData = $testStepResult->getRawResults();
+$customMetrics = null;
+if( isset($rawResultData['custom']) && count($rawResultData['custom']) ){
+	$customMetrics = $rawResultData['custom'];
+}
+
+
 ?>

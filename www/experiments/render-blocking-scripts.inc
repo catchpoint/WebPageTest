@@ -20,7 +20,17 @@ if( count($blockingJSReqs) > 0 ){
                 "expvar" => 'deferjs',
                 "expval" => implode(",", $blockingJSReqs)
                 ]
-        )
+        ),
+        false
+    );
+}
+else {
+    echo observationHTML(
+        'You had no render-blocking javascript files.',
+        "TBD importance notes here",
+        array(),
+        array(),
+        true
     );
 }
 

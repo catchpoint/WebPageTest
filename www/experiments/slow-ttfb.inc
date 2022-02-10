@@ -22,7 +22,17 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
             #         "desc" => 'All WPT experiments run over a CDN, but we preserve your original TTFB by default to demonstrate non-CDN improvements. This experiment will override that and show how your TTFB will change when hosted on a worldwide CDN.',
             #         "expvar" => 'ShowCDNTiming'
             #         ]
-        )
+        ),
+        false
+    );
+}
+else {
+    echo observationHTML(
+        'This test had a reasonably quick first-byte time.',
+        "First byte timing importance notes here",
+        array(),
+        array(),
+        true
     );
 }
 ?>

@@ -365,12 +365,14 @@ p.grade_summary {
     margin: 2em 0 4rem 0rem;
 }
 
+
 .experiments_bottlenecks>ol {
     list-style: none;
     margin: 1em 0;
     padding: 0;
     counter-reset: bottlenecks;
 }
+
 
 .experiments_bottlenecks summary {
     font-size: 1.1875rem;
@@ -431,7 +433,7 @@ p.grade_summary {
 .experiments_bottlenecks summary:before {
     content: counter(bottlenecks);
     color: #fff;
-    background: #1072BA;
+    background-color: #6ca71a;
     border-radius: 100%;
     font-weight: 900;
     width: 1.5em;
@@ -440,6 +442,9 @@ p.grade_summary {
     margin: 0 .7em 0 .5em;
     text-align: center;
     line-height: 1.5;
+}
+.experiments_bottlenecks .experiments_details-bad summary:before {
+    background-color: #d02424;
 }
 
 h4.experiments_list_hed {

@@ -53,9 +53,19 @@
                             "expvar" => 'addimportance',
                             "expval" => $lcpSource . "|i_high"
                         ]
-                    )
+                    ),
+                    false
                 );
             }
+        }
+         else {
+            echo observationHTML(
+                'Largest Contentful Paint time was reasonably quick',
+                "TBD importance notes here",
+                array(),
+                array(),
+                true
+            );
         }
 
     }

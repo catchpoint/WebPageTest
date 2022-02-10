@@ -25,7 +25,16 @@ if( count($blockingFontCSSReqs) > 0 ){
               "expvar" => 'asynccss',
               "expval" => implode(",", $blockingFontCSSReqs)
             ]
-      )
+      ),
+      false
   );
+} else {
+    echo observationHTML(
+        'You had no render-blocking external font CSS files.',
+        "TBD importance notes here",
+        array(),
+        array(),
+        true
+    );
 }
 ?>

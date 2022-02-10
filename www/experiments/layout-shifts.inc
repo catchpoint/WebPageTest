@@ -37,9 +37,19 @@
                             "expvar" => 'imageaspectratio',
                             "expval" => $lcpSource . "|w". $lcp['element']['width'] ."|h" . $lcp['element']['height']
                         ]
-                    )
+                    ),
+                    false
                 );
             }
+            else {
+            echo observationHTML(
+                'Largest Contentful Paint Image Has aspect ratio defined',
+                "TBD importance notes here",
+                array(),
+                array(),
+                true
+            );
+        }
         }
 
     }

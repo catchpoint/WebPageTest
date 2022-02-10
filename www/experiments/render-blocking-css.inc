@@ -18,8 +18,17 @@
                     "expvar" => 'inline',
                     "expval" => implode(",", $blockingCSSReqs)
                 ]
-            )
+            ),
+            false
         );
-    }
+    } else {
+    echo observationHTML(
+        'You had no render-blocking external CSS files.',
+        "TBD importance notes here",
+        array(),
+        array(),
+        true
+    );
+}
 
 ?>

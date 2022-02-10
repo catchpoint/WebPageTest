@@ -121,7 +121,7 @@ $page_description = "Website performance test result$testLabel.";
                         $secret = '';
                     }
 
-                    echo "<form class='experiments_grades' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+                    echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
                     echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -165,6 +165,10 @@ $page_description = "Website performance test result$testLabel.";
                     include __DIR__ . '/experiments/render-blocking-font-css.inc';
 
                     include __DIR__ . '/experiments/lcp.inc';
+
+                    include __DIR__ . '/experiments/imgs-lazy-loaded.inc';
+                    include __DIR__ . '/experiments/imgs-lazy-loadable.inc';
+
 
                     echo '</ol></div>';
 
@@ -242,7 +246,7 @@ $page_description = "Website performance test result$testLabel.";
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
             // collapse later opps
-            document.querySelectorAll("li:first-child + li details").forEach(deet => {
+            document.querySelectorAll("li:not(.experiments_details-bad) details").forEach(deet => {
                 deet.open = false;
             });
         </script>
