@@ -11,21 +11,21 @@ if(isset($imgsInViewport) ){
 }  
 
 if( count($imgsThatShouldNotBeLazy) ){
-    $srcs = array();
+    $shouldNotBeLazySrcs = array();
     foreach($imgsThatShouldNotBeLazy as $img){
-        array_push($srcs, $img["src"]);
+        array_push($shouldNotBeLazySrcs, $img["src"]);
     }
 
     echo observationHTML(
         "Images within the critical viewport are being lazy-loaded.",
         "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-        $srcs,
+        $shouldNotBeLazySrcs,
         array(
             (object) [
                 'title' => 'Remove loading="lazy" from layout-critical images',
                 "desc" => 'This experiment will remove <code>loading="lazy"</code> attributes from images that are inside the viewport at load',
                 "expvar" => 'removeloadinglazy',
-                "expval" => implode(",",$srcs)
+                "expval" => implode(",",$shouldNotBeLazySrcs)
             ]
         ),
         false

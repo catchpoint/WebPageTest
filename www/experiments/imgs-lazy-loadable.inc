@@ -3,7 +3,7 @@ $imgsOutViewport = $testStepResult->getMetric('imgs-out-viewport');
 $imgsThatShouldBeLazy = array();
 if(isset($imgsOutViewport) ){
     foreach($imgsOutViewport as $img) {
-        if( $img["loading"] === "lazy" ){
+        if( $img["loading"] !== "lazy" ){
             array_push($imgsThatShouldBeLazy, $img);
         }
 
@@ -11,21 +11,21 @@ if(isset($imgsOutViewport) ){
 }  
 
 if( count($imgsThatShouldBeLazy) ){
-    $srcs = array();
+    $shouldBeLazySrcs = array();
     foreach($imgsThatShouldBeLazy as $img){
-        array_push($srcs, $img["src"]);
+        array_push($shouldBeLazySrcs, $img["src"]);
     }
 
     echo observationHTML(
         "Images outside the critical viewport can be lazy-loaded.",
         "When images are lazy-loaded using loading=\"lazy\", when they scroll into the viewport, freeing up early load for other tasks.",
-        $srcs,
+        $shouldBeLazySrcs,
         array(
             (object) [
                 'title' => 'Add loading="lazy" to non-critical images',
                 "desc" => 'This experiment will add <code>loading="lazy"</code> attributes from images that are inside the viewport at load',
                 "expvar" => 'addloadinglazy',
-                "expval" => implode(",",$srcs)            ]
+                "expval" => implode(",",$shouldBeLazySrcs)            ]
         ),
         false
     );
