@@ -19,7 +19,7 @@ if( count($fontsThatBlock) ){
 
     $blockers = array();
     foreach($fontsThatBlock as $font){
-        array_push($blockers, $font["family"] . " " . (isset( $font["weight"] ) && $font["weight"]) . " " . (isset( $font["style"] ) && $font["style"]) );
+        array_push($blockers, $font["family"] . " " . (isset( $font["weight"] ) ? $font["weight"] : "") . " " . (isset( $font["style"] ) ? $font["style"] : "") );
     }
 
     echo observationHTML(
