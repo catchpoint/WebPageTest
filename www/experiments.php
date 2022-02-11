@@ -169,6 +169,8 @@ $page_description = "Website performance test result$testLabel.";
                     include __DIR__ . '/experiments/imgs-lazy-loaded.inc';
                     include __DIR__ . '/experiments/imgs-lazy-loadable.inc';
 
+                    include __DIR__ . '/experiments/font-rendering.inc';
+
 
                     echo '</ol></div>';
 
