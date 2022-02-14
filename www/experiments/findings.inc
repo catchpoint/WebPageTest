@@ -45,8 +45,8 @@ if( $experiment ){
         }
      echo "</ul>";
 
-     echo '<video id="player" controls autoplay muted="" preload="auto" poster="https://www.webpagetest.org/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual">
-        <source src="https://www.webpagetest.org/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual" type="video/mp4">
+     echo '<video id="player" controls autoplay muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual">
+        <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual" type="video/mp4">
     </video>';
         
 }
