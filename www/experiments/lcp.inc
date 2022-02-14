@@ -18,7 +18,7 @@
        
         if (isset($lcp['element']['tagName']) && $lcp['element']['tagName'] === "IMG") {
             if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
-                $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
+                $lcpSource = $lcp['element']['src'];
             }
             if (isset($lcp['element']['background-image'])) {
                 preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);

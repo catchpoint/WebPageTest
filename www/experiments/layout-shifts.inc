@@ -27,7 +27,7 @@
                     "Layout shifts occur due to images missing aspect ratio.",
                     "Your CLS score is $cls, and your LCP image has no aspect ratio specified, meaning the browser has no way of knowing how tall it is until it loads. This can cause the image to shift content down as it loads.",
                     array(
-                        "<strong>LCP Image:</strong>" . $lcp['element']['outerHTML'],
+                        "<strong>LCP Image:</strong><img src= \"" . $lcp['element']['src'] . "\">",
                         "<strong>LCP HTML:</strong>" . $lcpHTML
                     ),
                     array(
