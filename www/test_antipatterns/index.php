@@ -52,18 +52,18 @@ if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
 			<h1>Pageload Delays Triple when Developers Forget to Check WebPageTest</h1>
 			<p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
 
-			<img src="https://picsum.photos/700/300" loading="lazy">
+			<img src="dog.jpg" loading="lazy">
 			
 		</section>
 
 		<section class="headlines-secondary">
 			<article>
 			<h2>JavaScript Frameworks Forecast Imminent First Input Delay</h2>
-			<img src="https://picsum.photos/400/200" alt="">
+			<img src="delays.jpg" alt="">
 			</article>
 			<article>
 			<h2>Service Workers Respond as Requests Increasingly Mount</h2>
-			<img src="https://picsum.photos/400/100" importance="low" alt="">
+			<img src="serviceworkers.jpg" importance="low" alt="">
 			</article>
 		</section>
 
