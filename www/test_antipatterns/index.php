@@ -1,4 +1,9 @@
-
+<?php
+// if agent is wpt, artificial slowdown
+if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
+	sleep(3);
+}
+?>
 
 <!DOCTYPE html>
 <html>
