@@ -6,8 +6,10 @@ if( isset($tests) && $sameIDs ){
     $experimentPath = GetTestPath($tests[1]['id']);
     $experimentInfo = TestInfo::fromFiles($experimentPath);
     $scriptInfo = $experimentInfo->getRawData()['testinfo']['script'];
+    $metaInfo = $experimentInfo->getRawData()['testinfo']['metadata'];
     $experiment = strpos($scriptInfo, "recipes.webpagetest.workers.dev");
     $experimentsRan = preg_match('/x-recipes: ([^\s]+)/', $scriptInfo, $matches);
+
 }
 
 
@@ -16,6 +18,25 @@ if( isset($tests) && $sameIDs ){
 
 
 if( $experiment ){
+
+    if( isset( $metaInfo ) ){
+        $metaInfo = json_decode( $metaInfo );
+
+
+        $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->source_test, 0, 1 );
+        $originalTestHref = $originalTestUrlGenerator->resultSummary();
+
+        $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_test, 0, 1 );
+        $controlTestHref = $controlTestUrlGenerator->resultSummary();
+
+        $experimentTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $tests[1]['id'], 0, 1 );
+        $experimentTestHref = $experimentTestUrlGenerator->resultSummary();
+
+
+    }
+    
+    
+
     $diffMetrics = array( 
         "TTFB" => "Time to First Byte", 
         "StartRender" => "Start Render",
@@ -27,11 +48,25 @@ if( $experiment ){
         "FullyLoaded" => "Fully Loaded",
         "BytesIn" => "Total Bytes"
     );
+
+   
     
+
     
 
     echo '<h2>Experiment Results!</h2>';
-    //echo $matches[1];
+
+    if( isset( $metaInfo ) ){
+        $metaInfo = json_decode( $metaInfo );
+
+        echo "<p>Experiment URLs: 
+            <a href=\"". $originalTestHref ."\">Source Test</a>
+            <a href=\"". $controlTestHref ."\">Control Test</a>
+            <a href=\"". $experimentTestHref ."\">Experiment Test</a>
+        </p>";
+
+    }
+    
 
     echo "<p>Here's how your experiment impacted your metrics:</p>";
                                 

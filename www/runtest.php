@@ -322,6 +322,7 @@ use WebPageTest\RateLimiter;
             $test['max_retries'] = isset($req_retry) ? min((int)$req_retry, 10) : 0;
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
+            $test['axe'] = 1;
             if (isset($req_pss_advanced))
               $test['pss_advanced'] = $req_pss_advanced;
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
@@ -2512,6 +2513,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['clearRV'] = 1;
             if( isset($test['keepua']) && $test['keepua'] )
                 $job['keepua'] = 1;
+            if( isset($test['axe']) && $test['axe'] )
+                $job['axe'] = 1;
             if( isset($test['mobile']) && $test['mobile'] )
                 $job['mobile'] = 1;
             if( isset($test['lighthouse']) && $test['lighthouse'] )
