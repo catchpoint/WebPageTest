@@ -809,11 +809,11 @@ use WebPageTest\RateLimiter;
                   // redirect to the comparison page
                   $recipeTests = array();
                   $test['video'] = 1;
-                  $test['label'] = 'Control (Original with Proxy)';
+                  $test['label'] = 'Experiment Control (For Comparison Only)';
                   $id = CreateTest($test, $test['url']);
                   if( isset($id) ) {
                       $recipeTests[] = $id;
-                      $test['label'] = 'Experiments: ' . implode(", ", $req_recipes);
+                      $test['label'] = 'Experiment: ' . implode(", ", $req_recipes);
 
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
