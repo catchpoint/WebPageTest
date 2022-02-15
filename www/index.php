@@ -22,6 +22,11 @@ $headless = false;
 if (GetSetting('headless')) {
     $headless = true;
 }
+
+$advancedFormDefault = false;
+if (isset($_GET['advanced'])) {
+    $advancedFormDefault = true;
+}
 // load the secret key (if there is one)
 $secret = GetServerSecret();
 if (!isset($secret))
@@ -208,7 +213,7 @@ $loc = ParseLocations($locations);
                         </li>
                     </ul>
                     <div class="simpleadvancedfields_contain">
-                    <input type="radio" name="simpleadvanced"  value="simple" id="simple" checked>
+                    <input type="radio" name="simpleadvanced"  value="simple" id="simple" <?php if(!$advancedFormDefault){ echo "checked"; } ?>>
                     <label for="simple">Simple Configuration <em>(Choose from quick recommended test location and browser presets)</em></label>
                     <div class="simpleadvancedfields">
                         <ul class="input_fields home_responsive_test_top">
@@ -256,7 +261,7 @@ $loc = ParseLocations($locations);
 
 
                     <div class="simpleadvancedfields_contain">
-                    <input type="radio" name="simpleadvanced" value="advanced" id="advanced" >
+                    <input type="radio" name="simpleadvanced" value="advanced" id="advanced"  <?php if($advancedFormDefault){ echo "checked"; } ?>>
                     <label for="advanced">Advanced Configuration <em>(Choose from all browser, location, &amp; device options)</em></label>
                     <div class="simpleadvancedfields">
                     <ul class="input_fields home_responsive_test_top">
