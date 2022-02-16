@@ -41,16 +41,24 @@
                     false
                 );
             }
-            else {
+        }
+        else {
             echo observationHTML(
-                'Largest Contentful Paint Image Has aspect ratio defined',
+                'Layout shifts exist but are not caused by images needing aspect ratio',
                 "TBD importance notes here",
                 array(),
                 array(),
                 true
             );
         }
-        }
-
     }
+    else {
+            echo observationHTML(
+                'No major layout shifts detected.',
+                "TBD importance notes here",
+                array(),
+                array(),
+                true
+            );
+        }
 ?>

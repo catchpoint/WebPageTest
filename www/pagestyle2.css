@@ -290,10 +290,12 @@ span.lh-flag.poor {
 }
 
 .results_body {
-    padding: 1rem 3em;
+    padding: 0 3em;
     border-radius: 1rem;
     box-shadow: 0 0 4px #ddd;
     margin: 1em -3rem !important;
+    background-clip: content-box;
+    overflow: hidden;
 }
 
 @media (max-width: 87.5em) {
@@ -311,7 +313,13 @@ span.lh-flag.poor {
     justify-content: flex-start;
     border-bottom: 1px solid #ddd;
     padding-bottom: .6rem;
-    margin-top: 2rem;
+    margin-top: 0;
+    margin-left: -3em;
+    margin-right: -3em;
+    padding: .6em 3em;
+    background: #fafafa;
+    border-right: 0;
+    border-left: 0;
 }
 
 h3.grade_heading {
@@ -365,7 +373,6 @@ p.grade_summary {
     margin: 2em 0 4rem 0rem;
 }
 
-
 .experiments_bottlenecks>ol {
     list-style: none;
     margin: 1em 0;
@@ -373,12 +380,14 @@ p.grade_summary {
     counter-reset: bottlenecks;
 }
 
-
 .experiments_bottlenecks>ol>li>details>summary {
     font-size: 1.1875rem;
     font-weight: 900;
 }
 
+.experiments_bottlenecks>ol>li.experiments_details-good>details>summary {
+    font-weight: 500;
+}
 
 .experiments_bottlenecks img {
     max-width: 150px;
@@ -429,7 +438,7 @@ p.grade_summary {
     margin: 1em 0 2rem;
 }
 
-.experiments_bottlenecks>ol>li>details >summary:before {
+.experiments_bottlenecks>ol>li>details>summary:before {
     content: counter(bottlenecks);
     color: #fff;
     background-color: #6ca71a;
@@ -442,7 +451,8 @@ p.grade_summary {
     text-align: center;
     line-height: 1.5;
 }
-.experiments_bottlenecks>ol>li.experiments_details-bad>details> summary:before {
+
+.experiments_bottlenecks>ol>li.experiments_details-bad>details>summary:before {
     background-color: #d02424;
 }
 
@@ -460,7 +470,7 @@ h4.experiments_list_hed {
     padding: 0;
 }
 
-.experiments_list > li {
+.experiments_list>li {
     border: 1px solid #c8d4c3;
     padding: 1.5rem;
     background: #fff;
@@ -484,20 +494,25 @@ h4.experiments_list_hed {
     font-weight: 700;
     margin: 0;
 }
+
 .experiment_description_text {
     flex: 1 0 45%;
 }
+
 .experiment_assets {
     flex: 1 1 25%;
     color: #444;
 }
+
 .experiment_assets p {
     font-weight: 900;
     margin: 0;
 }
+
 .experiment_assets li {
     font-size: .9rem;
 }
+
 .experiment_description_text p {
     color: #555;
     margin: .5em 0 0;
@@ -509,7 +524,7 @@ h4.experiments_list_hed {
     align-self: center;
 }
 
-.experiment_description_go > label {
+.experiment_description_go>label {
     padding: .9em 1.5em .9em 1.1em;
     background: #fff;
     box-shadow: 0 0 3px rgb(0 0 0 / 10%);
@@ -522,11 +537,11 @@ h4.experiments_list_hed {
     /* display: flex; */
 }
 
-.experiment_description_go > label:hover {
+.experiment_description_go>label:hover {
     box-shadow: 0 0 6px rgba(0, 0, 0, .3);
 }
 
-.experiment_description_go > label > input {
+.experiment_description_go>label>input {
     margin-right: 1em;
     display: inline-block;
     width: 1.2em;
@@ -534,13 +549,22 @@ h4.experiments_list_hed {
 }
 
 .experiments_foot {
-    margin: 3rem 0;
-    border-top: 1px solid #ddd;
-    padding: 2em 0;
+    margin: 0;
+    /* border-top: 1px solid #ddd; */
+    /* padding: 2em 0; */
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 4rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.6rem;
+    margin-top: 0;
+    margin-left: -3em;
+    margin-right: -3em;
+    padding: 2em 3em;
+    background: #fafafa;
+    border-right: 0;
+    border-left: 0;
 }
 
 .experiments_foot p {
@@ -2254,6 +2278,7 @@ label small {
     font-weight: 500;
     font-size: 0.875rem;
 }
+
 .test_presets li b {
     color: #fbe076;
 }

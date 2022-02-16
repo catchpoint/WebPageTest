@@ -100,5 +100,8 @@ if( isset($rawResultData['custom']) && count($rawResultData['custom']) ){
 	$customMetrics = $rawResultData['custom'];
 }
 
+// accessibility!
+$axe = $testStepResult->getMetric('axe');
+
 
 ?>
