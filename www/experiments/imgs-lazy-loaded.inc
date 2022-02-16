@@ -25,7 +25,7 @@ if( count($imgsThatShouldNotBeLazy) ){
                 'title' => 'Remove loading="lazy" from layout-critical images',
                 "desc" => 'This experiment will remove <code>loading="lazy"</code> attributes from images that are inside the viewport at load',
                 "expvar" => 'removeloadinglazy',
-                "expval" => implode(",",$shouldNotBeLazySrcs)
+                "expval" => $shouldNotBeLazySrcs
             ]
         ),
         false

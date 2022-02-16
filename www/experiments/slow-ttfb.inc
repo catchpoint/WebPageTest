@@ -14,7 +14,7 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
             (object) [
                 'title' => ' Check for accuracy! Preserve original User Agent string in re-run',
                 "desc" => 'This experiment will remove the WPT-modified User Agent string and use the default string that the browser would otherwise send.',
-                "expvar" => 'keepua'
+                "expvar" => array('keepua')
             ]//,
             
             # (object) [

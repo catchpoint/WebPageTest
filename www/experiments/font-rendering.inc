@@ -31,7 +31,7 @@ if( count($fontsThatBlock) ){
                 'title' => 'Add font-display: swap to font loading',
                 "desc" => 'This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner',
                 "expvar" => 'swap',
-                "expval" => encodeURIComponent("@font-face {") . "|" . encodeURIComponent( "@font-face { font-display: swap; " )
+                "expval" => array(encodeURIComponent("@font-face {") . "|" . encodeURIComponent( "@font-face { font-display: swap; " ))
             ]),
         false
     );

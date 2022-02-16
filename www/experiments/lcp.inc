@@ -45,13 +45,13 @@
                             'title' => 'Preload the LCP image.',
                             "desc" => 'This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.',
                             "expvar" => 'preload',
-                            "expval" => $lcpSource . "|as_image"
+                            "expval" => array($lcpSource . "|as_image")
                         ],
                         (object) [
                             'title' => 'Add a priority hint <em>(Chrome-only)</em>',
                             "desc" => 'This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.',
                             "expvar" => 'addimportance',
-                            "expval" => $lcpSource . "|i_high"
+                            "expval" => array($lcpSource . "|i_high")
                         ]
                     ),
                     false

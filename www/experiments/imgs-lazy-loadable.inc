@@ -25,7 +25,7 @@ if( count($imgsThatShouldBeLazy) ){
                 'title' => 'Add loading="lazy" to non-critical images',
                 "desc" => 'This experiment will add <code>loading="lazy"</code> attributes from images that are inside the viewport at load',
                 "expvar" => 'addloadinglazy',
-                "expval" => implode(",",$shouldBeLazySrcs)            ]
+                "expval" => $shouldBeLazySrcs            ]
         ),
         false
     );

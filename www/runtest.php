@@ -784,7 +784,7 @@ use WebPageTest\RateLimiter;
                     }
                 } else if (isset($req_recipes) && count($req_recipes) > 0 )
                 {
-                  $test['script'] .= "overrideHost\t%HOST%\trecipes.webpagetest.workers.dev\r\n";
+                  $test['script'] = "overrideHost\t%HOST%\trecipes.webpagetest.workers.dev\r\n";
                   //$test['script'] .= "setHeader\tx-recipes:\t$recipeScript\r\n";
                   $scriptNavigate = "navigate\t%URL%\r\n";
                   $test['script'] .= $scriptNavigate;
@@ -797,7 +797,11 @@ use WebPageTest\RateLimiter;
                     foreach( $req_recipes as $key=>$value ){
                       $recipeScript .= $value;
                       if( $_REQUEST[$value] ){
-                        $recipeScript .= ":=" . $_REQUEST[$value];
+                        $value = $_REQUEST[$value];
+                        if( count($value) > 1 ){
+                          $value = implode($value, ",");
+                        }
+                        $recipeScript .= ":=" . $value;
                       }
                       $recipeScript .= ";";
                     }

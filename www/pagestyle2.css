@@ -374,12 +374,11 @@ p.grade_summary {
 }
 
 
-.experiments_bottlenecks summary {
+.experiments_bottlenecks>ol>li>details>summary {
     font-size: 1.1875rem;
     font-weight: 900;
 }
 
-.experiments_details_desc>p {}
 
 .experiments_bottlenecks img {
     max-width: 150px;
@@ -430,7 +429,7 @@ p.grade_summary {
     margin: 1em 0 2rem;
 }
 
-.experiments_bottlenecks summary:before {
+.experiments_bottlenecks>ol>li>details >summary:before {
     content: counter(bottlenecks);
     color: #fff;
     background-color: #6ca71a;
@@ -443,7 +442,7 @@ p.grade_summary {
     text-align: center;
     line-height: 1.5;
 }
-.experiments_bottlenecks .experiments_details-bad summary:before {
+.experiments_bottlenecks>ol>li.experiments_details-bad>details> summary:before {
     background-color: #d02424;
 }
 
@@ -461,7 +460,7 @@ h4.experiments_list_hed {
     padding: 0;
 }
 
-.experiments_list li {
+.experiments_list > li {
     border: 1px solid #c8d4c3;
     padding: 1.5rem;
     background: #fff;
@@ -473,7 +472,8 @@ h4.experiments_list_hed {
     display: flex;
     gap: 2rem;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    word-break: break-all;
 }
 
 .experiment_description_text h5 {
@@ -484,18 +484,32 @@ h4.experiments_list_hed {
     font-weight: 700;
     margin: 0;
 }
-
+.experiment_description_text {
+    flex: 1 0 45%;
+}
+.experiment_assets {
+    flex: 1 1 25%;
+    color: #444;
+}
+.experiment_assets p {
+    font-weight: 900;
+    margin: 0;
+}
+.experiment_assets li {
+    font-size: .9rem;
+}
 .experiment_description_text p {
     color: #555;
     margin: .5em 0 0;
 }
 
 .experiment_description_go {
-    flex: 0 1 40%;
+    flex: 1 0 30%;
     text-align: right;
+    align-self: center;
 }
 
-.experiment_description_go label {
+.experiment_description_go > label {
     padding: .9em 1.5em .9em 1.1em;
     background: #fff;
     box-shadow: 0 0 3px rgb(0 0 0 / 10%);
@@ -508,11 +522,11 @@ h4.experiments_list_hed {
     /* display: flex; */
 }
 
-.experiment_description_go label:hover {
+.experiment_description_go > label:hover {
     box-shadow: 0 0 6px rgba(0, 0, 0, .3);
 }
 
-.experiment_description_go label input {
+.experiment_description_go > label > input {
     margin-right: 1em;
     display: inline-block;
     width: 1.2em;
@@ -2233,11 +2247,15 @@ label small {
 }
 
 .input_fields .test_presets li strong,
+.test_presets li b,
 .test_presets li strong,
 .test_preset_profile strong {
     text-transform: uppercase;
     font-weight: 500;
     font-size: 0.875rem;
+}
+.test_presets li b {
+    color: #fbe076;
 }
 
 .test_preset_profile strong {

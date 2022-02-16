@@ -43,6 +43,9 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
+
+
+
 if (!defined('EMBED')) {
 ?>
 <?php
@@ -244,7 +247,11 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 || !$url ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
-            echo "<ul class=\"header_data_urltime\"><li><strong>URL: </strong>";
+            echo "<ul class=\"header_data_urltime\">";
+            if ( $test['testinfo']['label'] ) {
+                echo '<li><strong>Label:</strong> <span>'.$test['testinfo']['label'].'</span></li>';
+            }
+            echo "<li><strong>URL: </strong>";
             if (GetSetting('nolinks')) {
                 echo "<span class=\"page-tested\">$shortUrl</span>";
             } else {
@@ -330,11 +337,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             <div class="test_presets">
                 <ul>
                     <?php 
-                    if ( $test['testinfo']['label'] ) {
-                        echo '<li><strong>'.$test['testinfo']['label'].'</strong>';
-                    } else {
-                        echo '<li><strong>'.$device.'</strong>';
-                    }
+                    
+                    echo '<li><b>Settings:</b> <strong>'.$device.'</strong>';
+                    
                     
                     //browser and version
                     if (isset($browser)){

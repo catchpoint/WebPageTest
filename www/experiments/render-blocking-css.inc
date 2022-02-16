@@ -16,7 +16,7 @@
                     'title' => 'Inline external stylesheets.',
                     "desc" => 'This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.',
                     "expvar" => 'inline',
-                    "expval" => implode(",", $blockingCSSReqs)
+                    "expval" => $blockingCSSReqs
                 ]
             ),
             false

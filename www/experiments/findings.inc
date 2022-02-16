@@ -57,7 +57,6 @@ if( $experiment ){
     echo '<h2>Experiment Results!</h2>';
 
     if( isset( $metaInfo ) ){
-        $metaInfo = json_decode( $metaInfo );
 
         echo "<p>Experiment URLs: 
             <a href=\"". $originalTestHref ."\">Source Test</a>

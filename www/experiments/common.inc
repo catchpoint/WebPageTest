@@ -32,22 +32,44 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 				<h5>{$exp->title}</h5>
 				<p>{$exp->desc}</p>
 				</div>
-				<div class="experiment_description_go">
 				EOT;
 
 			if( $exp->expval ){
+				if( count($exp->expval) ){
+					$out .= '<div class="experiment_assets"><p>Include in Experiment:</p>';
+					$out .= '<ol>';
+					foreach($exp->expval as $val){
+						
+						if( count($exp->expval) > 1 ){
+						$out .= <<<EOT
+							<li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$val}</label></li>
+							EOT;
+						}
+						else {
+							$out .= <<<EOT
+							<li><input type="hidden" name="{$exp->expvar}[]" value="{$val}">{$val}</li>
+							EOT;
+						}
+					}
+					$out .= '</ol>';
+					$out .= '</div>';
+				}
+				
 				$out .= <<<EOT
+				<div class="experiment_description_go">
 				<label><input type="checkbox" name="recipes[]" value="{$exp->expvar}">Run This Experiment!</label>
-				<input type="hidden" name="{$exp->expvar}" value="{$exp->expval}">
+				</div>
 				EOT;
 			}
 			else {
 				$out .= <<<EOT
-				<label><input type="checkbox" name="{$exp->expvar}">Run This Experiment!</label>
+				<div class="experiment_description_go">
+				<label><input type="checkbox" name="{$exp->expvar[0]}">Run This Experiment!</label>
+				</div>
 				EOT;
 			}
-			
-			$out .= '</div></li>';
+
+			$out .= '</li>';
 				
 		}
 	}

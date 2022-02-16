@@ -16,14 +16,14 @@ if( count($blockingFontCSSReqs) > 0 ){
         //     'title' => 'Inline font stylesheets.',
         //     "desc" => 'This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps.',
         //     "expvar" => 'inline',
-        //     "expval" => implode(",", $blockingFontCSSReqs)
+        //     "expval" => $blockingFontCSSReqs
         //   ]
         // ,
           (object) [
               'title' => 'Load Font CSS files asynchronously.',
               "desc" => 'This experiment will load these stylesheets in a way that allows the page to begin rendering while they are still loading. Fonts will appear when they arrive.',
               "expvar" => 'asynccss',
-              "expval" => implode(",", $blockingFontCSSReqs)
+              "expval" => $blockingFontCSSReqs
             ]
       ),
       false
