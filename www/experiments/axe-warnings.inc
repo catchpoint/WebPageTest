@@ -1,6 +1,8 @@
 <?php 
 
-if( isset( $axe ) && count($axe['violations']) ){
+if( isset( $axe ) ) {
+    
+    if( count($axe['violations']) ){
     $violations = $axe['violations'];
     $num_violations = count($violations);
     $num_critical = 0;
@@ -44,6 +46,16 @@ if( isset( $axe ) && count($axe['violations']) ){
 
 
     //print_r($violations);
+}
+else {
+    echo observationHTML(
+        "No Accessiblity Issues were Detected in this Page",
+        "Axe found no accessibility issues. ",
+        array(),
+        array(),
+        true
+    );
+}
 }
 
 

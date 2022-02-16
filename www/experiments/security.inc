@@ -1,5 +1,6 @@
 <?php 
 
+
 echo observationHTML(
     "Several security vulnerabilies found by Snyk",
     "Snyk has found 2 security vulnerabilities, 1 high priority, and 1 low.",
