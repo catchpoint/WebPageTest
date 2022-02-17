@@ -370,12 +370,12 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks {
-    margin: 2em 0 4rem 0rem;
+    margin: 1em 0 2rem 0rem;
 }
 
 .experiments_bottlenecks>ol {
     list-style: none;
-    margin: 1em 0;
+    margin: 0;
     padding: 0;
     counter-reset: bottlenecks;
 }
@@ -384,6 +384,10 @@ p.grade_summary {
     font-size: 1.1875rem;
     font-weight: 900;
     cursor: pointer;
+    /* border-bottom: 1px solid #ddd; */
+    /* border-top: 1px solid #ddd; */
+    /* padding: .6em 0; */
+    margin: 0;
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-good>details>summary {
@@ -428,6 +432,14 @@ p.grade_summary {
 .experiments_bottlenecks>ol>li {
     counter-increment: bottlenecks;
     margin-bottom: 1em;
+    border-bottom: 1px solid #eee;
+    /* border-top: 1px solid #ddd; */
+    padding: 1em 0;
+    margin: 0;
+}
+
+.experiments_bottlenecks>ol>li:last-child {
+    border-bottom: none;
 }
 
 .experiments_bottlenecks>p {
