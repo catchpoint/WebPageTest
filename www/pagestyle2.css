@@ -386,7 +386,7 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-good>details>summary {
-    font-weight: 500;
+    /* font-weight: 500; */
 }
 
 .experiments_bottlenecks img {
@@ -398,14 +398,14 @@ p.grade_summary {
 }
 
 .experiments_details_body {
-    padding: 1em 1em 2rem 4.5em;
+    padding: 1em 1em 1rem 4.5em;
 }
 
 .experiments_details_desc {}
 
 .experiments_details_desc p {
     flex: 1 1 40%;
-    font-size: 1.1em;
+    /* font-size: 1.1em; */
 }
 
 .experiments_details_body ol {
@@ -414,11 +414,11 @@ p.grade_summary {
 }
 
 .experiments_details_body code {
-    font-size: 1em;
-    background: #fafafa;
-    padding: .3em;
-    border-radius: 3px;
-    display: inline-block;
+    /* font-size: 1em; */
+    /* background: #fafafa; */
+    /* padding: .3em; */
+    /* border-radius: 3px; */
+    /* display: inline-block; */
 }
 
 .experiments_bottlenecks>ol>li {
@@ -426,9 +426,9 @@ p.grade_summary {
     margin-bottom: 1em;
 }
 
-.experiments_bottlenecks p {
+.experiments_bottlenecks>p {
     font-size: .9em;
-    margin: .5em 0 1em;
+    margin: .5em 0 0;
     max-width: 40em;
     line-height: 1.4;
 }
@@ -476,14 +476,16 @@ h4.experiments_list_hed {
     background: #fff;
     margin: 1rem 0;
     border-radius: .3em;
+    display: flex;
 }
 
-.experiment_description {
-    display: flex;
-    gap: 2rem;
-    justify-content: space-between;
-    align-items: flex-start;
+.experiment_description code {
+    font-size: 1.2em;
     word-break: break-all;
+    /* background: #eee; */
+    padding: .2em .4em;
+    /* color: #1e1e1e; */
+    font-weight: 500;
 }
 
 .experiment_description_text h5 {
@@ -499,6 +501,60 @@ h4.experiments_list_hed {
     flex: 1 0 45%;
 }
 
+.experiment_description_text h6 {
+    font-size: .95em;
+    font-weight: 900;
+    color: #444;
+    margin: 1em 0 0;
+    text-transform: capitalize;
+}
+
+.experiment_description_text h6 a {
+    font-weight: 500;
+    padding-right: 1.6em;
+    margin-left: .5em;
+    background: url(/images/icon-external.svg) right center no-repeat;
+}
+
+.experiment_description_text h6 span {
+    font-size: .7em;
+    padding: .2em .4em;
+    border: 1px solid #666;
+    border-radius: .2rem;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+h6.recommendation_level-cri#ffffffpan {
+    border-color: #e33535;
+}
+
+h6.recommendation_level-serious span {
+    border-color: #e37f35;
+}
+
+h6.recommendation_level-moderate span {
+    border-color: #f1c92e;
+}
+
+h6.recommendation_level-minor span {
+    border-color: #2a3d64;
+}
+
+.experiment_description_text li,
+.experiment_description_text p {
+    font-size: .9em;
+    line-height: 1.5;
+    color: #444;
+    margin: .0 0 1em;
+    max-width: 74em;
+}
+
+.experiment_description_text li {
+    list-style: disc;
+    margin-left: 2em;
+}
+
 .experiment_assets {
     flex: 1 1 25%;
     color: #444;
@@ -510,7 +566,8 @@ h4.experiments_list_hed {
 }
 
 .experiment_assets li {
-    font-size: .9rem;
+    font-size: .8rem;
+    word-break: break-all;
 }
 
 .experiment_description_text p {

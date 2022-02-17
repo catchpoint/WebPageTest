@@ -30,17 +30,36 @@ if( isset( $axe ) ) {
         array_push($warningsArr, $v['impact'] . ": " . $v['help']);
     }
 
-    //$violations_serious = array_map(findSerious, $violations);
+    $recs = array();
+    foreach($violations as $v){
+        
+        $thisRec = '<h6 class="recommendation_level-'. $v['impact'] .'"><span>'. $v['impact'] .'</span> ' . $v['help'] .  ' <a href=\"'. $v['helpUrl'] .'\">More info</a></h6>';
+        if( $v["nodes"] && count($v["nodes"]) ){
+            //print_r($v["nodes"])
+            $thisRec .=  '<ul>';
+            foreach($v["nodes"] as $vnode){
+                $thisRec .=  '<li>' . $vnode["failureSummary"] . '<code>' . htmlentities($vnode["html"]) . '</code></li>';
+            }
+            $thisRec .=  '</ul>';
+        }
+     
+        array_push($recs, $thisRec);
+    }
 
     echo observationHTML(
-        "Accessiblity Issues were Detected in this Page",
+        "Accessiblity Issues were Detected",
         "Axe found $num_violations accessibility issues: " . 
         ($num_critical > 0 ? "$num_critical critical, " : '') .
         ($num_serious > 0 ? "$num_serious serious, " : '') .
         ($num_moderate > 0 ? "$num_moderate moderate, " : '') .
         ($num_minor > 0 ? "$num_minor minor " : ''),
-        $warningsArr,
         array(),
+        array(
+            (object) [
+                'title' => 'Make the following changes to improve accessibility:',
+                "desc" => implode($recs)
+            ]
+        ),
         false
     );
 

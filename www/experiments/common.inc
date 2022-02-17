@@ -23,23 +23,29 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 	$out .= "</div>";
 
 	if( count($relevantExperiments) > 0 ){
-		$out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4><ul class=\"experiments_list\">";
+		if( $relevantExperiments[0]->expvar ){
+			$out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
+		}
+		else {
+			$out .= "<h4 class=\"experiments_list_hed\">Relevant Recommendations</h4>";
+		}
+
+		$out .= "<ul class=\"experiments_list\">";
 
 		foreach( $relevantExperiments as $exp ) {
 			$out .= <<<EOT
 				<li class="experiment_description">
 				<div class="experiment_description_text">
 				<h5>{$exp->title}</h5>
-				<p>{$exp->desc}</p>
-				</div>
-				EOT;
+				{$exp->desc}
+			EOT;
 
-			if( $exp->expval ){
+
+			if( $exp->expvar && $exp->expval ){
 				if( count($exp->expval) ){
-					$out .= '<div class="experiment_assets"><p>Include in Experiment:</p>';
+					$out .= '<div class="experiment_assets"><p>Applied for:</p>';
 					$out .= '<ol>';
 					foreach($exp->expval as $val){
-						
 						if( count($exp->expval) > 1 ){
 						$out .= <<<EOT
 							<li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$val}</label></li>
@@ -54,15 +60,18 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 					$out .= '</ol>';
 					$out .= '</div>';
 				}
-				
-				$out .= <<<EOT
-				<div class="experiment_description_go">
-				<label><input type="checkbox" name="recipes[]" value="{$exp->expvar}">Run This Experiment!</label>
-				</div>
-				EOT;
+				if( $exp->expvar ){
+					$out .= <<<EOT
+					</div>
+					<div class="experiment_description_go">
+					<label><input type="checkbox" name="recipes[]" value="{$exp->expvar}">Run This Experiment!</label>
+					</div>
+					EOT;
+				}
 			}
-			else {
+			else if( $exp->expvar && !$exp->expval ) {
 				$out .= <<<EOT
+				</div>
 				<div class="experiment_description_go">
 				<label><input type="checkbox" name="{$exp->expvar[0]}">Run This Experiment!</label>
 				</div>

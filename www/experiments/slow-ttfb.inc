@@ -13,15 +13,9 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
         array(
             (object) [
                 'title' => ' Check for accuracy! Preserve original User Agent string in re-run',
-                "desc" => 'This experiment will remove the WPT-modified User Agent string and use the default string that the browser would otherwise send.',
+                "desc" => '<p>This experiment will remove the WPT-modified User Agent string and use the default string that the browser would otherwise send.</p>',
                 "expvar" => array('keepua')
-            ]//,
-            
-            # (object) [
-            #         'title' => 'Use a CDN',
-            #         "desc" => 'All WPT experiments run over a CDN, but we preserve your original TTFB by default to demonstrate non-CDN improvements. This experiment will override that and show how your TTFB will change when hosted on a worldwide CDN.',
-            #         "expvar" => 'ShowCDNTiming'
-            #         ]
+            ]
         ),
         false
     );

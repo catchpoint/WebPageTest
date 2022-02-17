@@ -14,7 +14,7 @@
             array(
                 (object) [
                     'title' => 'Inline external stylesheets.',
-                    "desc" => 'This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.',
+                    "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.</p>',
                     "expvar" => 'inline',
                     "expval" => $blockingCSSReqs
                 ]

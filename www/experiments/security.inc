@@ -11,13 +11,13 @@ echo observationHTML(
     array(
         (object) [
             'title' => 'Add strict transport security.',
-            "desc" => 'This experiment will add a blah blah to your HTML document, causing browsers to  blah blah',
+            "desc" => '<p>This experiment will add a blah blah to your HTML document, causing browsers to  blah blah</p>',
             "expvar" => 'preload',
             "expval" => $lcpSource . "|as_image"
         ],
         (object) [
             'title' => 'Add X Content Type Options',
-            "desc" => 'This experiment will add a blah blah to your HTML document, causing browsers to  blah blah',
+            "desc" => '<p>This experiment will add a blah blah to your HTML document, causing browsers to  blah blah</p>',
             "expvar" => 'addimportance',
             "expval" => $lcpSource . "|i_high"
         ]

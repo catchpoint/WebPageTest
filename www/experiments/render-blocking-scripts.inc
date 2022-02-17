@@ -16,7 +16,7 @@ if( count($blockingJSReqs) > 0 ){
         array(
             (object) [
                 'title' => 'Defer all render-blocking scripts.',
-                "desc" => 'This experiment will add a defer attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a>',
+                "desc" => '<p>This experiment will add a defer attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a></p>',
                 "expvar" => 'deferjs',
                 "expval" => $blockingJSReqs
                 ]
