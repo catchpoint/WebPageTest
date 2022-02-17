@@ -537,7 +537,8 @@ h4.experiments_list_hed-recs {
     text-transform: capitalize;
 }
 
-.experiment_description_text h6 a {
+.experiment_description_text h6 a,
+.experiment_description_text li a.external {
     font-weight: 500;
     padding-right: 1.6em;
     margin-left: .5em;
