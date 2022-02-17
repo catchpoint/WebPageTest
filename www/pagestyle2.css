@@ -383,6 +383,7 @@ p.grade_summary {
 .experiments_bottlenecks>ol>li>details>summary {
     font-size: 1.1875rem;
     font-weight: 900;
+    cursor: pointer;
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-good>details>summary {
@@ -401,7 +402,10 @@ p.grade_summary {
     padding: 1em 1em 1rem 4.5em;
 }
 
-.experiments_details_desc {}
+.experiments_details_desc>ul li {
+    list-style: disc;
+    margin-left: 1em;
+}
 
 .experiments_details_desc p {
     flex: 1 1 40%;
@@ -463,7 +467,7 @@ h4.experiments_list_hed {
     font-size: 1.4em;
     padding-bottom: 0;
     padding-left: 2.5em;
-    background: url(/images/src/icon_science_bubbling.svg) left center no-repeat;
+    background: url(/images/src/icon_science_bubbling.svg) left bottom no-repeat;
     background-size: 1.6em;
     min-height: em;
     padding: 0em 0 0 1.7em;
@@ -472,6 +476,7 @@ h4.experiments_list_hed {
 
 h4.experiments_list_hed-recs {
     background-image: url(/images/src/icon_code_rec.svg);
+    background-position: left 0 bottom -3px;
 }
 
 .experiments_list {
@@ -481,12 +486,13 @@ h4.experiments_list_hed-recs {
 }
 
 .experiments_list>li {
-    border: 1px solid #c8d4c3;
-    padding: 1.5rem;
+    border: 1px solid #eee;
+    padding: 1rem 1.5rem;
     background: #fff;
-    margin: 1rem 0;
+    margin: .8rem 0;
     border-radius: .3em;
     display: flex;
+    background: #fafafa;
 }
 
 .experiment_description code {

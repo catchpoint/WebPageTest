@@ -14,11 +14,11 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 	$out .= "<div class=\"experiments_details_desc\">";
 	$out .= "<p>$bottleneckDesc</p>";
 	if( count($bottleneckExamples) > 0 ){
-		$out .= "<ol>";
+		$out .= "<ul>";
 		foreach( $bottleneckExamples as $ex ) {
 			$out .= "<li><code>$ex</code></li>";
 		}
-		$out .= "</ol>";
+		$out .= "</ul>";
 	}
 	$out .= "</div>";
 
