@@ -199,6 +199,7 @@ if (ValidateTestId($id)) {
 
       // delete any .test files
       $files = scandir($testPath);
+      $files = $files ?: [];
       foreach ($files as $file)
         if (preg_match('/.*\.test$/', $file))
           unlink("$testPath/$file");
@@ -345,6 +346,7 @@ function RemoveSensitiveHeaders($file) {
 function CompressTextFiles($testPath) {
   global $ini;
   $f = scandir($testPath);
+  $f = $f ?: [];
   foreach( $f as $textFile ) {
     if ($textFile != 'test.log') {
       logMsg("Checking $textFile\n");
