@@ -476,7 +476,7 @@ h4.experiments_list_hed {
     font-weight: 300;
     margin: 1.3em 0 0;
     color: #4E8F37;
-    font-size: 1.4em;
+    font-size: 1.3em;
     padding-bottom: 0;
     padding-left: 2.5em;
     background: url(/images/src/icon_science_bubbling.svg) left bottom no-repeat;
@@ -518,11 +518,11 @@ h4.experiments_list_hed-recs {
 
 .experiment_description_text h5 {
     font-size: 1rem;
-    color: #383838;
+    color: #2a3c64;
     margin-bottom: 0;
     padding: 0;
-    font-weight: 700;
-    margin: 0;
+    font-weight: 900;
+    margin: 0 0 1em;
 }
 
 .experiment_description_text {
@@ -544,28 +544,32 @@ h4.experiments_list_hed-recs {
     background: url(/images/icon-external.svg) right center no-repeat;
 }
 
-.experiment_description_text h6 span {
+.experiment_description_text span {
     font-size: .7em;
     padding: .2em .4em;
     border: 1px solid #666;
     border-radius: .2rem;
     text-transform: uppercase;
     font-weight: 500;
+    min-width: 10em;
 }
 
-h6.recommendation_level-cri#ffffffpan {
+.experiment_description_text .recommendation_level-critical span,
+.experiment_description_text .recommendation_level-high span {
     border-color: #e33535;
 }
 
-h6.recommendation_level-serious span {
+.experiment_description_text .recommendation_level-serious span,
+.experiment_description_text .recommendation_level-medium span {
     border-color: #e37f35;
 }
 
-h6.recommendation_level-moderate span {
+.experiment_description_text .recommendation_level-moderate span,
+.experiment_description_text .recommendation_level-low span {
     border-color: #f1c92e;
 }
 
-h6.recommendation_level-minor span {
+.experiment_description_text .recommendation_level-minor span {
     border-color: #2a3d64;
 }
 
@@ -581,6 +585,8 @@ h6.recommendation_level-minor span {
 .experiment_description_text li {
     list-style: disc;
     margin-left: 2em;
+    margin: .5em 0 0 2em;
+    text-transform: capitalize;
 }
 
 .experiment_assets {

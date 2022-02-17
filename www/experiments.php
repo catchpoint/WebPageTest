@@ -202,7 +202,7 @@ $page_description = "Website performance test result$testLabel.";
                     <ol>
                     <?php
                     include __DIR__ . '/experiments/security.inc';
-                    print_r($rawResultData['jsLibsVulns']);
+                    
                     ?>
                 </ol>
                     
