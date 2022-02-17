@@ -27,7 +27,7 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 			$out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
 		}
 		else {
-			$out .= "<h4 class=\"experiments_list_hed\">Relevant Recommendations</h4>";
+			$out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Recommendations</h4>";
 		}
 
 		$out .= "<ul class=\"experiments_list\">";
@@ -43,7 +43,7 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 
 			if( $exp->expvar && $exp->expval ){
 				if( count($exp->expval) ){
-					$out .= '<div class="experiment_assets"><p>Applied for:</p>';
+					$out .= '<details class="experiment_assets"><summary>Assets included in experiment:</summary>';
 					$out .= '<ol>';
 					foreach($exp->expval as $val){
 						if( count($exp->expval) > 1 ){
@@ -58,7 +58,7 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 						}
 					}
 					$out .= '</ol>';
-					$out .= '</div>';
+					$out .= '</details>';
 				}
 				if( $exp->expvar ){
 					$out .= <<<EOT

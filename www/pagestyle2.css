@@ -457,11 +457,21 @@ p.grade_summary {
 }
 
 h4.experiments_list_hed {
-    font-weight: 900;
-    margin: 0;
+    font-weight: 300;
+    margin: 1.3em 0 0;
     color: #4E8F37;
-    font-size: 1.1em;
+    font-size: 1.4em;
     padding-bottom: 0;
+    padding-left: 2.5em;
+    background: url(/images/src/icon_science_bubbling.svg) left center no-repeat;
+    background-size: 1.6em;
+    min-height: em;
+    padding: 0em 0 0 1.7em;
+    text-transform: capitalize;
+}
+
+h4.experiments_list_hed-recs {
+    background-image: url(/images/src/icon_code_rec.svg);
 }
 
 .experiments_list {
@@ -556,13 +566,14 @@ h6.recommendation_level-minor span {
 }
 
 .experiment_assets {
-    flex: 1 1 25%;
-    color: #444;
+    margin: .5em 0 0;
+    color: #555;
 }
 
-.experiment_assets p {
+.experiment_assets summary {
     font-weight: 900;
     margin: 0;
+    font-size: .9em;
 }
 
 .experiment_assets li {
