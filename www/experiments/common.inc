@@ -16,7 +16,7 @@ function observationHTML( $bottleneckTitle, $bottleneckDesc, $bottleneckExamples
 	if( count($bottleneckExamples) > 0 ){
 		$out .= "<ul>";
 		foreach( $bottleneckExamples as $ex ) {
-			$out .= "<li><code>$ex</code></li>";
+			$out .= "<li>$ex</li>";
 		}
 		$out .= "</ul>";
 	}

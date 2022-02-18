@@ -201,6 +201,7 @@ $page_description = "Website performance test result$testLabel.";
                 <div class="experiments_bottlenecks">
                     <ol>
                     <?php
+                    include __DIR__ . '/experiments/render-blocking-3rd-party.inc';
                     include __DIR__ . '/experiments/security-jslibs.inc';
                     
                     ?>

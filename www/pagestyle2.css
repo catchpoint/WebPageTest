@@ -587,7 +587,6 @@ h4.experiments_list_hed-recs {
     list-style: disc;
     margin-left: 2em;
     margin: .5em 0 0 2em;
-    text-transform: capitalize;
 }
 
 .experiment_assets {

@@ -147,6 +147,13 @@ use WebPageTest\RateLimiter;
             if (isset($req_block)) {
               $test['block'] .= ' ' . $req_block;
             }
+            if (isset($req_spof)) {
+              // if spof is passed as an array, join it by \n
+              if( count($req_spof )){
+                $req_spof = implode("\n", $req_spof);
+              }
+              $test['spof'] .= ' ' . $req_spof;
+            }
             if (isset($req_keepua)) {
               $test['keepua'] = 1;
             }
