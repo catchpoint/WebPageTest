@@ -28,7 +28,7 @@ use WebPageTest\RequestContext;
 
   echo '<pre>';
   foreach (new APCUIterator('/rladdr_per_month/') as $val) {
-    echo "$val[key]: $val[value]\n";
+    echo "$val[key]: " . var_dump($val['value']) . "\n";
   }
   echo '</pre>';
   exit();
