@@ -33,12 +33,12 @@ if( isset( $axe ) ) {
     $recs = array();
     foreach($violations as $v){
         
-        $thisRec = '<h6 class="recommendation_level-'. $v['impact'] .'"><span>'. $v['impact'] .'</span> ' . $v['help'] .  ' <a href=\"'. $v['helpUrl'] .'\">More info</a></h6>';
+        $thisRec = '<h6 class="recommendation_level-'. $v['impact'] .'"><span>'. $v['impact'] .'</span> ' . htmlentities($v['help']) .  ' <a href=\"'. $v['helpUrl'] .'\">More info</a></h6>';
         if( $v["nodes"] && count($v["nodes"]) ){
             //print_r($v["nodes"])
             $thisRec .=  '<ul>';
             foreach($v["nodes"] as $vnode){
-                $thisRec .=  '<li>' . $vnode["failureSummary"] . '<code>' . htmlentities($vnode["html"]) . '</code></li>';
+                $thisRec .=  '<li>' . htmlentities($vnode["failureSummary"]) . '<code>' . htmlentities($vnode["html"]) . '</code></li>';
             }
             $thisRec .=  '</ul>';
         }
