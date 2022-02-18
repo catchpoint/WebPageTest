@@ -16,7 +16,9 @@ use WebPageTest\RequestContext;
     exit();
   }
 
-  print_r(apcu_cache_info());
+  echo '<pre>';
+  echo print_r(apcu_cache_info());
+  echo '</pre>';
   exit();
 
 
