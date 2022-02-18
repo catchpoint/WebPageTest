@@ -16,8 +16,10 @@ use WebPageTest\RequestContext;
     exit();
   }
 
+  $info = apcu_cache_info();
+  $list = $info['cache_list'];
   echo '<pre>';
-  echo print_r(apcu_cache_info());
+  echo $list;
   echo '</pre>';
   exit();
 
