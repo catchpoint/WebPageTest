@@ -12,7 +12,7 @@ class CheckMonthlyRateLimit {
   }
 
   function check (?int $run_count) : bool {
-    $times_to_add = $run_count ? $run_count : 1;
+    $times_to_add = $run_count ?? 1;
     $bucket = $this->fetch_bucket();
     if (count($bucket) >= $this->limit) {
       return false;
