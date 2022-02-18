@@ -19,9 +19,12 @@ use WebPageTest\RequestContext;
   $cache_info = apcu_cache_info();
   $list = $cache_info['cache_list'];
   $infos = array_map(fn($val) => $val['info'], $list);
+  $filtered = array_filter($infos, function($k) {
+    return preg_match('/rladdr_per_month/', $k);
+  });
 
   echo '<pre>';
-  echo var_dump($infos);
+  echo var_dump($filtered);
   echo '</pre>';
   exit();
 
