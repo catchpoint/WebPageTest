@@ -16,10 +16,12 @@ use WebPageTest\RequestContext;
     exit();
   }
 
-  $info = apcu_cache_info();
-  $list = $info['cache_list'];
+  $cache_info = apcu_cache_info();
+  $list = $cache_info['cache_list'];
+  $infos = array_map(fn($val) => $val['info'], $list);
+
   echo '<pre>';
-  echo var_dump($list);
+  echo var_dump($infos);
   echo '</pre>';
   exit();
 
