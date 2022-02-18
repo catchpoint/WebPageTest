@@ -19,7 +19,7 @@ use WebPageTest\RequestContext;
   $info = apcu_cache_info();
   $list = $info['cache_list'];
   echo '<pre>';
-  echo $list;
+  echo var_dump($list);
   echo '</pre>';
   exit();
 
