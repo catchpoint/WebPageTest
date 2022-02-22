@@ -41,7 +41,7 @@ if ($request_method === 'POST') {
 
     header("Location: {$redirect_uri}");
     exit();
-} else if ($request_method === 'GET') {
+} elseif ($request_method === 'GET') {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(35));
 
 

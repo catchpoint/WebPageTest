@@ -242,7 +242,7 @@ if ($supportsSaml && !$supportsCPAuth) {
   $isFirstVisit = false;
   $owner = GetSamlAccount();
   $saml_user->setOwnerId($owner);
-} 
+}
 if (!$owner) {
   if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
     $isFirstVisit = false;
