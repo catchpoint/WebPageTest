@@ -174,30 +174,30 @@ function SelectRequest(step, request) {
             details += '<b>Request Start: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
         if (IsValidDuration(r['dns_ms'])) {
             details += '<b>DNS Lookup: </b>' + htmlEncode(r['dns_ms']) + ' ms<br>';
-            totalConnectionTime += parseFloat(r['dns_ms']);
+            totalConnectionTime += Number(r['dns_ms']);
         } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
             var dnsTime = r['dns_end'] - r['dns_start'];
-            totalConnectionTime+= parseFloat(dnsTime);
+            totalConnectionTime+= Number(dnsTime);
             details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
         }
         if (IsValidDuration(r['connect_ms'])) {
             details += '<b>Initial Connection: </b>' + htmlEncode(r['connect_ms']) + ' ms<br>';
-            totalConnectionTime+= parseFloat(r['connect_ms']);
+            totalConnectionTime+= Number(r['connect_ms']);
             if (r['is_secure'] !== undefined && r['is_secure'] && IsValidDuration(r['ssl_ms'])) {
                 details += '<b>SSL Negotiation: </b>' + htmlEncode(r['ssl_ms']) + ' ms<br>';
-                totalConnectionTime+= parseFloat(r['ssl_ms']);
+                totalConnectionTime+= Number(r['ssl_ms']);
             }
         } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
             var connectTime = r['connect_end'] - r['connect_start'];
-            totalConnectionTime+= parseFloat(connectTime);
+            totalConnectionTime+= Number(connectTime);
             details += '<b>Initial Connection: </b>' + connectTime + ' ms<br>';
             if( r['ssl_end'] !== undefined && r['ssl_start'] !== undefined && r['ssl_end'] > 0 ) {
                 var sslTime = r['ssl_end'] - r['ssl_start'];
-                totalConnectionTime+= parseFloat(r['sslTime']);
+                totalConnectionTime+= Number(r['sslTime']);
                 details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
             }
         }
-        if (IsValidDuration(totalConnectionTime) && totalConnectionTime > 0) {
+        if (!Number.isNaN(totalConnectionTime) && totalConnectionTime > 0) {
             details += '<b>Total Connection Time: </b>' + htmlEncode(totalConnectionTime) + ' ms<br>';
         }
         if (IsValidDuration(r['ttfb_ms'])) {
