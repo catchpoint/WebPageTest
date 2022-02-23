@@ -95,6 +95,7 @@ function SelectRequest(step, request) {
     }
     if (wptRequestData[stepLabel][request - 1] !== undefined) {
         var r = wptRequestData[stepLabel][request - 1];
+        var totalConnectionTime = 0;
         json = JSON.stringify(r, null, 4);
         const PRIORITY_MAP = {
             'VeryHigh': 'Highest',
@@ -121,6 +122,7 @@ function SelectRequest(step, request) {
         }
         if (r['documentURL'] !== undefined)
             details += '<b>Document: </b>' + htmlEncode(r['documentURL']) + '<br>';
+        details += '<h3>Request</h3>';
         if (r['host'] !== undefined)
             details += '<b>Host: </b>' + htmlEncode(r['host']) + '<br>';
             experiment += '<li><a href="#" data-block-domain="' + htmlEncode(r['host']) + '">Block Request Domain</a></li>';
@@ -158,44 +160,6 @@ function SelectRequest(step, request) {
             details += '<b>Request ID: </b>' + htmlEncode(r['request_id']) + '<br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
-        if (r['created'] !== undefined)
-            details += '<b>Discovered: </b>' + (r['created'] / 1000.0).toFixed(3) + ' s<br>';
-        if (r['load_start'] !== undefined)
-            details += '<b>Request Start: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
-        if (IsValidDuration(r['dns_ms'])) {
-            details += '<b>DNS Lookup: </b>' + htmlEncode(r['dns_ms']) + ' ms<br>';
-        } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
-            var dnsTime = r['dns_end'] - r['dns_start'];
-            details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
-        }
-        if (IsValidDuration(r['connect_ms'])) {
-            details += '<b>Initial Connection: </b>' + htmlEncode(r['connect_ms']) + ' ms<br>';
-            if (r['is_secure'] !== undefined && r['is_secure'] && IsValidDuration(r['ssl_ms'])) {
-                details += '<b>SSL Negotiation: </b>' + htmlEncode(r['ssl_ms']) + ' ms<br>';
-            }
-        } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
-            var connectTime = r['connect_end'] - r['connect_start'];
-            details += '<b>Initial Connection: </b>' + connectTime + ' ms<br>';
-            if( r['ssl_end'] !== undefined && r['ssl_start'] !== undefined && r['ssl_end'] > 0 ) {
-                var sslTime = r['ssl_end'] - r['ssl_start'];
-                details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
-            }
-        }
-        if (IsValidDuration(r['ttfb_ms'])) {
-            details += '<b>Time to First Byte: </b>' + htmlEncode(r['ttfb_ms']) + ' ms<br>';
-        }
-        if (IsValidDuration(r['download_ms']))
-            details += '<b>Content Download: </b>' + htmlEncode(r['download_ms']) + ' ms<br>';
-        if (r['bytesIn'] !== undefined)
-            details += '<b>Bytes In (downloaded): </b>' + NumBytesAsDisplayString(r['bytesIn']) + '<br>';
-        if (r['objectSizeUncompressed'] !== undefined)
-            details += '<b>Uncompressed Size: </b>' + NumBytesAsDisplayString(r['objectSizeUncompressed']) + '<br>';
-        if (r['certificate_bytes'] !== undefined && r['certificate_bytes'] > 0)
-            details += '<b>Certificates (downloaded): </b>' + r['certificate_bytes'] + ' B<br>';
-        if (r['bytesOut'] !== undefined)
-            details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
-        if (r['cpuTime'] !== undefined && r['cpuTime'] > 0)
-            details += '<b>CPU Time: </b>' + r['cpuTime'] + ' ms<br>';
         if (r['renderBlocking'] !== undefined) {
             details += '<b>Render Blocking Status: </b>' + htmlEncode(r['renderBlocking']) + '<br>';
 
@@ -203,7 +167,56 @@ function SelectRequest(step, request) {
                 experiment += '</ul><ul class="experiments"><li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
             }
         }
-            
+        details += '<h3>Timing</h3>';
+        if (r['created'] !== undefined)
+            details += '<b>Discovered: </b>' + (r['created'] / 1000.0).toFixed(3) + ' s<br>';
+        if (r['load_start'] !== undefined)
+            details += '<b>Request Start: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
+        if (IsValidDuration(r['dns_ms'])) {
+            details += '<b>DNS Lookup: </b>' + htmlEncode(r['dns_ms']) + ' ms<br>';
+            totalConnectionTime += parseFloat(r['dns_ms']);
+        } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
+            var dnsTime = r['dns_end'] - r['dns_start'];
+            totalConnectionTime+= parseFloat(dnsTime);
+            details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
+        }
+        if (IsValidDuration(r['connect_ms'])) {
+            details += '<b>Initial Connection: </b>' + htmlEncode(r['connect_ms']) + ' ms<br>';
+            totalConnectionTime+= parseFloat(r['connect_ms']);
+            if (r['is_secure'] !== undefined && r['is_secure'] && IsValidDuration(r['ssl_ms'])) {
+                details += '<b>SSL Negotiation: </b>' + htmlEncode(r['ssl_ms']) + ' ms<br>';
+                totalConnectionTime+= parseFloat(r['ssl_ms']);
+            }
+        } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
+            var connectTime = r['connect_end'] - r['connect_start'];
+            totalConnectionTime+= parseFloat(connectTime);
+            details += '<b>Initial Connection: </b>' + connectTime + ' ms<br>';
+            if( r['ssl_end'] !== undefined && r['ssl_start'] !== undefined && r['ssl_end'] > 0 ) {
+                var sslTime = r['ssl_end'] - r['ssl_start'];
+                totalConnectionTime+= parseFloat(r['sslTime']);
+                details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
+            }
+        }
+        if (IsValidDuration(totalConnectionTime) && totalConnectionTime > 0) {
+            details += '<b>Total Connection Time: </b>' + htmlEncode(totalConnectionTime) + ' ms<br>';
+        }
+        if (IsValidDuration(r['ttfb_ms'])) {
+            details += '<b>Time to First Byte: </b>' + htmlEncode(r['ttfb_ms']) + ' ms<br>';
+        }
+        if (IsValidDuration(r['download_ms']))
+            details += '<b>Content Download: </b>' + htmlEncode(r['download_ms']) + ' ms<br>';
+        if (r['cpuTime'] !== undefined && r['cpuTime'] > 0)
+            details += '<b>CPU Time: </b>' + r['cpuTime'] + ' ms<br>';
+        details += '<h3>Size</h3>';
+
+        if (r['bytesIn'] !== undefined)
+            details += '<b>Bytes In (downloaded): </b>' + NumBytesAsDisplayString(r['bytesIn']) + '<br>';
+        if (r['objectSizeUncompressed'] !== undefined)
+            details += '<b>Uncompressed Size: </b>' + NumBytesAsDisplayString(r['objectSizeUncompressed']) + '<br>';
+        if (r['certificate_bytes'] !== undefined && r['certificate_bytes'] > 0)
+            details += '<b>Certificates (downloaded): </b>' + r['certificate_bytes'] + ' B<br>';
+        if (r['bytesOut'] !== undefined)
+            details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';            
             
         var psPageData = wptPageData[stepLabel] !== undefined ? wptPageData[stepLabel]['psPageData'] : undefined;
         if (psPageData !== undefined &&
