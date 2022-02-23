@@ -123,6 +123,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
  * Output XML row for locations
  */
 function outputXMLRow($location) {
+  $name = $location['location'];
   echo "<location>\n";
   echo "<id>$name</id>\n";
   foreach ($location as $key => &$value) {
@@ -150,6 +151,7 @@ function outputXMLRow($location) {
  */
 function outputHTMLRow($location) {
   $error = '';
+  $name = $location['location'];
   if (isset($location['PendingTests']['Total']) && $location['PendingTests']['Total'] > 1)
     $error = ' warning';
   if (!isset($location['status']) || $location['status'] == 'OFFLINE')
