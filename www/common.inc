@@ -14,11 +14,25 @@ require_once(__DIR__ . '/util.inc');
 use WebPageTest\Util;
 use WebPageTest\User;
 use WebPageTest\RequestContext;
+use WebPageTest\Exception\ClientException;
 
 
 if (Util::getSetting('cp_auth')) {
   // Start session handling for this request
   session_start();
+}
+
+if (Util::getSetting('cp_auth')) {
+  set_exception_handler(function($e) {
+    if(is_a($e, ClientException::class)) {
+      $route = $e->getRoute();
+      $message = $e->getMessage();
+      $_SESSION['error_message'] = $message;
+      header('HTTP/1.1 302 Found');
+      header('Location: ' . $route);
+      exit(0);
+    }
+  });
 }
 
 // Disable caching by default
