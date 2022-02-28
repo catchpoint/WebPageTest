@@ -78,7 +78,10 @@ function loadPageStepData($localPaths, $testInfo = null) {
       $ret = null;
     }
   }
-    
+
+  if (isset($ret) && is_array($ret) && isset($ret['edge-processed']) && $ret['edge-processed'])
+    return $ret;
+  
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
     if (!isset($ret) || !is_array($ret) || !count($ret))
