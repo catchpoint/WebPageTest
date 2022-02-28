@@ -28,3 +28,4 @@
 !/settings/benchmarks/sample
 /settings/custom.css
 *.log
+/settings/custom_metrics/*.js
