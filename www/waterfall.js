@@ -197,7 +197,7 @@ function SelectRequest(step, request) {
                 details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
             }
         }
-        if (!Number.isNaN(totalConnectionTime) && totalConnectionTime > 0) {
+        if (typeof totalConnectionTime === 'number' && !Number.isNaN(totalConnectionTime) && totalConnectionTime > 0) {
             details += '<b>Total Connection Time: </b>' + htmlEncode(totalConnectionTime) + ' ms<br>';
         }
         if (IsValidDuration(r['ttfb_ms'])) {
