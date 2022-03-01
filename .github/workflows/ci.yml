@@ -22,3 +22,6 @@ jobs:
 
       - name: Run tests
         run: composer test
+
+      - name: Run linter
+        run: composer lint

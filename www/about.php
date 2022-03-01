@@ -48,7 +48,7 @@ $page_description = "More information about WebPageTest website speed testing an
                 more <a href="https://github.com/WPO-Foundation/webpagetest/blob/master/LICENSE_FAQ.md">here</a>.</p>
 
                 <p>If you are having any problems or just have questions about the site, please feel free to 
-                <a href="mailto:info@webpagetest.org">contact us</a>. If you are considering sending advertising opportunities, 
+                <a href="mailto:support@webpagetest.org">contact us</a>. If you are considering sending advertising opportunities, 
                 SEO/SEM solicitations, link sharing, etc....don't. We won't respond and will mark it as spam.</p>
             </div>
             </div>

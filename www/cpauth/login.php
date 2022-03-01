@@ -14,7 +14,8 @@ $request_method = strtoupper($_SERVER['REQUEST_METHOD']);
 if ($request_method === 'POST') {
     $csrf_token = filter_input(INPUT_POST, 'csrf_token');
     if ($csrf_token !== $_SESSION['csrf_token']) {
-        throw new ClientException("You submitted an incorrect CSRF token", 403);
+        error_log("Incorrect CSRF token");
+        throw new ClientException("There was an error logging you in. Please try again.", "/login", 403);
         exit();
     }
 
@@ -22,14 +23,15 @@ if ($request_method === 'POST') {
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
         $password = filter_input(INPUT_POST, 'password');
     } catch (Exception $e) {
-        throw new ClientException($e->getMessage(), 400);
+        error_log("Incorrect CSRF token");
+        throw new ClientException($e->getMessage(), "/login", 400);
     }
 
     try {
         $auth_token = $request_context->getClient()->login($email, $password);
         $request_context->getClient()->authenticate($auth_token->access_token);
     } catch (Exception $e) {
-        throw new ClientException($e->getMessage(), 403);
+        throw new ClientException($e->getMessage(), "/login", 403);
     }
 
     $protocol = getUrlProtocol();
@@ -41,16 +43,20 @@ if ($request_method === 'POST') {
 
     header("Location: {$redirect_uri}");
     exit();
-} else if ($request_method === 'GET') {
+} elseif ($request_method === 'GET') {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(35));
-
+    $error = $_SESSION['error_message'] ?? "";
+    unset($_SESSION['error_message']);
 
     $tpl = new Template('account');
+    $tpl->setLayout('headless');
+    $args = array(
+        'csrf_token' => $_SESSION['csrf_token'],
+        'has_error' => !empty($error)
+    );
     echo $tpl->render(
         'login',
-        array(
-            'csrf_token' => $_SESSION['csrf_token']
-        )
+        $args
     );
     exit();
 }
