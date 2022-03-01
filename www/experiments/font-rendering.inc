@@ -1,4 +1,5 @@
 <?php
+$category = "Quick";
 $fonts = $testStepResult->getMetric('fonts');
 
 $fontsThatBlock = array();
@@ -22,28 +23,29 @@ if( count($fontsThatBlock) ){
         array_push($blockers, $font["family"] . " " . (isset( $font["weight"] ) ? $font["weight"] : "") . " " . (isset( $font["style"] ) ? $font["style"] : "") );
     }
 
-    echo observationHTML(
-        "Several fonts are loaded with settings that hide text while they are loading.",
-        "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font.",
-        $blockers,
-        array(
+    $assessment[$category]["opportunities"][] = array(
+		"title" => "Several fonts are loaded with settings that hide text while they are loading.",
+		"desc" => "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font.",
+		"examples" => $blockers,
+		"experiments" => array(
             (object) [
                 'title' => 'Add font-display: swap to font loading',
                 "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner</p>',
                 "expvar" => 'swap',
                 "expval" => array(encodeURIComponent("@font-face {") . "|" . encodeURIComponent( "@font-face { font-display: swap; " ))
             ]),
-        false
-    );
+		"good" => false
+	);
+    
 }
 else {
-    echo observationHTML(
-        "All custom fonts are loaded with settings that show fallback text while they are loading.",
-        "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font. font-display: swap will fix this.",
-        array(),
-        array(),
-        true
-    );
+    $assessment[$category]["opportunities"][] = array(
+		"title" => "All custom fonts are loaded with settings that show fallback text while they are loading.",
+		"desc" => "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font. font-display: swap will fix this.",
+		"examples" => array(),
+		"experiments" => array(),
+		"good" => true
+	);
 }
     
 ?>

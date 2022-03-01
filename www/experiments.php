@@ -105,7 +105,18 @@ $page_description = "Website performance test result$testLabel.";
                 </div>
 
                 <?php include "testinfo_command-bar.inc"; ?>
+                
+
             </div>
+
+            <?php
+                    $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
+                    $requests = $testStepResult->getRequests();
+
+                    include __DIR__ . '/experiments/common.inc';
+
+                    include __DIR__ . '/experiments/summary.inc';
+                ?>
 
 
                 <?php
@@ -120,6 +131,8 @@ $page_description = "Website performance test result$testLabel.";
                     if (!isset($secret)) {
                         $secret = '';
                     }
+
+                    
 
                     echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
                     echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
@@ -137,77 +150,138 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
 
-                    $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
-                    $requests = $testStepResult->getRequests();
-
-                    include __DIR__ . '/experiments/common.inc';
-
-                    ?>
-
-
-                <div class="grade_header">
-                    <h3 class="grade_heading grade-a">Quick: <span>8/10</span></h3>
-                    <p class="grade_summary"><strong>Great work!</strong> This page connects to the server quickly and begins rendering visually soon after initial delivery. Large content renders soon as well. But you can always make improvements...</p>
-                </div>
-
-
-                    <?php
-
-                    echo '<div class="experiments_bottlenecks">
-                        <ol>';
-
-                    include __DIR__ . '/experiments/slow-ttfb.inc';
-
-                    include __DIR__ . '/experiments/render-blocking-scripts.inc';
-
-                    include __DIR__ . '/experiments/render-blocking-css.inc';
-
-                    include __DIR__ . '/experiments/render-blocking-font-css.inc';
-
-                    include __DIR__ . '/experiments/lcp.inc';
-
-                    include __DIR__ . '/experiments/imgs-lazy-loaded.inc';
-                    include __DIR__ . '/experiments/imgs-lazy-loadable.inc';
-
-                    include __DIR__ . '/experiments/font-rendering.inc';
-
-
-                    echo '</ol></div>';
-
-
-
-
-                    ?>
-
-                <div class="grade_header">
-                    <h3 class="grade_heading grade-c">Usable: <span>6/10</span></h3>
-                    <p class="grade_summary"><strong>Not bad!</strong> Users can begin interacting with this page after a short delay. Readability is average. Touch-friendliness is average.</p>
-                </div>
-
-                <div class="experiments_bottlenecks">
-                        <ol>
-                    <?php
-                    include __DIR__ . '/experiments/layout-shifts.inc';
-                    include __DIR__ . '/experiments/axe-warnings.inc';
-                    ?>
-                        </ol>
-                </div>
-
-
-                <div class="grade_header">
-                    <h3 class="grade_heading grade-f">Resilient: <span>4/10</span></h3>
-                    <p class="grade_summary"><strong>Needs Improvement!</strong> This page contains several render-blocking CSS and JavaScript requests and contains critical content that is generated client-side with JavaScript. </p>
-                </div>
-                <div class="experiments_bottlenecks">
-                    <ol>
-                    <?php
-                    include __DIR__ . '/experiments/render-blocking-3rd-party.inc';
-                    include __DIR__ . '/experiments/security-jslibs.inc';
                     
-                    ?>
-                </ol>
+
+
+                    function observationHTML( $parts ){
+                        $bottleneckTitle = $parts["title"];
+                        
+                        $bottleneckDesc = $parts["desc"];
+                        $bottleneckExamples = $parts["examples"];
+                        $relevantExperiments = $parts["experiments"];
+                        $good = $parts["good"];
+
+                        $out = '';
+                        
+                        // todo move this summary heading broader for all recs
+                        $goodbadClass = "experiments_details-good";
+                        if( $good !== true ){
+                            $goodbadClass = "experiments_details-bad";
+                        }
+                        
+                        $out .= "<li class=\"$goodbadClass\"><details open><summary>$bottleneckTitle</summary>";
+                        $out .= "<div class=\"experiments_details_body\">";
+                        
+                        $out .= "<div class=\"experiments_details_desc\">";
+                        $out .= "<p>$bottleneckDesc</p>";
+                        if( count($bottleneckExamples) > 0 ){
+                            $out .= "<ul>";
+                            foreach( $bottleneckExamples as $ex ) {
+                                $out .= "<li>$ex</li>";
+                            }
+                            $out .= "</ul>";
+                        }
+                        $out .= "</div>";
                     
-                </div>
+                        if( count($relevantExperiments) > 0 ){
+                            if( $relevantExperiments[0]->expvar ){
+                                $out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
+                            }
+                            else {
+                                $out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Recommendations</h4>";
+                            }
+                    
+                            $out .= "<ul class=\"experiments_list\">";
+                    
+                            foreach( $relevantExperiments as $exp ) {
+                                $out .= <<<EOT
+                                    <li class="experiment_description">
+                                    <div class="experiment_description_text">
+                                    <h5>{$exp->title}</h5>
+                                    {$exp->desc}
+                                EOT;
+                    
+                    
+                                if( $exp->expvar && $exp->expval ){
+                                    if( count($exp->expval) ){
+                                        $out .= '<details class="experiment_assets"><summary>Assets included in experiment:</summary>';
+                                        $out .= '<ol>';
+                                        foreach($exp->expval as $val){
+                                            if( count($exp->expval) > 1 ){
+                                            $out .= <<<EOT
+                                                <li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$val}</label></li>
+                                                EOT;
+                                            }
+                                            else {
+                                                $out .= <<<EOT
+                                                <li><input type="hidden" name="{$exp->expvar}[]" value="{$val}">{$val}</li>
+                                                EOT;
+                                            }
+                                        }
+                                        $out .= '</ol>';
+                                        $out .= '</details>';
+                                    }
+                                    if( $exp->expvar ){
+                                        $out .= <<<EOT
+                                        </div>
+                                        <div class="experiment_description_go">
+                                        <label><input type="checkbox" name="recipes[]" value="{$exp->expvar}">Run This Experiment!</label>
+                                        </div>
+                                        EOT;
+                                    }
+                                }
+                                else if( $exp->expvar && !$exp->expval ) {
+                                    $out .= <<<EOT
+                                    </div>
+                                    <div class="experiment_description_go">
+                                    <label><input type="checkbox" name="{$exp->expvar[0]}">Run This Experiment!</label>
+                                    </div>
+                                    EOT;
+                                }
+                    
+                                $out .= '</li>';
+                                    
+                            }
+                        }
+                    
+                        $out .= '<ul></div></details></li>';
+                        return $out;
+                    }
+
+
+                    
+
+
+
+
+                    // write out the observations HTML
+                    foreach($assessment as $key => $cat ){
+                       $grade = $cat["grade"];
+                       $summary = $cat["summary"];
+                       $opps = count($cat["opportunities"]);
+                       $bad = $cat["num_recommended"];
+                       $good = $opps - $bad;
+                        echo <<<EOT
+                        <div class="grade_header" id="${key}">
+                            <h3 class="grade_heading grade-${grade}">${key}</h3>
+                            <p class="grade_summary">${summary}</p>
+                        </div>
+                        <div class="experiments_bottlenecks">
+                            <ol>
+                        EOT;
+
+                        foreach( $cat["opportunities"] as $opportunity ){
+                            echo observationHTML($opportunity);
+                        }
+                        echo '</ol></div>';
+                    }
+
+                    ?>
+
+
+                
+
+
 
                     <?php
 

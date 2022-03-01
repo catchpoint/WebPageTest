@@ -1,4 +1,5 @@
 <?php
+$category = "Quick";
 $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
 $imgsThatShouldNotBeLazy = array();
 if(isset($imgsInViewport) ){
@@ -16,11 +17,11 @@ if( count($imgsThatShouldNotBeLazy) ){
         array_push($shouldNotBeLazySrcs, $img["src"]);
     }
 
-    echo observationHTML(
-        "Images within the critical viewport are being lazy-loaded.",
-        "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-        $shouldNotBeLazySrcs,
-        array(
+    $assessment[$category]["opportunities"][] = array(
+		"title" =>  "Images within the critical viewport are being lazy-loaded.",
+		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
+		"examples" => $shouldNotBeLazySrcs,
+		"experiments" => array(
             (object) [
                 'title' => 'Remove loading="lazy" from layout-critical images',
                 "desc" => '<p>This experiment will remove <code>loading="lazy"</code> attributes from images that are inside the viewport at load</p>',
@@ -28,17 +29,18 @@ if( count($imgsThatShouldNotBeLazy) ){
                 "expval" => $shouldNotBeLazySrcs
             ]
         ),
-        false
-    );
+		"good" => false
+	);
 }
 else {
-    echo observationHTML(
-        "No images within the critical viewport are being lazy-loaded.",
-        "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-        array(),
-        array(),
-        true
-    );
+    $assessment[$category]["opportunities"][] = array(
+		"title" => "No images within the critical viewport are being lazy-loaded.",
+		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
+		"examples" => array(),
+		"experiments" => array(),
+		"good" => true
+	);
+    
 }
     
 ?>

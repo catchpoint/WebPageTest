@@ -1,7 +1,7 @@
 <?php 
 
 
-
+$category = "Resilient";
 
 if ($testStepResult) {
     $jsLibsVulns = $testStepResult->getRawResults()['jsLibsVulns'];
@@ -47,38 +47,32 @@ if( $jsLibsVulns  ){
 
     
 
-    echo observationHTML(
-        "Several security vulnerabilies were detected by Snyk",
-        "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") .
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  "Several security vulnerabilies were detected by Snyk",
+        "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") .
         ($num_high > 0 ? "$num_high high, " : '') .
         ($num_medium > 0 ? "$num_medium medium, " : '') .
         ($num_low > 0 ? "$num_low low, " : ''),
-        array(),
-        array(
+        "examples" =>  array(),
+        "experiments" =>  array(
             (object) [
                 'title' => 'Update the following JavaScript packages',
                 "desc" => implode($secRecs)
             ]
             ),
-            false
+        "good" =>  false
     );
 
 }
 else {
-    echo observationHTML(
-        "No security vulnerabilies were detected by Snyk",
-        "Snyk has found 0 security vulnerabilities with included packages.",
-        array(),
-        array(),
-            true
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  "No security vulnerabilies were detected by Snyk",
+        "desc" =>  "Snyk has found 0 security vulnerabilities with included packages.",
+        "examples" =>  array(),
+        "experiments" =>  array(),
+        "good" =>  true
     );
 }
-
-
-
-
-
-
 
 
 ?>

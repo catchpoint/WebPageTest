@@ -1,5 +1,6 @@
 <?php
     // LCP info!
+    $category = "Quick";
     $events = $testStepResult->getMetric('largestPaints');
     $lcp = null;
     if (isset($events) && is_array($events)) {
@@ -33,14 +34,14 @@
             
            if( $lcp['time'] > 2500 ){
 
-                echo observationHTML(
-                    "Largest Contentful Paint is high (over 2500ms).",
-                    "The element driving your LCP is a" . ($isBG ? " background" : "n")  . " image. Some optimizations can help that image fetch earlier.",
-                    array(
+                $assessment[$category]["opportunities"][] = array( 
+                    "title" =>  "Largest Contentful Paint is high (over 2500ms).",
+                    "desc" =>  "The element driving your LCP is a" . ($isBG ? " background" : "n")  . " image. Some optimizations can help that image fetch earlier.",
+                    "examples" =>  array(
                         "<strong>LCP Image:</strong> <img src=\"" . $lcpSource . "\" alt=\"\">",
                         "<strong>LCP HTML:</strong>" . $lcpHTML
                     ),
-                    array(
+                    "experiments" =>  array(
                         (object) [
                             'title' => 'Preload the LCP image.',
                             "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
@@ -54,17 +55,17 @@
                             "expval" => array($lcpSource . "|i_high")
                         ]
                     ),
-                    false
+                    "good" =>  false
                 );
             }
         }
          else {
-            echo observationHTML(
-                'Largest Contentful Paint time was reasonably quick',
-                "TBD importance notes here",
-                array(),
-                array(),
-                true
+            $assessment[$category]["opportunities"][] = array(
+                "title" =>  'Largest Contentful Paint time was reasonably quick',
+                "desc" =>  "TBD importance notes here",
+                "examples" =>  array(),
+                "experiments" =>  array(),
+                "good" =>  true
             );
         }
 

@@ -327,7 +327,7 @@ h3.grade_heading {
     font-size: 1.875rem;
     font-weight: 900;
     margin: 0;
-    flex: 0 1 16rem;
+    flex: 0 1 12rem;
     padding: 0 0 0 3.5rem;
     text-align: left;
 }
@@ -390,10 +390,6 @@ p.grade_summary {
     margin: 0;
 }
 
-.experiments_bottlenecks>ol>li.experiments_details-good>details>summary {
-    /* font-weight: 500; */
-}
-
 .experiments_bottlenecks img {
     max-width: 150px;
     height: auto;
@@ -419,14 +415,6 @@ p.grade_summary {
 .experiments_details_body ol {
     margin: .5em 0;
     padding: 0 1rem;
-}
-
-.experiments_details_body code {
-    /* font-size: 1em; */
-    /* background: #fafafa; */
-    /* padding: .3em; */
-    /* border-radius: 3px; */
-    /* display: inline-block; */
 }
 
 .experiments_bottlenecks>ol>li {
@@ -710,8 +698,6 @@ input.pill {
     text-decoration: none;
     color: #fff;
 }
-
-.home a {}
 
 img {
     border: none;
@@ -1175,6 +1161,37 @@ footer ul {
     max-width: 25em;
 }
 
+.opportunities_summary {
+    display: flex;
+    gap: 1rem;
+    max-width: 60%;
+}
+
+.opportunities_summary p,
+.results_header .opportunities_summary p {
+    font-size: 1rem;
+    padding-left: 3rem;
+    background-position: top left !important;
+    margin: 0;
+}
+
+.opportunities_summary a {
+    padding: .5em;
+    flex: 1 1 33%;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: .5em;
+    /* padding-left: 2rem; */
+    text-decoration: none;
+    color: inherit;
+}
+
+.opportunities_summary .grade_heading span {
+    color: #444;
+    display: block;
+    font-size: .8em;
+}
+
 .testinfo_meta {
     border-right: 1px solid #e9e9e9;
 }
@@ -1441,7 +1458,6 @@ details.details_custommetrics summary {
     .header_screenshots {
         max-height: 220px !important;
     }
-    .header_screenshots img {}
 }
 
 @media (max-width: 50em) {
@@ -1767,10 +1783,6 @@ body.result #main {
     .results_nav_hed {
         font-size: 1.1em;
     }
-}
-
-.home_feature_hed_text {
-    /* text-align: center; */
 }
 
 .home_feature_hed .attention {
@@ -2354,8 +2366,6 @@ label small {
     padding: 1em;
     overflow: auto;
 }
-
-.test_presets_more .details_contain br {}
 
 .input_fields.home_responsive_test_top li {
     margin: 0;
@@ -3143,8 +3153,7 @@ form[name=filterLog] .history_filter input[type=text] {
 }
 
 .input_fields li input[type="radio"],
-.input_fields .fieldrow input[type="radio"],
-{
+.input_fields .fieldrow input[type="radio"] {
     /* margin-right: .3em; */
     margin-left: 0;
 }
@@ -3613,7 +3622,7 @@ label.test_preset_profile {
 .box {
     background: #fff;
     box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.2);
-    */ padding: 1em 1em;
+    padding: 1em 1em;
     margin: 1em 0;
     padding-bottom: 2em;
 }

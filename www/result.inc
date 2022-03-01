@@ -113,10 +113,23 @@ $page_description = "Website performance test result$testLabel.";
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <p>Here's how this site performed in this test. <strong>Please note:</strong> Supported metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
-            </div>
+          
+                
+                
+
+
+
+              </div>
                         <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
+
+            <h3>Experiments & Opportunities...</h3>
+
+            <?php
+                    include __DIR__ . '/experiments/common.inc';
+                    include __DIR__ . '/experiments/summary.inc';
+                ?>
 
 
             <div id="result" class="results_body">

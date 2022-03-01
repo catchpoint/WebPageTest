@@ -1,4 +1,5 @@
 <?php
+$category = "Quick";
 $blockingFontCSSReqs = array();
 foreach ($requests as $request) {
     if( $request['renderBlocking'] === "blocking" && strpos($request['url'], "font") !== false && $request['contentType'] === "text/css" ){
@@ -7,11 +8,11 @@ foreach ($requests as $request) {
 }
 
 if( count($blockingFontCSSReqs) > 0 ){
-  echo observationHTML(
-      count($blockingFontCSSReqs) . " external font CSS file". (count($blockingFontCSSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
-      "By default, references to external CSS files will block the page from rendering while they are fetched and executed. CSS files that are purely for loading fonts can often be loaded asynchronously to allow the page content to render sooner.",
-      $blockingFontCSSReqs,
-      array(
+  $assessment[$category]["opportunities"][] = array( 
+      "title" =>  count($blockingFontCSSReqs) . " external font CSS file". (count($blockingFontCSSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
+      "desc" =>  "By default, references to external CSS files will block the page from rendering while they are fetched and executed. CSS files that are purely for loading fonts can often be loaded asynchronously to allow the page content to render sooner.",
+      "examples" =>  $blockingFontCSSReqs,
+      "experiments" =>  array(
         (object) [
             'title' => 'Inline font stylesheets.',
             "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps.</p>',
@@ -26,15 +27,15 @@ if( count($blockingFontCSSReqs) > 0 ){
               "expval" => $blockingFontCSSReqs
             ]
       ),
-      false
+      "good" =>  false
   );
 } else {
-    echo observationHTML(
-        'You had no render-blocking external font CSS files.',
-        "TBD importance notes here",
-        array(),
-        array(),
-        true
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  'You had no render-blocking external font CSS files.',
+        "desc" =>  "TBD importance notes here",
+        "examples" =>  array(),
+        "experiments" =>  array(),
+        "good" =>  true
     );
 }
 ?>

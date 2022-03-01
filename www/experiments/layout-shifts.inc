@@ -1,5 +1,5 @@
 <?php
-
+    $category = "Usable";
     $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
 
 
@@ -23,13 +23,13 @@
 
            if( !$hasHeightAttr ){
 
-                echo observationHTML(
-                    "Layout shifts occur due to images missing aspect ratio.",
-                    "Your CLS score is $cls, and your LCP image has no aspect ratio specified, meaning the browser has no way of knowing how tall it is until it loads. This can cause the image to shift content down as it loads.",
-                    array(
+                $assessment[$category]["opportunities"][] = array( 
+                    "title" =>  "Layout shifts occur due to images missing aspect ratio.",
+                    "desc" =>  "Your CLS score is $cls, and your LCP image has no aspect ratio specified, meaning the browser has no way of knowing how tall it is until it loads. This can cause the image to shift content down as it loads.",
+                    "examples" =>  array(
                         "$lcpHTML <img src= \"" . $lcp['element']['src'] . "\">"
                     ),
-                    array(
+                    "experiments" =>  array(
                         (object) [
                             'title' => 'Give the image an aspect ratio with width and height attributes',
                             "desc" => '<p>This experiment will add <code>width="'. $lcp['element']['width'] .'" height="'. $lcp['element']['width'] .'"</code> attributes to the LCP image</p>',
@@ -37,27 +37,27 @@
                             "expval" => array($lcpSource . "|w". $lcp['element']['width'] ."|h" . $lcp['element']['height'])
                         ]
                     ),
-                    false
+                    "good" =>  false
                 );
             }
         }
         else {
-            echo observationHTML(
-                'Layout shifts exist but are not caused by images needing aspect ratio',
-                "TBD importance notes here",
-                array(),
-                array(),
-                true
+            $assessment[$category]["opportunities"][] = array(
+                "title" =>  'Layout shifts exist but are not caused by images needing aspect ratio',
+                "desc" =>  "TBD importance notes here",
+                "examples" =>  array(),
+                "experiments" =>   array(),
+                "good" =>  true
             );
         }
     }
     else {
-            echo observationHTML(
-                'No major layout shifts detected.',
-                "TBD importance notes here",
-                array(),
-                array(),
-                true
+            $assessment[$category]["opportunities"][] = array( 
+                "title" =>  'No major layout shifts detected.',
+                "desc" =>  "TBD importance notes here",
+                "examples" =>  array(),
+                "experiments" =>  array(),
+                "good" =>   true
             );
         }
 ?>

@@ -1,5 +1,5 @@
 <?php 
-
+$category = "Usable";
 if( isset( $axe ) ) {
     
     if( count($axe['violations']) ){
@@ -46,34 +46,36 @@ if( isset( $axe ) ) {
         array_push($recs, $thisRec);
     }
 
-    echo observationHTML(
-        "Accessiblity Issues were Detected",
-        "Axe found $num_violations accessibility issues: " . 
-        ($num_critical > 0 ? "$num_critical critical, " : '') .
-        ($num_serious > 0 ? "$num_serious serious, " : '') .
-        ($num_moderate > 0 ? "$num_moderate moderate, " : '') .
-        ($num_minor > 0 ? "$num_minor minor " : ''),
-        array(),
-        array(
+
+    
+
+    $assessment[$category]["opportunities"][] = array(
+		"title" => "Accessiblity Issues were Detected",
+		"desc" => "Axe found $num_violations accessibility issues: " . 
+            ($num_critical > 0 ? "$num_critical critical, " : '') .
+            ($num_serious > 0 ? "$num_serious serious, " : '') .
+            ($num_moderate > 0 ? "$num_moderate moderate, " : '') .
+            ($num_minor > 0 ? "$num_minor minor " : ''),
+		"examples" =>  array(),
+		"experiments" => array(
             (object) [
                 'title' => 'Make the following changes to improve accessibility:',
                 "desc" => implode($recs)
             ]
         ),
-        false
-    );
+		"good" => false
+	);
 
 
-    //print_r($violations);
 }
 else {
-    echo observationHTML(
-        "No Accessiblity Issues were Detected in this Page",
-        "Axe found no accessibility issues. ",
-        array(),
-        array(),
-        true
-    );
+    $assessment[$category]["opportunities"][] = array(
+		"title" => "No Accessiblity Issues were Detected in this Page",
+		"desc" => "Axe found no accessibility issues. ",
+		"examples" =>  array(),
+		"experiments" => array(),
+		"good" => true
+	);
 }
 }
 

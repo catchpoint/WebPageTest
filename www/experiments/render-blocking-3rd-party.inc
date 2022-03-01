@@ -1,6 +1,6 @@
 <?php
 
-
+$category = "Resilient";
 $initialHost = $requests[0]["host"];
 $blocking3pReqs = array();
 $blocking3pHosts = array();
@@ -15,11 +15,11 @@ foreach ($requests as $request) {
 
 
 if( count($blocking3pReqs) > 0 ){
-    echo observationHTML(
-        "Potential <abbr title=\"Single Point of Failure\">SPOF</abbr>: ". count($blocking3pReqs) ." 3rd-party request". (count($blocking3pReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
-        "By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page's access relies on their response time and availability.'",
-        $blocking3pReqs,
-        array(
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  "Potential <abbr title=\"Single Point of Failure\">SPOF</abbr>: ". count($blocking3pReqs) ." 3rd-party request". (count($blocking3pReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
+        "desc" =>  "By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page's access relies on their response time and availability.'",
+        "examples" =>  $blocking3pReqs,
+        "experiments" =>  array(
             (object) [
                 'title' => 'Test impact of hanging service request.',
                 "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
@@ -27,16 +27,16 @@ if( count($blocking3pReqs) > 0 ){
                 "expval" => $blocking3pHosts
                 ]
         ),
-        false
+        "good" =>  false
     );
 }
 else {
-    echo observationHTML(
-        'You had no render-blocking javascript files.',
-        "TBD importance notes here",
-        array(),
-        array(),
-        true
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  'You had no render-blocking javascript files.',
+        "desc" =>  "TBD importance notes here",
+        "examples" =>  array(),
+        "experiments" =>   array(),
+        "good" =>  true
     );
 }
 
