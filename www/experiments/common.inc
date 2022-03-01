@@ -85,15 +85,14 @@ foreach($assessment as $key => $cat ){
 
 	$assessment[$key]["num_recommended"] = $numBad;
 
-	if( $numBad > 0 ){
-		$assessment[$key]["grade"] = "c";
-		$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numBad} opportunit${ending} to consider.";
-	}else if( $numBad > 4 ){
+	if( $numBad > 4 ){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numBad} opportunit${ending} to consider.";
 
-	}
-	else {
+	} else if( $numBad > 0 ){
+		$assessment[$key]["grade"] = "c";
+		$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numBad} opportunit${ending} to consider.";
+	} else {
 		$assessment[$key]["grade"] = "a";
 		$assessment[$key]["summary"] = "<strong>Great work!</strong> Nothing pressing, but you can always make improvements.";
 	}
