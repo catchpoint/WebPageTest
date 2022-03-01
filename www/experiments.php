@@ -101,7 +101,7 @@ $page_description = "Website performance test result$testLabel.";
             <div class="results_and_command">
                 <div class="results_header results_header-experiments">
                     <h2>Opportunities &amp; Experiments <em class="flag">New</em></h2>
-                    <p>With <strong>Experiments</strong>, WebPageTest identifies opportunities for improvements that you can test without changing your actual code. Experiments help you quickly test the impact of a change by re-running your test in a similated test environment.</p>
+                    <p>WebPageTest identifies opportunities for improvements that you can test without changing your actual code. Experiments help you quickly test the impact of a change by re-running your test in a similated test environment.</p>
                 </div>
 
                 <?php include "testinfo_command-bar.inc"; ?>
@@ -114,8 +114,10 @@ $page_description = "Website performance test result$testLabel.";
                     $requests = $testStepResult->getRequests();
 
                     include __DIR__ . '/experiments/common.inc';
+                    echo '<p class="opportunities_summary_hed">A summary of our findings...</p>';
 
                     include __DIR__ . '/experiments/summary.inc';
+                    
                 ?>
 
 

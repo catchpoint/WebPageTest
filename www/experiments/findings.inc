@@ -15,8 +15,6 @@ if( isset($tests) && $sameIDs ){
 
 
 
-
-
 if( $experiment ){
 
     if( isset( $metaInfo ) ){

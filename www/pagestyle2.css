@@ -255,7 +255,8 @@ h6 {
 }
 
 .test_results-content h2 em.flag,
-span.lh-flag {
+span.lh-flag,
+.pro-flag {
     font-size: .3em;
     font-weight: 500;
     text-transform: uppercase;
@@ -267,6 +268,13 @@ span.lh-flag {
     align-self: flex-start;
     font-style: normal;
     margin: 0 1em;
+}
+
+.pro-flag {
+    border-radius: .6em;
+    font-weight: 900;
+    align-self: center;
+    padding: .8em;
 }
 
 span.lh-flag {
@@ -1165,31 +1173,52 @@ footer ul {
     display: flex;
     gap: 1rem;
     max-width: 60%;
+    padding: 0 0 2rem;
+}
+
+.opportunities_summary_hed {
+    font-weight: 900;
+    color: #3c3c3c;
 }
 
 .opportunities_summary p,
 .results_header .opportunities_summary p {
     font-size: 1rem;
-    padding-left: 3rem;
+    padding-left: 1.8rem;
     background-position: top left !important;
+    background-size: 1.3em !important;
     margin: 0;
+    padding-bottom: 0;
 }
 
 .opportunities_summary a {
-    padding: .5em;
+    padding: .8em;
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
     flex: 1 1 33%;
     background: #fff;
     border: 1px solid #eee;
     border-radius: .5em;
     /* padding-left: 2rem; */
     text-decoration: none;
-    color: inherit;
+    /* color: inherit; */
 }
 
 .opportunities_summary .grade_heading span {
     color: #444;
-    display: block;
-    font-size: .8em;
+    font-size: 1em;
+}
+
+p.opportunities_summary_exps {
+    font-size: .85em;
+    font-weight: 500;
+    margin: .5rem -.5rem -.5rem;
+    padding: .5em .8em;
+    background: #f0e0cc57;
+    color: #1071ba;
+    display: flex;
+    align-items: center;
 }
 
 .testinfo_meta {

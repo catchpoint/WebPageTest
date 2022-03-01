@@ -124,11 +124,14 @@ $page_description = "Website performance test result$testLabel.";
 
             </div>
 
-            <h3>Experiments & Opportunities...</h3>
 
             <?php
                     include __DIR__ . '/experiments/common.inc';
+
+
+                    echo '<p class="opportunities_summary_hed">Opportunities & Experiments to consider...</p>';
                     include __DIR__ . '/experiments/summary.inc';
+
                 ?>
 
 

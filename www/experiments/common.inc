@@ -1,22 +1,28 @@
 <?php
 
 
-// container 
+// container for assessment including opportunities, experiments to recommend
 $assessment = array(
 	"Quick" => array(
 		"grade" => "",
 		"summary" => "",
-		"opportunities" => array()
+		"opportunities" => array(),
+		"num_recommended" => 0,
+		"num_experiments" => 0
 	), 
 	"Usable" => array(
 		"grade" => "",
 		"summary" => "",
-		"opportunities" => array()
+		"opportunities" => array(),
+		"num_recommended" => 0,
+		"num_experiments" => 0
 	), 
 	"Resilient" => array(
 		"grade" => "",
 		"summary" => "",
-		"opportunities" => array()
+		"opportunities" => array(),
+		"num_recommended" => 0,
+		"num_experiments" => 0
 	)
 );
 
@@ -71,27 +77,38 @@ include __DIR__ . '/security-jslibs.inc';
 
 
 
+
+
+// fill out high-level info in 
 foreach($assessment as $key => $cat ){
 	$opps = $assessment[$key]["opportunities"];
 	$numChecks = count($opps);
+	$numExperiments = 0;
+	$checkTitles = array();
+	$oppTitles = array();
 	$numGood = 0;
 	foreach($opps as $op){
 		if( $op["good"] ){
 			$numGood++;
+			array_push($checkTitles, $op["title"]);
+		} else {
+			array_push($oppTitles, $op["title"]);
+			$numExperiments+= count($op["experiments"]);
 		}
 	}
-	$numBad = $numChecks - $numGood;
+	$numRecommended = $numChecks - $numGood;
 	$ending = $opps === 1 ? "y" : "ies";
 
-	$assessment[$key]["num_recommended"] = $numBad;
+	$assessment[$key]["num_recommended"] = $numRecommended;
+	$assessment[$key]["num_experiments"] = $numExperiments;
 
-	if( $numBad > 4 ){
+	if( $numRecommended > 4 ){
 		$assessment[$key]["grade"] = "f";
-		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numBad} opportunit${ending} to consider.";
-
-	} else if( $numBad > 0 ){
+		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numRecommended} opportunit${ending} to consider.";
+		
+	} else if( $numRecommended > 0 ){
 		$assessment[$key]["grade"] = "c";
-		$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numBad} opportunit${ending} to consider.";
+		$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numRecommended} opportunit${ending} to consider.";
 	} else {
 		$assessment[$key]["grade"] = "a";
 		$assessment[$key]["summary"] = "<strong>Great work!</strong> Nothing pressing, but you can always make improvements.";
