@@ -760,7 +760,7 @@ use WebPageTest\RateLimiter;
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
                 // redirect to the comparison page
-                if (isset($req_spof) && strlen(trim($req_spof))) {
+                if (!isset($req_spof) && strlen(trim($req_spof))) {
                     $spofTests = array();
                     $test['video'] = 1;
                     $test['label'] = 'Original';
@@ -1100,7 +1100,7 @@ use WebPageTest\RateLimiter;
                     if (isset($spofTests) && count($spofTests) > 1) {
                         header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
                     } else if (isset($recipeTests) && count($recipeTests) > 1) {
-                        header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $recipeTests));
+                        header("Location: $protocol://$host$uri/video/compare.php?tests=" . $recipeTests[1] . ',' . $recipeTests[0] );
                     } else {
                         // redirect regardless if it is a bulk test or not
                         $view = '';
