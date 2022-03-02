@@ -193,7 +193,7 @@ function BuildRenderInfo(&$tests) {
             "labelFont" => __DIR__ . '/font/sourcesanspro-semibold.ttf',
             "labelHeight" => 30,
             "timeHeight" => 40,
-            "timePadding" => 3,
+            "timePadding" =>10,
             "rowPadding" => 10,
             "bottomMargin" => 30,
             "maxAspectRatio" => 0,

@@ -40,10 +40,16 @@ else
     //
     require_once('./include/TestInfo.php');
     require_once('./include/TestResults.php');
+    require_once __DIR__ . '/../include/RunResultHtmlTable.php';
+
     include 'video/filmstrip.inc.php';  // include the common php shared across the filmstrip code
     require_once('object_detail.inc');
     require_once('waterfall.inc');
+    
     //
+
+
+    
     $testPath = GetTestPath($tests[0]['id']);
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
@@ -72,6 +78,56 @@ else
             $labels .= htmlspecialchars($test['name']);
         }
     }
+
+
+    // See if all tests are the same ID or from a compared experiment not
+    $sameIDs = true;
+    $experiment = false;
+    foreach($tests as $key=>$value) {
+        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id'] && $value['url'] !== $tests[$key - 1]['url']){
+            $sameIDs = false;
+        }
+    }
+    if( $sameIDs ){
+        // TODO IF SHARED TEST URL
+       
+        $testPath = GetTestPath($tests[1]['id']);
+        $testInfo = TestInfo::fromFiles($testPath);
+        $test['test'] = $testInfo->getRawData()['test'];
+        $test['testinfo'] =  $testInfo->getRawData()['testinfo'];
+
+        if( count($tests) === 2 ) {
+            
+            $metaInfo = $test['testinfo']['metadata'];
+            if( $metaInfo ){
+                $metaInfo = json_decode($metaInfo);
+                if( $metaInfo->experiment ){
+                    $experiment = true;
+                       
+
+                    $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->source_test, 0, 1 );
+                    $originalTestHref = $originalTestUrlGenerator->resultSummary();
+        
+                    $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_test, 0, 1 );
+                    $controlTestHref = $controlTestUrlGenerator->resultSummary();
+        
+                    $experimentTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->experiment_test, 0, 1 );
+                    $experimentTestHref = $experimentTestUrlGenerator->resultSummary();
+                
+
+
+                }
+            }
+        }
+    }
+
+
+    
+    
+
+
+
+
 
     $stickyFilmstrip = true; 
     if( array_key_exists('filmstripScrollWithPage', $_GET) && strlen($_GET['filmstripScrollWithPage'])) {
@@ -349,11 +405,15 @@ else
                 ?>
             </style>
         </head>
-        <body class="result compare">
+        <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }?>">
                 <?php 
                 $tab = 'Test Result';
                 //$nosubheader = false;
-                $subtab = 'Filmstrip';
+                if( $experiment ){
+                    $subtab = 'Experiment Results';
+                } else {
+                    $subtab = 'Filmstrip';
+                }
 
                 //$headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
@@ -409,12 +469,69 @@ else
                      ?>
                         </div>
             
-                        <?php include("testinfo_command-bar.inc"); ?>
+                        <?php if(!$experiment){ include("testinfo_command-bar.inc"); } ?>
             
                         </div>
             
             
                         <div id="result" class="results_body">
+
+
+
+
+                <?php
+
+                
+
+                    // echo '<h3 class="hed_sub">Metric Comparison</h3>';
+                      
+                    // $experimentRun = $testResults->getRunResult(1, false);
+                    
+                    // $resultTable = new RunResultHtmlTable($testInfo, $experimentRun, null);
+                    // $resultTable->useLabelLinks(true);
+                    // $resultTable->disableColumns(array(
+                    //   RunResultHtmlTable::COL_VISUAL_COMPLETE,
+                    //   RunResultHtmlTable::COL_COST,
+                    //   RunResultHtmlTable::COL_FULLYLOADED,
+                    //   RunResultHtmlTable::COL_RESULT
+                    // ));
+                    // echo $resultTable->create(false);
+
+                    // $controlTestPath = GetTestPath($tests[1]['id']);
+                    // $controlTestInfo = TestInfo::fromFiles($controlTestPath);
+                    // $controlTestResults = TestResults::fromFiles($controlTestInfo);
+                    // $controlRun = $controlTestResults->getRunResult(1, false);
+                    // $resultTable = new RunResultHtmlTable($controlTestInfo, $controlRun, null);
+                    // $resultTable->useLabelLinks(true);
+                    // $resultTable->disableColumns(array(
+                    //   RunResultHtmlTable::COL_VISUAL_COMPLETE,
+                    //   RunResultHtmlTable::COL_COST,
+                    //   RunResultHtmlTable::COL_FULLYLOADED,
+                    //   RunResultHtmlTable::COL_RESULT
+                    // ));
+                    // echo $resultTable->create(false);
+
+                    
+
+                    // ?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <?php
 
                     echo '<div class=""><div class="test_results-content">';

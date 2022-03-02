@@ -795,24 +795,30 @@ use WebPageTest\RateLimiter;
                   //$test['script'] .= "setHeader\tx-recipes:\t$recipeScript\r\n";
                   $scriptNavigate = "navigate\t%URL%\r\n";
                   $test['script'] .= $scriptNavigate;
-
-
-                  // RECIPES!
-                  if(isset($req_recipes) && count($req_recipes) > 0 ){
-                    // this is for re-running a test with recipes enabled
-                    $recipeScript = '';
-                    foreach( $req_recipes as $key=>$value ){
-                      $recipeScript .= $value;
-                      if( $_REQUEST[$value] ){
-                        $value = $_REQUEST[$value];
-                        if( count($value) > 1 ){
-                          $value = implode($value, ",");
-                        }
-                        $recipeScript .= ":=" . $value;
+                  $experimentMetadata = array(
+                    "experiment" => array(
+                      "source_id" => $id,
+                      "control_id" => "",
+                      "experiment_id" => "",
+                      "recipes" => array()
+                    )
+                  );
+                  
+                  // this is for re-running a test with recipes enabled
+                  $recipeScript = '';
+                  foreach( $req_recipes as $key=>$value ){
+                    $recipeScript .= $value;
+                    if( $_REQUEST[$value] ){
+                      $ingredients = $_REQUEST[$value];
+                      $experimentMetadata["experiments"]["recipes"][] = array( $value => $ingredients );
+                      if( count($ingredients) > 1 ){
+                        $ingredients = implode($ingredients, ",");
                       }
-                      $recipeScript .= ";";
+                      $recipeScript .= ":=" . $ingredients;
                     }
+                    $recipeScript .= ";";
                   }
+                  
 
 
                   // Recipes need a control to compare to. 
@@ -821,11 +827,16 @@ use WebPageTest\RateLimiter;
                   // redirect to the comparison page
                   $recipeTests = array();
                   $test['video'] = 1;
-                  $test['label'] = 'Experiment Control (For Comparison Only)';
+                  $test['label'] = 'Control';
+                  $test['metadata'] = json_encode($experimentMetadata);
                   $id = CreateTest($test, $test['url']);
+                  
                   if( isset($id) ) {
+                      
                       $recipeTests[] = $id;
-                      $test['label'] = 'Experiment: ' . implode(", ", $req_recipes);
+                      $experimentMetadata["experiment"]["control_id"] = $id;
+                      $test['metadata'] = json_encode($experimentMetadata);
+                      $test['label'] = 'Experiment';
 
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );

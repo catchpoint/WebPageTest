@@ -277,6 +277,18 @@ span.lh-flag,
     padding: .8em;
 }
 
+h1 {
+    display: flex;
+}
+
+h1 .pro-flag {
+    align-self: flex-start;
+    font-size: .5em;
+    padding: .5em;
+    border-radius: .4em;
+    margin: 0 1em 0 .4em;
+}
+
 span.lh-flag {
     font-size: .8em;
     font-weight: 700;
@@ -1466,6 +1478,50 @@ details.details_custommetrics summary {
     align-items: flex-start;
 }
 
+.compare-experiment .header_screenshots {
+    flex: 1 1 45%;
+}
+
+.compare-experiment #header_data {
+    min-width: 50%;
+}
+
+.header_screenshots .play {
+    height: calc(3em);
+    background: url("/images/src/icon_play.svg") 50% no-repeat;
+    overflow: hidden;
+    text-indent: -999px;
+    border-radius: 100%;
+    -moz-appearance: none;
+    position: absolute;
+    bottom: 1em;
+    left: 50%;
+    cursor: pointer;
+    width: 3em;
+    background-size: 100%;
+    border: 2px solid #2d3c60;
+    margin-left: -1.5em;
+}
+
+.header_screenshots.playing .play {
+    background-image: url("/images/src/icon_playpause.svg");
+}
+
+.header_screenshots {
+    position: relative;
+    height: auto;
+    align-self: flex-start;
+}
+
+.header_screenshots.playing:hover .play {
+    opacity: 1 !important;
+    outline: none;
+}
+
+video:focus {
+    outline: none;
+}
+
 .header_screenshots img,
 .header_screenshots video {
     max-width: 100%;
@@ -1473,6 +1529,8 @@ details.details_custommetrics summary {
     border-radius: 0.7rem;
     border: 5px solid #fff;
     box-shadow: 0 0 10px rgb(0 0 0 / 30%);
+    display: block;
+    height: auto;
 }
 
 @media (max-width: 80em) {

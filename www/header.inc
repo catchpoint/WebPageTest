@@ -11,6 +11,7 @@ require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 
 if(isset($testPath) ) {
+
   $testInfo = TestInfo::fromFiles($testPath);
   $testResults = TestResults::fromFiles($testInfo);
 }
@@ -43,7 +44,9 @@ if ($id && isset($test) && is_array($test) &&
     echo "\n<script>\nconst wptTestInfo=$history_json;\n</script>\n";
 }
 
-
+if( !isset($experiment) ){
+    $experiment = false;
+}
 
 
 if (!defined('EMBED')) {
@@ -193,25 +196,13 @@ echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
 
                        
 
-if( isset($tests) ){
-    // See if all tests are the same ID or from a compared recipe not
 
-    $sameIDs = true;
-    foreach($tests as $key=>$value) {
-        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id'] && $value['url'] !== $tests[$key - 1]['url']){
-            $sameIDs = false;
-        }
-    }
-    if( $sameIDs ){
-        // TODO IF SHARED TEST URL
-        $test['test'] = $testInfo->getRawData()['test'];
-        $test['testinfo'] =  $testInfo->getRawData()['testinfo'];
-    }
-}
 
 //If we're looking at a test result, include the extra header section and sub-menu
 if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED') )
 {
+
+    
     // make sure the test is actually complete
     if(isset($test['test']['completeTime']))
     {
@@ -248,7 +239,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<ul class=\"header_data_urltime\">";
-            if ( $test['testinfo']['label'] ) {
+            if ( $test['testinfo']['label'] && !$experiment ) {
                 echo '<li><strong>Label:</strong> <span>'.$test['testinfo']['label'].'</span></li>';
             }
             echo "<li><strong>URL: </strong>";
@@ -274,10 +265,15 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             echo "</li></ul>";
 
             // Note: "Comprehensive" if it's multi device?
-            echo "<h1>Webpage Performance Test Result</h1>"; ?>
+            if( $experiment ){
+                echo "<h1>WebPageTest<em class=\"pro-flag\">Pro</em> Experiment</h1>";
+            } else {
+                echo "<h1>Webpage Performance Test Result</h1>";
 
-            <?php
-                $flags = array(
+            }
+
+            
+            $flags = array(
                     'ec2-us-east-1' => 'US',
                     'gce-us-west3' => 'US',
                     'ec2-us-west-1' => 'US',
@@ -384,15 +380,50 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     <?php
     
         echo '<div class="header_screenshots">';
-        
+
+        if( $experiment ){
+            echo '<video id="player" playsinline autoplay loop muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;&amp;labelHeight=60&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual">
+                    <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;labelHeight=60&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
+                </video>
+                <button class="play" id="playbtn">Play/Pause Video</button>';
+            ?>
+            <script>
+                (function(){
+                var container = document.querySelector(".header_screenshots");
+				var video = container.querySelector("video");
+				var playbtn = container.querySelector(".play");
+				
+				function activate(){
+					container.classList.add("playing");
+				}
+				function deactivate(){
+					container.classList.remove("playing");
+				}
+				video.addEventListener( "play", function(e){
+					activate();
+				});
+				video.addEventListener( "pause", function(e){
+                    deactivate();
+				});
+				playbtn.addEventListener( "click", function(e){
+					e.preventDefault();
+					if(video.paused){
+						video.play();
+					} else {
+						video.pause();
+					}
+				});
+				
+				
+			}());
+            </script>
+        <?php
+        }
+        else {
             require_once __DIR__ . '/screen_shot_embed.php';
-
-        
-        echo '</div></div>';
-
-
-        
-        echo '</div>';
+        }
+ 
+        echo '</div></div></div>';
 
 ?>
 
@@ -413,124 +444,143 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             if( !$id && $test['id'] && isset($tests) ){
                 $id = $test['id'];
             }
-            echo '<ul>';
-        if( !isset($run) )
-            $run = $gradeRun;
-        $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
-
-        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $gradeRun, !empty($cached));
-        $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
-
-        $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
-          
-        $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);    
+            if( !isset($run) )
+                $run = $gradeRun;
 
 
-        $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
-
-        $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
-
-        $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
-
-
-        if ($gradedRunResults->hasWebVitals())
-            $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
+        // create the results nav. 
+        // if it's a regular result or Same ID compare, it'll be a normal result nav
+        // if it's an experiment compare, it'll just have experiment links
+        echo '<ul>';
 
 
-        if ($gradedRunResults->isOptimizationChecked())
-            $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+        //if( !$experiment ){
+            $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
 
-        $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
-        $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
-        if ($gradedRunResults->hasBreakdownTimeline()) {
-          // currently only supported by standard urls
-          $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
-          $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
-        }
-        
+            $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $gradeRun, !empty($cached));
+            $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
-      
-        foreach( $tabs as $tabName => $tabUrl )
-        {
-            // make sure we have a test result to navigate to
-            if( strlen($tabUrl) )
-            {
-                // highlight the current tab
-                $current = '';
-                if( !strcasecmp($tabName, $subtab) )
-                    $current = ' class="current"';
-                echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
-            }
-        }
-          
-        if (isset($firstRunResults)){
-            $lighthouse = $firstRunResults->getLighthouseScore();
-            $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
+            $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
             
-            if (isset($lighthouse)) {
-                $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
-                $lhClass = 'poor';
-                if ($lighthouse >= 90)
-                    $lhClass = 'good';
-                elseif ($lighthouse >= 50)
-                    $lhClass = 'ok';
-                
-            echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag ". $lhClass ."\">". $lighthouse ."</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);    
+
+
+            $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
+
+            $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
+
+            $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
+
+
+            if ($gradedRunResults->hasWebVitals())
+                $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
+
+
+            if ($gradedRunResults->isOptimizationChecked())
+                $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+
+            $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
+            $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
+            if ($gradedRunResults->hasBreakdownTimeline()) {
+            // currently only supported by standard urls
+            $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
+            $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
             }
-        }
+            
+            
 
-        // Add the "Image Analysis" link
-        if (isset($id) && strlen($id)) {
-          $tabUrl = GetSetting('image_analysis');
-          if ($tabUrl) {
-            $tabUrl = str_replace('{test id}', $id, $tabUrl);
-            $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Cloudinary']);}}catch(err){}";
-            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Image Analysis<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
-          }
-        }
-
-        // Add the "Request Map" link
-        if (isset($id) && strlen($id)) {
-          $tabUrl = GetSetting('request_map');
-          if ($tabUrl) {
-            $tabUrl = str_replace('{test id}', $id, $tabUrl);
-            $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','RequestMap']);}}catch(err){}";
-            echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Request Map<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
-          }
-        }
-
-        // one dollar sign for every 500KB
-        $dollars = "";
-        $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
-        for ($i = 1; $i <= 5; $i++)
-        $dollars .= $i <= $dollarcount ? '$' : '-';
-        if(!$id){
-        $id = $testInfo->getId();
-        }
-        $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
-        echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-        "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
-
-    if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
-
-        // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
-        $securityScoreIncludesVulnerabilities = true;
-        if ($gradeRunResults) {
-            $detected = $gradeRunResults->getStepResult(1)->getRawResults()['detected'];
-            if (isset($detected) && isset($detected['CMS'])) {
-                if (stripos($detected['CMS'], "WordPress") >= 0) {
-                    $securityScoreIncludesVulnerabilities = false;
+        
+            foreach( $tabs as $tabName => $tabUrl )
+            {
+                // make sure we have a test result to navigate to
+                if( strlen($tabUrl) )
+                {
+                    // highlight the current tab
+                    $current = '';
+                    if( !strcasecmp($tabName, $subtab) )
+                        $current = ' class="current"';
+                    echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
                 }
             }
-        }
-        require_once('security_checks.php');
-        $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
+          
+            if (isset($firstRunResults)){
+                $lighthouse = $firstRunResults->getLighthouseScore();
+                $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
+                
+                if (isset($lighthouse)) {
+                    $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
+                    $lhClass = 'poor';
+                    if ($lighthouse >= 90)
+                        $lhClass = 'good';
+                    elseif ($lighthouse >= 50)
+                        $lhClass = 'ok';
+                    
+                echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag ". $lhClass ."\">". $lighthouse ."</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+                }
+            }
 
-        $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Snyk']);}}catch(err){}";
-        $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
-        echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            // Add the "Image Analysis" link
+            if (isset($id) && strlen($id)) {
+            $tabUrl = GetSetting('image_analysis');
+            if ($tabUrl) {
+                $tabUrl = str_replace('{test id}', $id, $tabUrl);
+                $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Cloudinary']);}}catch(err){}";
+                echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Image Analysis<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            }
+            }
 
-    }
+            // Add the "Request Map" link
+            if (isset($id) && strlen($id)) {
+            $tabUrl = GetSetting('request_map');
+            if ($tabUrl) {
+                $tabUrl = str_replace('{test id}', $id, $tabUrl);
+                $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','RequestMap']);}}catch(err){}";
+                echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Request Map<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            }
+            }
+
+            // one dollar sign for every 500KB
+            $dollars = "";
+            $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
+            for ($i = 1; $i <= 5; $i++)
+            $dollars .= $i <= $dollarcount ? '$' : '-';
+            if(!$id){
+            $id = $testInfo->getId();
+            }
+            $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
+            echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
+            "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+        
+            if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+
+                // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
+                $securityScoreIncludesVulnerabilities = true;
+                if ($gradeRunResults) {
+                    $detected = $gradeRunResults->getStepResult(1)->getRawResults()['detected'];
+                    if (isset($detected) && isset($detected['CMS'])) {
+                        if (stripos($detected['CMS'], "WordPress") >= 0) {
+                            $securityScoreIncludesVulnerabilities = false;
+                        }
+                    }
+                }
+                require_once('security_checks.php');
+                $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
+        
+                $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Snyk']);}}catch(err){}";
+                $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
+                echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+        
+            }
+        
+        // }
+        // else {
+        //     echo "
+        //     <li><a href=\"". $originalTestHref ."\">Source Test Results</a></li>
+        //     <li><a href=\"". $experimentTestHref ."\">Experiment Run Test Results</a></li>
+        //     <li><a href=\"". $controlTestHref ."\">Control Run Test Results</a></li>
+        //     ";
+        // }
+    
 
         echo '</ul></span></div></div>';
 

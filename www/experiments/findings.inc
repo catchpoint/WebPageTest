@@ -1,39 +1,7 @@
 <?php
-$experiment = false;
-$experimentsRan = "";
-if( isset($tests) && $sameIDs ){
-    // See if all tests are the same ID or from a compared recipe not
-    $experimentPath = GetTestPath($tests[1]['id']);
-    $experimentInfo = TestInfo::fromFiles($experimentPath);
-    $scriptInfo = $experimentInfo->getRawData()['testinfo']['script'];
-    $metaInfo = $experimentInfo->getRawData()['testinfo']['metadata'];
-    $experiment = strpos($scriptInfo, "recipes.webpagetest.workers.dev");
-    $experimentsRan = preg_match('/x-recipes: ([^\s]+)/', $scriptInfo, $matches);
-
-}
-
-
 
 
 if( $experiment ){
-
-    if( isset( $metaInfo ) ){
-        $metaInfo = json_decode( $metaInfo );
-
-
-        $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->source_test, 0, 1 );
-        $originalTestHref = $originalTestUrlGenerator->resultSummary();
-
-        $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_test, 0, 1 );
-        $controlTestHref = $controlTestUrlGenerator->resultSummary();
-
-        $experimentTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $tests[1]['id'], 0, 1 );
-        $experimentTestHref = $experimentTestUrlGenerator->resultSummary();
-
-
-    }
-    
-    
 
     $diffMetrics = array( 
         "TTFB" => "Time to First Byte", 
@@ -47,19 +15,16 @@ if( $experiment ){
         "BytesIn" => "Total Bytes"
     );
 
-   
-    
+    echo '<h2>Experiment Results</h2>';
 
-    
-
-    echo '<h2>Experiment Results!</h2>';
+    echo '<p>This experiment incorportated the following changes:' . $test['testinfo']['label'] . '</p>';
 
     if( isset( $metaInfo ) ){
 
         echo "<p>Experiment URLs: 
-            <a href=\"". $originalTestHref ."\">Source Test</a>
-            <a href=\"". $controlTestHref ."\">Control Test</a>
-            <a href=\"". $experimentTestHref ."\">Experiment Test</a>
+            <a href=\"". $experimentTestHref ."\">Experiment Result</a>
+            <a href=\"". $controlTestHref ."\">Control Test Result</a>
+            <a href=\"". $originalTestHref ."\">Original Source Test</a>
         </p>";
 
     }
@@ -77,9 +42,6 @@ if( $experiment ){
         }
      echo "</ul>";
 
-     echo '<video id="player" controls autoplay muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual">
-        <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=2a3c64&amp;&text=ffffff&amp;end=visual" type="video/mp4">
-    </video>';
         
 }
 
