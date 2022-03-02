@@ -382,8 +382,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo '<div class="header_screenshots">';
 
         if( $experiment ){
-            echo '<video id="player" playsinline autoplay loop muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;forceFontSize=16&amp;labelHeight=60&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual">
-                    <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;forceFontSize=16&amp;labelHeight=60&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
+            echo '<video id="player" playsinline autoplay loop muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;forceFontSize=6&amp;labelHeight=40&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual">
+                    <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;forceFontSize=6&amp;labelHeight=40&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
                 </video>
                 <button class="play" id="playbtn">Play/Pause Video</button>';
             ?>
