@@ -1480,6 +1480,7 @@ details.details_custommetrics summary {
 
 .compare-experiment .header_screenshots {
     flex: 1 1 45%;
+    align-self: flex-start;
 }
 
 .compare-experiment #header_data {
@@ -1510,7 +1511,6 @@ details.details_custommetrics summary {
 .header_screenshots {
     position: relative;
     height: auto;
-    align-self: flex-start;
 }
 
 .header_screenshots.playing:hover .play {
