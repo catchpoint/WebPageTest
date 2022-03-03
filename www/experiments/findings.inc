@@ -22,6 +22,7 @@ if( $experiment ){
                     foreach($diffMetrics as $metric){
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $thisDiff = $tests[1]['stepResult']->getMetric($metric[0]) - $experimentMetric;
+                        $thisDiff = intval(removeLeadingZero(round(abs($thisDiff),3)));
                         if($thisDiff !== 0){
                             echo '<th align="center" valign="middle">' . $metric[1] . '</th>';
                         }
@@ -39,8 +40,9 @@ if( $experiment ){
                             $changeTerms = $metric[3];
                         }
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
+                        $thisDiff = intval(removeLeadingZero(round(abs($thisDiff),3)));
                         if($thisDiff !== 0){
-                            echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. removeLeadingZero(round(abs($thisDiff),3)) . $units . $change . '</td>';
+                            echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. $thisDiff . $units . $change . '</td>';
                         }
                     }
                 ?>
