@@ -21,7 +21,7 @@ function BuildRenderTests() {
     $videoIdExtra = "";
     $bgColor = isset($_REQUEST['bg']) ? htmlspecialchars($_REQUEST['bg']) : '000000';
     $textColor = isset($_REQUEST['text']) ? htmlspecialchars($_REQUEST['text']) : 'ffffff';
-
+    $applyGrey = isset($_REQUEST['applyGrey']) && $_REQUEST['applyGrey'] === 0 ? false : true;
     $compTests = explode(',', $_REQUEST['tests']);
     foreach($compTests as $t)
     {
@@ -674,7 +674,9 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im) {
 
     $need_grey = false;
     if (!isset($test['done']) && $frameTime > $test['end']) {
-        $need_grey = true;
+        if( $applyGrey ){
+            $need_grey = true;
+        }
         $test['done'] = true;
     }
 
