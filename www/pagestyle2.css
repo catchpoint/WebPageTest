@@ -301,6 +301,7 @@ h1 .pro-flag {
 .experiment_meta_included {
     display: flex;
     gap: 1rem;
+    align-items: flex-start;
 }
 
 .experiment_meta_urls>p,
@@ -314,9 +315,10 @@ h1 .pro-flag {
 .experiment_meta_urls>ul,
 .experiment_meta_included>ul {
     display: flex;
-    gap: 1rem;
+    gap: .5rem;
     margin: 0;
     padding: 0;
+    flex-flow: row wrap;
 }
 
 .experiment_meta_included details {
@@ -324,11 +326,46 @@ h1 .pro-flag {
     z-index: 10;
 }
 
+.experiment_meta_included summary {
+    list-style: none;
+    padding: 0.2em 1.3rem .2em .5em;
+    background-image: url(/images/src/icon_triangledown.svg);
+    background-repeat: no-repeat;
+    background-position: right 0.5em top 50%;
+    background-color: #fafafa;
+    cursor: pointer;
+    border-radius: .5em;
+    font-size: .9em;
+    font-weight: 900;
+    color: #1071ba;
+    border: 1px solid #ddd;
+}
+
+.experiment_meta_included details:hover summary,
+.experiment_meta_included details:focus summary {
+    background-color: #fff;
+    box-shadow: 0 0 5px #eee;
+}
+
+.experiment_meta_included details[open] summary {
+    background-color: #2a3c64;
+    color: #fff;
+    border-color: #2a3c64;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
 .experiment_meta_included details ul {
     position: absolute;
-    background: #fff;
-    padding: 1em;
-    border: 1px solid #eee;
+    background: #2a3c64;
+    padding: 2em .6em;
+    font-size: .8em;
+    color: #fff;
+    list-style: disc;
+    border-radius: .5rem;
+    margin: 0;
+    border-top-left-radius: 0;
+    max-width: 80vw;
 }
 
 span.lh-flag {

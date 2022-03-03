@@ -448,7 +448,7 @@ else
                                     echo '<h2>Experiment Results</h2>';
                                     echo '<div class="experiment_meta">';
                                     echo '<div class="experiment_meta_included">';
-                                    echo '<p>Experiments applied:</p>';
+                                    echo '<p>Experiments:</p>';
                                     echo '<ul>';
                                     foreach( $metaInfo->experiment->recipes as $recipe ){
                                        echo "<li><details><summary>".key($recipe)."</summary>";
@@ -460,7 +460,7 @@ else
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
 
-                                    echo '<p>Relevant URLs:</p>';
+                                    echo '<p>URLs:</p>';
                                     echo "<ul>
                                     <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
                                     <li><a href=\"". $experimentTestHref ."\">Experiment Run</a></li>
