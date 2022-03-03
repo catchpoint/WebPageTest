@@ -357,6 +357,10 @@ h1 .pro-flag {
     border: 1px solid #ddd;
 }
 
+.experiment_meta_included summary::-webkit-details-marker {
+    display: none;
+}
+
 .experiment_meta_urls a {
     display: block;
     text-decoration: none;
