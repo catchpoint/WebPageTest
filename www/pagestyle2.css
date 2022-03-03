@@ -4083,6 +4083,7 @@ label.test_preset_profile {
     line-height: 1;
     overflow-x: auto;
     vertical-align: top;
+    /* min-width: 100%; */
 }
 
 .test_results-content {
@@ -5252,13 +5253,18 @@ table.pretty .metric_groups th {
 }
 
 .metric_change {
-    font-size: .4em;
-    font-weight: 500;
-    -webkit-text-stroke: 0;
     display: block;
+}
+
+.metric_change em {
+    font-size: .4em;
+    font-weight: 900;
+    -webkit-text-stroke: 0;
+    display: inline-block;
     font-style: normal;
     text-transform: uppercase;
     margin: .3em 0;
+    /* color: #222; */
 }
 
 .results-filmstrip-container h4 a {
@@ -5301,6 +5307,23 @@ table.pretty td.border {
 table.pretty td.good,
 table#tableResults td.good {
     color: #6ca71a;
+}
+
+.results_header table#tableResults td.good,
+.results_header table#tableResults td.poor {
+    color: #2a3c64;
+}
+
+.results_header table#tableResults td.good em {
+    background: #6ca71a;
+    color: #fff;
+    padding: .5rem;
+    display: block;
+    width: auto;
+}
+
+.results_header table#tableResults td.poor em {
+    color: #d02424;
 }
 
 table.pretty td.ok,
