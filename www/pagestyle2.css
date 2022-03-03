@@ -4259,6 +4259,8 @@ div.results-filmstrip-container img {
 table.pretty td {
     text-align: left;
     vertical-align: top;
+    width: 1%;
+    /* equal cols default */
 }
 
 img.autohide:hover {
