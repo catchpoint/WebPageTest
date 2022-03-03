@@ -39,8 +39,9 @@ if( $experiment ){
                         if( $metric[3] ){
                             $changeTerms = $metric[3];
                         }
-                        $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
                         $thisDiff = intval(removeLeadingZero(round(abs($thisDiff),3)));
+                        $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
+                        
                         if($thisDiff !== 0){
                             echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. $thisDiff . $units . $change . '</td>';
                         }
