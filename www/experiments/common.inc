@@ -97,7 +97,7 @@ foreach($assessment as $key => $cat ){
 		}
 	}
 	$numRecommended = $numChecks - $numGood;
-	$ending = $numChecks === 1 ? "y" : "ies";
+	$ending = $numRecommended === 1 ? "y" : "ies";
 
 	$assessment[$key]["num_recommended"] = $numRecommended;
 	$assessment[$key]["num_experiments"] = $numExperiments;
