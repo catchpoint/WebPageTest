@@ -1,5 +1,9 @@
 <?php
 
+require_once(__DIR__ . '/../experiments/common.inc');
+
+
+
 $expPage = $menuUrlGenerator->resultPage("experiments");
 
 

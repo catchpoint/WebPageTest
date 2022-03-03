@@ -473,7 +473,27 @@ else
                                     echo '<h3 class="hed_sub">Improvements & Regressions <em>(Notable changes between experiment and control)</em></h3>';
                                     include __DIR__ . '/../experiments/findings.inc';
 
-                                    echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment run vs. control run.)</em></h3>';
+
+                                    ?>
+
+                                    <div class="experiment_opportunities">
+                                        <div class="experiment_opportunities-resolved">
+                                            <h3 class="hed_sub">Resolved Opportunities</h3>
+                                            <p><strong>Success!</strong> This experiment resolved these bottlenecks</p>
+
+                                        </div>
+                                        <div class="experiment_opportunities-remaining">
+                                            <h3 class="hed_sub">Remaining Opportunities</h3>
+                                            <p>There are more opportunities and experiments you can try!</p>
+                                            <?php include __DIR__ . '/../experiments/summary.inc'; ?>
+
+                                        </div>
+                                    </div>
+
+
+                                    <?php
+
+                                    echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment vs. Control)</em></h3>';
 
                                    
 

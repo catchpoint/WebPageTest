@@ -163,7 +163,8 @@ h3.hed_sub {
     color: #2A3D64;
 }
 
-.hed_sub em {
+.hed_sub em,
+.results_header .hed_sub+p {
     font-size: .5em;
     font-style: normal;
     text-transform: none;
@@ -187,7 +188,8 @@ h3.hed_sub {
     h3.hed_sub {
         font-size: 1.6em;
     }
-    .hed_sub em {
+    .hed_sub em,
+    .results_header .hed_sub+p {
         display: block;
         font-size: .6em;
         margin: .5em 0;
@@ -200,8 +202,17 @@ h3.hed_sub {
     padding: 0;
 }
 
-.results_header .hed_sub em {
+.results_header .hed_sub em,
+.results_header .hed_sub+p {
     font-size: .7em;
+}
+
+.results_header .hed_sub+p {
+    font-size: 1rem;
+}
+
+.compare-experiment .opportunities_summary {
+    max-width: none;
 }
 
 h4,
@@ -298,7 +309,8 @@ h1 .pro-flag {
     margin: 0 1em 0 .4em;
 }
 
-.experiment_meta {
+.experiment_meta,
+.experiment_opportunities {
     display: flex;
     gap: 3rem;
     margin: .5rem 0;
@@ -306,6 +318,19 @@ h1 .pro-flag {
     padding: 0 0 .5rem;
     justify-content: space-between;
     align-items: flex-start;
+}
+
+.experiment_opportunities {
+    border-top: 1px solid #eee;
+    padding: .5rem 0 0;
+}
+
+.experiment_opportunities-resolved {
+    flex: 1 1 30%;
+}
+
+.experiment_opportunities-remaining {
+    flex: 1 1 70%;
 }
 
 .experiment_meta_urls,

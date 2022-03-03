@@ -33,6 +33,9 @@ $assessment = array(
 
 
 // define $lcp for future experiments
+if(!$testStepResult){
+	$testStepResult = $test['stepResult'];
+}
 $events = $testStepResult->getMetric('largestPaints');
 $lcp = null;
 if (isset($events) && is_array($events)) {
