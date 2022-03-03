@@ -102,7 +102,7 @@ foreach($assessment as $key => $cat ){
 	$assessment[$key]["num_recommended"] = $numRecommended;
 	$assessment[$key]["num_experiments"] = $numExperiments;
 
-	if( $numRecommended > 4 ){
+	if( $numRecommended > 3 ){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numRecommended} opportunit${ending} to consider.";
 		
