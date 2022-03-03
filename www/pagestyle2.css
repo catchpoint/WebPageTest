@@ -292,7 +292,6 @@ h1 {
 }
 
 h1 .pro-flag {
-    align-self: flex-start;
     font-size: .5em;
     padding: .5em;
     border-radius: .4em;
