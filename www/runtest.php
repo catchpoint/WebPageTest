@@ -799,7 +799,6 @@ use WebPageTest\RateLimiter;
                     "experiment" => array(
                       "source_id" => $id,
                       "control_id" => "",
-                      "experiment_id" => "",
                       "recipes" => array()
                     )
                   );
@@ -810,7 +809,7 @@ use WebPageTest\RateLimiter;
                     $recipeScript .= $value;
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
-                      $experimentMetadata["experiments"]["recipes"][] = array( $value => $ingredients );
+                      $experimentMetadata["experiment"]["recipes"][] = array( $value => $ingredients );
                       if( count($ingredients) > 1 ){
                         $ingredients = implode($ingredients, ",");
                       }
@@ -2345,6 +2344,19 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
         // generate the test ID
         $testId = GenerateTestID($test['private'], $locationShard);
+        
+        // if this is an experiment, and it's a control run, it needs its control_id field set to its own id
+        if( $test['metadata'] ){
+          $meta = json_decode($test['metadata']);
+          if (isset($meta) && is_array($meta) && $meta['experiment'] ){
+            if( $meta['control_id'] === "" ){
+              $meta['control_id'] = $testId;
+              $test['metadata'] = json_encode($meta);
+            }
+          }
+        }
+
+        
         $test['path'] = './' . GetTestPath($testId);
 
         // create the folder for the test results

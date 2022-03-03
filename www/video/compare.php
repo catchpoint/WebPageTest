@@ -105,13 +105,13 @@ else
                     $experiment = true;
                        
 
-                    $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->source_test, 0, 1 );
+                    $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->source_id, 0, 1 );
                     $originalTestHref = $originalTestUrlGenerator->resultSummary();
         
-                    $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_test, 0, 1 );
+                    $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_id, 0, 1 );
                     $controlTestHref = $controlTestUrlGenerator->resultSummary();
         
-                    $experimentTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->experiment_test, 0, 1 );
+                    $experimentTestUrlGenerator = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
                     $experimentTestHref = $experimentTestUrlGenerator->resultSummary();
                 
 
