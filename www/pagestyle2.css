@@ -1542,7 +1542,7 @@ details.details_custommetrics summary {
 }
 
 .results_header .scrollableTable+h3 {
-    margin-top: .1em;
+    margin-top: .3em;
 }
 
 .results_header p {
@@ -5254,6 +5254,9 @@ table.pretty .metric_groups th {
 
 .metric_change {
     display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: .3;
 }
 
 .metric_change em {
@@ -5263,8 +5266,13 @@ table.pretty .metric_groups th {
     display: inline-block;
     font-style: normal;
     text-transform: uppercase;
-    margin: .3em 0;
+    margin: 0;
     /* color: #222; */
+    padding: 0rem 0.5rem;
+    display: inline;
+    width: auto;
+    margin: 0;
+    line-height: 1;
 }
 
 .results-filmstrip-container h4 a {
@@ -5317,9 +5325,10 @@ table#tableResults td.good {
 .results_header table#tableResults td.good em {
     background: #6ca71a;
     color: #fff;
-    padding: .5rem;
-    display: block;
-    width: auto;
+    /* padding: .1rem .5rem; */
+    /* display: inline-block; */
+    /* width: auto; */
+    /* margin: 0; */
 }
 
 .results_header table#tableResults td.poor em {
