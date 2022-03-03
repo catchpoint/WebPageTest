@@ -1613,7 +1613,7 @@ details.details_custommetrics summary {
     background-size: 100%;
     border: 2px solid #2d3c60;
     margin-left: -1.5em;
-    opacity: 0;
+    /* opacity: 0; */
 }
 
 .header_screenshots.playing .play {
