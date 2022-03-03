@@ -1541,10 +1541,6 @@ details.details_custommetrics summary {
     /* padding: ; */
 }
 
-.results_header .scrollableTable+h3 {
-    margin-top: .3em;
-}
-
 .results_header p {
     font-size: 1.25rem;
     max-width: 45em;
