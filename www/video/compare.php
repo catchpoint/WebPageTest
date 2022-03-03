@@ -470,10 +470,10 @@ else
                                     echo "</div>";
                                     echo "</div>";
 
-                                    echo '<h3 class="hed_sub">Improvements & Regressions</h3>';
+                                    echo '<h3 class="hed_sub">Improvements & Regressions <em>(Notable changes between experiment and control)</em></h3>';
                                     include __DIR__ . '/../experiments/findings.inc';
 
-                                    echo '<h3 class="hed_sub">Filmstrip Comparison</h3>';
+                                    echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment run vs. control run.)</em></h3>';
 
                                    
 

@@ -194,6 +194,16 @@ h3.hed_sub {
     }
 }
 
+.results_header .hed_sub {
+    font-size: 1.3rem;
+    margin: 1em 0 0;
+    padding: 0;
+}
+
+.results_header .hed_sub em {
+    font-size: .7em;
+}
+
 h4,
 .h4,
 h2.accordion_opener {
@@ -304,6 +314,7 @@ h1 .pro-flag {
     display: flex;
     gap: 1rem;
     align-items: flex-start;
+    flex: 1 1 50%;
 }
 
 .experiment_meta_urls>p,
@@ -1528,6 +1539,10 @@ details.details_custommetrics summary {
     padding-bottom: .5rem;
     flex: 1 1 60%;
     /* padding: ; */
+}
+
+.results_header .scrollableTable+h3 {
+    margin-top: .1em;
 }
 
 .results_header p {
