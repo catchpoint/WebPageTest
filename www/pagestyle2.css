@@ -5333,7 +5333,8 @@ table#tableResults td.good {
 }
 
 .results_header table#tableResults td.poor em {
-    color: #d02424;
+    background: #d02424;
+    color: #fff;
 }
 
 table.pretty td.ok,
