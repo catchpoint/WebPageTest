@@ -470,10 +470,12 @@ else
                                     echo "</div>";
                                     echo "</div>";
 
+                                    echo '<h3 class="hed_sub">Improvements & Regressions</h3>';
                                     include __DIR__ . '/../experiments/findings.inc';
 
+                                    echo '<h3 class="hed_sub">Filmstrip Comparison</h3>';
+
                                    
-                                   // echo '<p>Experiment settings:' . $test['testinfo']['label'] . '</p>';
 
                                 }
                                 
@@ -491,7 +493,7 @@ else
             
                         </div>
             
-                        <h3 class="hed_sub">Filmstrip Comparison</h3>
+                        
                         <div id="result" class="results_body">
 
 
