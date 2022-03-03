@@ -292,9 +292,11 @@ h1 .pro-flag {
 .experiment_meta {
     display: flex;
     gap: 3rem;
-    margin: 0;
+    margin: .5rem 0;
     border-bottom: 1px solid #eee;
-    padding: 0 0 1rem;
+    padding: 0 0 .5rem;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .experiment_meta_urls,
@@ -307,9 +309,11 @@ h1 .pro-flag {
 .experiment_meta_urls>p,
 .experiment_meta_included>p {
     margin: 0 0 .5em;
-    font-size: 1rem !important;
+    font-size: .9rem !important;
     text-transform: uppercase;
-    font-weight: 900 !important;
+    font-weight: 500 !important;
+    color: #222;
+    padding: .3rem 0;
 }
 
 .experiment_meta_urls>ul,
@@ -326,24 +330,41 @@ h1 .pro-flag {
     z-index: 10;
 }
 
+.experiment_meta_urls a,
 .experiment_meta_included summary {
     list-style: none;
-    padding: 0.2em 1.3rem .2em .5em;
+    padding: 0.2em 1.3rem .2em .7em;
     background-image: url(/images/src/icon_triangledown.svg);
     background-repeat: no-repeat;
     background-position: right 0.5em top 50%;
     background-color: #fafafa;
     cursor: pointer;
-    border-radius: .5em;
+    border-radius: 1rem;
     font-size: .9em;
     font-weight: 900;
     color: #1071ba;
     border: 1px solid #ddd;
 }
 
+.experiment_meta_urls a {
+    display: block;
+    text-decoration: none;
+    background-image: none;
+    padding-right: .7em;
+    background: #1071ba;
+    border-color: #1071ba;
+    color: #fff;
+}
+
 .experiment_meta_included details:hover summary,
 .experiment_meta_included details:focus summary {
     background-color: #fff;
+    box-shadow: 0 0 5px #eee;
+}
+
+.experiment_meta_urls a:hover,
+.experiment_meta_urls a:focus {
+    background-color: #2a3d64;
     box-shadow: 0 0 5px #eee;
 }
 
