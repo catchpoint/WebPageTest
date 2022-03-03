@@ -111,8 +111,7 @@ else
                     $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_id, 0, 1 );
                     $controlTestHref = $controlTestUrlGenerator->resultSummary();
         
-                    $experimentTestUrlGenerator = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
-                    $experimentTestHref = $experimentTestUrlGenerator->resultSummary();
+                    $experimentTestHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
                 
 
 
