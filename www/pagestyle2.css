@@ -1502,6 +1502,7 @@ details.details_custommetrics summary {
     background-size: 100%;
     border: 2px solid #2d3c60;
     margin-left: -1.5em;
+    opacity: 0;
 }
 
 .header_screenshots.playing .play {
@@ -1513,7 +1514,8 @@ details.details_custommetrics summary {
     height: auto;
 }
 
-.header_screenshots.playing:hover .play {
+.header_screenshots:hover .play,
+.header_screenshots video:focus+.play {
     opacity: 1 !important;
     outline: none;
 }
@@ -5132,6 +5134,16 @@ table.pretty .metric_groups th {
 
 .results-filmstrip-container h4 span {
     font-weight: 300;
+}
+
+.metric_change {
+    font-size: .4em;
+    font-weight: 500;
+    -webkit-text-stroke: 0;
+    display: block;
+    font-style: normal;
+    text-transform: uppercase;
+    margin: .3em 0;
 }
 
 .results-filmstrip-container h4 a {

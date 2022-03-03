@@ -91,7 +91,7 @@ else
     if( $sameIDs ){
         // TODO IF SHARED TEST URL
        
-        $testPath = GetTestPath($tests[1]['id']);
+        $testPath = GetTestPath($tests[0]['id']);
         $testInfo = TestInfo::fromFiles($testPath);
         $test['test'] = $testInfo->getRawData()['test'];
         $test['testinfo'] =  $testInfo->getRawData()['testinfo'];
@@ -435,7 +435,6 @@ else
                             <?php 
 
 
-                                include __DIR__ . '/../experiments/findings.inc';
 
                                 if( !$experiment ){
                                     if (count($tests) > 1 ) {
@@ -445,27 +444,31 @@ else
                                         echo '<h2>Filmstrip View</h2>';
                                     }
                                     echo '<p>Use this page to explore and compare timing and request details from one or more tests.</p>';
+                                } else {
+                                    echo '<h2>Experiment Results</h2>';
+
+                                    include __DIR__ . '/../experiments/findings.inc';
+
+                                    if( isset( $metaInfo ) ){
+
+                                        echo "<p>Experiment URLs: 
+                                            <a href=\"". $experimentTestHref ."\">Experiment</a>, 
+                                            <a href=\"". $controlTestHref ."\">Control</a>, 
+                                            <a href=\"". $originalTestHref ."\">Original</a>
+                                        </p>";
+                                
+                                    }
+                                   // echo '<p>Experiment settings:' . $test['testinfo']['label'] . '</p>';
+
                                 }
+                                
                             ?>
                             
                     <?php
 
 
 
-                    // //build out an expanded link
-                     if ($testResults->countRuns() > 1 && count($tests) == 1) {
-                         $link = '/video/compare.php?tests=';
-                         $cnt = 1;
-                         do {
-                             $link .= $tests[0]['id'] . '-r:' . $cnt . '-c:0';
-                             if ($tests[0]['step']) {
-                                 $link .= '-s:' . $test['step'];
-                             }
-                             $link .= ',';
-                             $cnt++;
-                         } while ($cnt <= $testResults->countRuns());
-                         echo '<a class="compare-all-link" href="' . substr($link,0,-1) . '">Compare all runs</a>';
-                     }
+   
                      ?>
                         </div>
             
@@ -473,63 +476,8 @@ else
             
                         </div>
             
-            
+                        <h3 class="hed_sub">Filmstrip Comparison</h3>
                         <div id="result" class="results_body">
-
-
-
-
-                <?php
-
-                
-
-                    // echo '<h3 class="hed_sub">Metric Comparison</h3>';
-                      
-                    // $experimentRun = $testResults->getRunResult(1, false);
-                    
-                    // $resultTable = new RunResultHtmlTable($testInfo, $experimentRun, null);
-                    // $resultTable->useLabelLinks(true);
-                    // $resultTable->disableColumns(array(
-                    //   RunResultHtmlTable::COL_VISUAL_COMPLETE,
-                    //   RunResultHtmlTable::COL_COST,
-                    //   RunResultHtmlTable::COL_FULLYLOADED,
-                    //   RunResultHtmlTable::COL_RESULT
-                    // ));
-                    // echo $resultTable->create(false);
-
-                    // $controlTestPath = GetTestPath($tests[1]['id']);
-                    // $controlTestInfo = TestInfo::fromFiles($controlTestPath);
-                    // $controlTestResults = TestResults::fromFiles($controlTestInfo);
-                    // $controlRun = $controlTestResults->getRunResult(1, false);
-                    // $resultTable = new RunResultHtmlTable($controlTestInfo, $controlRun, null);
-                    // $resultTable->useLabelLinks(true);
-                    // $resultTable->disableColumns(array(
-                    //   RunResultHtmlTable::COL_VISUAL_COMPLETE,
-                    //   RunResultHtmlTable::COL_COST,
-                    //   RunResultHtmlTable::COL_FULLYLOADED,
-                    //   RunResultHtmlTable::COL_RESULT
-                    // ));
-                    // echo $resultTable->create(false);
-
-                    
-
-                    // ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 <?php

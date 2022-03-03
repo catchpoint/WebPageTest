@@ -239,7 +239,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<ul class=\"header_data_urltime\">";
-            if ( $test['testinfo']['label'] && !$experiment ) {
+            if ( $test['testinfo']['label']  ) {
                 echo '<li><strong>Label:</strong> <span>'.$test['testinfo']['label'].'</span></li>';
             }
             echo "<li><strong>URL: </strong>";
@@ -454,7 +454,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo '<ul>';
 
 
-        //if( !$experiment ){
             $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
 
             $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $gradeRun, !empty($cached));
@@ -572,14 +571,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         
             }
         
-        // }
-        // else {
-        //     echo "
-        //     <li><a href=\"". $originalTestHref ."\">Source Test Results</a></li>
-        //     <li><a href=\"". $experimentTestHref ."\">Experiment Run Test Results</a></li>
-        //     <li><a href=\"". $controlTestHref ."\">Control Run Test Results</a></li>
-        //     ";
-        // }
+        
+        echo "
+        <li><a href=\"". $originalTestHref ."\">Source Test Results</a></li>
+        <li><a href=\"". $experimentTestHref ."\">Experiment Run Test Results</a></li>
+        <li><a href=\"". $controlTestHref ."\">Control Run Test Results</a></li>
+        ";
+
     
 
         echo '</ul></span></div></div>';
