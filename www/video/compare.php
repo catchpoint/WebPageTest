@@ -111,7 +111,8 @@ else
                     $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo->experiment->control_id, 0, 1 );
                     $controlTestHref = $controlTestUrlGenerator->resultSummary();
         
-                    $experimentTestHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
+                    $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
+                    $experimentTestHref = "/result/" . $tests[0]['id'];
                 
 
 
@@ -445,18 +446,33 @@ else
                                     echo '<p>Use this page to explore and compare timing and request details from one or more tests.</p>';
                                 } else {
                                     echo '<h2>Experiment Results</h2>';
+                                    echo '<div class="experiment_meta">';
+                                    echo '<div class="experiment_meta_included">';
+                                    echo '<p>Experiments applied:</p>';
+                                    echo '<ul>';
+                                    foreach( $metaInfo->experiment->recipes as $recipe ){
+                                       echo "<li><details><summary>".key($recipe)."</summary>";
+                                       foreach($recipe as $ings){
+                                        echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
+                                       }
+                                    }
+                                    echo '</ul>';
+                                    echo '</div>';
+                                    echo '<div class="experiment_meta_urls">';
+
+                                    echo '<p>Relevant URLs:</p>';
+                                    echo "<ul>
+                                    <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
+                                    <li><a href=\"". $experimentTestHref ."\">Experiment Run</a></li>
+                                    <li><a href=\"". $controlTestHref ."\">Control Run</a></li>
+                                    <li><a href=\"". $originalTestHref ."\">Original Test</a></li>
+                                    </ul>";
+                                    echo "</div>";
+                                    echo "</div>";
 
                                     include __DIR__ . '/../experiments/findings.inc';
 
-                                    if( isset( $metaInfo ) ){
-
-                                        echo "<p>Experiment URLs: 
-                                            <a href=\"". $experimentTestHref ."\">Experiment</a>, 
-                                            <a href=\"". $controlTestHref ."\">Control</a>, 
-                                            <a href=\"". $originalTestHref ."\">Original</a>
-                                        </p>";
-                                
-                                    }
+                                   
                                    // echo '<p>Experiment settings:' . $test['testinfo']['label'] . '</p>';
 
                                 }

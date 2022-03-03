@@ -289,6 +289,48 @@ h1 .pro-flag {
     margin: 0 1em 0 .4em;
 }
 
+.experiment_meta {
+    display: flex;
+    gap: 3rem;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+    padding: 0 0 1rem;
+}
+
+.experiment_meta_urls,
+.experiment_meta_included {
+    display: flex;
+    gap: 1rem;
+}
+
+.experiment_meta_urls>p,
+.experiment_meta_included>p {
+    margin: 0 0 .5em;
+    font-size: 1rem !important;
+    text-transform: uppercase;
+    font-weight: 900 !important;
+}
+
+.experiment_meta_urls>ul,
+.experiment_meta_included>ul {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+}
+
+.experiment_meta_included details {
+    position: relative;
+    z-index: 10;
+}
+
+.experiment_meta_included details ul {
+    position: absolute;
+    background: #fff;
+    padding: 1em;
+    border: 1px solid #eee;
+}
+
 span.lh-flag {
     font-size: .8em;
     font-weight: 700;
