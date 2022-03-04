@@ -462,6 +462,7 @@ else
                                         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
                                        }
                                     }
+                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOptsHref ."\">View & Run More</a></li>";
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
@@ -498,7 +499,7 @@ else
 
                                         
                                         <div class="experiment_opportunities-remaining">
-                                            <h3 class="hed_sub">Remaining Opportunities <?php echo "<a class=\"experiment_opportunities-more\" href=\"". $experimentOptsHref ."\">Run More Experiments!</a>"; ?></h3>
+                                            <h3 class="hed_sub">Remaining Opportunities</h3>
                                             <p>Here's how your overall Opportunities look after this experiment:</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
                                         </div>
