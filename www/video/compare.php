@@ -462,7 +462,6 @@ else
                                         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
                                        }
                                     }
-                                    echo '<li><a href="#">Run More</a></li>';
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
