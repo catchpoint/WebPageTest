@@ -113,6 +113,12 @@ else
         
                     $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
                     $experimentTestHref = "/result/" . $tests[0]['id'];
+
+                    $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $tests[0]['id'], 0, 1 );
+                    $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
+
+
+
                 
 
 
@@ -456,6 +462,7 @@ else
                                         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
                                        }
                                     }
+                                    echo '<li><a href="#">Run More</a></li>';
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
@@ -463,8 +470,9 @@ else
                                     echo '<p>URLs:</p>';
                                     echo "<ul>
                                     <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
-                                    <li><a href=\"". $experimentTestHref ."\">Experiment Run</a></li>
-                                    <li><a href=\"". $controlTestHref ."\">Control Run</a></li>
+                                    <li><a href=\"". $experimentOptsHref ."\">Modify Experiment</a></li>
+                                    <li><a href=\"". $experimentTestHref ."\">Experiment Test</a></li>
+                                    <li><a href=\"". $controlTestHref ."\">Control Test</a></li>
                                     <li><a href=\"". $originalTestHref ."\">Original Test</a></li>
                                     </ul>";
                                     echo "</div>";
