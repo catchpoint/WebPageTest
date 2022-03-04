@@ -139,7 +139,7 @@ foreach($assessment as $key => $cat ){
 			$sentiment .= " little time ";
 		}
 		else {
-			$sentiment .= " little to not time ";
+			$sentiment .= " little time ";
 		}
 		$sentiment .= " to become interactive.";
 	} else if( $key === "Usable" ) {
