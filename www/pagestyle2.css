@@ -434,9 +434,11 @@ a.experiment_meta-more {
 }
 
 a.experiment_meta-more {
-    background: #1071ba;
-    border-color: #1071ba;
-    color: #fff;
+    font-weight: 500;
+}
+
+a.experiment_meta-more:after {
+    content: "...";
 }
 
 .experiment_meta_included details:hover summary,
