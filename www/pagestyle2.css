@@ -219,6 +219,10 @@ h3.hed_sub {
     margin-bottom: 1.5rem;
 }
 
+.compare-experiment .extended {
+    display: none;
+}
+
 h4,
 .h4,
 h2.accordion_opener {
