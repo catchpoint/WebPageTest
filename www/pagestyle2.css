@@ -330,7 +330,7 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-resolved ol {
-    padding: 0;
+    padding: .5rem 0 0;
     list-style: none;
     display: flex;
     gap: 1rem;
