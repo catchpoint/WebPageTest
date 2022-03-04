@@ -402,6 +402,7 @@ h1 .pro-flag {
 }
 
 .experiment_meta_urls a,
+a.experiment_meta-more,
 .experiment_meta_included summary {
     list-style: none;
     padding: 0.2em 1.3rem .2em .7em;
@@ -421,11 +422,18 @@ h1 .pro-flag {
     display: none;
 }
 
-.experiment_meta_urls a {
+.experiment_meta_urls a,
+a.experiment_meta-more {
     display: block;
     text-decoration: none;
     background-image: none;
     padding-right: .7em;
+    /* background: #1071ba; */
+    /* border-color: #1071ba; */
+    /* color: #fff; */
+}
+
+a.experiment_meta-more {
     background: #1071ba;
     border-color: #1071ba;
     color: #fff;
@@ -437,9 +445,11 @@ h1 .pro-flag {
     box-shadow: 0 0 5px #eee;
 }
 
+a.experiment_meta-more:hover,
+a.experiment_meta-more:focus,
 .experiment_meta_urls a:hover,
 .experiment_meta_urls a:focus {
-    background-color: #2a3d64;
+    background-color: #fff;
     box-shadow: 0 0 5px #eee;
 }
 
