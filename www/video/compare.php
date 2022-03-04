@@ -497,6 +497,7 @@ else
                                         
                                         <div class="experiment_opportunities-remaining">
                                             <h3 class="hed_sub">Remaining Opportunities</h3>
+                                            <p>Here's how your overall Opportunities look after this experiment:</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
                                         </div>
                                     </div>
