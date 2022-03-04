@@ -215,6 +215,10 @@ h3.hed_sub {
     max-width: none;
 }
 
+.compare-experiment .results_header .scrollableTable {
+    margin-bottom: 1.5rem;
+}
+
 h4,
 .h4,
 h2.accordion_opener {
@@ -321,8 +325,9 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities {
-    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
     padding: .5rem 0 0;
+    /* margin-bottom: 1rem; */
 }
 
 .experiment_opportunities-resolved {
@@ -330,7 +335,7 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities p {
-    margin: .5em 0;
+    margin: .3em 0 1rem;
 }
 
 .experiment_opportunities p strong {}
@@ -361,6 +366,7 @@ h1 .pro-flag {
 
 .experiment_opportunities-remaining {
     flex: 1 1 60%;
+    align-self: flex-start;
 }
 
 .experiment_meta_urls,
@@ -456,6 +462,12 @@ h1 .pro-flag {
     margin: 0;
     border-top-left-radius: 0;
     max-width: 80vw;
+}
+
+.compare-experiment .scrollableTable {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 span.lh-flag {
@@ -1354,7 +1366,7 @@ footer ul {
     display: flex;
     gap: 1rem;
     max-width: 60%;
-    padding: 0 0 2rem;
+    padding: 0 0 1.5rem;
 }
 
 .opportunities_summary_hed {
