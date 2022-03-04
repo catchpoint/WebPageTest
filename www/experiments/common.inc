@@ -159,22 +159,8 @@ foreach($assessment as $key => $cat ){
 		}
 		
 		if( isset($axe) && count($axe['violations']) ){
-			$violations = $axe['violations'];
-			$num_violations = count($violations);
-			$num_critical = 0;
-			$num_serious = 0;
-			$num_moderate = 0;
-			$num_minor = 0;
+
 			
-			foreach($violations as $v){
-				if( $v['impact'] === "critical" ){
-					$num_critical++;
-				}
-				if( $v['impact'] === "serious" ){
-					$num_serious++;
-				}
-				
-			}
 			$sentiment .= "It had $num_violations accessibility issues, ";
 			if( $num_critical > 0 ){
 				$sentiment .= " $num_critical critical";
