@@ -114,7 +114,7 @@ else
                     $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo->experiment->control_id;
                     $experimentTestHref = "/result/" . $tests[0]['id'];
 
-                    $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $tests[0]['id'], 0, 1 );
+                    $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $tests[0]['id'], 0, 0 );
                     $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
 
 
