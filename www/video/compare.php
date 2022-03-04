@@ -477,11 +477,24 @@ else
                                     ?>
 
                                     <div class="experiment_opportunities">
-                                        <div class="experiment_opportunities-resolved">
-                                            <h3 class="hed_sub">Resolved Opportunities</h3>
-                                            <p><strong>Success!</strong> This experiment resolved these bottlenecks</p>
+                                    <?php 
+                                        include __DIR__ . '/../experiments/compare-assessments.inc'; 
+                                        if(count($assessmentChanges)){
+                                            $numAssessmentChanged = count($assessmentChanges);
+                                            $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
+                                            echo '<div class="experiment_opportunities-resolved">
+                                                <h3 class="hed_sub">Resolved Opportunities</h3>
+                                                <p><strong>Success!</strong> This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
+                                                    <ol>';
+                                                
+                                            foreach($assessmentChanges as $change){
+                                                echo '<li class="'. ( $change['good'] ? 'good' : 'bad' ) .'">' . $change['title'] . '</li>';
+                                            }
+                                        echo '</ol></div>';
+                                        }
+                                    ?>
 
-                                        </div>
+                                        
                                         <div class="experiment_opportunities-remaining">
                                             <h3 class="hed_sub">Remaining Opportunities</h3>
                                             <p>There are more opportunities and experiments you can try!</p>
@@ -517,7 +530,7 @@ else
                         <div id="result" class="results_body">
 
 
-<?php
+<?php 
 
                     echo '<div class=""><div class="test_results-content">';
                     echo '<div class="test_results_header">';

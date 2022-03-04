@@ -795,11 +795,13 @@ use WebPageTest\RateLimiter;
                   //$test['script'] .= "setHeader\tx-recipes:\t$recipeScript\r\n";
                   $scriptNavigate = "navigate\t%URL%\r\n";
                   $test['script'] .= $scriptNavigate;
+                  
                   $experimentMetadata = array(
                     "experiment" => array(
                       "source_id" => $id,
                       "control_id" => "",
-                      "recipes" => array()
+                      "recipes" => array(),
+                      "assessment" => isset($_REQUEST["assessment"]) ? json_decode(urldecode($_REQUEST["assessment"])) : null
                     )
                   );
                   

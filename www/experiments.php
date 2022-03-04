@@ -289,6 +289,8 @@ $page_description = "Website performance test result$testLabel.";
                     <?php
 
                     echo '<div class="experiments_foot"><p>Ready to go?</p>';
+                    
+                    echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
 
                     echo '<input type="submit" value="Re-Run Test with Experiments">';
                     echo "\n</div></form>\n";
