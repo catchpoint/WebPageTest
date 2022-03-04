@@ -467,10 +467,9 @@ else
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
 
-                                    echo '<p>Experiment Links:</p>';
+                                    echo '<p>Links:</p>';
                                     echo "<ul>
-                                    <li><a href=\"". $experimentResultsHref ."\">Results</a></li>
-                                    <li><a href=\"". $experimentOptsHref ."\">Edit</a></li>
+                                    <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
                                     <li><a href=\"". $experimentTestHref ."\">Experiment Test</a></li>
                                     <li><a href=\"". $controlTestHref ."\">Control Test</a></li>
                                     <li><a href=\"". $originalTestHref ."\">Original Test</a></li>
