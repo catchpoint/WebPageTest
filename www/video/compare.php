@@ -466,10 +466,10 @@ else
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
 
-                                    echo '<p>URLs:</p>';
+                                    echo '<p>Experiment Links:</p>';
                                     echo "<ul>
-                                    <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
-                                    <li><a href=\"". $experimentOptsHref ."\">Modify Experiment</a></li>
+                                    <li><a href=\"". $experimentResultsHref ."\">Results</a></li>
+                                    <li><a href=\"". $experimentOptsHref ."\">Edit</a></li>
                                     <li><a href=\"". $experimentTestHref ."\">Experiment Test</a></li>
                                     <li><a href=\"". $controlTestHref ."\">Control Test</a></li>
                                     <li><a href=\"". $originalTestHref ."\">Original Test</a></li>
@@ -498,7 +498,7 @@ else
 
                                         
                                         <div class="experiment_opportunities-remaining">
-                                            <h3 class="hed_sub">Remaining Opportunities</h3>
+                                            <h3 class="hed_sub">Remaining Opportunities <?php echo "<a class=\"experiment_opportunities-more\" href=\"". $experimentOptsHref ."\">Run More Experiments!</a>"; ?></h3>
                                             <p>Here's how your overall Opportunities look after this experiment:</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
                                         </div>
