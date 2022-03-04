@@ -31,7 +31,7 @@ if( count($blockingFontCSSReqs) > 0 ){
   );
 } else {
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  'You had no render-blocking external font CSS files.',
+        "title" =>  'Zero render-blocking font CSS files found.',
         "desc" =>  "TBD importance notes here",
         "examples" =>  array(),
         "experiments" =>  array(),

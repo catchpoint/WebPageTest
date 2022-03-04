@@ -66,7 +66,7 @@ if( $jsLibsVulns  ){
 }
 else {
     $assessment[$category]["opportunities"][] = array( 
-        "title" =>  "No security vulnerabilies were detected by Snyk",
+        "title" =>  "Zero security vulnerabilies were detected by Snyk",
         "desc" =>  "Snyk has found 0 security vulnerabilities with included packages.",
         "examples" =>  array(),
         "experiments" =>  array(),

@@ -61,7 +61,7 @@
         }
          else {
             $assessment[$category]["opportunities"][] = array(
-                "title" =>  'Largest Contentful Paint time was reasonably quick',
+                "title" =>  'Largest Contentful Paint time was quick',
                 "desc" =>  "TBD importance notes here",
                 "examples" =>  array(),
                 "experiments" =>  array(),

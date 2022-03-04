@@ -24,7 +24,7 @@
         );
     } else {
         $assessment[$category]["opportunities"][] = array( 
-            "title" =>  'You had no render-blocking external CSS files.',
+            "title" =>  'Zero render-blocking CSS files found.',
             "desc" =>  "TBD importance notes here",
             "examples" =>  array(),
             "experiments" =>  array(),

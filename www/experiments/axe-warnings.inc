@@ -70,7 +70,7 @@ if( isset( $axe ) ) {
 }
 else {
     $assessment[$category]["opportunities"][] = array(
-		"title" => "No Accessiblity Issues were Detected in this Page",
+		"title" => "Zero Accessiblity Issues were Detected",
 		"desc" => "Axe found no accessibility issues. ",
 		"examples" =>  array(),
 		"experiments" => array(),

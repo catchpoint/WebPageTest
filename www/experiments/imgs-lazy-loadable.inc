@@ -34,7 +34,7 @@ if( count($imgsThatShouldBeLazy) ){
 else {
    
     $assessment[$category]["opportunities"][] = array(
-		"title" => "No images outside the critical viewport need to be lazy-loaded.",
+		"title" => "Zero images outside the critical viewport need to be lazy-loaded.",
 		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
 		"examples" => array(),
 		"experiments" => array(),

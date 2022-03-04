@@ -43,7 +43,7 @@
         }
         else {
             $assessment[$category]["opportunities"][] = array(
-                "title" =>  'Layout shifts exist but are not caused by images needing aspect ratio',
+                "title" =>  'Layout shifts are not caused by images lacking aspect ratio',
                 "desc" =>  "TBD importance notes here",
                 "examples" =>  array(),
                 "experiments" =>   array(),
@@ -53,7 +53,7 @@
     }
     else {
             $assessment[$category]["opportunities"][] = array( 
-                "title" =>  'No major layout shifts detected.',
+                "title" =>  'Zero major layout shifts detected.',
                 "desc" =>  "TBD importance notes here",
                 "examples" =>  array(),
                 "experiments" =>  array(),

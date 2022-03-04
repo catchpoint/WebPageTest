@@ -40,7 +40,7 @@ if( count($fontsThatBlock) ){
 }
 else {
     $assessment[$category]["opportunities"][] = array(
-		"title" => "All custom fonts are loaded with settings that show fallback text while they are loading.",
+		"title" => "Zero custom fonts load in ways that delay text visibility.",
 		"desc" => "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font. font-display: swap will fix this.",
 		"examples" => array(),
 		"experiments" => array(),

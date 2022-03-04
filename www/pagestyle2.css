@@ -326,11 +326,36 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-resolved {
+    flex: 1 1 40%;
+}
+
+.experiment_opportunities-resolved ol {
+    padding: 0;
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    flex-flow: row wrap;
+    justify-content: space-between;
+}
+
+.experiment_opportunities-resolved li {
     flex: 1 1 30%;
+    background: url("/images/src/icon_award.svg") top center no-repeat;
+    padding-top: 4.2rem;
+    margin: 0;
+    box-sizing: border-box;
+    background-size: 3rem auto;
+    text-align: center;
+    font-size: .8em;
+    line-height: 1.3;
+    min-height: 3rem;
+    max-width: 50%;
+    font-weight: 900;
+    color: #2a3c64;
 }
 
 .experiment_opportunities-remaining {
-    flex: 1 1 70%;
+    flex: 1 1 60%;
 }
 
 .experiment_meta_urls,
