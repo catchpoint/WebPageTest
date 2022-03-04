@@ -13,11 +13,11 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
         $grade = $cat["grade"];
         $summary = $cat["summary"];
         $oppsCount = count($cat["opportunities"]);
-        $recommendedCount = $cat["num_recommended"];
-        $experimentsCount = $cat["num_experiments"];
-        $recsEnd = $recommendedCount != 1 ? "s" : "";
-        $oppsEnd = $oppsCount != 1 ? "s" : "";
-        $expsEnd = $experimentsCount != 1 ? "s" : "";
+        $recommendedCount = count($cat["num_recommended"]);
+        $experimentsCount = count($cat["num_experiments"]);
+        $recsEnd = $recommendedCount !== 1 ? "s" : "";
+        $oppsEnd = $oppsCount !== 1 ? "s" : "";
+        $expsEnd = $experimentsCount !== 1 ? "s" : "";
 
         $oppsAdd = "<p class=\"opportunities_summary_opps\"><span class=\"experiment_summary_count\">$oppsCount</span> Opportunities$end <span class=\"extended\"> found.</span></p>";
         $recsAdd = "<p class=\"opportunities_summary_recs\"><span class=\"experiment_summary_count\">$recommendedCount</span> Recommendation$recEnd <span class=\"extended\"> to consider.</span></p>";
