@@ -484,7 +484,7 @@ else
                                             $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
                                             echo '<div class="experiment_opportunities-resolved">
                                                 <h3 class="hed_sub">Resolved Opportunities</h3>
-                                                <p><strong>Success!</strong> This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
+                                                <p><strong>Success!</strong> This experiment resolved '. $numAssessmentChanged .' performance bottleneck' . $assessEnding .':</p>
                                                     <ol>';
                                                 
                                             foreach($assessmentChanges as $change){
@@ -497,9 +497,7 @@ else
                                         
                                         <div class="experiment_opportunities-remaining">
                                             <h3 class="hed_sub">Remaining Opportunities</h3>
-                                            <p>There are more opportunities and experiments you can try!</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
-
                                         </div>
                                     </div>
 

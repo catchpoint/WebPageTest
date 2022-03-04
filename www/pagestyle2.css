@@ -326,8 +326,14 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-resolved {
-    flex: 1 1 40%;
+    flex: 1 1 35%
 }
+
+.experiment_opportunities p {
+    margin: .5em 0;
+}
+
+.experiment_opportunities p strong {}
 
 .experiment_opportunities-resolved ol {
     padding: .5rem 0 0;
@@ -349,7 +355,6 @@ h1 .pro-flag {
     font-size: .8em;
     line-height: 1.3;
     min-height: 3rem;
-    max-width: 50%;
     font-weight: 900;
     color: #2a3c64;
 }
