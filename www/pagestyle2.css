@@ -219,6 +219,10 @@ h3.hed_sub {
     margin-bottom: 1.5rem;
 }
 
+.opportunities_summary .extended {
+    white-space: break-spaces;
+}
+
 .compare-experiment .extended {
     display: none;
 }
@@ -1399,12 +1403,15 @@ footer ul {
     border-radius: .5em;
 }
 
-.opportunities_summary,
 .opportunities_summary {
     border: 0;
     padding: 0 !important;
     margin: 0 0 2rem;
     gap: 3rem;
+}
+
+.results_body .opportunities_summary {
+    margin: 1rem 0 0;
 }
 
 .opportunities_summary a {

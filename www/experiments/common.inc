@@ -105,65 +105,129 @@ foreach($assessment as $key => $cat ){
 	$assessment[$key]["num_recommended"] = $numRecommended;
 	$assessment[$key]["num_experiments"] = $numExperiments;
 
-	// build sentiment
-	$sentiment = "This site ";
-	$ttfbCheck = $testStepResult->getMetric('TTFB');
-	if( $ttfbCheck > 2000 ){
-		$sentiment .= " was very slow";
-	} else if( $ttfbCheck > 1000 ){
-		$sentiment .= "took little time";
-	}
-	else {
-		$sentiment .= "was quick";
-	}
-	$sentiment .= " to connect and deliver initial code. It began rendering content ";
-
-	$fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
-	if( $fcpCheck > 5 ){
-		$sentiment .= " with considerable delay ";
-	} else if( $fcpCheck > 2 ){
-		$sentiment .= " with little delay ";
-	}
-	else {
-		$sentiment .= " very quickly ";
-	}
-
-	$tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
-	$sentiment .= "after that. It took ";
-	if( $tbtCheck > 2 ){
-		$sentiment .= " a long time ";
-	} else if( $tbtCheck > 1 ){
-		$sentiment .= " little time ";
-	}
-	else {
-		$sentiment .= " little to not time ";
-	}
-	$sentiment .= " to become interactive.";
+	
 
 	if( $key === "Quick" ){
-		if( $numRecommended > 3 ){
-			$assessment[$key]["grade"] = "f";
-			$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> " . $sentiment;
+		// build sentiment
+		$sentiment = "This site ";
+		$ttfbCheck = $testStepResult->getMetric('TTFB');
+		if( $ttfbCheck > 2000 ){
+			$sentiment .= " was very slow";
+		} else if( $ttfbCheck > 1000 ){
+			$sentiment .= "took little time";
+		}
+		else {
+			$sentiment .= "was quick";
+		}
+		$sentiment .= " to connect and deliver initial code. It began rendering content ";
+
+		$fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
+		if( $fcpCheck > 5 ){
+			$sentiment .= " with considerable delay ";
+		} else if( $fcpCheck > 2 ){
+			$sentiment .= " with little delay ";
+		}
+		else {
+			$sentiment .= " very quickly ";
+		}
+
+		$tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
+		$sentiment .= "after that. It took ";
+		if( $tbtCheck > 2 ){
+			$sentiment .= " a long time ";
+		} else if( $tbtCheck > 1 ){
+			$sentiment .= " little time ";
+		}
+		else {
+			$sentiment .= " little to not time ";
+		}
+		$sentiment .= " to become interactive.";
+	} else if( $key === "Usable" ) {
+		// build sentiment
+		$sentiment = "This site ";
+		if( isset($cls) ){
 			
-		} else if( $numRecommended > 0 ){
-			$assessment[$key]["grade"] = "c";
-			$assessment[$key]["summary"] = "<strong>Not bad!</strong> " .  $sentiment;
-		} else {
-			$assessment[$key]["grade"] = "a";
-			$assessment[$key]["summary"] = "<strong>Great work!</strong> " .  $sentiment;
+			if( $cls > .200 ){
+				$sentiment .= "had major layout shifts";
+			} else if( $cls > .50 ){
+				$sentiment .= "had minor layout shifts";
+			}
+			else {
+				$sentiment .= "had good layout stability";
+			}
+			$sentiment .= ".";
+		}
+		
+		if( isset($axe) && count($axe['violations']) ){
+			$violations = $axe['violations'];
+			$num_violations = count($violations);
+			$num_critical = 0;
+			$num_serious = 0;
+			$num_moderate = 0;
+			$num_minor = 0;
+			
+			foreach($violations as $v){
+				if( $v['impact'] === "critical" ){
+					$num_critical++;
+				}
+				if( $v['impact'] === "serious" ){
+					$num_serious++;
+				}
+				
+			}
+			$sentiment .= "It had $num_violations accessibility issues, ";
+			if( $num_critical > 0 ){
+				$sentiment .= " $num_critical critical";
+			} else if( $$num_serious > 0 ){
+				$sentiment .= "$num_critical serious";
+			}
+			else {
+				$sentiment .= " none serious";
+			}
+			$sentiment .= ".";
 		}
 	} else {
-		if( $numRecommended > 3 ){
-			$assessment[$key]["grade"] = "f";
-			$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numRecommended} opportunit${ending} to consider.";
+		$sentiment = "This site ";
+		// build sentiment
+		$sentiment = "This site ";
+		if( isset($blocking3pReqs) ){
 			
-		} else if( $numRecommended > 0 ){
-			$assessment[$key]["grade"] = "c";
-			$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numRecommended} opportunit${ending} to consider.";
-		} else {
-			$assessment[$key]["grade"] = "a";
-			$assessment[$key]["summary"] = "<strong>Great work!</strong> Nothing pressing, but you can always make improvements.";
+			if( $blocking3pReqs > 2 ){
+				$sentiment .= "had many";
+			} else if( $blocking3pReqs > 0 ){
+				$sentiment .= "had several";
+			}
+			else {
+				$sentiment .= "had zero";
+			}
+			$sentiment .= " render-blocking 3rd party requests.";
 		}
+		if( $jsLibsVulns ){
+			$sentiment .= "It had $numVulns security issues"; 
+			if( $num_high > 0 ){
+				$sentiment .= ", $num_high high-priority";
+			} else if( $num_medium > 0 ){
+				$sentiment .= ", $num_medium low-priority";
+			}
+			else if( $num_low > 0  ) {
+				$sentiment .= ", $num_low low-priority";
+			}
+			$sentiment .= ".";
+		}
+
+	}
+
+
+	if( $numRecommended > 3 ){
+		$assessment[$key]["grade"] = "f";
+		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> " . $sentiment;
+		
+	} else if( $numRecommended > 0 ){
+		$assessment[$key]["grade"] = "c";
+		$assessment[$key]["summary"] = "<strong>Not bad!</strong> " .  $sentiment;
+	} else {
+		$assessment[$key]["grade"] = "a";
+		$assessment[$key]["summary"] = "<strong>Great work!</strong> " .  $sentiment;
 	}
 
 	
