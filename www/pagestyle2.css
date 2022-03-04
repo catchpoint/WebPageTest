@@ -540,8 +540,8 @@ h3.grade_heading {
     font-size: 1.875rem;
     font-weight: 900;
     margin: 0;
-    flex: 0 1 12rem;
-    padding: 0 0 0 3.5rem;
+    flex: 0 1 19rem;
+    padding: 0;
     text-align: left;
 }
 
@@ -550,35 +550,48 @@ p.grade_summary {
     color: #2E2E2E;
     max-width: 49em;
     line-height: 1.5;
-    margin: 1em 0 .5em;
+    margin: 1.4em 0 .5em;
     font-weight: 500;
+    min-height: 3rem;
+    padding-left: 2.5rem;
+    /* vertical-align: middle; */
 }
 
 .grade_heading span {
     font-weight: 500;
 }
 
-.grade_heading.grade-a {
+.experiments_grades .grade_heading.grade-a+p {
     background: url(/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
 
-.grade_heading.grade-a span {
+.experiments_grades .grade_heading.grade-a+p strong {
     color: #43892A;
 }
 
-.grade_heading.grade-c {
+.experiments_grades .grade_heading.grade-c+p {
     background: url(/images/src/icon_grading_warn.svg) left 50% no-repeat;
 }
 
-.grade_heading.grade-c span {
+.experiments_grades .grade_heading+p strong {
+    white-space: nowrap;
+    margin-right: .3em;
+}
+
+.experiments_grades .grade_heading.grade-c+p strong {
     color: #D27A04;
 }
 
-.grade_heading.grade-f {
+.experiments_grades .grade_heading.grade-f+p {
     background: url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
 }
 
-.grade_heading.grade-f span {
+.experiments_grades .grade_heading+p {
+    background-size: 1.6rem auto !important;
+    background-position: top left !important;
+}
+
+.experiments_grades .grade_heading.grade-f+p strong {
     color: #DD5000;
 }
 
@@ -1377,8 +1390,21 @@ footer ul {
 .opportunities_summary {
     display: flex;
     gap: 1rem;
-    max-width: 60%;
-    padding: 0 0 1.5rem;
+    padding: 1em 1em;
+    border: 1px solid #eee;
+    border-radius: .5em;
+}
+
+.opportunities_summary,
+.opportunities_summary {
+    border: 0;
+    padding: 0 !important;
+    margin: 0 0 2rem;
+    gap: 3rem;
+}
+
+.opportunities_summary a {
+    padding: 0;
 }
 
 .opportunities_summary_hed {
@@ -1386,24 +1412,69 @@ footer ul {
     color: #3c3c3c;
 }
 
-.opportunities_summary p,
-.results_header .opportunities_summary p {
+.opportunities_summary>p,
+.results_header .opportunities_summary>p {
     font-size: 1rem;
-    padding-left: 1.8rem;
-    background-position: top left !important;
-    background-size: 1.3em !important;
     margin: 0;
     padding-bottom: 0;
 }
 
+.opportunities_summary .grade_heading {
+    background: none !important;
+    font-size: 1.2rem;
+}
+
+.opportunities_summary p>strong {
+    border-bottom: 1px solid #eee;
+    display: block;
+    padding-bottom: .5rem;
+    margin-bottom: 1rem;
+    color: #2a3c64;
+    /* margin: -1em -1em 1em; */
+    /* padding: .5em 1em; */
+    /* background: #fafafa; */
+}
+
+.opportunities_summary .grade_heading.grade-a span {
+    background: url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+}
+
+.opportunities_summary .grade_heading.grade-c span {
+    background: url(/images/src/icon_grading_warn.svg) left 50% no-repeat;
+}
+
+.opportunities_summary .grade_heading.grade-f span {
+    background: url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
+}
+
+.opportunities_summary .grade_heading.grade-a span strong {
+    color: #43892A;
+}
+
+.opportunities_summary .grade_heading.grade-c span strong {
+    color: #D27A04;
+}
+
+.opportunities_summary .grade_heading.grade-f span strong {
+    color: #DD5000;
+}
+
+.opportunities_summary .grade_heading span {
+    padding-left: 2em;
+    background-position: top left !important;
+    background-size: 1.4rem !important;
+    min-height: 1.5rem;
+}
+
 .opportunities_summary a {
-    padding: .8em;
+    /* padding: 1em; */
     display: flex;
+    gap: 0;
     flex-flow: column;
     justify-content: space-between;
     flex: 1 1 33%;
     background: #fff;
-    border: 1px solid #eee;
+    /* border: 1px solid #eee; */
     border-radius: .5em;
     /* padding-left: 2rem; */
     text-decoration: none;
@@ -1412,19 +1483,52 @@ footer ul {
 
 .opportunities_summary .grade_heading span {
     color: #444;
-    font-size: 1em;
+    font-size: .85em;
+    display: block;
+    line-height: 1.3;
+}
+
+.compare-experiment .opportunities_summary p>strong,
+.result-opportunities .opportunities_summary p>strong {
+    margin-bottom: 0;
+}
+
+.compare-experiment .opportunities_summary .grade_heading span,
+.result-opportunities .opportunities_summary .grade_heading span {
+    display: none;
+}
+
+p.opportunities_summary_opps,
+p.opportunities_summary_recs,
+p.opportunities_summary_exps {
+    font-size: .85em !important;
+    font-weight: 900 !important;
+    /* margin: 0 -1rem -1rem; */
+    padding: .5em .8em;
+    background: #eaeaea57;
+    color: #333;
+    display: flex;
+    border-radius: .5em;
+    align-items: center;
+    margin: 0 0 .3em 0;
 }
 
 p.opportunities_summary_exps {
-    font-size: .85em !important;
-    font-weight: 500 !important;
-    margin: .5rem -.5rem -.5rem;
-    padding: .5em .8em;
     background: #f0e0cc57;
-    color: #1071ba;
-    display: flex;
-    align-items: center;
-    padding-bottom: .5rem !important;
+}
+
+.experiment_summary_count {
+    background: #1071ba;
+    display: inline-block;
+    border-radius: 100%;
+    color: #fff;
+    width: 1.8em;
+    height: 1.8em;
+    text-align: center;
+    font-weight: 900;
+    font-size: .9em;
+    margin-right: .5em;
+    line-height: 1.8;
 }
 
 .testinfo_meta {

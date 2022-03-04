@@ -105,16 +105,65 @@ foreach($assessment as $key => $cat ){
 	$assessment[$key]["num_recommended"] = $numRecommended;
 	$assessment[$key]["num_experiments"] = $numExperiments;
 
-	if( $numRecommended > 3 ){
-		$assessment[$key]["grade"] = "f";
-		$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numRecommended} opportunit${ending} to consider.";
-		
-	} else if( $numRecommended > 0 ){
-		$assessment[$key]["grade"] = "c";
-		$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numRecommended} opportunit${ending} to consider.";
+	// build sentiment
+	$sentiment = "This site ";
+	$ttfbCheck = $testStepResult->getMetric('TTFB');
+	if( $ttfbCheck > 2000 ){
+		$sentiment .= " was very slow";
+	} else if( $ttfbCheck > 1000 ){
+		$sentiment .= "took little time";
+	}
+	else {
+		$sentiment .= "was quick";
+	}
+	$sentiment .= " to connect and deliver initial code. It began rendering content ";
+
+	$fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
+	if( $fcpCheck > 5 ){
+		$sentiment .= " with considerable delay ";
+	} else if( $fcpCheck > 2 ){
+		$sentiment .= " with little delay ";
+	}
+	else {
+		$sentiment .= " very quickly ";
+	}
+
+	$tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
+	$sentiment .= "after that. It took ";
+	if( $tbtCheck > 2 ){
+		$sentiment .= " a long time ";
+	} else if( $tbtCheck > 1 ){
+		$sentiment .= " little time ";
+	}
+	else {
+		$sentiment .= " little to not time ";
+	}
+	$sentiment .= " to become interactive.";
+
+	if( $key === "Quick" ){
+		if( $numRecommended > 3 ){
+			$assessment[$key]["grade"] = "f";
+			$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> " . $sentiment;
+			
+		} else if( $numRecommended > 0 ){
+			$assessment[$key]["grade"] = "c";
+			$assessment[$key]["summary"] = "<strong>Not bad!</strong> " .  $sentiment;
+		} else {
+			$assessment[$key]["grade"] = "a";
+			$assessment[$key]["summary"] = "<strong>Great work!</strong> " .  $sentiment;
+		}
 	} else {
-		$assessment[$key]["grade"] = "a";
-		$assessment[$key]["summary"] = "<strong>Great work!</strong> Nothing pressing, but you can always make improvements.";
+		if( $numRecommended > 3 ){
+			$assessment[$key]["grade"] = "f";
+			$assessment[$key]["summary"] = "<strong>Needs Improvement.</strong> We found ${numRecommended} opportunit${ending} to consider.";
+			
+		} else if( $numRecommended > 0 ){
+			$assessment[$key]["grade"] = "c";
+			$assessment[$key]["summary"] = "<strong>Not bad!</strong> We found ${numRecommended} opportunit${ending} to consider.";
+		} else {
+			$assessment[$key]["grade"] = "a";
+			$assessment[$key]["summary"] = "<strong>Great work!</strong> Nothing pressing, but you can always make improvements.";
+		}
 	}
 
 	

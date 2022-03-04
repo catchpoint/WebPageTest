@@ -59,7 +59,7 @@ $page_description = "Website performance test result$testLabel.";
         <?php $gaTemplate = 'Test Result';
         require 'head.inc'; ?>
     </head>
-    <body class="result">
+    <body class="result result-opportunities">
             <?php
             $tab = 'Test Result';
             $subtab = 'Opportunities & Experiments';
@@ -115,7 +115,6 @@ $page_description = "Website performance test result$testLabel.";
                     $requests = $testStepResult->getRequests();
 
                     include __DIR__ . '/experiments/common.inc';
-                    echo '<p class="opportunities_summary_hed">A summary of our findings...</p>';
 
                     include __DIR__ . '/experiments/summary.inc';
                     
@@ -266,7 +265,7 @@ $page_description = "Website performance test result$testLabel.";
                        $good = $opps - $bad;
                         echo <<<EOT
                         <div class="grade_header" id="${key}">
-                            <h3 class="grade_heading grade-${grade}">${key}</h3>
+                            <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
                             <p class="grade_summary">${summary}</p>
                         </div>
                         <div class="experiments_bottlenecks">
