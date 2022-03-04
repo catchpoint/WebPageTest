@@ -198,7 +198,10 @@ foreach($assessment as $key => $cat ){
 			else if( $num_low > 0  ) {
 				$sentiment .= ", $num_low low-priority";
 			}
+			
 			$sentiment .= ".";
+		}else {
+			$sentiment .= "It had no security issues detected."; 
 		}
 
 	}
