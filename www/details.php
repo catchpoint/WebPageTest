@@ -179,7 +179,7 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                   echo '</div>';
                 }
                 ?>
-                <script type="text/javascript">
+                <script>
                   markUserTime('aft.Detail Table');
                 </script>
 
@@ -287,16 +287,16 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
               </div>
         <?php
         if ($isMultistep) {
-          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
-          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          echo '<script src="/js/jk-navigation.js"></script>';
+          echo '<script src="/js/accordion.js"></script>';
           $testId = $testInfo->getId();
           $testRun = $testRunResults->getRunNumber();
-          echo '<script type="text/javascript">';
+          echo '<script>';
           echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
           echo '</script>';
         }
         ?>
-        <script type="text/javascript">
+        <script>
         function expandRequest(targetNode) {
           if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));

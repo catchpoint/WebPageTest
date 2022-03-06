@@ -1524,7 +1524,7 @@ EOT;
 
     // script support
     $nolinks = GetSetting('nolinks', 0);
-    $out .= "<script type=\"text/javascript\">\n";
+    $out .= "<script>\n";
     $out .= "function decodeUnicode(str) {\n";
     $out .=  "return decodeURIComponent(atob(str).split('').map(function (c) {\n";
     $out .=  "return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);\n";

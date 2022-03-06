@@ -33,7 +33,7 @@ EOT;
 
   protected function createJavaScript($jsVarName, $jsonBreakdown) {
     $id = $this->breakdownId;
-    $out = "<script type=\"text/javascript\">";
+    $out = "<script>";
     $out .= "if (typeof $jsVarName == 'undefined') var $jsVarName = {};";
     $out .= $jsVarName . "['$id'] = $jsonBreakdown;";
     $out .= "</script>";

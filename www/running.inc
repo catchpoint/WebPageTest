@@ -99,7 +99,7 @@
             <?php include('footer.inc'); ?>
         </div>
         
-        <script type="text/javascript">
+        <script>
             var testId = "<?php echo $id; ?>";
             var lastStatusCode = 0;
             var lastStatusText = '';

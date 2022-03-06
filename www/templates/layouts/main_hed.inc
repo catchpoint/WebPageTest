@@ -303,6 +303,6 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
     return $grades;
 }
 ?>
-<script type="text/javascript">
+<script>
   markUserTime('aft.Site Header');
 </script>

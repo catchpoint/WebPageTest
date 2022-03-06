@@ -19,7 +19,7 @@ if (!$privateInstall && !$admin) {
         <meta name="description" content="Installation check for WebPageTest">
         <meta name="author" content="Patrick Meenan">
         <meta name="robots" content="noindex,nofollow" />
-        <style type="text/css">
+        <style>
         body {
             background-color: #fff;
         }

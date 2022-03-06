@@ -213,7 +213,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     <meta http-equiv="charset" content="iso-8859-1">
     <meta name="author" content="Patrick Meenan">
     <?php $gaTemplate = 'Import'; include ('head.inc'); ?>
-    <style type="text/css">
+    <style>
     #logo {float:right;}
     input[type="file"] {color:#FFF;}
     </style>

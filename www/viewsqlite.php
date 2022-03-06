@@ -11,7 +11,7 @@ $results = $db->query('SELECT * FROM labels');
 
 // Some really basic CSS for the table
 ?>
-<style type="text/css">
+<style>
     table {
         border-collapse: collapse;
     }

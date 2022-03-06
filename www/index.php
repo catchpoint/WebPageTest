@@ -933,7 +933,7 @@ $loc = ParseLocations($locations);
         </div><!--home_content_contain-->
         </div><!--home_content-->
 
-        <script type="text/javascript">
+        <script>
         <?php
             echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
@@ -954,7 +954,7 @@ $loc = ParseLocations($locations);
               echo "var forgetSettings = false;\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 

@@ -121,7 +121,7 @@ if (is_file($profile_file))
                         <a href="/">main test page</a>.</p>
                 </div>
 
-                <script type="text/javascript">
+                <script>
                 <?php
                   echo "var profiles = " . json_encode($profiles) . ";\n";
                 ?>
@@ -160,6 +160,6 @@ if (is_file($profile_file))
             <?php include('footer.inc'); ?>
         </div>
 
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
     </body>
 </html>

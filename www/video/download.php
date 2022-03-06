@@ -20,7 +20,7 @@ else
     <head>
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
             div.content
             {
                 text-align:center;

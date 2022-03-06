@@ -22,7 +22,7 @@ function header_link($url, $title) {
             <noscript>
                 <meta http-equiv="refresh" content="<?php echo $refresh; ?>" />
             </noscript>
-            <script type="text/javascript">
+            <script>
                 setTimeout("window.location.reload(true)", <?php echo $refresh*1000; ?>);
             </script>
         <?php
