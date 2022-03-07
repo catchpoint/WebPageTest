@@ -570,13 +570,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
         
             }
-        
-        
-        echo "
-        <li><a href=\"". $originalTestHref ."\">Source Test Results</a></li>
-        <li><a href=\"". $experimentTestHref ."\">Experiment Run Test Results</a></li>
-        <li><a href=\"". $controlTestHref ."\">Control Run Test Results</a></li>
-        ";
 
     
 
