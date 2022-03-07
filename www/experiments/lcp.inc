@@ -44,7 +44,7 @@
                     "expval" => array($lcpSource . "|as_image")
                 ];
                 // priority Hints only help for foreground images
-                if( $isBG ){
+                if( !$isBG ){
                     $expsToAdd[] = (object) [
                         'title' => 'Add a priority hint <em>(Chrome-only)</em>',
                         "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
