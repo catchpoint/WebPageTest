@@ -2,7 +2,7 @@
     $category = "Quick";
     $blockingCSSReqs = array();
     foreach ($requests as $request) {
-        if( $request['renderBlocking'] === "blocking"  && strpos($request['url'], "font") === false && $request['contentType'] === "text/css" ){
+        if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "text/css" ){
             array_push($blockingCSSReqs, $request['url'] );
         }
     }
