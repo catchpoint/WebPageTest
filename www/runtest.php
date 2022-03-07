@@ -820,9 +820,12 @@ use WebPageTest\RateLimiter;
                     $recipeScript .= ";";
                   }
                   // see if cmd line priority hints flag needed
-                  if( $experimentMetadata["experiment"]["recipes"]["addimportance"] || $experimentMetadata["experiment"]["recipes"]["removeimportance"] ){
-                    $test['cmdLine'] = '--enable-experimental-web-platform-features';
-                  }
+                  $test['addCmdLine'] .= ' ';
+                  $test['addCmdLine'] .= '--enable-experimental-web-platform-features';
+                  
+                  // if( $experimentMetadata["experiment"]["recipes"]["addimportance"] || $experimentMetadata["experiment"]["recipes"]["removeimportance"] ){
+                  //   $test['cmdLine'] = '--enable-experimental-web-platform-features';
+                  // }
                   
 
 
