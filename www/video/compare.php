@@ -456,9 +456,15 @@ else
                                     echo '<div class="experiment_meta_included">';
                                     echo '<p>Experiments Applied:</p>';
                                     echo '<ul>';
-                                    foreach( $metaInfo->experiment->recipes as $recipe ){
+                                    $recips = $metaInfo->experiment->recipes;
+                                    
+                                    foreach( $recips as $recipe ){
                                        echo "<li><details><summary>".key($recipe)."</summary>";
+                                       
                                        foreach($recipe as $ings){
+                                        if( is_string($ings)){
+                                            $ings = array($ings);
+                                        }
                                         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
                                        }
                                     }

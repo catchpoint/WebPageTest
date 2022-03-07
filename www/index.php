@@ -902,7 +902,7 @@ $loc = ParseLocations($locations);
                                             <input type="checkbox" name="recipes[]" value="{$recipe->value}"> {$recipe->label}
                                         </label>
                                         <label>Instructions: 
-                                        <input style="margin-left: .5em;" type="text" name="{$recipe->value}" value="" placeholder="{$recipe->hint}">
+                                        <input style="margin-left: .5em;" type="text" name="{$recipe->value}[]" value="" placeholder="{$recipe->hint}">
                                         </label>
                                     </div>
                                     EOT;
