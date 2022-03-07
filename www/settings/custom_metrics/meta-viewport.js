@@ -1,9 +1,9 @@
-var viewport = undefined;
+var metaviewport = undefined;
 var metaTags=document.getElementsByTagName("meta");
 for (var i = 0; i < metaTags.length; i++) {
     if (metaTags[i].getAttribute("name") == "viewport") {
-        viewport = metaTags[i].getAttribute("content");
+        metaviewport = metaTags[i].getAttribute("content");
         break;
     }
 }
-return viewport;
+return metaviewport;

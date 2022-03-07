@@ -106,7 +106,6 @@ www/.vscode/launch.json
 www/settings/getkey.html
 www/forums
 www/settings/custom_metrics/iframeCount.js
-www/settings/custom_metrics/meta-viewport.js
 .gitignore
 www/settings/custom_metrics/scriptTagCount.js
 www/settings/common
