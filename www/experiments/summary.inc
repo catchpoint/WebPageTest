@@ -34,6 +34,5 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
         EOT;
     }
     echo  '</div>';
-    //echo '<p class="opportunities_go"><a href="' . $expPage .'">View Opportunities & Run <em class=\"pro-flag\">Pro</em> Experiments!</p>';
 
 ?>
