@@ -821,7 +821,8 @@ use WebPageTest\RateLimiter;
                   }
                   // see if cmd line priority hints flag needed
                   if( $experimentMetadata["experiment"]["recipes"]["addimportance"] || $experimentMetadata["experiment"]["recipes"]["removeimportance"] ){
-                    $test['addCmdLine'] = "---enable-blink-features=PriorityHints";
+                    $test['addCmdLine'] .= ' ';
+                    $test['addCmdLine'] .= '--enable-blink-features=PriorityHints';
                   }
                   
 
