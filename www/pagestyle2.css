@@ -820,6 +820,7 @@ h4.experiments_list_hed-recs {
     font-weight: 900;
     margin: 0;
     font-size: .9em;
+    cursor: pointer;
 }
 
 .experiment_assets li {
