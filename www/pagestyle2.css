@@ -482,6 +482,7 @@ a.experiment_meta-more:focus,
     margin: 0;
     border-top-left-radius: 0;
     max-width: 80vw;
+    max-width: 20em;
 }
 
 .compare-experiment .scrollableTable {
