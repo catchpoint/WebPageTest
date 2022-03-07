@@ -35,6 +35,23 @@
                 if (isset($lcp['element']['outerHTML'])) {
                     $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
                 }
+
+                $expsToAdd = array();
+                $expsToAdd[] = (object) [
+                    'title' => 'Preload the LCP image.',
+                    "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
+                    "expvar" => 'preload',
+                    "expval" => array($lcpSource . "|as_image")
+                ];
+                // priority Hints only help for foreground images
+                if( $isBG ){
+                    $expsToAdd[] = (object) [
+                        'title' => 'Add a priority hint <em>(Chrome-only)</em>',
+                        "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
+                        "expvar" => 'addimportance',
+                        "expval" => array($lcpSource . "|i_high")
+                    ];
+                }
             
 
                 $assessment[$category]["opportunities"][] = array( 
@@ -44,20 +61,7 @@
                         "<strong>LCP Image:</strong> <img src=\"" . $lcpSource . "\" alt=\"\">",
                         "<strong>LCP HTML:</strong>" . $lcpHTML
                     ),
-                    "experiments" =>  array(
-                        (object) [
-                            'title' => 'Preload the LCP image.',
-                            "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
-                            "expvar" => 'preload',
-                            "expval" => array($lcpSource . "|as_image")
-                        ],
-                        (object) [
-                            'title' => 'Add a priority hint <em>(Chrome-only)</em>',
-                            "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
-                            "expvar" => 'addimportance',
-                            "expval" => array($lcpSource . "|i_high")
-                        ]
-                    ),
+                    "experiments" => $expsToAdd,
                     "good" =>  false
                 );
             } // LCP was high but wasn't due to an Image. TBD!
