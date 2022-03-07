@@ -819,6 +819,10 @@ use WebPageTest\RateLimiter;
                     }
                     $recipeScript .= ";";
                   }
+                  // see if cmd line priority hints flag needed
+                  if( $experimentMetadata["experiment"]["recipes"]["addImportance"] || $experimentMetadata["experiment"]["recipes"]["removeImportance"] ){
+                    $test['addCmdLine'] = "---enable-blink-features=PriorityHints";
+                  }
                   
 
 
