@@ -812,7 +812,7 @@ use WebPageTest\RateLimiter;
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
                       $experimentMetadata["experiment"]["recipes"][] = array( $value => $ingredients );
-                      if( count($ingredients) > 1 ){
+                      if( is_array($ingredients) ){
                         $ingredients = implode($ingredients, ",");
                       }
                       $recipeScript .= ":=" . $ingredients;
@@ -820,7 +820,7 @@ use WebPageTest\RateLimiter;
                     $recipeScript .= ";";
                   }
                   // see if cmd line priority hints flag needed
-                  if( $experimentMetadata["experiment"]["recipes"]["addImportance"] || $experimentMetadata["experiment"]["recipes"]["removeImportance"] ){
+                  if( $experimentMetadata["experiment"]["recipes"]["addimportance"] || $experimentMetadata["experiment"]["recipes"]["removeimportance"] ){
                     $test['addCmdLine'] = "---enable-blink-features=PriorityHints";
                   }
                   
