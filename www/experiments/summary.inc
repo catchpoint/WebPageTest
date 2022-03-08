@@ -19,7 +19,7 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
         $oppsEnd = $oppsCount === 1 ? "y" : "ies";
         $expsEnd = $experimentsCount === 1 ? "" : "s";
 
-        $oppsAdd = "<p class=\"opportunities_summary_opps\"><span class=\"experiment_summary_count\">$oppsCount</span> Opportunit$oppsEnd <span class=\"extended\"> checked.</span></p>";
+        $oppsAdd = "<p class=\"opportunities_summary_opps\"><span class=\"experiment_summary_count\">$oppsCount</span> Opportunit$oppsEnd checked.</p>";
         $recsAdd = "<p class=\"opportunities_summary_recs\"><span class=\"experiment_summary_count\">$recommendedCount</span> Recommendation$recsEnd <span class=\"extended\"> to consider.</span></p>";
         $expAdd = "<p class=\"opportunities_summary_exps\"><span class=\"experiment_summary_count\">$experimentsCount</span> <span class=\"extended\">WebPageTest</span> <em class=\"pro-flag\">Pro</em> experiment$expsEnd <span class=\"extended\"> to try.</span></p>";
         echo  <<<EOT
