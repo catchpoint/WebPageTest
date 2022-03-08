@@ -1,6 +1,7 @@
 <?php
 
 $category = "Resilient";
+$requests = $testStepResult->getRequests();
 $initialHost = $requests[0]["host"];
 $blocking3pReqs = array();
 $blocking3pHosts = array();

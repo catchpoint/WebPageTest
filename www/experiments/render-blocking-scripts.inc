@@ -1,5 +1,6 @@
 <?php
 $category = "Quick";
+$requests = $testStepResult->getRequests();
 $blockingJSReqs = array();
 foreach ($requests as $request) {
     if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript" ){

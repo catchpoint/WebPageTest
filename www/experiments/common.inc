@@ -31,10 +31,9 @@ $assessment = array(
 
 
 
-
 // define $lcp for future experiments
-if(!$testStepResult){
-	$testStepResult = $test['stepResult'];
+if(!$testStepResult && isset($tests)){
+	$testStepResult = $tests[0]['stepResult'];
 }
 $events = $testStepResult->getMetric('largestPaints');
 $lcp = null;
@@ -219,7 +218,6 @@ foreach($assessment as $key => $cat ){
 		$assessment[$key]["summary"] = "<strong>Great work!</strong> " .  $sentiment;
 	}
 
-	
 
 
 }

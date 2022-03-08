@@ -1,5 +1,6 @@
 <?php
 $category = "Quick";
+$requests = $testStepResult->getRequests();
 $blockingFontCSSReqs = array();
 foreach ($requests as $request) {
   //echo $request['contentType'];
