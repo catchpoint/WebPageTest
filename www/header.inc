@@ -338,7 +338,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo '<span class="test_presets_tag">';
 
                     if( $flags[$test['test']['loc']] ){
-                        echo '<img src="/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="' . $locationSimple . '" title="'. $locationSimple .'">';
+                        echo '<img src="/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
                     }
                     
                     echo $locationSimple;

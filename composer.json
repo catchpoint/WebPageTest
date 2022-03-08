@@ -13,6 +13,7 @@
     },
     "require": {
         "guzzlehttp/guzzle": "^7.4",
-        "gmostafa/php-graphql-client": "^1.13"
+        "gmostafa/php-graphql-client": "^1.13",
+        "php": "^7.4.0"
     }
 }
