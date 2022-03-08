@@ -53,8 +53,9 @@ if( strlen($page_description) )
     } elseif (file_exists('./settings/customhead.inc.php')) {
         include('./settings/customhead.inc.php');
     }
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
-    echo "<style type=\"text/css\">\n";
+
+    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
+    echo "<style>\n";
     
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;

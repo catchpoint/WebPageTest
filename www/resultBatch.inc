@@ -112,7 +112,7 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
-        <style type="text/css">
+        <style>
             .player
             {
                 margin-left: auto;

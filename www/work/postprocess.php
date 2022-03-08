@@ -129,7 +129,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         "<html>
             <head>
                 <title>$subject</title>
-                <style type=\"text/css\">
+                <style>
                     .indented1 {padding-left: 40pt;}
                     .indented2 {padding-left: 80pt;}
                 </style>

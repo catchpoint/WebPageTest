@@ -47,7 +47,7 @@ $page_description = "Website performance test result$testLabel.";
     <head>
         <title><?php echo "$page_title - WebPageTest Result"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
-        <style type="text/css">
+        <style>
             tr.stepResultRow.jkActive td.resultCell {
                 border-left: 2px #181741 solid;
             }
@@ -212,7 +212,7 @@ $page_description = "Website performance test result$testLabel.";
               echo '</div>';
             }
             ?>
-            <script type="text/javascript">
+            <script>
               markUserTime('aft.Result Data Table');
             </script>
             <?php } ?>
@@ -236,16 +236,16 @@ $page_description = "Website performance test result$testLabel.";
 
             <?php include('footer.inc'); ?>
         </div>
-        <script type="text/javascript" src="/js/jk-navigation.js"></script>
-        <script type="text/javascript">
+        <script src="/js/jk-navigation.js"></script>
+        <script>
             addJKNavigation("tr.stepResultRow");
         </script>
         <?php
         $breakdown = $resultTables->getBreakdown();
         if ($breakdown) {
         ?>
-          <script type="text/javascript" src="//www.google.com/jsapi"></script>
-          <script type="text/javascript">
+          <script src="//www.google.com/jsapi"></script>
+          <script>
           <?php
           echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
           ?>
@@ -302,7 +302,7 @@ $page_description = "Website performance test result$testLabel.";
         } // $breakdown
 
         if( !$testComplete ) {
-            echo "<script type=\"text/javascript\">\n";
+            echo "<script>\n";
             echo "var testId = '$id';\n";
         ?>
             // polyfill performance.now

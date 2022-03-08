@@ -227,7 +227,7 @@ else
               echo '<meta property="og:image" content="' . htmlspecialchars($imagePreview) . '" />';
             }
         ?>
-        <style type="text/css">
+        <style>
             .content h2 {
                 font-size: 1.5em;
                 <?php
@@ -300,7 +300,7 @@ else
                 echo "body {background-color: " . htmlspecialchars($bgcolor) . "; margin:0; padding: 0;}";
             ?>
         </style>
-        <script type="text/javascript">
+        <script>
             function ShowEmbed() {
                 $("#embed").modal({opacity:80});
             }

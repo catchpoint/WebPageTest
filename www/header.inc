@@ -545,6 +545,6 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 
 
 ?>
-<script type="text/javascript">
+<script>
   markUserTime('aft.Site Header');
 </script>

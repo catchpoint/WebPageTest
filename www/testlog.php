@@ -76,7 +76,7 @@ if( $csv )
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
             /* h4 {text-align: center;}
             .history table {text-align:left;}
             .history thead {text-align:left;}
@@ -153,7 +153,7 @@ if( $csv )
                 ?>
                 </form>
             </div>
-<script type="text/javascript">
+<script>
         <?php include(__DIR__ . '/js/history.js'); ?>
         </script>
         <?php include('footer.inc'); ?>

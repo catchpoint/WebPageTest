@@ -109,19 +109,19 @@ if(!$testInfo->isFirstViewOnly()) {
                 </div>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="//www.google.com/jsapi"></script>
+        <script src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
-            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
-            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            echo '<script src="/js/jk-navigation.js"></script>';
+            echo '<script src="/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $firstViewResults->getRunNumber();
-            echo '<script type="text/javascript">';
+            echo '<script>';
             echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
             echo '</script>';
         }
         ?>
-        <script type="text/javascript">
+        <script>
 
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
