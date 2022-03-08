@@ -52,7 +52,6 @@ $userImages = true;
                 <h2>Page Images</h2>
                 <p>The following requests were images.</p>
             </div>
-                        <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

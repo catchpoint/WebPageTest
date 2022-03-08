@@ -50,7 +50,6 @@ if(!$testInfo->isFirstViewOnly()) {
                 <p>How this site's assets are comprised by content type.</p>
             </div>
 
-            <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

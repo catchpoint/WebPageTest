@@ -108,7 +108,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
                     ?>.</p>
             </div>
 
-            <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

@@ -132,7 +132,6 @@ $common_label = implode(" ", $common_labels);
                     <h2>Graph Page Data Comparison</h2>
                     <p>Use this page to plot the results for each run in your test to help you spot outliers and patterns.</p>
                 </div>
-                      <?php if (!count($compTests)) {include("testinfo_command-bar.inc");} ?>
                 </div>
     
     

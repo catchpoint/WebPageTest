@@ -44,7 +44,6 @@ $isMultistep = $testRunResults->countSteps() > 1;
     <p>A detailed view of this site's asset optimization and related opportunities.</p>
 </div>
 
-<?php include("testinfo_command-bar.inc"); ?>
 
 </div>
 

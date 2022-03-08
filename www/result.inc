@@ -120,7 +120,6 @@ $page_description = "Website performance test result$testLabel.";
 
 
               </div>
-                        <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

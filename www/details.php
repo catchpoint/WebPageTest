@@ -79,7 +79,6 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                 <p>Use this page to explore the metric timings and request waterfall for any run of your test.</p>
             </div>
 
-            <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

@@ -105,7 +105,6 @@ $page_description = "Website performance test result$testLabel.";
                     <p>WebPageTest identifies opportunities for improvements that you can test without changing your actual code. Experiments help you quickly test the impact of a change by re-running your test in a similated test environment.</p>
                 </div>
 
-                <?php include "testinfo_command-bar.inc"; ?>
                 
 
             </div>

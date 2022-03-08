@@ -62,7 +62,6 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 <p>Details on how this site requests assets across multiple domains.</p>
             </div>
 
-            <?php include("testinfo_command-bar.inc"); ?>
 
             </div>
 

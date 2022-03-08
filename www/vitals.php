@@ -56,7 +56,6 @@ $page_description = "Web Vitals details$testLabel";
                         <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
                     </div>
 
-                    <?php include("testinfo_command-bar.inc"); ?>
 
                 </div>
 

@@ -30,7 +30,6 @@
                     <h2>Traceroute Test Results</h2>
                     <p>Here's how this site performed in this tracerout test. </p>
                 </div>
-                    <?php include("testinfo_command-bar.inc"); ?>
 
         </div>
             

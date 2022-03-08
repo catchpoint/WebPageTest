@@ -505,8 +505,8 @@ else
 
                                         
                                         <div class="experiment_opportunities-remaining">
-                                            <h3 class="hed_sub">Remaining Opportunities</h3>
-                                            <p>Here's how your overall Opportunities look after this experiment:</p>
+                                            <h3 class="hed_sub">Remaining Recommendations & Experiments</h3>
+                                            <p>Here's how your overall opportunities look after this experiment:</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
                                         </div>
                                     </div>
@@ -540,7 +540,7 @@ else
                      ?>
                         </div>
             
-                        <?php if(!$experiment){ include("testinfo_command-bar.inc"); } ?>
+                        
             
                         </div>
             

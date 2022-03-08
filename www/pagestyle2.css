@@ -2179,10 +2179,60 @@ body.result #main {
     .results_nav {
         padding-left: 3em;
         padding-right: 3em;
+        gap: 3rem;
     }
     .results_nav_hed {
         font-size: 1.1em;
     }
+}
+
+.results_nav {
+    /* display: flex; */
+    /* justify-items: flex-start; */
+}
+
+.results_nav_pair {
+    display: flex;
+    align-items: center;
+    /* flex: 1 0 30em; */
+    /* justify-self: flex-start; */
+}
+
+.results_nav .test_meta_commands {
+    flex: 1 1 30em;
+    display: flex;
+    gap: 1rem;
+    position: relative;
+}
+
+.results_nav .test_meta_commands details {
+    position: relative;
+}
+
+.results_nav .test_meta_commands summary {
+    list-style: none;
+    font-size: .9rem;
+    display: inline-block;
+    padding: 0.8em 2em 0.8em 1em;
+    color: #2a3c64;
+    border-color: #eee;
+    position: relative;
+    z-index: 999999;
+    border: 1px solid #eee;
+    border-radius: .4em;
+    background-color: #fafafa;
+    background-image: url(/images/src/icon_triangledown.svg);
+    max-width: 70vw;
+    background-repeat: no-repeat;
+    background-position: right .8em top 50%;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.results_nav .test_meta_commands details>form,
+.results_nav .test_meta_commands details>ul {
+    position: absolute;
+    background: #fff;
 }
 
 .home_feature_hed .attention {

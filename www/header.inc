@@ -433,7 +433,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         ?>
         <div class="results_nav_contain">
         <div class="results_nav">
-
+            <div class="results_nav_pair">
               <p class="results_nav_hed">View:</p>
               <nav class="link_select" tabindex="0" aria-label="Test Type">
         <span class="link_select_label"><?php echo $subtab; ?></span>
@@ -573,7 +573,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
     
 
-        echo '</ul></span></div></div>';
+        echo '</ul></nav></div>';
+
+        
+        if(!$experiment){ include("testinfo_command-bar.inc"); }
+        
+        
+        echo '</div></div>';
 
         }
         ?>
