@@ -24,6 +24,7 @@
                 
                 if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                     $lcpSource = $lcp['element']['src'];
+                    $lcpFullSource = $lcp['element']['src'];
                     // get actual source attribute if we can.
                     $srcAttrVal = preg_match_all('/src\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches );
                     if( $srcmatches ){
@@ -63,7 +64,7 @@
                     "title" =>  "Largest Contentful Paint is high (over 2.5s).",
                     "desc" =>  "The element driving your LCP is a" . ($isBG ? " background" : "n")  . " image. Some optimizations can help that image fetch earlier.",
                     "examples" =>  array(
-                        "<strong>LCP Image:</strong> <img src=\"" . $lcpSource . "\" alt=\"\">",
+                        "<strong>LCP Image:</strong> <img src=\"" . $lcpFullSource . "\" alt=\"\">",
                         "<strong>LCP HTML:</strong>" . $lcpHTML
                     ),
                     "experiments" => $expsToAdd,
