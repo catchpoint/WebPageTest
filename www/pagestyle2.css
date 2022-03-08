@@ -447,10 +447,6 @@ a.experiment_meta-more {
     font-weight: 500;
 }
 
-a.experiment_meta-more:after {
-    content: "...";
-}
-
 .experiment_meta_included details:hover summary,
 .experiment_meta_included details:focus summary {
     background-color: #fff;

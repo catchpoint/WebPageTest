@@ -2,6 +2,23 @@
 
 
 // container for assessment including opportunities, experiments to recommend
+
+$experiment = false;
+
+if( $testInfo ){
+	$testTestInfo = $testInfo->getRawData()['testinfo'];
+	$metaInfo = $testTestInfo['metadata'];
+	if( $metaInfo ){
+		$metaInfo = json_decode($metaInfo, true);
+		if( $metaInfo['experiment'] ){
+			$experiment = true;
+		}
+	}
+}
+
+if( $metaInfo ){
+	$assessmentData = $metaInfo['experiment']['assessment'];
+}
 $assessment = array(
 	"Quick" => array(
 		"grade" => "",

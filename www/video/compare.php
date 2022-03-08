@@ -100,10 +100,11 @@ else
             if( $metaInfo['experiment'] ){
                 $experiment = true;
                    
-                $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 1 );
+                $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0 );
                 $originalTestHref = $originalTestUrlGenerator->resultSummary();
+                $originalExperimentsHref = $originalTestUrlGenerator->resultPage("experiments");
     
-                $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 1 );
+                $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 0 );
                 $controlTestHref = $controlTestUrlGenerator->resultSummary();
     
                 $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo['experiment']['control_id'];
@@ -463,7 +464,8 @@ else
                                         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
                                        }
                                     }
-                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOptsHref ."\">Run More</a></li>";
+                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOptsHref ."\">Add More...</a></li>";
+                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $originalExperimentsHref ."\">Start Fresh</a></li>";
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';

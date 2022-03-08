@@ -243,7 +243,7 @@ $page_description = "Website performance test result$testLabel.";
                     include __DIR__ . '/experiments/common.inc';
 
 
-                    echo '<h3 class="hed_sub">Opportunities & Experiments to consider...</h3>';
+                    echo '<h3 class="hed_sub">Opportunities & Experiments...</h3>';
                     include __DIR__ . '/experiments/summary.inc';
 
                 ?>
