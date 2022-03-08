@@ -53,7 +53,6 @@ if( strlen($page_description) )
     } elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) {
         include(__DIR__ . '/../../settings/customhead.inc.php');
     }
-
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
     echo "<style>\n";
 
