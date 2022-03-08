@@ -19,6 +19,10 @@
         if( $lcp['time'] > 2500 ){
         
             $isBG = false;
+
+            if (isset($lcp['element']['outerHTML'])) {
+                $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
+            }
         
             if (isset($lcp['element']['tagName']) && $lcp['element']['tagName'] === "IMG") {
                 
@@ -38,9 +42,7 @@
                         $isBG = true;
                     }
                 }
-                if (isset($lcp['element']['outerHTML'])) {
-                    $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
-                }
+                
 
                 $expsToAdd = array();
                 $expsToAdd[] = (object) [
@@ -74,7 +76,7 @@
              else {
                 $assessment[$category]["opportunities"][] = array(
                     "title" =>  'Largest Contentful Paint is high (over 2.5s).',
-                    "desc" =>  "The HTML driving your LCP is $lcpHTML ",
+                    "desc" =>  "The HTML driving your LCP is " . ( $lcpHTML ? $lcpHTML : "text-related."),
                     "examples" =>  array(),
                     "experiments" =>  array(
                         (object)[
