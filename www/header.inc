@@ -381,7 +381,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     
         echo '<div class="header_screenshots">';
 
-        if( $experiment ){
+        if( $experiment && isset($tests) && count($tests) === 2 ){
             echo '<video id="player" playsinline autoplay loop muted="" preload="auto" poster="/video/poster.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual">
                     <source src="/video/video.php?tests='. $tests[0]['id'] .','. $tests[1]['id'] .'&amp;applyGrey=0&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
                 </video>

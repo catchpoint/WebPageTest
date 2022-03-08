@@ -82,49 +82,43 @@ else
 
     // See if all tests are the same ID or from a compared experiment not
     $sameIDs = true;
-    $experiment = false;
     foreach($tests as $key=>$value) {
-        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id'] && $value['url'] !== $tests[$key - 1]['url']){
+        if($key !== 0 && $value['id'] !== $tests[$key - 1]['id'] ){
             $sameIDs = false;
         }
     }
-    if( $sameIDs ){
-        // TODO IF SHARED TEST URL
-       
-        $testPath = GetTestPath($tests[0]['id']);
-        $testInfo = TestInfo::fromFiles($testPath);
-        $test['test'] = $testInfo->getRawData()['test'];
-        $test['testinfo'] =  $testInfo->getRawData()['testinfo'];
 
-        if( count($tests) === 2 ) {
-            
-            $metaInfo = $test['testinfo']['metadata'];
-            if( $metaInfo ){
-                $metaInfo = json_decode($metaInfo, true);
-                if( $metaInfo['experiment'] ){
-                    $experiment = true;
-                       
+    $compareTestPath = GetTestPath($tests[0]['id']);
+    $compareTestInfo = TestInfo::fromFiles($testPath);
+    $testTest = $compareTestInfo->getRawData()['test'];
+    $testTestInfo = $compareTestInfo->getRawData()['testinfo'];
+    $experiment = false;
+    if( count($tests) === 2 && $testTestInfo['metadata'] ) {
+        $metaInfo = $testTestInfo['metadata'];
+        if( $metaInfo ){
+            $metaInfo = json_decode($metaInfo, true);
+            if( $metaInfo['experiment'] ){
+                $experiment = true;
+                   
+                $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 1 );
+                $originalTestHref = $originalTestUrlGenerator->resultSummary();
+    
+                $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 1 );
+                $controlTestHref = $controlTestUrlGenerator->resultSummary();
+    
+                $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo['experiment']['control_id'];
+                $experimentTestHref = "/result/" . $tests[0]['id'];
 
-                    $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 1 );
-                    $originalTestHref = $originalTestUrlGenerator->resultSummary();
-        
-                    $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 1 );
-                    $controlTestHref = $controlTestUrlGenerator->resultSummary();
-        
-                    $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo['experiment']['control_id'];
-                    $experimentTestHref = "/result/" . $tests[0]['id'];
-
-                    $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $tests[0]['id'], 0, 0 );
-                    $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
-
-
-
-                
-
-
-                }
+                $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $tests[0]['id'], 0, 0 );
+                $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
             }
         }
+    }
+
+    
+    if( $sameIDs || $experiment ){
+        $test['test'] = $testTest;
+        $test['testinfo'] =  $testTestInfo;
     }
 
 
