@@ -150,7 +150,7 @@ else
     <!DOCTYPE html>
     <html lang="en-us">
         <head>
-            <title>WebPageTest - Visual Comparison</title>
+            <title>WebPageTest - <?php echo ($experiment ? "Experiment Results" : "Visual Comparison"); ?></title>
             <script>document.documentElement.classList.add('has-js');</script>
 
             <?php
