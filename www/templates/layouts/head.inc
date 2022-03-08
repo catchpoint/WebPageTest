@@ -1,3 +1,7 @@
+<?php if (!isset($noanalytics)) {
+require_once __DIR__ . '/google-tag-manager.inc';
+} ?>
+
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <?php
 // Copyright 2020 Catchpoint Systems Inc.
@@ -17,6 +21,7 @@ if( strlen($page_description) )
 <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+
 
 
 <style>
@@ -46,12 +51,12 @@ if( strlen($page_description) )
 }
 </style>
 <?php
+
     if (file_exists(__DIR__ . '/../../settings/server/customhead.inc.php')) {
         include(__DIR__ . '/../../settings/server/customhead.inc.php');
     } elseif (file_exists(__DIR__ . '/../../settings/common/customhead.inc.php')) {
         include(__DIR__ . '/../../settings/common/customhead.inc.php');
-    } elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) {
-        include(__DIR__ . '/../../settings/customhead.inc.php');
+    } elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) { include(__DIR__ . '/../../settings/customhead.inc.php');
     }
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/wpt-header.css?v=" . VER_CSS . "\">\n";
@@ -97,6 +102,5 @@ if( strlen($page_description) )
         include('analytics.inc');
         include('catchpoint-rum.inc');
     }
-        
 
 ?>

@@ -13,7 +13,9 @@ require_once __DIR__ . '/../../include/TestInfo.php';
 require_once __DIR__ . '/../../include/TestResults.php';
 require_once __DIR__ . '/../../include/TestRunResults.php';
 
-
+if(!isset($noanalytics)) {
+  require_once __DIR__ . '/google-tag-manager-noscript.inc';
+}
 
 if(isset($testPath) ) {
   $testInfo = TestInfo::fromFiles($testPath);
