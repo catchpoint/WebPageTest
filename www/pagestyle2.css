@@ -211,6 +211,56 @@ h3.hed_sub {
     font-size: 1rem;
 }
 
+details.metrics_shown {
+    position: absolute;
+    top: 4rem;
+    right: 3rem;
+    list-style: none;
+    z-index: 10;
+}
+
+details.metrics_shown p {
+    position: absolute;
+    background: #4381e5;
+    padding: 1em;
+    color: #fff;
+    width: 25rem;
+    right: 0;
+    margin-top: 1em;
+    font-size: .9rem;
+    box-shadow: 0 0 5px #3333333b;
+    border-radius: .5rem;
+    max-width: 80vw;
+}
+
+details.metrics_shown p:after {
+    border-bottom: .6em solid #4381e5;
+    border-right: .6em solid transparent;
+    border-left: .6em solid transparent;
+    content: "";
+    width: 0;
+    height: 0;
+    right: 2em;
+    position: absolute;
+    top: -.6em;
+    background-repeat: no-repeat;
+}
+
+details.metrics_shown summary {
+    cursor: pointer;
+    list-style: none;
+    color: #333;
+    padding-left: 1.4em;
+    font-size: .9em;
+    text-decoration: dotted underline #888;
+    background: url(/images/src/icon_info_circle.svg) left 50% no-repeat;
+    background-size: 1.2em auto;
+}
+
+details.metrics_shown summary::-webkit-details-marker {
+    display: none;
+}
+
 .compare-experiment .opportunities_summary {
     max-width: none;
 }
@@ -516,6 +566,7 @@ span.lh-flag.poor {
     margin: 1em -3rem !important;
     background-clip: content-box;
     overflow: hidden;
+    position: relative;
 }
 
 @media (max-width: 87.5em) {
