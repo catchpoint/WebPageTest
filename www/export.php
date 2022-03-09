@@ -31,6 +31,7 @@ if (isset($_REQUEST['pretty']))
   $options['pretty'] = $_REQUEST['pretty'];
 if (isset($_REQUEST['run']))
   $options['run'] = $_REQUEST['run'];
+$options['lighthouse'] = isset($_REQUEST['lighthouse']) ? $_REQUEST['lighthouse'] : 1;
 
 $filename = '';
 if (@strlen($url)) {
