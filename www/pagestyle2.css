@@ -2252,6 +2252,7 @@ body.result #main {
     display: flex;
     gap: 1rem;
     position: relative;
+    z-index: 999999;
 }
 
 .results_nav .test_meta_commands details {
