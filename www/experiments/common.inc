@@ -120,6 +120,8 @@ foreach($assessment as $key => $cat ){
 
 	$assessment[$key]["num_recommended"] = $numRecommended;
 	$assessment[$key]["num_experiments"] = $numExperiments;
+	$assessment[$key]["num_good"] = $numGood;
+	$assessment[$key]["num_bad"] = $numChecks - $numGood;
 
 	
 
@@ -162,10 +164,10 @@ foreach($assessment as $key => $cat ){
 		// build sentiment
 		$sentiment = "This site ";
 		if( isset($cls) ){
-			
-			if( $cls > .200 ){
+			echo $cls;
+			if( $cls > .25 ){
 				$sentiment .= "had major layout shifts";
-			} else if( $cls > .50 ){
+			} else if( $cls > .1 ){
 				$sentiment .= "had minor layout shifts";
 			}
 			else {
