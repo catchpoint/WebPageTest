@@ -109,7 +109,7 @@ else
                 $gaTemplate = 'Visual Comparison';
                 include ('head.inc');
             ?>
-            <style type="text/css">
+            <style>
             <?php
                 $bgcolor = 'ffffff';
                 $color = '222222';
@@ -454,7 +454,7 @@ else
                 </div></div>
                 </div>
 
-            <script type="text/javascript">
+            <script>
                 function ShowAdvanced()
                 {
                     $("#advanced").modal({opacity:80});
@@ -1085,8 +1085,8 @@ function DisplayGraphs() {
       }
     }
     ?>
-    <script type="text/javascript" src="//www.google.com/jsapi"></script>
-    <script type="text/javascript">
+    <script src="//www.google.com/jsapi"></script>
+    <script>
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(drawCharts);
         function drawCharts() {

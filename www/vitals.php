@@ -92,7 +92,7 @@ $page_description = "Web Vitals details$testLabel";
 
         </div>
 
-        <script type="text/javascript">
+        <script>
         function expandRequest(targetNode) {
           if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));

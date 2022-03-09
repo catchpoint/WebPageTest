@@ -53,14 +53,9 @@ if( strlen($page_description) )
     } elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) {
         include(__DIR__ . '/../../settings/customhead.inc.php');
     }
-    echo "<script type=\"text/javascript\">\n";
-    if (is_file(__DIR__ . '/../../js/user-timing-min.js'))
-      include(__DIR__ . '/../../js/user-timing-min.js');
-    if (!isset($noanalytics) && is_file(__DIR__ . '/../../js/user-timing-rum-min.js'))
-      include(__DIR__ . '/../../js/user-timing-rum-min.js');
-    echo "\n</script>\n";
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
-    echo "<style type=\"text/css\">\n";
+
+    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
+    echo "<style>\n";
 
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;

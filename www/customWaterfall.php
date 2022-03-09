@@ -83,7 +83,7 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
             <?php include('footer.inc'); ?>
         
 
-        <script type="text/javascript">
+        <script>
             $(document).ready(function(){
 
                 // handle when the selection changes for the location

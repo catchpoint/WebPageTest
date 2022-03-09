@@ -94,8 +94,7 @@ $common_label = implode(" ", $common_labels);
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Graph'; include ('head.inc'); ?>
-        <style type="text/css">
-       
+        <style>
         .chartStats {
           clear: both;
           text-align: left;
@@ -331,8 +330,8 @@ $common_label = implode(" ", $common_labels);
               ?>
             <?php include('footer.inc'); ?>
             </div></div>
-            <script type="text/javascript" src="//www.google.com/jsapi"></script>
-            <script type="text/javascript">
+            <script src="//www.google.com/jsapi"></script>
+            <script>
                 <?php
                     $chartDataJson = json_encode($chartData);
                     // If JSON encode fails due to inf and nan, replace those occurences with '0' in the serialized output then retry.

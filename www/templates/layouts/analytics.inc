@@ -6,7 +6,7 @@
 $analytics = GetSetting('analytics');
 if ($analytics) { 
 ?>
-    <script type="text/javascript">
+    <script>
     var _gaq = _gaq || [];
     <?php
     echo "_gaq.push(['_setAccount', '$analytics']);\n";

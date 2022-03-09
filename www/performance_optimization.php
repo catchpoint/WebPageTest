@@ -140,12 +140,12 @@ $isMultistep = $testRunResults->countSteps() > 1;
         <!--Load the AJAX API-->
         <?php
         if ($isMultistep) {
-            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
-            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            echo '<script src="/js/jk-navigation.js"></script>';
+            echo '<script src="/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $testRunResults->getRunNumber();
         ?>
-        <script type="text/javascript">
+        <script>
         var accordionHandler = new AccordionHandler('<?php echo $testId ?>', <?php echo $testRun ?>);
         $(document).ready(initJS);
 

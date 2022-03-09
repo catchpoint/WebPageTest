@@ -35,7 +35,7 @@
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
-        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
     if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
@@ -49,7 +49,7 @@
         echo "wptBrowser = '$browser';\n";
         include ('./js/experiment.js');
         echo "</script>\n";
-        //echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+        //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }
 
     ?>

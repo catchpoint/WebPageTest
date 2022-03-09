@@ -130,7 +130,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
         </div><!--home_content-->
         </div>
 
-        <script type="text/javascript">
+        <script>
         var maxRuns = 3;
         var profileChanged = function() {
           var sel = document.getElementById("location");
@@ -140,6 +140,6 @@ if (file_exists('./settings/server/lighthouse.ini')) {
           document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";          
         };
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
     </body>
 </html>

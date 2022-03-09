@@ -154,8 +154,8 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
         </div></div></div>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="//www.google.com/jsapi"></script>
-        <script type="text/javascript">
+        <script src="//www.google.com/jsapi"></script>
+        <script>
 
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});

@@ -36,7 +36,7 @@ if( !$ok )
         <title>WebPageTest - Visual Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
             div.content
             {
                 text-align:center;

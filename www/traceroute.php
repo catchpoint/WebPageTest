@@ -177,7 +177,7 @@ $page_description = "Test network path from multiple locations around the world 
         </div><!--home_content-->
         </div>
 
-        <script type="text/javascript">
+        <script>
         <?php
             $max_runs = GetSetting('maxruns', 9);
             echo "var maxRuns = $max_runs;\n";
@@ -189,7 +189,7 @@ $page_description = "Test network path from multiple locations around the world 
             }
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 
