@@ -1593,13 +1593,13 @@ p.opportunities_summary_exps {
     line-height: 1.8;
 }
 
-.result .opportunities_summary {
+.result-summary .opportunities_summary {
     display: block;
     max-width: auto;
     margin: 0;
 }
 
-.result .opportunities_summary a.grade_anchor {
+.result-summary .opportunities_summary a.grade_anchor {
     display: flex;
     gap: 1rem;
     flex-flow: row wrap;
@@ -1610,36 +1610,36 @@ p.opportunities_summary_exps {
     justify-items: space-between;
 }
 
-.result .opportunities_summary a.grade_anchor:last-of-type {
+.result-summary .opportunities_summary a.grade_anchor:last-of-type {
     border: 0;
     padding-bottom: 0;
     margin-bottom: 0;
 }
 
-.result .opportunities_summary a.grade_anchor>p {
+.result-summary .opportunities_summary a.grade_anchor>p {
     flex: 1 1 50%;
     display: flex;
     align-items: flex-start;
     margin: 0;
 }
 
-.result .opportunities_summary a.grade_anchor>p strong {
+.result-summary .opportunities_summary a.grade_anchor>p strong {
     flex: 1 1 25%;
     border: 0;
 }
 
-.result .opportunities_summary a.grade_anchor>p span {
+.result-summary .opportunities_summary a.grade_anchor>p span {
     flex: 1 1 70%;
 }
 
-.result .opportunities_summary a.grade_anchor>div {
+.result-summary .opportunities_summary a.grade_anchor>div {
     flex: 1 1 35%;
     display: flex;
     gap: .5rem;
     align-items: flex-start;
 }
 
-.result .opportunities_summary .extended {
+.result-summary .opportunities_summary .extended {
     display: none;
 }
 
