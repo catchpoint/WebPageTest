@@ -164,7 +164,6 @@ foreach($assessment as $key => $cat ){
 		// build sentiment
 		$sentiment = "This site ";
 		if( isset($cls) ){
-			echo $cls;
 			if( $cls > .25 ){
 				$sentiment .= "had major layout shifts";
 			} else if( $cls > .1 ){
