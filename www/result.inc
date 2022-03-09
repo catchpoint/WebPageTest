@@ -112,9 +112,15 @@ $page_description = "Website performance test result$testLabel.";
             
            <div class="results_header">
                 <h2>Performance Summary</h2>
+                <div class="summary_opps">
                 <p>Here's how this site performed in this test.</p>
           
-                
+                <?php
+                    include __DIR__ . '/experiments/common.inc';
+                    include __DIR__ . '/experiments/summary.inc';
+
+                ?>
+                </div>
                 
 
 
@@ -234,14 +240,7 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
             </div>
 
-            <?php
-                    include __DIR__ . '/experiments/common.inc';
-
-
-                    echo '<h3 class="hed_sub">Opportunities & Experiments...</h3>';
-                    include __DIR__ . '/experiments/summary.inc';
-
-                ?>
+            
             
             <?php
             if (isset($fvRunResults)) {
