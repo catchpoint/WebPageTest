@@ -1628,7 +1628,7 @@ details.details_custommetrics summary {
     text-decoration: none;
     color: #333333;
     display: block;
-    padding: .75em 1em;
+    padding: .5em 0;
 }
 
 .testinfo_artifacts-list a:hover,
@@ -2207,7 +2207,8 @@ body.result #main {
     position: relative;
 }
 
-.results_nav .test_meta_commands summary {
+.results_nav .test_meta_commands summary,
+.results_nav .test_meta_commands>form>input[type=submit] {
     list-style: none;
     font-size: .9rem;
     display: inline-block;
@@ -2227,10 +2228,19 @@ body.result #main {
     font-weight: 900;
 }
 
+.results_nav .test_meta_commands>form>input[type=submit] {
+    background-image: none;
+    padding-right: 1em;
+}
+
 .results_nav .test_meta_commands details>form,
 .results_nav .test_meta_commands details>ul {
     position: absolute;
     background: #fff;
+    padding: 1em;
+    border: 1px solid #eee;
+    min-width: 20rem;
+    margin-top: -1px;
 }
 
 .home_feature_hed .attention {

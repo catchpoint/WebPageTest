@@ -1,6 +1,6 @@
 <div class="test_meta_commands">
                 
-                <div >
+               
                 <?php
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
@@ -11,7 +11,15 @@
                         $secret = GetServerSecret();
                         if (!isset($secret))
                             $secret = '';
-                        echo '<details><summary>Rerun Test</summary>';
+
+                        // if TTFB is extra slow (all runs had a ttfb greater than thresold below), then perhaps a site/cdn is purposefully slowing responsse times for bots.
+                        // Show a message that offers an option to re-run the tests with a default UA
+                        $slowttfbThreshold = 3000;
+                        $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
+                        $showTTFBWarn = count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold;
+                        if($showTTFBWarn){
+                          echo '<details><summary>Re-Run Test</summary>';
+                        }
                         echo "<form name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
                         echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
@@ -28,30 +36,28 @@
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
 
-                        // if TTFB is extra slow (all runs had a ttfb greater than thresold below), then perhaps a site/cdn is purposefully slowing responsse times for bots.
-                        // Show a message that offers an option to re-run the tests with a default UA
-                        $slowttfbThreshold = 3000;
-                        $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
-                        if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold ) { 
+                        
+                        if ( $showTTFBWarn ) { 
                           echo <<<EOT
-                            <details>
-                              <summary><strong>High TTFB</strong> <span>Rerun for accuracy...</span></summary> 
-                              <div>
-                              <p>Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
+                            <div class="highttfb_warn">
+                              <p><strong>High TTFB</strong>: Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
                               <p><label><input type="checkbox" name="keepua"> Preserve original User Agent string in re-run</label></p>
-                            </details>
+                            </div>
                           EOT;
                         }
 
 
-                         echo '<input type="submit" value="Re-run the test">';
-                        echo "\n</form>\n</details>";
+                         echo '<input type="submit" value="Re-Run Test">';
+                        echo "\n</form>\n";
+                        if($showTTFBWarn){
+                          echo "</details>";
+                        }
                         
                     }
                     ?>
-                </div>
+               
                 <details>
-                <summary>Export Files</summary>
+                <summary>Export</summary>
                   <ul class="testinfo_artifacts-list">
                   <?php
                       $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
@@ -78,3 +84,18 @@
                 </div>
                   </details>
             </div>
+            <script>
+              var cmddeets = document.querySelectorAll(".test_meta_commands details");
+              cmddeets.forEach(thisdeet => {
+                thisdeet.addEventListener("toggle",function(e){
+                  let opened = e.target;
+                  if( opened.open ){
+                    cmddeets.forEach(deet => {
+                      if(deet !== opened ){
+                        deet.open = false;
+                      }
+                    });
+                  }
+                });
+              });
+            </script>
