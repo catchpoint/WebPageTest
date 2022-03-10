@@ -88,6 +88,7 @@ include __DIR__ . '/font-rendering.inc';
 
 // usable
 include __DIR__ . '/layout-shifts.inc';
+include __DIR__ . '/meta-viewport.inc';
 include __DIR__ . '/axe-warnings.inc';
 
 // resilient

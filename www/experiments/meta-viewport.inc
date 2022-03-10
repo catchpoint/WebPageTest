@@ -1,0 +1,40 @@
+<?php
+// OPPORTUNITY: Meta viewport element set
+// this is necessary for responsive layout
+$category = "Usable";
+$expectedWidth = "width=device-width";
+$expectedScale = "initial-scale=1";
+$metaMetric = $testStepResult->getMetric('meta-viewport');
+// null if metric was not included in run,
+// "Not found" if it ran and no meta tag was present
+if ( $metaMetric ) { 
+    if( $metaMetric === "Not found" || strpos($metaMetric, $expectedScale) === false || strpos($metaMetric,$expectedWidth) === false ){
+    
+        $assessment[$category]["opportunities"][] = array(
+            "title" =>  'Meta Viewport not configured properly for mobile-friendly layout.',
+            "desc" =>  'A meta viewport tag will help a mobile-friendly site scale and display properly on small screen devices.',
+            "examples" =>  array(
+                ($metaMetric === "Not found" ? "<p>It looks like no meta viewport tag is present.</p>" : "<p>The current meta viewport tag has a content property value of $metaMetric</p>")
+            ),
+            "experiments" =>  array(
+                (object) [
+                    'title' => 'Add a meta viewport tag',
+                    "desc" => '<p>This experiment will insert a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.</p>',
+                    "expvar" => 'swap',
+                    "expval" => array(encodeURIComponent("</head>") . "|" . encodeURIComponent( '<meta name="viewport" content="width=device-width, initial-scale=1"></head>' ))
+                ]
+            ),
+            "good" =>  false
+        );
+    }
+    else {
+        $assessment[$category]["opportunities"][] = array( 
+            "title" =>  'Meta Viewport tag is configured properly.',
+            "desc" =>  "A meta viewport tag will help a mobile-friendly site scale and display properly on small screen devices.",
+            "examples" =>  array(),
+            "experiments" =>  array(),
+            "good" =>  true
+        );
+    }
+}
+?>
