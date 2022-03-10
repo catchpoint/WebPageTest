@@ -49,7 +49,8 @@
                     'title' => 'Preload the LCP image.',
                     "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
                     "expvar" => 'preload',
-                    "expval" => array($lcpSource . "|as_image")
+                    "expval" => array($lcpSource . "|as_image"),
+                    "explabel" => array($lcpSource)
                 ];
                 // priority Hints only help for foreground images
                 if( !$isBG ){
@@ -57,7 +58,8 @@
                         'title' => 'Add a priority hint <em>(Chrome-only)</em>',
                         "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
                         "expvar" => 'addimportance',
-                        "expval" => array($lcpSource . "|i_high")
+                        "expval" => array($lcpSource . "|i_high"),
+                        "explabel" => array($lcpSource)
                     ];
                 }
             

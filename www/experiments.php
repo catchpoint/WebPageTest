@@ -208,15 +208,21 @@ $page_description = "Website performance test result$testLabel.";
                                     if( count($exp->expval) ){
                                         $out .= '<details class="experiment_assets '. ($hideassets === true ? "experiment_assets-hide" : "" )  .'"><summary>Assets included in experiment:</summary>';
                                         $out .= '<ol>';
-                                        foreach($exp->expval as $val){
+                                        
+                                        foreach($exp->expval as $in => $val){
+                                            $label = $val;
+                                            
+                                            if( isset($exp->explabel) ){
+                                                $label = $exp->explabel[$in];
+                                            }
                                             if( count($exp->expval) > 1 ){
                                             $out .= <<<EOT
-                                                <li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$val}</label></li>
+                                                <li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
                                                 EOT;
                                             }
                                             else {
                                                 $out .= <<<EOT
-                                                <li><input type="hidden" name="{$exp->expvar}[]" value="{$val}">{$val}</li>
+                                                <li><input type="hidden" name="{$exp->expvar}[]" value="{$val}">{$label}</li>
                                                 EOT;
                                             }
                                         }
