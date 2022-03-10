@@ -7,7 +7,7 @@ $blocking3pReqs = array();
 $blocking3pHosts = array();
 
 foreach ($requests as $request) {
-    if( $request['renderBlocking'] === "blocking" && $request['host'] !== $initialHost && ($request['contentType'] === "application/javascript" || $request['contentType'] === "text/css") ){
+    if( ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && $request['host'] !== $initialHost && ($request['contentType'] === "application/javascript" || $request['contentType'] === "text/css") ){
         array_push($blocking3pReqs, $request['url'] );
         array_push($blocking3pHosts, $request['host'] );
     }

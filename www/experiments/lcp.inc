@@ -81,7 +81,7 @@
                     "experiments" =>  array(
                         (object)[
                             'title' => 'Look for bottlenecks that are delaying text rendering',
-                            "desc" => '<p>When LCP is not image-based, that often means something is preventing text from appearing sooner. Text visibility may be delayed by blocking scripts or stylsheets, JavaScript-generated content, non-progressive custom font loading, and CSS or JavaScript animations.</p>'
+                            "desc" => '<p>When LCP is not image-based, that often means something is preventing text from appearing sooner. Text visibility may be delayed by blocking scripts or stylesheets, JavaScript-generated content, non-progressive custom font loading, and CSS or JavaScript animations.</p>'
                         ]
                     ),
                     "good" =>  false

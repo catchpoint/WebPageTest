@@ -3,7 +3,7 @@
     $requests = $testStepResult->getRequests();
     $blockingCSSReqs = array();
     foreach ($requests as $request) {
-        if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "text/css" ){
+        if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && $request['contentType'] === "text/css" ){
             array_push($blockingCSSReqs, $request['url'] );
         }
     }

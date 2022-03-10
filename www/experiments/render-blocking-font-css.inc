@@ -4,7 +4,7 @@ $requests = $testStepResult->getRequests();
 $blockingFontCSSReqs = array();
 foreach ($requests as $request) {
   //echo $request['contentType'];
-    if( $request['renderBlocking'] === "blocking" && (strpos($request['host'], "font") !== false || strpos($request['url'], "font") !== false) && $request['contentType'] === "text/css" ){
+    if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && (strpos($request['host'], "font") !== false || strpos($request['url'], "font") !== false) && $request['contentType'] === "text/css" ){
         array_push($blockingFontCSSReqs, $request['url'] );
     }
 }
