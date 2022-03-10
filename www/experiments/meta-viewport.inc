@@ -4,7 +4,7 @@
 $category = "Usable";
 $expectedWidth = "width=device-width";
 $expectedScale = "initial-scale=1";
-$metaMetric = "width=device-width, maximum-scale=1"; //$testStepResult->getMetric('meta-viewport');
+$metaMetric = $testStepResult->getMetric('meta-viewport');
 // null if metric was not included in run,
 // "Not found" if it ran and no meta tag was present
 if ( $metaMetric ) { 
