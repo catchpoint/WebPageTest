@@ -1890,7 +1890,7 @@ details.details_custommetrics summary {
 
 .compare-experiment .header_screenshots {
     flex: 1 1 45%;
-    align-self: flex-start;
+    /* align-self: flex-start; */
 }
 
 .compare-experiment #header_data {
