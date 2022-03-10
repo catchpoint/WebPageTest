@@ -1,4 +1,4 @@
-var metaviewport;
+var metaviewport = undefined;
 var metaTags = document.getElementsByTagName("meta");
 for (var i = 0; i < metaTags.length; i++) {
     if (metaTags[i].getAttribute("name") == "viewport") {
