@@ -1,4 +1,4 @@
-var metaviewport = "Not found";
+var metaviewport = null;
 var metaTags = document.getElementsByTagName("meta");
 for (var i = 0; i < metaTags.length; i++) {
     if (metaTags[i].getAttribute("name") == "viewport") {
@@ -6,4 +6,4 @@ for (var i = 0; i < metaTags.length; i++) {
         break;
     }
 }
-return metaviewport;
+return metaviewport === null ? "Not found" : metaviewport;
