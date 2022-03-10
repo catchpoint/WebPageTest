@@ -34,7 +34,8 @@ if( count($fontsThatBlock) ){
                 "expvar" => 'swap',
                 "expval" => array(encodeURIComponent("@font-face {") . "|" . encodeURIComponent( "@font-face { font-display: swap; " ))
             ]),
-		"good" => false
+		"good" => false,
+        "hideassets" => true
 	);
     
 }

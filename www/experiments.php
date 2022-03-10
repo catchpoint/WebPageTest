@@ -123,7 +123,7 @@ $page_description = "Website performance test result$testLabel.";
                 <?php
                 if (
                     !$headless && gz_is_file("$testPath/testinfo.json")
-                    && !array_key_exists('published', $test['testinfo'])
+                    //&& !array_key_exists('published', $test['testinfo'])
                     && ($isOwner || !$test['testinfo']['sensitive'])
                     && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
                 ) {
@@ -161,6 +161,7 @@ $page_description = "Website performance test result$testLabel.";
                         $bottleneckExamples = $parts["examples"];
                         $relevantExperiments = $parts["experiments"];
                         $good = $parts["good"];
+                        $hideassets = $parts["hideassets"];
 
                         $out = '';
                         
@@ -205,7 +206,7 @@ $page_description = "Website performance test result$testLabel.";
                     
                                 if( $exp->expvar && $exp->expval ){
                                     if( count($exp->expval) ){
-                                        $out .= '<details class="experiment_assets"><summary>Assets included in experiment:</summary>';
+                                        $out .= '<details class="experiment_assets '. ($hideassets === true ? "experiment_assets-hide" : "" )  .'"><summary>Assets included in experiment:</summary>';
                                         $out .= '<ol>';
                                         foreach($exp->expval as $val){
                                             if( count($exp->expval) > 1 ){

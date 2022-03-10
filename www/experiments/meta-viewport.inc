@@ -4,7 +4,7 @@
 $category = "Usable";
 $expectedWidth = "width=device-width";
 $expectedScale = "initial-scale=1";
-$metaMetric = $testStepResult->getMetric('meta-viewport');
+$metaMetric = "width=device-width, maximum-scale=1"; //$testStepResult->getMetric('meta-viewport');
 // null if metric was not included in run,
 // "Not found" if it ran and no meta tag was present
 if ( $metaMetric ) { 
@@ -24,7 +24,8 @@ if ( $metaMetric ) {
                     "expval" => array(encodeURIComponent("</head>") . "|" . encodeURIComponent( '<meta name="viewport" content="width=device-width, initial-scale=1"></head>' ))
                 ]
             ),
-            "good" =>  false
+            "good" =>  false,
+            "hideassets" => true
         );
     }
     else {
