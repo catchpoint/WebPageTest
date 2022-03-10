@@ -249,10 +249,16 @@ class TestResults {
 
   public function getBrowser(){
       $rawResultsFirstRunFirstStep = $this->getRunResult(1, false)->getStepResult(1)->getRawResults();
-      return new Browser(
-          $rawResultsFirstRunFirstStep['browser_name'],
-          $rawResultsFirstRunFirstStep['browser_version']
-      );
+      if (isset($rawResultsFirstRunFirstStep) &&
+          isset($rawResultsFirstRunFirstStep['browser_name']) &&
+          isset($rawResultsFirstRunFirstStep['browser_version'])) {
+        return new Browser(
+            $rawResultsFirstRunFirstStep['browser_name'],
+            $rawResultsFirstRunFirstStep['browser_version']
+        );
+      } else {
+        return null;
+      }
   }
 
   private function calculateAverages($cached) {

@@ -487,9 +487,13 @@ function gz_file_put_contents($filename, $data)
 {
     $ret = false;
     $nogzip = GetSetting('nogzip');
+    $compression = GetSetting('compression', '6');
+    if (!is_numeric($compression) || $compression < 1 || $compression > 9) {
+      $compression = 6;
+    }
     if( !$nogzip && extension_loaded('zlib') )
     {
-        $zip = @gzopen("$filename.gz", 'wb6');
+        $zip = @gzopen("$filename.gz", "wb$compression");
         if( $zip !== false )
         {
             if( gzwrite($zip, $data) )
@@ -1461,25 +1465,39 @@ function GetTesterCount($location) {
 }
 
 function GetDailyTestNum() {
-  $lock = Lock("TestNum");
-  if ($lock) {
-    $num = 0;
-    if (!$num) {
-      $filename = __DIR__ . '/dat/testnum.dat';
-      $day = date ('ymd');
-      $testData = array('day' => $day, 'num' => 0);
-      $newData = json_decode(file_get_contents($filename), true);
-      if (isset($newData) && is_array($newData) &&
-          array_key_exists('day', $newData) &&
-          array_key_exists('num', $newData) &&
-          $newData['day'] == $day) {
-        $testData['num'] = $newData['num'];
-      }
-      $testData['num']++;
-      $num = $testData['num'];
-      file_put_contents($filename, json_encode($testData));
+  $num = 0;
+  $day = date ('ymd');
+  $key = "testnum_$day";
+  if (function_exists('apcu_inc')) {
+    $success = false;
+    $num = apcu_inc($key, 1, $success, 86400);
+    if (!$success) {
+      $num = 0;
     }
-    Unlock($lock);
+  }
+  if (!$num) {
+    $lock = Lock("TestNum");
+    if ($lock) {
+      if (!$num) {
+        $filename = __DIR__ . '/dat/testnum.dat';
+        $testData = array('day' => $day, 'num' => 0);
+        $newData = json_decode(file_get_contents($filename), true);
+        if (isset($newData) && is_array($newData) &&
+            array_key_exists('day', $newData) &&
+            array_key_exists('num', $newData) &&
+            $newData['day'] == $day) {
+          $testData['num'] = $newData['num'];
+        }
+        $testData['num']++;
+        $num = $testData['num'];
+        file_put_contents($filename, json_encode($testData));
+        if (function_exists('apcu_store')) {
+          $nextNum = $num+1;
+          apcu_store($key, $nextNum);
+        }
+      }
+      Unlock($lock);
+    }
   }
   return $num;
 }

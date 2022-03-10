@@ -410,6 +410,8 @@ exit;
                                                           echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
                                                       } elseif( isset($email) ) {
                                                         echo '<td class="uid">' . htmlspecialchars($email) . '</td>';
+                                                      } elseif( isset($key) ) {
+                                                        echo '<td class="uid">' . htmlspecialchars($key) . '</td>';
                                                       } else {
                                                           echo '<td class="uid"></td>';
                                                       }
