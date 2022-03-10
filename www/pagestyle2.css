@@ -2339,6 +2339,7 @@ body.result #main {
 .results_nav .test_meta_commands .test_meta_rerun_form input[type=submit] {
     background: #fbe076;
     border-color: #e2d088;
+    color: #333;
 }
 
 .results_nav .test_meta_commands details>form,
