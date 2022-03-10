@@ -2335,6 +2335,12 @@ body.result #main {
     padding-right: 1em;
 }
 
+.results_nav .test_meta_commands .test_meta_rerun summary,
+.results_nav .test_meta_commands .test_meta_rerun_form input[type=submit] {
+    background: #fbe076;
+    border-color: #e2d088;
+}
+
 .results_nav .test_meta_commands details>form,
 .results_nav .test_meta_commands details>ul {
     position: absolute;
