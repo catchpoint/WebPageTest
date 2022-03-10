@@ -3,7 +3,7 @@ $category = "Quick";
 $requests = $testStepResult->getRequests();
 $blockingJSReqs = array();
 foreach ($requests as $request) {
-    if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && ($request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript") ){
+    if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && ($request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript" || $request['contentType'] === "application/x-javascript") ){
         array_push($blockingJSReqs, $request['url'] );
     }
 }
