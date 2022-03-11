@@ -2177,15 +2177,15 @@ body.result #main {
 
 .home_feature_hed_contain {
     background-color: #6b25cf;
-    background-image: url(/images/wpt_home_swoop.svg), url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3e%3cradialGradient id='a' cy='281' r='514' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%237d0688'/%3e%3cstop offset='1' stop-color='%23150033'/%3e%3c/radialGradient%3e%3clinearGradient id='b' x2='0' y2='1'%3e%3cstop offset='.68' stop-color='%23d617c5' stop-opacity='0'/%3e%3cstop offset='1' stop-color='%23d617c5' stop-opacity='.25'/%3e%3c/linearGradient%3e%3cpath fill='url(%23a)' d='M0 0h800v400H0z'/%3e%3ccircle cx='268' cy='61' r='300' fill='url(%23b)'/%3e%3ccircle cx='533' cy='61' r='300' fill='url(%23b)'/%3e%3ccircle cx='400' cy='30' r='300' fill='url(%23b)'/%3e%3c/svg%3e");
-    background-position: bottom -2px left 50%, bottom 0 left 50%;
+    background-image: url(/images/wpt_home_swoop.svg), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%237D0688'/%3E%3Cstop offset='1' stop-color='%23150033'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23D617C5' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23D617C5' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.49'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
+    background-position: bottom -12px left 50%, bottom 0 left 50%;
     background-repeat: no-repeat, no-repeat;
     background-size: 100%, cover;
 }
 
 @media (min-width:70em) {
     .home_feature_hed_contain {
-        background-position: bottom -2px left 50%, bottom -50px left 50%;
+        background-position: bottom -32px left 50%, bottom -50px left 50%;
     }
 }
 
@@ -2205,7 +2205,138 @@ body.result #main {
     gap: 2rem;
 }
 
+.home .play {
+    height: 7em;
+    background: #000 url("/images/src/icon_play.svg") 50% no-repeat;
+    overflow: hidden;
+    text-indent: -999px;
+    border-radius: 100%;
+    -moz-appearance: none;
+    position: absolute;
+    bottom: 35%;
+    left: 50%;
+    cursor: pointer;
+    width: 7em;
+    background-size: 100%;
+    border: 2px solid #2d3c60;
+    margin-left: -3em;
+    /* opacity: 0; */
+    box-shadow: 0 0 10px #2f80ed59;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .home_feature_hed,
+    .home_feature_hed-pro {
+        transition: all 1.5s ease-out;
+    }
+}
+
+.home_feature_hed:first-child {
+    position: absolute;
+}
+
+.home_feature_hed-pro {
+    position: relative;
+}
+
+.home_feature_hed-pro,
+.home.feature-pro .home_feature_hed_contain>.home_feature_hed {
+    transform: scale(.8);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.home.feature-pro .home_feature_hed-pro {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: all;
+}
+
+.home_feature_hed_contain {
+    transition: all 1s ease-out;
+    overflow: hidden;
+}
+
+.home.feature-pro .home_feature_hed_contain {
+    background-color: #0a234f;
+    background-image: url(/images/wpt_home_swoop.svg), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23123D80'/%3E%3Cstop offset='1' stop-color='%23050D26'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23307CD1' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23307CD1' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.home_feature_hed_visual {
+    box-shadow: 0px 0px 5px 3px #85e0ff45;
+}
+
+header {
+    transition: border-color 1s ease-out;
+}
+
+.home.feature-pro header {
+    border-bottom-color: #2fbded;
+}
+
+.home.feature-pro h1 .pro-flag {
+    font-size: .5em;
+    padding: 0.5em;
+    border-radius: 0.4em;
+    margin: 0 1em 0 0.4em;
+    font-size: .3em;
+    font-weight: 500;
+    text-transform: uppercase;
+    background: linear-gradient(302deg, #6ca71a, #3c7b00);
+    color: #fff;
+    padding: 0.5em;
+    border-radius: 0.4em;
+    line-height: .8;
+    /* align-self: flex-start; */
+    font-style: normal;
+    margin: 0 1em;
+    text-shadow: none;
+    -webkit-text-stroke: 1px;
+    text-transform: capitalize;
+    font-size: .5em;
+    padding: 0.3em 0.4em;
+    border-radius: 0.5em;
+    margin: 0 1em 0 0.4em;
+    border: 3px solid #fff;
+}
+
+.home_feature_hed_text_leadin {
+    font-weight: 300;
+    margin-right: .2em;
+}
+
+.home_feature_hed_text_line {
+    display: block;
+}
+
+.home_feature_hed_contain .pill {
+    background: #1151bb;
+    border-radius: 6.25em;
+    padding: 0.6875em 1.4375em;
+    line-height: 1em;
+    text-decoration: none;
+    color: #fff;
+    margin: 1.5rem 0 3em 0em;
+    display: inline-block;
+    padding: 1.2em 2em;
+    background-color: #00000026;
+    font-weight: 700;
+    color: #ffffff;
+    border: 1px solid #fff;
+    padding: 0.9em 1.5em;
+}
+
+.home_feature_hed_text_logo {
+    background: url(/images/wpt-logo-text.svg) no-repeat;
+    display: inline-block;
+    text-indent: -99999px;
+    width: 365px;
+    background-size: contain;
+    background-position: left bottom;
+}
+
 .home_feature_hed,
+.home_feature_hed-pro,
 .home_feature_main {
     display: flex;
     margin: 0 auto;
@@ -2213,6 +2344,11 @@ body.result #main {
     padding: 3rem 0 3rem;
     justify-content: space-between;
     align-items: flex-start;
+}
+
+.home_feature_hed-pro {
+    display: block;
+    padding: 0;
 }
 
 @media (max-width: 87.5em) {
@@ -2383,13 +2519,14 @@ body.result #main {
 }
 
 .home_feature_hed_visual {
-    flex: 0 1 40%;
+    flex: 0 1 42%;
     border: 6px solid #fff;
     box-shadow: 0px 0px 5px 3px #fe89ff7a;
     /* margin-left: 2em; */
     background: #fff;
     /* max-height: 200px; */
     overflow: hidden;
+    position: relative;
     /* object-fit: contain; */
 }
 
