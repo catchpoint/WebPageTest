@@ -405,6 +405,12 @@ else
                 }
                 ?>
             </style>
+
+            <?php
+                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode('https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI]."&screenshot=1") . "/opengraph/_2022/";
+            ?>
+
+            <meta property="og:image" content="$socialImage">
         </head>
         <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; }   ?>">
                 <?php 
@@ -475,7 +481,8 @@ else
                                     <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
                                     <li><a href=\"". $experimentTestHref ."\">Experiment Test</a></li>
                                     <li><a href=\"". $controlTestHref ."\">Control Test</a></li>
-                                    <li><a href=\"". $originalTestHref ."\">Original Test</a></li>
+                                    <li><a href=\"". $originalTestHref ."\">Original</a></li>
+                                    <li><a href=\"$socialImage\">Image</a></li>
                                     </ul>";
                                     echo "</div>";
                                     echo "</div>"; ?>

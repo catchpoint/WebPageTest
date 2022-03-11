@@ -433,7 +433,7 @@ h1 .pro-flag {
 .experiment_meta_included {
     display: flex;
     gap: 1rem;
-    align-items: center;
+    align-items: flex-start;
     flex: 1 1 50%;
 }
 
@@ -7881,6 +7881,6 @@ body.screenshot .header_screenshots {
     max-width: 100% !important;
 }
 
-.experiment_opportunities {
+body.screenshot .experiment_opportunities {
     display: none;
 }
