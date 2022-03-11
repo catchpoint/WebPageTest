@@ -27,6 +27,7 @@ chdir('..');
 require_once('common.inc');
 require_once('archive.inc');
 require_once 'page_data.inc';
+require_once('testStatus.inc');
 require_once('object_detail.inc');
 require_once('harTiming.inc');
 require_once('video.inc');
@@ -54,16 +55,32 @@ if (!isset($included)) {
 set_time_limit(3600);
 ignore_user_abort(true);
 
-
 $id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
+logAlways('WorkDoneID:'.$id, './work/workdone.log');
+// if (strpos($id, 'SaaS')) {
+//   $id = null;
+// }
 $uploaded = false;
 if (!isset($id)) {
   // Generate a test ID if this is an upload
   $id = GenerateTestID();
   $uploaded = true;
   $testPath = './' . GetTestPath($id);
-  if( !is_dir($testPath) ) 
+
+  if( !is_dir($testPath) ) {
       mkdir($testPath, 0777, true);
+  }
+} elseif (isset($id) && strpos($id, 'SaaS')) {
+  $uploaded = true;
+  $testPath = './' . GetTestPath($id);
+  file_put_contents('./log_'.date("j.n.Y").'.log', 'WorkDone:'.$testPath.PHP_EOL, FILE_APPEND);
+  logAlways('Generated:'.$id, './work/workdone.log');
+  logAlways('Generated:'.$testPath, './work/workdone.log');
+
+  if( !is_dir($testPath) ) {
+    logAlways('MkDir:'.$testPath, './work/workdone.log');
+    mkdir($testPath, 0777, true);
+  }
 }
 // Send back the generated test ID
 echo $id;
@@ -76,7 +93,7 @@ if(extension_loaded('newrelic')) {
 
 $workdone_start = microtime(true);
 
-//logmsg(json_encode($_REQUEST), './work/workdone.log', true);
+logAlways(json_encode($_REQUEST), './work/workdone.log');
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
@@ -106,6 +123,7 @@ $flattenUploadedZippedHar =
 // TODO(skerner): POST params are not saved to disk directly, so it is hard to
 // see what the agent uploaded after the fact.  Consider writing them to a
 // file that gets uploaded.
+
 $runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, null);
 $runNumber     = arrayLookupWithDefault('run',            $_REQUEST, $runNumber);
 $runIndex      = arrayLookupWithDefault('index',          $_REQUEST, null);
@@ -119,8 +137,14 @@ $urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
 $testInfo_dirty = false;
 
 if (ValidateTestId($id)) {
-  $testPath = './' . GetTestPath($id);
+  logAlways('Validated:'.$id, './work/workdone.log');
 
+  $testPath = './' . GetTestPath($id);
+  logAlways('TestPath:'.$testPath,'./work/workdone.log');
+  if (!is_dir($testPath)) {
+    logAlways('MkDir2:'.$testPath,'./work/workdone.log');
+    mkdir($testPath, 0777, true);
+  }
   // Extract the uploaded data
   if (is_dir($testPath)) {
     if (isset($_FILES['file']['tmp_name'])) {
@@ -140,6 +164,7 @@ if (ValidateTestId($id)) {
   if (!isset($testLock))
     logTestMsg($id, "Failed to lock test");
   $testInfo = GetTestInfo($id);
+  logAlways('GetTestInfoAgain:'.json_encode($testInfo),'./work/workdone.log');
 
   // Figure out the path to the results.
   $ini = parse_ini_file("$testPath/testinfo.ini");
@@ -265,6 +290,7 @@ if (ValidateTestId($id)) {
   SecureDir($testPath);
   if ($uploaded){
     ProcessUploadedTest($id);
+    $testInfo = GetTestInfo($id);
   }
   logTestMsg($id, "Done Processing. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
   UnlockTest($testLock);
@@ -291,17 +317,31 @@ if (ValidateTestId($id)) {
         }
       }
     }
+    if (isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id'])) {
+      $ret = array('data' => GetTestStatus($id));
+      $ret['statusCode'] = $ret['data']['statusCode'];
+      $ret['statusText'] = $ret['data']['statusText'];
+      $ret['saas_test_id'] = $testInfo['saas_test_id'];
+      $ret['saas_node_id'] = $testInfo['saas_node_id'];
+      
+      if ($ret['statusCode'] == 200) {
+        if (defined("VER_WEBPAGETEST")) {
+          $ret["webPagetestVersion"] = VER_WEBPAGETEST;
+        }
 
-    if (isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id']) && isset($testInfo['saas_node_id'])) {
-      $saasTestInfo = TestInfo::fromFiles($testPath);
-      $saasTestResults = TestResults::fromFiles($saasTestInfo);
-      $infoFlags = array(JsonResultGenerator::WITHOUT_AVERAGE, JsonResultGenerator::WITHOUT_STDDEV, JsonResultGenerator::WITHOUT_MEDIAN, JsonResultGenerator::WITHOUT_REPEAT_VIEW);
-      $jsonResultGenerator = new JsonResultGenerator($saasTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
-      $test_json = $jsonResultGenerator->resultDataArray($saasTestResults, $median_metric);
-      if (isset($test_json) && is_array($test_json)) {
-          $txt = json_encode($test_json);
-          ReportSaaSTest($txt, $testInfo['saas_node_id']);
-      }      
+        $saasTestInfo = TestInfo::fromFiles($testPath);
+
+        $saasTestResults = TestResults::fromFiles($saasTestInfo);
+
+        $infoFlags = array(JsonResultGenerator::WITHOUT_AVERAGE, JsonResultGenerator::WITHOUT_STDDEV, JsonResultGenerator::WITHOUT_MEDIAN, JsonResultGenerator::WITHOUT_REPEAT_VIEW);
+        $jsonResultGenerator = new JsonResultGenerator($saasTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
+        $ret['data'] = $jsonResultGenerator->resultDataArray($saasTestResults, $median_metric);
+
+        if (isset($ret) && is_array($ret)) {
+            $txt = json_encode($ret);
+            ReportSaaSTest($txt, $ret['saas_node_id'], $ret['data']['id']);
+        }      
+      }
     }
 
     // send an async request to the post-processing code so we don't block
