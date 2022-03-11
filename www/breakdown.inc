@@ -5,11 +5,6 @@
 require_once('object_detail.inc');
 require_once('contentColors.inc');
 
-if(extension_loaded('newrelic')) {
-    newrelic_add_custom_tracer('getBreakdown');
-    newrelic_add_custom_tracer('getBreakdownCombined');
-}
-
 define('BREAKDOWN_CACHE_VERSION', 4);
 
 /**

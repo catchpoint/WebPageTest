@@ -20,13 +20,6 @@ if (ob_get_length())
 if (function_exists('fastcgi_finish_request'))
   fastcgi_finish_request();
 
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_tracer('ArchiveTest');
-  newrelic_add_custom_tracer('loadAllPageData');
-  newrelic_add_custom_tracer('SendBeacon');
-  newrelic_add_custom_tracer('SendCallback');
-}
-
 if (array_key_exists('test', $_REQUEST)) {
   $id = $_REQUEST['test'];
   if (ValidateTestId($id)) {
@@ -136,7 +129,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         "<html>
             <head>
                 <title>$subject</title>
-                <style type=\"text/css\">
+                <style>
                     .indented1 {padding-left: 40pt;}
                     .indented2 {padding-left: 80pt;}
                 </style>

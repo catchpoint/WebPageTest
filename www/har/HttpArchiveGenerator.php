@@ -82,30 +82,34 @@ class HttpArchiveGenerator
     }
 
     private function setLighthouseData() {
-        $testPath = $this->testInfo->getRootDirectory();
-        $lighthouse_file = $testPath . "/lighthouse.json";
-        if (gz_is_file($lighthouse_file)) {
-            $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
-            if (isset($lighthouse) && is_array($lighthouse))
-                $this->harData['_lighthouse'] = $lighthouse;
-        }
-        $lighthouse_log = $testPath . "/lighthouse.log";
-        if (gz_is_file($lighthouse_log)) {
-            $log = gz_file_get_contents($lighthouse_log);
-            if (isset($log) && strlen($log)) {
-                if (!isset($this->harData['_lighthouse']))
-                  $this->harData['_lighthouse'] = array();
-                $this->harData['test_log'] = $log;
+        if (isset($this->options['lighthouse']) && $this->options['lighthouse']) {
+            $testPath = $this->testInfo->getRootDirectory();
+            $lighthouse_file = $testPath . "/lighthouse.json";
+            if (gz_is_file($lighthouse_file)) {
+                $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
+                if (isset($lighthouse) && is_array($lighthouse))
+                    $this->harData['_lighthouse'] = $lighthouse;
+            }
+            $lighthouse_log = $testPath . "/lighthouse.log";
+            if (gz_is_file($lighthouse_log)) {
+                $log = gz_file_get_contents($lighthouse_log);
+                if (isset($log) && strlen($log)) {
+                    if (!isset($this->harData['_lighthouse']))
+                    $this->harData['_lighthouse'] = array();
+                    $this->harData['test_log'] = $log;
+                }
             }
         }
     }
 
     public function setBrowserData() {
         $browser = $this->resultData->getBrowser();
-        $this->harData['log']['browser'] = array(
-            'name' => $browser->getName(),
-            'version' => $browser->getVersion()
-        );
+        if (isset($browser)) {
+            $this->harData['log']['browser'] = array(
+                'name' => $browser->getName(),
+                'version' => $browser->getVersion()
+            );
+        }
     }
 
     private function handleRun($runNumber, &$entries) {

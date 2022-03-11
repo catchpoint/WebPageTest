@@ -134,6 +134,10 @@ echo ' <details class="box details_panel">
                             $checked = ' checked=checked';
                         echo "<label for=\"endVisuallyComplete\"><input type=\"radio\" name=\"end\" id=\"endVisuallyComplete\" value=\"visual\"$checked onclick=\"this.form.submit();\"> Visually Complete</label>";
                         $checked = '';
+                        if( !strcasecmp($endTime, 'lcp') )
+                            $checked = ' checked=checked';
+                            echo "<label for=\"endLCP\"><input type=\"radio\" name=\"end\" id=\"endLCP\" value=\"lcp\"$checked onclick=\"this.form.submit();\"> Largest Contentful Paint</label>";
+                        $checked = '';
                         if( !strcasecmp($endTime, 'all') )
                             $checked = ' checked=checked';
                         echo "<label for=\"endLastChange\"><input type=\"radio\" name=\"end\" id=\"endLastChange\" value=\"all\"$checked onclick=\"this.form.submit();\"> Last Change</label>";

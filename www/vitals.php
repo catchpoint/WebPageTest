@@ -34,16 +34,39 @@ $page_description = "Web Vitals details$testLabel";
 <html lang="en-us">
     <head>
         <title><?php echo "$page_title - Web Vitals Details"; ?></title>
+        <script>document.documentElement.classList.add('has-js');</script>
+
         <?php $gaTemplate = 'Vitals'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="result">
             <?php
             $tab = 'Test Result';
             $subtab = 'Web Vitals';
             include 'header.inc';
             ?>
-            <div id="result" class=" vitals-diagnostics">
-            <h3>Google <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Web Vitals <img src='/images/icon-external.svg'></a> Diagnostic Information</h3>
+
+            <div class="results_main_contain">
+                <div class="results_main">
+
+
+                <div class="results_and_command">
+
+                    <div class="results_header">
+                        <h2>Core Web Vitals</h2>
+                        <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
+                    </div>
+
+                    <?php include("testinfo_command-bar.inc"); ?>
+
+                </div>
+
+
+
+
+            <div id="result" class="results_body vitals-diagnostics crux-embed">
+
+            <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
+
             <?php
             if (isset($testRunResults)) {
               require_once(__DIR__ . '/include/CrUX.php');
@@ -53,7 +76,7 @@ $page_description = "Web Vitals details$testLabel";
             if ($isMultistep) {
                 for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
                     $stepResult = $testRunResults->getStepResult($i);
-                    echo "<h1>" . $stepResult->readableIdentifier() . "</h1>";
+                    echo "<h4>" . $stepResult->readableIdentifier() . "</h4>";
                     InsertWebVitalsHTML($stepResult);
                 }
             } else {
@@ -64,9 +87,12 @@ $page_description = "Web Vitals details$testLabel";
             </div>
             </div>
             <?php include('footer.inc'); ?>
+            </div>
+                  </div>
+
         </div>
 
-        <script type="text/javascript">
+        <script>
         function expandRequest(targetNode) {
           if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));
@@ -151,8 +177,8 @@ function InsertWebVitalsHTML_Summary($stepResult) {
           $scoreClass = 'ok';
         }
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
-        echo "<p>Largest Contentful Paint</p>";
-        echo "<p class='metric-value $scoreClass'>{$lcp['time']} ms</p>";
+        echo "<h4>Largest Contentful Paint</h4>";
+        echo "<p class='metric-value $scoreClass'>{$lcp['time']}<span class='units'>ms</span></p>";
         InsertCruxHTML($testRunResults, null, 'lcp', false, false);
         echo "</div></a>";
     }
@@ -193,7 +219,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
           $scoreClass = 'ok';
         }
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
-        echo "<p>Cumulative Layout Shift</p>";
+        echo "<h4>Cumulative Layout Shift</h4>";
         echo "<p class='metric-value $scoreClass'>$cls</p>";
         InsertCruxHTML($testRunResults, null, 'cls', false, false);
         echo "</div></a>";
@@ -208,8 +234,8 @@ function InsertWebVitalsHTML_Summary($stepResult) {
           $scoreClass = 'ok';
         }
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
-        echo "<p>Total Blocking Time</p>";
-        echo "<p class='metric-value $scoreClass'>$tbt ms</p>";
+        echo "<h4>Total Blocking Time</h4>";
+        echo "<p class='metric-value $scoreClass'>$tbt<span class='units'>ms</span></p>";
         InsertCruxHTML($testRunResults, null, 'fid', false, true);
         echo "</div></a>";
     }
@@ -263,15 +289,15 @@ function InsertWebVitalsHTML_LCP($stepResult) {
         }
         if (isset($lcp)) {
             echo "<div class='metric'>";
-            echo "<h2 id='lcp'>Largest Contentful Paint ({$lcp['time']} ms)</h2>";
-            echo "<small>";
+            echo "<h3 class=\"hed_sub\" id='lcp'>Largest Contentful Paint ({$lcp['time']}<span class='units'>ms</span>)</h3>";
+            echo "<p>";
             $urlGenerator = $stepResult->createUrlGenerator("", false);
             $filmstripUrl = $urlGenerator->filmstripView();
             echo "<a href='$filmstripUrl&highlightLCP=1'>View as Filmstrip</a>";
             $videoUrl = $urlGenerator->createVideo();
             echo " - <a href='$videoUrl'>View Video</a>";
             echo " - <a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/images/icon-external.svg'></a>";
-            echo "</small>";
+            echo "</p>";
 
             // 3-frame filmstrip (if video is available)
             $video_frames = $stepResult->getVisualProgress();
@@ -329,7 +355,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
 
                     echo '<figure>';
                     echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                    echo "<figcaption>{$previous['time']} ms</figcaption>";
+                    echo "<figcaption>{$previous['time']}<span class='units'>ms</span></figcaption>";
                     echo '</figure>';
 
                     $imgUrl = $lcp_frame['path'];
@@ -346,13 +372,13 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                     }
                     echo '<figure>';
                     echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                    echo "<figcaption>{$lcp_frame['time']} ms</figcaption>";
+                    echo "<figcaption>{$lcp_frame['time']}<span class='units'>ms</span></figcaption>";
                     echo '</figure>';
 
                     $imgUrl = $urlGenerator->videoFrameThumbnail(basename($next['path']), $thumbSize);
                     echo '<figure>';
                     echo "<img width=$width height=$height class='thumbnail' src='$imgUrl'>";
-                    echo "<figcaption>{$next['time']} ms</figcaption>";
+                    echo "<figcaption>{$next['time']}<span class='units'>ms</span></figcaption>";
                     echo '</figure>';
 
                     echo '</div>';
@@ -360,10 +386,10 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             }
 
             // summary table
-            echo '<h3 align="left">LCP Event Summary</h3>';
-            echo '<p align="left"><small><a href="#lcp-full">See full details</a></small></p>';
+            echo '<h4>LCP Event Summary</h4>';
+            echo '<p><a href="#lcp-full">See full details</a></p>';
             echo '<div class="scrollableTable"><table class="pretty" cellspacing="0">';
-            echo "<tr><th align='left'>Time</th><td>{$lcp['time']} ms</td></tr>";
+            echo "<tr><th align='left'>Time</th><td>{$lcp['time']}ms</td></tr>";
             echo "<tr><th align='left'>Size</th><td>{$lcp['size']}px²</td></tr>";
             echo "<tr><th align='left'>Type</th><td>{$lcp['type']}</td></tr>";
             if (isset($lcp['element']['nodeName'])) {
@@ -431,12 +457,12 @@ function InsertWebVitalsHTML_LCP($stepResult) {
 
                 //image
                 if ($lcpSource) {
-                    echo "<div class='lcp-image'><h3>LCP Image</h3><img src='" . $lcpSource . "' /></div>";
+                    echo "<div class='lcp-image'><h4>LCP Image</h4><img src='" . $lcpSource . "' /></div>";
                 }    
 
             // Insert the raw debug details
             echo "<div class='values'>";
-            echo "<h3 id='lcp-full'>Full LCP Event Information</h3>";
+            echo "<h4 id='lcp-full'>Full LCP Event Information</h4>";
             if (isset($lcp['event'])) {
                 unset($lcp['event']);
             }
@@ -480,15 +506,15 @@ function InsertWebVitalsHTML_CLS($stepResult) {
         });
         $cls = round($cls, 3);
         echo "<div class='metric'>";
-        echo "<h2 id='cls'>Cumulative Layout Shift ($cls)</h2>";
-        echo "<small>";
+        echo "<h3 class=\"hed_sub\" id='cls'>Cumulative Layout Shift ($cls)</h2>";
+        echo "<p>";
         $urlGenerator = $stepResult->createUrlGenerator("", false);
         $filmstripUrl = $urlGenerator->filmstripView();
         echo "<a href='$filmstripUrl&highlightCLS=1'>View as Filmstrip</a>";
         $videoUrl = $urlGenerator->createVideo();
         echo " - <a href='$videoUrl'>View Video</a>";
         echo " - <a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a>";
-        echo "</small>";
+        echo "</p>";
 
         foreach ($windows as $window) {
             InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames);
@@ -545,7 +571,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
 
     echo "<div class='cls-window'>";
     $cls = round($window['cls'], 3);
-    echo "<h3>Window {$window['num']} ($cls)</h3>";
+    echo "<h4>Window {$window['num']} ($cls)</h4>";
     echo "<p>Hover over any image to see the previous frame and the effect of the layout shift.</p>";
     echo "<ul>";
     $even = true;
@@ -637,7 +663,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
 
                 echo "<img width=$width height=$height class='thumbnail autohide' src='$after'>";
                 echo "</div>";
-                echo "<figcaption>{$shift['time']} ms ($ls)</figcaption>";
+                echo "<figcaption>{$shift['time']}<span class='units'>ms</span> ($ls)</figcaption>";
                 echo '</figure>';
 
                 echo '</div>';
@@ -681,8 +707,8 @@ function InsertWebVitalsHTML_TBT($stepResult) {
         $tbt = $stepResult->getMetric('TotalBlockingTime');
         if (isset($tbt)) {
             echo "<div class='metric'>";
-            echo "<h2 id='tbt'>Total Blocking Time ($tbt ms)</h2>";
-            echo "<small><a href='https://web.dev/tbt/' target='_blank' rel='noopener'>About Total Blocking Time (TBT) <img src='/images/icon-external.svg'></a></small>";
+            echo "<h3 class=\"hed_sub\" id='tbt'>Total Blocking Time ($tbt ms)</h3>";
+            echo "<p><a href='https://web.dev/tbt/' target='_blank' rel='noopener'>About Total Blocking Time (TBT) <img src='/images/icon-external.svg'></a></p>";
 
             // Load and filter the JS executions to only the blocking time blocks
             $long_tasks = null;
@@ -794,9 +820,9 @@ function InsertWebVitalsHTML_TBT($stepResult) {
                 arsort($domains);
                 if (count($domains)) {
                     ?>
-                    <div class="center">
-                    <table class="tableDetails details center">
-                        <caption>Main Thread Blocking Time by Script Origin</caption>
+                    <h4>Main Thread Blocking Time by Script Origin</h4>
+                    <div class="scrollableTable">
+                    <table class="pretty">
                         <thead>
                             <tr>
                                 <th class="domain">Script Origin</th>

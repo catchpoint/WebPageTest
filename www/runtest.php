@@ -2,13 +2,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-    if(extension_loaded('newrelic')) {
-        newrelic_add_custom_tracer('CheckUrl');
-        newrelic_add_custom_tracer('CheckIp');
-        newrelic_add_custom_tracer('WptHookValidateTest');
-        newrelic_add_custom_tracer('GetRedirect');
-        newrelic_add_custom_tracer('ReportAnalytics');
-    }
+
 
     // deal with magic quotes being enabled
     if (get_magic_quotes_gpc()) {
@@ -31,8 +25,9 @@
       $profile_file = __DIR__ . '/settings/common/profiles.ini';
     if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
       $profile_file = __DIR__ . '/settings/server/profiles.ini';
-    if (isset($_REQUEST['profile']) && is_file($profile_file)) {
-      $profiles = parse_ini_file($profile_file, true);
+    // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile, or if it's not there at all.
+    if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQUEST['simpleadvanced'] === 'simple') && is_file($profile_file)) {
+        $profiles = parse_ini_file($profile_file, true);
       if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
         foreach($profiles[$_REQUEST['profile']] as $key => $value) {
           if ($key !== 'label' && $key !== 'description') {
@@ -59,10 +54,14 @@
       }
     }
     require_once('common.inc');
+
+use WebPageTest\Template;
+
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
     require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
-    require_once(__DIR__ . '/helpers/template.php');
+
+
     set_time_limit(300);
 
     $redirect_cache = array();
@@ -189,15 +188,12 @@
             if ($run_time_limit)
               $test['run_time_limit'] = (int)$run_time_limit;
             $test['connections'] = isset($req_connections) ? (int)$req_connections : 0;
-            if (isset($req_private)) {
-              $test['private'] = $req_private;
-            } elseif (GetSetting('defaultPrivate')) {
-              $test['private'] = 1;
-            } else {
-              $test['private'] = 0;
-            }
-            if (GetSetting('forcePrivate'))
-              $test['private'] = 1;
+            // Currently, we do nothing to designate the difference between public and private tests
+            // This creates a problem in that people assume their tests are actually private.
+            // But they're more private in the way that github gists are private, we don't advertise
+            // them, but they're accessible to those that know the url. Until we can create a truly
+            // private test, we are going to treat all tests as public
+            $test['private'] = 0;
             if (isset($req_web10))
               $test['web10'] = $req_web10;
             if (isset($req_ignoreSSL))
@@ -344,6 +340,7 @@
             $test['disableWEBP'] = isset($_REQUEST['disableWEBP']) && $_REQUEST['disableWEBP'] ? 1 : 0;
             $test['disableJXL'] = isset($_REQUEST['disableJXL']) && $_REQUEST['disableJXL'] ? 1 : 0;
             $test['dtShaper'] = isset($_REQUEST['dtShaper']) && $_REQUEST['dtShaper'] ? 1 : 0;
+            $test['axe'] = isset($_REQUEST['axe']) && $_REQUEST['axe'] ? 1 : 0;
             if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
               $test['warmup'] = min(intval($_REQUEST['warmup']), 3);
             }
@@ -442,6 +439,16 @@
               $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
             }
 
+            // Store an opaque metadata string/JSON object if one was provided (up to 10KB)
+            if (isset($_REQUEST['metadata']) && is_string($_REQUEST['metadata']) && strlen($_REQUEST['metadata'] <= 10240)) {
+              $metadata = $_REQUEST['metadata'];
+              $metadata_json = json_decode($metadata, true);
+              if (isset($metadata_json) && is_array($metadata_json)) {
+                $metadata = $metadata_json;
+              }
+              $test['metadata'] = $metadata;
+            }
+
             // see if we need to process a template for these requests	
             if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
               if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {	
@@ -530,10 +537,6 @@
                 $is_bulk_test = true;
             }
 
-            // login tests are forced to be private
-            if( isset($test['login']) && strlen($test['login']) )
-                $test['private'] = 1;
-
             if (!$test['mobile'] && (!$test['browser_width'] || !$test['browser_height']) && isset($_REQUEST['resolution'])) {
               $resolution = $_REQUEST['resolution'];
               $parts = explode('x', $resolution);
@@ -560,20 +563,6 @@
                   }
                 }
               }
-            }
-
-            // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
-            $atPos = strpos($test['url'], '@');
-            if ($atPos !== false) {
-              $queryPos = strpos($test['url'], '?');
-              if ($queryPos === false || $queryPos > $atPos) {
-                $test['private'] = 1;
-              }
-            }
-
-            // If API requests explicitly mark tests as not-private, allow it
-            if (($_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json) && isset($_REQUEST['private']) && !$_REQUEST['private'] && !GetSetting('forcePrivate')) {
-                $test['private'] = 0;
             }
 
             // default batch and API requests to a lower priority
@@ -1243,21 +1232,6 @@ function ValidateKey(&$test, &$error, $key = null)
 
       if( $hmac != $test['vh'] || $elapsed > 86400 ) {
         $error = 'Your test request could not be validated (this can happen if you leave the browser window open for over a day before submitting a test).  Please try submitting it again.';
-      } else {
-        // if recaptcha is enabled, verify the response
-        $secret = GetSetting("recaptcha_secret_key", "");
-        if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($secret)) {
-          $passed = false;
-          if (isset($_REQUEST['g-recaptcha-response'])) {
-            $captcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secret) . "&response=" . urlencode($_REQUEST['g-recaptcha-response']);
-            $response = json_decode(http_fetch($captcha_url), true);
-            if (isset($response["success"]) && $response["success"])
-              $passed = true;
-          }
-          if (!$passed) {
-            $error = "Failed recaptcha validation.  Please go back and try submitting your test again";
-          }
-        }
       }
     } elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
@@ -2051,7 +2025,7 @@ function LogTest(&$test, $testId, $url)
         'guid' => @$testId,
         'url' => @$url,
         'location' => @$test['locationText'],
-        'private' => @$test['private'],
+        'private' => 0,
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
         'video' => @$video,
@@ -2077,7 +2051,7 @@ function LogTest(&$test, $testId, $url)
         'guid' => @$testId,
         'url' => @$url,
         'location' => @$test['locationText'],
-        'private' => TRUE,
+        'private' => 0,
         'testUID' => @$test['uid'],
         'testUser' => $USER_EMAIL,
         'video' => @$video,
@@ -2562,6 +2536,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['disableJXL'] = 1;
             if( isset($test['dtShaper']) && $test['dtShaper'] )
                 $job['dtShaper'] = 1;
+            if( isset($test['axe']) && $test['axe'] )
+                $job['axe'] = 1;
             // Pass the WPT server hostname to the agent
             $hostname = GetSetting('host');
             if (isset($hostname) && is_string($hostname) && strlen($hostname))
@@ -3087,7 +3063,8 @@ function CheckRateLimit($test, &$error) {
   $runcount = max(1, $test['runs']);
   $multiplier = $test['fvonly'] ? 1 : 2;
   $total_runs = $runcount * $multiplier;
-  $cmrl = new CheckMonthlyRateLimit($test['ip']);
+  $monthly_limit = GetSetting('rate_limit_anon_monthly') ?: 50;
+  $cmrl = new CheckMonthlyRateLimit($test['ip'], $monthly_limit);
   $passesMonthly = $cmrl->check($total_runs);
 
   if(!$passesMonthly) {

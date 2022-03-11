@@ -5,14 +5,6 @@
 require_once __DIR__ . '/devtools.inc.php';
 require_once __DIR__ . '/include/UrlGenerator.php';
 
-if(extension_loaded('newrelic')) {
-    newrelic_add_custom_tracer('LoadRequests');
-    newrelic_add_custom_tracer('FixUpRequestTimes');
-    newrelic_add_custom_tracer('AddHeaders');
-    newrelic_add_custom_tracer('AddResponseBodyFlags');
-    newrelic_add_custom_tracer('BuildRequestDependencies');
-}
-
 /**
 * Load the object data file.
 */

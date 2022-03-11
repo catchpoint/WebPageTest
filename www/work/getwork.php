@@ -2,21 +2,6 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-if(extension_loaded('newrelic')) { 
-  newrelic_add_custom_tracer('GetUpdate');
-  newrelic_add_custom_tracer('GetJob');
-  newrelic_add_custom_tracer('GetTestJob');
-  newrelic_add_custom_tracer('CheckCron');
-  newrelic_add_custom_tracer('GetTesters');
-  newrelic_add_custom_tracer('LockLocation');
-  newrelic_add_custom_tracer('GetLocationInfo');
-  newrelic_add_custom_tracer('LockTest');
-  newrelic_add_custom_tracer('UpdateTester');
-  newrelic_add_custom_tracer('GetTesterIndex');
-  newrelic_add_custom_tracer('StartTest');
-  newrelic_add_custom_tracer('TestToJSON');
-  newrelic_add_custom_tracer('logTestMsg');
-}
 
 chdir('..');
 include 'common.inc';

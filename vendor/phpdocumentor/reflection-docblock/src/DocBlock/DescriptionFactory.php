@@ -15,8 +15,8 @@ namespace phpDocumentor\Reflection\DocBlock;
 
 use phpDocumentor\Reflection\Types\Context as TypeContext;
 use phpDocumentor\Reflection\Utils;
+
 use function count;
-use function explode;
 use function implode;
 use function ltrim;
 use function min;
@@ -25,6 +25,7 @@ use function strlen;
 use function strpos;
 use function substr;
 use function trim;
+
 use const PREG_SPLIT_DELIM_CAPTURE;
 
 /**
@@ -60,7 +61,7 @@ class DescriptionFactory
     /**
      * Returns the parsed text of this description.
      */
-    public function create(string $contents, ?TypeContext $context = null) : Description
+    public function create(string $contents, ?TypeContext $context = null): Description
     {
         $tokens   = $this->lex($contents);
         $count    = count($tokens);
@@ -88,7 +89,7 @@ class DescriptionFactory
      *
      * @return string[] A series of tokens of which the description text is composed.
      */
-    private function lex(string $contents) : array
+    private function lex(string $contents): array
     {
         $contents = $this->removeSuperfluousStartingWhitespace($contents);
 
@@ -142,9 +143,9 @@ class DescriptionFactory
      * If we do not normalize the indentation then we have superfluous whitespace on the second and subsequent
      * lines and this may cause rendering issues when, for example, using a Markdown converter.
      */
-    private function removeSuperfluousStartingWhitespace(string $contents) : string
+    private function removeSuperfluousStartingWhitespace(string $contents): string
     {
-        $lines = explode("\n", $contents);
+        $lines = Utils::pregSplit("/\r\n?|\n/", $contents);
 
         // if there is only one line then we don't have lines with superfluous whitespace and
         // can use the contents as-is

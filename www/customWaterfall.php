@@ -25,7 +25,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
     </head>
-    <body id="custom-waterfall" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body id="custom-waterfall">
             <?php
             $tab = null;
             include 'header.inc';
@@ -83,7 +83,7 @@ $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->get
             <?php include('footer.inc'); ?>
         
 
-        <script type="text/javascript">
+        <script>
             $(document).ready(function(){
 
                 // handle when the selection changes for the location

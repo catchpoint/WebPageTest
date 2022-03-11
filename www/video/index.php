@@ -25,67 +25,33 @@ if (is_file($profile_file))
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
-    <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="home">
             <?php
-            $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
-              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
-              ?>
-              <script>
-              function onRecaptchaSubmit(token) {
-                var form = document.getElementById("urlEntry");
-                if (ValidateInput(form)) {
-                  form.submit();
-                } else {
-                  grecaptcha.reset();
-                }
-              }
-              </script>
-              <?php
-            }
             $tab = 'Home';
             include 'header.inc';
             ?>
-            <h1 class="attention">Test. Optimize. Repeat.</h1>
+
+<?php include("home_header.php"); ?>
+
+
+<div class="home_content_contain">
+             <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
 
-            <div id="test_box-container">
-                <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
-                    <?php
-                    if (file_exists(__DIR__ . '/../settings/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/../settings/common/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/../settings/server/profiles_webvitals.ini')) {
-                        echo "<li class=\"vitals\"><a href=\"/webvitals\">";
-                        echo file_get_contents('./images/icon-webvitals-testing.svg');
-                        echo "Web Vitals</a></li>";
-                    }
-                    if (file_exists(__DIR__ . '/../settings/profiles.ini') ||
-                        file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
-                        file_exists(__DIR__ . '/../settings/server/profiles.ini')) {
-                        echo "<li class=\"easy_mode\"><a href=\"/easy\">";
-                        echo file_get_contents('./images/icon-simple-testing.svg');
-                        echo "Simple Testing</a></li>";
-                    }
-                    ?>
-                    <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php"><?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
-                </ul>
+            <div id="test_box-container" class="home_responsive_test">
+                <?php 
+                $currNav = "Visual Comparison";
+                include("testTypesNav.php");
+                ?>  
                 <div id="visual_comparison" class="test_box">
-                    <div class="test-box-lede">
+                    <div class="test-box-lede test_main_config">
+                      <div class="test_presets">
                       <p class="h3">Enter multiple URLs to compare them against each other visually.</p>
-                      <?php
-                            if (strlen($siteKey)) {
-                            echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                            } else {
-                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                            }
-                            ?> 
-                    </div>
-                       
-                    <input type="hidden" id="nextid" value="2">
+
+
+                      <input type="hidden" id="nextid" value="3">
                         <div id="urls">
                             <?php
                             if( $tid )
@@ -107,17 +73,19 @@ if (is_file($profile_file))
                                 }
                             }
                             ?>
-                            <div id="urldiv1" class="urldiv">
+                            <div id="urldiv1" class="urldiv fieldrow">
                                 <label for="label1">Label</label> <input id="label1" type="text" required name="label[1]">
                                 <label for="url1">URL</label> <input id="url1" type="text" required name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
+                            <div id="urldiv2" class="urldiv fieldrow">
+                                <label for="label2">Label</label> <input id="label2" type="text" required name="label[2]">
+                                <label for="url2">URL</label> <input id="url2" type="text" required name="url[2]" onkeypress="if (event.keyCode == 32) {return false;}" >
+                                <a href='#' onClick='return RemoveUrl("#urldiv2");'>Remove</a>
+                            </div>
                         </div>
-                        <button class="addBtn" onclick="return AddUrl();">Add Page</button>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
+                        <button class="addBtn" onclick="return AddUrl();">Add URL</button>
+                        
                         <ul class="input_fields">
                         <?php
                         if (isset($profiles) && is_array($profiles) && count($profiles)) {
@@ -138,13 +106,22 @@ if (is_file($profile_file))
                           echo '</ul>';
                         }
                         ?>
-                        <p class="footnote">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
+                        
+
+
+                      </div>
+                      <div>
+                        <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                    </div>
+                       
+                    
+                    </div>
+                    <p class="footnote">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
                         If you would like to test with different settings, submit your tests individually from the
                         <a href="/">main test page</a>.</p>
-                    </div>
                 </div>
 
-                <script type="text/javascript">
+                <script>
                 <?php
                   echo "var profiles = " . json_encode($profiles) . ";\n";
                 ?>
@@ -172,12 +149,17 @@ if (is_file($profile_file))
                 profileChanged();
                 </script>
             </form>
+            </div><!--home_content_contain-->
+        </div><!--home_content-->
+
+
+
             <?php
             include(__DIR__ . '/../include/home-subsections.inc');
             ?>
             <?php include('footer.inc'); ?>
         </div>
 
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
     </body>
 </html>

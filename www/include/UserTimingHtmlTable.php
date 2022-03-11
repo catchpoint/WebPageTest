@@ -57,9 +57,9 @@ class UserTimingHtmlTable {
     if ($this->hasNavTiming) {
       $out .= "<th$borderClass>";
       if ($this->hasDomInteractive)
-        $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
-      $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th>";
-      $out .= "<th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
+        $out .= "<a href=\"https://w3c.github.io/navigation-timing/#processing-model\">domInteractive</a></th><th>";
+      $out .= "<a href=\"https://w3c.github.io/navigation-timing/#processing-model\">domContentLoaded</a></th>";
+      $out .= "<th><a href=\"https://w3c.github.io/navigation-timing/#processing-model\">loadEvent</a></th>";
     }
     $out .= "</tr>\n";
     return $out;

@@ -113,23 +113,25 @@ foreach($compTests as $t) {
                       if (isset($test['end'])) {
                           $visualComplete = $stepResult->getMetric("visualComplete");
                           if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
-                              $test['end'] = $visualComplete;
+                            $test['end'] = $visualComplete;
+                          } elseif( !strcmp($test['end'], 'lcp') ) {
+                            $test['end'] = $stepResult->getMetric('chromeUserTiming.LargestContentfulPaint');
                           } elseif( !strcmp($test['end'], 'load') ) {
-                              $test['end'] = $stepResult->getMetric('loadTime');
+                            $test['end'] = $stepResult->getMetric('loadTime');
                           } elseif( !strcmp($test['end'], 'doc') ) {
-                              $test['end'] = $stepResult->getMetric('docTime');
+                            $test['end'] = $stepResult->getMetric('docTime');
                           } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
-                              $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
+                            $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
                           } elseif( !strcmp($test['end'], 'full') ) {
-                              $test['end'] = 0;
+                            $test['end'] = 0;
                           } elseif( !strcmp($test['end'], 'all') ) {
-                              $test['end'] = -1;
+                            $test['end'] = -1;
                           } elseif( !strcmp($test['end'], 'aft') ) {
-                              $test['end'] = $test['aft'];
-                              if( !$test['end'] )
-                                  $test['end'] = -1;
+                            $test['end'] = $test['aft'];
+                            if( !$test['end'] )
+                              $test['end'] = -1;
                           } else {
-                              $test['end'] = (int)((double)$test['end'] * 1000.0);
+                            $test['end'] = (int)((double)$test['end'] * 1000.0);
                           }
                       } else {
                           $test['end'] = 0;

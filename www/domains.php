@@ -40,14 +40,34 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 <html lang="en-us">
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Domain Breakdown</title>
+        <script>document.documentElement.classList.add('has-js');</script>
+
         <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="result">
             <?php
             $tab = 'Test Result';
             $subtab = 'Domains';
             include 'header.inc';
             ?>
+
+          
+<div class="results_main_contain">
+        <div class="results_main">
+
+        <div class="results_and_command">
+
+            <div class="results_header">
+                <h2>Domains Breakdown</h2>
+                <p>Details on how this site requests assets across multiple domains.</p>
+            </div>
+
+            <?php include("testinfo_command-bar.inc"); ?>
+
+            </div>
+
+            <div id="result" class="results_body">
+           
             <?php
             if ($isMultistep) {
               echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
@@ -69,7 +89,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
               echo "</table>\n<br>\n";
             }
             ?>
-            <h1>Content breakdown by domain (First View)</h1>
+            <h3 class="hed_sub">Content breakdown by domain</h3>
+            <h4>First View:</h4>
             <?php
               if ($isMultistep) {
                 $accordionHelper = new AccordionHtmlHelper($firstViewResults);
@@ -80,8 +101,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
               }
 
               if ($repeatViewResults) {
-                echo "<br><hr><br>\n";
-                echo "<h1>Content breakdown by domain (Repeat View)</h1>\n";
+                echo '<h4>Repeat View</h4>';
+
                 if ($isMultistep) {
                   $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
                   echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
@@ -94,23 +115,27 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             </div>
 
             <?php include('footer.inc'); ?>
+
+            </div>
+            </div>
+            </div>
         </div>
         <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="//www.google.com/jsapi"></script>
+        <script src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
-          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
-          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          echo '<script src="/js/jk-navigation.js"></script>';
+          echo '<script src="/js/accordion.js"></script>';
           $testId = $testInfo->getId();
           $testRun = $firstViewResults->getRunNumber();
-          echo '<script type="text/javascript">';
+          echo '<script>';
           echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
           echo '</script>';
         }
         ?>
-        <script type="text/javascript">
+        <script>
 
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});

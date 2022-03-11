@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace phpDocumentor\Reflection;
 
 use phpDocumentor\Reflection\DocBlock\Tag;
+use phpDocumentor\Reflection\DocBlock\Tags\TagWithType;
 use Webmozart\Assert\Assert;
 
 final class DocBlock
@@ -68,12 +69,12 @@ final class DocBlock
         $this->isTemplateStart = $isTemplateStart;
     }
 
-    public function getSummary() : string
+    public function getSummary(): string
     {
         return $this->summary;
     }
 
-    public function getDescription() : DocBlock\Description
+    public function getDescription(): DocBlock\Description
     {
         return $this->description;
     }
@@ -81,7 +82,7 @@ final class DocBlock
     /**
      * Returns the current context.
      */
-    public function getContext() : ?Types\Context
+    public function getContext(): ?Types\Context
     {
         return $this->context;
     }
@@ -89,7 +90,7 @@ final class DocBlock
     /**
      * Returns the current location.
      */
-    public function getLocation() : ?Location
+    public function getLocation(): ?Location
     {
         return $this->location;
     }
@@ -113,7 +114,7 @@ final class DocBlock
      *
      * @see self::isTemplateEnd() for the check whether a closing marker was provided.
      */
-    public function isTemplateStart() : bool
+    public function isTemplateStart(): bool
     {
         return $this->isTemplateStart;
     }
@@ -123,7 +124,7 @@ final class DocBlock
      *
      * @see self::isTemplateStart() for a more complete description of the Docblock Template functionality.
      */
-    public function isTemplateEnd() : bool
+    public function isTemplateEnd(): bool
     {
         return $this->isTemplateEnd;
     }
@@ -133,7 +134,7 @@ final class DocBlock
      *
      * @return Tag[]
      */
-    public function getTags() : array
+    public function getTags(): array
     {
         return $this->tags;
     }
@@ -146,7 +147,7 @@ final class DocBlock
      *
      * @return Tag[]
      */
-    public function getTagsByName(string $name) : array
+    public function getTagsByName(string $name): array
     {
         $result = [];
 
@@ -162,11 +163,34 @@ final class DocBlock
     }
 
     /**
+     * Returns an array of tags with type matching the given name. If no tags are found
+     * an empty array is returned.
+     *
+     * @param string $name String to search by.
+     *
+     * @return TagWithType[]
+     */
+    public function getTagsWithTypeByName(string $name): array
+    {
+        $result = [];
+
+        foreach ($this->getTagsByName($name) as $tag) {
+            if (!$tag instanceof TagWithType) {
+                continue;
+            }
+
+            $result[] = $tag;
+        }
+
+        return $result;
+    }
+
+    /**
      * Checks if a tag of a certain type is present in this DocBlock.
      *
      * @param string $name Tag name to check for.
      */
-    public function hasTag(string $name) : bool
+    public function hasTag(string $name): bool
     {
         foreach ($this->getTags() as $tag) {
             if ($tag->getName() === $name) {
@@ -182,7 +206,7 @@ final class DocBlock
      *
      * @param Tag $tagToRemove The tag to remove.
      */
-    public function removeTag(Tag $tagToRemove) : void
+    public function removeTag(Tag $tagToRemove): void
     {
         foreach ($this->tags as $key => $tag) {
             if ($tag === $tagToRemove) {
@@ -197,7 +221,7 @@ final class DocBlock
      *
      * @param Tag $tag The tag to add.
      */
-    private function addTag(Tag $tag) : void
+    private function addTag(Tag $tag): void
     {
         $this->tags[] = $tag;
     }

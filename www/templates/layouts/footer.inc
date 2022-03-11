@@ -23,7 +23,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
-        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
     if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
@@ -37,7 +37,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo "wptBrowser = '$browser';\n";
         require_once (__DIR__ . '/../../js/experiment.js');
         echo "</script>\n";
-        //echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+        //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }
 
     ?>
@@ -49,10 +49,6 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
     } elseif (file_exists(__DIR__ . '/../../settings/customfooter.inc.php')) {
         require(__DIR__ . '/../../settings/customfooter.inc.php');
     }
-    ?>
-    <?php
-    if(!isset($noanalytics) && extension_loaded('newrelic'))
-        echo @newrelic_get_browser_timing_footer();
     ?>
 
     <div id="experiment-timing" style="color: #77A;"></div>

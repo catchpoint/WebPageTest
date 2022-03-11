@@ -90,11 +90,11 @@ $common_label = implode(" ", $common_labels);
 <html lang="en-us">
     <head>
         <title>WebPageTest - Graph Page Data</title>
+        <script>document.documentElement.classList.add('has-js');</script>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Graph'; include ('head.inc'); ?>
-        <style type="text/css">
-       
+        <style>
         .chartStats {
           clear: both;
           text-align: left;
@@ -110,16 +110,37 @@ $common_label = implode(" ", $common_labels);
         }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="result">
     <?php
             if (count($testsId) == 1) {
               $tab = 'Test Result';
+              $subtab = "Graphed Page Data";
             }
             include 'header.inc';
+            ?>
+
+
+            <div class="results_main_contain">
+            <div class="results_main">
+    
             
+    
+    
+              <div class="results_and_command">
+
+               <div class="results_header">
+                    <h2>Graph Page Data Comparison</h2>
+                    <p>Use this page to plot the results for each run in your test to help you spot outliers and patterns.</p>
+                </div>
+                      <?php include("testinfo_command-bar.inc"); ?>
+                </div>
+    
+    
+                <div id="result" class="results_body">
+<?php
             if (count($testsId) != 1) {
               ?>
-              <div id="test_results-container" class="box">
+              <div id="test_results-container" >
                 <div class="test_results">
                   <div class="test_results-content">
               <?php
@@ -308,8 +329,9 @@ $common_label = implode(" ", $common_labels);
 }
               ?>
             <?php include('footer.inc'); ?>
-            <script type="text/javascript" src="//www.google.com/jsapi"></script>
-            <script type="text/javascript">
+            </div></div>
+            <script src="//www.google.com/jsapi"></script>
+            <script>
                 <?php
                     $chartDataJson = json_encode($chartData);
                     // If JSON encode fails due to inf and nan, replace those occurences with '0' in the serialized output then retry.
@@ -384,7 +406,7 @@ function InsertChart($metric, $label) {
   $view_index = 0;
 
   if ($num_runs >= 3) {
-    echo '<div class="chartStats scrollableTable"><table class="pretty">';
+    echo '<div class="chartStats scrollableTable"><table class="pretty details">';
     echo '<thead><tr><th class="pin"></th><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr></thead>';
     foreach ($views as $cached) {
       // For each run in that view

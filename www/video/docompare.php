@@ -139,7 +139,7 @@ function DisplayError()
         <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Visual Comparison Error'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = null;
             $headerType = 'video';

@@ -51,13 +51,6 @@ if (isset($USER_EMAIL) && !isset($user))
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
 
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_parameter('filter', $filter);
-  newrelic_add_custom_parameter('days', $days);
-  newrelic_add_custom_parameter('all', $all);
-  newrelic_add_custom_parameter('nolimit', $nolimit);
-}
-
 $includeip      = false;
 $includePrivate = false;
 if ($admin) {
@@ -83,7 +76,7 @@ if( $csv )
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
             /* h4 {text-align: center;}
             .history table {text-align:left;}
             .history thead {text-align:left;}
@@ -113,7 +106,7 @@ if( $csv )
             .history td.uid {white-space:nowrap;} */
         </style>
     </head>
-    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="history">
             <?php
             $tab = 'Test History';
             include 'header.inc';
@@ -159,9 +152,11 @@ if( $csv )
                 }
                 ?>
                 </form>
-        <script type="text/javascript">
+            </div>
+<script>
         <?php include(__DIR__ . '/js/history.js'); ?>
         </script>
+        <?php include('footer.inc'); ?>
     </body>
 </html>
 <?php
@@ -174,7 +169,7 @@ exit;
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
     </head>
-    <body class="history<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="history">
         <?php
         $tab = 'Test History';
         include 'header.inc';
@@ -196,8 +191,6 @@ exit;
                             <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                             <?php
                         }
-                        if ($includePrivate)
-                        echo '<input id="private" type="hidden" name="private" value="1">';
                     if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
                         echo '<input type="hidden" name="ip" value="1">';
                     if (isset($_REQUEST['local']) && $_REQUEST['local'])
@@ -417,6 +410,8 @@ exit;
                                                           echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
                                                       } elseif( isset($email) ) {
                                                         echo '<td class="uid">' . htmlspecialchars($email) . '</td>';
+                                                      } elseif( isset($key) ) {
+                                                        echo '<td class="uid">' . htmlspecialchars($key) . '</td>';
                                                       } else {
                                                           echo '<td class="uid"></td>';
                                                       }

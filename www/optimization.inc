@@ -60,12 +60,12 @@ function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
     $out = "";
     if( isset($score) )
     {
-        $out .= "<a  name=\"first_byte_time\"></a><h3 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100 <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/Server\" aria-label=\"Learn more about improving server response times\" target=\"blank\" rel=\"noopener\">Learn More</a></h3><p class=\"indented1\">\n";
+        $out .= "<a  name=\"first_byte_time\"></a><h5 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100 <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/Server\" aria-label=\"Learn more about improving server response times\" target=\"blank\" rel=\"noopener\">Learn More</a></h5><p class=\"indented1\">\n";
         $out .= "<b>$ttfb ms</b> First Byte Time<br>\n";
         $out .= "<b>$target ms</b> Target First Byte Time<br>\n";
     }
     else
-        $out .= "<a name=\"first_byte_time\"></a><h3>First Byte Time (back-end processing): N/A</h3><p class=\"indented1\">\n";
+        $out .= "<a name=\"first_byte_time\"></a><h5>First Byte Time (back-end processing): N/A</h5><p class=\"indented1\">\n";
     $out .= "</p><br>\n";
     return $out;
 }
@@ -100,7 +100,7 @@ function ReportKeepAlive(&$pageData, &$requests, $step)
         ksort($report);
     }
 
-    $out .= "<a name=\"keep_alive_enabled\"></a><h3 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h3><p class=\"indented1\">\n";
+    $out .= "<a name=\"keep_alive_enabled\"></a><h5 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h5><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -152,13 +152,13 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"compress_text\"></a><h3 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score<a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/EnableCompression\" aria-label=\"Learn more about enabling compression\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"compress_text\"></a><h5 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score<a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/EnableCompression\" aria-label=\"Learn more about enabling compression\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
-    $out .= "<p class=\"indented1\">";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -207,13 +207,13 @@ function ReportImageCompression(&$pageData, &$requests, $step)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"compress_images\"></a><h3 id='image_compression_step$step'>Compress Images: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/graphicalcontent-4#reduce_image_quality\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"compress_images\"></a><h5 id='image_compression_step$step'>Compress Images: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/graphicalcontent-4#reduce_image_quality\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
-    $out .= "<p class=\"indented1\">";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -260,13 +260,13 @@ function ReportProgressiveJpeg(&$pageData, &$requests, $step)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"progressive_jpeg\"></a><h3 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/OptimizeImages\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"progressive_jpeg\"></a><h5 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/OptimizeImages\" aria-label=\"Learn more about compressing images\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
-    $out .= "<p class=\"indented1\">";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -320,11 +320,11 @@ function ReportCache(&$pageData, &$requests, $step)
         ksort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"cache_static_content\"></a><h3 id='caching_step$step'>Leverage browser caching of static assets: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/httpcaching-6\" aria-label=\"Learn more about leveraging browser caching\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
-    $out .= "<p class=\"indented1\">";
+    $out .= "<a name=\"cache_static_content\"></a><h5 id='caching_step$step'>Leverage browser caching of static assets: $score <a class=\"link-external\" href=\"https://developers.google.com/web/fundamentals/performance/get-started/httpcaching-6\" aria-label=\"Learn more about leveraging browser caching\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -358,10 +358,11 @@ function ReportCombine(&$pageData, &$requests, $step)
         ksort($report);
     }
 
-    $out .= "<a name=\"combine_js_css_files\"></a><h3 id='combine_step$step'>Combine static CSS and JS files: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h3><p class=\"indented1\">\n";
+    $out .= "<a name=\"combine_js_css_files\"></a><h5 id='combine_step$step'>Combine static CSS and JS files: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -400,16 +401,17 @@ function ReportCDN(&$pageData, &$requests, $step)
         ksort($report);
     }
 
-    $out .= "<a name=\"use_of_cdn\"></a><h3 id='cdn_step$step'>Use a CDN for all static assets: $score</h3><p class=\"indented1\">\n";
+    $out .= "<a name=\"use_of_cdn\"></a><h5 id='cdn_step$step'>Use a CDN for all static assets: $score</h5><ol class=\"indented1\">\n";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
+        $out .= "<li>$entry</li>\n";
     if( count($cdns) )
     {
-        $out .= "<br>CDN's Used:<br>";
+        $out .= "<li>CDN's Used:<ol>";
         foreach( $cdns as $host => $provider )
-            $out .= "$host : $provider<br>";
+            $out .= "<li>$host : $provider</li>";
+        $out .= "</ol>";
     }
-    $out .= "</p><br>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -458,13 +460,13 @@ function ReportMinify(&$pageData, &$requests, $step)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a name=\"minify_js\"></a><h3 id='minify_step$step'>Minify JS: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h3>\n";
+    $out .= "<a name=\"minify_js\"></a><h5 id='minify_step$step'>Minify JS: $score <a class=\"link-external\" href=\"https://developers.google.com/speed/docs/insights/MinifyResources\" aria-label=\"Learn more about minifying resources\" target=\"blank\" rel=\"noopener\">Learn More</a></h5>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
-    $out .= "<p class=\"indented1\">";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -498,10 +500,11 @@ function ReportCookies(&$pageData, &$requests, $step)
         ksort($report);
     }
 
-    $out .= "<a name=\"cookies\"></a><h3 id='cookies_step$step'>Proper cookie usage: $score</h3><p class=\"indented1\">\n";
+    $out .= "<a name=\"cookies\"></a><h5 id='cookies_step$step'>Proper cookie usage: $score</h5><ol class=\"indented1\">\n";
+    $out .= "<ol class=\"indented1\">";
     foreach( $report as $entry )
-        $out .= "$entry<br>\n";
-    $out .= "</p><br>\n";
+        $out .= "<li>$entry</li>\n";
+    $out .= "</ol>\n";
     return $out;
 }
 
@@ -511,10 +514,10 @@ function ReportCookies(&$pageData, &$requests, $step)
 function dumpOptimizationGlossary()
 {
 ?>
-    <hr>
-    <h3>Glossary:</h3>
+
+    <h4>Glossary:</h4>
     <div class="scrollableTable">
-    <table class="glossary pretty" cellpadding="5px" cellspacing="0" style="width:100%">
+    <table class="pretty details" >
 
         <tr><th class="nowrap" rowspan=2 colspan=1>First Byte Time</th>
             <td class="nowrap">Applicable Objects</td>

@@ -25,7 +25,7 @@ $userImages = true;
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Screenshots</title>
         <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
         img.center {
             display:block;
             margin-left: auto;
@@ -87,7 +87,7 @@ $userImages = true;
         }
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             $subtab = 'Screenshot';
@@ -99,7 +99,7 @@ $userImages = true;
             <?php include('footer.inc'); ?>
             <?php
             if (!empty($hasJquery) && is_file('./js/jk-navigation.js') && $testRunResults->countSteps() > 1) {
-                echo '<script type="text/javascript">';
+                echo '<script>';
                 include('./js/jk-navigation.js');
                 echo 'addJKNavigation("h1.stepName")';
                 echo '</script>';

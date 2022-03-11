@@ -13,7 +13,7 @@
             include ('head.inc');
         ?>
     </head>
-    <body class="common <?php if ($COMPACT_MODE) {echo ' compact';} ?>">
+    <body class="common">
             <?php
             require_once('testStatus.inc');
             $tab = 'Test Result';
@@ -99,7 +99,7 @@
             <?php include('footer.inc'); ?>
         </div>
         
-        <script type="text/javascript">
+        <script>
             var testId = "<?php echo $id; ?>";
             var lastStatusCode = 0;
             var lastStatusText = '';

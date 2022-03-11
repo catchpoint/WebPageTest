@@ -16,12 +16,18 @@ class RunResultHtmlTable {
   const COL_VISUAL_COMPLETE = "visualComplete";
   const COL_RESULT = "result";
   const COL_COST = "cost";
+  const COL_REQUESTS = "requests";
+  const COL_FULLYLOADED = "fullyLoaded";
   const COL_CERTIFICATE_BYTES = "certificate_bytes";
   const COL_FIRST_CONTENTFUL_PAINT = 'firstContentfulPaint';
   const COL_LARGEST_CONTENTFUL_PAINT = 'chromeUserTiming.LargestContentfulPaint';
   const COL_CUMULATIVE_LAYOUT_SHIFT = 'chromeUserTiming.CumulativeLayoutShift';
   const COL_TOTAL_BLOCKING_TIME = 'TotalBlockingTime';
   const COL_TIME_TO_INTERACTIVE = 'TimeToInteractive';
+  const COL_DOC_COMPLETE = 'DocComplete';
+  const COL_DOC_REQUESTS = 'RequestsDoc';
+  const COL_DOC_BYTES = 'BytesInDoc';
+  
 
   /* @var TestInfo */
   private $testInfo;
@@ -50,7 +56,6 @@ class RunResultHtmlTable {
     $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_RESULT);
     $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
-
     // optional columns default setting based on data
     $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_RESULT] = true;
@@ -105,83 +110,114 @@ class RunResultHtmlTable {
     return !empty($this->enabledColumns[$column]);
   }
 
-  public function create() {
-    $out = '<div class="scrollableTable">';
-    $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
-    $out .= '<thead>' . $this->_createHead() . '</thead>';
-    $out .= $this->_createBody();
-    $out .= "</table></div>\n";
+  public function create( $repeatMetricLabels = false ) {
+    if( !$repeatMetricLabels ){
+      $out = '<div class="scrollableTable">';
+      $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
+      $out .= '<thead>' . $this->_createHead() . '</thead>';
+    }
+    $out .= $this->_createBody($repeatMetricLabels);
+    if( !$repeatMetricLabels ){
+      $out .= "</table></div>\n";
+    }
+    
     return $out;
   }
 
   private function _createHead() {
-    $colspan = 1 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
-    $out = "<tr class=\"metric_groups\">\n";
-    $out .= $this->_headCell("", "empty pin");
-    $out .= $this->_headCell("", "empty", $colspan);
+    $out = '';
+    //$colspan = 1 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
+    // $out = "<tr class=\"metric_groups\">\n";
+    // $out .= $this->_headCell("", "empty pin");
+    // $out .= $this->_headCell("", "empty", $colspan);
 
-    // Count the web vitals metrics that we have
-    $test_id = $this->testInfo->getId();
-    $run = $this->runResults->getRunNumber();
-    $cached = $this->runResults->isCachedRun() ? '1' : '0';
-    $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
-    $vitals_count = 0;
-    if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-      $vitals_count++;
-    }
-    if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-      $vitals_count++;
-    }
-    if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-      $vitals_count++;
-    }
-    if ($vitals_count > 0) {
-      $out .= $this->_headCell("<span><a href='$vitals_url'>Web Vitals</a></span>", "border", $vitals_count);
-    }
-    $out .= $this->_headCell("<span>Document Complete</span>", "border", 3);
-    $out .= $this->_headCell("<span>Fully Loaded</span>", "border", 3 + $this->_countRightEnabledColumns());
-    $out .= "</tr>\n";
+    // // Count the web vitals metrics that we have
+
+    // $vitals_count = 0;
+    // if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
+    //   $vitals_count++;
+    // }
+    // if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
+    //   $vitals_count++;
+    // }
+    // if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
+    //   $vitals_count++;
+    // }
+    // if ($vitals_count > 0) {
+    //   $out .= $this->_headCell("<span><a href='$vitals_url'>Web Vitals</a></span>", "border", $vitals_count);
+    //}
+//    $out .= $this->_headCell("<span>Document Complete</span>", "border", 3);
+    // $out .= $this->_headCell("<span>Fully Loaded</span>", "border", 3 + $this->_countRightEnabledColumns());
+    // $out .= "</tr>\n";
+
 
     $out .= "<tr class=\"metric_labels\">";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
       if ($this->isMultistep) {
-        $out .= $this->_headCell("Step");
+        // TODO test multistep
+        //$out .= $this->_headCell("Step");
       } else {
-        $out .= $this->_headCell("", "empty pin", 1);
+        //$out .= $this->_headCell("", "empty pin", 1);
       }
     }
-    $out .= $this->_headCell("First<br>Byte");
+    $out .= $this->_headCell("First Byte");
     if ($this->isColumnEnabled(self::COL_START_RENDER)) {
-      $out .= $this->_headCell("Start<br>Render");
+      $out .= $this->_headCell("Start Render");
     }
     if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell('First<br>Contentful<br>Paint');
+      $out .= $this->_headCell('<abbr title="First Contentful Paint">FCP</abbr>');
     }
     if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
-      $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed<br>Index</a>');
+      $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_headCell("Result (error&nbsp;code)");
     }
     $vitalsBorder = "border";
+    //for now, only provide a link to vitals if all metrics are collected
+    if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT) &&
+        $this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT) &&
+        $this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
+        $test_id = $this->testInfo->getId();
+        $run = $this->runResults->getRunNumber();
+        $cached = $this->runResults->isCachedRun() ? '1' : '0';
+        $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
+      }
+    
     if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-      $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest<br>Contentful<br>Paint</a>", $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title='Largest Contentful Paint'>LCP</abbr></a>", $vitalsBorder);
       $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-      $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative<br>Layout<br>Shift</a>", $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#cls'><abbr title='Cumulative Layout Shift'>CLS</abbr></a>", $vitalsBorder);
       $vitalsBorder = null;
     }
     if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-      $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total<br>Blocking<br>Time</a>", $vitalsBorder);
+      $out .= $this->_headCell("<a href='$vitals_url#tbt'><abbr title='Total Blocking Time'>TBT</abbr></a>", $vitalsBorder);
       $vitalsBorder = null;
     }
 
-    for ($i = 0; $i < 2; $i++) {
-      $out .= $this->_headCell("Time", "border");
-      $out .= $this->_headCell("Requests");
-      $out .= $this->_headCell("Bytes In");
+    if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Time', "border");
     }
+    if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Requests', "border");
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
+      $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Bytes', "border");
+    }
+
+    for ($i = 1; $i < 2; $i++) {
+      if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
+        $out .= $this->_headCell("Time", "border");
+      }
+      if ($this->isColumnEnabled(self::COL_REQUESTS)) {
+        $out .= $this->_headCell("Requests");
+      }
+      $out .= $this->_headCell("Total Bytes");
+      
+    }
+    
 
     if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
       $out .= $this->_headCell("Certificates");
@@ -194,20 +230,20 @@ class RunResultHtmlTable {
     return $out;
   }
 
-  private function _createBody() {
+  private function _createBody($repeatMetricLabels = false) {
     $out = "";
     if ($this->isMultistep && $this->rvRunResults) {
       $out .= $this->_headlineRow($this->runResults->isCachedRun(), $this->runResults->getRunNumber());
     }
     for ($i = 1; $i <= $this->runResults->countSteps(); $i++) {
-      $out .= $this->_createRow($this->runResults->getStepResult($i), $i);
+      $out .= $this->_createRow($this->runResults->getStepResult($i), $i, $repeatMetricLabels);
     }
     if ($this->rvRunResults) {
       if ($this->isMultistep) {
         $out .= $this->_headlineRow($this->rvRunResults->isCachedRun(), $this->rvRunResults->getRunNumber());
       }
       for ($i = 1; $i <= $this->rvRunResults->countSteps(); $i++) {
-        $out .= $this->_createRow($this->rvRunResults->getStepResult($i), $i);
+        $out .= $this->_createRow($this->rvRunResults->getStepResult($i), $i, $repeatMetricLabels);
       }
     }
     return $out;
@@ -216,7 +252,7 @@ class RunResultHtmlTable {
   private function _headlineRow($isRepeatView, $runNumber) {
     $label = $this->_rvLabel($isRepeatView, $runNumber);
     $colspan = 8 + $this->_countLeftEnabledColumns() + $this->_countRightEnabledColumns();
-    return "<tr><td colspan='$colspan' class='separation'>$label</td></tr>\n";
+    return "<tr><th colspan='$colspan' class='separation'>$label</th></tr>\n";
   }
 
   private function _rvLabel($isRepeatView, $runNumber) {
@@ -230,7 +266,7 @@ class RunResultHtmlTable {
    * @param int $row Row number
    * @return string HTML Table row
    */
-  private function _createRow($stepResult, $row) {
+  private function _createRow($stepResult, $row, $repeatMetricLabels = false) {
     $stepNum = $stepResult->getStepNumber();
     $cachedRun = $stepResult->isCachedRun();
     $idPrefix = "";
@@ -239,10 +275,27 @@ class RunResultHtmlTable {
       $idPrefix = $stepResult->isCachedRun() ? "rv" : "fv";
     }
     $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
-    $out = "<tr>\n";
-    if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $out .= $this->_bodyCell("", $this->_labelColumnText($stepResult), $class, true );
+    $out = '';
+
+    if( $repeatMetricLabels ){
+      $out = '<div class="scrollableTable">';
+      $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
     }
+
+    if ($this->isColumnEnabled(self::COL_LABEL)) {
+      $out .= "<tr class='runview'>\n";
+      $out .= $this->_headCell($this->_labelColumnText($stepResult), "pin", 3 );
+      $out .= "</tr>\n";
+    }
+
+    if( $repeatMetricLabels ){
+      $out .= $this->_createHead(); 
+    }
+
+    
+    
+    $out .= "<tr>\n";
+    
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
     if ($this->isColumnEnabled(self::COL_START_RENDER)) {
       $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
@@ -287,14 +340,14 @@ class RunResultHtmlTable {
         $scoreClass = 'ok';
       }
       $vclass = $vitalsClass ? ($vitalsClass . ' ' . $scoreClass) : $scoreClass;
-      $out .= $this->_bodyCell($idPrefix. self::COL_CUMULATIVE_LAYOUT_SHIFT . $idSuffix, $value, $vclass);
+      $out .= $this->_bodyCell($idPrefix. self::COL_CUMULATIVE_LAYOUT_SHIFT . $idSuffix, removeLeadingZero($value), $vclass);
       $vitalsClass = $class;
     }
 
     if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
       $value = $this->_getIntervalMetric($stepResult, self::COL_TOTAL_BLOCKING_TIME);
       if (!$this->isColumnEnabled(self::COL_TIME_TO_INTERACTIVE)) {
-        $value = '&ge; ' . $value;
+        $value = '<span class="units comparator">&ge;</span> ' . $value;
       }
       $rawValue = $stepResult->getMetric(self::COL_TOTAL_BLOCKING_TIME);
       $scoreClass = 'good';
@@ -308,13 +361,21 @@ class RunResultHtmlTable {
       $vitalsClass = $class;
     }
 
-    $out .= $this->_bodyCell($idPrefix . "DocComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), $borderClass);
-    $out .= $this->_bodyCell($idPrefix . "RequestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"), $class);
-    $out .= $this->_bodyCell($idPrefix . "BytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"), $class);
-
-
-    $out .= $this->_bodyCell($idPrefix . "FullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), $borderClass);
-    $out .= $this->_bodyCell($idPrefix . "Requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"), $class);
+    if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
+      $out .= $this->_bodyCell($idPrefix . "DocComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), $borderClass);
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
+      $out .= $this->_bodyCell($idPrefix . "RequestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"), $class);
+    }
+    if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
+      $out .= $this->_bodyCell($idPrefix . "BytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"), $class);
+    }
+    if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
+      $out .= $this->_bodyCell($idPrefix . "FullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), $borderClass);
+    }
+    if ($this->isColumnEnabled(self::COL_REQUESTS)) {
+      $out .= $this->_bodyCell($idPrefix . "Requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"), $class);
+    }
     $out .= $this->_bodyCell($idPrefix . "BytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"), $class);
 
     if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
@@ -330,7 +391,31 @@ class RunResultHtmlTable {
     }
 
     $out .= "</tr>\n";
+    if( $repeatMetricLabels ){
+      $out .= "</table></div>\n";
+      $localPaths = $stepResult->createTestPaths();
+      if (is_dir($localPaths->videoDir())) {
+        $urlGenerator = $stepResult->createUrlGenerator("", false);
+        $end = $this->getRequestEndParam($stepResult);
+        $filmstripUrl = $urlGenerator->filmstripView($end);
+        $filmstripImage = $urlGenerator->filmstripImage($end);
+        $out .= '<div class="results-filmstrip-container">';
+        $out .= '<h4>Visual Page Loading Process <span>(<a href=' . $filmstripUrl . '>Explore</a>)</span></h4>';
+        $out .= '<a href=' . $filmstripUrl . '><img src="' . $filmstripImage . '-l:+&bg=2a3c64&text=ffffff&thumbSize=110&ival=100"></a></div>';
+      }
+    }
     return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string|null The $_REQUEST["end"] parameter if set and the run is the first view median run, null otherwise
+   */
+  private function getRequestEndParam($stepResult) {
+    if (!$stepResult->isCachedRun() && $stepResult->getRunNumber() == $this->firstViewMedianRun && array_key_exists('end', $_REQUEST)) {
+      return $_REQUEST['end'];
+    }
+    return null;
   }
 
   private function _headCell($innerHtml, $classNames = null, $colspan = 0) {
@@ -388,7 +473,7 @@ class RunResultHtmlTable {
 
   private function _getByteMetricInKbyte($step, $metric) {
     $value = $step->getMetric($metric);
-    return $value !== null ? number_format($value / 1024, 0) . " KB" : "-";
+    return $value !== null ? number_format($value / 1024, 0) . "<span class=\"units\">KB</span>" : "-";
   }
 
   /**
@@ -407,20 +492,4 @@ class RunResultHtmlTable {
     return $label;
   }
 
-  /**
-   * @param $stepResult
-   * @return string
-   */
-  private function _costColumnText($stepResult) {
-    // one dollar sign for every 500KB
-    $dollars = "";
-    $count = max(1, min(5, ceil($stepResult->getMetric("bytesIn") / (500 * 1024))));
-    for ($i = 1; $i <= 5; $i++)
-      $dollars .= $i <= $count ? '$' : '-';
-    $id = $this->testInfo->getId();
-    $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
-    $text = "<a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" " .
-      "href=\"http://whatdoesmysitecost.com/test/$id\" onclick=\"$onclick\">$dollars</a>";
-    return $text;
-  }
 }

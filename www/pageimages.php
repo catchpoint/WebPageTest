@@ -25,14 +25,40 @@ $userImages = true;
 <html lang="en-us">
   <head>
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
+    <script>document.documentElement.classList.add('has-js');</script>
+
     <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>
   </head>
-  <body id="page-images" <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+  <body id="page-images" class="result">
       <?php
       $tab = 'Test Result';
-      $subtab = null;
+      $subtab = "Page Images";
       include 'header.inc';
       ?>
+
+<div class="results_main_contain">
+        <div class="results_main">
+
+        
+
+
+           <div class="results_and_command">
+            
+
+            
+
+            
+           <div class="results_header">
+                <h2>Page Images</h2>
+                <p>The following requests were images.</p>
+            </div>
+                        <?php include("testinfo_command-bar.inc"); ?>
+
+            </div>
+
+
+            <div id="result" class="results_body">
+
       <div class="translucent">
         <?php
         $stepsInRun = $testInfo->stepsInRun($run);
@@ -85,5 +111,7 @@ $userImages = true;
       </div>
 
       <?php include('footer.inc'); ?>
+      </div>
+      </div>
   </body>
 </html>

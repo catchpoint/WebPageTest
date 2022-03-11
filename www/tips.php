@@ -15,12 +15,13 @@ $page_description = "Website performance optimization tips.";
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Tips'; include ('head.inc'); ?>
-        <style type="text/css">
+        <style>
         .tip {
             margin-bottom: 3em;
-            </style>
+        }
+        </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Tips';
             include 'header.inc';

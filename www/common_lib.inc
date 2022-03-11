@@ -2,16 +2,29 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+
+// Load app and composer-based dependencies
+require_once(__DIR__ . '/../vendor/autoload.php');
+
 require_once(__DIR__ . '/archive.inc');
 require_once(__DIR__ . '/util.inc');
-
-if(extension_loaded('newrelic')) {
-  newrelic_add_custom_tracer('RestoreTest');
-}
 
 define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
+use WebPageTest\Util;
+
+function GetSetting($setting, $default = false) {
+  return Util::getSetting($setting, $default);
+}
+
+function CacheFetch($key) {
+  return Util::cacheFetch($key);
+}
+
+function CacheStore($key, $value, $ttl=0) {
+  return Util::cacheStore($key, $value, $ttl);
+}
 
 /**
 * Figure out the test path (relative) for the given test ID
@@ -174,73 +187,6 @@ function LoadLocationsIni() {
     }
   }
   return $locations;
-}
-
-/**
-* Get a setting from settings.ini (and cache it for up to a minute)
-*/
-$SETTINGS = null;
-function GetSetting($setting, $default = FALSE) {
-  global $SETTINGS;
-  $ret = $default;
-
-  // Pull the settings from apc cache if possible if they are not in the memory cache
-  if (!isset($SETTINGS)) {
-    $SETTINGS = CacheFetch('settings');
-    if (!isset($SETTINGS)) {
-      $SETTINGS = array();
-      // Load the global settings
-      if (file_exists(__DIR__ . '/settings/settings.ini')) {
-        $SETTINGS = parse_ini_file(__DIR__ . '/settings/settings.ini');
-      }
-      // Load common settings as overrides
-      if (file_exists(__DIR__ . '/settings/common/settings.ini')) {
-        $common = parse_ini_file(__DIR__ . '/settings/common/settings.ini');
-        $SETTINGS = array_merge($SETTINGS, $common);
-      }
-      // Load server-specific settings as overrides
-      if (file_exists(__DIR__ . '/settings/server/settings.ini')) {
-        $server = parse_ini_file(__DIR__ . '/settings/server/settings.ini');
-        $SETTINGS = array_merge($SETTINGS, $server);
-      }
-      CacheStore('settings', $SETTINGS, 60);
-    }
-  }
-
-  if (isset($SETTINGS) && is_array($SETTINGS) && isset($SETTINGS[$setting])) {
-    $ret = $SETTINGS[$setting];
-  }
-  return $ret;
-}
-
-function CacheFetch($key) {
-  $ret = null;
-  // namespace the keys by installation
-  $key = sha1(__DIR__) . $key;
-  if (function_exists('apcu_fetch')) {
-    $ret = apcu_fetch($key, $success);
-    if (!$success) {
-      $ret = null;
-    }
-  } elseif (function_exists('apc_fetch')) {
-    $ret = apc_fetch($key, $success);
-    if (!$success) {
-      $ret = null;
-    }
-  }
-  return $ret;
-}
-
-function CacheStore($key, $value, $ttl=0) {
-  // namespace the keys by installation
-  $key = sha1(__DIR__) . $key;
-  if (isset($value)) {
-    if (function_exists('apcu_store')) {
-      apcu_store($key, $value, $ttl);
-    } elseif (function_exists('apc_store')) {
-      apc_store($key, $value, $ttl);
-    }
-  }
 }
 
 /**
@@ -541,9 +487,13 @@ function gz_file_put_contents($filename, $data)
 {
     $ret = false;
     $nogzip = GetSetting('nogzip');
+    $compression = GetSetting('compression', '6');
+    if (!is_numeric($compression) || $compression < 1 || $compression > 9) {
+      $compression = 6;
+    }
     if( !$nogzip && extension_loaded('zlib') )
     {
-        $zip = @gzopen("$filename.gz", 'wb6');
+        $zip = @gzopen("$filename.gz", "wb$compression");
         if( $zip !== false )
         {
             if( gzwrite($zip, $data) )
@@ -1141,12 +1091,8 @@ function GetScriptBlock() {
         }
         if ($show)
         {
-            $html .= '<div class="script-block">';
-            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
-            $html .= '<div id="script_in_results-container" class="hidden">';
+            $html .= 'Scripted Test:';
             $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
-            $html .= '</div>';
-            $html .= '</div>';
         } 
     }
     return $html;
@@ -1161,40 +1107,67 @@ function GetTestInfoHtml($includeScript = true)
     global $test;
     global $isOwner;
     global $dom;
+    global $blockDomainsString;
+    global $blockString;
     global $login;
     global $admin;
     global $privateInstall;
-    $html = '';
+    $html = '<ul>';
     $run = null;
     if (array_key_exists('run', $_REQUEST))
       $run = intval($_REQUEST['run']);
     if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester']))
-      $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
+      $html .= '<li>Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '</li>';
     elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester']) )
-      $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
+      $html .= '<li>Tester: ' . $test['testinfo']['tester'] . '</li>';
     if( $dom )
-        $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
+        $html .= '<li>DOM Element: ' . htmlspecialchars($dom) . '</li>';
     if( $test['test']['fvonly'] )
-        $html .= '<b>First View only</b><br>';
+        $html .= '<li>First View only</li>';
     if( isset($test['test']['runs']) )
-        $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
+        $html .= '<li>Test runs: ' . $test['test']['runs'] . '</li>';
     if( isset($test['test']['authenticated']) && (int)$test['test']['authenticated'] == 1)
-        $html .= '<b>Authenticated: ' . htmlspecialchars($login) . '</b><br>';
+        $html .= '<li>Authenticated: ' . htmlspecialchars($login) . '</li>';
+    if( (int)$test['test']['connections'] !== 0)
+        echo '<li>Browser Connections: ' . $test['test']['connections'] . '</li>';
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine']))
-        $html .= '<b>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</b><br>';
-    if( isset($test['testinfo']['connectivity']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
+        $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
+    
+    if( isset($test['testinfo']['connectivity']) && strcasecmp($test['testinfo']['connectivity'], 'custom') != 0 )
     {
-        $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
+        $html .= "<li>Connectivity: {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
             $html .= ", {$test['testinfo']['plr']}% Packet Loss";
         if( $test['testinfo']['shaperLimit'] )
             $html .= ", shaperLimit {$test['testinfo']['shaperLimit']}";
-        $html .= '<br>';
+        $html .= '</li>';
     }
     if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
     {
-      $html .= '<b>Scripted test</b><br>';
+      $html .= '<li>';
+      $html .= GetScriptBlock();
+      $html .= '</li>';
     }
+    if( strlen($blockString) ) {
+      $html .= '<li>Blocked:<pre>';
+      $blockedStrings = explode(",",$blockString);
+      foreach ($blockedStrings as $string) {
+        $html .= $string . "\n";
+      }
+      $html .= '</pre></li>';
+    }
+    if( strlen($blockDomainsString) ) {
+      $html .= '<li>Blocked Domains:<pre>';
+      $blockedStrings = explode(",",$blockDomainsString);
+      foreach ($blockedStrings as $string) {
+        $html .= $string . "\n";
+      }
+      $html .= '</pre></li>';
+    }
+    // TODO FIND CUSTOM METRICS HERE
+    if (array_key_exists('customMetrics', $test['testinfo']) && is_array($test['testinfo']['customMetrics']) && count($test['testinfo']['customMetrics']))
+         $html .= '<li><a href="/custom_metrics.php?' . "test=". $test['testinfo']['id'] ."&run=1&cached=0" . '">Custom Metrics</a></li>';
+    $html .= '</ul>';
     
     return $html;
 }
@@ -1492,25 +1465,39 @@ function GetTesterCount($location) {
 }
 
 function GetDailyTestNum() {
-  $lock = Lock("TestNum");
-  if ($lock) {
-    $num = 0;
-    if (!$num) {
-      $filename = __DIR__ . '/dat/testnum.dat';
-      $day = date ('ymd');
-      $testData = array('day' => $day, 'num' => 0);
-      $newData = json_decode(file_get_contents($filename), true);
-      if (isset($newData) && is_array($newData) &&
-          array_key_exists('day', $newData) &&
-          array_key_exists('num', $newData) &&
-          $newData['day'] == $day) {
-        $testData['num'] = $newData['num'];
-      }
-      $testData['num']++;
-      $num = $testData['num'];
-      file_put_contents($filename, json_encode($testData));
+  $num = 0;
+  $day = date ('ymd');
+  $key = "testnum_$day";
+  if (function_exists('apcu_inc')) {
+    $success = false;
+    $num = apcu_inc($key, 1, $success, 86400);
+    if (!$success) {
+      $num = 0;
     }
-    Unlock($lock);
+  }
+  if (!$num) {
+    $lock = Lock("TestNum");
+    if ($lock) {
+      if (!$num) {
+        $filename = __DIR__ . '/dat/testnum.dat';
+        $testData = array('day' => $day, 'num' => 0);
+        $newData = json_decode(file_get_contents($filename), true);
+        if (isset($newData) && is_array($newData) &&
+            array_key_exists('day', $newData) &&
+            array_key_exists('num', $newData) &&
+            $newData['day'] == $day) {
+          $testData['num'] = $newData['num'];
+        }
+        $testData['num']++;
+        $num = $testData['num'];
+        file_put_contents($filename, json_encode($testData));
+        if (function_exists('apcu_store')) {
+          $nextNum = $num+1;
+          apcu_store($key, $nextNum);
+        }
+      }
+      Unlock($lock);
+    }
   }
   return $num;
 }
@@ -1584,9 +1571,12 @@ function AddTestJob($location, $job, $test, $testId) {
           if ($test['runs'] > 1 && substr($job, 0, 1) == '{') {
             $json = json_decode($job, true);
           }
-          for ($run = 1; $run <= $test['runs']; $run++) {
+          $submit_count = $test['runs'];
+          if (GetSetting('disable_sharding'))
+            $submit_count = 1;
+          for ($run = 1; $run <= $submit_count; $run++) {
             // Submit multiple job files for a multi-run test so they can run in parallel
-            if (isset($json)) {
+            if ($submit_count > 1 && isset($json)) {
               $json['run'] = $run;
               $job = json_encode($json);
             }
@@ -1719,10 +1709,10 @@ function cp_http_get($url, $cpid) {
     curl_setopt($ch, CURLOPT_HTTPHEADER, array("CPID: $cpid"));
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
     curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
     curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
     curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$headers) {
       $len = strlen($header);
       $header = explode(':', $header, 2);
@@ -2577,7 +2567,11 @@ function formatMsInterval($val, $digits) {
   if ($val == UNKNOWN_TIME)
     return '-';
 
-  return number_format($val / 1000.0, $digits) . 's';
+  return removeLeadingZero(number_format($val / 1000.0, $digits) . '<span class="units">S</span>');
+}
+
+function removeLeadingZero($in){
+  return preg_replace('/^0*([^0]+)/i', '${1}', $in);
 }
 
 /**
@@ -3664,7 +3658,7 @@ function TestArchiveExpired($id) {
 /**
  * Generate a unique test ID
  */
-function GenerateTestID($private=true, $locationShard=null) {
+function GenerateTestID($private=false, $locationShard=null) {
   $test_num;
   $id = uniqueId($test_num);
   if( $private )

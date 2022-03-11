@@ -22,6 +22,11 @@ $headless = false;
 if (GetSetting('headless')) {
     $headless = true;
 }
+
+$advancedFormDefault = false;
+if (isset($_GET['advanced'])) {
+    $advancedFormDefault = true;
+}
 // load the secret key (if there is one)
 $secret = GetServerSecret();
 if (!isset($secret))
@@ -31,6 +36,12 @@ if (isset($req_url)) {
   $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a website URL...';
+$profile_file = __DIR__ . '/settings/profiles.ini';
+if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/common/profiles.ini';
+if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+  $profile_file = __DIR__ . '/settings/server/profiles.ini';
+$profiles = parse_ini_file($profile_file, true);
 $connectivity_file = './settings/connectivity.ini.sample';
 if (file_exists('./settings/connectivity.ini'))
     $connectivity_file = './settings/connectivity.ini';
@@ -77,29 +88,33 @@ $loc = ParseLocations($locations);
             $tab = 'Home';
             include 'header.inc';
         ?>
-        <h1 class="attention">Test. Optimize. Repeat.</h1>
-        
-        <?php
-            $siteKey = GetSetting("recaptcha_site_key", "");
-            if (!isset($uid) && !isset($user) && !isset($USER_EMAIL) && strlen($siteKey)) {
-              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
-              ?>
-              <script>
-              function onRecaptchaSubmit(token) {
-                var form = document.getElementById("urlEntry");
-                if (ValidateInput(form)) {
-                  form.submit();
-                } else {
-                  grecaptcha.reset();
-                }
-              }
-              </script>
-              <?php
-            }
+        <?php if (true /* USER NOT LOGGED IN */ ) { ?>
 
+            
+        </div>
+
+        <?php } /* END USER NOT LOGGED IN IF*/ ?>
+
+        <?php include("home_header.php"); ?>
+
+        <div class="home_content_contain">
+        <div class="home_content">
+        
+            
+
+
+        <?php
             if (!$headless) {
             ?>
+
+
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            
+            
+            
+            
+            
+            
             <input type="hidden" name="lighthouseTrace" value="1">
             <input type="hidden" name="lighthouseScreenshots" value="0">
 
@@ -174,50 +189,87 @@ $loc = ParseLocations($locations);
             ?>
 
 
-            <div id="test_box-container">
-                <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#"><?php echo file_get_contents('./images/icon-advanced-testing.svg'); ?>Advanced Testing</a></li>
-                    <?php
-                    if (file_exists(__DIR__ . '/settings/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini') ||
-                            file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
-                        echo "<li class=\"vitals\"><a href=\"/webvitals\">";
-                        echo file_get_contents('./images/icon-webvitals-testing.svg');
-                        echo "Web Vitals</a></li>";
-                    }
-                    if (file_exists(__DIR__ . '/settings/profiles.ini') ||
-                        file_exists(__DIR__ . '/settings/common/profiles.ini') ||
-                        file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-                      echo "<li class=\"easy_mode\"><a href=\"/easy\">";
-                      echo file_get_contents('./images/icon-simple-testing.svg');
-                      echo "Simple Testing</a></li>";
-                    }
-                    ?>
-                    <li class="visual_comparison"><a href="/video/">
-                    <?php echo file_get_contents('./images/icon-visual-comparison.svg'); ?>Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php">
-                    <?php echo file_get_contents('./images/icon-traceroute.svg'); ?>Traceroute</a></li>
-                </ul>
+            <div id="test_box-container" class="home_responsive_test">
+                <?php 
+                $currNav = "Site Performance";
+                include("testTypesNav.php");
+                ?>
+
+                
                 <div id="analytical-review" class="test_box">
-                    <ul class="input_fields">
+                    <ul class="input_fields home_responsive_test_top">
                         <li>
+                            
                             <label for="url" class="vis-hidden">Enter URL to test</label>
                             <?php
+
                             if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                                $url = htmlentities($_REQUEST['url']);
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
                             } else {
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
                             }
                             ?>
-                        <?php
-                            if (strlen($siteKey)) {
-                            echo "<button data-sitekey=\"$siteKey\" data-callback=\"onRecaptchaSubmit\" class=\"g-recaptcha start_test\">Start Test &#8594;</button>";
-                            } else {
-                            echo '<input type="submit" name="submit" value="Start Test &#8594;" class="start_test">';
-                            }
-                            ?>
-                    </li>
-                        <li>
+                        </li>
+                    </ul>
+                    <div class="simpleadvancedfields_contain">
+                    <input type="radio" name="simpleadvanced"  value="simple" id="simple" <?php if(!$advancedFormDefault){ echo "checked"; } ?>>
+                    <label for="simple">Simple Configuration <em>(Choose from quick recommended test location and browser presets)</em></label>
+                    <div class="simpleadvancedfields">
+                        <ul class="input_fields home_responsive_test_top">
+                            
+                            <li class="test_main_config">
+
+                            <div class="test_presets test_presets_easy">
+                            <div class="fieldrow fieldrow-profiles">
+                                <div class="profiles">
+                                    <?php
+                                    if (isset($profiles) && count($profiles)) {
+                                    $pIndex = 0;
+                                    foreach($profiles as $name => $profile) {
+                                        $selected = '';
+                                        if ($name == $_COOKIE['testProfile'] || (!$_COOKIE['testProfile'] && $pIndex == 0))
+                                        $selected = 'checked';
+                                        echo "<label class=\"test_preset_profile test_preset_profile-$name\"><input type=\"radio\" name=\"profile\" aria-labelledby=\"tt-$name\" value=\"$name\" $selected><span>{$profile['label']}</span><span role=\"tooltip\" id=\"tt-$name\" class=\"test_preset_profile_tt\">{$profile['description']}</span></label>";
+                                        $pIndex++;
+                                    }
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                            <div class="test_presets_easy_checks">
+                            <div class="fieldrow" id="description"></div>
+                            <div class="fieldrow">
+                                <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
+                            </div>
+                            <div class="fieldrow">
+                                <label for="lighthouse"><input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                            </div>
+                            </div>
+
+
+                            
+                            <div class="test_presets_easy_submit">
+                            <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                        </div>
+                        </div>
+                            </li>
+                        </ul>
+                    </div>
+                    </div>
+
+
+
+                    <div class="simpleadvancedfields_contain">
+                    <input type="radio" name="simpleadvanced" value="advanced" id="advanced"  <?php if($advancedFormDefault){ echo "checked"; } ?>>
+                    <label for="advanced">Advanced Configuration <em>(Choose from all browser, location, &amp; device options)</em></label>
+                    <div class="simpleadvancedfields">
+                    <ul class="input_fields home_responsive_test_top">
+                        <li class="test_main_config">
+
+                          <div class="test_presets">
+
+                          <div class="fieldrow">
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
                                 <?php
@@ -244,10 +296,10 @@ $loc = ParseLocations($locations);
                                 ?>
                             </select>
                             <?php if (GetSetting('map')) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
+                                <button id="change-location-btn" type=button onclick="SelectLocation();" title="Select from Map">Select from Map</button>
                             <?php } ?>
-                        </li>
-                        <li>
+                        </div>
+                        <div class="fieldrow">
                             <label for="browser">Browser</label>
                             <select name="browser" id="browser">
                                 <?php
@@ -287,7 +339,14 @@ $loc = ParseLocations($locations);
                             </select>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                             <span class="cleared"></span>
-                        </li>
+                        </div>
+
+                        </div>
+                        <div>
+                          <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                        </div>
+                    </li>
+                        
                     </ul>
                     <?php if (GetSetting('multi_locations')) { ?>
                     <a href="javascript:OpenMultipleLocations()"><font color="white">Multiple locations/browsers?</font></a>
@@ -313,13 +372,11 @@ $loc = ParseLocations($locations);
                    <?php
                     if( isset($_COOKIE["as"]) && (int)$_COOKIE["as"] )
                     {
-                        echo '<p><a href="javascript:void(0)" id="advanced_settings" class="extended">Advanced Settings <span class="arrow"></span></a><small id="settings_summary_label" class="hidden"><br><span id="settings_summary"></span></small></p>';
                         echo '<div id="advanced_settings-container">';
                     }
                     else
                     {
-                        echo '<p><a href="javascript:void(0)" id="advanced_settings">Advanced Settings <span class="arrow"></span></a><small id="settings_summary_label"><br><span id="settings_summary"></span></small></p>';
-                        echo '<div id="advanced_settings-container" class="hidden">';
+                        echo '<div id="advanced_settings-container">';
                     }
                     ?>
 
@@ -435,17 +492,6 @@ $loc = ParseLocations($locations);
                                     <li>
                                       <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
                                     </li>
-                                    <?php
-                                    if (!GetSetting('forcePrivate')) {
-                                    ?>
-                                    <li>
-                                        <label for="keep_test_private"><input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>> Keep Test Private</label>
-                                    </li>
-                                    <?php
-                                    } else {
-                                      echo "<li>All test results are configured to be private by default.</li>";
-                                    }
-                                    ?>
                                     <li>
                                         <label for="label">Label</label>
                                         <?php
@@ -779,7 +825,7 @@ $loc = ParseLocations($locations);
                             <div id="spof" class="test_subbox ui-tabs-hide">
                                 <p>
                                     Simulate failure of specified domains.  This is done by re-routing all requests for
-                                    the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html" target="_blank" rel="noopener">blackhole.webpagetest.org</a> which will silently drop all requests.
+                                    the domains to <a href="https://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html" target="_blank" rel="noopener">blackhole.webpagetest.org</a> which will silently drop all requests.
                                 </p>
                                 <p>
                                     <label for="spof_hosts" class="full_width">
@@ -856,20 +902,38 @@ $loc = ParseLocations($locations);
                     <input id="location-ok" type=button class="simplemodal-close" value="OK">
                 </p>
             </div>
+                    </div>
+                    </div><!--/simpleadvancedfieldscontain-->
             </form>
+
+            
 
             <?php
             if( is_file('settings/intro.inc') )
                 include('settings/intro.inc');
             } // $headless
             ?>
-            </div>
-            <?php
-            include(__DIR__ . '/include/home-subsections.inc');
-            ?>
+            
+
+
+
+        
+
+                <div class="home_content_contain">
+                <div class="home_content">
+                <?php
+                    include(__DIR__ . '/include/home-subsections.inc');
+                    ?>
+                    </div><!--home_content_contain-->
+                </div><!--home_content-->
             <?php include('footer.inc'); ?>
 
-        <script type="text/javascript">
+            </div>
+            
+        </div><!--home_content_contain-->
+        </div><!--home_content-->
+
+        <script>
         <?php
             echo "var maxRuns = $max_runs;\n";
             echo "var locations = " . json_encode($locations) . ";\n";
@@ -890,7 +954,7 @@ $loc = ParseLocations($locations);
               echo "var forgetSettings = false;\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 

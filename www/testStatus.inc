@@ -4,9 +4,6 @@
 // found in the LICENSE.md file.
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/page_data.inc');
-if(extension_loaded('newrelic')) {
-    newrelic_add_custom_tracer('GetRelayStatus');
-}
 
 $testQueue = array();
 $testInfoJson = null;

@@ -8,8 +8,19 @@
             ?>
 
 
+    
+
+
     <footer>
+        <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
+
         <ul>
+        <li class="footer_social"><span>Find us on: </span>
+            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/images/github.svg" alt="Github"></a>
+            <a href="https://twitter.com/RealWebPageTest"><img src="/images/twitter.svg" alt="Twitter"></a>
+            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/images/youtube.svg" alt="Youtube"></a>
+            <a href="https://www.linkedin.com/company/webpagetest/"><img src="/images/linkedin.svg" alt="LinkedIn"></a>
+        </li>
         <?php
         if (is_file('settings/common/terms.inc') || is_file('settings/server/terms.inc') || is_file('settings/terms.inc')) {
             echo '<li><a href="/terms.php">Terms of Service</a></li>';
@@ -24,7 +35,7 @@
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
-        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
     if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
@@ -38,7 +49,7 @@
         echo "wptBrowser = '$browser';\n";
         include ('./js/experiment.js');
         echo "</script>\n";
-        //echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+        //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }
 
     ?>
@@ -51,9 +62,7 @@
         include('./settings/customfooter.inc.php');
     }
     ?>
-    <?php
-    if(!isset($noanalytics) && extension_loaded('newrelic'))
-        echo @newrelic_get_browser_timing_footer();
-    ?>
 
     <div id="experiment-timing" style="color: #77A;"></div>
+
+

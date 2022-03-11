@@ -2,6 +2,8 @@
 <html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute test result<?php echo $testLabel; ?></title>
+                <script>document.documentElement.classList.add('has-js');</script>
+
         <?php
             $gaTemplate = 'Traceroute Result';
             $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Page Speed');
@@ -10,29 +12,47 @@
             require_once('testStatus.inc');
         ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="result">
             <?php
             $tab = 'Test Result';
-            $nosubheader = true;
+            $hideResultsNav = true;
+            //$nosubheader = true;
             include 'header.inc';
             ?>
-            <div class="box">
-                <h2>Traceroute to <?php echo $url;?></h2>
-                From: <?php echo $test['test']['location'];?><br>
-                <?php if( (int)$test['test']['runs'] > 1 ) echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>'; ?>
-                <br>
-                <div class="centered">
+
+            <div class="results_main_contain">
+        <div class="results_main">
+
+
+        <div class="results_and_command">
+       
+                <div class="results_header">
+                    <h2>Traceroute Test Results</h2>
+                    <p>Here's how this site performed in this tracerout test. </p>
+                </div>
+                    <?php include("testinfo_command-bar.inc"); ?>
+
+        </div>
+            
+            
+            <div id="result" class="results_body">
+                <h3 class="hed_sub">Individual Runs</h3>
+                
                 <?php
                 for( $run = 1; $run <= $test['test']['runs']; $run++ )
                 {
-                    echo "<br><h3>Run $run</h3>";
+                    echo "<h4>Run $run</h4>";
+                    echo '<div class="scrollableTable">';
                     DisplayTraceroute( $testPath, $run );
+                    echo '</div>';
                 }
                 ?>
-                </div>
+                
             </div>
             <?php include('footer.inc'); ?>
         </div>
+        </div>
+            </div>
     </body>
 </html>
 
@@ -49,7 +69,7 @@
 function DisplayTraceroute( &$testPath, $run )
 {
 ?>
-<table class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
+<table class="pretty details" >
 <?php
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
     if( count($rows) > 2 ) {

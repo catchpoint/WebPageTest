@@ -21,14 +21,35 @@ $isMultistep = $testRunResults->countSteps() > 1;
 <html lang="en-us">
     <head>
         <title><?php echo "$page_title - WebPageTest Optimization Check Results"; ?></title>
+        <script>document.documentElement.classList.add('has-js');</script>
+
         <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body class="result">
             <?php
             $tab = 'Test Result';
             $subtab = 'Performance';
             include 'header.inc';
 
+            
+            echo '<div class="results_main_contain">
+            <div class="results_main">';
+
+            ?>
+
+<div class="results_and_command">
+
+<div class="results_header">
+    <h2>Performance Optimization Overview</h2>
+    <p>A detailed view of this site's asset optimization and related opportunities.</p>
+</div>
+
+<?php include("testinfo_command-bar.inc"); ?>
+
+</div>
+
+            <?php
+            
             if ($isMultistep) {
                 $firstStep = $testRunResults->getStepResult(1);
                 $gradesFirstStep = getOptimizationGradesForStep($testInfo, $firstStep);
@@ -37,8 +58,24 @@ $isMultistep = $testRunResults->countSteps() > 1;
                     array_splice($gradeKeys, 4, 0, array('progressive_jpeg'));
                 }
             ?>
-            <div style="text-align:center;">
-                <h1>Optimization Summary</h1>
+
+
+
+
+            
+
+                
+            
+
+
+
+            <div id="result" class="results_body">
+            <h3 class="hed_sub">Optimization Summary</h3>
+
+            <p>Quickly jump to the sections below:</p>
+
+                
+
                 <table id="optimization_summary" class="grades">
                     <tr>
                         <th>Step</th>
@@ -68,37 +105,47 @@ $isMultistep = $testRunResults->countSteps() > 1;
                     ?>
                 </table>
             </div>
-            <br>
-            <br>
+            
             <?php
                 // still multistep
                 $accordionHelper = new AccordionHtmlHelper($testRunResults);
                 echo $accordionHelper->createAccordion("review", "performanceOptimization");
             } else {
+
+                echo '<div id="result" class="results_body">';
                 // singlestep
+                echo '<h3 class="hed_sub">Optimization Summary</h3><p>Quickly jump to the sections below:</p>
+                ';
+                
+                include("grades.inc");
+
                 $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
                 echo $snippet->create();
             }
             ?>
 
             <?php
-                echo '<p></p><br>';
-                echo '<br>';
+                echo '<h3 class="hed_sub">Optimization Details</h3>';
                 dumpOptimizationGlossary();
             ?>
-    </div>
+
+        </div>
+    
             <?php include('footer.inc'); ?>
         </div>
+        </div>
+        </div>
+        
 
         <!--Load the AJAX API-->
         <?php
         if ($isMultistep) {
-            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
-            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            echo '<script src="/js/jk-navigation.js"></script>';
+            echo '<script src="/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $testRunResults->getRunNumber();
         ?>
-        <script type="text/javascript">
+        <script>
         var accordionHandler = new AccordionHandler('<?php echo $testId ?>', <?php echo $testRun ?>);
         $(document).ready(initJS);
 

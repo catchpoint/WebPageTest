@@ -112,7 +112,7 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
-        <style type="text/css">
+        <style>
             .player
             {
                 margin-left: auto;
@@ -130,7 +130,7 @@ else
         </style>
         </style>
     </head>
-    <body <?php if ($COMPACT_MODE) {echo 'class="compact"';} ?>>
+    <body>
             <?php
             $tab = 'Test Result';
             include 'header.inc';
