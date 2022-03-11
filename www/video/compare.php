@@ -406,7 +406,7 @@ else
                 ?>
             </style>
         </head>
-        <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }?>">
+        <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; }   ?>">
                 <?php 
                 $tab = 'Test Result';
                 //$nosubheader = false;
@@ -501,7 +501,7 @@ else
 
                                         
                                         <div class="experiment_opportunities-remaining">
-                                            <h3 class="hed_sub">Remaining Recommendations & Experiments</h3>
+                                            <h3 class="hed_sub">Remaining Opportunities</h3>
                                             <p>Here's how your overall opportunities look after this experiment:</p>
                                             <?php include __DIR__ . '/../experiments/summary.inc'; ?>
                                         </div>

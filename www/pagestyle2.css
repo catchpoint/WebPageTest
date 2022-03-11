@@ -433,7 +433,7 @@ h1 .pro-flag {
 .experiment_meta_included {
     display: flex;
     gap: 1rem;
-    align-items: flex-start;
+    align-items: center;
     flex: 1 1 50%;
 }
 
@@ -7681,18 +7681,6 @@ div.bar {
     margin-bottom: 1.5em;
 }
 
-.a11y-hidden {
-  clip: rect(1px, 1px, 1px, 1px);
-  clip-path: inset(50%);
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-}
-
-
 .median_metric-selector {
     justify-self: center;
     position: relative;
@@ -7814,4 +7802,85 @@ div.bar {
     .error-banner-twitch a {
         display: inline-block;
     }
+}
+
+.a11y-hidden {
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+}
+
+
+/* screenshot friendly styles */
+
+body.screenshot a {
+    text-decoration: none !important;
+}
+
+body.screenshot .results_header h2 {
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    height: 1rem;
+}
+
+body.screenshot .alert-banner,
+body.screenshot .cta-banner,
+body.screenshot .experiment_meta-more,
+body.screenshot .results_nav_contain,
+body.screenshot .test_presets_more,
+body.screenshot .experiment_meta_urls,
+body.screenshot header ul,
+body.screenshot .scrollableTable+.hed_sub,
+body.screenshot .results_body,
+body.screenshot footer li {
+    display: none !important;
+}
+
+body.screenshot footer {
+    padding: 1em !important;
+    ;
+    margin-top: 0 !important;
+    ;
+}
+
+body.screenshot footer li:last-child {
+    display: block !important;
+}
+
+body.screenshot .header_screenshots {
+    margin-top: -5rem;
+}
+
+body.screenshot .header_data_urltime *,
+body.screenshot .experiment_meta_included p,
+body.screenshot .experiment_meta_included summary {
+    font-size: 1rem !important;
+}
+
+body.screenshot .experiment_meta_included p,
+body.screenshot .experiment_meta_included summary {
+    font-size: 1.4rem !important;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+}
+
+body.screenshot .experiment_meta_included {
+    align-items: center;
+}
+
+body.screenshot .header_screenshots {
+    height: 350px !important;
+    max-width: 100% !important;
+}
+
+.experiment_opportunities {
+    display: none;
 }
