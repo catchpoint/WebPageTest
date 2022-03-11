@@ -36,7 +36,6 @@ set_time_limit(3600);
 ignore_user_abort(true);
 
 $id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
-logAlways('WorkDoneID:'.$id, './work/workdone.log');
 // if (strpos($id, 'SaaS')) {
 //   $id = null;
 // }
@@ -53,12 +52,8 @@ if (!isset($id)) {
 } elseif (isset($id) && strpos($id, 'SaaS')) {
   $uploaded = true;
   $testPath = './' . GetTestPath($id);
-  file_put_contents('./log_'.date("j.n.Y").'.log', 'WorkDone:'.$testPath.PHP_EOL, FILE_APPEND);
-  logAlways('Generated:'.$id, './work/workdone.log');
-  logAlways('Generated:'.$testPath, './work/workdone.log');
 
   if( !is_dir($testPath) ) {
-    logAlways('MkDir:'.$testPath, './work/workdone.log');
     mkdir($testPath, 0777, true);
   }
 }
@@ -68,8 +63,6 @@ ob_flush();
 flush();
 
 $workdone_start = microtime(true);
-
-logAlways(json_encode($_REQUEST), './work/workdone.log');
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
@@ -113,12 +106,9 @@ $urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
 $testInfo_dirty = false;
 
 if (ValidateTestId($id)) {
-  logAlways('Validated:'.$id, './work/workdone.log');
 
   $testPath = './' . GetTestPath($id);
-  logAlways('TestPath:'.$testPath,'./work/workdone.log');
   if (!is_dir($testPath)) {
-    logAlways('MkDir2:'.$testPath,'./work/workdone.log');
     mkdir($testPath, 0777, true);
   }
   // Extract the uploaded data
@@ -140,7 +130,6 @@ if (ValidateTestId($id)) {
   if (!isset($testLock))
     logTestMsg($id, "Failed to lock test");
   $testInfo = GetTestInfo($id);
-  logAlways('GetTestInfoAgain:'.json_encode($testInfo),'./work/workdone.log');
 
   // Figure out the path to the results.
   $ini = parse_ini_file("$testPath/testinfo.ini");
