@@ -2503,7 +2503,7 @@ header {
 .home_feature_hed p {
     font-size: 1.75rem;
     line-height: 1.5;
-    margin: 0;
+    margin: .5em 0 0;
     max-width: 26em;
 }
 
@@ -2537,7 +2537,7 @@ header {
 
 @media (min-width: 65em) {
     .home_feature_hed .attention {
-        margin-top: 1em
+        margin-top: .5em
     }
 }
 
