@@ -410,7 +410,7 @@ else
                 $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode('https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI]."&screenshot=1") . "/opengraph/_2022/";
             ?>
 
-            <meta property="og:image" content="$socialImage">
+            <meta property="og:image" content="<?php echo $socialImage; ?>">
         </head>
         <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; }   ?>">
                 <?php 
