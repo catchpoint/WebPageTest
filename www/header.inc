@@ -297,7 +297,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             $browser = $testResults->getBrowser();
                 //check to make sure we have a browser icon
-                if ($browser && file_exists(__DIR__.'/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
+                if (isset($browser) && file_exists(__DIR__.'/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
                     //exists so let's use it
                     $browserIcon = true;
                 } else {
@@ -322,14 +322,14 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     }
                     
                     //browser and version
-                    if ($browser){
+                    if (isset($browser)){
                         echo '<span class="test_presets_tag">';
                         if ($browserIcon) {
                             echo '<img src="/images/test_icons/'. strtolower($browser->getName()) . '.svg" alt="'. $browser->getName() . '">';
-                        } else if ($browser && $browser-getName()){
+                        } else if ($browser-getName()){
                             echo $browser->getName();
                         }
-                        if ($browser && $browser->getVersion()) {
+                        if ($browser->getVersion()) {
                             echo 'v' . strtok($browser->getVersion(), '.');
                         }
                         echo '</span>';
