@@ -296,14 +296,14 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $connectivity = $test['test']['connectivity'];
 
             $browser = $testResults->getBrowser();
-
-            //check to make sure we have a browser icon
-            if (file_exists(__DIR__.'/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
-                //exists so let's use it
-                $browserIcon = true;
-            } else {
-                $browserIcon = false;
-            }
+                //check to make sure we have a browser icon
+                if ($browser && file_exists(__DIR__.'/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
+                    //exists so let's use it
+                    $browserIcon = true;
+                } else {
+                    $browserIcon = false;
+                }
+            
             if ($test['testinfo']['mobile'] == 1) {
                 $device = strtolower( $test['testinfo']['mobileDevice'] );
             } else {
@@ -322,16 +322,19 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     }
                     
                     //browser and version
-                    echo '<span class="test_presets_tag">';
-                    if ($browserIcon) {
-                        echo '<img src="/images/test_icons/'. strtolower($browser->getName()) . '.svg" alt="'. $browser->getName() . '">';
-                    } else {
-                        echo $browser->getName();
+                    if ($browser){
+                        echo '<span class="test_presets_tag">';
+                        if ($browserIcon) {
+                            echo '<img src="/images/test_icons/'. strtolower($browser->getName()) . '.svg" alt="'. $browser->getName() . '">';
+                        } else if ($browser && $browser-getName()){
+                            echo $browser->getName();
+                        }
+                        if ($browser && $browser->getVersion()) {
+                            echo 'v' . strtok($browser->getVersion(), '.');
+                        }
+                        echo '</span>';
                     }
-                    if ($browser->getVersion()) {
-                        echo 'v' . strtok($browser->getVersion(), '.');
-                    }
-                    echo '</span>';
+                    
                     //connectivity
                     echo '<span class="test_presets_tag">'. $connectivity . '</span>';
                     //location
