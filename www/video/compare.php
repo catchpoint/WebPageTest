@@ -407,10 +407,19 @@ else
             </style>
 
             <?php
-                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode('https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI]."&screenshot=1") . "/opengraph/_2022/";
+                $pageURI = 'https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI];
+                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_2022/";
             ?>
 
+            <meta property="og:title" content="WebPageTest Experiment Result">
+            <meta property="og:type" content="article" />
             <meta property="og:image" content="<?php echo $socialImage; ?>">
+            <meta property="og:url" content="<?php echo $pageURI; ?>">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta property="og:description" content="Comparison showing impact of performance optimizations.">
+            <meta property="og:site_name" content="WebPageTest">
+            <meta name="twitter:image:alt" content="Web performance visual and metric differences for this experiment.">
+            <meta name="twitter:site" content="@realwebpagetest">
         </head>
         <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; }   ?>">
                 <?php 
