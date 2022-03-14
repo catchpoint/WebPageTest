@@ -9,9 +9,12 @@ $ok = false;
 $tests = BuildRenderTests();
 $renderInfo = BuildRenderInfo($tests);
 if (isset($renderInfo)) {
+    // frame num will be in 60fps increments. 
+    // if you want a frame for LCP and LCP is at 1.5sec, then you'll want frame 60*1.5=90
+    $frameNum = isset($req_frameNum) ? intval($req_frameNum) : 0;
     $im = PrepareImage($tests, $renderInfo);
     if ($im !== false) {
-        if (RenderFrame($tests, $renderInfo, 0, $im, null)) {
+        if (RenderFrame($tests, $renderInfo, $frameNum, $im, null)) {
             $ok = true;
             header("Content-Type: image/png");
             header('Last-Modified: ' . gmdate('r'));
