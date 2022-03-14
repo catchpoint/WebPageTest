@@ -411,7 +411,7 @@ else
                 $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_2022/";
             ?>
 
-            <meta property="og:title" content="WebPageTest Experiment Result">
+            <meta property="og:title" content="WebPageTest Pro Experiment Result">
             <meta property="og:type" content="article" />
             <meta property="og:image" content="<?php echo $socialImage; ?>">
             <meta property="og:url" content="<?php echo $pageURI; ?>">
