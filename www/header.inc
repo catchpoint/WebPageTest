@@ -266,7 +266,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             // Note: "Comprehensive" if it's multi device?
             if( $experiment ){
-                echo "<h1>WebPageTest<em class=\"pro-flag\">Pro</em> Experiment</h1>";
+                echo "<h1><span class=\"home_feature_hed_text_logo\">WebPageTest</span><em class=\"pro-flag\">Pro</em> Experiment</h1>";
             } else {
                 echo "<h1>Webpage Performance Test Result</h1>";
 

@@ -2274,7 +2274,7 @@ header {
     border-bottom-color: #2fbded;
 }
 
-.home.feature-pro h1 .pro-flag {
+h1 .pro-flag {
     font-size: .5em;
     padding: 0.5em;
     border-radius: 0.4em;
@@ -2298,6 +2298,11 @@ header {
     border-radius: 0.5em;
     margin: 0 1em 0 0.4em;
     border: 3px solid #fff;
+}
+
+.result h1 .pro-flag {
+    border-width: 2px;
+    padding: .4em;
 }
 
 .home_feature_hed_text_leadin {
@@ -2333,6 +2338,10 @@ header {
     width: 365px;
     background-size: contain;
     background-position: left bottom;
+}
+
+.result .home_feature_hed_text_logo {
+    width: 8em;
 }
 
 .home_feature_hed,
