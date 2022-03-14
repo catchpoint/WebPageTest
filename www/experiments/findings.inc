@@ -31,6 +31,7 @@ if( $experiment ){
         array( "chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "ms"),
         array( "chromeUserTiming.CumulativeLayoutShift", "Cumulative Layout Shift", "", array("Better","Worse")),
         array( "TotalBlockingTime", "Total Blocking Time", "ms"),
+        array( "visualComplete", "Visual Complete", "ms"),
         array( "FullyLoaded", "Fully Loaded", "ms"),
         array( "BytesIn", "Total Bytes", "kb", array("Lighter","Heavier"))
     );   
