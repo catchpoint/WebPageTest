@@ -49,7 +49,7 @@ if ($id && isset($test) && is_array($test) &&
 }
 
 // If $tab is null, make it an empty string for strcasecmp
-$tab = $tab ?? "";
+$tab ??= "";
 
 if (!defined('EMBED')) {
 ?>
@@ -57,6 +57,9 @@ if (!defined('EMBED')) {
 $alert = Util::getSetting('alert');
 if ($alert) {
     echo '<div class="alert-banner">' . $alert . '</div>';
+}
+if (isset($error_message)) {
+    echo '<div class="error-notification-banner">' . $error_message . '</div>';
 }
 ?>
 <header>

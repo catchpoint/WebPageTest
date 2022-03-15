@@ -6,6 +6,9 @@ namespace WebPageTest;
 
 use Exception as BaseException;
 use GraphQL\Query;
+use GraphQL\Exception\QueryError;
+use GraphQL\Mutation;
+use GraphQL\Variable;
 use GraphQL\Client as GraphQLClient;
 use GuzzleHttp\Client as GuzzleClient;
 use WebPageTest\AuthToken;
@@ -158,6 +161,228 @@ class CPClient
             throw new ClientException($e->getMessage());
         } catch (BaseException $e) {
             throw new ClientException($e->getMessage());
+        }
+    }
+
+    public function getUserContactInfo(int $id): array
+    {
+        $gql = (new Query('contact'))
+        ->setVariables([
+        new Variable('id', 'ID', true)
+        ])
+        ->setArguments(['id' => '$id'])
+        ->setSelectionSet([
+        'companyName',
+        'firstName',
+        'lastName'
+        ]);
+
+        $variables_array = array('id' => $id);
+        $contact_info = $this->graphql_client->runQuery($gql, true, $variables_array);
+        return $contact_info->getData()['contact'][0];
+    }
+
+    public function getUnpaidAccountpageInfo(): array
+    {
+        $gql = (new Query())
+        ->setSelectionSet([
+        'braintreeClientToken',
+        (new Query('wptPlans'))
+          ->setSelectionSet([
+            'id',
+            'name',
+            'price',
+            'billingFrequency',
+            'billingDayOfMonth',
+            'currencyIsoCode',
+            'numberOfBillingCycles',
+            'trialDuration',
+            'trialPeriod',
+            (new Query('discount'))
+              ->setSelectionSet([
+                'amount',
+                'numberOfBillingCycles'
+              ])
+          ])
+        ]);
+        $page_info = $this->graphql_client->runQuery($gql, true);
+        return $page_info->getData();
+    }
+
+    public function getPaidAccountPageInfo(): array
+    {
+        $gql = (new Query())
+        ->setSelectionSet([
+          (new Query('wptApiKey'))
+            ->setSelectionSet([
+              'id',
+              'name',
+              'apiKey',
+              'createDate',
+              'changeDate'
+            ]),
+          (new Query('braintreeCustomerDetails'))
+              ->setSelectionSet([
+                  'customerId',
+                  'wptPlanId',
+                  'subscriptionId',
+                  'ccLastFour',
+                  'daysPastDue',
+                  'subscriptionPrice',
+                  'maskedCreditCard',
+                  'nextBillingDate',
+                  'billingPeriodEndDate',
+                  'numberOfBillingCycles',
+                  'ccExpirationDate',
+                  'ccImageUrl',
+                  'status',
+                  (new Query('discount'))
+                    ->setSelectionSet([
+                      'amount',
+                      'numberOfBillingCycles'
+                    ]),
+                  'remainingRuns',
+                  'planRenewalDate',
+                  'billingFrequency',
+                  'wptPlanName'
+              ]),
+          (new Query('braintreeTransactionHistory'))
+              ->setSelectionSet([
+                  'amount',
+                  'cardType',
+                  'ccLastFour',
+                  'maskedCreditCard',
+                  'transactionDate'
+              ])
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function updateUserContactInfo(string $id, array $options): array
+    {
+        $gql = (new Mutation('wptContactUpdate'))
+        ->setVariables([
+        new Variable('contact', 'ContactUpdateInputType', true)
+        ])
+        ->setArguments([
+        'contact' => '$contact'
+        ])
+        ->setSelectionSet([
+        'id',
+        'firstName',
+        'lastName',
+        'companyName',
+        'email'
+        ]);
+
+        $variables_array = array('contact' => [
+        'id' => $id,
+        'email' => $options['email'],
+        'firstName' => $options['first_name'],
+        'lastName' => $options['last_name'],
+        'companyName' => $options['company_name']
+        ]);
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+        return $results->getData();
+    }
+
+    public function changePassword(string $new_pass, string $current_pass): array
+    {
+        $gql = (new Mutation('userPasswordChange'))
+        ->setVariables([
+        new Variable('passwordChangedInput', 'UserPasswordChangeInputType', true)
+        ])
+        ->setArguments([
+        'changePassword' => '$passwordChangedInput'
+        ])
+        ->setSelectionSet([
+          'id',
+          'lastPasswordChangedDate'
+        ]);
+
+        $variables_array = array('passwordChangedInput' => [
+            'newPassword' => $new_pass,
+            'currentPassword' => $current_pass
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function createApiKey(string $name): array
+    {
+        $gql = (new Mutation('wptApiKeyCreate'))
+        ->setVariables([
+          new Variable('wptApiKey', 'WptApiKeyCreateInputType', true)
+        ])
+        ->setArguments([
+          'wptApiKey' => '$wptApiKey'
+        ])
+        ->setSelectionSet([
+          'id',
+          'name',
+          'apiKey',
+          'createDate',
+          'changeDate'
+        ]);
+
+        $variables_array = array('wptApiKey' => [
+            'name' => $name,
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function addWptSubscription(string $nonce, string $plan, array $billing_address): array
+    {
+        $gql = (new Mutation('wptAddSubscription'))
+        ->setVariables([
+          new Variable('customer', 'CustomerInputType', true)
+        ])
+        ->setArguments([
+          'customer' => '$customer'
+        ])
+        ->setSelectionSet([
+          'company',
+          'firstName',
+          'lastName',
+          'email',
+          'loginVerificationId'
+        ]);
+
+        $variables_array = array('customer' => [
+          "paymentMethodNonce" => $nonce,
+          "subscriptionPlanId" => $plan,
+          "billingAddressModel" => array(
+            "city" => $billing_address['city'],
+            "country" => $billing_address['country'],
+            "state" => $billing_address['state'],
+            "streetAddress" => $billing_address['street_address'],
+            "zipcode" => $billing_address['zipcode']
+          )
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
         }
     }
 }
