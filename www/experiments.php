@@ -102,12 +102,14 @@ $page_description = "Website performance test result$testLabel.";
             <div class="results_and_command">
                 <div class="results_header results_header-experiments">
                     <h2>Opportunities &amp; Experiments <em class="flag">New</em></h2>
-                    <p>WebPageTest identifies opportunities for improvements that you can test without changing your actual code. Experiments help you quickly test the impact of a change by re-running your test in a similated test environment.</p>
+                    <p>WebPageTest identifies opportunities to improve a site's user experience and offers tips and No-Code Experiments to immediately test the impact of a change without changing the actual website.</p>
                 </div>
 
                 
 
             </div>
+
+
 
             <?php
                     $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
@@ -123,7 +125,7 @@ $page_description = "Website performance test result$testLabel.";
                 <?php
                 if (
                     !$headless && gz_is_file("$testPath/testinfo.json")
-                    && !array_key_exists('published', $test['testinfo'])
+                    //&& !array_key_exists('published', $test['testinfo'])
                     && ($isOwner || !$test['testinfo']['sensitive'])
                     && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
                 ) {
@@ -266,13 +268,14 @@ $page_description = "Website performance test result$testLabel.";
                     foreach($assessment as $key => $cat ){
                        $grade = $cat["grade"];
                        $summary = $cat["summary"];
+                       $sentiment = $cat["sentiment"];
                        $opps = count($cat["opportunities"]);
                        $bad = $cat["num_recommended"];
                        $good = $opps - $bad;
                         echo <<<EOT
                         <div class="grade_header" id="${key}">
                             <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
-                            <p class="grade_summary">${summary}</p>
+                            <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
                         </div>
                         <div class="experiments_bottlenecks">
                             <ol>

@@ -12,6 +12,7 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
     foreach($assessment as $key => $cat ){
         $grade = $cat["grade"];
         $summary = $cat["summary"];
+        $sentiment = $cat["sentiment"];
         $oppsCount = count($cat["opportunities"]);
         $recommendedCount = intval($cat["num_recommended"]);
         $oppsBadCount = intval($cat["num_bad"]);
@@ -20,17 +21,18 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
         $oppsEnd = $oppsBadCount === 1 ? "y" : "ies";
         $expsEnd = $experimentsCount === 1 ? "" : "s";
 
-        $oppsAdd = "<p class=\"opportunities_summary_opps\"><span class=\"experiment_summary_count\">$oppsBadCount</span> Opportunit$oppsEnd</p>";
-        $recsAdd = "<p class=\"opportunities_summary_recs\"><span class=\"experiment_summary_count\">$recommendedCount</span> Recommendation$recsEnd <span class=\"extended\"> to consider</span></p>";
-        $expAdd = "<p class=\"opportunities_summary_exps\"><span class=\"experiment_summary_count\">$experimentsCount</span> <span class=\"extended\">WebPageTest</span> <em class=\"pro-flag\">Pro</em> experiment$expsEnd <span class=\"extended\"> to try</span></p>";
+        
         echo  <<<EOT
         <a class="grade_anchor" href="${expPage}#${key}">
-            <p class="grade_heading grade_heading-summary grade-${grade}"><strong>Is it ${key}?</strong> <span>${summary}</span></p>
             <div>
-            ${oppsAdd}
-            ${recsAdd}
-            ${expAdd}
+                <h4 class="grade_heading grade_heading-summary grade-${grade}"><strong>Is it ${key}?</strong> ${sentiment}</h4>
+                <p class="opportunities_summary_body">${summary}</p>
             </div>
+            <ul>
+                <li class="opportunities_summary_opps">Opportunities <span class="experiment_summary_count">${oppsBadCount}</span></li>
+                <li class="opportunities_summary_recs"><span class="experiment_summary_label">Tips</span> <span class="experiment_summary_count">${recommendedCount}</span></li>
+                <li class="opportunities_summary_exps"><em class="pro-flag">Pro</em> <span class="experiment_summary_label">Experiments</span> <span class="experiment_summary_count">${experimentsCount}</span></li>
+            </ul>
         </a>
         EOT;
     }
