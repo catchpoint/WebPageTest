@@ -79,21 +79,28 @@
     <table>
       <thead>
         <tr>
-          <th>ID</th>
           <th>Name</th>
           <th>API Key</th>
           <th>Create Date</th>
-          <th>Change Date</th>
+          <th>Last Updated</th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody>
 <?php foreach($wptApiKey as $row) {
   echo "<tr>
-          <td>{$row['id']}</td>
           <td>{$row['name']}</td>
           <td>{$row['apiKey']}</td>
           <td>{$row['createDate']}</td>
           <td>{$row['changeDate']}</td>
+          <td>
+            <form method='POST' action='/account'>
+              <input type='hidden' name='api-key-id' value='{$row['id']}' />
+              <input type='hidden' name='type' value='delete-api-key' />
+              <input type='hidden' name='csrf_token' value='{$csrf_token}' />
+              <button type='submit'>Delete</button>
+            </form>
+          </td>
         </tr>";
 } ?>
       </tbody>

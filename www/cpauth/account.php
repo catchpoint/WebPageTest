@@ -172,13 +172,12 @@ use Braintree\Gateway as BraintreeGateway;
                 header("Location: {$redirect_uri}");
                 exit();
             } catch (Exception $e) {
-                echo "<pre>" . var_dump($e) . "</pre>";
-                exit();
+                error_log($e->getMessage());
                 throw new ClientException("There was an error", "/account");
             }
         } elseif ($type == "create-api-key") {
-            $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
             try {
+                $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
                 $request_context->getClient()->createApiKey($name);
                 $protocol = $request_context->getUrlProtocol();
                 $host = Util::getSetting('host');
@@ -188,12 +187,27 @@ use Braintree\Gateway as BraintreeGateway;
                 header("Location: {$redirect_uri}");
                 exit();
             } catch (Exception $e) {
-                echo "<pre>" . var_dump($e) . "</pre>";
+                error_log($e->getMessage());
+                throw new ClientException("There was an error", "/account");
+            }
+        } elseif ($type == "delete-api-key") {
+            try {
+                $id = filter_input(INPUT_POST, 'api-key-id', FILTER_SANITIZE_NUMBER_INT);
+                $request_context->getClient()->deleteApiKey(intval($id));
+
+                $protocol = $request_context->getUrlProtocol();
+                $host = Util::getSetting('host');
+                $route = '/account';
+                $redirect_uri = "{$protocol}://{$host}{$route}";
+
+                header("Location: {$redirect_uri}");
                 exit();
+            } catch (Exception $e) {
+                error_log($e->getMessage());
                 throw new ClientException("There was an error", "/account");
             }
         } else {
-            echo "<pre>" . var_dump($type, $request_context) . "</pre>";
+            throw new ClientException("Incorrect post type", "/account");
             exit();
         }
     } elseif ($request_method == 'GET') {

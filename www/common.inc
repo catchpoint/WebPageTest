@@ -40,6 +40,12 @@ if (Util::getSetting('cp_auth')) {
     echo '<pre>';
     var_dump($e);
     echo '</pre>';
+
+    /*
+     * for when we ship to prod
+     * throw $e;
+     *
+     */
     exit();
   });
 }

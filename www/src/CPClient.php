@@ -349,6 +349,31 @@ class CPClient
         }
     }
 
+    public function deleteApiKey(int $id): array
+    {
+        $ids = [$id];
+
+        $gql = (new Mutation('wptApiKeyBulkDelete'))
+        ->setVariables([
+          new Variable('ids', '[Int!]', true)
+        ])
+        ->setArguments([
+          'ids' => '$ids'
+        ])
+        ->setSelectionSet([
+          'id'
+        ]);
+
+        $variables_array = array('ids' => $ids);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
     public function addWptSubscription(string $nonce, string $plan, array $billing_address): array
     {
         $gql = (new Mutation('wptAddSubscription'))
