@@ -401,7 +401,7 @@ h1 .pro-flag {
 .experiment_opportunities p strong {}
 
 .experiment_opportunities-resolved ol {
-    padding: .5rem 0 0;
+    padding: 0;
     list-style: none;
     display: flex;
     gap: 1rem;
@@ -410,12 +410,12 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-resolved li {
-    flex: 0 1 30%;
+    flex: 0 1 40%;
     background: url("/images/src/icon_award.svg") top center no-repeat;
-    padding-top: 4.2rem;
+    padding-top: 3.2rem;
     margin: 0;
     box-sizing: border-box;
-    background-size: 3rem auto;
+    background-size: auto 3rem;
     text-align: center;
     font-size: .8em;
     line-height: 1.3;
