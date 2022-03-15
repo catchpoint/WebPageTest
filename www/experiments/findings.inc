@@ -24,15 +24,15 @@ if( $experiment ){
 
 
     $diffMetrics = array( 
-        array( "TTFB", "Time to First Byte", "ms"), 
-        array( "StartRender", "Start Render", "ms"),
-        array( "firstContentfulPaint", "First Contentful Paint", "ms"),
-        array( "SpeedIndex", "Speed Index", "ms"),
-        array( "chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "ms"),
+        array( "TTFB", "Time to First Byte", "s"), 
+        array( "StartRender", "Start Render", "s"),
+        array( "firstContentfulPaint", "First Contentful Paint", "s"),
+        array( "SpeedIndex", "Speed Index", "s"),
+        array( "chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "s"),
         array( "chromeUserTiming.CumulativeLayoutShift", "Cumulative Layout Shift", "", array("Better","Worse")),
-        array( "TotalBlockingTime", "Total Blocking Time", "ms"),
-        array( "visualComplete", "Visual Complete", "ms"),
-        array( "FullyLoaded", "Fully Loaded", "ms"),
+        array( "TotalBlockingTime", "Total Blocking Time", "s"),
+        array( "visualComplete", "Visual Complete", "s"),
+        array( "FullyLoaded", "Fully Loaded", "s"),
         array( "BytesIn", "Total Bytes", "kb", array("Lighter","Heavier"))
     );   
 
@@ -72,6 +72,9 @@ if( $experiment ){
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
                         
                         if($thisDiff !== 0){
+                            if( $metric[2] === "s" ){
+                                $thisDiff = round($thisDiff / 60,2);
+                            }
                             echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. abs($thisDiff) . $units . $change . '</td>';
                         }
                     }
