@@ -326,7 +326,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         echo '<span class="test_presets_tag">';
                         if ($browserIcon) {
                             echo '<img src="/images/test_icons/'. strtolower($browser->getName()) . '.svg" alt="'. $browser->getName() . '">';
-                        } else if ($browser-getName()){
+                        } else if ($browser->getName()){
                             echo $browser->getName();
                         }
                         if ($browser->getVersion()) {
