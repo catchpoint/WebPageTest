@@ -505,7 +505,7 @@ else
                                             $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
                                             echo '<div class="experiment_opportunities-resolved">
                                                 <h3 class="hed_sub">Resolved Opportunities</h3>
-                                                <p><strong>Success!</strong> This experiment resolved '. $numAssessmentChanged .' performance bottleneck' . $assessEnding .':</p>
+                                                <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
                                                     <ol>';
                                                 
                                             foreach($assessmentChanges as $change){
