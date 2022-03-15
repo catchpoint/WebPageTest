@@ -2408,6 +2408,10 @@ header {
     /* padding: .5em; */
 }
 
+.compare-experiment .pro-flag {
+    margin-right: 1em;
+}
+
 .result .opportunities_summary .pro-flag {
     /* padding: .4em !important; */
     font-size: .7em;
