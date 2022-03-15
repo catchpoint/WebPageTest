@@ -1627,11 +1627,15 @@ footer ul {
     /* text-transform: uppercase; */
 }
 
-.experiment_summary_label {
-    /* text-indent: -9999px; */
+.compare-experiment .experiment_summary_label {
+    text-indent: -9999px;
     /* overflow: hidden; */
     /* font-weight: normal; */
     /* background: #fff; */
+}
+
+.compare-experiment .opportunities_summary ul {
+    gap: 0.8em;
 }
 
 .opportunities_summary_recs {
