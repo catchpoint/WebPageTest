@@ -408,7 +408,7 @@ else
 
             <?php
                 $pageURI = 'https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI];
-                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_20224/";
+                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_202241/";
             ?>
 
             <meta property="og:title" content="WebPageTest Pro Experiment Result">
