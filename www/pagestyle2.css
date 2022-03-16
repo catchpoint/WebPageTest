@@ -1596,7 +1596,7 @@ footer ul {
 
 .opportunities_summary ul {
     display: flex;
-    gap: 1.4em;
+    gap: 1rem;
     align-items: center;
     border: 1px solid #fcfcfc;
     padding-top: .7em;
