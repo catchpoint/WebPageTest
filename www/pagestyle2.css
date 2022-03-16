@@ -390,7 +390,7 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-resolved {
-    flex: 1 1 35%;
+    flex: 1 1 25%;
     /* justify-content: flex-start; */
 }
 
@@ -426,7 +426,7 @@ h1 .pro-flag {
 }
 
 .experiment_opportunities-remaining {
-    flex: 1 1 60%;
+    flex: 1 1 70%;
     align-self: flex-start;
 }
 
