@@ -270,6 +270,7 @@ $page_description = "Website performance test result$testLabel.";
                        $summary = $cat["summary"];
                        $sentiment = $cat["sentiment"];
                        $opps = count($cat["opportunities"]);
+                       $oppsEnd = $opps === 1 ? "y" : "ies";
                        $bad = $cat["num_recommended"];
                        $good = $opps - $bad;
                         echo <<<EOT
@@ -278,6 +279,7 @@ $page_description = "Website performance test result$testLabel.";
                             <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
                         </div>
                         <div class="experiments_bottlenecks">
+                            <p>WebPageTest checked for bottlenecks related to this category and found ${opps}</p>
                             <ol>
                         EOT;
 

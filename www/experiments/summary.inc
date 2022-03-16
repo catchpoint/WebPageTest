@@ -29,7 +29,7 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
                 <p class="opportunities_summary_body">${summary}</p>
             </div>
             <ul>
-                <li class="opportunities_summary_opps">Opportunities <span class="experiment_summary_count">${oppsBadCount}</span></li>
+                <li class="opportunities_summary_opps"><span class="experiment_summary_label">Opportunities</span> <span class="experiment_summary_count">${oppsBadCount}</span></li>
                 <li class="opportunities_summary_recs"><span class="experiment_summary_label">Tips</span> <span class="experiment_summary_count">${recommendedCount}</span></li>
                 <li class="opportunities_summary_exps"><em class="pro-flag">Pro</em> <span class="experiment_summary_label">Experiments</span> <span class="experiment_summary_count">${experimentsCount}</span></li>
             </ul>

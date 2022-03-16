@@ -605,11 +605,11 @@ h3.grade_heading {
 }
 
 p.grade_summary {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #2E2E2E;
     max-width: 49em;
     line-height: 1.5;
-    margin: 1.4em 0 .5em;
+    margin: .5em 0;
     font-weight: 500;
     min-height: 3rem;
     padding-left: 2.5rem;
@@ -1464,7 +1464,7 @@ footer ul {
     padding: 0 !important;
     padding: 0 0 1rem;
     gap: 3rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .results_body .opportunities_summary {
@@ -1616,7 +1616,7 @@ footer ul {
     font-size: .85em !important;
     font-weight: 500;
     /* margin: 0 -1rem -1rem; */
-    padding: 0 1.7em 0 0;
+    padding: 0 1.8em 0 0;
     color: #111;
     display: flex;
     border-radius: .5em;
@@ -1629,13 +1629,17 @@ footer ul {
 
 .compare-experiment .experiment_summary_label {
     text-indent: -9999px;
-    /* overflow: hidden; */
-    /* font-weight: normal; */
-    /* background: #fff; */
 }
 
 .compare-experiment .opportunities_summary ul {
     gap: 0.8em;
+}
+
+.opportunities_summary_opps {
+    background: url(/images/src/icon_opportunities.svg) left 0 bottom 50% no-repeat;
+    background-size: auto 1.4rem;
+    padding-left: 2em;
+    height: 1em;
 }
 
 .opportunities_summary_recs {
@@ -1653,7 +1657,7 @@ footer ul {
 }
 
 .experiment_summary_count {
-    border: 1px solid;
+    border: 1px solid #aaa;
     display: inline-block;
     border-radius: 100%;
     color: #fff;
@@ -1668,16 +1672,17 @@ footer ul {
     text-indent: 0;
     /* top: -.5em; */
     /* right: 0; */
-    background: #1071ba;
+    background: #fff;
+    color: #333;
 }
 
 .experiment_summary_count {
-    /* border: 1px solid #6ca71a; */
-    color: #fff;
+    border: 1px solid #ddd;
+    color: #333;
     /* border: 1px solid #1071ba; */
-    width: 1.5em;
-    height: 1.5em;
-    line-height: 1.5;
+    width: 1.7em;
+    height: 1.7em;
+    line-height: 1.7;
     /* padding: .2em; */
     /* position: relative; */
     /* top: -0.5em; */
@@ -1686,12 +1691,12 @@ footer ul {
     font-weight: 900;
     font-size: .8em;
     /* margin-right: 2.5em; */
-    border: 0;
+    /* border: 0; */
     position: absolute;
     right: 0;
     /* top: 0; */
     margin: 0;
-    padding: .1em;
+    /* padding: .1em; */
 }
 
 .opportunities_summary_opps .experiment_summary_count {
