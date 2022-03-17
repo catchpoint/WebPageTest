@@ -808,7 +808,12 @@ use WebPageTest\RateLimiter;
                   // this is for re-running a test with recipes enabled
                   $recipeScript = '';
                   foreach( $req_recipes as $key=>$value ){
-                    $recipeScript .= $value;
+                    // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
+                    if( strpos($value, "-") > 0 ){
+                      $recipeScript = substr($value, strpos($value, "-") + 1); 
+                    } else {
+                      $recipeScript .= $value;
+                    }
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
                       $experimentMetadata["experiment"]["recipes"][] = array( $value => $ingredients );

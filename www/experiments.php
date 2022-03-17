@@ -153,7 +153,7 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
 
-                    
+                    $expNum = 0;
 
 
                     function observationHTML( $parts ){
@@ -198,6 +198,7 @@ $page_description = "Website performance test result$testLabel.";
                             $out .= "<ul class=\"experiments_list\">";
                     
                             foreach( $relevantExperiments as $exp ) {
+                                $expNum++;
                                 $out .= <<<EOT
                                     <li class="experiment_description">
                                     <div class="experiment_description_text">
@@ -219,12 +220,12 @@ $page_description = "Website performance test result$testLabel.";
                                             }
                                             if( count($exp->expval) > 1 ){
                                             $out .= <<<EOT
-                                                <li><label><input type="checkbox" name="{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
+                                                <li><label><input type="checkbox" name="{$expNum}-{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
                                                 EOT;
                                             }
                                             else {
                                                 $out .= <<<EOT
-                                                <li><input type="hidden" name="{$exp->expvar}[]" value="{$val}">{$label}</li>
+                                                <li><input type="hidden" name="{$expNum}-{$exp->expvar}[]" value="{$val}">{$label}</li>
                                                 EOT;
                                             }
                                         }
@@ -235,7 +236,7 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go">
-                                        <label><input type="checkbox" name="recipes[]" value="{$exp->expvar}">Run This Experiment!</label>
+                                        <label><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run This Experiment!</label>
                                         </div>
                                         EOT;
                                     }
@@ -244,13 +245,12 @@ $page_description = "Website performance test result$testLabel.";
                                     $out .= <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
-                                    <label><input type="checkbox" name="{$exp->expvar[0]}">Run This Experiment!</label>
+                                    <label><input type="checkbox" name="{$expNum}-{$exp->expvar[0]}">Run This Experiment!</label>
                                     </div>
                                     EOT;
                                 }
                     
                                 $out .= '</li>';
-                                    
                             }
                         }
                     
