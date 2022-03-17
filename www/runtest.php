@@ -809,14 +809,16 @@ use WebPageTest\RateLimiter;
                   $recipeScript = '';
                   foreach( $req_recipes as $key=>$value ){
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
+                    $recipeSansId = $value;
                     if( strpos($value, "-") > 0 ){
-                      $recipeScript = substr($value, strpos($value, "-") + 1); 
-                    } else {
-                      $recipeScript .= $value;
+                      $recipeSansId = substr($value, strpos($value, "-") + 1); 
                     }
+
+                    $recipeScript .= $recipeSansId;
+                    
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
-                      $experimentMetadata["experiment"]["recipes"][] = array( $value => $ingredients );
+                      $experimentMetadata["experiment"]["recipes"][] = array( $recipeSansId => $ingredients );
                       if( is_array($ingredients) ){
                         $ingredients = implode($ingredients, ",");
                       }
