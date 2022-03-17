@@ -3757,15 +3757,15 @@ function ProcessUploadedTest($id) {
   }
 }
 
-function ReportSaaSTest($test_json, $node_id) {
+function ReportSaaSTest($test_json, $node_id, $test_id) {
   // Get the scheduler queue length (not separated by priorities)
   $scheduler = GetSetting('cp_scheduler');
   $scheduler_salt = GetSetting('cp_scheduler_salt');
   if ($scheduler && $scheduler_salt) {
-    $cpid = GetCPID($node_id, $scheduler_salt);
+    $host = str_replace('.', '', trim(GetSetting('host')));
+    $cpid = GetCPID($host, $scheduler_salt);
     $loggers = CacheFetch('scheduler-loggers', null);
     if (!isset($loggers)) {
-      $host = GetSetting('host');
       $url = "{$scheduler}hawkscheduleserver/wpt-metadata.ashx?population=1";
       $result_text = cp_http_get($url, $cpid);
       if (isset($result_text) && strlen($result_text)) {
@@ -3792,11 +3792,13 @@ function ReportSaaSTest($test_json, $node_id) {
         if (strncmp($url, 'http', 4)) {
           $url = 'http://' . $url;
         }
-        $url .= '/hawklogserver/wpt.ashx';
-        // POST the JSON to the logger
-        $result = cp_http_post($url, $test_json, $cpid);
-        if (isset($result)) {
-          break;
+        if ($test_id) {
+          $url .= "/hawklogserver/wpt.ashx?test=$test_id&node=$node_id";
+          // POST the JSON to the logger
+          $result = cp_http_post($url, $test_json, $cpid);
+          if (isset($result)) {
+            break;
+          }
         }
       }
     }
