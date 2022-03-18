@@ -5681,7 +5681,7 @@ div.request-dialog-radio {
 .response-headers,
 .response-body,
 .request-raw-details,
-.experiment {
+.request-blocking {
     display: none;
 }
 
@@ -6251,7 +6251,7 @@ div.bar {
     margin-bottom: auto;
 }
 
-#experimentSettings {
+#requestBlockingSettings {
     position: fixed;
     bottom: 1.5em;
     left: 1.5em;
@@ -6264,24 +6264,24 @@ div.bar {
     box-shadow: 0px 6.4px 14.4px rgb(0 0 0 / 13%), 0px 1.2px 3.6px rgb(0 0 0 / 11%);
 }
 
-#experimentSettings.inactive {
+#requestBlockingSettings.inactive {
     display: none;
 }
 
-#experimentSettings h2 {
+#requestBlockingSettings h2 {
     font-size: 1em;
 }
 
-#experimentSettings ul+h2 {
+#requestBlockingSettings ul+h2 {
     margin-top: 2em;
 }
 
-#experimentSettings li {
+#requestBlockingSettings li {
     word-break: break-word;
     font-size: .9em;
 }
 
-#experimentSettings button {
+#requestBlockingSettings button {
     border: 0;
     border-radius: 4px;
     padding: 0.6875em 2.625em;
@@ -6292,11 +6292,11 @@ div.bar {
     text-decoration: none;
 }
 
-#experimentForm {
+#requestBlockingForm {
     margin-top: 2em;
 }
 
-#experimentSettings a[data-remove-field] {
+#requestBlockingSettings a[data-remove-field] {
     color: #fff;
     text-decoration: none;
     font-weight: bold;
@@ -6304,7 +6304,7 @@ div.bar {
     display: inline-block;
 }
 
-#experimentSettings .remove-block:hover {
+#requestBlockingSettings .remove-block:hover {
     text-decoration: underline;
 }
 
@@ -6312,12 +6312,12 @@ div.bar {
     margin-bottom: 2em;
 }
 
-#experimentSettings label {
+#requestBlockingSettings label {
     display: block;
     font-weight: bold;
 }
 
-#experimentSettings input[type="text"] {
+#requestBlockingSettings input[type="text"] {
     margin-bottom: 1em;
 }
 

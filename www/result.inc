@@ -212,9 +212,6 @@ $page_description = "Website performance test result$testLabel.";
               echo '</div>';
             }
             ?>
-            <script>
-              markUserTime('aft.Result Data Table');
-            </script>
             <?php } ?>
 
            

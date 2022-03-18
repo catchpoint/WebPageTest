@@ -209,7 +209,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             tableGroups.draw(viewGroups, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var pieGroups = new google.visualization.PieChart(document.getElementById('pieGroups'));
-            google.visualization.events.addListener(pieGroups, 'ready', function(){markUserTime('aft.Groups Pie');});
             pieGroups.draw(viewGroups, {width: 450, height: 300, title: 'Processing Categories', colors: groupColors});
 
 
@@ -220,7 +219,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             tableEvents.draw(viewEvents, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var pieEvents = new google.visualization.PieChart(document.getElementById('pieEvents'));
-            google.visualization.events.addListener(pieEvents, 'ready', function(){markUserTime('aft.Events Pie');});
             pieEvents.draw(viewEvents, {width: 450, height: 300, title: 'Processing Events', colors: eventColors});
 
 

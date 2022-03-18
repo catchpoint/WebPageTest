@@ -202,11 +202,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var pieRequests = new google.visualization.PieChart(parentNode.find('div.pieRequests')[0]);
-            google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
             pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests'});
 
             var pieBytes = new google.visualization.PieChart(parentNode.find('div.pieBytes')[0]);
-            google.visualization.events.addListener(pieBytes, 'ready', function(){markUserTime('aft.Bytes Pie');});
             pieBytes.draw(bytes, {width: 450, height: 300, title: 'Bytes'});
         }
         </script>

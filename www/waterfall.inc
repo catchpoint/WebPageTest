@@ -1471,7 +1471,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
 
     // main container for the waterfall
     $out .= '<div class="waterfall-container">';
-    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
+    $out .= "<img class=\"waterfall-image\" alt=\"\" usemap=\"#waterfall_map_step$step\" " .
             "id=\"waterfall_step$step\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached&step=$step$waterfall_options\">";
 
     $stepSuffix = "-step" . $step;
@@ -1502,7 +1502,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
                 <span id="request-raw-details-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="request-raw-details$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Raw Details</label></span>
                 <span id="response-body-button$stepSuffix"><input type="radio" id="radio5$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio5$stepSuffix">Object</label></span>
-                <span id="experiment-button$stepSuffix"><input type="radio" id="radio6$stepSuffix" value="experiment$stepSuffix" name="radio" /><label for="radio6$stepSuffix">Experiment</label></span>
+                <span id="blocking-button$stepSuffix"><input type="radio" id="radio6$stepSuffix" value="blocking$stepSuffix" name="radio" /><label for="radio6$stepSuffix">Request Blocking</label></span>
             </div>
         </div>
         <div class="jqmdBC">
@@ -1512,7 +1512,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
                 <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre id="request-raw-details-json$stepSuffix"></pre></div>
                 <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
-                <div id="experiment$stepSuffix" class="dialog-tab-content experiment"></div>
+                <div id="blocking$stepSuffix" class="dialog-tab-content blocking"></div>
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>
