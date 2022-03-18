@@ -18,7 +18,7 @@ if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
 	<script src="site.js"></script>
 	<script src="site2.js"></script>
 	<script src="site3.js" defer></script>
-	<script src="https://code.jquery.com/jquery-3.6.0.js" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-2.0.0.js" crossorigin="anonymous"></script>
 	<script src="https://example.com/this-will-fail.js"></script>
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0-rc.3/themes/smoothness/jquery-ui.css">
 	<link rel="preload" href="foo/bar/baz.css" as="style">
