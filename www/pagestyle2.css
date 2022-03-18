@@ -956,6 +956,14 @@ h4.experiments_list_hed-recs {
     border-radius: 2rem;
 }
 
+.experiments_foot input[type=submit]:focus,
+.experiments_foot button:focus,
+.experiments_foot input[type=submit]:hover,
+.experiments_foot button:hover {
+    background: #58a03d;
+    box-shadow: 0 0 6px rgba(0, 0, 0, .3);
+}
+
 p {
     margin: 0 0 1em 0;
 }
