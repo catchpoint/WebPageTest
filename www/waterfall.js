@@ -85,7 +85,7 @@ function SelectRequest(step, request) {
     var details='';
     var requestHeaders='';
     var responseHeaders='';
-    var experiment = '<ul class="experiments">';
+    var blocking = '<ul class="requestBlocking">';
     let json = '';
     $("#response-body-" + stepLabel).html('');
     try {
@@ -112,7 +112,7 @@ function SelectRequest(step, request) {
             } else {
                 details += '<b>URL:</b> <a href="' + htmlEncode(r['full_url']) + '">' + htmlEncode(r['full_url']) + '</a><br>';
             }
-            experiment += '<li><a href="#" data-block="' + htmlEncode(r['full_url']) + '">Block Request URL</a></li>';
+            blocking += '<li><a href="#" data-block="' + htmlEncode(r['full_url']) + '">Block Request URL</a></li>';
         }
         if (r['initiator'] !== undefined && r['initiator'].length > 0) {
             details += '<b>Loaded By:</b> ' + htmlEncode(r['initiator']);
@@ -125,7 +125,7 @@ function SelectRequest(step, request) {
         details += '<h3>Request</h3>';
         if (r['host'] !== undefined)
             details += '<b>Host: </b>' + htmlEncode(r['host']) + '<br>';
-            experiment += '<li><a href="#" data-block-domain="' + htmlEncode(r['host']) + '">Block Request Domain</a></li>';
+            blocking += '<li><a href="#" data-block-domain="' + htmlEncode(r['host']) + '">Block Request Domain</a></li>';
         if (r['ip_addr'])
             details += '<b>IP: </b>' + htmlEncode(r['ip_addr']) + '<br>';
         if (r['location'] !== undefined && r['location'] !== null && r['location'].length)
@@ -164,7 +164,7 @@ function SelectRequest(step, request) {
             details += '<b>Render Blocking Status: </b>' + htmlEncode(r['renderBlocking']) + '<br>';
 
             if (r['renderBlocking']=== 'blocking') {
-                experiment += '</ul><ul class="experiments"><li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
+                blocking += '</ul><ul class="requestBlocking"><li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
             }
         }
         details += '<h3>Timing</h3>';
@@ -281,13 +281,13 @@ function SelectRequest(step, request) {
     $("#request-headers-" + stepLabel).html(requestHeaders);
     $("#response-headers-" + stepLabel).html(responseHeaders);
     if (document.getElementById('urlEntry')) {
-        //only do experiments if on a page where we can resubmit the test
-        $("#experiment-" + stepLabel).html(experiment + "</ul>");
+        //only do requestBlocking if on a page where we can resubmit the test
+        $("#blocking-" + stepLabel).html(blocking + "</ul>");
     } else {
-        var experimentButtons = document.querySelectorAll("[id^='experiment-button']");
-        if (experimentButtons) {
-            for (var i = 0, len = experimentButtons.length; i < len; i++) {
-                experimentButtons[i].style.display = "none";
+        var blockingButtons = document.querySelectorAll("[id^='blocking-button']");
+        if (blockingButtons) {
+            for (var i = 0, len = blockingButtons.length; i < len; i++) {
+                blockingButtons[i].style.display = "none";
             }
         }
     }
@@ -330,59 +330,59 @@ if (document.getElementById('urlEntry')) {
         return false;
     })
     $('.waterfall-container').on("click", "a[data-block]", function (e) {
-        if ($('#experimentSettings h2').length <= 0) {
-            createExperimentSettingsBox();
+        if ($('#requestBlocking h2').length <= 0) {
+            createRequestBlockingBox();
         }
-        $('#experimentSettings').removeClass('inactive');
-        if ($('#experimentForm input[name=block]').length > 0) {
-            var fieldVal = $('#experimentForm input[name=block]').val();
+        $('#requestBlocking').removeClass('inactive');
+        if ($('#blockingForm input[name=block]').length > 0) {
+            var fieldVal = $('#blockingForm input[name=block]').val();
             if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
                 return false;
             }
             else {
-                $('#experimentForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
+                $('#blockingForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
             }
             
         } else {
-            $('#experimentForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
+            $('#blockingForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
         }
-        $('#experimentSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
+        $('#requestBlocking .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
 
 
         return false;
     })
     $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-        if ($('#experimentSettings h2').length <= 0) {
-            createExperimentSettingsBox();
+        if ($('#requestBlocking h2').length <= 0) {
+            createRequestBlockingBox();
         }
-        $('#experimentSettings').removeClass('inactive');
-        if ($('#experimentForm input[name=blockDomains]').length > 0) {
-            var fieldVal = $('#experimentForm input[name=blockDomains]').val();
+        $('#requestBlocking').removeClass('inactive');
+        if ($('#blockingForm input[name=blockDomains]').length > 0) {
+            var fieldVal = $('#blockingForm input[name=blockDomains]').val();
             if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
                 return false;
             } else {
-                $('#experimentForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
+                $('#blockingForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
             }
             
         } else {
-            $('#experimentForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
+            $('#blockingForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
         }
-        $('#experimentSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
+        $('#requestBlocking .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
 
         return false;
     })
-    function createExperimentSettingsBox() {
-        $('#experimentSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
-        $('#experimentSettings form').prepend('<label for="label">Label</label><input type="text" name="label" />');
+    function createRequestBlockingBox() {
+        $('#requestBlocking').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
+        $('#requestBlocking form').prepend('<label for="label">Label</label><input type="text" name="label" />');
     }
     $('body').on("click", "a[data-remove-field]", function (e) {
         var remove = $(this).attr('data-remove-field');
-        var fieldVal = $('#experimentForm input[name=' + remove + ']').val();
-        $('#experimentForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
+        var fieldVal = $('#blockingForm input[name=' + remove + ']').val();
+        $('#blockingForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
         $(this).closest('li').remove();
         //check to see if any li, if not, hide the field
-        if ($('#experimentSettings li').length <= 0) {
-            $('#experimentSettings').addClass('inactive');
+        if ($('#requestBlocking li').length <= 0) {
+            $('#requestBlocking').addClass('inactive');
         }
         return false;
     })

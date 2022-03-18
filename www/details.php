@@ -179,9 +179,6 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                   echo '</div>';
                 }
                 ?>
-                <script>
-                  markUserTime('aft.Detail Table');
-                </script>
 
                 <?php
                 if ($isMultistep) {
@@ -270,7 +267,7 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                   </div>
                   </div>
 
-        <div id="experimentSettings" class="inactive">
+        <div id="requestBlockingSettings" class="inactive">
               <?php
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
@@ -281,7 +278,7 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                         $secret = GetServerSecret();
                         if (!isset($secret))
                             $secret = '';
-                            createForm('experimentForm', 'Run Experiment', $id, $owner, $secret);
+                            createForm('requestBlockingForm', 'Run with Blocked', $id, $owner, $secret);
                           }
                     ?>
               </div>

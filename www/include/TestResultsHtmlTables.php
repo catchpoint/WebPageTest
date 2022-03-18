@@ -263,10 +263,9 @@ class TestResultsHtmlTables {
     $detailsUrl = $urlGenerator->resultPage("details", $endParam) . $hash;
     $thumbUrl = $urlGenerator->thumbnail("waterfall.png");
     $class = $even ? 'class="even"' : '';
-    $onload =  $this->waterfallDisplayed ? "" : " onload=\"markUserTime('aft.First Waterfall')\"";
 
     $out = "<td align=\"center\" >\n";
-    $out .=  "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\" $onload></a>\n";
+    $out .=  "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\"></a>\n";
     $out .=  "</td>\n";
 
     $this->waterfallDisplayed = true;
@@ -292,11 +291,10 @@ class TestResultsHtmlTables {
   private function _createScreenshotCell($stepResult, $even) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $class = $even ? 'class="even"' : '';
-    $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screenshot')\"";
     $screenShotUrl = $urlGenerator->resultPage("screen_shot") . "#step_" . $stepResult->getStepNumber();
     $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
     $out = "<td align=\"center\"  $class>\n";
-    $out .= "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
+    $out .= "<a href=\"$screenShotUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbnailUrl\"></a>\n";
     $out .= "</td>\n";
     return $out;
   }
