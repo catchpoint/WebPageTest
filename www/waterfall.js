@@ -330,59 +330,59 @@ if (document.getElementById('urlEntry')) {
         return false;
     })
     $('.waterfall-container').on("click", "a[data-block]", function (e) {
-        if ($('#requestBlocking h2').length <= 0) {
+        if ($('#requestBlockingSettings h2').length <= 0) {
             createRequestBlockingBox();
         }
-        $('#requestBlocking').removeClass('inactive');
-        if ($('#blockingForm input[name=block]').length > 0) {
-            var fieldVal = $('#blockingForm input[name=block]').val();
+        $('#requestBlockingSettings').removeClass('inactive');
+        if ($('#requestBlockingForm input[name=block]').length > 0) {
+            var fieldVal = $('#requestBlockingForm input[name=block]').val();
             if (fieldVal.indexOf($(this).attr("data-block")) >= 0) {
                 return false;
             }
             else {
-                $('#blockingForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
+                $('#requestBlockingForm input[name=block]').val(fieldVal + $(this).attr("data-block") + ' ' );
             }
             
         } else {
-            $('#blockingForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
+            $('#requestBlockingForm').append('<input type="hidden" name="block" value="' + $(this).attr("data-block") + ' "/>');
         }
-        $('#requestBlocking .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
+        $('#requestBlockingSettings .block-list').append('<li><a href="#" title="Remove" data-remove-field="block" data-remove-val="' + $(this).attr("data-block") + '">x</a>' + $(this).attr("data-block") + '</li>');
 
 
         return false;
     })
     $('.waterfall-container').on("click", "a[data-block-domain]", function (e) {
-        if ($('#requestBlocking h2').length <= 0) {
+        if ($('#requestBlockingSettings h2').length <= 0) {
             createRequestBlockingBox();
         }
-        $('#requestBlocking').removeClass('inactive');
-        if ($('#blockingForm input[name=blockDomains]').length > 0) {
-            var fieldVal = $('#blockingForm input[name=blockDomains]').val();
+        $('#requestBlockingSettings').removeClass('inactive');
+        if ($('#requestBlockingForm input[name=blockDomains]').length > 0) {
+            var fieldVal = $('#requestBlockingForm input[name=blockDomains]').val();
             if (fieldVal.indexOf($(this).attr("data-block-domain")) >= 0) {
                 return false;
             } else {
-                $('#blockingForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
+                $('#requestBlockingForm input[name=blockDomains]').val(fieldVal + $(this).attr("data-block-domain") + ' ');
             }
             
         } else {
-            $('#blockingForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
+            $('#requestBlockingForm').append('<input type="hidden" name="blockDomains" value="' + $(this).attr("data-block-domain") + ' "/>');
         }
-        $('#requestBlocking .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
+        $('#requestBlockingSettings .blockDomain-list').append('<li><a href="#" title="Remove" data-remove-field="blockDomains" data-remove-val="' + $(this).attr("data-block-domain") + '">x</a>' + $(this).attr("data-block-domain") + '</li>');
 
         return false;
     })
     function createRequestBlockingBox() {
-        $('#requestBlocking').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
-        $('#requestBlocking form').prepend('<label for="label">Label</label><input type="text" name="label" />');
+        $('#requestBlockingSettings').prepend("<h2>Block URLs:</h2><ul class='block-list'></ul><h2>Block Domains:</h2><ul class='blockDomain-list'></ul>");
+        $('#requestBlockingSettings form').prepend('<label for="label">Label</label><input type="text" name="label" />');
     }
     $('body').on("click", "a[data-remove-field]", function (e) {
         var remove = $(this).attr('data-remove-field');
-        var fieldVal = $('#blockingForm input[name=' + remove + ']').val();
-        $('#blockingForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
+        var fieldVal = $('#requestBlockingForm input[name=' + remove + ']').val();
+        $('#requestBlockingForm input[name=' + remove + ']').val(fieldVal.replace($(this).attr('data-remove-val') + ' ', ''));
         $(this).closest('li').remove();
         //check to see if any li, if not, hide the field
-        if ($('#requestBlocking li').length <= 0) {
-            $('#requestBlocking').addClass('inactive');
+        if ($('#requestBlockingSettings li').length <= 0) {
+            $('#requestBlockingSettings').addClass('inactive');
         }
         return false;
     })
