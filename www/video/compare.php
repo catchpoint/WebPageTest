@@ -1084,7 +1084,7 @@ function DisplayStatus()
     echo '<div id="result" class="results_body">';
 
     if( $metaInfo && $metaInfo['experiment'] ){
-    echo '<p>Experiments Applied:</p>';
+    echo '<div class="experiment_meta_included"><p>Experiments running:</p>';
     echo '<ul>';
     $recips = $metaInfo['experiment']['recipes'];
     
@@ -1098,7 +1098,7 @@ function DisplayStatus()
         echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
         }
     }
-    echo '</ul>';
+    echo '</ul></div>';
     }
 
 

@@ -523,15 +523,23 @@ a.experiment_meta-more:focus,
 .experiment_meta_included details ul {
     position: absolute;
     background: #2a3c64;
-    padding: 2em .6em;
+    padding: 2em 2em;
     font-size: .8em;
     color: #fff;
-    list-style: disc;
     border-radius: .5rem;
     margin: 0;
     border-top-left-radius: 0;
-    max-width: 80vw;
+    max-width: 50vw;
     min-width: 20em;
+    width: 30rem;
+    overflow: auto;
+    word-break: break-word;
+    line-height: 1.3;
+    list-style: disc;
+}
+
+.experiment_meta_included details li {
+    padding-bottom: 1em;
 }
 
 .compare-experiment.compare-loading .scrollableTable {
@@ -571,8 +579,9 @@ span.lh-flag.poor {
     box-shadow: 0 0 4px #ddd;
     margin: 1em -3rem !important;
     background-clip: content-box;
-    overflow: hidden;
+    /* overflow-x: hidden; */
     position: relative;
+    /* overflow-y: visible; */
 }
 
 @media (max-width: 87.5em) {
@@ -586,6 +595,18 @@ span.lh-flag.poor {
 
 .compare-loading .results_body {
     padding: 3em 1em
+}
+
+.compare-loading .experiment_meta_included {
+    padding: 0 0 1.5rem;
+    border-bottom: 1px solid #ddd;
+    margin: 0 2rem 2.5rem;
+    /* font-size: 1.2em; */
+}
+
+.compare-loading #statusTable th {
+    text-decoration: none;
+    font-weight: 900;
 }
 
 .grade_header {
