@@ -1070,6 +1070,7 @@ function DisplayStatus()
 {
     global $tests;
     global $experiment;
+    global $metaInfo;
 
     echo '<div class="results_main_contain">
     <div class="results_main">';
@@ -1081,6 +1082,26 @@ function DisplayStatus()
     }
 
     echo '<div id="result" class="results_body">';
+
+    if( $metaInfo && $metaInfo['experiment'] ){
+        echo '<p>Experiments Applied:</p>';
+        echo '<ul>';
+        $recips = $metaInfo['experiment']['recipes'];
+        
+        foreach( $recips as $recipe ){
+            echo "<li><details><summary>".key($recipe)."</summary>";
+            
+            foreach($recipe as $ings){
+            if( is_string($ings)){
+                $ings = array($ings);
+            }
+            echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
+            }
+        }
+        echo '</ul>';
+    }
+
+
     echo "<div class='scrollableTable'><table id=\"statusTable\" class=\"pretty\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {
