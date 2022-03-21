@@ -1071,9 +1071,15 @@ function DisplayStatus()
     global $tests;
 
     echo '<div class="results_main_contain">
-    <div class="results_main">
-    <div class="results_header"><h2>Filmstrip Comparison</h2><p>Please wait while the tests are run...</p></div>
-    <div id="result" class="results_body">';
+    <div class="results_main">';
+
+    if( $ready ){
+        echo '<div class="results_header"><h1>Filmstrip Comparison</h1><p>Please wait while the tests are run...</p></div>';
+    } else {
+        echo '<div class="results_header"><h1>WebPageTest <span class="pro-flag">Pro</span> Experiment</h1><p>Please wait while the tests are run...</p></div>';
+    }
+
+    echo '<div id="result" class="results_body">';
     echo "<div class='scrollableTable'><table id=\"statusTable\" class=\"pretty\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {

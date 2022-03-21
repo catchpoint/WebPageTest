@@ -579,6 +579,10 @@ span.lh-flag.poor {
     }
 }
 
+.compare-loading .results_body {
+    padding: 3em 1em
+}
+
 .grade_header {
     display: flex;
     align-items: center;
