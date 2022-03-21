@@ -1084,19 +1084,21 @@ function DisplayStatus()
     echo '<div id="result" class="results_body">';
 
     if( $metaInfo && $metaInfo['experiment'] ){
-        echo '<p>Experiments Applied:</p>';
-        echo '<ul>';
-        $recips = $metaInfo['experiment']['recipes'];
-        foreach( $recips as $recipe ){
-            echo "<li><strong>".key($recipe)."</strong>";
-            foreach($recipe as $ings){
-            if( is_string($ings)){
-                $ings = array($ings);
-            }
-            echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></li>";
-            }
+    echo '<p>Experiments Applied:</p>';
+    echo '<ul>';
+    $recips = $metaInfo['experiment']['recipes'];
+    
+    foreach( $recips as $recipe ){
+        echo "<li><details><summary>".key($recipe)."</summary>";
+        
+        foreach($recipe as $ings){
+        if( is_string($ings)){
+            $ings = array($ings);
         }
-        echo '</ul>';
+        echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
+        }
+    }
+    echo '</ul>';
     }
 
 
