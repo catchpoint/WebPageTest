@@ -100,7 +100,8 @@ use Braintree\Gateway as BraintreeGateway;
             }
         } elseif ($type == 'password') {
             $password_validator = new Rules\AllOf(
-                new Rules\Length(8, 32)
+              new Rules\Length(8, 32),
+              new Rules\Regex('/' . ValidatorPatterns::getPassword() . '/')
             );
 
             $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
@@ -108,17 +109,21 @@ use Braintree\Gateway as BraintreeGateway;
             $new_password = filter_input(INPUT_POST, 'new-password');
             $confirm_new_password = filter_input(INPUT_POST, 'confirm-new-password');
 
+            if ($new_password !== $confirm_new_password) {
+                throw new ClientException("New Password must match confirmed password", "/account", 400);
+            }
+
             try {
                 $password_validator->assert($new_password);
                 $password_validator->assert($confirm_new_password);
-            } catch (Exception $e) {
+            } catch (NestedValidationException $e) {
                 $msg = "The requirements are at least 8 characters, including a number, lowercase letter, uppercase ";
                 $msg .= "letter and symbol. No <, >.";
-                throw new ClientException($msg, "/account", 400);
-            }
 
-            if ($new_password !== $confirm_new_password) {
-                throw new ClientException("New Password must match confirmed password", "/account", 400);
+                $message = $e->getMessages([
+                'regex' => $msg
+                ]);
+                throw new ClientException(implode(', ', $message));
             }
 
             try {
@@ -269,6 +274,7 @@ use Braintree\Gateway as BraintreeGateway;
         $results = array_merge($contact_info, $billing_info);
         $results['csrf_token'] = $_SESSION['csrf_token'];
         $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
+        $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
         $results['bt_client_token'] = $client_token;
 
         if (!is_null($error_message)) {

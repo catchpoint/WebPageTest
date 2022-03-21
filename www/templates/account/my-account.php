@@ -306,6 +306,12 @@ include_once __DIR__ . '/includes/modals/subscription-plan.php';
           document.querySelector(`#${modal}`).open();
         });
       });
+      document.querySelectorAll('.fg-modal .cancel-button button').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const modal = e.target.closest('.fg-modal');
+          modal.close();
+        });
+      });
     });
   } else {
     document.querySelectorAll('.edit-button button').forEach(el => {
@@ -313,6 +319,12 @@ include_once __DIR__ . '/includes/modals/subscription-plan.php';
         const card = e.target.closest('[data-modal]');
         const modal = card.dataset.modal;
         document.querySelector(`#${modal}`).open();
+      });
+    });
+    document.querySelectorAll('.fg-modal .cancel-button button').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const modal = e.target.closest('.fg-modal');
+        modal.close();
       });
     });
   }

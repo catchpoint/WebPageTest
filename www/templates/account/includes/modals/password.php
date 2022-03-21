@@ -10,11 +10,11 @@
         </div>
         <div class="section">
           <label class="required" for="new-password">New Password</label>
-          <input type="password" name="new-password" minlength="8" title="The requirements are at least 8 characters, including a number, lowercase letter, uppercase letter and symbol. No &lt;, &gt;." required />
+          <input type="password" name="new-password" minlength="8" title="The requirements are at least 8 characters, including a number, lowercase letter, uppercase letter and symbol. No &lt;, &gt;." pattern="<?= $validation_pattern_password ?>" required />
         </div>
         <div class="section">
           <label class="required" for="confirm-new-password">New Password</label>
-          <input type="password" name="confirm-new-password" minlength="8" title="The requirements are at least 8 characters, including a number, lowercase letter, uppercase letter and symbol. No &lt;, &gt;." required />
+          <input type="password" name="confirm-new-password" minlength="8" title="The requirements are at least 8 characters, including a number, lowercase letter, uppercase letter and symbol. No &lt;, &gt;." pattern="<?= $validation_pattern_password ?>" required />
         </div>
         <div class="section">
           <div class="save-button">
