@@ -421,7 +421,7 @@ else
             <meta name="twitter:image:alt" content="Web performance visual and metric differences for this experiment.">
             <meta name="twitter:site" content="@realwebpagetest">
         </head>
-        <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; }   ?>">
+        <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; } if(!$ready){ echo ' compare-loading'; }   ?>">
                 <?php 
                 $tab = 'Test Result';
                 //$nosubheader = false;
