@@ -1069,6 +1069,7 @@ function ScreenShotTable()
 function DisplayStatus()
 {
     global $tests;
+    global $experiment;
 
     echo '<div class="results_main_contain">
     <div class="results_main">';
