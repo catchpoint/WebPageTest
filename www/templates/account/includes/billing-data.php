@@ -4,12 +4,12 @@
     <div class="info">
       <ul>
         <li><strong>Plan</strong> <?= "{$braintreeCustomerDetails['wptPlanName']}"; ?></li>
-        <li><strong>Remaining Runs</strong> <?= "{$remaining}"; ?></li>
-        <li><strong>Runs Renewal</strong> <?= "{$run_renewal}"; ?></li>
+        <?php echo isset($braintreeCustomerDetails['remainingRuns']) ? "<li><strong>Remaining Runs</strong> {$braintreeCustomerDetails['remainingRuns']}</li>" : "" ?>
+        <?php echo isset($runs_renewal) ? "<li><strong>Runs Renewal</strong> {$runs_renewal}</li>" : "" ?>
         <li><strong>Price</strong> <?= "\${$braintreeCustomerDetails['subscriptionPrice']}"; ?></li>
-        <li><strong>Payment</strong> <?= $braintreeCustomerDetails['billingFrequency'] == 12 ?  "Monthly" : "Annually"; ?></li>
-        <li><strong>Plan Renewal</strong> <?php echo "{$plan_renewal}"; ?></li>
-        <li><strong>Status</strong> <?php echo "{$status}"; ?></li>
+        <li><strong>Payment</strong> <?= $billing_frequency ?></li>
+        <li><strong>Plan Renewal</strong> <?= $plan_renewal ?></li>
+        <li><strong>Status</strong> <?= $braintreeCustomerDetails['status']; ?></li>
       </ul>
     </div>
   </div>

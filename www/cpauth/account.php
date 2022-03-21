@@ -240,6 +240,19 @@ use Braintree\Gateway as BraintreeGateway;
 
         if ($is_paid) {
             $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
+            $billing_frequency = $billing_info['braintreeCustomerDetails']['billingFrequency'] == 12 ? "Annually" : "Monthly";
+
+            if (isset($billing_info['braintreeCustomerDetails']['planRenewalDate']) && $billing_frequency == "Annually") {
+                $runs_renewal_date = new DateTime($billing_info['braintreeCustomerDetails']['planRenewalDate']);
+                $billing_info['runs_renewal'] = $runs_renewal_date->format('m/d/Y');
+            }
+
+            if (isset($billing_info['braintreeCustomerDetails']['nextBillingDate'])) {
+                $plan_renewal_date = new DateTime($billing_info['braintreeCustomerDetails']['nextBillingDate']);
+                $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
+            }
+
+            $billing_info['billing_frequency'] = $billing_frequency;
             $client_token = $gateway->clientToken()->generate($billing_info['braintreeCustomerDetails']['customerId']);
         } else {
             $countryList = Util::getCountryList();
