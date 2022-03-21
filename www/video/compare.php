@@ -1087,15 +1087,13 @@ function DisplayStatus()
         echo '<p>Experiments Applied:</p>';
         echo '<ul>';
         $recips = $metaInfo['experiment']['recipes'];
-        
         foreach( $recips as $recipe ){
-            echo "<li><details><summary>".key($recipe)."</summary>";
-            
+            echo "<li><strong>".key($recipe)."</strong>";
             foreach($recipe as $ings){
             if( is_string($ings)){
                 $ings = array($ings);
             }
-            echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
+            echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></li>";
             }
         }
         echo '</ul>';
