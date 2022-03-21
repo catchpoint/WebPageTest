@@ -159,7 +159,7 @@ else
                 <meta http-equiv="refresh" content="10" />
                 </noscript>
                 <script language="JavaScript">
-                setTimeout( "window.location.reload(true)", 10000 );
+                let reloadTimeout = setTimeout( "window.location.reload(true)", 10000 );
                 </script>
             <?php
                 }
