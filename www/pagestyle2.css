@@ -534,10 +534,15 @@ a.experiment_meta-more:focus,
     min-width: 20em;
 }
 
-.compare-experiment .scrollableTable {
+.compare-experiment.compare-loading .scrollableTable {
     border-bottom: 1px solid #eee;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
+}
+
+.compare-experiment.compare-loading .scrollableTable {
+    border: 0;
+    margin: 0;
 }
 
 span.lh-flag {
@@ -1962,6 +1967,17 @@ details.details_custommetrics summary {
     padding-bottom: .5rem;
     flex: 1 1 60%;
     /* padding: ; */
+}
+
+.compare-experiment.compare-loading .results_header {
+    padding: 1.2rem 6rem 0;
+    background: url(/images/src/icon_science_bubbling.svg) left top no-repeat;
+    background-size: 6rem auto;
+    margin: 3rem 0 0;
+}
+
+.compare-experiment.compare-loading .results_header h1 {
+    margin: 0 0 .5rem;
 }
 
 .results_header p {
