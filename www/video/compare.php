@@ -409,6 +409,9 @@ else
             <?php
                 $pageURI = 'https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI];
                 $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_202241/";
+
+                $tweetText = "Check out this WebPageTest Pro Experiment Results... $socialImage";
+                $tweetURI = '#';  //https://twitter.com/intent/tweet?text=' . urlencode($tweetText) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
             ?>
 
             <meta property="og:title" content="WebPageTest Pro Experiment Result">
@@ -488,10 +491,18 @@ else
                                     echo '<p>Links:</p>';
                                     echo "<ul>
                                     <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
-                                    <li><a href=\"". $experimentTestHref ."\">Experiment Test</a></li>
-                                    <li><a href=\"". $controlTestHref ."\">Control Test</a></li>
+                                    <li><a href=\"". $experimentTestHref ."\">Experiment</a></li>
+                                    <li><a href=\"". $controlTestHref ."\">Control</a></li>
                                     <li><a href=\"". $originalTestHref ."\">Original</a></li>
-                                    <li><a href=\"$socialImage\">Image</a></li>
+                                    <li>
+                                        <details>
+                                        <summary>Share...</summary>
+                                            <ul>
+                                            <li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">Download Results Image</a></li>
+                                            <li><a href=\"\">Tweet This Experiment</a></li>
+                                            </ul>
+                                        </details>
+                                    </li>
                                     </ul>";
                                     echo "</div>";
                                     echo "</div>"; ?>

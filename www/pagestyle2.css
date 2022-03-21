@@ -457,14 +457,14 @@ h1 .pro-flag {
     flex-flow: row wrap;
 }
 
-.experiment_meta_included details {
+.experiment_meta details {
     position: relative;
     z-index: 10;
 }
 
 .experiment_meta_urls a,
 a.experiment_meta-more,
-.experiment_meta_included summary {
+.experiment_meta summary {
     list-style: none;
     padding: 0.2em 1.3rem .2em .7em;
     background-image: url(/images/src/icon_triangledown.svg);
@@ -479,7 +479,7 @@ a.experiment_meta-more,
     border: 1px solid #ddd;
 }
 
-.experiment_meta_included summary::-webkit-details-marker {
+.experiment_meta summary::-webkit-details-marker {
     display: none;
 }
 
@@ -494,12 +494,24 @@ a.experiment_meta-more {
     /* color: #fff; */
 }
 
+.experiment_meta details a,
+.experiment_meta details a:hover,
+.experiment_meta details a:focus {
+    background: none;
+    color: #fff;
+    border: none;
+    font-size: 1em;
+    font-weight: normal;
+    text-decoration: underline;
+    box-shadow: none;
+}
+
 a.experiment_meta-more {
     font-weight: 500;
 }
 
-.experiment_meta_included details:hover summary,
-.experiment_meta_included details:focus summary {
+.experiment_meta details:hover summary,
+.experiment_meta details:focus summary {
     background-color: #fff;
     box-shadow: 0 0 5px #eee;
 }
@@ -512,7 +524,7 @@ a.experiment_meta-more:focus,
     box-shadow: 0 0 5px #eee;
 }
 
-.experiment_meta_included details[open] summary {
+.experiment_meta details[open] summary {
     background-color: #2a3c64;
     color: #fff;
     border-color: #2a3c64;
@@ -520,11 +532,11 @@ a.experiment_meta-more:focus,
     border-bottom-right-radius: 0;
 }
 
-.experiment_meta_included details ul {
+.experiment_meta details ul {
     position: absolute;
     background: #2a3c64;
     padding: 2em 2em;
-    font-size: .8em;
+    font-size: .9em;
     color: #fff;
     border-radius: .5rem;
     margin: 0;
@@ -538,7 +550,15 @@ a.experiment_meta-more:focus,
     list-style: disc;
 }
 
-.experiment_meta_included details li {
+.experiment_meta_urls details ul {
+    right: 0;
+    left: auto;
+    max-width: 20rem;
+    border-top-left-radius: .5rem;
+    border-top-right-radius: 0;
+}
+
+.experiment_meta details li {
     padding-bottom: 1em;
 }
 
