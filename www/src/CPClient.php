@@ -410,4 +410,29 @@ class CPClient
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
     }
+
+    public function cancelWptSubscription(string $subscription_id, string $reason = "", string $suggestion = ""): array
+    {
+        $gql = (new Mutation('braintreeCancelSubscription'))
+        ->setVariables([
+          new Variable('wptApiSubscriptionCancellation', 'WptSubscriptionCancellationInputType', true)
+        ])
+        ->setArguments([
+          'wptApiSubscriptionCancellation' => '$wptApiSubscriptionCancellation'
+        ]);
+
+        $variables_array = array('wptApiSubscriptionCancellation' => [
+          "subscriptionId" => $subscription_id,
+          "cancellationReason" => $reason,
+          "suggestion" => $suggestion
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
 }
