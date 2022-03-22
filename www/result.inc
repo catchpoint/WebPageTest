@@ -61,10 +61,14 @@ $page_description = "Website performance test result$testLabel.";
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
-        <?php } ?>
+        <?php } 
+         $socialTitle = "WebPageTest Performance Test Results";
+         $socialDesc = "Check out these performance test results on WebPageTest.org...";
+        ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
+        
     </head>
-    <body class="result result-summary">
+    <body class="result result-summary <?php if($req_screenshot){ echo ' screenshot'; } ?>">
             <?php
             $tab = 'Test Result';
             $subtab = 'Performance Summary';

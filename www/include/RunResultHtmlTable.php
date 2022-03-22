@@ -401,7 +401,7 @@ class RunResultHtmlTable {
         $filmstripImage = $urlGenerator->filmstripImage($end);
         $out .= '<div class="results-filmstrip-container">';
         $out .= '<h4>Visual Page Loading Process <span>(<a href=' . $filmstripUrl . '>Explore</a>)</span></h4>';
-        $out .= '<a href=' . $filmstripUrl . '><img src="' . $filmstripImage . '-l:+&bg=2a3c64&text=ffffff&thumbSize=110&ival=100"></a></div>';
+        $out .= '<a href=' . $filmstripUrl . '><img src="' . $filmstripImage . '-l:+&bg=2a3c64&text=ffffff&thumbSize=56&ival=100"></a></div>';
       }
     }
     return $out;

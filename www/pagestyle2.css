@@ -2929,6 +2929,15 @@ header {
     border-radius: 20px;
 }
 
+@media (max-width: 85em) {
+    .home_feature_hed .attention {
+        font-size: 2.5rem;
+    }
+    .home_feature_hed_text_logo {
+        width: 300px;
+    }
+}
+
 .home_responsive_test h2 {
     font-size: 2.5rem;
     margin: 0;
@@ -8037,16 +8046,37 @@ body.screenshot .test_presets_more,
 body.screenshot .experiment_meta_urls,
 body.screenshot header ul,
 body.screenshot .scrollableTable+.hed_sub,
-body.screenshot .results_body,
+body.screenshot.result .results_header,
+body.screenshot .metrics_shown,
+body.screenshot.result-summary .cruxembed,
+body.screenshot.result-summary #tables,
+body.screenshot.compare-experiment .results_body,
+body.screenshot.result-summary .results_body .hed_sub,
+body.screenshot .results-filmstrip-container span,
+body.screenshot .compare_contain_wrap,
+body.screenshot.compare:not(.compare-experiment) .test_results_header,
+body.screenshot .result_plot,
+body.screenshot.result-opportunities .results_body,
+body.screenshot.result-opportunities .opportunities_summary .experiment_summary_label,
 body.screenshot footer li {
     display: none !important;
 }
 
+body.screenshot.result .results_body {
+    box-shadow: none;
+}
+
+body.screenshot.result-opportunities .opportunities_summary {
+    margin: 1rem 0;
+}
+
+body.screenshot.result-opportunities .opportunities_summary_body {
+    display: block;
+}
+
 body.screenshot footer {
     padding: 1em !important;
-    ;
     margin-top: 0 !important;
-    ;
 }
 
 body.screenshot footer li:last-child {
@@ -8055,6 +8085,15 @@ body.screenshot footer li:last-child {
 
 body.screenshot .header_screenshots {
     margin-top: -5rem;
+}
+
+body.screenshot #videoContainer img {
+    height: 50px !important;
+    width: auto !important;
+}
+
+body.screenshot #video * {
+    font-size: 14px;
 }
 
 body.screenshot .header_data_urltime *,
@@ -8076,9 +8115,18 @@ body.screenshot .experiment_meta_included {
     align-items: center;
 }
 
+body.screenshot #header_data {
+    min-width: 50%;
+}
+
 body.screenshot .header_screenshots {
-    height: 350px !important;
+    flex: 0 1 40%;
+}
+
+body.screenshot .header_screenshots img {
+    max-height: 300px !important;
     max-width: 100% !important;
+    width: auto !important;
 }
 
 body.screenshot .experiment_opportunities {

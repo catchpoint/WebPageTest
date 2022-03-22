@@ -164,6 +164,10 @@ else
             <?php
                 }
                 $gaTemplate = 'Visual Comparison';
+
+                $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Comparison";
+                $socialDesc = $experiment ? "Check out the impact of the optimizatations in this WebPageTest Pro Experiment..." : "Check out how these web performance tests compare visually.";
+
                 include ('head.inc');
             ?>
             <style>
@@ -406,23 +410,8 @@ else
                 ?>
             </style>
 
-            <?php
-                $pageURI = 'https://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI];
-                $socialImage = "https://wpt-screenshot.netlify.app/" . urlencode($pageURI."&screenshot=1") . "/opengraph/_202241/";
 
-                $tweetText = "Check out this WebPageTest Pro Experiment Results... $socialImage";
-                $tweetURI = '#';  //https://twitter.com/intent/tweet?text=' . urlencode($tweetText) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
-            ?>
-
-            <meta property="og:title" content="WebPageTest Pro Experiment Result">
-            <meta property="og:type" content="article" />
-            <meta property="og:image" content="<?php echo $socialImage; ?>">
-            <meta property="og:url" content="<?php echo $pageURI; ?>">
-            <meta name="twitter:card" content="summary_large_image">
-            <meta property="og:description" content="Comparison showing impact of performance optimizations.">
-            <meta property="og:site_name" content="WebPageTest">
-            <meta name="twitter:image:alt" content="Web performance visual and metric differences for this experiment.">
-            <meta name="twitter:site" content="@realwebpagetest">
+            
         </head>
         <body class="result compare <?php if($experiment){ echo ' compare-experiment'; }  if($req_screenshot){ echo ' screenshot'; } if(!$ready){ echo ' compare-loading'; }   ?>">
                 <?php 

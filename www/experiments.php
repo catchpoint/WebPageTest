@@ -57,9 +57,12 @@ $page_description = "Website performance test result$testLabel.";
         </noscript>
         <?php } ?>
         <?php $gaTemplate = 'Test Result';
+        $socialTitle = "WebPageTest Opportunities & Experiments";
+        $socialDesc = "Check out these opportunities for improvement identified by WebPageTest";
+
         require 'head.inc'; ?>
     </head>
-    <body class="result result-opportunities">
+    <body class="result result-opportunities <?php if($req_screenshot){ echo ' screenshot'; } ?>">
             <?php
             $tab = 'Test Result';
             $subtab = 'Opportunities & Experiments';
