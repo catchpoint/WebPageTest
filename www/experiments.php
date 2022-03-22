@@ -57,6 +57,7 @@ $page_description = "Website performance test result$testLabel.";
         </noscript>
         <?php } ?>
         <?php $gaTemplate = 'Test Result';
+        $useScreenshot = true;
         $socialTitle = "WebPageTest Opportunities & Experiments";
         $socialDesc = "Check out these opportunities for improvement identified by WebPageTest";
 

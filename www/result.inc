@@ -62,6 +62,7 @@ $page_description = "Website performance test result$testLabel.";
         <meta http-equiv="refresh" content="30" />
         </noscript>
         <?php } 
+        $useScreenshot = true;
          $socialTitle = "WebPageTest Performance Test Results";
          $socialDesc = "Check out these performance test results on WebPageTest.org...";
         ?>

@@ -164,7 +164,7 @@ else
             <?php
                 }
                 $gaTemplate = 'Visual Comparison';
-
+                $useScreenshot = true;
                 $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Comparison";
                 $socialDesc = $experiment ? "Check out the impact of the optimizatations in this WebPageTest Pro Experiment..." : "Check out how these web performance tests compare visually.";
 

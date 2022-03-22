@@ -82,8 +82,7 @@ $loc = ParseLocations($locations);
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; 
-        
-
+        $useScreenshot = true;
         include ('head.inc'); ?>
     </head>
     <body class="home feature-pro ">
