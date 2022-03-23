@@ -98,6 +98,9 @@ include __DIR__ . '/axe-warnings.inc';
 include __DIR__ . '/render-blocking-3rd-party.inc';
 include __DIR__ . '/security-jslibs.inc';
 
+// all
+include __DIR__ . '/generated-content.inc';
+
 
 
 
