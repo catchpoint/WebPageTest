@@ -698,7 +698,7 @@ p.grade_summary {
 
 .experiments_grades .grade_heading+p {
     background-size: 1.6rem auto !important;
-    background-position: top .2rem left 0 !important;
+    background-position: top left !important;
 }
 
 .experiments_grades .grade_heading.grade-f+p strong {
