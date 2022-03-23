@@ -21,4 +21,4 @@ if (htmlInitial && htmlAfter) {
     generatedContent = (htmlAfterSize - htmlInitialSize) / 1024;
 }
 
-return generatedContent;
+return generatedContent.toFixed(2);

@@ -21,4 +21,4 @@ if (htmlInitial && htmlAfter) {
     generatedContentPercent = 100 - (htmlInitialSize / htmlAfterSize * 100);
 }
 
-return generatedContentPercent;
+return generatedContentPercent.toFixed(2);
