@@ -231,7 +231,7 @@ foreach($assessment as $key => $cat ){
 	}
 
 
-	if( $numRecommended > 3 ){
+	if( $numRecommended > 2 ){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
 		
