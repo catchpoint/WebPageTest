@@ -22,9 +22,11 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             ),
             "experiments" =>  array(
                 (object) [
-                    'title' => 'Look for ways to deliver more HTML content from the start',
-                    "desc" => '<p>Many modern frameworks offer patterns for generating useful HTML on the server. </p>',
-                ]
+                    'title' => 'Compare performance impact of server-delivered HTML',
+                    "desc" => '<p>This experiment mimics server-generated HTML by swapping the initial HTML with the fully rendered HTML from this test run. <strong>Note:</strong> this will very likely break site behavior, but is potentially useful for comparing early metrics and assessing whether moving logic to the server is worth the effort.</p>',
+                    "expvar" => 'prerender',
+                    "expval" => array($id)
+                    ]
             ),
             "good" =>  false,
             "hideassets" => true
@@ -50,9 +52,17 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             "examples" =>  array(),
             "experiments" =>  array(
                 (object) [
-                    'title' => 'Look for ways to deliver more HTML content from the start',
-                    "desc" => '<p>Many modern frameworks offer patterns for generating useful HTML on the server. </p>',
-                ]
+                    'title' => 'Test impact on experience if JavaScript fails to execute',
+                    "desc" => '<p>This experiment makes all scripts (inline and external) unrecognizable as javascript by the browser in order to demonstrate whether the site will still be usable if JavaScript fails to properly run.</p>',
+                    "expvar" => 'swap',
+                    "expval" => array('TBD')
+                ],
+                (object) [
+                    'title' => 'Test impact on experience if 3rd party JavaScript files hang until timeout.',
+                    "desc" => '<p>This experiment will cause external scripts to hang indefinitely, demonstrating the site\'s ability to provide a usable experience in that scenario.</p>',
+                    "expvar" => 'swap',
+                    "expval" => array('TBD')
+                    ]
             ),
             "good" =>  false,
             "hideassets" => true
