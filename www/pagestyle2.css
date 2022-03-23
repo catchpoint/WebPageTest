@@ -641,7 +641,8 @@ span.lh-flag.poor {
     padding: .6em 3em;
     background: #fafafa;
     border-right: 0;
-    border-left: 0;
+    border-left: aliceblue;
+    min-height: 4rem;
 }
 
 h3.grade_heading {
@@ -655,13 +656,13 @@ h3.grade_heading {
 }
 
 p.grade_summary {
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #2E2E2E;
     max-width: 49em;
     line-height: 1.5;
     margin: .5em 0;
     font-weight: 500;
-    min-height: 3rem;
+    min-height: none;
     padding-left: 2.5rem;
     /* vertical-align: middle; */
 }
@@ -697,7 +698,7 @@ p.grade_summary {
 
 .experiments_grades .grade_heading+p {
     background-size: 1.6rem auto !important;
-    background-position: top left !important;
+    background-position: top .2rem left 0 !important;
 }
 
 .experiments_grades .grade_heading.grade-f+p strong {
