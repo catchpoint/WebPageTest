@@ -196,7 +196,7 @@ $page_description = "Website performance test result$testLabel.";
                                 $out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
                             }
                             else {
-                                $out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Recommendations</h4>";
+                                $out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Tips</h4>";
                             }
                     
                             $out .= "<ul class=\"experiments_list\">";
