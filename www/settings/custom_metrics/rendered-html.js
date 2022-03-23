@@ -1,0 +1,1 @@
+return document.documentElement.outerHTML;
