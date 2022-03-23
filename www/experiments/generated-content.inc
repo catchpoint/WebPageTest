@@ -9,7 +9,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
     $genContentSize = intval($genContentSize);
     $genContentPercent = intval($genContentPercent);
 
-    if( $genContentSize > 5 && $genContentPercent > 1 ){
+    if( $genContentSize > .5 || $genContentPercent > 1 ){
 
         $amtNote = "(".$genContentPercent."% / ".$genContentSize."kb)";
     
