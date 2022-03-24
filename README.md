@@ -1,39 +1,30 @@
 # WebPageTest
 
-This is the official repository for the [WebPageTest](https://www.webpagetest.org/) web-performance testing code.
+This is the official repository for the performance-testing code that runs at [webpagetest.org](https://www.webpagetest.org).
 
-If you are looking to install your own instance, I recommend grabbing the latest [private instance release](https://docs.webpagetest.org/private-instances/).
+- 🥡 [Install your own instance](https://docs.webpagetest.org/private-instances/)
+- 📕 [Documentation](https://github.com/WPO-Foundation/webpagetest-docs)
+- 🕒 [Changelog](https://docs.webpagetest.org/change-log)
+- 🌐 [Cross-platform browser agent](https://github.com/WPO-Foundation/wptagent)
+- 💤 [REST API](https://docs.webpagetest.org/api/) examples:
+  - 🐘 [`/bulktest`](/bulktest/): A PHP command-line tool that can submit a bulk set of tests, gather the results, and aggregate analyses.
+  - 🐍 [`/batchtool`](/batchtool/): A Python tool that can submit a bulk set of tests and gather the results.
 
-# Troubleshooting Private instances
+## Troubleshooting private instances
 
-If your instance is running, but you're having issues configuring agents, try navigating to {server_ip}/install and checking for a valid configuration.
+If your instance runs, but you’re having issues configuring agents, navigate to `http://{your_instance’s_ip}/install` to [check for a valid configuration](https://docs.webpagetest.org/private-instances/#web-server-install).
 
-# Agents
+## Contributing
 
-The cross-platform browser agent is [here](https://github.com/WPO-Foundation/wptagent).
+There are separate lines of development under different licenses (pull requests accepted to either):
 
-# Documentation
+- The `master` branch where most active development occurs has the [Polyform Shield 1.0.0 license](LICENSE.md)
+- The `apache` branch has the more permissive [Apache 2.0 license](https://opensource.org/licenses/Apache-2.0)
 
-[WebPageTest Documentation](https://github.com/WPO-Foundation/webpagetest-docs)
+### Testing
 
-# API Examples
+WebPageTest uses [PHPUnit](https://phpunit.de) for unit tests. To set up and run the unit tests:
 
-There are two examples using the [Restful API](https://docs.webpagetest.org/api/):
-
-- /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
-- /batchtool - A python project that can submit a bulk set of tests and gather the results.
-
-# Contributing
-
-There are 2 separate lies of development under different licenses and pull requests are accepted to either of them. The master branch where most active development is occurring is under the [Polyform Shield 1.0.0 license](LICENSE.md) and there is an "apache" branch which is under the more permissive Apache 2.0 license.
-
-## Testing the code
-
-WebPageTest uses [PHPUnit](https://phpunit.de/index.html) to run unit tests. In
-order to install PHPUnit and run the unit tests, you'll first need to install
-[Composer](https://getcomposer.org/). From there, you can run `composer install`
-and `composer test` to run the tests.
-
-# Change Log
-
-View the [WebPageTest Change Log](https://docs.webpagetest.org/change-log)
+1. Install [Composer](https://getcomposer.org)
+2. Run `composer install`
+3. Run `composer test`
