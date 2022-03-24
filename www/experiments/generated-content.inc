@@ -55,7 +55,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                     'title' => 'Test impact on experience if JavaScript fails to execute',
                     "desc" => '<p>This experiment makes all scripts (inline and external) unrecognizable as javascript by the browser in order to demonstrate whether the site will still be usable if JavaScript fails to properly run.</p>',
                     "expvar" => 'swap',
-                    "expval" => array(urlencode('<(\/?)script') . '|<$1scrapt style="display:none"|true|gmi')
+                    "expval" => array('<script.+<\/script>|<!--former script-->|true|gmi')
                 ],
                 (object) [
                     'title' => 'Test impact on experience if 3rd party JavaScript files hang until timeout.',
