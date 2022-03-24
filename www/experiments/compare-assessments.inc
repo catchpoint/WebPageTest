@@ -12,11 +12,9 @@
 
         foreach( $controlOpportunities as $oppKey => $opportunity ){
            if( ($newOpportunities[$oppKey]['good'] && $controlOpportunities[$oppKey]['good'] ? "true" : "false") !== ($newOpportunities[$oppKey]['good'] ? "true" : "false") ){
-               $assessmentChanges[] = $newOpportunities[$oppKey];
+               $assessmentChanges[] = $newOpportunities[$oppKey]['title'];
            }
         }
     }
-    print_r($assessmentChanges);
     $assessmentChanges = array_unique($assessmentChanges);
-    print_r($assessmentChanges);
 ?>
