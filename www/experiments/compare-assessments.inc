@@ -16,4 +16,5 @@
            }
         }
     }
+    $assessmentChanges = array_unique($assessmentChanges);
 ?>
