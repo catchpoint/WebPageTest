@@ -9,12 +9,12 @@ $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
 if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold ) { 
     
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  'This test had a high first-byte time.',
+        "title" =>  'This test had a slow first-byte time.',
         "desc" =>  "First byte timing relates to DNS, network latency, and the time it takes a server to connect and return a response.",
         "examples" =>  array(),
         "experiments" =>  array(
             (object) [
-                'title' => ' Check for accuracy! Preserve original User Agent string in re-run',
+                'title' => 'Check for accuracy! Preserve original User Agent string in re-run',
                 "desc" => '<p>Some networks and sites intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, look for the the rerun test menu at the top of the page and try re-running this test with its UA preserved before running experiments.</p>'
             ],
             (object) [
