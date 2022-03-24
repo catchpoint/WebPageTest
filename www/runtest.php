@@ -2564,6 +2564,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
               $crux_key = explode(',', $crux_keys);
               $job['crux_api_key'] = trim($crux_key[array_rand($crux_key)]);
             }
+            if (isset($test['metadata'])) {
+              $job['metadata'] = $test['metadata'];
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )

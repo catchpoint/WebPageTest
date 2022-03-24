@@ -29,3 +29,4 @@
 /settings/custom.css
 *.log
 /settings/custom_metrics/*.js
+/settings/custom_metrics/bak
