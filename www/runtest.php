@@ -861,6 +861,15 @@ use WebPageTest\RateLimiter;
                         $test['spof'] .= ' ' . $req_experimentSpof;
                       }
 
+                      // if experimentBlock is set...
+                      if (isset($req_experimentBlock)) {
+                        // if spof is passed as an array, join it by \n
+                        if( count($req_experimentBlock )){
+                          $req_experimentBlock = implode("\n", $req_experimentBlock);
+                        }
+                        $test['block'] .= ' ' . $req_experimentBlock;
+                      }
+
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
 

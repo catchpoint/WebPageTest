@@ -22,10 +22,16 @@ if( count($blocking3pReqs) > 0 ){
         "examples" =>  $blocking3pReqs,
         "experiments" =>  array(
             (object) [
-                'title' => 'Test impact of hanging service request.',
+                'title' => 'Test impact of hanging service requests.',
                 "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                  "expvar" => 'experimentSpof',
                  "expval" => $blocking3pHosts
+            ],
+            (object) [
+                'title' => 'Test impact of failed service request.',
+                "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
+                 "expvar" => 'experimentBlock',
+                 "expval" => $blocking3pReqs
                 ]
         ),
         "good" =>  false
