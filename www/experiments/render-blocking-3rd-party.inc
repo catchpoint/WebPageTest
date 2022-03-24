@@ -24,8 +24,8 @@ if( count($blocking3pReqs) > 0 ){
             (object) [
                 'title' => 'Test impact of hanging service request.',
                 "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
-                // "expvar" => 'spof',
-                // "expval" => $blocking3pHosts
+                 "expvar" => 'experimentSpof',
+                 "expval" => $blocking3pHosts
                 ]
         ),
         "good" =>  false
@@ -34,7 +34,7 @@ if( count($blocking3pReqs) > 0 ){
 else {
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  'Zero render-blocking third-party requests found.',
-        "desc" =>  "TBD importance notes here",
+        "desc" =>  'By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page\'s access relies on their response time and availability.',
         "examples" =>  array(),
         "experiments" =>   array(),
         "good" =>  true

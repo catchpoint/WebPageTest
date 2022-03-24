@@ -851,6 +851,16 @@ use WebPageTest\RateLimiter;
                       $test['metadata'] = json_encode($experimentMetadata);
                       $test['label'] = 'Experiment';
 
+                      // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
+                      // if experimentSpof is set...
+                      if (isset($req_experimentSpof)) {
+                        // if spof is passed as an array, join it by \n
+                        if( count($req_experimentSpof )){
+                          $req_experimentSpof = implode("\n", $req_experimentSpof);
+                        }
+                        $test['spof'] .= ' ' . $req_experimentSpof;
+                      }
+
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
 
