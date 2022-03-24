@@ -16,5 +16,7 @@
            }
         }
     }
+    print_r($assessmentChanges);
     $assessmentChanges = array_unique($assessmentChanges);
+    print_r($assessmentChanges);
 ?>

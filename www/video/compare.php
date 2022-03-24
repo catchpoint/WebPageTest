@@ -509,7 +509,7 @@ else
                                                     <ol>';
                                                 
                                             foreach($assessmentChanges as $change){
-                                                echo '<li class="'. ( $change['good'] ? 'good' : 'bad' ) .'">' . $change['title'] . '</li>';
+                                                echo '<li class="good">' . $change . '</li>';
                                             }
                                         echo '</ol></div>';
                                         }
