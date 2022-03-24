@@ -55,7 +55,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                     'title' => 'Test impact on experience if JavaScript fails to execute',
                     "desc" => '<p>This experiment makes all scripts (inline and external) unrecognizable as javascript by the browser in order to demonstrate whether the site will still be usable if JavaScript fails to properly run.</p>',
                     "expvar" => 'swap',
-                    "expval" => array('TBD')
+                    "expval" => array('<script|<scrapt')
                 ],
                 (object) [
                     'title' => 'Test impact on experience if 3rd party JavaScript files hang until timeout.',
@@ -86,7 +86,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
         );
 
         $assessment["Resilient"]["opportunities"][] = array( 
-            "title" =>  'Most HTML content was mostly generated server-side.',
+            "title" =>  'HTML content was mostly generated server-side.',
             "desc" =>  "When critical HTML content is generated with JavaScript in the browser, there is an increased risk of delivering that content successfully. Common issues such as JavaScript errors and third-party network delays and outages can present potential single points of failure.",
             "examples" =>  array(),
             "experiments" =>  array(),
