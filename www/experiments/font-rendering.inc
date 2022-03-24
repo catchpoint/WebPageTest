@@ -26,7 +26,7 @@ if( count($fontsThatBlock) ){
     $assessment[$category]["opportunities"][] = array(
 		"title" => "Several fonts are loaded with settings that hide text while they are loading.",
 		"desc" => "When fonts are loaded with default display settings, like font-display=\"block\", browsers will hide text entirely for several seconds instead of showing text with a fallback font.",
-		"examples" => $blockers,
+		"examples" => array_unique($blockers),
 		"experiments" => array(
             (object) [
                 'title' => 'Add font-display: swap to font loading',

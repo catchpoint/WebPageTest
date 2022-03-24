@@ -18,13 +18,13 @@
                     'title' => 'Inline external stylesheets.',
                     "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.</p>',
                     "expvar" => 'inline',
-                    "expval" => $blockingCSSReqs
+                    "expval" => array_unique($blockingCSSReqs)
                 ],
                 (object) [
                     'title' => 'Load CSS files asynchronously.',
                     "desc" => '<p>This experiment will load these stylesheets in a way that allows the page to begin rendering while they are still loading. Note that this may cause a flash of unstyled content.</p>',
                     "expvar" => 'asynccss',
-                    "expval" => $blockingCSSReqs
+                    "expval" => array_unique($blockingCSSReqs)
                   ]
             ),
             "good" =>  false

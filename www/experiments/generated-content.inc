@@ -6,9 +6,11 @@ $genContentPercent = $testStepResult->getMetric('generated-content-percent');
 
 $requests = $testStepResult->getRequests();
 $jsRequests = array();
+$jsHosts = array();
 foreach ($requests as $request) {
     if( $request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript" || $request['contentType'] === "application/x-javascript" ){
         array_push($jsRequests, $request['url'] );
+        array_push($jsRequests, $request['host'] );
     }
 }
 
@@ -69,17 +71,17 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                     'title' => 'Test impact on experience if external JavaScript requests hang until timeout.',
                     "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                     "expvar" => 'experimentSpof',
-                    "expval" => $jsRequests
+                    "expval" => array_unique($jsHosts)
                 ],
                 (object) [
                     'title' => 'Test impact of failed service request.',
                     "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                      "expvar" => 'experimentBlock',
-                     "expval" => $jsRequests
+                     "expval" => array_unique($jsRequests)
                 ]
             ),
             "good" =>  false,
-            "hideassets" => true
+            "hideassets" => false
         );
     }
     else {

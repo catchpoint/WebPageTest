@@ -20,13 +20,13 @@ if( count($imgsThatShouldNotBeLazy) ){
     $assessment[$category]["opportunities"][] = array(
 		"title" =>  "Images within the initial viewport are being lazy-loaded.",
 		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-		"examples" => $shouldNotBeLazySrcs,
+		"examples" => array_unique($shouldNotBeLazySrcs),
 		"experiments" => array(
             (object) [
                 'title' => 'Remove loading="lazy" from layout-critical images',
                 "desc" => '<p>This experiment will remove <code>loading="lazy"</code> attributes from images that are inside the viewport at load</p>',
                 "expvar" => 'removeloadinglazy',
-                "expval" => $shouldNotBeLazySrcs
+                "expval" => array_unique($shouldNotBeLazySrcs)
             ]
         ),
 		"good" => false

@@ -19,19 +19,19 @@ if( count($blocking3pReqs) > 0 ){
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  "Potential <abbr title=\"Single Point of Failure\">SPOF</abbr>: ". count($blocking3pReqs) ." 3rd-party request". (count($blocking3pReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
         "desc" =>  "By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page's access relies on their response time and availability.'",
-        "examples" =>  $blocking3pReqs,
+        "examples" =>  array_unique($blocking3pReqs),
         "experiments" =>  array(
             (object) [
                 'title' => 'Test impact of hanging service requests.',
                 "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                  "expvar" => 'experimentSpof',
-                 "expval" => $blocking3pHosts
+                 "expval" => array_unique($blocking3pHosts)
             ],
             (object) [
                 'title' => 'Test impact of failed service request.',
                 "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                  "expvar" => 'experimentBlock',
-                 "expval" => $blocking3pReqs
+                 "expval" => array_unique($blocking3pReqs)
                 ]
         ),
         "good" =>  false
