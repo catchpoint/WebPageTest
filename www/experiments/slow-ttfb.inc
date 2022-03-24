@@ -5,17 +5,21 @@
 $category = "Quick";
 $slowttfbThreshold = 1000;
 $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
+
 if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold ) { 
     
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  'This test had an unusually-high first-byte time.',
-        "desc" =>  "First byte timing relates to server work. This may not be a problem with your site, but instead with how your site recognizes bots like WebPageTest. This is because some networks and sites intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.",
+        "title" =>  'This test had a high first-byte time.',
+        "desc" =>  "First byte timing relates to DNS, network latency, and the time it takes a server to connect and return a response.",
         "examples" =>  array(),
         "experiments" =>  array(
             (object) [
                 'title' => ' Check for accuracy! Preserve original User Agent string in re-run',
-                "desc" => '<p>This experiment will remove the WPT-modified User Agent string and use the default string that the browser would otherwise send.</p>',
-                "expvar" => array('keepua')
+                "desc" => '<p>Some networks and sites intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, look for the the rerun test menu at the top of the page and try re-running this test with its UA preserved before running experiments.</p>'
+            ],
+            (object) [
+                'title' => 'Use server timing headers to identify slow server tasks',
+                "desc" => '<p>Server timing headers are designed to pass custom logging information to the client. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing">More info on MDN</a></p>'
             ]
         ),
         "good" =>  false
@@ -24,7 +28,7 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
 else {
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  'This test had a reasonably quick first-byte time.',
-        "desc" =>  "First byte timing importance notes here",
+        "desc" =>  "A fast time to first byte is essential for delivering assets quickly. ",
         "examples" =>  array(),
         "experiments" =>  array(),
         "good" =>  true
