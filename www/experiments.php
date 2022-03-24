@@ -161,6 +161,7 @@ $page_description = "Website performance test result$testLabel.";
 
 
                     function observationHTML( $parts ){
+                        global $expNum;
                         $bottleneckTitle = $parts["title"];
                         
                         $bottleneckDesc = $parts["desc"];
