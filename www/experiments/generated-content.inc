@@ -10,7 +10,7 @@ $jsHosts = array();
 foreach ($requests as $request) {
     if( $request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript" || $request['contentType'] === "application/x-javascript" ){
         array_push($jsRequests, $request['url'] );
-        array_push($jsRequests, $request['host'] );
+        array_push($jsHosts, $request['host'] );
     }
 }
 
