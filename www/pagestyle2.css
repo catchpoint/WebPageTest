@@ -213,7 +213,7 @@ h3.hed_sub {
 
 details.metrics_shown {
     position: absolute;
-    top: 4rem;
+    top: 2rem;
     right: 3rem;
     list-style: none;
     z-index: 10;
