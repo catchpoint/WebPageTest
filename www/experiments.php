@@ -168,13 +168,16 @@ $page_description = "Website performance test result$testLabel.";
                         $bottleneckExamples = $parts["examples"];
                         $relevantExperiments = $parts["experiments"];
                         $good = $parts["good"];
+                        $textinput = isset($parts["inputttext"]);
                         $hideassets = $parts["hideassets"];
 
                         $out = '';
                         
                         // todo move this summary heading broader for all recs
                         $goodbadClass = "experiments_details-good";
-                        if( $good !== true ){
+                        if( $good === null ){
+                            $goodbadClass = "experiments_details-neutral";
+                        } else if( $good !== true ){
                             $goodbadClass = "experiments_details-bad";
                         }
                         
@@ -246,6 +249,16 @@ $page_description = "Website performance test result$testLabel.";
                                         EOT;
                                     }
                                 }
+                                else if( $exp->expvar && !$exp->expval && $textinput ) {
+                                    $out .= <<<EOT
+                                    </div>
+                                    <div class="experiment_description_go">
+                                    <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
+                                    <label class="experiment_pair_value"><span>Value: </span><input type="text" name="{$expNum}-{$exp->expvar}[]" placeholder="experiment value..."></label>
+
+                                    </div>
+                                    EOT;
+                                }
                                 else if( $exp->expvar && !$exp->expval ) {
                                     $out .= <<<EOT
                                     </div>
@@ -294,6 +307,47 @@ $page_description = "Website performance test result$testLabel.";
                         echo '</ol></div>';
                     }
 
+
+
+                    // custom experiments
+                    echo <<<EOT
+                        <details>
+                        <summary class="grade_header" id="Custom">
+                            <h3 class="grade_heading">Custom</h3>
+                            <p class="grade_summary"><strong>Advanced!</strong> Use this section to create custom experiments to add to your test.</p>
+                        </summary>
+                        <div class="experiments_bottlenecks">
+                            <ol>
+                        EOT;
+
+                        echo observationHTML(array(
+                            "title" =>  "Add HTML to document",
+                            "desc" =>  "These experiments allow you to add arbitrary html to page, which can for example, enable to you test the impact of adding script tags.",
+                            "examples" =>  array(),
+                            "experiments" =>  array(
+                                (object) [
+                                    'title' => 'Add HTML to beginning of <code>head</code> element',
+                                    "desc" => '<p>This experiment will add arbitrary HTML text to the start of the head of the tested website.</p>',
+                                    "expvar" => 'insertheadstart'
+                                ],
+                                (object) [
+                                    'title' => 'Add HTML to end of <code>head</code> element',
+                                    "desc" => '<p>This experiment will add arbitrary HTML text to the end of the head of the tested website.</p>',
+                                    "expvar" => 'insertheadend'
+                                ],
+                                (object) [
+                                    'title' => 'Add HTML to end of <code>body</code> element',
+                                    "desc" => '<p>This experiment will add arbitrary HTML text to the end of the body of the tested website.</p>',
+                                    "expvar" => 'insertbodyend'
+                                ],
+                            ),
+                            "good" =>  null,
+                            "inputttext" => true
+                        ));
+
+
+                        echo '</ol></details>';
+
                     ?>
 
 
@@ -323,7 +377,7 @@ $page_description = "Website performance test result$testLabel.";
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
             // collapse later opps
-            document.querySelectorAll("li:not(.experiments_details-bad) details").forEach(deet => {
+            document.querySelectorAll("li:not(.experiments_details-bad,.experiments_details-neutral) details").forEach(deet => {
                 deet.open = false;
             });
         </script>

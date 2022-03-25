@@ -645,6 +645,10 @@ span.lh-flag.poor {
     min-height: 4rem;
 }
 
+summary.grade_header {
+    cursor: pointer;
+}
+
 h3.grade_heading {
     color: #2A3D64;
     font-size: 1.875rem;
@@ -653,6 +657,22 @@ h3.grade_heading {
     flex: 0 1 19rem;
     padding: 0;
     text-align: left;
+}
+
+#Custom h3.grade_heading:before {
+    content: "";
+    width: .6em;
+    height: .6em;
+    display: inline-block;
+    margin-right: .8rem;
+    background: url('/images/src/icon_triangledown.svg') left center no-repeat;
+    background-size: .6em auto;
+    transform: rotate(-90deg);
+    padding-left:
+}
+
+details[open] #Custom h3.grade_heading:before {
+    transform: rotate(0deg);
 }
 
 p.grade_summary {
@@ -681,6 +701,11 @@ p.grade_summary {
 
 .experiments_grades .grade_heading.grade-c+p {
     background: url(/images/src/icon_grading_warn.svg) left 50% no-repeat;
+}
+
+#Custom .grade_heading+p {
+    background: url(/images/src/icon_science_bubbling.svg) left 50% no-repeat;
+    background-size: auto 1.8rem !important;
 }
 
 .experiments_grades .grade_heading+p strong {
@@ -795,6 +820,10 @@ p.grade_summary {
 
 .experiments_bottlenecks>ol>li.experiments_details-bad>details>summary:before {
     background-color: #d02424;
+}
+
+.experiments_bottlenecks>ol>li.experiments_details-neutral>details>summary:before {
+    background-color: #2f80ed;
 }
 
 h4.experiments_list_hed {
@@ -968,6 +997,45 @@ h4.experiments_list_hed-recs {
     display: inline-block;
     width: 1.2em;
     height: 1.2em;
+}
+
+.experiment_description_go {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.experiment_description_go>label.experiment_pair_check {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    margin: 0;
+}
+
+.experiment_description_go>label.experiment_pair_value {
+    border-left: 0;
+    margin-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+}
+
+.experiment_description_go>label.experiment_pair_value span {
+    overflow: hidden;
+    text-indent: -999px;
+    display: inline-block;
+}
+
+.experiment_description_go>label.experiment_pair_value input {
+    width: 14em;
+    margin: 0;
+    padding: 1.45em;
+    border: 0;
+    font-size: 1em;
+    font-family: monospace;
+    line-height: 1;
 }
 
 .experiments_foot {
