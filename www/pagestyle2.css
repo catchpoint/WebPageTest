@@ -213,7 +213,7 @@ h3.hed_sub {
 
 details.metrics_shown {
     position: absolute;
-    top: 2rem;
+    top: 4rem;
     right: 3rem;
     list-style: none;
     z-index: 10;
@@ -599,7 +599,7 @@ span.lh-flag.poor {
     box-shadow: 0 0 4px #ddd;
     margin: 1em -3rem !important;
     background-clip: content-box;
-    /* overflow-x: hidden; */
+    overflow: hidden;
     position: relative;
     /* overflow-y: visible; */
 }
