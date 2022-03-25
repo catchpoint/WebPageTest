@@ -807,13 +807,16 @@ use WebPageTest\RateLimiter;
                   
                   // this is for re-running a test with recipes enabled
                   $recipeScript = '';
+                  $experimentSpof = "";
+                  $experimentBlock = "";
                   foreach( $req_recipes as $key=>$value ){
                     
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
                     // for wpt params to run on only experiment runs, there's a experiment- prefix after the number
                     $recipeSansId = $value;
                     if( strpos($value, "experiment-") > 0 ){
-                      $recipeSansId = substr($value, strpos($value, "experiment-") + 1); 
+                      $recipeSansId = substr($value, strpos($value, "experiment-") + 11);  //11 is the num of chars in experiment-
+                      
                     } else if( strpos($value, "-") > 0 ){
                       $recipeSansId = substr($value, strpos($value, "-") + 1); 
                     }
@@ -873,7 +876,7 @@ use WebPageTest\RateLimiter;
                         if( count($experimentBlock )){
                           $experimentBlock = implode("\n", $experimentBlock);
                         }
-                        $test['spof'] .= ' ' . $experimentBlock;
+                        $test['block'] .= ' ' . $experimentBlock;
                       }
 
                       //replace last step with last step plus recipes
