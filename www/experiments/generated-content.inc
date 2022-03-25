@@ -5,12 +5,15 @@ $genContentSize = $testStepResult->getMetric('generated-content-size');
 $genContentPercent = $testStepResult->getMetric('generated-content-percent');
 
 $requests = $testStepResult->getRequests();
+$initialHost = $requests[0]["host"];
 $jsRequests = array();
 $jsHosts = array();
 foreach ($requests as $request) {
     if( $request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript" || $request['contentType'] === "application/x-javascript" ){
         array_push($jsRequests, $request['url'] );
-        array_push($jsHosts, $request['host'] );
+        if( $request['host'] !== $initialHost ){
+            array_push($jsHosts, $request['host'] );
+        }
     }
 }
 
@@ -74,7 +77,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                     "expval" => array_unique($jsHosts)
                 ],
                 (object) [
-                    'title' => 'Test impact of failed service request.',
+                    'title' => 'Test impact on experience if external JavaScript requests fail immediately.',
                     "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                      "expvar" => 'experimentBlock',
                      "expval" => array_unique($jsRequests)
