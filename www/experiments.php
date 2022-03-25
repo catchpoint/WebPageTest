@@ -313,7 +313,7 @@ $page_description = "Website performance test result$testLabel.";
                     echo <<<EOT
                         <details>
                         <summary class="grade_header" id="Custom">
-                            <h3 class="grade_heading">Custom</h3>
+                            <h3 class="grade_heading">Create Experiments</h3>
                             <p class="grade_summary"><strong>Advanced!</strong> Use this section to create custom experiments to add to your test.</p>
                         </summary>
                         <div class="experiments_bottlenecks">

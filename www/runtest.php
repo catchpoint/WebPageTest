@@ -817,7 +817,7 @@ use WebPageTest\RateLimiter;
                     }
 
                     $recipeScript .= $recipeSansId;
-                    
+                    // TODO should this be $req_$value instead, essentially?
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
                       $experimentMetadata["experiment"]["recipes"][] = array( $recipeSansId => $ingredients );

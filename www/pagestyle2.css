@@ -213,7 +213,7 @@ h3.hed_sub {
 
 details.metrics_shown {
     position: absolute;
-    top: 2rem;
+    top: 4rem;
     right: 3rem;
     list-style: none;
     z-index: 10;
@@ -654,7 +654,7 @@ h3.grade_heading {
     font-size: 1.875rem;
     font-weight: 900;
     margin: 0;
-    flex: 0 1 19rem;
+    flex: 0 1 23rem;
     padding: 0;
     text-align: left;
 }
@@ -705,7 +705,8 @@ p.grade_summary {
 
 #Custom .grade_heading+p {
     background: url(/images/src/icon_science_bubbling.svg) left 50% no-repeat;
-    background-size: auto 1.8rem !important;
+    background-size: auto 2rem !important;
+    background-position: left center !important;
 }
 
 .experiments_grades .grade_heading+p strong {
