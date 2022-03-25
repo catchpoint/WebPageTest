@@ -217,7 +217,7 @@ $page_description = "Website performance test result$testLabel.";
                     
                                 if( $exp->expvar && $exp->expval ){
                                     if( count($exp->expval) ){
-                                        $out .= '<details class="experiment_assets '. ($hideassets === true ? "experiment_assets-hide" : "" )  .'"><summary>Assets included in experiment:</summary>';
+                                        $out .= '<details class="experiment_assets '. (($hideassets === true || $exp->hideassets ===true) ? "experiment_assets-hide" : "" )  .'"><summary>Assets included in experiment:</summary>';
                                         $out .= '<ol>';
                                         
                                         foreach($exp->expval as $in => $val){
