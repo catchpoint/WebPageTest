@@ -810,8 +810,8 @@ use WebPageTest\RateLimiter;
                   foreach( $req_recipes as $key=>$value ){
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
                     $recipeSansId = $value;
-                    if( strpos($value, "experiment") > 0 ){
-                      $recipeSansId = substr($value, strpos($value, "experiment") + 1); 
+                    if( strpos($value, "experiment-") > 0 ){
+                      $recipeSansId = substr($value, strpos($value, "experiment-") + 1); 
                     } else if( strpos($value, "-") > 0 ){
                       $recipeSansId = substr($value, strpos($value, "-") + 1); 
                     }
