@@ -810,7 +810,9 @@ use WebPageTest\RateLimiter;
                   foreach( $req_recipes as $key=>$value ){
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
                     $recipeSansId = $value;
-                    if( strpos($value, "-") > 0 ){
+                    if( strpos($value, "experiment") > 0 ){
+                      $recipeSansId = substr($value, strpos($value, "experiment") + 1); 
+                    } else if( strpos($value, "-") > 0 ){
                       $recipeSansId = substr($value, strpos($value, "-") + 1); 
                     }
 
@@ -853,21 +855,23 @@ use WebPageTest\RateLimiter;
 
                       // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
                       // if experimentSpof is set...
-                      if (isset($req_experimentSpof)) {
+                      if ( $experimentMetadata["experiment"]["recipes"]["spof"] ) {
                         // if spof is passed as an array, join it by \n
-                        if( count($req_experimentSpof )){
-                          $req_experimentSpof = implode("\n", $req_experimentSpof);
+                        $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
+                        if( count($experimentSpof )){
+                          $experimentSpof = implode("\n", $req_experimentSpof);
                         }
-                        $test['spof'] .= ' ' . $req_experimentSpof;
+                        $test['spof'] .= ' ' . $experimentSpof;
                       }
 
                       // if experimentBlock is set...
-                      if (isset($req_experimentBlock)) {
+                      if ( $experimentMetadata["experiment"]["recipes"]["block"] ) {
                         // if spof is passed as an array, join it by \n
-                        if( count($req_experimentBlock )){
-                          $req_experimentBlock = implode("\n", $req_experimentBlock);
+                        $experimentBlock = $experimentMetadata["experiment"]["recipes"]["block"];
+                        if( count($experimentSpof )){
+                          $experimentBlock = implode("\n", $experimentBlock);
                         }
-                        $test['block'] .= ' ' . $req_experimentBlock;
+                        $test['spof'] .= ' ' . $experimentBlock;
                       }
 
                       //replace last step with last step plus recipes
