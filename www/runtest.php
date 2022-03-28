@@ -749,6 +749,24 @@ use WebPageTest\RateLimiter;
         if (!strlen($error)) {
           ValidateKey($test, $error);
         }
+
+        function buildSpofTest($hosts){
+          $script = "";
+          foreach($hosts as $host) {
+            $host = trim($host);
+            if (strlen($host)) {
+                $script .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
+            }
+          }
+
+          if (strlen($script)) {
+            $script .= "setTimeout\t240\r\n";
+          }
+
+          return $script;
+        }
+
+
         if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) )
         {
 
@@ -766,14 +784,9 @@ use WebPageTest\RateLimiter;
                         $test['label'] = 'SPOF';
                         $script = '';
                         $hosts = explode("\n", $req_spof);
-                        foreach($hosts as $host) {
-                            $host = trim($host);
-                            if (strlen($host)) {
-                                $script .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
-                            }
-                        }
+                        $script = buildSpofTest($hosts);
+                        
                         if (strlen($script)) {
-                            $script .= "setTimeout\t240\r\n";
                             if (strlen($test['script'])) {
                                 $test['script'] = $script . $test['script'];
                             } else {
@@ -788,7 +801,6 @@ use WebPageTest\RateLimiter;
                 } else if (isset($req_recipes) && count($req_recipes) > 0 )
                 {
                   $test['script'] = "overrideHost\t%HOST%\trecipes.webpagetest.workers.dev\r\n";
-                  //$test['script'] .= "setHeader\tx-recipes:\t$recipeScript\r\n";
                   $scriptNavigate = "navigate\t%URL%\r\n";
                   $test['script'] .= $scriptNavigate;
                   
@@ -807,8 +819,8 @@ use WebPageTest\RateLimiter;
                   $experimentBlock = "";
                   foreach( $req_recipes as $key=>$value ){
                     
-                    // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired
-                    // for wpt params to run on only experiment runs, there's a experiment- prefix after the number
+                    // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
+                    // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
                     $recipeSansId = $value;
                     if( strpos($value, "experiment-") > 0 ){
                       $recipeSansId = substr($value, strpos($value, "experiment-") + 11);  //11 is the num of chars in experiment-
@@ -859,9 +871,8 @@ use WebPageTest\RateLimiter;
                       if ( $experimentMetadata["experiment"]["recipes"]["spof"] ) {
                         // if spof is passed as an array, join it by \n
                         $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
-                        if( count($experimentSpof )){
-                          $experimentSpof = implode("\n", $experimentSpof);
-                        }
+                        $spofScript = buildSpofTest($experimentSpof);
+                        $test['script'] = $spofScript . $test['script'];
                         $test['spof'] .= ' ' . $experimentSpof;
                       }
 
