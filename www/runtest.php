@@ -868,11 +868,11 @@ use WebPageTest\RateLimiter;
 
                       // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
                       // if experimentSpof is set...
+                      $spofScript = "";
                       if ( $experimentMetadata["experiment"]["recipes"]["spof"] ) {
                         // if spof is passed as an array, join it by \n
                         $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
                         $spofScript = buildSpofTest($experimentSpof);
-                        
                         $test['spof'] .= ' ' . $experimentSpof;
                       }
 
@@ -888,9 +888,9 @@ use WebPageTest\RateLimiter;
 
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
-                      if( $spofScript ){
-                        $test['script'] = $spofScript . $test['script'];
-                      }
+                      
+                      $test['script'] = $spofScript . $test['script'];
+                      
                       $id = CreateTest($test, $test['url']);
                       if( isset($id) ) {
                           $recipeTests[] = $id;
