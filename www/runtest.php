@@ -873,6 +873,8 @@ use WebPageTest\RateLimiter;
                         // if spof is passed as an array, join it by \n
                         $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
                         $spofScript = buildSpofTest($experimentSpof);
+                        echo $spofScript;
+                        exit;
                         $test['spof'] .= ' ' . $experimentSpof;
                       }
 
