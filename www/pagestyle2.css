@@ -2790,7 +2790,7 @@ header {
 }
 
 .home_feature_hed_visual {
-    flex: 0 1 42%;
+    flex: 0 1 40%;
     border: 6px solid #fff;
     box-shadow: 0px 0px 5px 3px #fe89ff7a;
     /* margin-left: 2em; */
