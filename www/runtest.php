@@ -751,19 +751,19 @@ use WebPageTest\RateLimiter;
         }
 
         function buildSpofTest($hosts){
-          $script = "";
+          $spofScript = "";
           foreach($hosts as $host) {
             $host = trim($host);
             if (strlen($host)) {
-                $script .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
+                $spofScript .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
             }
           }
 
-          if (strlen($script)) {
-            $script .= "setTimeout\t240\r\n";
+          if (strlen($spofScript)) {
+            $spofScript .= "setTimeout\t240\r\n";
           }
 
-          return $script;
+          return $spofScript;
         }
 
 
@@ -872,7 +872,7 @@ use WebPageTest\RateLimiter;
                         // if spof is passed as an array, join it by \n
                         $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
                         $spofScript = buildSpofTest($experimentSpof);
-                        $test['script'] = $spofScript . $test['script'];
+                        
                         $test['spof'] .= ' ' . $experimentSpof;
                       }
 
@@ -888,7 +888,9 @@ use WebPageTest\RateLimiter;
 
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
-
+                      if( $spofScript ){
+                        $test['script'] = $spofScript . $test['script'];
+                      }
                       $id = CreateTest($test, $test['url']);
                       if( isset($id) ) {
                           $recipeTests[] = $id;
