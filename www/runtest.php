@@ -830,11 +830,19 @@ use WebPageTest\RateLimiter;
                     }
 
                     $recipeScript .= $recipeSansId;
+                    $experimentSpof = array();
+                    $experimentBlock = array();
                     // TODO should this be $req_$value instead, essentially?
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
                       $experimentMetadata["experiment"]["recipes"][] = array( $recipeSansId => $ingredients );
                       if( is_array($ingredients) ){
+                        if( $recipeSansId === "spof" ){
+                          $experimentSpof = $ingredients;
+                        }
+                        if( $recipeSansId === "block" ){
+                          $experimentBlock = $ingredients;
+                        }
                         $ingredients = implode($ingredients, ",");
                       }
                       $recipeScript .= ":=" . $ingredients;
@@ -868,20 +876,16 @@ use WebPageTest\RateLimiter;
 
                       // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
                       // if experimentSpof is set...
-                      $spofScript = "";
-                      if ( $experimentMetadata["experiment"]["recipes"]["spof"] ) {
-                        // if spof is passed as an array, join it by \n
-                        $experimentSpof = $experimentMetadata["experiment"]["recipes"]["spof"];
+                      
+                      if ( $experimentSpof ) {
                         $spofScript = buildSpofTest($experimentSpof);
-                        echo $spofScript;
-                        exit;
+                        $test['script'] = $spofScript . "\n" . $test['script'];
                         $test['spof'] .= ' ' . $experimentSpof;
                       }
 
                       // if experimentBlock is set...
-                      if ( $experimentMetadata["experiment"]["recipes"]["block"] ) {
+                      if ( $experimentBlock ) {
                         // if spof is passed as an array, join it by \n
-                        $experimentBlock = $experimentMetadata["experiment"]["recipes"]["block"];
                         if( count($experimentBlock )){
                           $experimentBlock = implode("\n", $experimentBlock);
                         }
@@ -891,7 +895,6 @@ use WebPageTest\RateLimiter;
                       //replace last step with last step plus recipes
                       $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
                       
-                      $test['script'] = $spofScript . $test['script'];
                       
                       $id = CreateTest($test, $test['url']);
                       if( isset($id) ) {
