@@ -468,7 +468,10 @@ else
                                         if( is_string($ings)){
                                             $ings = array($ings);
                                         }
-                                        echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
+                                        echo "<div class=\"experiment_meta_included_list\"><p>Assets included:</p><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
+                                        <p>Code changes made:</p>
+                                        <pre><code>TBD! Code changes will be summarized here...</code></pre>
+                                        </div></details></li>";
                                        }
                                     }
                                     echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOptsHref ."\">Add More...</a></li>";

@@ -532,7 +532,8 @@ a.experiment_meta-more:focus,
     border-bottom-right-radius: 0;
 }
 
-.experiment_meta details ul {
+.experiment_meta details>div,
+.experiment_meta details>ul {
     position: absolute;
     background: #2a3c64;
     padding: 2em 2em;
@@ -550,7 +551,8 @@ a.experiment_meta-more:focus,
     list-style: disc;
 }
 
-.experiment_meta_urls details ul {
+.experiment_meta_urls details>div,
+.experiment_meta_urls details>ul {
     right: 0;
     left: auto;
     max-width: 20rem;
@@ -558,8 +560,25 @@ a.experiment_meta-more:focus,
     border-top-right-radius: 0;
 }
 
+.experiment_meta details div p {
+    font-size: 1em;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.experiment_meta details pre {
+    background: #fff;
+    color: #0e0e0e;
+    padding: 1em;
+    overflow: auto;
+}
+
+.experiment_meta details ul {
+    margin: 0 0 1em;
+}
+
 .experiment_meta details li {
-    padding-bottom: 1em;
+    padding-bottom: .5em;
 }
 
 .compare-experiment.compare-loading .scrollableTable {
