@@ -71,9 +71,9 @@ if( $experiment ){
                         $thisDiff = intval(removeLeadingZero(round($thisDiff,3)));
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
                         
-                        if($thisDiff !== 0){
+                        if($thisDiff != 0){
                             if( $metric[2] === "s" ){
-                                $thisDiff = round($thisDiff / 60,2);
+                                $thisDiff = round($thisDiff / 1000,2);
                             }
                             echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. abs($thisDiff) . $units . $change . '</td>';
                         }
