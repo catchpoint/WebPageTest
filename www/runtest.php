@@ -774,7 +774,7 @@ use WebPageTest\RateLimiter;
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
                 // redirect to the comparison page
-                if (!isset($req_spof) && strlen(trim($req_spof))) {
+                if (isset($req_spof) && strlen(trim($req_spof))) {
                     $spofTests = array();
                     $test['video'] = 1;
                     $test['label'] = 'Original';
