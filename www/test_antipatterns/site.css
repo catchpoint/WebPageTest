@@ -10,17 +10,21 @@ body {
 }
 
 time {
-    font-family: "Roboto",sans-serif;
-    font-weight: bold;
+    font-family: "Roboto", sans-serif;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: .8em;
 }
 
 header {
-    margin: 2em 0 1em;
+    margin: 1em 0 1em;
     text-align: center;
+    position: relative;
 }
 
 header p {
-    margin: .2em 0;
+    margin: 0;
+    padding: 0;
 }
 
 p.logo {
@@ -33,24 +37,28 @@ p.logo {
 p.logosub {
     font-size: .9em;
     color: maroon;
-    margin: .3em 0;
+    margin: 0;
     font-style: italic;
 }
 
 .wptlogo {
-    border: 1px solid #aaa;
-    display: inline-block;
+    /* border: 1px solid #aaa; */
+    /* position: absolute; */
     padding: 0;
-    margin: .5em 0 0;
+    /* top: 3em; */
+    /* right: 0; */
+    margin: 0;
+    padding: 0.3rem 0 0;
+    display: block;
 }
 
 .wptlogo img {
-    background-color: #000;
+    /* background-color: #000; */
     display: block;
     padding: .4em .7em;
     margin: 0 auto 0;
-    width: 90px;
-    border: 2px solid #fff;
+    width: 150px;
+    /* border: 2px solid #fff; */
 }
 
 header nav ul {
@@ -59,8 +67,8 @@ header nav ul {
     justify-content: center;
     padding: 0 0 1em;
     list-style: none;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
+    border: 1px solid #676767;
+    /* border-bottom: 1px solid #000; */
 }
 
 header nav li {
@@ -69,20 +77,20 @@ header nav li {
 }
 
 header nav ul a {
-    color: #000;
+    color: #000000;
     display: block;
     padding: 1em 1em 0;
-    font-family: "Roboto",sans-serif;
+    font-family: "Roboto", sans-serif;
     text-decoration: none;
-    font-size: .9rem;
+    font-size: .9em;
 }
 
 @media (min-width: 60em) {
     p.logo {
-        font-size: 3rem;
+        font-size: 2.7rem;
     }
     p.logosub {
-        font-size: 1.1em;
+        font-size: 1em;
     }
 }
 
