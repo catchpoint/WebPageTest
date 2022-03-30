@@ -501,9 +501,9 @@ else
 
 <?php
 
-echo '<h3 class="hed_sub">Experiment Impact <em>(Notable changes between experiment and control)</em></h3>';
+echo '<div class="experiment_impact"><h3 class="hed_sub">Experiment Impact <em>(Notable changes between experiment and control)</em></h3>';
 include __DIR__ . '/../experiments/findings.inc';
-
+echo "</div>";
 
 ?>
 
