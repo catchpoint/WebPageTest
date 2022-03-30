@@ -114,8 +114,6 @@ echo $plan_block;
 
 <script>
     braintree.dropin.create({
-        // Step three: get client token from your server, such as via
-        //    templates or async http request
         authorization: "<?= $bt_client_token ?>",
         container: '#braintree-container',
         card: {
@@ -124,8 +122,6 @@ echo $plan_block;
             }
         }
     }, (error, dropinInstance) => {
-      // Use `dropinInstance` here
-      // Methods documented at https://braintree.github.io/braintree-web-drop-in/docs/current/Dropin.html
       var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
       var form = document.querySelector("#wpt-account-signup");
 
