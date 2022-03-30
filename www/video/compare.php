@@ -499,6 +499,14 @@ else
                                     echo "</div>";
                                     echo "</div>"; ?>
 
+<?php
+
+echo '<h3 class="hed_sub">Experiment Impact <em>(Notable changes between experiment and control)</em></h3>';
+include __DIR__ . '/../experiments/findings.inc';
+
+
+?>
+
 
                                     <div class="experiment_opportunities">
                                     <?php 
@@ -526,13 +534,7 @@ else
                                         </div>
                                     </div>
 
-                                    <?php
-
-                                    echo '<h3 class="hed_sub">Experiment Impact <em>(Notable changes between experiment and control)</em></h3>';
-                                    include __DIR__ . '/../experiments/findings.inc';
-
-
-                                    ?>
+                                   
 
                                     
 
