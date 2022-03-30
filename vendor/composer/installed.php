@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '521441ad09bb580fb09a5d65b76bfd07b6535f44',
+        'reference' => '699ed3659b1be77f0a94ae571445bad5d7015650',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '521441ad09bb580fb09a5d65b76bfd07b6535f44',
+            'reference' => '699ed3659b1be77f0a94ae571445bad5d7015650',
             'dev_requirement' => false,
         ),
         'doctrine/instantiator' => array(
@@ -56,12 +56,12 @@
             'dev_requirement' => false,
         ),
         'guzzlehttp/psr7' => array(
-            'pretty_version' => '2.1.0',
-            'version' => '2.1.0.0',
+            'pretty_version' => '2.2.1',
+            'version' => '2.2.1.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../guzzlehttp/psr7',
             'aliases' => array(),
-            'reference' => '089edd38f5b8abba6cb01567c2a8aaa47cec4c72',
+            'reference' => 'c94a94f120803a18554c1805ef2e539f8285f9a2',
             'dev_requirement' => false,
         ),
         'myclabs/deep-copy' => array(
