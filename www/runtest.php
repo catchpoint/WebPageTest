@@ -893,7 +893,7 @@ use WebPageTest\RateLimiter;
                       }
 
                       //replace last step with last step plus recipes
-                      $test['script'] = str_replace($scriptNavigate, "setHeader\tx-recipes: $recipeScript\r\n" . $scriptNavigate, $test['script'] );
+                      $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
                       
                       
                       $id = CreateTest($test, $test['url']);
