@@ -377,14 +377,14 @@ h1 .pro-flag {
     display: flex;
     gap: 3rem;
     margin: .5rem 0;
-    border-bottom: 1px solid #eee;
+    /* border-bottom: 1px solid #eee; */
     padding: 0 0 .5rem;
     justify-content: space-between;
     align-items: flex-start;
 }
 
 .experiment_opportunities {
-    border-bottom: 1px solid #eee;
+    border-top: 1px solid #eee;
     padding: .5rem 0 0;
     /* margin-bottom: 1rem; */
 }
