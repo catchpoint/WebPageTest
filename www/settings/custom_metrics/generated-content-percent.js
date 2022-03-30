@@ -5,11 +5,11 @@ function replaceNonContent(markup) {
     // get content from body start onward
     markup = markup.replace(/^.*(\<body.+)$/gmi, "$1");
     //remove script tags
-    markup = markup.replace(/\<script.*\<\/script\>/gmi, "$1");
+    markup = markup.replace(/\<script.*\<\/script\>/gmi, "");
     //remove style tags
-    markup = markup.replace(/\<style.*\<\/style\>/gmi, "$1");
+    markup = markup.replace(/\<style.*\<\/style\>/gmi, "");
     // remove link tags
-    markup = markup.replace(/\<link.*\<\/link\>/gmi, "$1");
+    markup = markup.replace(/\<link.*\<\/link\>/gmi, "");
     return markup;
 }
 let htmlInitial = replaceNonContent($WPT_BODIES[0].response_body);
