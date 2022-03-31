@@ -12,7 +12,13 @@
        
         if (isset($lcp['element']['tagName']) && $lcp['element']['tagName'] === "IMG" && !isset($lcp['element']['background-image']) ) {
             if (isset($lcp['element']['src']) ) {
-                $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
+                $lcpSource = $lcp['element']['src'];
+                $lcpFullSource = $lcp['element']['src'];
+                // get actual source attribute if we can.
+                $srcAttrVal = preg_match_all('/src\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches );
+                if( $srcmatches ){
+                    $lcpSource = $srcmatches[1][0];
+                }
             }
 
             if (isset($lcp['element']['outerHTML'])) {
