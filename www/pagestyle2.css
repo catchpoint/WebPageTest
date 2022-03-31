@@ -462,6 +462,10 @@ h1 .pro-flag {
     z-index: 10;
 }
 
+.experiment_meta details[open] {
+    z-index: 11;
+}
+
 .experiment_meta_urls a,
 a.experiment_meta-more,
 .experiment_meta summary {
