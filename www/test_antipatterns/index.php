@@ -13,7 +13,7 @@ if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
 	<title>The Metric Times. Your source of performance antipattern test pages since 2022! WebPageTest's Performance AntiPattern Test Page</title>
 	<meta name="Description" content="WebPageTest Recipe Testing Page" />
 	<!-- <meta name="viewport" content="width=device-width" /> -->
-	<link href="https://fonts.googleapis.com/css2?family=Roboto" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Roboto&family=Merriweather:wght@300;700" rel="stylesheet">
 	<link rel="stylesheet" href="site.css">
 	<script src="site.js"></script>
 	<script src="site2.js"></script>
@@ -33,7 +33,7 @@ if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
 		</script>
 		<p class="logo">The Metric Times</p>
 		<p class="logosub">Your source of performance antipattern test pages since 2022!</p>
-		<a class="wptlogo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a>
+		<a class="wptlogo" href="/"><img src="/images/wpt-logo-dark.svg" alt="WebPageTest, by Catchpoint"/></a>
 		<nav>
 			<ul>
 				<li><a href="#">These</a></li>
