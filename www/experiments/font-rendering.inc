@@ -31,8 +31,8 @@ if( count($fontsThatBlock) ){
             (object) [
                 'title' => 'Add font-display: swap to font loading',
                 "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner.</p>',
-                "expvar" => 'insertheadend',
-                "expval" => '<script>document.fonts.forEach(f => { f.display = "swap"; });</script>'
+                "expvar" => 'insertbodyend',
+                "expval" => urlencode('<script>document.fonts.forEach(font => { font.display = "swap"; });</script>')
             ]),
 		"good" => false,
         "hideassets" => true
