@@ -17,7 +17,7 @@ if( count($blockingFontCSSReqs) > 0 ){
       "experiments" =>  array(
         (object) [
             'title' => 'Inline font stylesheets.',
-            "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps.</p>',
+            "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps. <strong>Note:</strong> The inline experiment may break relative references to images and other assets in the CSS. These would need proper path changes in production.</p>',
             "expvar" => 'inline',
             "expval" => array_unique($blockingFontCSSReqs)
           ]

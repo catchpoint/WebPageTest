@@ -30,7 +30,7 @@ if( count($fontsThatBlock) ){
 		"experiments" => array(
             (object) [
                 'title' => 'Add font-display: swap to font loading',
-                "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner</p>',
+                "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner. <strong>Note:</strong> This experiment will only apply to CSS that is on the same domain. To try this experiment on a 3rd-party CSS file, consider inlining the file first.</p>',
                 "expvar" => 'swap',
                 "expval" => array(encodeURIComponent("@font-face {") . "|" . encodeURIComponent( "@font-face { font-display: swap; " ))
             ]),
