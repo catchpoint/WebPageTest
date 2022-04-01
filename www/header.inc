@@ -239,7 +239,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<ul class=\"header_data_urltime\">";
-            if ( $test['testinfo']['label'] ) {
+            if ( $test['testinfo']['label'] && !$experiment ) {
                 echo '<li><strong>Label:</strong> <span>'.$test['testinfo']['label'].'</span></li>';
             }
             echo "<li><strong>URL: </strong>";
