@@ -185,7 +185,7 @@ foreach($assessment as $key => $cat ){
 		if( isset($axe) && count($axe['violations']) ){
 
 			
-			$summary .= "It had $num_violations accessibility issues, ";
+			$summary .= " It had $num_violations accessibility issues, ";
 			if( $num_critical > 0 ){
 				$summary .= " $num_critical critical";
 			} else if( $$num_serious > 0 ){
@@ -201,10 +201,10 @@ foreach($assessment as $key => $cat ){
 			$genContentPercent = intval($genContentPercent);
 		
 			if( $genContentSize > .5 || $genContentPercent > 1 ){
-				$summary .= $genContentSize ."kb of HTML (".$genContentPercent."%) was generated client-side, delaying usability.";
+				$summary .= " " . $genContentSize ."kb of HTML (".$genContentPercent."%) was generated client-side, delaying usability.";
 			}
 			else {
-				$summary .= "HTML content was mostly generated server-side.";
+				$summary .= " HTML content was mostly generated server-side.";
 			}
 		}
 	} else {
@@ -236,17 +236,17 @@ foreach($assessment as $key => $cat ){
 			
 			$summary .= ".";
 		}else {
-			$summary .= "It had no security issues detected."; 
+			$summary .= " It had no security issues detected."; 
 		}
 		if( isset($genContentSize) && isset($genContentPercent) ){
 			$genContentSize = intval($genContentSize);
 			$genContentPercent = intval($genContentPercent);
 		
 			if( $genContentSize > .5 || $genContentPercent > 1 ){
-				$summary .= "Dependence on client-generated HTML risks fragility.";
+				$summary .= " Dependence on client-generated HTML risks fragility.";
 			}
 			else {
-				$summary .= "HTML generation was not overly JavaScript-dependent";
+				$summary .= " HTML generation was not overly JavaScript-dependent";
 			}
 		}
 
