@@ -161,7 +161,7 @@ foreach($assessment as $key => $cat ){
 		if( $tbtCheck > 2 ){
 			$summary .= " a long time ";
 		} else if( $tbtCheck > 1 ){
-			$summary .= " little time ";
+			$summary .= " considerable time ";
 		}
 		else {
 			$summary .= " little time ";
@@ -196,6 +196,17 @@ foreach($assessment as $key => $cat ){
 			}
 			$summary .= ".";
 		}
+		if( isset($genContentSize) && isset($genContentPercent) ){
+			$genContentSize = intval($genContentSize);
+			$genContentPercent = intval($genContentPercent);
+		
+			if( $genContentSize > .5 || $genContentPercent > 1 ){
+				$summary .= $genContentSize ."kb of HTML (".$genContentPercent."%) was generated client-side, delaying usability.";
+			}
+			else {
+				$summary .= "HTML content was mostly generated server-side.";
+			}
+		}
 	} else {
 		$summary = "This site ";
 		// build sentiment
@@ -226,6 +237,17 @@ foreach($assessment as $key => $cat ){
 			$summary .= ".";
 		}else {
 			$summary .= "It had no security issues detected."; 
+		}
+		if( isset($genContentSize) && isset($genContentPercent) ){
+			$genContentSize = intval($genContentSize);
+			$genContentPercent = intval($genContentPercent);
+		
+			if( $genContentSize > .5 || $genContentPercent > 1 ){
+				$summary .= "Dependence on client-generated HTML risks fragility.";
+			}
+			else {
+				$summary .= "HTML generation was not overly JavaScript-dependent";
+			}
 		}
 
 	}
