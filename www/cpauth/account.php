@@ -55,13 +55,13 @@ if ($request_method === 'POST') {
     $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
 
     if ($type == 'contact_info') {
-      changeContactInfo($request_context);
+        changeContactInfo($request_context);
     } elseif ($type == 'password') {
-      changePassword($request_context);
+        changePassword($request_context);
     } elseif ($type == "account-signup") {
-      subscribeToAccount($request_context);
+        subscribeToAccount($request_context);
     } elseif ($type == "cancel-subscription") {
-      cancelSubscription($request_context);
+        cancelSubscription($request_context);
     } elseif ($type == "create-api-key") {
         try {
             $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
@@ -184,7 +184,7 @@ if ($request_method === 'POST') {
     throw new ClientException("HTTP Method not supported for this endpoint", "/");
 }
 
-function changeContactInfo (RequestContext $request_context) : void
+function changeContactInfo(RequestContext $request_context): void
 {
     $contact_info_validator = new Rules\AllOf(
         new Rules\Regex('/' . ValidatorPatterns::getContactInfo() . '/'),
@@ -230,11 +230,11 @@ function changeContactInfo (RequestContext $request_context) : void
     }
 }
 
-function changePassword (RequestContext $request_context) : void
+function changePassword(RequestContext $request_context): void
 {
     $password_validator = new Rules\AllOf(
-      new Rules\Length(8, 32),
-      new Rules\Regex('/' . ValidatorPatterns::getPassword() . '/')
+        new Rules\Length(8, 32),
+        new Rules\Regex('/' . ValidatorPatterns::getPassword() . '/')
     );
 
     $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
@@ -273,7 +273,7 @@ function changePassword (RequestContext $request_context) : void
     }
 }
 
-function subscribeToAccount (RequestContext $request_context) : void
+function subscribeToAccount(RequestContext $request_context): void
 {
     $nonce = filter_input(INPUT_POST, 'nonce');
     $plan = filter_input(INPUT_POST, 'plan');
@@ -318,21 +318,21 @@ function subscribeToAccount (RequestContext $request_context) : void
     }
 }
 
-function cancelSubscription (RequestContext $request_context)
+function cancelSubscription(RequestContext $request_context)
 {
 
-  $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
-  $protocol = $request_context->getUrlProtocol();
-  $host = Util::getSetting('host');
-  $route = '/account';
-  $redirect_uri = "{$protocol}://{$host}{$route}";
+    $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
+    $protocol = $request_context->getUrlProtocol();
+    $host = Util::getSetting('host');
+    $route = '/account';
+    $redirect_uri = "{$protocol}://{$host}{$route}";
 
-  header("Location: {$redirect_uri}");
-  exit();
-  try {
-    $request_context->getClient()->cancelWptSubscription($subscription_id);
-  } catch (Exception $e) {
-    error_log($e->getMessage());
-    throw new ClientException("There was an error", "/account");
-  }
+    header("Location: {$redirect_uri}");
+    exit();
+    try {
+        $request_context->getClient()->cancelWptSubscription($subscription_id);
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        throw new ClientException("There was an error", "/account");
+    }
 }

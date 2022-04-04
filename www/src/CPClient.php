@@ -23,15 +23,24 @@ class CPClient
     public ?string $client_id;
     public ?string $client_secret;
     private ?string $access_token;
+    private $handler; // For unit tests
 
     public function __construct(string $host, array $options = [])
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
+        $graphql_client_options = array();
+
         $this->client_id = $auth_client_options['client_id'] ?? null;
         $this->client_secret = $auth_client_options['client_secret'] ?? null;
+        $this->handler = $auth_client_options['handler'] ?? null;
         $this->auth_client = new GuzzleClient($auth_client_options);
-        $this->graphql_client = new GraphQLClient($host);
+
         $this->access_token = null;
+
+        if (isset($this->handler)) {
+            $graphql_client_options['handler'] = $this->handler;
+        }
+        $this->graphql_client = new GraphQLClient($host, [], $graphql_client_options);
 
         $this->host = $host;
     }
@@ -39,9 +48,16 @@ class CPClient
     public function authenticate(string $access_token): void
     {
         $this->access_token = $access_token;
+
+        $options = array();
+        if (isset($this->handler)) {
+            $options['handler'] = $this->handler;
+        }
+
         $this->graphql_client = new GraphQLClient(
             $this->host,
-            ['Authorization' => "Bearer {$access_token}"]
+            ['Authorization' => "Bearer {$access_token}"],
+            $options
         );
     }
 
@@ -178,8 +194,13 @@ class CPClient
         ]);
 
         $variables_array = array('id' => $id);
-        $contact_info = $this->graphql_client->runQuery($gql, true, $variables_array);
-        return $contact_info->getData()['contact'][0];
+
+        try {
+            $contact_info = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $contact_info->getData()['contact'][0];
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
     }
 
     public function getUnpaidAccountpageInfo(): array
@@ -434,5 +455,4 @@ class CPClient
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
     }
-
 }
