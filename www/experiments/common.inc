@@ -43,6 +43,14 @@ $assessment = array(
 		"opportunities" => array(),
 		"num_recommended" => 0,
 		"num_experiments" => 0
+	),
+	"Custom" => array(
+		"grade" => "",
+		"sentiment" => "Advanced!",
+		"summary" => "",
+		"opportunities" => array(),
+		"num_recommended" => 0,
+		"num_experiments" => 0
 	)
 );
 
@@ -100,6 +108,9 @@ include __DIR__ . '/security-jslibs.inc';
 
 // all
 include __DIR__ . '/generated-content.inc';
+
+include __DIR__ . '/custom.inc';
+
 
 
 
@@ -207,7 +218,7 @@ foreach($assessment as $key => $cat ){
 				$summary .= " HTML content was mostly generated server-side.";
 			}
 		}
-	} else {
+	} else if( $key === "Resilient" ) {
 		$summary = "This site ";
 		// build sentiment
 		$summary = "This site ";
@@ -250,10 +261,14 @@ foreach($assessment as $key => $cat ){
 			}
 		}
 
+	} else {
+		$summary = "Use this section to create custom experiments to add to your test.";
 	}
 
-
-	if( $numRecommended > 2 ){
+	if( $key === "Custom" ){
+		$assessment[$key]["grade"] = "";
+		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Advanced.</span>";
+	} else if( $numRecommended > 2 ){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
 		

@@ -157,11 +157,9 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
 
-                    $expNum = 0;
 
 
                     function observationHTML( $parts ){
-                        global $expNum;
                         $bottleneckTitle = $parts["title"];
                         
                         $bottleneckDesc = $parts["desc"];
@@ -206,7 +204,7 @@ $page_description = "Website performance test result$testLabel.";
                             $out .= "<ul class=\"experiments_list\">";
                     
                             foreach( $relevantExperiments as $exp ) {
-                                $expNum++;
+                                $expNum = $exp->id;
                                 $out .= <<<EOT
                                     <li class="experiment_description">
                                     <div class="experiment_description_text">
@@ -291,7 +289,25 @@ $page_description = "Website performance test result$testLabel.";
                        $oppsEnd = $opps === 1 ? "y" : "ies";
                        $bad = $cat["num_recommended"];
                        $good = $opps - $bad;
+                       if( $key === "Custom") {
+                            echo <<<EOT
+                            <details>
+                            <summary class="grade_header" id="${key}">
+                                <h3 class="grade_heading grade-${grade}">Create Experiments</h3>
+                                <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
+                            </summary>
+                            <div class="experiments_bottlenecks">
+                                <ol>
+
+                            EOT;
+                            foreach( $cat["opportunities"] as $opportunity ){
+                                echo observationHTML($opportunity);
+                            }
+                            echo '</ol></div></details>';
+                       }
+                       else {
                         echo <<<EOT
+
                         <div class="grade_header" id="${key}">
                             <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
                             <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
@@ -299,63 +315,17 @@ $page_description = "Website performance test result$testLabel.";
                         <div class="experiments_bottlenecks">
                             <p>WebPageTest checked for bottlenecks related to this category and found ${opps}</p>
                             <ol>
+
                         EOT;
+                       
 
                         foreach( $cat["opportunities"] as $opportunity ){
                             echo observationHTML($opportunity);
                         }
                         echo '</ol></div>';
+                        }
                     }
 
-
-
-                    // custom experiments
-                    echo <<<EOT
-                        <details>
-                        <summary class="grade_header" id="Custom">
-                            <h3 class="grade_heading">Create Experiments</h3>
-                            <p class="grade_summary"><strong>Advanced!</strong> Use this section to create custom experiments to add to your test.</p>
-                        </summary>
-                        <div class="experiments_bottlenecks">
-                            <ol>
-                        EOT;
-
-                        echo observationHTML(array(
-                            "title" =>  "Add HTML to document",
-                            "desc" =>  "These experiments allow you to add arbitrary html to page, which can for example, enable to you test the impact of adding script tags.",
-                            "examples" =>  array(),
-                            "experiments" =>  array(
-                                (object) [
-                                    'title' => 'Add HTML to beginning of <code>head</code> element',
-                                    "desc" => '<p>This experiment will add arbitrary HTML text to the start of the head of the tested website.</p>',
-                                    "expvar" => 'insertheadstart'
-                                ],
-                                (object) [
-                                    'title' => 'Add HTML to end of <code>head</code> element',
-                                    "desc" => '<p>This experiment will add arbitrary HTML text to the end of the head of the tested website.</p>',
-                                    "expvar" => 'insertheadend'
-                                ],
-                                (object) [
-                                    'title' => 'Add HTML to end of <code>body</code> element',
-                                    "desc" => '<p>This experiment will add arbitrary HTML text to the end of the body of the tested website.</p>',
-                                    "expvar" => 'insertbodyend'
-                                ],
-                            ),
-                            "good" =>  null,
-                            "inputttext" => true
-                        ));
-
-
-                        echo '</ol></details>';
-
-                    ?>
-
-
-                
-
-
-
-                    <?php
 
                     echo '<div class="experiments_foot"><p>Ready to go?</p>';
                     
