@@ -1,0 +1,40 @@
+<?php
+$category = "Quick";
+$requests = $testStepResult->getRequests();
+$unusedPreloads = array();
+
+foreach ($requests as $request) {
+    if( isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true" ){
+        array_push($unusedPreloads, $request['url'] );
+    }
+}
+
+
+
+if( count($unusedPreloads) > 0 ){
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  count($unusedPreloads) . " resource" .(count($unusedPreloads) > 1 ? "s are" : " is") ." being preloaded, but is not used during page load.",
+        "desc" =>  "Preloaded resources are fetched at a high priority, delaying the arrival of other resources in the page. In the case where a preloaded resource is never actually used by the page, that means potentially critical requests will be delayed, slowing down the initial loading of your site.",
+        "examples" =>  array_unique($unusedPreloads),
+        "experiments" =>  array(
+            (object) [
+                'title' => 'Test impact of removing unused preloads.',
+                "desc" => '<p>This experiment will remove all unused preloads from the page, allowing other critical resources to be requested earlier.</p>',
+                 "expvar" => 'removepreload',
+                 "expval" => array_unique($unusedPreloads)
+                ]
+        ),
+        "good" =>  false
+    );
+}
+else {
+    $assessment[$category]["opportunities"][] = array( 
+        "title" =>  'Zero unused preloads were found.',
+        "desc" =>  'Preloaded resources are fetched at a high priority, delaying the arrival of other resources in the page. In the case where a preloaded resource is never actually used by the page, that means potentially critical requests will be delayed, slowing down the initial loading of your site.',
+        "examples" =>  array(),
+        "experiments" =>   array(),
+        "good" =>  true
+    );
+}
+
+?>

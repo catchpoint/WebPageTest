@@ -1,6 +1,4 @@
 <?php
-
-
 // container for assessment including opportunities, experiments to recommend
 
 $experiment = false;
@@ -96,6 +94,7 @@ include __DIR__ . '/lcp.inc';
 include __DIR__ . '/imgs-lazy-loaded.inc';
 include __DIR__ . '/imgs-lazy-loadable.inc';
 include __DIR__ . '/font-rendering.inc';
+include __DIR__ . '/unused-preloads.inc';
 
 // usable
 include __DIR__ . '/layout-shifts.inc';
