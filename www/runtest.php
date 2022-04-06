@@ -822,11 +822,14 @@ use WebPageTest\RateLimiter;
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
                     // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
                     $recipeSansId = $value;
+                    $experimentId = "";
+                    if( strpos($value, "-") > 0 ){
+                      $experimentId = preg_match('/^[^\-]+/', $value);
+                      $recipeSansId = substr($value, strpos($value, "-") + 1); 
+                    }
                     if( strpos($value, "experiment-") > 0 ){
                       $recipeSansId = substr($value, strpos($value, "experiment-") + 11);  //11 is the num of chars in experiment-
                       
-                    } else if( strpos($value, "-") > 0 ){
-                      $recipeSansId = substr($value, strpos($value, "-") + 1); 
                     }
 
                     $recipeScript .= $recipeSansId;
@@ -835,7 +838,7 @@ use WebPageTest\RateLimiter;
                     // TODO should this be $req_$value instead, essentially?
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
-                      $experimentMetadata["experiment"]["recipes"][] = array( $recipeSansId => $ingredients );
+                      $experimentMetadata["experiment"]["recipes"][] = array( $experimentId => $ingredients );
                       if( is_array($ingredients) ){
                         if( $recipeSansId === "spof" ){
                           $experimentSpof = $ingredients;

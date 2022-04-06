@@ -1,6 +1,17 @@
 <?php
 // container for assessment including opportunities, experiments to recommend
 
+function documentRelativePath($url, $path){
+    $basePath = explode('/', $path);
+    array_pop($basePath);
+    $basePath = implode('/', $basePath);
+    if( strpos($url, $basePath) === 0 ){
+        $url = substr($url, strlen($basePath) + 1); 
+    }
+    return $url;
+}
+
+
 $experiment = false;
 
 if( $testInfo ){
@@ -37,14 +48,6 @@ $assessment = array(
 	"Resilient" => array(
 		"grade" => "",
 		"sentiment" => "",
-		"summary" => "",
-		"opportunities" => array(),
-		"num_recommended" => 0,
-		"num_experiments" => 0
-	),
-	"Custom" => array(
-		"grade" => "",
-		"sentiment" => "Advanced!",
 		"summary" => "",
 		"opportunities" => array(),
 		"num_recommended" => 0,
@@ -107,9 +110,6 @@ include __DIR__ . '/security-jslibs.inc';
 
 // all
 include __DIR__ . '/generated-content.inc';
-
-include __DIR__ . '/custom.inc';
-
 
 
 
@@ -217,7 +217,7 @@ foreach($assessment as $key => $cat ){
 				$summary .= " HTML content was mostly generated server-side.";
 			}
 		}
-	} else if( $key === "Resilient" ) {
+	} else {
 		$summary = "This site ";
 		// build sentiment
 		$summary = "This site ";
@@ -260,14 +260,10 @@ foreach($assessment as $key => $cat ){
 			}
 		}
 
-	} else {
-		$summary = "Use this section to create custom experiments to add to your test.";
 	}
 
-	if( $key === "Custom" ){
-		$assessment[$key]["grade"] = "";
-		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Advanced.</span>";
-	} else if( $numRecommended > 2 ){
+
+	if( $numRecommended > 2 ){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
 		

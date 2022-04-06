@@ -3,9 +3,8 @@ $category = "Quick";
 $requests = $testStepResult->getRequests();
 $blockingFontCSSReqs = array();
 foreach ($requests as $request) {
-  //echo $request['contentType'];
     if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && (strpos($request['host'], "font") !== false || strpos($request['url'], "font") !== false) && $request['contentType'] === "text/css" ){
-        array_push($blockingFontCSSReqs, $request['url'] );
+        array_push($blockingFontCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
     }
 }
 
@@ -16,7 +15,6 @@ if( count($blockingFontCSSReqs) > 0 ){
       "examples" =>  array_unique($blockingFontCSSReqs),
       "experiments" =>  array(
         (object) [
-            "id" => '005',
             'title' => 'Inline font stylesheets.',
             "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps. <strong>Note:</strong> The inline experiment may break relative references to images and other assets in the CSS. These would need proper path changes in production.</p>',
             "expvar" => 'inline',
@@ -24,7 +22,6 @@ if( count($blockingFontCSSReqs) > 0 ){
           ]
         ,
           (object) [
-              "id" => '006',
               'title' => 'Load Font CSS files asynchronously.',
               "desc" => '<p>This experiment will load these stylesheets in a way that allows the page to begin rendering while they are still loading. Fonts will appear when they arrive.</p>',
               "expvar" => 'asynccss',

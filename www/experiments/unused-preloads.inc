@@ -5,7 +5,7 @@ $unusedPreloads = array();
 
 foreach ($requests as $request) {
     if( isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true" ){
-        array_push($unusedPreloads, $request['url'] );
+        array_push($unusedPreloads, documentRelativePath($request['url'], $requests[0]['url']) );
     }
 }
 
