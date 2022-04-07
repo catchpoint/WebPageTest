@@ -79,8 +79,29 @@ function loadPageStepData($localPaths, $testInfo = null) {
     }
   }
 
-  if (isset($ret) && is_array($ret) && isset($ret['edge-processed']) && $ret['edge-processed'])
+  if (isset($ret) && is_array($ret) && isset($ret['edge-processed']) && $ret['edge-processed']) {
+    // Add the CrUX data which is collected only on the first Run
+    $crux_file = $localPaths->cruxJsonFile();
+    if (gz_is_file($crux_file)) {
+      $crux_data = json_decode(gz_file_get_contents($crux_file), true);
+      if (isset($crux_data) && is_array($crux_data)) {
+        if (isset($crux_data['record'])) {
+          $ret['CrUX'] = $crux_data['record'];
+        } else {
+          $ret['CrUX'] = $crux_data;
+        }
+      }
+    }
+    // Add the Lighthouse data which is collected only on the first Run
+    $lighthouse_audits_file = $localPaths->lighthouseAuditsFile();
+    if (gz_is_file($lighthouse_audits_file)) {
+      $audits = json_decode(gz_file_get_contents($lighthouse_audits_file), true);
+      foreach ($audits as $name => $value) {
+        $ret["lighthouse.$name"] = $value;
+      }
+    }
     return $ret;
+  }
   
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
