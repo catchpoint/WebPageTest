@@ -823,13 +823,15 @@ use WebPageTest\RateLimiter;
                     // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
                     $recipeSansId = $value;
                     $experimentId = "";
-                    if( strpos($value, "-") > 0 ){
-                      $experimentId = preg_match('/^[^\-]+/', $value);
-                      $recipeSansId = substr($value, strpos($value, "-") + 1); 
-                    }
-                    if( strpos($value, "experiment-") > 0 ){
-                      $recipeSansId = substr($value, strpos($value, "experiment-") + 11);  //11 is the num of chars in experiment-
-                      
+                    $splitValue = explode("-", $value);
+                    if( count($splitValue) > 1 ){
+                      $experimentId = $splitValue[0];
+                      if( $splitValue[1] === "experiment" ){
+                        $recipeSansId = $splitValue[2];
+                      }
+                      else {
+                        $recipeSansId = $splitValue[1];
+                      }                      
                     }
 
                     $recipeScript .= $recipeSansId;
