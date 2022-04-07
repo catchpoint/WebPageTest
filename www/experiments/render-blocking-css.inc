@@ -16,15 +16,15 @@
             "experiments" =>  array(
                 (object) [
                     "id" => '005',
-                    'title' => 'Inline external stylesheets.',
-                    "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips. <strong>Note:</strong> The inline experiment may break relative references to images and other assets in the CSS. These would need proper path changes in production.</p>',
+                    'title' => 'Inline external CSS',
+                    "desc" => '<p>This experiment embeds the contents of specified external stylesheets directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips. <strong>Note:</strong> The inline experiment may break relative references to images and other assets in the CSS. These would need proper path changes in production.</p>',
                     "expvar" => 'inline',
                     "expval" => array_unique($blockingCSSReqs)
                 ],
                 (object) [
                     "id" => '006',
-                    'title' => 'Load CSS files asynchronously.',
-                    "desc" => '<p>This experiment will load these stylesheets in a way that allows the page to begin rendering while they are still loading. Note that this may cause a flash of unstyled content.</p>',
+                    'title' => 'Load CSS Asynchronously',
+                    "desc" => '<p>This experiment loads specified stylesheets in a way that allows the page to begin rendering while they are still loading. Note that this may cause a flash of unstyled content.</p>',
                     "expvar" => 'asynccss',
                     "expval" => array_unique($blockingCSSReqs)
                   ]

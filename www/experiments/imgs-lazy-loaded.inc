@@ -24,8 +24,8 @@ if( count($imgsThatShouldNotBeLazy) ){
 		"experiments" => array(
             (object) [
                 "id" => '013',
-                'title' => 'Remove loading="lazy" from layout-critical images',
-                "desc" => '<p>This experiment will remove <code>loading="lazy"</code> attributes from images that are inside the viewport at load</p>',
+                'title' => 'Remove loading="lazy" from in-viewport images',
+                "desc" => '<p>This experiment removes <code>loading="lazy"</code> attributes from images that are inside the viewport at load</p>',
                 "expvar" => 'removeloadinglazy',
                 "expval" => array_unique($shouldNotBeLazySrcs)
             ]

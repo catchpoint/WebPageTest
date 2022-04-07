@@ -23,15 +23,15 @@ if( count($blocking3pReqs) > 0 ){
         "experiments" =>  array(
             (object) [
                 "id" => '007',
-                'title' => 'Test impact of hanging service requests.',
-                "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
+                'title' => 'Make Scripts Timeout',
+                "desc" => '<p>This experiment directs specified requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                  "expvar" => 'experiment-spof',
                  "expval" => array_unique($blocking3pHosts)
             ],
             (object) [
                 "id" => '008',
-                'title' => 'Test impact of failed service request.',
-                "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
+                'title' => 'Block Scripts',
+                "desc" => '<p>This experiment causes specified requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                  "expvar" => 'experiment-block',
                  "expval" => array_unique($blocking3pReqs)
                 ]

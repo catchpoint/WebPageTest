@@ -30,8 +30,8 @@ if( count($fontsThatBlock) ){
 		"experiments" => array(
             (object) [
                 "id" => '018',
-                'title' => 'Add font-display: swap to font loading',
-                "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner.</p>',
+                'title' => 'Add font-display: swap',
+                "desc" => '<p>This experiment adds <code>font-display="swap"</code> to custom fonts to show text sooner.</p>',
                 "expvar" => 'fontdisplayswap',
                 'expval' => array('')
             ]),

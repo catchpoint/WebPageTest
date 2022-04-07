@@ -19,8 +19,8 @@ if ( $metaMetric ) {
             "experiments" =>  array(
                 (object) [
                     "id" => '009',
-                    'title' => 'Add a meta viewport tag',
-                    "desc" => '<p>This experiment will insert a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.</p>',
+                    'title' => 'Add a Meta Viewport Tag',
+                    "desc" => '<p>This experiment inserts a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.</p>',
                     "expvar" => 'swap',
                     "expval" => array(encodeURIComponent("</head>") . "|" . encodeURIComponent( '<meta name="viewport" content="width=device-width, initial-scale=1"></head>' ))
                 ]

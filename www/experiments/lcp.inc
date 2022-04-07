@@ -47,8 +47,8 @@
                 $expsToAdd = array();
                 $expsToAdd[] = (object) [
                     "id" => '010',
-                    'title' => 'Preload the LCP image.',
-                    "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
+                    'title' => 'Preload LCP Image',
+                    "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
                     "expvar" => 'preload',
                     "expval" => array($lcpSource . "|as_image"),
                     "explabel" => array($lcpSource)
@@ -57,8 +57,8 @@
                 if( !$isBG ){
                     $expsToAdd[] = (object) [
                         "id" => '011',
-                        'title' => 'Add a priority hint <em>(Chrome-only)</em>',
-                        "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
+                        'title' => 'Add Priority Hint',
+                        "desc" => '<p><em>(Chrome-only)</em>This experiment adds an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
                         "expvar" => 'addimportance',
                         "expval" => array($lcpSource . "|i_high"),
                         "explabel" => array($lcpSource)

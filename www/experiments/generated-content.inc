@@ -35,7 +35,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             ),
             "experiments" =>  array(
                 (object) [
-                    'title' => 'Compare performance impact of server-delivered HTML',
+                    'title' => 'Mimic Pre-rendered HTML',
                     "desc" => '<p>This experiment mimics server-generated HTML by swapping the initial HTML with the fully rendered HTML from this test run. <strong>Note:</strong> this will very likely break site behavior, but is potentially useful for comparing early metrics and assessing whether moving logic to the server is worth the effort.</p>',
                     "expvar" => 'prerender',
                     "expval" => array($id)
@@ -66,7 +66,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             "experiments" =>  array(
                 (object) [
                     "id" => '015',
-                    'title' => 'Test impact on experience if JavaScript fails to execute',
+                    'title' => 'Disable Scripts',
                     "desc" => '<p>This experiment makes all scripts (inline and external) unrecognizable as javascript by the browser in order to demonstrate whether the site will still be usable if JavaScript fails to properly run.</p>',
                     "expvar" => 'disablescripts',
                     "expval" => array(''),
@@ -74,15 +74,15 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                 ],
                 (object) [
                     "id" => '016',
-                    'title' => 'Test impact on experience if external JavaScript requests hang until timeout.',
-                    "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
+                    'title' => 'Make Scripts Timeout',
+                    "desc" => '<p>This experiment directs specified requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                     "expvar" => 'experiment-spof',
                     "expval" => array_unique($jsHosts)
                 ],
                 (object) [
                     "id" => '017',
-                    'title' => 'Test impact on experience if external JavaScript requests fail immediately.',
-                    "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
+                    'title' => 'Block Script Requests',
+                    "desc" => '<p>This experiment causes specified requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                      "expvar" => 'experiment-block',
                      "expval" => array_unique($jsRequests)
                 ]
