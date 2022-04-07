@@ -29,7 +29,7 @@ if( count($fontsThatBlock) ){
 		"examples" => array_unique($blockers),
 		"experiments" => array(
             (object) [
-                "id" => '019',
+                "id" => '018',
                 'title' => 'Add font-display: swap to font loading',
                 "desc" => '<p>This experiment will add <code>font-display="swap"</code> to custom fonts to show text sooner.</p>',
                 "expvar" => 'fontdisplayswap',

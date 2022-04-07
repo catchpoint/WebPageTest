@@ -15,6 +15,7 @@ if( count($blockingFontCSSReqs) > 0 ){
       "examples" =>  array_unique($blockingFontCSSReqs),
       "experiments" =>  array(
         (object) [
+            "id" => '003',
             'title' => 'Inline font stylesheets.',
             "desc" => '<p>This experiment will embed the contents of external stylesheets directly into the HTML within a <code>style</code> element. This can allow the fonts to be loaded in fewer network steps. <strong>Note:</strong> The inline experiment may break relative references to images and other assets in the CSS. These would need proper path changes in production.</p>',
             "expvar" => 'inline',
@@ -22,6 +23,7 @@ if( count($blockingFontCSSReqs) > 0 ){
           ]
         ,
           (object) [
+              "id" => '004',
               'title' => 'Load Font CSS files asynchronously.',
               "desc" => '<p>This experiment will load these stylesheets in a way that allows the page to begin rendering while they are still loading. Fonts will appear when they arrive.</p>',
               "expvar" => 'asynccss',

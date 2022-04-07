@@ -18,6 +18,7 @@ if( count($unusedPreloads) > 0 ){
         "examples" =>  array_unique($unusedPreloads),
         "experiments" =>  array(
             (object) [
+                'id' => '022',
                 'title' => 'Test impact of removing unused preloads.',
                 "desc" => '<p>This experiment will remove all unused preloads from the page, allowing other critical resources to be requested earlier.</p>',
                  "expvar" => 'removepreload',

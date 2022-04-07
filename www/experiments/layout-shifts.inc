@@ -37,7 +37,7 @@
                     ),
                     "experiments" =>  array(
                         (object) [
-                            "id" => '013',
+                            "id" => '012',
                             'title' => 'Give the image an aspect ratio with width and height attributes',
                             "desc" => '<p>This experiment will add <code>width="'. $lcp['element']['width'] .'" height="'. $lcp['element']['width'] .'"</code> attributes to the LCP image</p>',
                             "expvar" => 'imageaspectratio',

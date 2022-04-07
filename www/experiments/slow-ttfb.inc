@@ -14,12 +14,10 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
         "examples" =>  array(),
         "experiments" =>  array(
             (object) [
-                "id" => '001',
                 'title' => 'Check for accuracy! Preserve original User Agent string in re-run',
                 "desc" => '<p>Some networks and sites intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, look for the the rerun test menu at the top of the page and try re-running this test with its UA preserved before running experiments.</p>'
             ],
             (object) [
-                "id" => '002',
                 'title' => 'Use server timing headers to identify slow server tasks',
                 "desc" => '<p>Server timing headers are designed to pass custom logging information to the client. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing">More info on MDN</a></p>'
             ]

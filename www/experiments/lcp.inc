@@ -46,7 +46,7 @@
 
                 $expsToAdd = array();
                 $expsToAdd[] = (object) [
-                    "id" => '012',
+                    "id" => '010',
                     'title' => 'Preload the LCP image.',
                     "desc" => '<p>This experiment will add a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
                     "expvar" => 'preload',
@@ -56,7 +56,7 @@
                 // priority Hints only help for foreground images
                 if( !$isBG ){
                     $expsToAdd[] = (object) [
-                        "id" => '013',
+                        "id" => '011',
                         'title' => 'Add a priority hint <em>(Chrome-only)</em>',
                         "desc" => '<p>This experiment will add an <code>importance="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
                         "expvar" => 'addimportance',

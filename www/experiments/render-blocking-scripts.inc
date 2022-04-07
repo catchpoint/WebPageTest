@@ -18,12 +18,14 @@ if( count($blockingJSReqs) > 0 ){
         "examples" =>  $blockingJSReqs,
         "experiments" =>  array(
             (object) [
+                "id" => '001',
                 'title' => 'Defer render-blocking scripts.',
                 "desc" => '<p>This experiment will add a defer attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a></p>',
                 "expvar" => 'deferjs',
                 "expval" => array_unique($blockingJSReqs)
             ],
             (object) [
+                "id" => '002',
                     'title' => 'Inline render-blocking scripts.',
                     "desc" => '<p>This experiment will embed the contents of external scripts directly into the HTML within a <code>script</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.</p>',
                     "expvar" => 'inline',

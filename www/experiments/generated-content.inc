@@ -65,6 +65,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             "examples" =>  array(),
             "experiments" =>  array(
                 (object) [
+                    "id" => '015',
                     'title' => 'Test impact on experience if JavaScript fails to execute',
                     "desc" => '<p>This experiment makes all scripts (inline and external) unrecognizable as javascript by the browser in order to demonstrate whether the site will still be usable if JavaScript fails to properly run.</p>',
                     "expvar" => 'disablescripts',
@@ -72,12 +73,14 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
                     "hideassets" => true
                 ],
                 (object) [
+                    "id" => '016',
                     'title' => 'Test impact on experience if external JavaScript requests hang until timeout.',
                     "desc" => '<p>This experiment will direct these requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                     "expvar" => 'experiment-spof',
                     "expval" => array_unique($jsHosts)
                 ],
                 (object) [
+                    "id" => '017',
                     'title' => 'Test impact on experience if external JavaScript requests fail immediately.',
                     "desc" => '<p>This experiment will cause these requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
                      "expvar" => 'experiment-block',
