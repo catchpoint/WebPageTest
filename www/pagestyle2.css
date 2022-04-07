@@ -566,8 +566,15 @@ a.experiment_meta-more:focus,
 
 .experiment_meta details div p {
     font-size: 1em;
+    font-weight: 300;
+    text-transform: none;
+}
+
+.experiment_meta details div h3 {
+    font-size: 1em;
     font-weight: 900;
     text-transform: uppercase;
+    margin: 0;
 }
 
 .experiment_meta details pre {
@@ -578,7 +585,7 @@ a.experiment_meta-more:focus,
 }
 
 .experiment_meta details ul {
-    margin: 0 0 1em;
+    margin: 0;
 }
 
 .experiment_meta details li {
