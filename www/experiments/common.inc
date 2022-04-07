@@ -115,6 +115,7 @@ include __DIR__ . '/axe-warnings.inc';
 // resilient
 include __DIR__ . '/render-blocking-3rd-party.inc';
 include __DIR__ . '/security-jslibs.inc';
+include __DIR__ . '/insecure-requests.inc';
 
 // all
 include __DIR__ . '/generated-content.inc';
