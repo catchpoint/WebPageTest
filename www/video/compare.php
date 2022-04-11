@@ -92,21 +92,20 @@ else
     $compareTestInfo = TestInfo::fromFiles($testPath);
     $testTest = $compareTestInfo->getRawData()['test'];
     $testTestInfo = $compareTestInfo->getRawData()['testinfo'];
-    $experiment = false;
     if( count($tests) === 2 && $testTestInfo['metadata'] ) {
         $metaInfo = $testTestInfo['metadata'];
         if( $metaInfo ){
             $metaInfo = json_decode($metaInfo, true);
             if( $metaInfo['experiment'] ){
                 $experiment = true;
-                   
-                $originalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0 );
-                $originalTestHref = $originalTestUrlGenerator->resultSummary();
-                $originalExperimentsHref = $originalTestUrlGenerator->resultPage("experiments");
-    
+                // NOTE: this file re-does these variables due to the $tests param (not test), unique to compare page
+                $experimentOriginalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0 );
+                $experimentOriginalTestHref = $experimentOriginalTestUrlGenerator->resultSummary();
+                $experimentOriginalExperimentsHref = $experimentOriginalTestUrlGenerator->resultPage("experiments");
+
                 $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 0 );
                 $controlTestHref = $controlTestUrlGenerator->resultSummary();
-    
+
                 $experimentResultsHref = "/video/compare.php?tests=" . $tests[0]['id'] . ',' . $metaInfo['experiment']['control_id'];
                 $experimentTestHref = "/result/" . $tests[0]['id'];
 
@@ -418,7 +417,7 @@ else
                 $tab = 'Test Result';
                 //$nosubheader = false;
                 if( $experiment ){
-                    $subtab = 'Experiment Results';
+                    $subtab = 'Experiment Results & Filmstrip';
                 } else {
                     $subtab = 'Filmstrip';
                 }
@@ -458,40 +457,10 @@ else
                                     echo '<div class="experiment_meta_included">';
                                     echo '<p>Experiments Applied:</p>';
                                     echo '<ul>';
-                                    $recips = $metaInfo['experiment']['recipes'];
-                                    $controlAssessment = $metaInfo['experiment']['assessment'];
+                                    include __DIR__ . '/../experiments/list_applied.inc';
 
-                                    
-
-                                   
-                                    
-                                    
-                                    foreach( $recips as $recipe ){
-                                        $recipeID = key($recipe);
-                                        
-                                        foreach( $controlAssessment as $cat ){
-                                            foreach($cat["opportunities"] as $opp){
-                                                foreach($opp["experiments"] as $exp){
-                                                    if($exp["id"] === $recipeID ){
-                                                        $experimentInfo = $exp;
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                       echo "<li><details><summary>". $experimentInfo["title"] ."</summary>";
-                                       
-                                       foreach($recipe as $ings){
-                                        if( is_string($ings)){
-                                            $ings = array($ings);
-                                        }
-                                        echo "<div class=\"experiment_meta_included_list\"> ". $experimentInfo["desc"] ."<h3>Assets included:</h3><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
-                                       
-                                        </div></details></li>";
-                                       }
-                                    }
                                     echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOptsHref ."\">Add More...</a></li>";
-                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $originalExperimentsHref ."\">Start Fresh</a></li>";
+                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOriginalExperimentsHref ."\">Start Fresh</a></li>";
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
@@ -501,7 +470,7 @@ else
                                     <li><a href=\"". $experimentResultsHref ."\">Experiment Results</a></li>
                                     <li><a href=\"". $experimentTestHref ."\">Experiment</a></li>
                                     <li><a href=\"". $controlTestHref ."\">Control</a></li>
-                                    <li><a href=\"". $originalTestHref ."\">Original</a></li>
+                                    <li><a href=\"". $experimentOriginalTestHref ."\">Original</a></li>
                                     <li>
                                         <details>
                                         <summary>Share...</summary>

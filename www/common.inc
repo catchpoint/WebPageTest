@@ -419,6 +419,34 @@ if (strlen($id)) {
     if (!array_key_exists('testinfo', $test)) {
         $test['testinfo'] = array();
     }
+
+    
+    $experiment = false;
+    if( $test['testinfo'] ){
+      $testTestInfo = $test['testinfo'];
+      $metaInfo = $testTestInfo['metadata'];
+      if( $metaInfo ){
+        $metaInfo = json_decode($metaInfo, true);
+        if( $metaInfo['experiment'] && $metaInfo['experiment']['control'] === false ){
+          $experiment = true;
+          
+          require_once __DIR__ . '/include/UrlGenerator.php';
+
+          $experimentOriginalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0 );
+          $experimentOriginalTestHref = $experimentOriginalTestUrlGenerator->resultSummary();
+          $experimentOriginalExperimentsHref = $experimentOriginalTestUrlGenerator->resultPage("experiments");
+
+          $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 0 );
+          $controlTestHref = $controlTestUrlGenerator->resultSummary();
+
+          $experimentResultsHref = "/video/compare.php?tests=" . $id . ',' . $metaInfo['experiment']['control_id'];
+          $experimentTestHref = "/result/" . $id;
+
+          $experimentOptsUrlGenerator= UrlGenerator::create(FRIENDLY_URLS, "", $id, 0, 0 );
+          $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
+        }
+      }
+    }
 }
 
 // see if we need to proxy requests to another server (after restoring the test and if we don't have it locally)

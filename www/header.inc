@@ -239,9 +239,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<ul class=\"header_data_urltime\">";
-            if ( $test['testinfo']['label'] && !$experiment ) {
-                echo '<li><strong>Label:</strong> <span>'.$test['testinfo']['label'].'</span></li>';
-            }
+            
             echo "<li><strong>URL: </strong>";
             if (GetSetting('nolinks')) {
                 echo "<span class=\"page-tested\">$shortUrl</span>";
@@ -362,6 +360,20 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     
                     echo $locationSimple;
                     echo '</span>';
+
+                    if( $experiment){
+                        $experimentData = $metaInfo['experiment'];
+
+                        echo '<details class="test_presets_more test_presets_more-experiments"><summary><span class="test_presets_tag">Experiment</span></summary><div class="details_contain">';
+                        
+                        echo '<ul>';
+                        include __DIR__ . '/experiments/list_applied.inc';
+                        echo '</ul>';
+                        echo "<p>Related Links: <a href=\"". $controlTestHref ."\">Control</a> <a href=\"". $experimentOriginalTestHref ."\">Original</a></p><ul>";
+                        echo '</div></details>';
+                    }
+
+
                     // TODO what is show sensitive?
                     //$show_sensitive = false;
                     echo '<details class="test_presets_more"><summary><span class="test_presets_tag">More</span></summary><div class="details_contain">';
@@ -370,7 +382,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     
                     ?>
                     </li>
-                    
+
                 </ul>
             </div>
         </div>
@@ -473,9 +485,11 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             
             $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);    
 
-
-            $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
-
+            if( $experiment ){
+                $tabs['Experiment Results (Filmstrip)'] = $experimentResultsHref;
+            } else {
+                $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
+            }
             $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
 
             $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));

@@ -1122,6 +1122,9 @@ function GetTestInfoHtml($includeScript = true)
     $run = null;
     if (array_key_exists('run', $_REQUEST))
       $run = intval($_REQUEST['run']);
+    if ( $test['testinfo'] && $test['testinfo']['label'] ) {
+        echo '<li>Label: '.$test['testinfo']['label'].'</li>';
+    }
     if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester']))
       $html .= '<li>Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '</li>';
     elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester']) )

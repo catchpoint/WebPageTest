@@ -808,6 +808,7 @@ use WebPageTest\RateLimiter;
                     "experiment" => array(
                       "source_id" => $id,
                       "control_id" => "",
+                      "control" => true,
                       "recipes" => array(),
                       "assessment" => isset($_REQUEST["assessment"]) ? json_decode(urldecode($_REQUEST["assessment"])) : null
                     )
@@ -868,7 +869,7 @@ use WebPageTest\RateLimiter;
                   // redirect to the comparison page
                   $recipeTests = array();
                   $test['video'] = 1;
-                  $test['label'] = 'Control';
+                  $test['label'] = 'Experiment Control';
                   $test['metadata'] = json_encode($experimentMetadata);
                   $id = CreateTest($test, $test['url']);
                   
@@ -876,6 +877,7 @@ use WebPageTest\RateLimiter;
                       
                       $recipeTests[] = $id;
                       $experimentMetadata["experiment"]["control_id"] = $id;
+                      $experimentMetadata["experiment"]["control"] = false;
                       $test['metadata'] = json_encode($experimentMetadata);
                       $test['label'] = 'Experiment';
 
