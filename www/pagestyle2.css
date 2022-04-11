@@ -2579,7 +2579,7 @@ header {
     border: 3px solid #fff;
 }
 
-.result .header_data .pro-flag {
+.result .results_header_contain .pro-flag {
     border-width: 2px;
     margin-right: 1em;
     /* padding: .5em; */
