@@ -2579,13 +2579,10 @@ header {
     border: 3px solid #fff;
 }
 
-.result .pro-flag {
+.result .header_data .pro-flag {
     border-width: 2px;
-    /* padding: .5em; */
-}
-
-.compare-experiment .pro-flag {
     margin-right: 1em;
+    /* padding: .5em; */
 }
 
 .result .opportunities_summary .pro-flag {
