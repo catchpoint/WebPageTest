@@ -1067,7 +1067,8 @@ h4.experiments_list_hed-recs {
     color: #222;
 }
 
-.experiment_description_go>label:hover {
+.experiment_description_go>label:hover,
+.experiment_description_go>a:hover {
     box-shadow: 0 0 6px rgba(0, 0, 0, .3);
 }
 
