@@ -407,6 +407,11 @@ h1 .pro-flag {
     gap: 1rem;
     flex-flow: row wrap;
     justify-content: flex-start;
+    display: flex;
+    overflow: auto;
+    flex-flow: row nowrap;
+    max-width: 100%;
+    scroll-snap-type: x;
 }
 
 .experiment_opportunities-resolved li {
@@ -423,6 +428,8 @@ h1 .pro-flag {
     font-weight: 900;
     color: #2a3c64;
     max-width: 15em;
+    min-width: 36%;
+    scroll-snap-align: start;
 }
 
 .experiment_opportunities-remaining {
@@ -5937,7 +5944,8 @@ th.header {
 div.waterfall-container,
 div.overflow-container,
 .breakdownFrame_item>div,
-#videoDiv {
+#videoDiv,
+.experiment_opportunities-resolved ol {
     background: linear-gradient(90deg, #fff 33%, rgba(255, 255, 255, 0)), linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 66%) 0 100%, radial-gradient(farthest-side at 0 50%, rgb(106 106 106 / 40%), transparent), radial-gradient(farthest-side at 100% 50%, rgba(106 106 106 / 40%), transparent) 0 100%;
     background-repeat: no-repeat;
     background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
@@ -5950,7 +5958,8 @@ div.overflow-container,
 div:not(.compare_contain_wrap)>div.waterfall-container img,
 div.overflow-container>*,
 .breakdownFrame_item>div>*,
-#videoDiv>* {
+#videoDiv>*,
+.experiment_opportunities-resolved ol>* {
     mix-blend-mode: multiply
 }
 
