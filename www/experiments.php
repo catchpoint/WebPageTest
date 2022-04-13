@@ -116,6 +116,12 @@ $page_description = "Website performance test result$testLabel.";
 
 
             <?php
+                    // TODO TEMP
+                    $paidUser = true;//$request_context->getUser()->isPaid();
+                    if( isset($_REQUEST['unpaid']) ){
+                        $paidUser = false;
+                    }
+
                     $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
                     $requests = $testStepResult->getRequests();
 
@@ -157,9 +163,15 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
 
-
+                    // used for tracking exp access
+                    $expCounter = 0;
+                    
+                    
 
                     function observationHTML( $parts ){
+                        global $expCounter;
+                        global $paidUser;
+
                         $bottleneckTitle = $parts["title"];
                         
                         $bottleneckDesc = $parts["desc"];
@@ -205,11 +217,24 @@ $page_description = "Website performance test result$testLabel.";
                     
                             foreach( $relevantExperiments as $exp ) {
                                 $expNum = $exp->id;
+                                if($exp->expvar){
+                                    $expCounter++;
+                                }
+                                
+                                $experimentEnabled = $expCounter < 2 || $paidUser;
+                                
                                 $out .= <<<EOT
                                     <li class="experiment_description">
                                     <div class="experiment_description_text">
                                     <h5>{$exp->title}</h5>
                                     {$exp->desc}
+                                EOT;
+
+                                $upgradeLink = <<<EOT
+                                </div>
+                                <div class="experiment_description_go">
+                                <a href="#pro">Upgrade to <em class="pro-flag">Pro</em> <span>for unlimited experiments.</span></a>
+                                </div>
                                 EOT;
                     
                     
@@ -239,31 +264,43 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= '</details>';
                                     }
                                     if( $exp->expvar ){
-                                        $out .= <<<EOT
-                                        </div>
-                                        <div class="experiment_description_go">
-                                        <label><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run This Experiment!</label>
-                                        </div>
-                                        EOT;
+                                        if( $experimentEnabled ){
+                                            $out .= <<<EOT
+                                            </div>
+                                            <div class="experiment_description_go">
+                                            <label><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run This Experiment!</label>
+                                            </div>
+                                            EOT;
+                                        } else {
+                                            $out .= $upgradeLink;
+                                        }
                                     }
                                 }
                                 else if( $exp->expvar && !$exp->expval && $textinput ) {
-                                    $out .= <<<EOT
-                                    </div>
-                                    <div class="experiment_description_go">
-                                    <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
-                                    <label class="experiment_pair_value"><span>Value: </span><input type="text" name="{$expNum}-{$exp->expvar}[]" placeholder="experiment value..."></label>
+                                    if( $experimentEnabled ){
+                                        $out .= <<<EOT
+                                        </div>
+                                        <div class="experiment_description_go">
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
+                                        <label class="experiment_pair_value"><span>Value: </span><input type="text" name="{$expNum}-{$exp->expvar}[]" placeholder="experiment value..."></label>
 
-                                    </div>
-                                    EOT;
+                                        </div>
+                                        EOT;
+                                    } else {
+                                        $out .= $upgradeLink;
+                                    }
                                 }
                                 else if( $exp->expvar && !$exp->expval ) {
-                                    $out .= <<<EOT
-                                    </div>
-                                    <div class="experiment_description_go">
-                                    <label><input type="checkbox" name="{$expNum}-{$exp->expvar[0]}">Run This Experiment!</label>
-                                    </div>
-                                    EOT;
+                                    if( $experimentEnabled ){
+                                        $out .= <<<EOT
+                                        </div>
+                                        <div class="experiment_description_go">
+                                        <label><input type="checkbox" name="{$expNum}-{$exp->expvar[0]}">Run This Experiment!</label>
+                                        </div>
+                                        EOT;
+                                    } else {
+                                        $out .= $upgradeLink;
+                                    }
                                 }
                     
                                 $out .= '</li>';

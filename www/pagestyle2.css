@@ -1007,17 +1007,46 @@ h4.experiments_list_hed-recs {
     align-self: center;
 }
 
-.experiment_description_go>label {
+.experiment_description_go>label,
+.experiment_description_go>a {
     padding: .9em 1.5em .9em 1.1em;
     background: #fff;
     box-shadow: 0 0 3px rgb(0 0 0 / 10%);
     color: #4E8F37;
     font-weight: 900;
+    min-width: 13em;
     border: 1px solid #ccc;
     cursor: pointer;
     border-radius: 2rem;
     vertical-align: middle;
     /* display: flex; */
+    text-decoration: none;
+}
+
+.experiment_description_go>a {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #4e8e37;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: none;
+    padding-top: .6em;
+    padding-bottom: .6em;
+    background: transparent url(/images/src/icon_lock.svg) left 1rem top 50% no-repeat;
+    background-size: 1rem auto;
+}
+
+.experiment_description_go>a .pro-flag {
+    margin: 0;
+    vertical-align: middle;
+}
+
+.experiment_description_go>a span {
+    display: block;
+    font-size: .7em;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: #222;
 }
 
 .experiment_description_go>label:hover {

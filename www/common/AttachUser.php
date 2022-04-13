@@ -84,6 +84,13 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
+  // TEMP FLAG TEMP FLAG
+    $user->setPaid(true);
+    if (isset($_REQUEST['unpaid'])) {
+        $user->setPaid(false);
+    }
+
+
     $user_email = $user->getEmail();
 
     if (!$admin && !is_null($user_email)) {
