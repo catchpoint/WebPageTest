@@ -19,9 +19,11 @@ require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/RunResultHtmlTable.php';
 require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 
+
 $breakdown = array();
 $testComplete = true;
 $status = GetTestStatus($id, false);
+
 if ($status['statusCode'] < 200) {
     $testComplete = false;
 }
@@ -29,6 +31,14 @@ $headless = false;
 if (Util::getSetting('headless')) {
     $headless = true;
 }
+
+$paidUser = $request_context->getUser()->isPaid();
+
+// TODO TEMP
+if( isset($_REQUEST['unpaid']) ){
+    $paidUser = false;
+}
+
 
 $testInfo = TestInfo::fromFiles($testPath);
 $testResults = TestResults::fromFiles($testInfo);
@@ -61,16 +71,14 @@ $page_description = "Website performance test result$testLabel.";
         $socialTitle = "WebPageTest Opportunities & Experiments";
         $socialDesc = "Check out these opportunities for improvement identified by WebPageTest";
 
-        require 'head.inc'; ?>
+        require_once 'head.inc'; ?>
     </head>
     <body class="result result-opportunities <?php if($req_screenshot){ echo ' screenshot'; } ?>">
             <?php
             $tab = 'Test Result';
             $subtab = 'Opportunities & Experiments';
-            require 'header.inc';
+            require_once __DIR__ . '/header.inc';
             ?>
-
-
             <div class="results_main_contain">
             <div class="results_main">
 
@@ -116,12 +124,6 @@ $page_description = "Website performance test result$testLabel.";
 
 
             <?php
-                    // TODO TEMP
-                    $paidUser = true;//$request_context->getUser()->isPaid();
-                    if( isset($_REQUEST['unpaid']) ){
-                        $paidUser = false;
-                    }
-
                     $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
                     $requests = $testStepResult->getRequests();
 

@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../experiments/common.inc');
+require_once(__DIR__ . '/common.inc');
 
 
 
