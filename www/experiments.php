@@ -233,7 +233,7 @@ $page_description = "Website performance test result$testLabel.";
                                 $upgradeLink = <<<EOT
                                 </div>
                                 <div class="experiment_description_go">
-                                <a href="#pro">Upgrade to <em class="pro-flag">Pro</em> <span>for unlimited experiments.</span></a>
+                                <a href="#pro"><span>Upgrade to <em class="pro-flag">Pro</em></span> <span>for unlimited experiments.</span></a>
                                 </div>
                                 EOT;
                     
