@@ -392,13 +392,7 @@ $page_description = "Website performance test result$testLabel.";
         </script>
 
         <?php
-        $breakdown = $resultTables->getBreakdown();
-        if ($breakdown) {
-            ?>
-          <script type="text/javascript" src="//www.google.com/jsapi"></script>
 
-            <?php
-        } // $breakdown
 
         if (!$testComplete) {
             echo "<script type=\"text/javascript\">\n";
