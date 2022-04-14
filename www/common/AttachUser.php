@@ -2,17 +2,21 @@
 
 use WebPageTest\User;
 use WebPageTest\Util;
+use WebPageTest\Util\OAuth as CPOauth;
+use WebPageTest\RequestContext;
 
-(function ($request) {
+(function (RequestContext $request) {
   global $admin;
+  $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
+  $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
 
   $user = new User();
 
-  if (isset($_COOKIE['cp_access_token'])) {
-    $user->setAccessToken($_COOKIE['cp_access_token']);
+  if (isset($_COOKIE[$cp_access_token_cookie_name])) {
+    $user->setAccessToken($_COOKIE[$cp_access_token_cookie_name]);
   }
-  if (isset($_COOKIE['cp_refresh_token'])) {
-    $user->setRefreshToken($_COOKIE['cp_refresh_token']);
+  if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
+    $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
   }
 
   $access_token = $user->getAccessToken();

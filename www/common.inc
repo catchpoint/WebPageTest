@@ -32,6 +32,8 @@ if (Util::getSetting('cp_auth')) {
       header('Location: ' . $route);
       exit(0);
     }
+    echo var_dump($e);
+    exit();
   });
 }
 

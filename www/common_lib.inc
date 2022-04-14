@@ -3462,29 +3462,7 @@ function server_sync($apiKey, $runCount, $logline) {
 
 
 function GetServerSecret() {
-  // cache the status in apc for 15 seconds so we don't hammer the scheduler
-  $secret = CacheFetch('server-secret');
-  if (isset($secret) && !is_string($secret)) {
-    $secret = null;
-  }
-  if (!isset($secret)) {
-    $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
-      $keys_file = __DIR__ . '/settings/common/keys.ini';
-    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
-      $keys_file = __DIR__ . '/settings/server/keys.ini';
-    $keys = parse_ini_file($keys_file, true);
-    if (isset($keys) && isset($keys['server']['secret'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-
-    $ttl = 3600;
-    if (!isset($secret)) {
-      $secret = '';
-      $ttl = 60;
-    }
-    CacheStore('server-secret', $secret, $ttl);
-  }
+  $secret = Util::getServerSecret();
   return $secret;
 }
 

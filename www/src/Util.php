@@ -8,6 +8,7 @@ class Util
 {
     private static array $SETTINGS = [];
     private const SETTINGS_KEY = 'settings';
+    private static string $settings_dir = __DIR__ . '/../settings';
 
     public function __construct()
     {
@@ -73,6 +74,50 @@ class Util
         return $ret;
     }
 
+    /**
+     * Let's not make all the cookies TOO obvious. Let's sha1 hash and salt em
+     *
+     * Pass in a name
+     */
+    public static function getCookieName(string $name): string
+    {
+        $salt = self::getServerSecret();
+        $hash = hash('sha1', $name);
+        return hash('sha256', $hash . $salt);
+    }
+
+
+    public static function getServerSecret()
+    {
+      // cache the status in apc for 15 seconds so we don't hammer the scheduler
+        $settings_dir = self::$settings_dir;
+        $secret = self::cacheFetch('server-secret');
+        if (isset($secret) && !is_string($secret)) {
+            $secret = null;
+        }
+        if (!isset($secret)) {
+            $keys_file = "{$settings_dir}/keys.ini";
+            if (file_exists("{$settings_dir}/common/keys.ini")) {
+                $keys_file = "{$settings_dir}/common/keys.ini";
+            }
+            if (file_exists("{$settings_dir}/server/keys.ini")) {
+                $keys_file = "{$settings_dir}/server/keys.ini";
+            }
+            $keys = parse_ini_file($keys_file, true);
+            if (isset($keys) && isset($keys['server']['secret'])) {
+                $secret = trim($keys['server']['secret']);
+            }
+
+            $ttl = 3600;
+            if (!isset($secret)) {
+                $secret = '';
+                $ttl = 60;
+            }
+            self::cacheStore('server-secret', $secret, $ttl);
+        }
+        return $secret;
+    }
+
     private static function loadAndStoreSettings(string $override_filepath = ""): void
     {
         if ($override_filepath != "") {
@@ -83,9 +128,9 @@ class Util
             return;
         }
 
-        $global_settings_file = __DIR__ . '/../settings/settings.ini';
-        $common_settings_file = __DIR__ . '/../settings/common/settings.ini';
-        $server_specific_settings_file = __DIR__ . '/../settings/server/settings.ini';
+        $global_settings_file = self::$settings_dir . "/settings.ini";
+        $common_settings_file = self::$settings_dir . "/common/settings.ini";
+        $server_specific_settings_file = self::$settings_dir . "/server/settings.ini";
 
         // Load the global settings
         if (file_exists($global_settings_file)) {
