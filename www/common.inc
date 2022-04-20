@@ -416,7 +416,7 @@ if (is_file('./settings/custom_common.inc.php')) {
 }
 
 // Create global request context for future use
-$request_context = new RequestContext($_REQUEST);
+$request_context = new RequestContext($_REQUEST, $_SERVER);
 if ($supportsSaml && !$supportsCPAuth) {
   $request_context->setUser($saml_user);
 }
