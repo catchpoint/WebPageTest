@@ -1,53 +1,54 @@
 <?php
     $category = "Usable";
     $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
+    $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
+    $imgsNoAspect = array();
+    if(isset($imgsInViewport) ){
+        foreach($imgsInViewport as $img) {
+            if( !strpos($img['html'], 'height="') && !strpos($img['html'], 'width="') ){
+                array_push($imgsNoAspect, $img);
+            }
+
+        }
+    }
 
 
-    
-    if (isset($lcp) && isset($cls) && $cls > 0 ) {
+    // if cls is present, note whether images need width/height attrs
+    if (isset($cls) && $cls > 0 ) {
 
-        $cls = round($cls, 3);
+       $cls = round($cls, 3);
         
-        $isBG = false;
-       
-        if (isset($lcp['element']['tagName']) && $lcp['element']['tagName'] === "IMG" && !isset($lcp['element']['background-image']) ) {
-            if (isset($lcp['element']['src']) ) {
-                $lcpSource = $lcp['element']['src'];
-                $lcpFullSource = $lcp['element']['src'];
-                // get actual source attribute if we can.
-                $srcAttrVal = preg_match_all('/src\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches );
-                if( $srcmatches ){
-                    $lcpSource = $srcmatches[1][0];
-                }
+       if( count($imgsNoAspect) > 0 ){
+
+            function applyValueFormatting($n) {
+                return $n['src'] . "|w". $n['naturalWidth'] ."|h" . $n['naturalHeight'];
             }
 
-            if (isset($lcp['element']['outerHTML'])) {
-                $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
+            function listSrcs($n) {
+                return $n['src'];
             }
 
-            $hasHeightAttr = strpos($lcp['element']['outerHTML'], 'height="');
+            $imgSrcList = array_map('listSrcs', $imgsNoAspect);
+            $numImages = count($imgSrcList);
+            $expValue = array_map('applyValueFormatting', $imgsNoAspect);
 
-           if( !$hasHeightAttr ){
-
-                $assessment[$category]["opportunities"][] = array( 
-                    "title" =>  "Layout shifts occur due to images missing aspect ratio.",
-                    "desc" =>  "Your CLS score is $cls, and your LCP image has no aspect ratio specified, meaning the browser has no way of knowing how tall it is until it loads. This can cause the image to shift content down as it loads.",
-                    "examples" =>  array(
-                        "$lcpHTML <img src= \"" . $lcp['element']['src'] . "\">"
-                    ),
-                    "experiments" =>  array(
-                        (object) [
-                            "id" => '012',
-                            'title' => 'Add Aspect Ratio to Images',
-                            "desc" => '<p>This experiment adds <code>width="'. $lcp['element']['width'] .'" height="'. $lcp['element']['width'] .'"</code> attributes to the LCP image</p>',
-                            "expvar" => 'imageaspectratio',
-                            "expval" => array($lcpSource . "|w". $lcp['element']['width'] ."|h" . $lcp['element']['height']),
-                            "explabel" => array($lcpSource)
-                        ]
-                    ),
-                    "good" =>  false
-                );
-            }
+            $assessment[$category]["opportunities"][] = array( 
+                "title" =>  "Layout shifts exist and may be caused by images missing aspect ratio.",
+                "desc" =>  "The CLS score is $cls. ". $numImages ." layout-critical image". ($numImages > 1 ? "s are": "is") ." lacking an aspect ratio, meaning the browser has no way of knowing how tall or wide an image is until it loads. This can cause content to shift as the image loads.",
+                "examples" =>  $imgSrcList,
+                "experiments" =>  array(
+                    (object) [
+                        "id" => '012',
+                        'title' => 'Add Aspect Ratio to Images',
+                        "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
+                        "expvar" => 'imageaspectratio',
+                        "expval" => $expValue,
+                        "explabel" => $imgSrcList
+                    ]
+                ),
+                "good" =>  false
+            );
+            
         }
         else {
             $assessment[$category]["opportunities"][] = array(
