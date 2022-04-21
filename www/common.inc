@@ -211,7 +211,7 @@ $supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
 $uid = NULL;
 $user = NULL;
 $saml_user = null;
-$admin = false;
+$admin = Util::getSetting('admin_on') == "true";
 $api_keys;
 
 if ($supportsSaml && !$supportsCPAuth) {
