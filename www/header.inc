@@ -339,7 +339,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         if( $experiment ){
                             $labelClass .= " test_presets_tag-experiment";
                         }
-                        echo '<span class="'. $labelClass .'">'.$test['testinfo']['label'].'</span>';
+                        echo '<span class="'. $labelClass .'" title="'.$test['testinfo']['label'].'">'.$test['testinfo']['label'].'</span>';
                     }
 
 

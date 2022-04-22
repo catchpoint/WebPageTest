@@ -3517,6 +3517,9 @@ label small {
 span.test_presets_tag-label {
     background: #fce075 !important;
     color: #333333 !important;
+    max-width: 10em;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 span.test_presets_tag-experiment {
