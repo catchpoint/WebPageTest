@@ -3514,7 +3514,7 @@ label small {
     flex-flow: row wrap;
 }
 
-span.test_presets_tag_label {
+span.test_presets_tag-label {
     background: #fce075 !important;
     color: #333333 !important;
 }

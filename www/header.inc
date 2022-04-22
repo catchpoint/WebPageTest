@@ -363,11 +363,11 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
                     
                     if ( $test['testinfo'] && $test['testinfo']['label'] ) {
-                        $labelClass = "test_presets_tag_label";
+                        $labelClass = "test_presets_tag-label";
                         if( $experiment ){
                             $labelClass .= " test_presets_tag-experiment";
                         }
-                        echo '<span class="'. $labelClass .'"><strong>Label:</strong> '.$test['testinfo']['label'].'</span>';
+                        echo '<span class="'. $labelClass .'">'.$test['testinfo']['label'].'</span>';
                     }
 
 
