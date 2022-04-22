@@ -766,6 +766,18 @@ use WebPageTest\RateLimiter;
           return $spofScript;
         }
 
+        function buildSelfHost($hosts){
+          $selfHostScript = "";
+          foreach($hosts as $host) {
+            $host = trim($host);
+            if (strlen($host)) {
+                $selfHostScript .= "overrideHost\t$host\trecipes.webpagetest.workers.dev\r\n";
+            }
+          }
+
+          return $selfHostScript;
+        }
+
 
         if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) )
         {
@@ -838,6 +850,7 @@ use WebPageTest\RateLimiter;
                     $recipeScript .= $recipeSansId;
                     $experimentSpof = array();
                     $experimentBlock = array();
+                    $experimentOverrideHost = array();
                     // TODO should this be $req_$value instead, essentially?
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
@@ -848,6 +861,9 @@ use WebPageTest\RateLimiter;
                         }
                         if( $recipeSansId === "block" ){
                           $experimentBlock = $ingredients;
+                        }
+                        if( $recipeSansId === "overrideHost" ){
+                          $experimentOverrideHost = $ingredients;
                         }
                         $ingredients = implode($ingredients, ",");
                       }
@@ -888,6 +904,11 @@ use WebPageTest\RateLimiter;
                         $spofScript = buildSpofTest($experimentSpof);
                         $test['script'] = $spofScript . "\n" . $test['script'];
                         $test['spof'] .= ' ' . $experimentSpof;
+                      }
+
+                      if ( $experimentOverrideHost ) {
+                        $overrideHostScript = buildSelfHost($experimentOverrideHost);
+                        $test['script'] = $overrideHostScript . "\n" . $test['script'];
                       }
 
                       // if experimentBlock is set...

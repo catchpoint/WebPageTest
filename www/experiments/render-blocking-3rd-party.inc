@@ -36,6 +36,13 @@ if( count($blocking3pReqs) > 0 ){
                  "expval" => array_unique($blocking3pReqs)
             ],
             (object) [
+                "id" => '025',
+                'title' => 'Self-Host 3rd Party Files',
+                "desc" => '<p>This experiment will fetch these files server-side and reference them on the same domain.</p>',
+                 "expvar" => 'experiment-overrideHost',
+                 "expval" => array_unique($blocking3pHosts)
+            ],
+            (object) [
                 "id" => '007',
                 'title' => 'Make Scripts Timeout',
                 "desc" => '<p>This experiment directs specified requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
