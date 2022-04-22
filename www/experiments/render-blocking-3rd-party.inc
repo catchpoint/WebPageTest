@@ -29,7 +29,7 @@ if( count($blocking3pReqs) > 0 ){
                  "expval" => array_unique($blocking3pHosts)
             ],
             (object) [
-                "id" => '023',
+                "id" => '024',
                 'title' => 'Preload 3rd Party Files',
                 "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
                  "expvar" => 'addpreload',
