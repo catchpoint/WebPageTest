@@ -37,7 +37,7 @@ if( count($blocking3pReqs) > 0 ){
             ],
             (object) [
                 "id" => '025',
-                'title' => 'Self-Host 3rd Party Files',
+                'title' => 'Self Host 3rd Party Files',
                 "desc" => '<p>This experiment will fetch these files server-side and reference them on the same domain.</p>',
                  "expvar" => 'experiment-overrideHost',
                  "expval" => array_unique($blocking3pHosts)
