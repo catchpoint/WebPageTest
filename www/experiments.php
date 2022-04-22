@@ -130,7 +130,10 @@ $page_description = "Website performance test result$testLabel.";
                     include __DIR__ . '/experiments/common.inc';
 
                     include __DIR__ . '/experiments/summary.inc';
-                    
+                    if( $experiment ){
+                        $moreExperimentsLink = false;
+                        include __DIR__ . '/experiments/meta.inc';
+                    }
                 ?>
 
 
@@ -459,10 +462,54 @@ $page_description = "Website performance test result$testLabel.";
             }
             setTimeout('UpdateStatus()', 15000);
 
+
+
+
+
+
     
           </script>
             <?php
         }
         ?>
+
+
+<script>
+    // refresh the form state from saved localstorage values
+    function refreshExperimentFormState(){
+        var priorState = localStorage.getItem("experimentForm");
+        var currentTestID = '<?php if(isset($id)){echo "$id"; } ?>';
+        if(priorState && currentTestID && priorState.indexOf("resubmit="+ currentTestID) > -1 ){
+            var form = $("form.experiments_grades");
+            form[0].reset();
+            var pairs = priorState.split("&");
+
+                pairs.forEach(pair => {
+                    var keyval = pair.split("=");
+                    var input = form.find("[name='" + keyval[0] + "']");
+                    
+                    if( input.length ){
+                        if( input.filter("[type=checkbox],[type=radio]").length ){
+                            input = input.filter( "[value='"+ keyval[1] +"']" ).attr("checked", true);
+                        } else {
+                            input.val(keyval[1]);
+                        }
+                    }
+                });
+            
+        }
+    }
+
+    // try and set the form state to localstorage
+    function saveExperimentFormState(){
+        localStorage.setItem("experimentForm", decodeURIComponent($("form.experiments_grades").serialize()) );
+    }
+
+    $("form.experiments_grades").on("change submit", saveExperimentFormState );
+
+    // try and restore state at load
+    refreshExperimentFormState();
+
+</script>
     </body>
 </html>
