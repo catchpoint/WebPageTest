@@ -361,16 +361,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo $locationSimple;
                     echo '</span>';
 
-                    if( $experiment){
-                        $experimentData = $metaInfo['experiment'];
-
-                        echo '<details class="test_presets_more test_presets_more-experiments"><summary><span class="test_presets_tag">Experiment</span></summary><div class="details_contain">';
-                        
-                        echo '<ul>';
-                        include __DIR__ . '/experiments/list_applied.inc';
-                        echo '</ul>';
-                        echo "<p>Related Links: <a href=\"". $controlTestHref ."\">Control</a> <a href=\"". $experimentOriginalTestHref ."\">Original</a></p><ul>";
-                        echo '</div></details>';
+                    
+                    if ( $test['testinfo'] && $test['testinfo']['label'] ) {
+                        $labelClass = "test_presets_tag_label";
+                        if( $experiment ){
+                            $labelClass .= " test_presets_tag-experiment";
+                        }
+                        echo '<span class="'. $labelClass .'"><strong>Label:</strong> '.$test['testinfo']['label'].'</span>';
                     }
 
 
@@ -378,6 +375,14 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     //$show_sensitive = false;
                     echo '<details class="test_presets_more"><summary><span class="test_presets_tag">More</span></summary><div class="details_contain">';
                     echo GetTestInfoHtml();
+                    if( $experiment){
+                        $experimentData = $metaInfo['experiment'];
+                        echo "<p class=\"meta_exp_applied_hed\">Experiment Info:</p>";
+                        echo '<ul class="meta_exp_applied_list">';
+                        include __DIR__ . '/experiments/list_applied.inc';
+                        echo '</ul>';
+                        echo "<p>Related Links: <a href=\"". $controlTestHref ."\">Control</a> <a href=\"". $experimentOriginalTestHref ."\">Original</a></p><ul>";
+                    }
                     echo '</div></details>';
                     
                     ?>
