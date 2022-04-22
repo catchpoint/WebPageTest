@@ -332,7 +332,18 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 <ul>
                     <?php 
                     
-                    echo '<li><b>Settings:</b> <strong>'.$device.'</strong>';
+                    echo '<li>';
+                    
+                    if ( $test['testinfo'] && $test['testinfo']['label'] ) {
+                        $labelClass = "test_presets_tag-label";
+                        if( $experiment ){
+                            $labelClass .= " test_presets_tag-experiment";
+                        }
+                        echo '<span class="'. $labelClass .'">'.$test['testinfo']['label'].'</span>';
+                    }
+
+
+                    echo '<b>Settings:</b> <strong>'.$device.'</strong>';
                     
                     
                     //browser and version
@@ -362,13 +373,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo '</span>';
 
                     
-                    if ( $test['testinfo'] && $test['testinfo']['label'] ) {
-                        $labelClass = "test_presets_tag-label";
-                        if( $experiment ){
-                            $labelClass .= " test_presets_tag-experiment";
-                        }
-                        echo '<span class="'. $labelClass .'">'.$test['testinfo']['label'].'</span>';
-                    }
+                    
 
 
                     // TODO what is show sensitive?
