@@ -847,7 +847,7 @@ $loc = ParseLocations($locations);
                                     'hint' => 'site.css,site2.js'
                                     ],
                                     (object) [
-                                    'value' => 'preload',
+                                    'value' => 'addpreload',
                                     'label' => 'Preload files',
                                     'required' => true,
                                     'hint' => 'https://www.webpagetest.org,site.css,site.js'
@@ -859,7 +859,7 @@ $loc = ParseLocations($locations);
                                     'hint' => 'https://www.webpagetest.org,site.css,site.js'
                                     ],
                                     (object) [
-                                    'value' => 'preconnect',
+                                    'value' => 'addpreconnect',
                                     'label' => 'Preconnect domains',
                                     'required' => true,
                                     'hint' => 'https://www.webpagetest.org,site.css,site.js'

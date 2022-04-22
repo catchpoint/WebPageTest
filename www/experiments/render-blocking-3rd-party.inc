@@ -22,6 +22,20 @@ if( count($blocking3pReqs) > 0 ){
         "examples" =>  array_unique($blocking3pReqs),
         "experiments" =>  array(
             (object) [
+                "id" => '023',
+                'title' => 'Preconnect 3rd Party Hosts',
+                "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
+                 "expvar" => 'addpreconnect',
+                 "expval" => array_unique($blocking3pHosts)
+            ],
+            (object) [
+                "id" => '023',
+                'title' => 'Preload 3rd Party Files',
+                "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
+                 "expvar" => 'addpreload',
+                 "expval" => array_unique($blocking3pReqs)
+            ],
+            (object) [
                 "id" => '007',
                 'title' => 'Make Scripts Timeout',
                 "desc" => '<p>This experiment directs specified requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
