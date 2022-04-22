@@ -2829,6 +2829,15 @@ header {
     padding-right: 1em;
 }
 
+.results_nav .test_meta_commands details p {
+    font-size: .9em;
+    line-height: 1.4;
+}
+
+.results_nav .test_meta_commands details p strong {
+    color: #dd5001;
+}
+
 .results_nav .test_meta_commands .test_meta_rerun summary,
 .results_nav .test_meta_commands .test_meta_rerun_form input[type=submit] {
     background-color: #fbe076;
@@ -2844,6 +2853,7 @@ header {
     border: 1px solid #eee;
     min-width: 20rem;
     margin-top: -1px;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, .2);
 }
 
 .home_feature_hed .attention {
