@@ -10,6 +10,8 @@ use GraphQL\Client as GraphQLClient;
 use GuzzleHttp\Client as GuzzleClient;
 use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\UnauthorizedException;
+use GraphQL\Exception\QueryError;
 
 class CPClient
 {
@@ -93,8 +95,10 @@ class CPClient
         );
         try {
             $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
-        } catch (BaseException $e) {
+        } catch (QueryError $e) {
             throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new UnauthorizedException();
         }
         $json = json_decode((string)$response->getBody());
         return new AuthToken((array)$json);
@@ -134,8 +138,11 @@ class CPClient
         try {
             $account_details = $this->graphql_client->runQuery($gql, true);
             return $account_details->getData()['userIdentity']['activeContact'];
-        } catch (BaseException $e) {
+        } catch (QueryError $e) {
+            error_log($e->getMessage());
             throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new UnauthorizedException();
         }
     }
 }

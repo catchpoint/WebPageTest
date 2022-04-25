@@ -13,17 +13,23 @@ define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 
 function GetSetting($setting, $default = false) {
   return Util::getSetting($setting, $default);
 }
 
 function CacheFetch($key) {
-  return Util::cacheFetch($key);
+  return Cache::fetch($key);
 }
 
 function CacheStore($key, $value, $ttl=0) {
-  return Util::cacheStore($key, $value, $ttl);
+  return Cache::store($key, $value, $ttl);
+}
+
+function GetServerSecret() {
+  $secret = Util::getServerSecret();
+  return $secret;
 }
 
 /**
@@ -3460,11 +3466,6 @@ function server_sync($apiKey, $runCount, $logline) {
   }
 }
 
-
-function GetServerSecret() {
-  $secret = Util::getServerSecret();
-  return $secret;
-}
 
 function GetServerKey() {
   // cache the status in apc for 15 seconds so we don't hammer the scheduler

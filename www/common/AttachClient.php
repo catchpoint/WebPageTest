@@ -6,6 +6,7 @@ use WebPageTest\RequestContext;
 use WebPageTest\CPClient;
 use WebPageTest\Util;
 use WebPageTest\Util\OAuth as CPOauth;
+use WebPageTest\Exception\UnauthorizedException;
 
 (function (RequestContext $request) {
 
@@ -34,10 +35,17 @@ use WebPageTest\Util\OAuth as CPOauth;
   if (!is_null($access_token)) {
     $client->authenticate($access_token);
   } else if (is_null($access_token) && !is_null($refresh_token)) {
-    $auth_token = $client->refreshAuthToken($refresh_token);
-    $client->authenticate($auth_token->access_token);
-    setcookie($cp_access_token_cookie_name, $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
-    setcookie($cp_refresh_token_cookie_name, $auth_token->refresh_token, time() + 60*60*24*30, "/", $host);
+    try {
+      $auth_token = $client->refreshAuthToken($refresh_token);
+      $client->authenticate($auth_token->access_token);
+      setcookie($cp_access_token_cookie_name, $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
+      setcookie($cp_refresh_token_cookie_name, $auth_token->refresh_token, time() + 60*60*24*30, "/", $host);
+    } catch (UnauthorizedException $e) {
+      error_log($e->getMessage());
+      // if this fails, delete all the cookies
+      setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+      setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+    }
   }
 
     $request->setClient($client);

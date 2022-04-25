@@ -4,7 +4,7 @@ use WebPageTest\User;
 use WebPageTest\Util;
 use WebPageTest\Util\OAuth as CPOauth;
 use WebPageTest\RequestContext;
-use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\UnauthorizedException;
 
 (function (RequestContext $request) {
   global $admin;
@@ -31,11 +31,32 @@ use WebPageTest\Exception\ClientException;
       $user->setEmail($data['email']);
       $user->setPaid($data['isWptPaidUser']);
       $user->setVerified($data['isWptAccountVerified']);
-    } catch (ClientException $e) {
+    } catch (UnauthorizedException $e) {
       error_log($e->getMessage());
-      setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
-      setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
-    } // if this fails, just delete the cookies, the token is no longer useful
+      // if this fails, Refresh and retry
+      $refresh_token = $user->getRefreshToken();
+      if (is_null($refresh_token)) {
+        // if no refresh token, delete the access token, it is no longer useful
+        setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+      } else {
+        try {
+          $auth_token = $request->getClient()->refreshAuthToken($refresh_token);
+          $request->getClient()->authenticate($auth_token->access_token);
+          setcookie($cp_access_token_cookie_name, $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
+          setcookie($cp_refresh_token_cookie_name, $auth_token->refresh_token, time() + 60*60*24*30, "/", $host);
+          $data = $request->getClient()->getUserDetails();
+          $user->setUserId($data['id']);
+          $user->setEmail($data['email']);
+          $user->setPaid($data['isWptPaidUser']);
+          $user->setVerified($data['isWptAccountVerified']);
+        } catch (UnauthorizedException $e) {
+          error_log($e->getMessage());
+          // if this fails, delete all the cookies
+          setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+          setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+        }
+      }
+    }
   }
 
   $user_email = $user->getEmail();
