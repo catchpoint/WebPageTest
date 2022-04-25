@@ -2,30 +2,33 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../util.inc';
 require_once __DIR__ . '/../common.inc';
 
 use WebPageTest\Util;
+use WebPageTest\Util\OAuth as CPOauth;
+use WebPageTest\RequestContext;
 
-$request_method = strtoupper($_SERVER['REQUEST_METHOD']);
+(function (RequestContext $request_context) {
 
-if ($request_method === 'POST') {
-    $protocol = getUrlProtocol();
+    $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
+    $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
+    $request_method = $request_context->getRequestMethod();
+    $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
+        $redirect_uri = "{$protocol}://{$host}";
 
-    $access_token = $request_context->getUser()->getAccessToken();
-    $request_context->getClient()->revokeToken($access_token);
+    if ($request_method === 'POST') {
+        $access_token = $request_context->getUser()->getAccessToken();
+        $request_context->getClient()->revokeToken($access_token);
 
-    setcookie("cp_access_token", "", time() - 3600, "/", $host);
-    setcookie("cp_refresh_token", "", time() - 3600, "/", $host);
+        setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+        setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
 
-    $redirect_uri = isset($_GET["redirect_uri"]) ? htmlspecialchars($_GET["redirect_uri"]) : "{$protocol}://{$host}";
-
-    header("Location: {$redirect_uri}");
-    exit();
-} else {
-    $redirect_uri = isset($_GET["redirect_uri"]) ? htmlspecialchars($_GET["redirect_uri"]) : "{$protocol}://{$host}";
-
-    header("Location: {$redirect_uri}");
-    exit();
-}
+        header("Location: {$redirect_uri}");
+        exit();
+    } else {
+        $redirect_uri = "{$protocol}://{$host}";
+        header("Location: {$redirect_uri}");
+        exit();
+    }
+})($request_context);
