@@ -114,7 +114,7 @@ $page_description = "Website performance test result$testLabel.";
             <div class="results_and_command">
                 <div class="results_header results_header-experiments">
                     <h2>Opportunities &amp; Experiments <em class="flag">New</em></h2>
-                    <p>WebPageTest identifies opportunities to improve a site's user experience and offers tips and No-Code Experiments to immediately test the impact of a change without changing the actual website.</p>
+                    <p>WebPageTest helps identify opportunities to improve a site's user experience. Choose one or more of the <strong>No-Code Experiments</strong> below to immediately test the impact of a change without changing the actual website.</p>
                 </div>
 
                 
