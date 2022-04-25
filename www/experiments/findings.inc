@@ -24,7 +24,7 @@ if( $experiment ){
 
 
     $diffMetrics = array( 
-        array( "TTFB", "Time to First Byte", "s"), 
+        //array( "TTFB", "Time to First Byte", "s"), 
         array( "StartRender", "Start Render", "s"),
         array( "firstContentfulPaint", "First Contentful Paint", "s"),
         array( "SpeedIndex", "Speed Index", "s"),
