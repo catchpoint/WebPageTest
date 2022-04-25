@@ -386,7 +386,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         echo '<ul class="meta_exp_applied_list">';
                         include __DIR__ . '/experiments/list_applied.inc';
                         echo '</ul>';
-                        echo "<p>Related Links: <a href=\"". $controlTestHref ."\">Control</a> <a href=\"". $experimentOriginalTestHref ."\">Original</a></p><ul>";
+                        echo "<p>Related Links: <a href=\"". $controlTestHref ."\">Experiment Control</a>, <a href=\"". $experimentOriginalTestHref ."\">Original Test</a></p><ul>";
                     }
                     echo '</div></details>';
                     
