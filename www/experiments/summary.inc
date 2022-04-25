@@ -9,6 +9,7 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
 
     // write out the observations summary HTML
     echo  '<div class="opportunities_summary">';
+    echo '<p>Jump to Opportunities by&nbsp;Category:</p>';
     foreach($assessment as $key => $cat ){
         if( $key !== "Custom" ){
         $grade = $cat["grade"];

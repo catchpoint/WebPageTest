@@ -1671,15 +1671,12 @@ footer ul {
     gap: 1rem;
     padding: 1em 1em;
     border: 1px solid #eee;
-    /* border-radius: .5em; */
-}
-
-.opportunities_summary {
     border: 0;
     padding: 0 !important;
     padding: 0 0 1rem;
     gap: 3rem;
     margin-bottom: 3rem;
+    /* align-items: flex-start; */
 }
 
 .results_body .opportunities_summary {
@@ -1688,6 +1685,13 @@ footer ul {
 
 .opportunities_summary a {
     border-right: 0;
+}
+
+.opportunities_summary a:hover,
+.opportunities_summary a:focus {
+    /* box-shadow: 0 0 5px rgba(0,0,0,.2); */
+    /* border-radius: .5em; */
+    /* background: #fff; */
 }
 
 .opportunities_summary a:last-child {
@@ -1704,6 +1708,11 @@ footer ul {
     font-size: 1rem;
     margin: 0;
     padding-bottom: 0;
+    font-weight: 500;
+    color: #111111;
+    text-transform: capitalize;
+    text-align: right;
+    flex: 1 1 15%;
 }
 
 .opportunities_summary .grade_heading {
@@ -1716,6 +1725,11 @@ footer ul {
     gap: .8rem;
     align-items: center;
     padding-top: 0;
+}
+
+.opportunities_summary a:hover .grade_heading strong,
+.opportunities_summary a:focus .grade_heading strong {
+    text-decoration: underline;
 }
 
 .opportunities_summary p>strong {
@@ -1767,25 +1781,26 @@ footer ul {
 }
 
 .opportunities_summary a {
-    /* padding: 1em 0; */
+    padding: 0;
     display: flex;
     gap: 0;
     flex-flow: column;
     justify-content: space-between;
-    flex: 1 1 33%;
+    flex: 1 1 auto;
     /* border-radius: .5em; */
     /* padding-left: 2rem; */
     text-decoration: none;
     /* color: inherit; */
     /* background-clip: border-box; */
     /* overflow: hidden; */
+    margin: 0;
 }
 
 .opportunities_summary a:hover ul,
 .opportunities_summary a:focus ul {
-    box-shadow: 0 0 5px #eee;
-    border-color: #1071ba;
-    background: #fff
+    /* box-shadow: 0 0 5px #eee; */
+    /* border-color: #1071ba; */
+    /* background: #fff; */
 }
 
 .opportunities_summary .grade_heading>span {
@@ -1811,14 +1826,12 @@ footer ul {
 
 .opportunities_summary ul {
     display: flex;
-    gap: 1rem;
+    gap: .8em;
     align-items: center;
-    border: 1px solid #fcfcfc;
     padding-top: .7em;
-    border-radius: .5em;
     margin: 0;
     /* justify-self: auto; */
-    padding: .5rem 1rem;
+    padding: .1rem 0 0;
     background: #fff;
     justify-content: flex-start;
     border-color: #efefef;
@@ -1842,12 +1855,8 @@ footer ul {
     /* text-transform: uppercase; */
 }
 
-.compare-experiment .experiment_summary_label {
+.experiment_summary_label {
     text-indent: -9999px;
-}
-
-.compare-experiment .opportunities_summary ul {
-    gap: 0.8em;
 }
 
 .opportunities_summary_opps {
