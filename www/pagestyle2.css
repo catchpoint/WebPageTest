@@ -1715,6 +1715,10 @@ footer ul {
     flex: 1 1 15%;
 }
 
+.results_header .opportunities_summary>p {
+    display: none;
+}
+
 .opportunities_summary .grade_heading {
     background: none !important;
     font-size: 1.1rem;
@@ -1786,7 +1790,7 @@ footer ul {
     gap: 0;
     flex-flow: column;
     justify-content: space-between;
-    flex: 1 1 auto;
+    flex: 1 1 33%;
     /* border-radius: .5em; */
     /* padding-left: 2rem; */
     text-decoration: none;
