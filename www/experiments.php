@@ -19,6 +19,10 @@ require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/RunResultHtmlTable.php';
 require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 
+// if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
+if($experiment && isset($experimentOriginalExperimentsHref) ){
+    header('Location: '. $experimentOriginalExperimentsHref );
+}
 
 $breakdown = array();
 $testComplete = true;
