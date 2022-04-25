@@ -18,7 +18,9 @@ use WebPageTest\RequestContext;
 
     if ($request_method === 'POST') {
         $access_token = $request_context->getUser()->getAccessToken();
-        $request_context->getClient()->revokeToken($access_token);
+        if (!is_null($access_token)) {
+            $request_context->getClient()->revokeToken($access_token);
+        }
 
         setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
         setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
