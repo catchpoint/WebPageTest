@@ -1,12 +1,12 @@
 <?php
 if( $experiment ){
     $recips = $metaInfo['experiment']['recipes'];
-    $controlAssessment = $metaInfo['experiment']['assessment'];
+    $appliedAssessment = $metaInfo['experiment']['assessment'];
 
     foreach( $recips as $recipe ){
         $recipeID = key($recipe);
         
-        foreach( $controlAssessment as $cat ){
+        foreach( $appliedAssessment as $cat ){
             foreach($cat["opportunities"] as $opp){
                 foreach($opp["experiments"] as $exp){
                     if($exp["id"] === $recipeID ){
