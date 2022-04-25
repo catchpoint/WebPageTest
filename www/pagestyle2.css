@@ -3438,6 +3438,68 @@ label small {
     overflow: auto;
 }
 
+.meta_exp_applied_list li {
+    padding: 0;
+}
+
+.meta_exp_applied_list summary::-webkit-details-marker {
+    display: none;
+}
+
+.meta_exp_applied_hed {
+    padding: 0;
+    margin: .5em 0 0;
+}
+
+ul.meta_exp_applied_list {
+    margin-bottom: .3em;
+}
+
+.meta_exp_applied_list li summary {
+    list-style: none;
+    padding: 0.2em 0rem;
+    cursor: pointer;
+    border-radius: 1rem;
+    font-size: .9em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.meta_exp_applied_list li summary:before {
+    content: "";
+    background: rgba(255, 255, 255, .8);
+    border-radius: 100%;
+    background-image: url(/images/src/icon_triangledown.svg);
+    background-repeat: no-repeat;
+    background-position: left 50% bottom 50%;
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: .5em;
+    display: inline-block;
+}
+
+.meta_exp_applied_list li summary+* {
+    margin-left: 1.4em;
+}
+
+.meta_exp_applied_list li h3,
+.meta_exp_applied_list li p {
+    font-size: .9rem;
+    margin: 0;
+}
+
+.meta_exp_applied_list li details ul {
+    margin: 0;
+    padding: 0 1em;
+}
+
+.meta_exp_applied_list li details li {
+    padding: 0 !important;
+    margin: 0;
+    font-size: .9rem;
+}
+
 .input_fields.home_responsive_test_top li {
     margin: 0;
     padding: 0;
