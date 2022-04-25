@@ -9,7 +9,6 @@ use WebPageTest\Util\OAuth as CPOauth;
 use WebPageTest\RequestContext;
 
 (function (RequestContext $request_context) {
-
     $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
     $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
     $request_method = $request_context->getRequestMethod();
