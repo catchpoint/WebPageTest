@@ -7,13 +7,12 @@ use WebPageTest\RequestContext;
 
 (function (RequestContext $request) {
   global $admin;
-  $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
   $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
 
   $user = new User();
 
-  if (isset($_COOKIE[$cp_access_token_cookie_name])) {
-    $user->setAccessToken($_COOKIE[$cp_access_token_cookie_name]);
+  if ($request->getClient()->isAuthenticated()) {
+    $user->setAccessToken($request->getClient()->getAccessToken());
   }
   if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
     $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
