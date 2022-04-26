@@ -1714,7 +1714,6 @@ footer ul {
     padding-bottom: 0;
     font-weight: 900;
     color: #111111;
-    text-transform: capitalize;
     text-align: right;
     flex: 1 1 15%;
 }
