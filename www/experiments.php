@@ -239,6 +239,7 @@ $page_description = "Website performance test result$testLabel.";
                                     {$exp->desc}
                                 EOT;
 
+                            
                                 $upgradeLink = <<<EOT
                                 </div>
                                 <div class="experiment_description_go">
@@ -310,6 +311,9 @@ $page_description = "Website performance test result$testLabel.";
                                     } else {
                                         $out .= $upgradeLink;
                                     }
+                                }
+                                else {
+                                    $out .= '</div>';
                                 }
                     
                                 $out .= '</li>';
