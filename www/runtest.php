@@ -2568,6 +2568,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (isset($test['metadata'])) {
               $job['metadata'] = $test['metadata'];
             }
+            $extensions_cache_time = GetSetting('extensions_cache_time');
+            if ($extensions_cache_time && strlen($extensions_cache_time)) {
+              $job['extensions_cache_time'] = $extensions_cache_time;
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
