@@ -777,7 +777,7 @@ p.grade_summary {
     list-style: none;
     margin: 0;
     padding: 0;
-    counter-reset: bottlenecks;
+    /* counter-reset: bottlenecks; */
 }
 
 .experiments_bottlenecks>ol>li>details>summary {
@@ -789,6 +789,7 @@ p.grade_summary {
     /* padding: .6em 0; */
     margin: 0;
     /* user-select: all; */
+    /* display: flex; */
 }
 
 .experiments_bottlenecks img {
@@ -819,7 +820,7 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks>ol>li {
-    counter-increment: bottlenecks;
+    /* counter-increment: bottlenecks; */
     margin-bottom: 1em;
     border-bottom: 1px solid #eee;
     /* border-top: 1px solid #ddd; */
@@ -844,21 +845,24 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks>ol>li>details>summary:before {
-    content: counter(bottlenecks);
+    content: "";
+    background: #6ca71a url(/images/src/icon_grading_check.svg) left 50% no-repeat;
     color: #fff;
-    background-color: #6ca71a;
     border-radius: 100%;
     font-weight: 900;
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.4em;
+    height: 1.4em;
     display: inline-block;
     margin: 0 .7em 0 .5em;
     text-align: center;
     line-height: 1.5;
+    background-size: contain;
+    vertical-align: middle;
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-bad>details>summary:before {
-    background-color: #d02424;
+    background: #d26122 url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
+    background-size: contain;
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-neutral>details>summary:before {
