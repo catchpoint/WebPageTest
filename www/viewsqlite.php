@@ -4,6 +4,19 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
+use WebPageTest\Util;
+
+global $admin;
+
+if (
+  (isset($request_context->getUser()) && $request_context->getUser()->isAdmin()) ||
+  $admin
+) {
+  $host = Util::getSetting('host');
+  header("Location: https://{$host}");
+  exit();
+}
+
 error_reporting(-1);
 
 $db = new SQLite3('./dat/labels.db');

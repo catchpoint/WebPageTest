@@ -32,6 +32,8 @@ if (Util::getSetting('cp_auth')) {
       header('Location: ' . $route);
       exit(0);
     }
+    echo var_dump($e);
+    exit();
   });
 }
 
@@ -211,7 +213,7 @@ $supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
 $uid = NULL;
 $user = NULL;
 $saml_user = null;
-$admin = false;
+$admin = Util::getSetting('admin_on') == "true";
 $api_keys;
 
 if ($supportsSaml && !$supportsCPAuth) {
@@ -416,7 +418,7 @@ if (is_file('./settings/custom_common.inc.php')) {
 }
 
 // Create global request context for future use
-$request_context = new RequestContext($_REQUEST);
+$request_context = new RequestContext($_REQUEST, $_SERVER);
 if ($supportsSaml && !$supportsCPAuth) {
   $request_context->setUser($saml_user);
 }

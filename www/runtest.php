@@ -55,11 +55,12 @@
     }
     require_once('common.inc');
 
+use WebPageTest\Util;
 use WebPageTest\Template;
+use WebPageTest\RateLimiter;
 
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
-    require_once(__DIR__ . '/ratelimit/check_monthly_rate_limit.php');
 
 
     set_time_limit(300);
@@ -75,7 +76,7 @@ use WebPageTest\Template;
     $is_mobile = false;
 
     // load the secret key (if there is one)
-    $server_secret = GetServerSecret();
+    $server_secret = Util::getServerSecret();
     $api_keys = null;
     if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
       $keys_file = __DIR__ . '/settings/keys.ini';
@@ -92,7 +93,7 @@ use WebPageTest\Template;
     if( isset($req_f) && !strcasecmp($req_f, 'json') )
         $json = true;
     $headless = false;
-    if (GetSetting('headless')) {
+    if (Util::getSetting('headless')) {
         $headless = true;
     }
     $is_bulk_test = false;
@@ -2567,6 +2568,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (isset($test['metadata'])) {
               $job['metadata'] = $test['metadata'];
             }
+            $extensions_cache_time = GetSetting('extensions_cache_time');
+            if ($extensions_cache_time && strlen($extensions_cache_time)) {
+              $job['extensions_cache_time'] = $extensions_cache_time;
+            }
             // Generate the job file name
             $ext = 'url';
             if( $test['priority'] )
@@ -3066,8 +3071,8 @@ function CheckRateLimit($test, &$error) {
   $runcount = max(1, $test['runs']);
   $multiplier = $test['fvonly'] ? 1 : 2;
   $total_runs = $runcount * $multiplier;
-  $monthly_limit = GetSetting('rate_limit_anon_monthly') ?: 50;
-  $cmrl = new CheckMonthlyRateLimit($test['ip'], $monthly_limit);
+  $monthly_limit = Util::getSetting('rate_limit_anon_monthly') ?: 50;
+  $cmrl = new RateLimiter($test['ip'], $monthly_limit);
   $passesMonthly = $cmrl->check($total_runs);
 
   if(!$passesMonthly) {

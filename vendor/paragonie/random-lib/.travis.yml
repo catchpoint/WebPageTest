@@ -1,0 +1,48 @@
+language: php
+sudo: false
+
+matrix:
+  fast_finish: true
+  include:
+    - php: "5.3"
+      env: USE_PSALM=0
+      dist: precise
+    - php: "5.4"
+      env: USE_PSALM=0
+      dist: trusty
+    - php: "5.5"
+      env: USE_PSALM=0
+      dist: trusty
+    - php: "5.6"
+      env: USE_PSALM=1
+    - php: "7.0"
+      env: USE_PSALM=1
+    - php: "7.1"
+      env: USE_PSALM=1
+    - php: "7.2"
+      env: USE_PSALM=1
+    - php: "7.3"
+      env: USE_PSALM=1
+    - php: "7.4"
+      env: USE_PSALM=1
+    - php: "nightly"
+      env: USE_PSALM=1
+    - php: "master"
+      env: USE_PSALM=1
+    - php: "hhvm"
+      env: USE_PSALM=1
+  allow_failures:
+    - php: "7.4"
+    - php: "master"
+    - php: "nightly"
+    - php: "hhvm"
+
+before_script:
+  - travis_retry composer self-update
+  - if [[ $USE_PSALM -eq 1 ]]; then composer require --dev "vimeo/psalm:^1|^3"; fi
+  - travis_retry composer install --prefer-source
+
+script:
+  - make lint
+  - make test
+  - if [[ $USE_PSALM -eq 1 ]]; then make typecheck; fi
