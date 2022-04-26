@@ -8,12 +8,14 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
 {
     public static $files = array (
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
+        '5255c38a0faeba867671b61dfda6d864' => __DIR__ . '/..' . '/paragonie/random_compat/lib/random.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
-        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
+        '3109cb1a231dcd04bee1f9f620d46975' => __DIR__ . '/..' . '/paragonie/sodium_compat/autoload.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -110,6 +112,23 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         'DeepCopy\\' => 
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
+    );
+
+    public static $prefixesPsr0 = array (
+        'S' => 
+        array (
+            'SecurityLib' => 
+            array (
+                0 => __DIR__ . '/..' . '/ircmaxell/security-lib/lib',
+            ),
+        ),
+        'R' => 
+        array (
+            'RandomLib' => 
+            array (
+                0 => __DIR__ . '/..' . '/paragonie/random-lib/lib',
+            ),
         ),
     );
 
@@ -747,6 +766,7 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7::$classMap;
 
         }, null, ClassLoader::class);

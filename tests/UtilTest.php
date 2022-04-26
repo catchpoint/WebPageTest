@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 
 final class UtilTest extends TestCase
 {
@@ -31,9 +32,9 @@ final class UtilTest extends TestCase
     {
         $value = 'silly-thing';
         $key = 'oh-ok';
-        $cached = Util::cacheStore($key, $value, 30);
+        $cached = Cache::store($key, $value, 30);
         $this->assertTrue($cached);
-        $fetched = Util::cacheFetch($key);
+        $fetched = Cache::fetch($key);
         $this->assertEquals($value, $fetched);
     }
 

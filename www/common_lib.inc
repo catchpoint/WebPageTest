@@ -13,17 +13,23 @@ define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 
 function GetSetting($setting, $default = false) {
   return Util::getSetting($setting, $default);
 }
 
 function CacheFetch($key) {
-  return Util::cacheFetch($key);
+  return Cache::fetch($key);
 }
 
 function CacheStore($key, $value, $ttl=0) {
-  return Util::cacheStore($key, $value, $ttl);
+  return Cache::store($key, $value, $ttl);
+}
+
+function GetServerSecret() {
+  $secret = Util::getServerSecret();
+  return $secret;
 }
 
 /**
@@ -3460,33 +3466,6 @@ function server_sync($apiKey, $runCount, $logline) {
   }
 }
 
-
-function GetServerSecret() {
-  // cache the status in apc for 15 seconds so we don't hammer the scheduler
-  $secret = CacheFetch('server-secret');
-  if (isset($secret) && !is_string($secret)) {
-    $secret = null;
-  }
-  if (!isset($secret)) {
-    $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
-      $keys_file = __DIR__ . '/settings/common/keys.ini';
-    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
-      $keys_file = __DIR__ . '/settings/server/keys.ini';
-    $keys = parse_ini_file($keys_file, true);
-    if (isset($keys) && isset($keys['server']['secret'])) {
-      $secret = trim($keys['server']['secret']);
-    }
-
-    $ttl = 3600;
-    if (!isset($secret)) {
-      $secret = '';
-      $ttl = 60;
-    }
-    CacheStore('server-secret', $secret, $ttl);
-  }
-  return $secret;
-}
 
 function GetServerKey() {
   // cache the status in apc for 15 seconds so we don't hammer the scheduler

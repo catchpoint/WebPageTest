@@ -18,14 +18,12 @@ final class CPClientTest extends TestCase {
 
     $this->assertNull($client->client_id);
     $this->assertNull($client->client_secret);
-    $this->assertNull($client->grant_type);
   }
 
   public function testConstructorSetsValues () : void {
     $auth_client_options = array (
       'client_id' => '123',
-      'client_secret' => '345',
-      'grant_type' => 'these are good to have'
+      'client_secret' => '345'
     );
     $host = 'http://127.0.0.1';
 
@@ -35,26 +33,25 @@ final class CPClientTest extends TestCase {
 
     $this->assertEquals('123', $client->client_id);
     $this->assertEquals('345', $client->client_secret);
-    $this->assertEquals('these are good to have', $client->grant_type);
   }
 
   public function testLoginCallsCorrectEndpointWithBody () : void {
     $results = [];
     $handler = $this->createRequestMock($results);
     $host = "http://webpagetest.org";
-    $username = "janet";
-    $password = "ihaveapassword";
+    $code = "janet";
+    $verify = "janet2";
+    $redirect_uri = "{$host}/ihaveapassword";
     $base = 'http://127.0.0.1';
     $client = new CPClient($host, array( 'auth_client_options' => [
         'base_uri' => $base,
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));
     try {
-      $client->login($username, $password);
+      $client->login($code, $verify, $redirect_uri);
     } catch (Exception $e) {
       // this tries to live hit your local machine, kill it instantly
     }
@@ -62,7 +59,7 @@ final class CPClientTest extends TestCase {
     $this->assertCount(1, $results);
     $transaction = $results[0];
     $expected_method = 'POST';
-    $expected_body = 'client_id=123&client_secret=345&grant_type=these+are+good+to+have&username=janet&password=ihaveapassword';
+    $expected_body = 'client_id=123&client_secret=345&grant_type=authorization_code&code=janet&code_verifier=janet2&scope=openid+Symphony+offline_access&redirect_uri=http%3A%2F%2Fwebpagetest.org%2Fihaveapassword';
     $expected_uri = "{$base}/auth/connect/token";
 
     $this->assertEquals($expected_method, $transaction['request']->getMethod());
@@ -79,18 +76,18 @@ final class CPClientTest extends TestCase {
       "token_type": "id"
     }');
     $host = "http://webpagetest.org";
-    $username = "janet";
-    $password = "ihaveapassword";
+    $code = "janet";
+    $verify = "janet2";
+    $redirect_uri = "{$host}/ihaveapassword";
     $client = new CPClient($host, array(
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));
 
-    $auth_token = $client->login($username, $password);
+    $auth_token = $client->login($code, $verify, $redirect_uri);
     $this->assertInstanceOf(AuthToken::class, $auth_token);
     $this->assertEquals('abcdef123', $auth_token->access_token);
   }
@@ -98,19 +95,19 @@ final class CPClientTest extends TestCase {
   public function testBadLoginResponse () : void {
     $handler = $this->createMockResponse(400, '{ "error": "invalid" }');
     $host = "http://webpagetest.org";
-    $username = "janet";
-    $password = "ihaveapassword";
+    $code = "janet";
+    $verify = "janet2";
+    $redirect_uri = "{$host}/ihaveapassword";
     $client = new CPClient($host, array(
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));
 
     $this->expectException(ClientException::class);
-    $client->login($username, $password);
+    $client->login($code, $verify, $redirect_uri);
   }
 
   public function testRefreshAuthTokenCallsCorrectEndpoint () : void {
@@ -123,7 +120,7 @@ final class CPClientTest extends TestCase {
         'base_uri' => $base,
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
+        'grant_type' => 'refresh_token',
         'handler' => $handler
       ]
     ));
@@ -159,7 +156,7 @@ final class CPClientTest extends TestCase {
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
+        'grant_type' => 'refresh_token',
         'handler' => $handler
       ]
     ));
@@ -177,7 +174,7 @@ final class CPClientTest extends TestCase {
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
+        'grant_type' => 'refresh_token',
         'handler' => $handler
       ]
     ));
@@ -196,7 +193,6 @@ final class CPClientTest extends TestCase {
         'base_uri' => $base,
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));
@@ -225,7 +221,6 @@ final class CPClientTest extends TestCase {
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));
@@ -241,7 +236,6 @@ final class CPClientTest extends TestCase {
       'auth_client_options' => [
         'client_id' => '123',
         'client_secret' => '345',
-        'grant_type' => 'these are good to have',
         'handler' => $handler
       ]
     ));

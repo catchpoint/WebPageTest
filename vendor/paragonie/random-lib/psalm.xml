@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<psalm
+    name="Example Psalm config with recommended defaults"
+    useDocblockTypes="true"
+    totallyTyped="true"
+>
+    <projectFiles>
+        <directory name="lib" />
+    </projectFiles>
+
+    <issueHandlers>
+        <DocblockTypeContradiction errorLevel="suppress" />
+        <MoreSpecificImplementedParamType errorLevel="suppress" />
+        <PossiblyNullPropertyAssignmentValue errorLevel="suppress" />
+        <RedundantConditionGivenDocblockType errorLevel="suppress" />
+        <UndefinedClass errorLevel="suppress" /><!-- Windows only -->
+    </issueHandlers>
+</psalm>
