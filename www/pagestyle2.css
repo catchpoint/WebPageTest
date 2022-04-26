@@ -2853,6 +2853,10 @@ header {
     color: #333;
 }
 
+.results_nav .test_meta_commands .test_meta_rerun_form p {
+    font-size: .9em;
+}
+
 .results_nav .test_meta_commands details>form,
 .results_nav .test_meta_commands details>ul {
     position: absolute;
@@ -2861,6 +2865,7 @@ header {
     border: 1px solid #eee;
     min-width: 20rem;
     margin-top: -1px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, .1);
 }
 
 .home_feature_hed .attention {
