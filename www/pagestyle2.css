@@ -1705,10 +1705,10 @@ footer ul {
 
 .opportunities_summary>p,
 .results_header .opportunities_summary>p {
-    font-size: 1rem;
+    font-size: .9rem;
     margin: 0;
     padding-bottom: 0;
-    font-weight: 500;
+    font-weight: 900;
     color: #111111;
     text-transform: capitalize;
     text-align: right;
