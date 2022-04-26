@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
+use WebPageTest\Util\Cache;
+
 class Util
 {
     private static array $SETTINGS = [];
@@ -18,59 +20,13 @@ class Util
     public static function getSetting(string $setting, $default = false, string $override_settings_file = "")
     {
         if (empty(self::$SETTINGS)) {
-            self::$SETTINGS = self::cacheFetch(self::SETTINGS_KEY) ?? [];
+            self::$SETTINGS = Cache::fetch(self::SETTINGS_KEY) ?? [];
             if (empty(self::$SETTINGS)) {
                 self::loadAndStoreSettings($override_settings_file);
             }
         }
 
         $ret = self::$SETTINGS[$setting] ?? $default;
-        return $ret;
-    }
-
-    /*
-     * returns string|array|null
-     */
-    public static function cacheFetch(string $key)
-    {
-        $ret = null;
-        $success = false;
-        // namespace the keys by installation
-        $key = \sha1(__DIR__) . $key;
-        if (\function_exists('apcu_fetch')) {
-            $ret = \apcu_fetch($key, $success);
-            if (!$success) {
-                $ret = null;
-            }
-        } elseif (\function_exists('apc_fetch')) {
-            $ret = \apc_fetch($key, $success);
-            if (!$success) {
-                $ret = null;
-            }
-        }
-        return $ret;
-    }
-
-    /*
-     * params
-     * string $key
-     * string|array $value
-     * int $ttl default 0
-     *
-     * returns bool
-     */
-    public static function cacheStore(string $key, $value, int $ttl = 0): bool
-    {
-        $ret = false;
-        // namespace the keys by installation
-        $key = sha1(__DIR__) . $key;
-        if (isset($value)) {
-            if (function_exists('apcu_store')) {
-                $ret = apcu_store($key, $value, $ttl);
-            } elseif (function_exists('apc_store')) {
-                $ret = apc_store($key, $value, $ttl);
-            }
-        }
         return $ret;
     }
 
@@ -91,7 +47,7 @@ class Util
     {
       // cache the status in apc for 15 seconds so we don't hammer the scheduler
         $settings_dir = self::$settings_dir;
-        $secret = self::cacheFetch('server-secret');
+        $secret = Cache::fetch('server-secret');
         if (isset($secret) && !is_string($secret)) {
             $secret = null;
         }
@@ -113,7 +69,7 @@ class Util
                 $secret = '';
                 $ttl = 60;
             }
-            self::cacheStore('server-secret', $secret, $ttl);
+            Cache::store('server-secret', $secret, $ttl);
         }
         return $secret;
     }
@@ -124,7 +80,7 @@ class Util
             if (file_exists($override_filepath)) {
                 self::$SETTINGS = parse_ini_file($override_filepath);
             }
-            self::cacheStore(self::SETTINGS_KEY, self::$SETTINGS, 60);
+            Cache::store(self::SETTINGS_KEY, self::$SETTINGS, 60);
             return;
         }
 
@@ -147,6 +103,6 @@ class Util
             self::$SETTINGS = array_merge(self::$SETTINGS, $server);
         }
 
-        self::cacheStore(self::SETTINGS_KEY, self::$SETTINGS, 60);
+        Cache::store(self::SETTINGS_KEY, self::$SETTINGS, 60);
     }
 }

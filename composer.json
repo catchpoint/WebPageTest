@@ -8,8 +8,8 @@
     },
     "scripts": {
       "test": "phpunit --configuration tests/phpunit.xml",
-      "lint": "phpcs --standard=PSR12 www/src www/cpauth",
-      "format": "phpcbf --standard=PSR12 www/src www/cpauth"
+      "lint": "phpcs --standard=PSR12 www/src www/cpauth www/common",
+      "format": "phpcbf --standard=PSR12 www/src www/cpauth www/common"
     },
     "require": {
         "guzzlehttp/guzzle": "^7.4",

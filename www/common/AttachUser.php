@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 use WebPageTest\User;
 use WebPageTest\Util;
@@ -7,82 +9,87 @@ use WebPageTest\RequestContext;
 use WebPageTest\Exception\UnauthorizedException;
 
 (function (RequestContext $request) {
-  global $admin;
-  $host = Util::getSetting('host');
-  $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
-  $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
+    global $admin;
+    $host = Util::getSetting('host');
+    $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
+    $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
 
-  $user = new User();
+    $user = new User();
 
-  if ($request->getClient()->isAuthenticated()) {
-    $user->setAccessToken($request->getClient()->getAccessToken());
-  }
-  if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
-    $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
-  }
+    if ($request->getClient()->isAuthenticated()) {
+        $user->setAccessToken($request->getClient()->getAccessToken());
+    }
+    if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
+        $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
+    }
 
-  $access_token = $user->getAccessToken();
+    $access_token = $user->getAccessToken();
 
   // Signed in, grab info on user
-  if (!is_null($access_token)) {
-    try {
-      $data = $request->getClient()->getUserDetails();
-      $user->setUserId($data['id']);
-      $user->setEmail($data['email']);
-      $user->setPaid($data['isWptPaidUser']);
-      $user->setVerified($data['isWptAccountVerified']);
-    } catch (UnauthorizedException $e) {
-      error_log($e->getMessage());
-      // if this fails, Refresh and retry
-      $refresh_token = $user->getRefreshToken();
-      if (is_null($refresh_token)) {
-        // if no refresh token, delete the access token, it is no longer useful
-        setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
-      } else {
+    if (!is_null($access_token)) {
         try {
-          $auth_token = $request->getClient()->refreshAuthToken($refresh_token);
-          $request->getClient()->authenticate($auth_token->access_token);
-          setcookie($cp_access_token_cookie_name, $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
-          setcookie($cp_refresh_token_cookie_name, $auth_token->refresh_token, time() + 60*60*24*30, "/", $host);
-          $data = $request->getClient()->getUserDetails();
-          $user->setUserId($data['id']);
-          $user->setEmail($data['email']);
-          $user->setPaid($data['isWptPaidUser']);
-          $user->setVerified($data['isWptAccountVerified']);
+            $data = $request->getClient()->getUserDetails();
+            $user->setUserId($data['id']);
+            $user->setEmail($data['email']);
+            $user->setPaid($data['isWptPaidUser']);
+            $user->setVerified($data['isWptAccountVerified']);
         } catch (UnauthorizedException $e) {
-          error_log($e->getMessage());
-          // if this fails, delete all the cookies
-          setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
-          setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
-        }
-      }
-    }
-  }
-
-  $user_email = $user->getEmail();
-
-  if (!$admin && !is_null($user_email))
-  {
-      $admin_users = Util::getSetting("admin_users");
-      if ($admin_users)
-      {
-          $admin_users = explode(',', $admin_users);
-          if (is_array($admin_users) && count($admin_users))
-          {
-            foreach($admin_users as $substr)
-            {
-              if (stripos($user_email, $substr) !== false)
-              {
-                  $user->setAdmin(true);
-                  $admin = true;
-                  break;
-              }
+            error_log($e->getMessage());
+          // if this fails, Refresh and retry
+            $refresh_token = $user->getRefreshToken();
+            if (is_null($refresh_token)) {
+              // if no refresh token, delete the access token, it is no longer useful
+                setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+            } else {
+                try {
+                    $auth_token = $request->getClient()->refreshAuthToken($refresh_token);
+                    $request->getClient()->authenticate($auth_token->access_token);
+                    setcookie(
+                        $cp_access_token_cookie_name,
+                        $auth_token->access_token,
+                        time() + $auth_token->expires_in,
+                        "/",
+                        $host
+                    );
+                    setcookie(
+                        $cp_refresh_token_cookie_name,
+                        $auth_token->refresh_token,
+                        time() + 60 * 60 * 24 * 30,
+                        "/",
+                        $host
+                    );
+                    $data = $request->getClient()->getUserDetails();
+                    $user->setUserId($data['id']);
+                    $user->setEmail($data['email']);
+                    $user->setPaid($data['isWptPaidUser']);
+                    $user->setVerified($data['isWptAccountVerified']);
+                } catch (UnauthorizedException $e) {
+                    error_log($e->getMessage());
+                  // if this fails, delete all the cookies
+                    setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+                    setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+                }
             }
-          }
-      }
-  }
+        }
+    }
 
-  $request->setUser($user);
+    $user_email = $user->getEmail();
+
+    if (!$admin && !is_null($user_email)) {
+        $admin_users = Util::getSetting("admin_users");
+        if ($admin_users) {
+            $admin_users = explode(',', $admin_users);
+            if (is_array($admin_users) && count($admin_users)) {
+                foreach ($admin_users as $substr) {
+                    if (stripos($user_email, $substr) !== false) {
+                        $user->setAdmin(true);
+                        $admin = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    $request->setUser($user);
 })($request_context);
-
-?>

@@ -11,7 +11,7 @@ use GuzzleHttp\Client as GuzzleClient;
 use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
-use GraphQL\Exception\QueryError;
+use GuzzleHttp\Exception\ClientException as GuzzleException;
 
 class CPClient
 {
@@ -72,6 +72,11 @@ class CPClient
         $body = array('form_params' =>  $form_params);
         try {
             $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
         } catch (BaseException $e) {
             throw new ClientException($e->getMessage());
         }
@@ -95,10 +100,13 @@ class CPClient
         );
         try {
             $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
-        } catch (QueryError $e) {
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
             throw new ClientException($e->getMessage());
         } catch (BaseException $e) {
-            throw new UnauthorizedException();
+            throw new ClientException($e->getMessage());
         }
         $json = json_decode((string)$response->getBody());
         return new AuthToken((array)$json);
@@ -116,6 +124,11 @@ class CPClient
         );
         try {
             $this->auth_client->request('POST', '/auth/connect/revocation', $body);
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
         } catch (BaseException $e) {
             throw new ClientException($e->getMessage());
         }
@@ -138,11 +151,13 @@ class CPClient
         try {
             $account_details = $this->graphql_client->runQuery($gql, true);
             return $account_details->getData()['userIdentity']['activeContact'];
-        } catch (QueryError $e) {
-            error_log($e->getMessage());
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
             throw new ClientException($e->getMessage());
         } catch (BaseException $e) {
-            throw new UnauthorizedException();
+            throw new ClientException($e->getMessage());
         }
     }
 }
