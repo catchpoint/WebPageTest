@@ -101,15 +101,18 @@ if ($request_method === 'POST') {
     $user_id = $request_context->getUser()->getUserId();
     $user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
     $user_email = $request_context->getUser()->getEmail();
+    $first_name = $user_contact_info['firstName'] ?? "";
+    $last_name = $user_contact_info['lastName'] ?? "";
+    $company_name = $user_contact_info['companyName'] ?? "";
 
     $contact_info = array(
     'layout_theme' => 'b',
     'is_paid' => $is_paid,
     'is_verified' => $is_verified,
-    'first_name' => htmlspecialchars($user_contact_info['firstName']),
-    'last_name' => htmlspecialchars($user_contact_info['lastName']),
+    'first_name' => htmlspecialchars($first_name),
+    'last_name' => htmlspecialchars($last_name),
     'email' => $user_email,
-    'company_name' => htmlspecialchars($user_contact_info['companyName']),
+    'company_name' => htmlspecialchars($company_name),
     'id' => $user_id
     );
 
