@@ -636,10 +636,11 @@ span.lh-flag.poor {
     border-radius: 1rem;
     box-shadow: 0 0 4px #ddd;
     margin: 1em -3rem !important;
-    background-clip: content-box;
-    overflow: hidden;
+    background-clip: padding-box;
     position: relative;
     /* overflow-y: visible; */
+    overflow: hidden;
+    /* height: 100%; */
 }
 
 @media (max-width: 87.5em) {
@@ -649,6 +650,20 @@ span.lh-flag.poor {
         box-shadow: none;
         margin: 0 0 !important;
     }
+}
+
+.experiments_grades {
+    overflow: visible;
+}
+
+.form_clip .grade_header:first-of-type {
+    border-top-right-radius: 1rem;
+    border-top-left-radius: 1rem;
+}
+
+.form_clip>.experiments_foot {
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
 }
 
 .compare-loading .results_body {
@@ -866,7 +881,8 @@ p.grade_summary {
 }
 
 .experiments_bottlenecks>ol>li.experiments_details-neutral>details>summary:before {
-    background-color: #2f80ed;
+    background: #2f80ed url(/images/src/icon_gear.svg) 50% 50% no-repeat;
+    background-size: .9em auto;
 }
 
 h4.experiments_list_hed {
@@ -1130,29 +1146,41 @@ h4.experiments_list_hed-recs {
 }
 
 .experiments_foot {
-    margin: 0;
     /* border-top: 1px solid #ddd; */
-    /* padding: 2em 0; */
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 4rem;
     border-bottom: 1px solid #ddd;
-    padding-bottom: 0.6rem;
-    margin-top: 0;
+    margin-top: 8rem;
     margin-left: -3em;
     margin-right: -3em;
-    padding: 2em 3em;
-    background: #fafafa;
+    padding: 1.4em 3em 1.4em;
+    background: #2a3c64;
     border-right: 0;
     border-left: 0;
+    /* scroll-margin-bottom: 3rem; */
+}
+
+.experiments_foot-stick {
+    position: sticky;
+    bottom: 0;
+}
+
+.experiments_create {
+    margin-bottom: -8rem;
+    /* NOTE this counters the top margin on the footer */
 }
 
 .experiments_foot p {
-    font-size: 1.7rem;
+    font-size: 1.3rem;
     font-weight: 900;
     margin: 0;
-    color: #333;
+    color: #fff;
+}
+
+.experiments_foot p span {
+    font-weight: 500;
 }
 
 .experiments_foot input[type=submit],

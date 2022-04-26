@@ -156,7 +156,7 @@ $page_description = "Website performance test result$testLabel.";
 
                     
 
-                    echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+                    echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'><div class=\"form_clip\">";
                     echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -341,7 +341,7 @@ $page_description = "Website performance test result$testLabel.";
                        $good = $opps - $bad;
                        if( $key === "Custom") {
                             echo <<<EOT
-                            <details>
+                            <details class="experiments_create">
                             <summary class="grade_header" id="${key}">
                                 <h3 class="grade_heading grade-${grade}">Create Experiments</h3>
                                 <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
@@ -376,13 +376,12 @@ $page_description = "Website performance test result$testLabel.";
                         }
                     }
 
-
-                    echo '<div class="experiments_foot"><p>Ready to go?</p>';
+                    echo '<div class="experiments_foot"><p><span class="exps-active"></span> Ready to go?</p>';
                     
                     echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
 
                     echo '<input type="submit" value="Re-Run Test with Experiments">';
-                    echo "\n</div></form>\n";
+                    echo "\n</div></div></form>\n";
                 }
                 ?>
 
@@ -515,8 +514,26 @@ $page_description = "Website performance test result$testLabel.";
 
     $("form.experiments_grades").on("change submit", saveExperimentFormState );
 
+    var expsActive = 0;
+    function updateCount(){
+        expsActive = $(".experiment_description_go input:checked").length;
+        if(expsActive > 0){
+            $(".experiments_foot").addClass("experiments_foot-stick");
+            $(".exps-active").html('<strong>' + expsActive + '</strong> experiment'+ (expsActive>1?'s':'') +' selected.' );
+        } else{
+            $(".experiments_foot").removeClass("experiments_foot-stick");
+            $(".exps-active").html('');
+        }
+    }
+
+        
+
+
     // try and restore state at load
     refreshExperimentFormState();
+    updateCount();
+    $("form.experiments_grades").on("change input submit", updateCount );
+
 
 </script>
     </body>
