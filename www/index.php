@@ -883,14 +883,14 @@ $loc = ParseLocations($locations);
                                     'hint' => 'no value necessary'
                                     ],
                                     (object) [
-                                    'value' => 'addimportance',
-                                    'label' => 'add importance=high or low to an image script or link by url',
+                                    'value' => 'addpriorityhint',
+                                    'label' => 'add fetchpriority=high or low to an image script or link by url',
                                     'required' => true,
                                     'hint' => 'foo.jpg|i_high,baz.js|i_low'
                                     ],
                                     (object) [
-                                    'value' => 'removeimportance',
-                                    'label' => 'remove importance attribute on an image script or link by url',
+                                    'value' => 'removepriorityhint',
+                                    'label' => 'remove fetchpriority attribute on an image script or link by url',
                                     'required' => true,
                                     'hint' => 'foo.jpg,baz.js'
                                     ]
