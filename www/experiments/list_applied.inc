@@ -19,12 +19,16 @@ if( $experiment ){
         echo "<li><details><summary>". $experimentInfo["title"] ."</summary>";
         
         foreach($recipe as $ings){
-        if( is_string($ings)){
-            $ings = array($ings);
-        }
-        echo "<div class=\"experiment_meta_included_list\"> ". $experimentInfo["desc"] ."<h3>Assets included:</h3><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
-        
-        </div></details></li>";
+            if( is_string($ings)){
+                $ings = array($ings);
+            }
+            // important to escape here. some experiments allow freeform markup changes to the test page.
+            foreach($ings as $ikey => $ing){
+                $ings[$ikey] = htmlentities($ing);
+            }
+            echo "<div class=\"experiment_meta_included_list\"> ". $experimentInfo["desc"] ."<h3>Assets included:</h3><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
+            
+            </div></details></li>";
         }
     }
 }
