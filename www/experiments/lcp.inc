@@ -61,7 +61,7 @@
                         "id" => '011',
                         'title' => 'Add Priority Hint',
                         "desc" => '<p><em>(Chrome-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
-                        "expvar" => 'addimportance',
+                        "expvar" => 'addpriorityhint',
                         "expval" => array($lcpSource . "|i_high"),
                         "explabel" => array($lcpSource)
                     ];
