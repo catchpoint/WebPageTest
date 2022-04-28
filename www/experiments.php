@@ -293,10 +293,12 @@ $page_description = "Website performance test result$testLabel.";
                                         <div class="experiment_description_go experiment_description_go-multi">
                                         <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
                                         EOT;
+                                        $addmore = $exp->addmore ? ' experiment_pair_value-add' : '';
+
                                         foreach($exp->expfields as $field){
                                             if( $field->type === "text" ){
                                             $out .= <<<EOT
-                                                <label class="experiment_pair_value-visible"><span>{$field->label}: </span><input type="{$field->type}" name="{$expNum}-{$exp->expvar}[]"></label>
+                                                <label class="experiment_pair_value-visible {$addmore}"><span>{$field->label}: </span><input type="{$field->type}" name="{$expNum}-{$exp->expvar}[]"></label>
                                                 EOT;
                                             } else {
                                                 $out .= <<<EOT
@@ -561,6 +563,9 @@ $page_description = "Website performance test result$testLabel.";
     refreshExperimentFormState();
     updateCount();
     $("form.experiments_grades").on("change input submit", updateCount );
+
+    // add add buttons
+    $(".experiment_pair_value-add").after("<button type='button' class='experiment_pair_value_addbtn'>Add more</button>").next().on("click", function(){ $(this).before($(this).prev().clone());}); 
 
 
 </script>

@@ -918,6 +918,7 @@ h4.experiments_list_hed-recs {
     border-radius: .3em;
     display: flex;
     background: #fafafa;
+    gap: 2rem;
 }
 
 .experiment_description code {
@@ -1121,6 +1122,8 @@ h4.experiments_list_hed-recs {
     border-radius: 2rem;
     overflow: hidden;
     box-shadow: 0 0 3px rgb(0 0 0 / 10%);
+    /* overflow: auto; */
+    background: #fff;
 }
 
 .experiment_description_go.experiment_description_go-multi>label {
@@ -1155,6 +1158,25 @@ h4.experiments_list_hed-recs {
     display: inline-block;
 }
 
+.experiment_pair_value_addbtn {
+    margin: 0 2rem 1rem;
+    cursor: pointer;
+    display: block;
+    float: right;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 2rem;
+    padding: .3em 1em;
+    font-size: .9em;
+    font-weight: 500;
+    color: #4e8e37;
+}
+
+.experiment_pair_value_addbtn:hover,
+.experiment_pair_value_addbtn:focus {
+    box-shadow: 0 0 5px rgba(0, 0, 0, .1);
+}
+
 .experiment_description_go>label.experiment_pair_value-visible {
     padding: .1em 1em .5em 3.3em;
     display: flex;
@@ -1164,7 +1186,12 @@ h4.experiments_list_hed-recs {
 
 .experiment_description_go>label.experiment_pair_value-visible span {
     font-weight: 500;
-    text-transform: capitalize;
+    text-transform: initial;
+}
+
+.experiment_description_go>label.experiment_pair_value-visible span em {
+    font-size: .8em;
+    color: #222;
 }
 
 .experiment_description_go>label.experiment_pair_value-visible input[type=text] {

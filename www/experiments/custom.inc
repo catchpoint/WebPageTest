@@ -44,7 +44,6 @@ $assessment[$category]["opportunities"][] = array(
             "expfields" => array(
                 (object) [
                     'label' => 'find',
-                    'name' => 'pattern',
                     'type' => 'text'
                 ],
                 (object) [
@@ -68,6 +67,216 @@ $assessment[$category]["opportunities"][] = array(
     "good" =>  null,
     "inputttext" => true
 );
+
+
+$assessment[$category]["opportunities"][] = array(
+    "title" =>  "Delivery Optimizations",
+    "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. <a href='#'>See Documentation</a>.",
+    "examples" =>  array(),
+    "experiments" =>  array(
+        (object) [
+            'id' => '027',
+            'expvar' => 'deferjs',
+            'title' => 'Defer Render-Blocking Scripts',
+            "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about defer on MDN</a></p>',
+            'textfield' => false,
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'site.js'
+            ],
+            (object) [
+            'id' => '028',
+            'expvar' => 'asyncjs',
+            'title' => 'Async Blocking Scripts',
+            "desc" => '<p>This experiment adds a <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source. <a href="#">More about async on MDN</a></p>',
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'site.js'
+            ],
+            (object) [
+            'id' => '029',
+            'expvar' => 'asynccss',
+            'title' => 'Load CSS Async',
+            "desc" => '<p>This experiment loads specified stylesheets in a way that allows the page to begin rendering while they are still loading. Note that this may cause a flash of unstyled content.</p>',
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'site.css'
+            ],
+            (object) [
+            'id' => '030',
+            'expvar' => 'imageaspectratio',
+            'title' => 'Add Image Aspect Ratio',
+            "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL <em>(plus <code>|w500|h600</code>)</em>',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'foo.jpg|w500|h600'
+            ],
+            (object) [
+            'id' => '031',
+            'expvar' => 'inline',
+            'title' => 'Inline External Files',
+            "desc" => '<p>This experiment embeds the contents of specified external scripts or stylesheets or svg Files directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips. <strong>Note:</strong> The inline experiment may break relative references to images and other assets inside the file. These would need proper path changes in production.</p>',
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'site.css'
+            ],
+            (object) [
+            'id' => '032',
+            'expvar' => 'addpreload',
+            'title' => 'Preload files',
+            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'path/to/foo.jpg'
+            ],
+            (object) [
+            'id' => '033',
+            'expvar' => 'removepreload',
+            'title' => 'Remove Preloads',
+            "desc" => '<p>This experiment removes specified unused preloads from the page, allowing other critical resources to be requested earlier.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'site.js'
+            ],
+            (object) [
+            'id' => '034',
+            'expvar' => 'addpreconnect',
+            'title' => 'Preconnect Domains',
+            "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'Domain',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'https://www.webpagetest.org'
+            ],
+            (object) [
+            'id' => '035',
+            'expvar' => 'addloadinglazy',
+            'title' => 'Lazy Load Images',
+            "desc" => '<p>This experiment adds <code>loading="lazy"</code> attributes to specified images.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'myimage.jpg'
+            ],
+            (object) [
+            'id' => '036',
+            'expvar' => 'removeloadinglazy',
+            'title' => 'Remove Lazy Loading',
+            "desc" => '<p>This experiment removes <code>loading="lazy"</code> attributes from specified images.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'myimage.jpg'
+            ],
+            (object) [
+            'id' => '037',
+            'expvar' => 'minifycss',
+            'title' => 'Minify CSS',
+            "desc" => '<p>This experiment removes whitespace from same-domain CSS files.</p>',
+            'textfield' => false,
+            'expval' => array(''),
+            "hideassets" => true,
+            'instruction' => false,
+            
+'hint' => 'no value necessary'
+            ],
+            (object) [
+            'id' => '038',
+            'expvar' => 'addpriorityhint',
+            'title' => 'Add Priority Hint',
+            "desc" => '<p><em>(Chrome-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL <em>(plus <code>|i_high</code> or <code>|i_low</code>)</em>',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'foo.jpg|i_high'
+            ],
+            (object) [
+            'id' => '039',
+            'expvar' => 'removepriorityhint',
+            'title' => 'Remove Priority Hint',
+            "desc" => '<p><em>(Chrome-only)</em> This experiment removes an existing <code>fetchpriority</code> attribute to specified images, causing them to request at their default priority.</p>',
+            
+"expfields" => array(
+                (object) [
+                    'label' => 'File/URL',
+                    'type' => 'text'
+                ]
+),
+            'addmore' => true,
+'hint' => 'foo.jpg'
+            ],
+            (object) [
+            'id' => '040',
+            'expvar' => 'fontdisplayswap',
+            'title' => 'Add font-display: swap',
+            "desc" => '<p>This experiment changes the way a custom font loads so that text can appear while fonts are loading</p>',
+            'expval' => array(''),
+            "hideassets" => true,
+           
+'hint' => 'foo.jpg'
+            ]
+    ),
+    "good" =>  null,
+    "inputttext" => true
+);
+
 
 
 ?>
