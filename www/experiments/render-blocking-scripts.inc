@@ -20,8 +20,15 @@ if( count($blockingJSReqs) > 0 ){
             (object) [
                 "id" => '001',
                 'title' => 'Defer Render-Blocking Scripts',
-                "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about resource hints on MDN</a></p>',
+                "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about defer on MDN</a></p>',
                 "expvar" => 'deferjs',
+                "expval" => array_unique($blockingJSReqs)
+            ],
+            (object) [
+                "id" => '041',
+                'title' => 'Async Render-Blocking Scripts',
+                "desc" => '<p>This experiment adds a <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source. <a href="#">More about async on MDN</a></p>',
+                "expvar" => 'asyncjs',
                 "expval" => array_unique($blockingJSReqs)
             ],
             (object) [
