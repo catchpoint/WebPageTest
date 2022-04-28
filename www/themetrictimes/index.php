@@ -3,6 +3,9 @@
 if( strpos( $_SERVER['HTTP_USER_AGENT'], "PTST" ) > 0 ){
 	sleep(3);
 }
+if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
+	header("Location: index.php");
+}
 ?>
 
 <!DOCTYPE html>
