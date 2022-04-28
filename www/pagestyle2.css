@@ -1112,6 +1112,26 @@ h4.experiments_list_hed-recs {
     justify-content: flex-end;
 }
 
+.experiment_description_go-multi {
+    display: block;
+}
+
+.experiment_description_go.experiment_description_go-multi {
+    border: 1px solid #ddd;
+    border-radius: 2rem;
+    overflow: hidden;
+    box-shadow: 0 0 3px rgb(0 0 0 / 10%);
+}
+
+.experiment_description_go.experiment_description_go-multi>label {
+    /* margin: 1em !important; */
+    display: block;
+    border-radius: 0;
+    text-align: left;
+    border: 0;
+    box-shadow: none;
+}
+
 .experiment_description_go>label.experiment_pair_check {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -1133,6 +1153,23 @@ h4.experiments_list_hed-recs {
     overflow: hidden;
     text-indent: -999px;
     display: inline-block;
+}
+
+.experiment_description_go>label.experiment_pair_value-visible {
+    padding: .1em 1em .5em 3.3em;
+    display: flex;
+    gap: .5em;
+    align-items: center;
+}
+
+.experiment_description_go>label.experiment_pair_value-visible span {
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.experiment_description_go>label.experiment_pair_value-visible input[type=text] {
+    border: 1px solid #ddd;
+    flex: 1 1 auto;
 }
 
 .experiment_description_go>label.experiment_pair_value input {

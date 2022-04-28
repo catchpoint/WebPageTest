@@ -26,7 +26,7 @@ if( $experiment ){
             foreach($ings as $ikey => $ing){
                 $ings[$ikey] = htmlentities($ing);
             }
-            echo "<div class=\"experiment_meta_included_list\"> ". $experimentInfo["desc"] ."<h3>Assets included:</h3><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
+            echo "<div class=\"experiment_meta_included_list\"> ". $experimentInfo["desc"] ."<h3>Assets/Instructions:</h3><ul><li>" . implode("</li><li>", $ings) . "</li></ul>
             
             </div></details></li>";
         }

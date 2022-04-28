@@ -286,6 +286,31 @@ $page_description = "Website performance test result$testLabel.";
                                         }
                                     }
                                 }
+                                else if( $exp->expvar && !$exp->expval && $exp->expfields ) {
+                                    if( $experimentEnabled ){
+                                        $out .= <<<EOT
+                                        </div>
+                                        <div class="experiment_description_go experiment_description_go-multi">
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
+                                        EOT;
+                                        foreach($exp->expfields as $field){
+                                            if( $field->type === "text" ){
+                                            $out .= <<<EOT
+                                                <label class="experiment_pair_value-visible"><span>{$field->label}: </span><input type="{$field->type}" name="{$expNum}-{$exp->expvar}[]"></label>
+                                                EOT;
+                                            } else {
+                                                $out .= <<<EOT
+                                                    <label class="experiment_pair_value-visible"><input type="{$field->type}" name="{$expNum}-{$exp->expvar}[]"><span> {$field->label}</span></label>
+                                                    EOT;
+                                            }
+                                        }
+                                        $out .= <<<EOT
+                                        </div>
+                                        EOT;
+                                    } else {
+                                        $out .= $upgradeLink;
+                                    }
+                                }
                                 else if( $exp->expvar && !$exp->expval && $textinput ) {
                                     if( $experimentEnabled ){
                                         $out .= <<<EOT
@@ -396,7 +421,7 @@ $page_description = "Website performance test result$testLabel.";
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
             // collapse later opps
-            document.querySelectorAll("li:not(.experiments_details-bad,.experiments_details-neutral) details").forEach(deet => {
+            document.querySelectorAll("li:not(.experiments_details-bad,.experiments_details-neutral)").forEach(deet => {
                 deet.open = false;
             });
         </script>
@@ -514,12 +539,15 @@ $page_description = "Website performance test result$testLabel.";
 
     $("form.experiments_grades").on("change submit", saveExperimentFormState );
 
-    var expsActive = 0;
+    var expsActive;
     function updateCount(){
-        expsActive = $(".experiment_description_go input:checked").length;
-        if(expsActive > 0){
+        expsActive = $(".experiment_description_go label:not(.experiment_pair_value-visible) input:checked");
+        if(expsActive.length > 0){
+            expsActive.parents("details").each(function(){
+                this.open = true;
+            });
             $(".experiments_foot").addClass("experiments_foot-stick");
-            $(".exps-active").html('<strong>' + expsActive + '</strong> experiment'+ (expsActive>1?'s':'') +' selected.' );
+            $(".exps-active").html('<strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.' );
         } else{
             $(".experiments_foot").removeClass("experiments_foot-stick");
             $(".exps-active").html('');
