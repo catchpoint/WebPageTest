@@ -1236,11 +1236,30 @@ h4.experiments_list_hed-recs {
     /* NOTE this counters the top margin on the footer */
 }
 
-.experiments_foot p {
+.experiments_foot>div {}
+
+.experiments_foot p:first-child {
     font-size: 1.3rem;
     font-weight: 900;
-    margin: 0;
+    margin: 0 0 1em;
     color: #fff;
+}
+
+.experiments_foot p:last-child {
+    font-size: .9rem;
+    font-weight: 900;
+    margin: 0 0;
+    color: #fff;
+}
+
+.experiments_foot p:last-child label {
+    font-weight: 500;
+}
+
+.experiments_foot p:last-child input {
+    width: 2em;
+    height: 1em;
+    padding: .5em;
 }
 
 .experiments_foot p span {

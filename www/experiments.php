@@ -403,7 +403,12 @@ $page_description = "Website performance test result$testLabel.";
                         }
                     }
 
-                    echo '<div class="experiments_foot"><p><span class="exps-active"></span> Ready to go?</p>';
+                    $numRuns = $testResults->countRuns();
+
+                    echo '<div class="experiments_foot">
+                    <div><p><span class="exps-active"></span> Ready to go?</p>
+                    <p class="exps-runcount">Number of Test Runs: <label>Experiment: <input type="number" min="1" name="900-experiment-experimentruns" value="'. $numRuns . '"></label> <label>Control: <input type="number" min="1" name="900-experiment-controlruns" value="'. $numRuns . '"></label></p>
+                    </div>';
                     
                     echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
 
