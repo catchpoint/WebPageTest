@@ -152,6 +152,9 @@ use WebPageTest\RateLimiter;
             if (isset($req_spof)) {
               $test['spof'] .= ' ' . $req_spof;
             }
+            if (isset($req_runs)) {
+              $test['runs'] = isset($req_runs) ? (int)$req_runs : 1;
+            }
             if (isset($req_keepua)) {
               $test['keepua'] = 1;
             }

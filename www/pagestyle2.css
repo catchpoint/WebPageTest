@@ -1236,12 +1236,16 @@ h4.experiments_list_hed-recs {
     /* NOTE this counters the top margin on the footer */
 }
 
-.experiments_foot>div {}
+.experiments_foot>div {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
 
 .experiments_foot p:first-child {
     font-size: 1.3rem;
     font-weight: 900;
-    margin: 0 0 1em;
+    margin: 0;
     color: #fff;
 }
 
@@ -1253,13 +1257,20 @@ h4.experiments_list_hed-recs {
 }
 
 .experiments_foot p:last-child label {
+    font-weight: 700;
+    text-align: right;
+}
+
+.experiments_foot p:last-child label small {
     font-weight: 500;
+    text-align: right;
 }
 
 .experiments_foot p:last-child input {
     width: 2em;
     height: 1em;
-    padding: .5em;
+    margin-left: .5em;
+    padding: .4em;
 }
 
 .experiments_foot p span {
@@ -1284,6 +1295,12 @@ h4.experiments_list_hed-recs {
 .experiments_foot button:hover {
     background: #58a03d;
     box-shadow: 0 0 6px rgba(0, 0, 0, .3);
+}
+
+.experiments_foot input[type=submit][aria-disabled],
+.experiments_foot button[aria-disabled] {
+    opacity: 0.9;
+    pointer-events: none;
 }
 
 p {
@@ -3468,7 +3485,7 @@ nav.link_select:hover ul {
 
 label small {
     display: block;
-    max-width: 80%;
+    /* max-width: 80%; */
 }
 
 .test_presets_easy .profiles {

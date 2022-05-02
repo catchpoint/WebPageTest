@@ -403,11 +403,11 @@ $page_description = "Website performance test result$testLabel.";
                         }
                     }
 
-                    $numRuns = $testResults->countRuns();
+                    $numRuns = $test['test']['runs'];
 
                     echo '<div class="experiments_foot">
-                    <div><p><span class="exps-active"></span> Ready to go?</p>
-                    <p class="exps-runcount">Number of Test Runs: <label>Experiment: <input type="number" min="1" name="900-experiment-experimentruns" value="'. $numRuns . '"></label> <label>Control: <input type="number" min="1" name="900-experiment-controlruns" value="'. $numRuns . '"></label></p>
+                    <div><p><span class="exps-active"></span> <span class="exps-cta">Ready to go?</span></p>
+                    <p class="exps-runcount"><label>Number of Experiment Runs:  <input type="number" min="1" max="9" class="text short" name="runs" value="'. $numRuns .'" required=""> <small>(Each experiment run uses 2 test runs: 1 experiment, 1 control.)</small></label></p>
                     </div>';
                     
                     echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
@@ -525,13 +525,15 @@ $page_description = "Website performance test result$testLabel.";
 
                 pairs.forEach(pair => {
                     var keyval = pair.split("=");
-                    var input = form.find("[name='" + keyval[0] + "']");
-                    
-                    if( input.length ){
-                        if( input.filter("[type=checkbox],[type=radio]").length ){
-                            input = input.filter( "[value='"+ keyval[1] +"']" ).attr("checked", true);
-                        } else {
-                            input.val(keyval[1]);
+                    if( keyval[0] !== 'runs' ){
+                        var input = form.find("[name='" + keyval[0] + "']");
+                        
+                        if( input.length ){
+                            if( input.filter("[type=checkbox],[type=radio]").length ){
+                                input = input.filter( "[value='"+ keyval[1] +"']" ).attr("checked", true);
+                            } else {
+                                input.val(keyval[1]);
+                            }
                         }
                     }
                 });
@@ -554,10 +556,16 @@ $page_description = "Website performance test result$testLabel.";
                 this.open = true;
             });
             $(".experiments_foot").addClass("experiments_foot-stick");
+            $(".exps-cta").text("Ready to go?");
             $(".exps-active").html('<strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.' );
+            $("[type=submit]").removeAttr("aria-disabled");
         } else{
             $(".experiments_foot").removeClass("experiments_foot-stick");
             $(".exps-active").html('');
+            $(".exps-cta").text("Select one or more experiments...");
+
+            $("[type=submit]").attr("aria-disabled", true);
+
         }
     }
 
