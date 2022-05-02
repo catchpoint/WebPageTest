@@ -130,13 +130,10 @@ if( $supportsAuth && !defined('EMBED') )
           echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
           echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
         } else {
-            echo '<li><a href="/login">Login';
-            echo file_get_contents('./images/icon-login.svg');
-            echo '</a></li>';
-            $register = Util::getSetting('saml_register');
-            if ($register) {
-                echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
-            }
+          echo '<li><a href="/login">Login';
+          echo file_get_contents('./images/icon-login.svg');
+          echo '</a></li>';
+          echo "<li><a class='pill' href='/signup' >Sign-up</a></li>";
         }
     } else if ($supportsSaml) {
         if (isset($USER_EMAIL) && Util::getSetting('saml_account')) {
