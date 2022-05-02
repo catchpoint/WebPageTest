@@ -6,12 +6,14 @@ namespace WebPageTest;
 
 use WebPageTest\User;
 use WebPageTest\CPClient;
+use WebPageTest\CPSignupClient;
 
 class RequestContext
 {
     private array $raw;
     private ?User $user;
     private ?CPClient $client;
+    private ?CPSignupClient $signup_client;
     private bool $ssl_connection;
     private string $url_protocol;
     private string $request_method;
@@ -22,6 +24,7 @@ class RequestContext
         $this->raw = $global_request;
         $this->user = null;
         $this->client = null;
+        $this->signup_client = null;
 
         $https = isset($server['HTTPS']) && $server['HTTPS'] == 'on';
         $httpssl = isset($server['HTTP_SSL']) && $server['HTTP_SSL'] == 'On';
@@ -59,6 +62,18 @@ class RequestContext
     {
         if (isset($client)) {
             $this->client = $client;
+        }
+    }
+
+    public function getSignupClient(): ?CPSignupClient
+    {
+        return $this->signup_client;
+    }
+
+    public function setSignupClient(?CPSignupClient $client): void
+    {
+        if (isset($client)) {
+            $this->signup_client = $client;
         }
     }
 

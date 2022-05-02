@@ -27,12 +27,19 @@ if (Util::getSetting('cp_auth')) {
     if(is_a($e, ClientException::class)) {
       $route = $e->getRoute();
       $message = $e->getMessage();
+      echo 'Client Exception:';
+      echo '<pre>';
+      var_dump($e);
+      echo '</pre>';
+      exit();
       $_SESSION['error_message'] = $message;
       header('HTTP/1.1 302 Found');
       header('Location: ' . $route);
       exit(0);
     }
-    echo var_dump($e);
+    echo '<pre>';
+    var_dump($e);
+    echo '</pre>';
     exit();
   });
 }
@@ -426,4 +433,5 @@ if ($supportsSaml && !$supportsCPAuth) {
 if ($supportsCPAuth) {
   require_once __DIR__ . '/common/AttachClient.php';
   require_once __DIR__ . '/common/AttachUser.php';
+  require_once __DIR__ . '/common/AttachSignupClient.php';
 }
