@@ -1076,18 +1076,8 @@ function DisplayStatus()
     if( $metaInfo && $metaInfo['experiment'] ){
     echo '<div class="experiment_meta"><div class="experiment_meta_included"><p>Experiments running:</p>';
     echo '<ul>';
-    $recips = $metaInfo['experiment']['recipes'];
+    include __DIR__ . '/../experiments/list_applied.inc';
     
-    foreach( $recips as $recipe ){
-        echo "<li><details><summary>".key($recipe)."</summary>";
-        
-        foreach($recipe as $ings){
-        if( is_string($ings)){
-            $ings = array($ings);
-        }
-        echo "<ul><li>" . implode("</li><li>", $ings) . "</li></ul></details></li>";
-        }
-    }
     echo '</ul></div></div>';
     }
 
