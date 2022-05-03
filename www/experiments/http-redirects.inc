@@ -5,23 +5,37 @@ $redirectedRequests = array();
 
 foreach ($requests as $request) {
     if( isset($request['responseCode']) &&  $request['responseCode'] >= 300 &&  $request['responseCode'] <= 399){
-        array_push($redirectedRequests, $request['full_url'] );
+        $ind = in_array($request["headers"]["response"]);
+        $loc = "";
+        foreach($request["headers"]["response"] as $header){
+            if( strpos( $header, "Location:" ) !== null ){
+                $loc = substr($header, strlen("Location:"));
+            }
+        }
+        array_push($redirectedRequests, array($request['full_url'], $loc ));
     }
 }
 
+function joinValues($arr){
+    $oneLevel = array();
+    foreach($arr as $item){
+        array_push($oneLevel, '<b>From: </b>' . implode(" <b>To: </b>",$item));
+    }
+    return $oneLevel;
+}
 
 
 if( count($redirectedRequests) > 0 ){
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  count($redirectedRequests) . " request" .(count($redirectedRequests) > 1 ? "s are" : " is") ." resulting in an HTTP redirect.",
         "desc" =>  "HTTP redirects can result in additional DNS resolution, TCP connection and HTTPS negotiation times, making them very costly for performance, particularly on high latency networks.",
-        "examples" =>  array_unique($redirectedRequests),
+        "examples" =>  joinValues($redirectedRequests),
         "good" =>  false
     );
 }
 else {
     $assessment[$category]["opportunities"][] = array( 
-        "title" =>  'Zero reqiests were found that resulted in an HTTP redirect.',
+        "title" =>  'Zero requests were found that resulted in an HTTP redirect.',
         "desc" =>  "HTTP redirects can result in additional DNS resolution, TCP connection and HTTPS negotiation times, making them very costly for performance, particularly on high latency networks.",
         "examples" =>  array(),
         "good" =>  true
