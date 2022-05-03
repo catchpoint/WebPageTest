@@ -9,12 +9,12 @@ use WebPageTest\Util;
 if (Util::getSetting('cp_auth')) {
   $user = $request_context->getUser();
   if (!(isset($user) && $user->isAdmin())) {
-    header('403 Forbidden');
-    exit();
+    http_response_code(403);
+    die('Forbidden');
   }
 } elseif (!$admin) {
-    header('403 Forbidden');
-    exit();
+    http_response_code(403);
+    die('Forbidden');
 }
 
 $remote_cache = array();
