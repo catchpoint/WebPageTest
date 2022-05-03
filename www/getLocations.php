@@ -8,7 +8,7 @@ use WebPageTest\Util;
 
 if (Util::getSetting('cp_auth')) {
   $user = $request_context->getUser();
-  if (isset($user) && $user->isAdmin()) {
+  if (!(isset($user) && $user->isAdmin())) {
     header('403 Forbidden');
     exit();
   }
