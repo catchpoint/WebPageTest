@@ -3,20 +3,6 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
-
-use WebPageTest\Util;
-
-if (Util::getSetting('cp_auth')) {
-  $user = $request_context->getUser();
-  if (!(isset($user) && $user->isAdmin())) {
-    http_response_code(403);
-    die('Forbidden');
-  }
-} elseif (!$admin) {
-    http_response_code(403);
-    die('Forbidden');
-}
-
 $remote_cache = array();
 if ($CURL_CONTEXT !== false) {
   curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
