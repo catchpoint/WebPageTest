@@ -822,6 +822,7 @@ p.grade_summary {
 .experiments_details_desc>ul li {
     list-style: disc;
     margin-left: 1em;
+    word-break: break-all;
 }
 
 .experiments_details_desc p {
