@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'a0314b6eb147b70c8a4459da61f63b41ad0bb671',
+        'reference' => '54bf81378253f89269f2398799faec0b426bc116',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'a0314b6eb147b70c8a4459da61f63b41ad0bb671',
+            'reference' => '54bf81378253f89269f2398799faec0b426bc116',
             'dev_requirement' => false,
         ),
         'braintree/braintree_php' => array(
