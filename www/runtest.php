@@ -856,6 +856,7 @@ use WebPageTest\RateLimiter;
                     $experimentSpof = array();
                     $experimentBlock = array();
                     $experimentOverrideHost = array();
+                    $experimentRunURL = null;
                     // TODO should this be $req_$value instead, essentially?
                     if( $_REQUEST[$value] ){
                       $ingredients = $_REQUEST[$value];
@@ -869,6 +870,9 @@ use WebPageTest\RateLimiter;
                         }
                         if( $recipeSansId === "overrideHost" ){
                           $experimentOverrideHost = $ingredients;
+                        }
+                        if( $recipeSansId === "setinitialurl"){
+                          $experimentRunURL = $ingredients;
                         }
                         if( $recipeSansId === "swap" ){
                           $experimentSwap = $ingredients;
@@ -922,6 +926,10 @@ use WebPageTest\RateLimiter;
                       if ( $experimentOverrideHost ) {
                         $overrideHostScript = buildSelfHost($experimentOverrideHost);
                         $test['script'] = $overrideHostScript . "\n" . $test['script'];
+                      }
+
+                      if( $experimentRunURL ){
+                        $test['url'] = urldecode(implode($experimentRunURL));
                       }
 
                       // if experimentBlock is set...

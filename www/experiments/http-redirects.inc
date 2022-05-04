@@ -3,8 +3,12 @@ $category = "Quick";
 $requests = $testStepResult->getRequests();
 $redirectedRequests = array();
 
+function is300s($req){
+    return $req['responseCode'] >= 300 &&  $req['responseCode'] <= 399;
+}
+
 foreach ($requests as $request) {
-    if( isset($request['responseCode']) &&  $request['responseCode'] >= 300 &&  $request['responseCode'] <= 399){
+    if( isset($request['responseCode']) &&  is300s($request)){
         $loc = "";
         foreach($request["headers"]["response"] as $header){
             if( strpos( $header, "Location:" ) !== null ){
@@ -24,12 +28,31 @@ function joinValues($arr){
 }
 
 
+
 if( count($redirectedRequests) > 0 ){
+
+    $expsToAdd = null;
+    if( isset($requests[0]['responseCode']) && is300s($requests[0])){
+        $to = $requests[1]['full_url'];
+        $expsToAdd = array();
+        $expsToAdd[] = (object) [
+            "id" => '047',
+            'title' => 'Remove Redirect on First Request',
+            "desc" => '<p>This experiment will replace the initial url with its redirected location, demonstrating time saved when no redirect is in play.</p>',
+            "expvar" => 'experiment-setinitialurl',
+            "expval" => array( $to ),
+            "expval" => array( $to ),
+            "hideassets" => true
+        ];
+        
+    }
+
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  count($redirectedRequests) . " request" .(count($redirectedRequests) > 1 ? "s are" : " is") ." resulting in an HTTP redirect.",
         "desc" =>  "HTTP redirects can result in additional DNS resolution, TCP connection and HTTPS negotiation times, making them very costly for performance, particularly on high latency networks.",
         "examples" =>  joinValues($redirectedRequests),
-        "good" =>  false
+        "good" =>  false,
+        "experiments" => $expsToAdd,
     );
 }
 else {

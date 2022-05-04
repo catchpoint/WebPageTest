@@ -531,7 +531,7 @@ $page_description = "Website performance test result$testLabel.";
                         if( input.length ){
                             if( input.filter("[type=checkbox],[type=radio]").length ){
                                 input = input.filter( "[value='"+ keyval[1] +"']" ).attr("checked", true);
-                            } else {
+                            } else if(input.filter("[type=text]").length ) {
                                 input.val(keyval[1]);
                             }
                         }
