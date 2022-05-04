@@ -295,6 +295,7 @@ class Signup
                 ));
 
                 $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+                return $redirect_uri;
             }
             throw $e;
         }
