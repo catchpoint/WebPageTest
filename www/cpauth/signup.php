@@ -29,50 +29,51 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     if ($request_method == 'POST') {
         $csrf_token = $_POST['csrf_token'];
         if ($csrf_token != $_SESSION['csrf_token']) {
-          throw new ClientException("CSRF error, wanted {$_SESSION['csrf_token']} and got {$csrf_token}", '/signup', 403);
+            $msg = "CSRF error, wanted {$_SESSION['csrf_token']} and got {$csrf_token}";
+            throw new ClientException($msg, '/signup', 403);
         }
         unset($_SESSION['csrf_token']);
 
         $signup_step = (int) filter_input(INPUT_POST, 'step', FILTER_SANITIZE_NUMBER_INT);
 
         switch ($signup_step) {
-          case 2:
-            $body = SignupHandler::validatePostStepTwo();
-            if ($body->plan == 'free') {
-                $redirect_uri = SignupHandler::postStepTwoFree($request_context, $body);
+            case 2:
+                $body = SignupHandler::validatePostStepTwo();
+                if ($body->plan == 'free') {
+                    $redirect_uri = SignupHandler::postStepTwoFree($request_context, $body);
+                    header("Location: {$redirect_uri}");
+                    exit();
+                } else {
+                    $redirect_uri = SignupHandler::postStepTwoPaid($request_context, $body);
+                    header("Location: {$redirect_uri}");
+                }
+                break;
+            case 3:
+              // gather post body
+                $body = SignupHandler::validatePostStepThree();
+                $redirect_uri = SignupHandler::postStepThree($request_context, $body);
+
+              // unset values
+                unset($_SESSION['signup-first-name']);
+                unset($_SESSION['signup-last-name']);
+                unset($_SESSION['signup-company-name']);
+                unset($_SESSION['signup-email']);
+                unset($_SESSION['signup-password']);
+                unset($_SESSION['signup-plan']);
+
+
+              // send to account page
                 header("Location: {$redirect_uri}");
-                exit();
-            } else {
-              $redirect_uri = SignupHandler::postStepTwoPaid($request_context, $body);
-              header("Location: {$redirect_uri}");
-            }
-            break;
-          case 3:
-            // gather post body
-            $body = SignupHandler::validatePostStepThree();
-            $redirect_uri = SignupHandler::postStepThree($request_context, $body);
+                break;
+            default: // step 1 or whatever somebody tries to send
+                $body = SignupHandler::validatePostStepOne();
+                $redirect_uri = SignupHandler::postStepOne($request_context);
 
-            // unset values
-            unset($_SESSION['signup-first-name']);
-            unset($_SESSION['signup-last-name']);
-            unset($_SESSION['signup-company-name']);
-            unset($_SESSION['signup-email']);
-            unset($_SESSION['signup-password']);
-            unset($_SESSION['signup-plan']);
+                unset($_SESSION['signup-plan']);
+                $_SESSION['signup-plan'] = $body->plan;
 
-
-            // send to account page
-            header("Location: {$redirect_uri}");
-            break;
-          default: // step 1 or whatever somebody tries to send
-            $body = SignupHandler::validatePostStepOne();
-            $redirect_uri = SignupHandler::postStepOne($request_context);
-
-            unset($_SESSION['signup-plan']);
-            $_SESSION['signup-plan'] = $body->plan;
-
-            header("Location: {$redirect_uri}");
-            break;
+                header("Location: {$redirect_uri}");
+                break;
         }
         exit();
     }
@@ -92,8 +93,8 @@ use WebPageTest\Handlers\Signup as SignupHandler;
 
     $auth_token = $_SESSION['signup-auth-token'] ?? null;
     if (is_null($auth_token)) {
-      $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
-      $_SESSION['signup-auth-token'] = $auth_token;
+        $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
+        $_SESSION['signup-auth-token'] = $auth_token;
     }
     $request_context->getSignupClient()->authenticate($auth_token);
     $vars['auth_token'] = $auth_token;
@@ -101,15 +102,15 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     $vars['is_plan_free'] = $is_plan_free;
 
     switch ($signup_step) {
-      case 2:
-        echo SignupHandler::getStepTwo($request_context, $vars);
-        break;
-      case 3:
-        echo SignupHandler::getStepThree($request_context, $vars);
-        break;
-      default: // step 1 or whatever somebody tries to send
-        echo SignupHandler::getStepOne($request_context, $vars);
-        break;
+        case 2:
+            echo SignupHandler::getStepTwo($request_context, $vars);
+            break;
+        case 3:
+            echo SignupHandler::getStepThree($request_context, $vars);
+            break;
+        default: // step 1 or whatever somebody tries to send
+            echo SignupHandler::getStepOne($request_context, $vars);
+            break;
     }
     exit();
 })($request_context);

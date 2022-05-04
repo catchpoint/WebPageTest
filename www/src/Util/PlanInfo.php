@@ -6,10 +6,10 @@ namespace WebPageTest\Util;
 
 class PlanHelper
 {
-  private static $benefits = array(
-  );
-  public static function getBenefits (string $id) : array
-  {
-    return self::$benefits[$id] ?? [];
-  }
+    private static $benefits = array(
+    );
+    public static function getBenefits(string $id): array
+    {
+        return self::$benefits[$id] ?? [];
+    }
 }
