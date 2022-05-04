@@ -5,7 +5,6 @@ $redirectedRequests = array();
 
 foreach ($requests as $request) {
     if( isset($request['responseCode']) &&  $request['responseCode'] >= 300 &&  $request['responseCode'] <= 399){
-        $ind = in_array($request["headers"]["response"]);
         $loc = "";
         foreach($request["headers"]["response"] as $header){
             if( strpos( $header, "Location:" ) !== null ){
