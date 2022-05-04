@@ -95,6 +95,7 @@ include __DIR__ . '/lcp.inc';
 include __DIR__ . '/imgs-lazy-loaded.inc';
 include __DIR__ . '/imgs-lazy-loadable.inc';
 include __DIR__ . '/font-rendering.inc';
+include __DIR__ . '/fonts-3rdparty.inc';
 include __DIR__ . '/unused-preloads.inc';
 include __DIR__ . '/http-redirects.inc';
 
