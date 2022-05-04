@@ -26,7 +26,26 @@ class Signup
         $tpl = new Template('account/signup');
 
         try {
-            $vars['wpt_plans'] = $request_context->getSignupClient()->getWptPlans();
+          $wpt_plans = $request_context->getSignupClient()->getWptPlans();
+          $annual_plans = array();
+          $monthly_plans = array();
+          usort($wpt_plans, function ($a, $b) {
+              if ($a['price'] == $b['price']) {
+                  return 0;
+              }
+              return ($a['price'] < $b['price']) ? -1 : 1;
+          });
+          foreach ($wpt_plans as $plan) {
+              if ($plan['billingFrequency'] == 1) {
+                  $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+                  $monthly_plans[] = $plan;
+              } else {
+                  $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
+                  $annual_plans[] = $plan;
+              }
+          }
+          $vars['annual_plans'] = $annual_plans;
+          $vars['monthly_plans'] = $monthly_plans;
         } catch (RequestException $e) {
             if ($e->getCode() == 401) {
               // get auth token again and retry!
