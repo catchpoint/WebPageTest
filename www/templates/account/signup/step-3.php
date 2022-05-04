@@ -49,6 +49,7 @@
   <input type="hidden" name="password" value="<?= $password ?>" />
   <input type="hidden" name="plan" value="<?= $plan ?>" />
   <input type="hidden" name="step" value="3" />
+  <button type="submit">Sign Up</button>
 </form>
 </div>
 
