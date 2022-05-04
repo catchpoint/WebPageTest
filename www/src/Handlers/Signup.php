@@ -281,9 +281,24 @@ class Signup
         $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
         return $redirect_uri;
       } catch (\Exception $e) {
-        // TODO
-      }
+        if ($e->getCode() == 401) {
+          $auth_token = $request_context->getSignupClient()->getAuthToken();
+          $request_context->getSignupClient()->authenticate($auth_token->access_token);
 
+          $data = $request_context->getSignupClient()->signup(array(
+            'first_name' => $body->first_name,
+            'last_name' => $body->last_name,
+            'company' => $body->company,
+            'email' => $body->email,
+            'password' => $body->password,
+            'customer' => $customer
+          ));
+
+          $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+
+        }
+        throw $e;
+      }
   }
 
   public static function validatePostStepOne(): object
