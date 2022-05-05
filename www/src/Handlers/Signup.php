@@ -99,6 +99,7 @@ class Signup
     public static function getStepThree(RequestContext $request_context, array $vars): string
     {
         $tpl = new Template('account/signup');
+        $tpl->setLayout('signup-flow');
 
         $gateway = new BraintreeGateway([
         'environment' => Util::getSetting('bt_environment'),
@@ -109,8 +110,8 @@ class Signup
         $client_token = $gateway->clientToken()->generate();
         $vars['bt_client_token'] = $client_token;
 
-        $vars['first_name'] = htmlentities($_SESSION['signup-first-name']);
-        $vars['last_name'] = htmlentities($_SESSION['signup-last-name']);
+        $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";
+        $vars['last_name'] = isset($_SESSION['signup-last-name']) ? htmlentities($_SESSION['signup-last-name']) : "";
         $vars['company_name'] = htmlentities($_SESSION['signup-company-name']);
         $vars['email'] = htmlentities($_SESSION['signup-email']);
         $vars['password'] = htmlentities($_SESSION['signup-password']);

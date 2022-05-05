@@ -1,59 +1,86 @@
-<div>
-<form method="POST" action="/signup" id="wpt-signup-paid-account">
-  <div class="plan-billing-container">
-    <div class="card billing-container">
-      <div id="braintree-container"></div>
-      <div class="billing-info-section">
-        <div class="info-container street-address">
+<section class="payment-details">
+  <div class="content">
+    <h1>Payment Details</h1>
+    <form method="POST" action="/signup" id="wpt-signup-paid-account">
+      <div class="braintree-card-container">
+        <div id="braintree-container"></div>
+      </div> <!-- /.braintree-card-container -->
+      <div class="billing-address-information-container">
+        <div class="form-input address">
           <label for="street-address">Street Address</label>
           <div>
             <input name="street-address" type="text" required />
           </div>
         </div>
-        <div class="info-container city">
+        <div class="form-input city">
           <label for="city">City</label>
-          <div>
-            <input name="city" type="text" required />
-          </div>
+          <input name="city" type="text" required />
         </div>
-        <div class="info-container state">
+        <div class="form-input state">
           <label for="state">State</label>
-          <div>
-            <input name="state" type="text" required />
-          </div>
+          <input name="state" type="text" required />
         </div>
-        <div class="info-container country">
+        <div class="form-input country">
           <label for="country">Country</label>
-          <div>
-            <select name="country">
-            <?php foreach($country_list as $country): ?>
-            <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
-            <?php endforeach; ?>
-            </select>
-          </div>
+          <select name="country">
+          <?php foreach($country_list as $country): ?>
+          <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
+          <?php endforeach; ?>
+          </select>
         </div>
-        <div class="info-container zipcode">
-          <label for="zipcode">Zip Code</label>
+        <div class="form-input zip">
+          <label for="zipcode">Postal Code</label>
           <div>
             <input type="text" name="zipcode" required />
           </div>
         </div>
-      </div> <!-- /.billing-info-section -->
-    </div> <!-- /.billing-container -->
-  </div> <!-- /.plan-billing-container -->
-  <input type="hidden" id="hidden-nonce-input" name="nonce" />
-  <input type="hidden" name="first-name" value="<?= $first_name ?>" />
-  <input type="hidden" name="last-name" value="<?= $last_name ?>" />
-  <input type="hidden" name="email" value="<?= $email ?>" />
-  <input type="hidden" name="company" value="<?= $company_name ?>" />
-  <input type="hidden" name="password" value="<?= $password ?>" />
-  <input type="hidden" name="plan" value="<?= $plan ?>" />
-  <input type="hidden" name="step" value="3" />
-  <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-  <button type="submit">Sign Up</button>
-</form>
-</div>
+      </div> <!-- /.billing-address-information-container -->
 
+      <input type="hidden" id="hidden-nonce-input" name="nonce" />
+      <input type="hidden" name="first-name" value="<?= $first_name ?>" />
+      <input type="hidden" name="last-name" value="<?= $last_name ?>" />
+      <input type="hidden" name="email" value="<?= $email ?>" />
+      <input type="hidden" name="company" value="<?= $company_name ?>" />
+      <input type="hidden" name="password" value="<?= $password ?>" />
+      <input type="hidden" name="plan" value="<?= $plan ?>" />
+      <input type="hidden" name="step" value="3" />
+      <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+
+      <div class="form-input">
+        <button type="submit">Sign Up</button>
+      </div>
+
+      <p class="disclaimer">By signing up I agree to WebPageTest's <a href="/terms.php" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://www.catchpoint.com/trust#privacy" target="_blank" rel="noopener">Privacy Statement</a>.</p>
+    </form>
+  </div><!-- /.content -->
+</section>
+<aside>
+  <h3>Selected Plan</h3>
+  <div class="plan-name"><?= $is_plan_free ? "Free" : "Pro"; ?></div>
+  <div class="plan-details">
+    <table>
+      <thead>
+        <th>Runs per month</th>
+        <th>Price</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><?= $runs ?></td>
+          <td>$<?= "{$price} {$billing_frequency}" ?></td>
+        </tr>
+      </tbody>
+    </table>
+  </div> <!-- /.plan-details -->
+  <div class="plan-benefits">
+    <h4>Plan Benefits</h4>
+    <ul>
+      <li>Access to real browsers in real locations with the latest OS versions.</li>
+      <li>Test on real connection speeds.</li>
+      <li>Run page level and user journey tests including custom scripts.</li>
+      <li>Access to test history for 13 months.</li>
+    </ul>
+  </div> <!-- /.plan-benefits -->
+</aside>
 
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
