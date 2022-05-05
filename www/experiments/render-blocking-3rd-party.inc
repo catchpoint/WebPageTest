@@ -8,7 +8,7 @@ $blocking3pHosts = array();
 
 foreach ($requests as $request) {
     if( $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")  ){
-        array_push($blocking3pReqs, $request['url'] );
+        array_push($blocking3pReqs, $request['full_url'] );
         array_push($blocking3pHosts, $request['host'] );
     }
 }
@@ -31,7 +31,7 @@ if( count($blocking3pReqs) > 0 ){
             (object) [
                 "id" => '024',
                 'title' => 'Preload 3rd Party Files',
-                "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
+                "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preload"</code> for specified files, causing the browser to fetch the file early and at a high priority.</p>',
                  "expvar" => 'addpreload',
                  "expval" => array_unique($blocking3pReqs)
             ],
@@ -40,12 +40,12 @@ if( count($blocking3pReqs) > 0 ){
                 'title' => 'Self Host 3rd Party Files',
                 "desc" => '<p>This experiment will fetch these files server-side and reference them on the same domain.</p>',
                  "expvar" => 'experiment-overrideHost',
-                 "expval" => array_unique($blocking3pHosts)
+                 "expval" => array_unique($blocking3pReqs)
             ],
             (object) [
                 "id" => '007',
                 'title' => 'Make Scripts Timeout',
-                "desc" => '<p>This experiment directs specified requests to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
+                "desc" => '<p>This experiment directs specified hosts to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
                  "expvar" => 'experiment-spof',
                  "expval" => array_unique($blocking3pHosts)
             ],

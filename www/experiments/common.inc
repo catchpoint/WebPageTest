@@ -90,7 +90,6 @@ $axe = $testStepResult->getMetric('axe');
 include __DIR__ . '/slow-ttfb.inc';
 include __DIR__ . '/render-blocking-scripts.inc';
 include __DIR__ . '/render-blocking-css.inc';
-include __DIR__ . '/render-blocking-font-css.inc';
 include __DIR__ . '/lcp.inc';
 include __DIR__ . '/imgs-lazy-loaded.inc';
 include __DIR__ . '/imgs-lazy-loadable.inc';

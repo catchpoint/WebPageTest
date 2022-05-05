@@ -11,7 +11,7 @@
     if( count($blockingCSSReqs) > 0 ){
         $assessment[$category]["opportunities"][] = array(
             "title" =>  count($blockingCSSReqs) . " externally-referenced CSS file". (count($blockingCSSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
-            "desc" =>  "By default, references to external CSS files will block the page from rendering while they are fetched and executed. Sometimes these files should block rendering, but can be inlined to avoid additional round-trips while the page is waiting to render.",
+            "desc" =>  "By default, references to external CSS files will block the page from rendering while they are fetched and executed. Sometimes these files _should_ block rendering, but can be inlined to avoid additional round-trips while the page is waiting to render. Sometimes, such as with stylesheets that are only used for loading custom fonts, inline or async CSS can greatly improve perceived performance. ",
             "examples" =>  $blockingCSSReqs,
             "experiments" =>  array(
                 (object) [

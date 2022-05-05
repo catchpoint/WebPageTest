@@ -5,7 +5,7 @@ $insecureRequests = array();
 
 foreach ($requests as $request) {
     if( isset($request['is_secure']) &&  $request['is_secure'] == 0 ){
-        array_push($insecureRequests, $request['url'] );
+        array_push($insecureRequests, $request['full_url'] );
     }
 }
 
