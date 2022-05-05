@@ -7123,6 +7123,9 @@ display: flex;
   width: 400px;
   margin: 0 auto;
 }
+.signup-flow-layout .payment-details .content {
+  width: 535px;
+}
 
 .signup-flow-layout section .content h1 {
   font-weight: 300;
@@ -7156,7 +7159,7 @@ display: flex;
 
 .signup-flow-layout .form-input button[type=submit] {
   appearance: none;
-  width: 400px;
+  width: 100%;
   padding: 0.9375rem 0;
   background-color: #F9D856;
   border: 1px solid #F9D856;
@@ -7222,6 +7225,22 @@ display: flex;
   padding: initial;
   margin: initial;
 }
+
+.billing-address-information-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 0px 10px;
+  grid-template-areas:
+    "address address"
+    "city st"
+    "country zip";
+}
+.billing-address-information-container .address { grid-area: address; }
+.billing-address-information-container .city { grid-area: city; }
+.billing-address-information-container .country { grid-area: country; }
+.billing-address-information-container .zip { grid-area: zip; }
+.billing-address-information-container .state { grid-area: st; }
 
 /*
  * End signup step 2
