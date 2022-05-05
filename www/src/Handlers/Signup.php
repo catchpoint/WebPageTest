@@ -79,9 +79,11 @@ class Signup
                 $plans = $request_context->getSignupClient()->getWptPlans();
             }
         }
+
         foreach ($plans as $p) {
-            if ($p['id'] = $plan_id) {
+            if ($p['id'] == $plan_id) {
                 $plan = $p;
+                break;
             }
         }
         if (!is_null($plan)) {
@@ -152,7 +154,6 @@ class Signup
         $plan = isset($_POST['plan']) ? htmlentities($_POST['plan']) : 'free';
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
-        // implement pw rules
         $password = $_POST["password"];
         if ($password != $_POST['confirm-password']) {
             throw new ClientException('Passwords must match', '/signup/2');
