@@ -11,6 +11,7 @@ use WebPageTest\ValidatorPatterns;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Braintree\Gateway as BraintreeGateway;
+use Exception;
 use GuzzleHttp\Exception\RequestException;
 use WebPageTest\Exception\ClientException;
 
@@ -66,7 +67,32 @@ class Signup
 
     public static function getStepTwo(RequestContext $request_context, array $vars): string
     {
+        $plan_id = $vars['plan'];
+        $plan = null;
+        $plans = [];
+        try {
+            $plans = $request_context->getSignupClient()->getWptPlans();
+        } catch (Exception $e) {
+            if ($e->getCode() == 401) {
+                $auth_token = $request_context->getSignupClient()->getAuthToken();
+                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+                $plans = $request_context->getSignupClient()->getWptPlans();
+            }
+        }
+        foreach ($plans as $p) {
+            if ($p['id'] = $plan_id) {
+                $plan = $p;
+            }
+        }
+        if (!is_null($plan)) {
+            $vars['runs'] = $plan['name'];
+            $vars['price'] = number_format(($plan['price']), 2, ".", ",");
+            $vars['billing_frequency'] = $plan['billingFrequency'] == 1 ? "Annually" : "Monthly";
+        }
+        $vars['contact_info_pattern'] = ValidatorPatterns::getContactInfo();
+        $vars['password_pattern'] = ValidatorPatterns::getPassword();
         $tpl = new Template('account/signup');
+        $tpl->setLayout('signup-flow');
         return $tpl->render('step-2', $vars);
     }
 

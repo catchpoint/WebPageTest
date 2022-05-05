@@ -7081,3 +7081,148 @@ body.theme-b {
 /**
  * end signup steps
  */
+
+/**
+ * begin signup step 2
+ */
+
+.signup-flow-layout * {
+ box-sizing: border-box;
+}
+
+.signup-flow-layout body {
+  display: block;
+}
+
+.signup-flow-layout header {
+  padding-left: 30px;
+  border-bottom: 1px solid #334870;
+}
+.signup-flow-layout header ol {
+display: flex;
+}
+
+.signup-flow-layout main {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+    ". .";
+  width: 100vw;
+  height: 100vh;
+}
+
+.signup-flow-layout section {
+  padding: 40px 0;
+  background-color: #0E1E38;
+  color: #FFFFFF;
+}
+
+.signup-flow-layout section .content {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.signup-flow-layout section .content h1 {
+  font-weight: 300;
+  font-size: 2.375rem;
+  text-align: center;
+}
+
+.signup-flow-layout .content form .form-input:not(:first-child) {
+  margin-top: 1.875rem;
+}
+
+.signup-flow-layout .form-input label {
+  display: block;
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.6875rem;
+}
+
+.signup-flow-layout .form-input input[type="text"],
+.signup-flow-layout .form-input input[type="email"],
+.signup-flow-layout .form-input input[type="password"] {
+  background: #FFFFFF;
+  border: 1px solid #999999;
+  border-radius: 2px;
+  width: 100%;
+  max-width: 100%;
+  font-size: 1.25rem;
+  line-height: 1.6875rem;
+  padding: 0.6875rem 1.3125rem;
+}
+
+.signup-flow-layout .form-input button[type=submit] {
+  appearance: none;
+  width: 400px;
+  padding: 0.9375rem 0;
+  background-color: #F9D856;
+  border: 1px solid #F9D856;
+  border-radius: 4px;
+}
+
+.signup-flow-layout .form-input .description,
+.signup-flow-layout .disclaimer {
+  font-size: 0.9375rem;
+}
+
+.signup-flow-layout .disclaimer {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.signup-flow-layout aside {
+  background: #24334F;
+  color: #DADADA;
+  padding: 70px 30px;
+}
+.signup-flow-layout aside h3 {
+  font-size: 1.25rem;
+  line-height: 1.6875rem;
+}
+.signup-flow-layout .plan-name {
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.6875rem;
+}
+.signup-flow-layout .plan-details {
+  border-top: 1px solid #808080;
+}
+.signup-flow-layout .plan-details table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+      "." ".";
+}
+
+.signup-flow-layout .plan-details table thead tr,
+.signup-flow-layout .plan-details table tbody tr {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+      "."
+      ".";
+}
+
+.signup-flow-layout .plan-details table th {
+  text-align: left;
+}
+.signup-flow-layout .plan-details table td {
+  text-align: right;
+}
+
+.signup-flow-layout .plan-benefits ul {
+  list-style: disc;
+  padding: initial;
+  margin: initial;
+}
+
+/*
+ * End signup step 2
+ */
