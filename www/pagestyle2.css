@@ -3908,8 +3908,19 @@ table.details td.reqMime {
 
 @media (min-width: 60em) {
     .cruxembed .cruxbars {
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(8, 1fr);
     }
+    .cruxembed .cruxbars svg {
+        grid-column: span 2;
+    }
+    .cruxembed .cruxbars svg:last-child:nth-child(4n - 1) {
+        grid-column-end: -3;
+      }
+      
+      .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n + 1) {
+        grid-column-end: 5;
+      }
+
 }
 
 .summary-container .crux h3 {

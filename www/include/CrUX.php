@@ -125,6 +125,8 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+            InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
         } else if  ($metric == 'fcp') {
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
         } else if  ($metric == 'lcp') {
@@ -133,6 +135,10 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
         } else if  ($metric == 'fid') {
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+        } else if  ($metric == 'ttfb') {
+            InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
+        } else if  ($metric == 'inp') {
+            InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
         }
 
         echo '</div>';
