@@ -303,7 +303,7 @@ class Signup
     {
         // build query items
         $billing_address_model = new BillingAddress([
-          'streetAddress' => $body->street_address,
+          'street_address' => $body->street_address,
           'city' => $body->city,
           'state' => $body->state,
           'country' => $body->country,
@@ -311,9 +311,9 @@ class Signup
         ]);
 
         $customer = new Customer([
-          'paymentMethodNonce' => $body->nonce,
-          'billingAddressModel' => $billing_address_model,
-          'subscriptionPlanId' => $body->plan
+          'payment_method_nonce' => $body->nonce,
+          'billing_address_model' => $billing_address_model,
+          'subscription_plan_id' => $body->plan
         ]);
 
         // handle signup

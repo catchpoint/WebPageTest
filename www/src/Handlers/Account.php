@@ -135,9 +135,9 @@ class Account
         ]);
 
         $customer = new Customer([
-          'paymentMethodNonce' => $nonce,
-          'billingAddressModel' => $billing_address,
-          'subscriptionPlanId' => $plan
+          'payment_method_nonce' => $nonce,
+          'billing_address_model' => $billing_address,
+          'subscription_plan_id' => $plan
         ]);
 
         try {
