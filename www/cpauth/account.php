@@ -178,6 +178,7 @@ if ($request_method === 'POST') {
     }
 
     $tpl = new Template('account');
+    $tpl->setLayout('account');
     echo $tpl->render('my-account', $results);
     exit();
 } else {
