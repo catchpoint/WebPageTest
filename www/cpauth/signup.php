@@ -100,6 +100,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     $vars['auth_token'] = $auth_token;
     $vars['plan'] = $plan;
     $vars['is_plan_free'] = $is_plan_free;
+    $vars['step'] = $signup_step;
 
     switch ($signup_step) {
         case 2:
