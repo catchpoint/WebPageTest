@@ -53,10 +53,10 @@
               <legend>Pro</legend>
               <select name="plan">
                 <?php foreach($annual_plans as $plan): ?>
-                <option value="<?= $plan['id'] ?>" data-price="<?= $plan['monthly_price'] ?>"><?= $plan['name'] ?>/mo</option>
+                <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>"><?= $plan->getRuns() ?>/mo</option>
                 <?php endforeach; ?>
               </select>
-              <div class="price">$<span><?= $annual_plans[0]['monthly_price'] ?></span>/mo</div>
+              <div class="price">$<span><?= $annual_plans[0]->getMonthlyPrice() ?></span>/mo</div>
               <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
               <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
               <input type="hidden" name="step" value="1" />
@@ -80,10 +80,10 @@
               <legend>Pro</legend>
               <select name="plan">
                 <?php foreach($monthly_plans as $plan): ?>
-                <option value="<?= $plan['id'] ?>" data-price="<?= $plan['price'] ?>"><?= $plan['name'] ?>/mo</option>
+                <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>"><?= $plan->getRuns() ?>/mo</option>
                 <?php endforeach; ?>
               </select>
-              <div class="price">$<span><?= $monthly_plans[0]['price'] ?></span>/mo</div>
+              <div class="price">$<span><?= $monthly_plans[0]->getMonthlyPrice() ?></span>/mo</div>
               <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
               <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
               <input type="hidden" name="step" value="1" />

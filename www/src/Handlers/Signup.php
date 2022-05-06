@@ -31,17 +31,15 @@ class Signup
             $annual_plans = array();
             $monthly_plans = array();
             usort($wpt_plans, function ($a, $b) {
-                if ($a['price'] == $b['price']) {
+                if ($a->getPrice() == $b->getPrice()) {
                     return 0;
                 }
-                return ($a['price'] < $b['price']) ? -1 : 1;
+                return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
             });
             foreach ($wpt_plans as $plan) {
-                if ($plan['billingFrequency'] == 1) {
-                    $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+                if ($plan->getBillingFrequency() == "Monthly") {
                     $monthly_plans[] = $plan;
                 } else {
-                    $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
                     $annual_plans[] = $plan;
                 }
             }
@@ -81,15 +79,17 @@ class Signup
         }
 
         foreach ($plans as $p) {
-            if ($p['id'] == $plan_id) {
+            if ($p->getId() == $plan_id) {
                 $plan = $p;
                 break;
             }
         }
         if (!is_null($plan)) {
-            $vars['runs'] = $plan['name'];
-            $vars['price'] = number_format(($plan['price']), 2, ".", ",");
-            $vars['billing_frequency'] = $plan['billingFrequency'] == 1 ? "Annually" : "Monthly";
+            $vars['runs'] = $plan->getRuns();
+            $vars['monthly_price'] = $plan->getMonthlyPrice();
+            $vars['annual_price'] = $plan->getAnnualPrice();
+            $vars['other_annual'] = $plan->getOtherAnnual();
+            $vars['billing_frequency'] = $plan->getBillingFrequency();
         }
         $vars['contact_info_pattern'] = ValidatorPatterns::getContactInfo();
         $vars['password_pattern'] = ValidatorPatterns::getPassword();

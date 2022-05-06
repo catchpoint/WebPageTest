@@ -12,6 +12,7 @@ use Exception as BaseException;
 use GraphQL\Query;
 use GraphQL\Mutation;
 use GraphQL\Variable;
+use WebPageTest\Plan;
 
 class CPSignupClient
 {
@@ -123,6 +124,9 @@ class CPSignupClient
         return $results->getData()['wptAccountCreate'];
     }
 
+    /**
+     * return Plan[]
+     */
     public function getWptPlans(): array
     {
         $gql = (new Query('wptPlans'))
@@ -144,7 +148,9 @@ class CPSignupClient
           ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        return $results->getData()['wptPlans'];
+        return array_map(function ($data): Plan {
+            return new Plan($data);
+        }, $results->getData()['wptPlans']);
     }
 
     private function makeRequest(string $method, string $url, array $headers, array $body): array

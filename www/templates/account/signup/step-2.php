@@ -52,7 +52,11 @@
       <tbody>
         <tr>
           <td><?= $runs ?></td>
-          <td>$<?= "{$price} {$billing_frequency}" ?></td>
+<?php if ($billing_frequency == "Monthly"): ?>
+          <td>$<?= "{$monthly_price} {$billing_frequency}"?></td>
+<?php else: ?>
+          <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}"?></td>
+<?php endif; ?>
         </tr>
       </tbody>
     </table>
