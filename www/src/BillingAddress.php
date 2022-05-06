@@ -28,7 +28,7 @@ class BillingAddress
         $this->city = $options['city'];
         $this->country = $options['country'];
         $this->state = $options['state'];
-        $this->streetAddress = $options['street_address'];
+        $this->street_address = $options['street_address'];
         $this->zipcode = $options['zipcode'];
     }
 
