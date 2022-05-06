@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="account-layout">
   <head>
 <?php
 require_once __DIR__ . '/../../common.inc';
@@ -15,7 +15,10 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
   <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
+  <link href="/css/account.css" rel="stylesheet" />
   </head>
+  <style>
+  </style>
   <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
     <div id="main">
