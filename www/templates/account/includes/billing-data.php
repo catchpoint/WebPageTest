@@ -91,8 +91,8 @@
 <tr>
   <td><?= $row['name'] ?></td>
   <td><?= $row['apiKey'] ?></td>
-  <td><?= date_format(date_create($row['createDate']), 'M d Y H e') ?></td>
-  <td><?= date_format(date_create($row['changeDate']), 'M d Y H e') ?></td>
+  <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
+  <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
   <td>
   <form method='POST' action='/account'>
     <input type='hidden' name='api-key-id' value='<?= $row['id'] ?>' />
