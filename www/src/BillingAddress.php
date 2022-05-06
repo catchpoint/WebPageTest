@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
+use Exception;
+
 class BillingAddress
 {
   private string $city;
@@ -14,6 +16,13 @@ class BillingAddress
 
   public function __construct(array $options = [])
   {
+    if (!isset($options['city']) ||
+      !isset($options['country']) ||
+      !isset($options['state']) ||
+      !isset($options['street_address']) ||
+      !isset($options['zipcode'])) {
+      throw new Exception("City, country, State, Street Address, and Zip Code are all required");
+    }
     $this->city = $options['city'];
     $this->country = $options['country'];
     $this->state = $options['state'];
