@@ -87,22 +87,22 @@
         </tr>
       </thead>
       <tbody>
-<?php foreach($wptApiKey as $row) {
-  echo "<tr>
-          <td>{$row['name']}</td>
-          <td>{$row['apiKey']}</td>
-          <td>{$row['createDate']}</td>
-          <td>{$row['changeDate']}</td>
-          <td>
-            <form method='POST' action='/account'>
-              <input type='hidden' name='api-key-id' value='{$row['id']}' />
-              <input type='hidden' name='type' value='delete-api-key' />
-              <input type='hidden' name='csrf_token' value='{$csrf_token}' />
-              <button type='submit'>Delete</button>
-            </form>
-          </td>
-        </tr>";
-} ?>
+<?php foreach($wptApiKey as $row): ?>
+<tr>
+  <td><?= $row['name'] ?></td>
+  <td><?= $row['apiKey'] ?></td>
+  <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
+  <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
+  <td>
+  <form method='POST' action='/account'>
+    <input type='hidden' name='api-key-id' value='<?= $row['id'] ?>' />
+    <input type='hidden' name='type' value='delete-api-key' />
+    <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />
+    <button type='submit'>Delete</button>
+  </form>
+</td>
+</tr>
+<?php endforeach; ?>
       </tbody>
     </table>
   </div>
