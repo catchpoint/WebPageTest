@@ -1,0 +1,36 @@
+{
+    "name": "respect/stringifier",
+    "description": "Converts any value to a string",
+    "keywords": ["respect", "stringifier", "stringify"],
+    "type": "library",
+    "homepage": "http://respect.github.io/Stringifier/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Respect/Stringifier Contributors",
+            "homepage": "https://github.com/Respect/Stringifier/graphs/contributors"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.8",
+        "malukenho/docheader": "^0.1.7",
+        "phpunit/phpunit": "^6.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Respect\\Stringifier\\": "src/"
+        },
+        "files": [
+            "src/stringify.php"
+        ]
+    },
+    "scripts": {
+        "docheader": "vendor/bin/docheader check src/ tests/",
+        "test": "vendor/bin/phpunit",
+        "test-unit": "vendor/bin/phpunit --testsuite=unit",
+        "test-integration": "vendor/bin/phpunit --testsuite=integration"
+    }
+}

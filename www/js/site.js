@@ -1126,3 +1126,52 @@ if (window.indexedDB && typeof wptTestInfo !== 'undefined') {
     }
 }
 })();
+
+
+/**
+ * Begin signup steps
+ */
+(() => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      attachListenerToBillingFrequencySelector();
+      handleRunUpdate();
+    });
+  } else {
+    attachListenerToBillingFrequencySelector();
+    handleRunUpdate();
+  }
+
+  function attachListenerToBillingFrequencySelector () {
+    var selectors = document.querySelectorAll('#pro-plan-selector input[type=radio]');
+    selectors.forEach(s => {
+      s.addEventListener('change', e => {
+        var monthlyCard = document.querySelector('.card .monthly');
+        var annualCard = document.querySelector('.card .annual');
+        if (e.target.value == 'monthly') {
+          monthlyCard.classList.add('selected');
+          annualCard.classList.remove('selected');
+        } else {
+          monthlyCard.classList.remove('selected');
+          annualCard.classList.add('selected');
+        }
+      })
+    })
+  }
+
+  function handleRunUpdate () {
+    var selects = document.querySelectorAll('select[name=plan]');
+    selects.forEach(s => {
+      var priceDisplay = s.closest('form').querySelector('.price span');
+      s.addEventListener('change', e => {
+        var selected = e.target.options[e.target.selectedIndex];
+        var price = selected.dataset['price'];
+        priceDisplay.innerText = price;
+      })
+    });
+  }
+})();
+
+/**
+ * End signup steps
+ */
