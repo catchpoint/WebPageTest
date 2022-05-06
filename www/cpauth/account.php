@@ -8,7 +8,7 @@ use WebPageTest\Template;
 use WebPageTest\Util;
 use WebPageTest\ValidatorPatterns;
 use WebPageTest\Exception\ClientException;
-use WebPageTest\AccountHandler;
+use WebPageTest\Handlers\Account as AccountHandler;
 use Braintree\Gateway as BraintreeGateway;
 
 

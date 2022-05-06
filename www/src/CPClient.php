@@ -15,6 +15,7 @@ use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
+use WebPageTest\Customer;
 
 class CPClient
 {
@@ -395,7 +396,7 @@ class CPClient
         }
     }
 
-    public function addWptSubscription(string $nonce, string $plan, array $billing_address): array
+    public function addWptSubscription(Customer $customer): array
     {
         $gql = (new Mutation('wptAddSubscription'))
         ->setVariables([
@@ -408,21 +409,10 @@ class CPClient
           'company',
           'firstName',
           'lastName',
-          'email',
-          'loginVerificationId'
+          'email'
         ]);
 
-        $variables_array = array('customer' => [
-          "paymentMethodNonce" => $nonce,
-          "subscriptionPlanId" => $plan,
-          "billingAddressModel" => array(
-            "city" => $billing_address['city'],
-            "country" => $billing_address['country'],
-            "state" => $billing_address['state'],
-            "streetAddress" => $billing_address['street_address'],
-            "zipcode" => $billing_address['zipcode']
-          )
-        ]);
+        $variables_array = array('customer' => $customer->toArray());
 
         try {
             $results = $this->graphql_client->runQuery($gql, true, $variables_array);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace WebPageTest;
+namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
 use WebPageTest\RequestContext;
@@ -11,8 +11,10 @@ use WebPageTest\ValidatorPatterns;
 use WebPageTest\Util;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
+use WebPageTest\BillingAddress;
+use WebPageTest\Customer;
 
-class AccountHandler
+class Account
 {
     public static function changeContactInfo(RequestContext $request_context): void
     {
@@ -124,16 +126,22 @@ class AccountHandler
             throw new ClientException("Please complete all required fields", "/account");
         }
 
-        $billing_address = array(
-        'city' => $city,
-        'country' => $country,
-        'state' => $state,
-        'street_address' => $street_address,
-        'zipcode' => $zipcode
-        );
+        $billing_address = new BillingAddress([
+          'city' => $city,
+          'country' => $country,
+          'state' => $state,
+          'street_address' => $street_address,
+          'zipcode' => $zipcode
+        ]);
+
+        $customer = new Customer([
+          'paymentMethodNonce' => $nonce,
+          'billingAddressModel' => $billing_address,
+          'subscriptionPlanId' => $plan
+        ]);
 
         try {
-            $request_context->getClient()->addWptSubscription($nonce, $plan, $billing_address);
+            $request_context->getClient()->addWptSubscription($customer);
             $protocol = $request_context->getUrlProtocol();
             $host = Util::getSetting('host');
             $route = '/account';
