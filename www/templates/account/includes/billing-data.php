@@ -52,14 +52,14 @@
         </tr>
       </thead>
       <tbody>
-<?php foreach($braintreeTransactionHistory as $row) {
-  echo "<tr>
-          <td>{$row['transactionDate']}</td>
-          <td>{$row['cardType']}</td>
-          <td>{$row['maskedCreditCard']}</td>
-          <td>{$row['amount']}</td>
-        </tr>";
-} ?>
+<?php foreach($braintreeTransactionHistory as $row): ?>
+<tr>
+  <td><?= date_format(date_create($row['transactionDate']), 'M d Y H:i:s e') ?></td>
+  <td><?= $row['cardType'] ?></td>
+  <td><?= $row['maskedCreditCard'] ?></td>
+  <td><?= $row['amount'] ?></td>
+</tr>
+<?php endforeach; ?>
       </tbody>
     </table>
   </div>
