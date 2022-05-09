@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../common.inc';
-
 use WebPageTest\RequestContext;
 use WebPageTest\Util;
 use WebPageTest\Exception\ClientException;

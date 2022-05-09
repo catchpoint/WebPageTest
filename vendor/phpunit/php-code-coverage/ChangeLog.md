@@ -2,6 +2,55 @@
 
 All notable changes are documented in this file using the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [9.2.15] - 2022-03-07
+
+### Fixed
+
+* [#885](https://github.com/sebastianbergmann/php-code-coverage/issues/885): Files that have only `\r` (CR, 0x0d) EOL characters are not handled correctly
+* [#907](https://github.com/sebastianbergmann/php-code-coverage/issues/907): Line with only `return [` is not recognized as executable
+
+## [9.2.14] - 2022-02-28
+
+### Fixed
+
+* [#904](https://github.com/sebastianbergmann/php-code-coverage/issues/904): Lines of code containing the `match` keyword were not recognized as executable correctly
+* [#905](https://github.com/sebastianbergmann/php-code-coverage/issues/905): Lines of code in constructors were not recognized as executable correctly when constructor property promotion is used
+
+## [9.2.13] - 2022-02-23
+
+### Changed
+
+* The contents of the static analysis sourcecode files is now used to generate the static analysis cache version identifier
+
+### Fixed
+
+* Reverted rename of `SebastianBergmann\CodeCoverage\ProcessedCodeCoverageData` to `SebastianBergmann\CodeCoverage\Data\ProcessedCodeCoverageData` (this class is marked as `@internal` and not covered by the backward compatibility promise, but it is (still) used directly by PHPUnit)
+* Reverted rename of `SebastianBergmann\CodeCoverage\RawCodeCoverageData` to `SebastianBergmann\CodeCoverage\Data\RawCodeCoverageData` (this class is marked as `@internal` and not covered by the backward compatibility promise, but it is (still) used directly by PHPUnit)
+* The `ArrayDim`, `Cast`, and `MethodCall` nodes are now considered when determining whether a line of code is executable or not
+
+## [9.2.12] - 2022-02-23 [YANKED]
+
+### Changed
+
+* [#898](https://github.com/sebastianbergmann/php-code-coverage/pull/898): Use content hash instead of `filemtime()` to determine cache hit/miss
+
+### Fixed
+
+* [#736](https://github.com/sebastianbergmann/php-code-coverage/issues/736): HTML report generator allows invalid values for low upper bound and high lower bound
+* [#854](https://github.com/sebastianbergmann/php-code-coverage/issues/854): "Class Coverage Distribution" and "Class Complexity" graphs are not displayed at full width
+* [#897](https://github.com/sebastianbergmann/php-code-coverage/issues/897): `declare(strict_types=1)` marked as uncovered
+
+## [9.2.11] - 2022-02-18
+
+### Changed
+
+* `CoveredFileAnalyser` and `UncoveredFileAnalyser` have been combined to `FileAnalyser`
+* Updated bundled CSS/JavaScript components used for HTML report: Bootstrap 4.6.1, jQuery 3.6.0, and popper.js 1.16.1
+
+### Fixed
+
+* [#889](https://github.com/sebastianbergmann/php-code-coverage/issues/889): Code Coverage depends on autoload order
+
 ## [9.2.10] - 2021-12-05
 
 ### Fixed
@@ -88,7 +137,7 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 ### Fixed
 
-* [#810](https://github.com/sebastianbergmann/php-code-coverage/issues/810): `SebastianBergmann\CodeCoverage\Driver\Driver::forLineCoverage()` and `SebastianBergmann\CodeCoverage\Driver\Driver::forLineAndPathCoverage()` are marked as internal 
+* [#810](https://github.com/sebastianbergmann/php-code-coverage/issues/810): `SebastianBergmann\CodeCoverage\Driver\Driver::forLineCoverage()` and `SebastianBergmann\CodeCoverage\Driver\Driver::forLineAndPathCoverage()` are marked as internal
 
 ### Removed
 
@@ -286,7 +335,7 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 ### Changed
 
-* Update HTML report Bootstrap 4.3.1, jQuery 3.4.1, and popper.js 1.15.0
+* Updated bundled CSS/JavaScript components used for HTML report: Bootstrap 4.3.1, jQuery 3.4.1, and popper.js 1.15.0
 
 ## [7.0.7] - 2019-07-25
 
@@ -322,7 +371,7 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 ### Changed
 
-* Updated HTML report to Bootstrap 4.3.0
+* Updated bundled CSS/JavaScript components used for HTML report: Bootstrap 4.3.0
 
 ### Fixed
 
@@ -349,6 +398,11 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 * This component is no longer supported on PHP 7.1
 
+[9.2.15]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.14...9.2.15
+[9.2.14]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.13...9.2.14
+[9.2.13]: https://github.com/sebastianbergmann/php-code-coverage/compare/c011a0b6aaa4acd2f39b7f51fb4ad4442b6ec631...9.2.13
+[9.2.12]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.11...c011a0b6aaa4acd2f39b7f51fb4ad4442b6ec631
+[9.2.11]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.10...9.2.11
 [9.2.10]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.9...9.2.10
 [9.2.9]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.8...9.2.9
 [9.2.8]: https://github.com/sebastianbergmann/php-code-coverage/compare/9.2.7...9.2.8

@@ -13,6 +13,8 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Braintree\Gateway as BraintreeGateway;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
+use WebPageTest\BillingAddress;
+use WebPageTest\Customer;
 use WebPageTest\Exception\ClientException;
 
 class Signup
@@ -300,19 +302,19 @@ class Signup
     public static function postStepThree(RequestContext $request_context, object $body): string
     {
         // build query items
-        $billing_address_model = [
-        'streetAddress' => $body->street_address,
-        'city' => $body->city,
-        'state' => $body->state,
-        'country' => $body->country,
-        'zipcode' => $body->zipcode
-        ];
+        $billing_address_model = new BillingAddress([
+          'street_address' => $body->street_address,
+          'city' => $body->city,
+          'state' => $body->state,
+          'country' => $body->country,
+          'zipcode' => $body->zipcode
+        ]);
 
-        $customer = [
-        'paymentMethodNonce' => $body->nonce,
-        'billingAddressModel' => $billing_address_model,
-        'subscriptionPlanId' => $body->plan
-        ];
+        $customer = new Customer([
+          'payment_method_nonce' => $body->nonce,
+          'billing_address_model' => $billing_address_model,
+          'subscription_plan_id' => $body->plan
+        ]);
 
         // handle signup
         try {
@@ -322,8 +324,7 @@ class Signup
             'company' => $body->company,
             'email' => $body->email,
             'password' => $body->password,
-            'customer' => $customer
-            ));
+            ), $customer);
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
@@ -337,9 +338,8 @@ class Signup
                 'last_name' => $body->last_name,
                 'company' => $body->company,
                 'email' => $body->email,
-                'password' => $body->password,
-                'customer' => $customer
-                ));
+                'password' => $body->password
+                ), $customer);
 
                 $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
                 return $redirect_uri;

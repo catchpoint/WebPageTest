@@ -13,6 +13,7 @@ use GraphQL\Query;
 use GraphQL\Mutation;
 use GraphQL\Variable;
 use WebPageTest\Plan;
+use WebPageTest\Customer;
 
 class CPSignupClient
 {
@@ -78,14 +79,14 @@ class CPSignupClient
         return new SignupToken($data);
     }
 
-    public function signup(array $options): array
+    public function signup(array $options, ?Customer $customer = null): array
     {
         $first_name = $options['first_name'] ?? null;
         $last_name = $options['last_name'] ?? null;
         $company = $options['company'] ?? null;
         $email = $options['email'] ?? null;
         $password = $options['password'] ?? null;
-        $customer = $options['customer'] ?? null;
+        $customer = $customer ?? null;
 
         if (is_null($first_name) || is_null($last_name) || is_null($email) || is_null($password)) {
             throw new BaseException('first_name, last_name, email, and password are all required');
@@ -115,7 +116,7 @@ class CPSignupClient
         ];
 
         if (!is_null($customer)) {
-            $wpt_account['customer'] = $customer;
+            $wpt_account['customer'] = $customer->toArray();
         }
 
         $variables_array = array('wptAccount' => $wpt_account);

@@ -12,11 +12,11 @@
       "format": "phpcbf --standard=PSR12 www/src www/cpauth www/common"
     },
     "require": {
-        "guzzlehttp/guzzle": "^7.4",
+        "braintree/braintree_php": "^6.8",
         "gmostafa/php-graphql-client": "^1.13",
-        "php": "^7.4.0",
+        "guzzlehttp/guzzle": "^7.4",
         "paragonie/random-lib": "^2.0",
-        "respect/validation": "^2.2",
-        "braintree/braintree_php": "^6.8"
+        "php": "^7.4.0",
+        "respect/validation": "^2.2"
     }
 }
