@@ -409,14 +409,15 @@ class CPClient
           'company',
           'firstName',
           'lastName',
-          'email'
+          'email',
+          'loginVerificationId'
         ]);
 
         $variables_array = array('customer' => $customer->toArray());
 
         try {
             $results = $this->graphql_client->runQuery($gql, true, $variables_array);
-            return $results->getData();
+            return $results->getData()['wptAddSubscription'];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
