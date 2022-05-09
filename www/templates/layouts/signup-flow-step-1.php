@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="account-layout">
+<html>
   <head>
 <?php
 require_once __DIR__ . '/../../common.inc';
