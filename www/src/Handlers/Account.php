@@ -141,12 +141,8 @@ class Account
         ]);
 
         try {
-            $request_context->getClient()->addWptSubscription($customer);
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $data = $request_context->getClient()->addWptSubscription($customer);
+            $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
