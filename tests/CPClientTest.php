@@ -244,6 +244,250 @@ final class CPClientTest extends TestCase {
     $client->revokeToken($token);
   }
 
+  public function testGetUserDetails () : void {
+    $handler = $this->createMockResponse(200, '{
+    "data": {
+      "userIdentity": {
+        "activeContact": {
+          "id": 263425,
+          "name": "Alice Bob",
+          "email": "alicebob@catchpoint.com",
+          "isWptPaidUser": true,
+          "isWptAccountVerified": true
+        }
+      }
+    }
+    }');
+    $host = "http://webpagetest.org";
+    $client = new CPClient($host, array(
+      'auth_client_options' => [
+        'client_id' => '123',
+        'client_secret' => '345',
+        'grant_type' => 'these are good to have',
+        'handler' => $handler
+      ]
+    ));
+
+    $data = $client->getUserDetails();
+    $this->assertEquals('263425', $data['id']);
+  }
+
+  public function testGetUserDetailsWithError () : void {
+    $handler = $this->createMockResponse(200, '{
+      "errors":[
+        {
+          "message":"Invalid data. This is an error, man",
+          "locations":[
+            {
+              "line":1,
+              "column":2
+            }
+          ],
+          "extensions":{
+            "code":"GRAPHQL_VALIDATION_FAILED",
+            "exception":{
+              "stacktrace":[
+                "Errors all over the place"
+              ]
+            }
+          }
+        }
+      ]
+    }');
+    $host = "http://webpagetest.org";
+    $client = new CPClient($host, array(
+      'auth_client_options' => [
+        'client_id' => '123',
+        'client_secret' => '345',
+        'grant_type' => 'these are good to have',
+        'handler' => $handler
+      ]
+    ));
+
+    $this->expectException(ClientException::class);
+    $client->getUserDetails();
+  }
+
+  public function testGetUserContactInfo () : void {
+    $handler = $this->createMockResponse(200, '{
+    "data": {
+      "contact": [
+        {
+          "companyName": "catchpoint",
+          "firstName": "Janet",
+          "lastName": "Jones"
+        }
+      ]
+    }
+    }');
+    $host = "http://webpagetest.org";
+    $client = new CPClient($host, array(
+      'auth_client_options' => [
+        'client_id' => '123',
+        'client_secret' => '345',
+        'grant_type' => 'these are good to have',
+        'handler' => $handler
+      ]
+    ));
+
+    $data = $client->getUserContactInfo(12345);
+    $this->assertEquals('catchpoint', $data['companyName']);
+  }
+
+  public function testGetUserContactInfoWithError () : void {
+    $handler = $this->createMockResponse(200, '{
+      "errors":[
+        {
+          "message":"Invalid data. This is an error, man",
+          "locations":[
+            {
+              "line":1,
+              "column":2
+            }
+          ],
+          "extensions":{
+            "code":"GRAPHQL_VALIDATION_FAILED",
+            "exception":{
+              "stacktrace":[
+                "Errors all over the place"
+              ]
+            }
+          }
+        }
+      ]
+    }');
+    $host = "http://webpagetest.org";
+    $client = new CPClient($host, array(
+      'auth_client_options' => [
+        'client_id' => '123',
+        'client_secret' => '345',
+        'grant_type' => 'these are good to have',
+        'handler' => $handler
+      ]
+    ));
+
+    $this->expectException(ClientException::class);
+    $client->getUserContactInfo(12345);
+  }
+
+  public function testGetUnpaidAccountpageInfo () : void {
+    $handler = $this->createMockResponse(200, '{
+    "data": {
+      "braintreeClientToken": "abcdef",
+      "wptPlans": [
+        {
+          "id": "ap7",
+          "name": "10,000 runs",
+          "price": 1620.00,
+          "billingFrequency": 12,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "mp7",
+          "name": "10,000 runs",
+          "price": 168.75,
+          "billingFrequency": 1,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "ap5",
+          "name": "1,000 runs",
+          "price": 180.00,
+          "billingFrequency": 12,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "mp5",
+          "name": "1000 runs",
+          "price": 18.75,
+          "billingFrequency": 1,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "ap8",
+          "name": "20,000 runs",
+          "price": 3000.00,
+          "billingFrequency": 12,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "mp8",
+          "name": "20,000 runs",
+          "price": 312.50,
+          "billingFrequency": 1,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "ap6",
+          "name": "5,000 runs",
+          "price": 840.00,
+          "billingFrequency": 12,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        },
+        {
+          "id": "mp6",
+          "name": "5,000 runs",
+          "price": 87.50,
+          "billingFrequency": 1,
+          "billingDayOfMonth": null,
+          "currencyIsoCode": "USD",
+          "numberOfBillingCycles": null,
+          "trialDuration": null,
+          "trialPeriod": false,
+          "discount": null
+        }
+      ]
+    }
+    }');
+    $host = "http://webpagetest.org";
+    $client = new CPClient($host, array(
+      'auth_client_options' => [
+        'client_id' => '123',
+        'client_secret' => '345',
+        'grant_type' => 'these are good to have',
+        'handler' => $handler
+      ]
+    ));
+
+    $data = $client->getUnpaidAccountpageInfo();
+    $this->assertEquals(8, count($data['wptPlans']));
+  }
+
   private function createMockResponse (int $status, string $body) : HandlerStack {
     $mock = new MockHandler([new Response($status, [], $body)]);
     return HandlerStack::create($mock);

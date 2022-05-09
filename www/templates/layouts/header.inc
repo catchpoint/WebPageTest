@@ -49,7 +49,7 @@ if ($id && isset($test) && is_array($test) &&
 }
 
 // If $tab is null, make it an empty string for strcasecmp
-$tab = $tab ?? "";
+$tab ??= "";
 
 if (!defined('EMBED')) {
 ?>
@@ -57,6 +57,9 @@ if (!defined('EMBED')) {
 $alert = Util::getSetting('alert');
 if ($alert) {
     echo '<div class="alert-banner">' . $alert . '</div>';
+}
+if (isset($error_message)) {
+    echo '<div class="error-notification-banner">' . $error_message . '</div>';
 }
 ?>
 <header>
@@ -128,7 +131,16 @@ if( $supportsAuth && !defined('EMBED') )
         $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
         if ($is_logged_in) {
           echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
-          echo "<li><form method='POST' action='/logout' class='logout-form'><button type='submit'>Logout</button></form></li>";
+          $logoutBtn =
+<<<HTML
+<li>
+  <form method='POST' action='/logout' class='logout-form'>
+    <button type='submit'>Logout</button>
+    <input type="hidden" name="csrf_token" value="{$_SESSION['csrf_token']}" />
+  </form>
+</li>
+HTML;
+        echo $logoutBtn;
         } else {
           echo '<li><a href="/login">Login';
           echo file_get_contents('./images/icon-login.svg');

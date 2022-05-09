@@ -3,19 +3,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
+
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
-
-// Load local deps
-require_once(__DIR__ . '/common_lib.inc');
-require_once(__DIR__ . '/plugins.php.inc');
-require_once(__DIR__ . '/util.inc');
 
 use WebPageTest\Util;
 use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
-
 
 if (Util::getSetting('cp_auth')) {
   // Start session handling for this request
@@ -25,24 +20,43 @@ if (Util::getSetting('cp_auth')) {
 if (Util::getSetting('cp_auth')) {
   set_exception_handler(function($e) {
     if(is_a($e, ClientException::class)) {
-      $route = $e->getRoute();
-      $message = $e->getMessage();
       echo 'Client Exception:';
       echo '<pre>';
       var_dump($e);
       echo '</pre>';
       exit();
-      $_SESSION['error_message'] = $message;
-      header('HTTP/1.1 302 Found');
-      header('Location: ' . $route);
-      exit(0);
+  /**
+   * for when we have notifications for errors
+   *  $route = $e->getRoute();
+   *  $message = $e->getMessage();
+   *  $host = Util::getSetting('host');
+   *  $_SESSION['error_message'] = $message;
+   *  $protocol = "https";
+   *  $location = "{$protocol}://{$host}{$route}";
+   *  header('Location: ' . $location);
+   *  exit();
+   */
     }
     echo '<pre>';
     var_dump($e);
     echo '</pre>';
+
+    /*
+     * for when we ship to prod
+     * throw $e;
+     *
+     */
     exit();
   });
 }
+
+// Load local deps
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/plugins.php.inc');
+require_once(__DIR__ . '/util.inc');
+
+// Create global request context for future use
+$request_context = new RequestContext($_REQUEST, $_SERVER);
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
@@ -424,8 +438,6 @@ if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
 
-// Create global request context for future use
-$request_context = new RequestContext($_REQUEST, $_SERVER);
 if ($supportsSaml && !$supportsCPAuth) {
   $request_context->setUser($saml_user);
 }
@@ -434,4 +446,5 @@ if ($supportsCPAuth) {
   require_once __DIR__ . '/common/AttachClient.php';
   require_once __DIR__ . '/common/AttachUser.php';
   require_once __DIR__ . '/common/AttachSignupClient.php';
+  require_once __DIR__ . '/common/CheckCSRF.php';
 }
