@@ -692,3 +692,130 @@ body.theme-b {
   background-color: rgb(234, 234, 234);
 }
 
+.card.api-consumers,
+.card.billing-history {
+  display: block;
+}
+
+/**
+ * sortable table
+ */
+.sr-only {
+  position: absolute;
+  top: -30em;
+}
+
+table.sortable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.sortable caption {
+  text-align: left;
+}
+
+table.sortable thead tr {
+  border-bottom: thin solid #c8c8c8;
+}
+
+
+table.sortable tbody tr {
+  border-bottom: thin solid #eaeaea;
+}
+
+table.sortable tbody tr:hover {
+  background: #e1dfdd;
+  color: #323130;
+}
+
+
+table.sortable td,
+table.sortable th {
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+table.sortable th {
+  position: relative;
+  padding: 1.25em 0.25em;
+  width: 10em;
+}
+
+table.sortable td {
+  padding: .75em 8px .625em 6px;
+}
+
+table.sortable th.no-sort {
+  padding-top: 0.35em;
+}
+
+table.sortable th button {
+  position: absolute;
+  padding: 4px;
+  margin: 1px;
+  font-size: 100%;
+  font-weight: 600;
+  color: #666;
+  background: transparent;
+  border: none;
+  display: inline;
+  right: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+}
+
+table.sortable th button span {
+  position: relative;
+  top: -1px;
+}
+
+table.sortable th[aria-sort="descending"] span::after {
+  content: "▼";
+  color: currentColor;
+  font-size: 50%;
+  top: 0;
+}
+
+table.sortable th[aria-sort="ascending"] span::after {
+  content: "▲";
+  color: currentColor;
+  font-size: 50%;
+  top: 0;
+}
+
+table.show-unsorted-icon th:not([aria-sort]) button span::after {
+  content: "♢";
+  color: currentColor;
+  font-size: 50%;
+  position: relative;
+  top: -3px;
+  left: -4px;
+}
+
+table.sortable td.num {
+  text-align: right;
+}
+
+/* Focus and hover styling */
+
+table.sortable th button:focus,
+table.sortable th button:hover {
+  color: rgb(50, 49, 48);
+  background: rgb(243, 242, 241);
+}
+
+table.sortable th:not([aria-sort]) button:focus span::after,
+table.sortable th:not([aria-sort]) button:hover span::after {
+  content: "▼";
+  color: currentColor;
+  font-size: 50%;
+  top: 0;
+}
+/**
+ * End sortable table
+ */

@@ -64,7 +64,7 @@ if ($request_method === 'POST') {
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
-            throw new ClientException("There was an error", "/account");
+            throw new ClientException($e->getMessage(), "/account");
         }
     } elseif ($type == "delete-api-key") {
         try {
