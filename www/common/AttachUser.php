@@ -10,6 +10,8 @@ use WebPageTest\Exception\UnauthorizedException;
 
 (function (RequestContext $request) {
     global $admin;
+    global $owner;
+
     $host = Util::getSetting('host');
     $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
     $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
@@ -29,10 +31,12 @@ use WebPageTest\Exception\UnauthorizedException;
     if (!is_null($access_token)) {
         try {
             $data = $request->getClient()->getUserDetails();
-            $user->setUserId($data['id']);
-            $user->setEmail($data['email']);
-            $user->setPaid($data['isWptPaidUser']);
-            $user->setVerified($data['isWptAccountVerified']);
+            $user->setUserId($data['activeContact']['id']);
+            $user->setEmail($data['activeContact']['email']);
+            $user->setPaid($data['activeContact']['isWptPaidUser']);
+            $user->setVerified($data['activeContact']['isWptAccountVerified']);
+            $user->setOwnerId($data['levelSummary']['levelId']);
+            $owner = $user->getOwnerId();
         } catch (UnauthorizedException $e) {
             error_log($e->getMessage());
           // if this fails, Refresh and retry

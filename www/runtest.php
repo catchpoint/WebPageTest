@@ -1980,6 +1980,9 @@ function LogTest(&$test, $testId, $url)
     global $runcount;
     global $apiKey;
     global $USER_EMAIL;
+    global $supportsCPAuth;
+    global $request_context;
+
     if (GetSetting('logging_off')) {
         server_sync($apiKey, $runcount, null);
         return;
@@ -2003,8 +2006,16 @@ function LogTest(&$test, $testId, $url)
     //    $pageLoads *= $test['navigateCount'];
 
     $user_info = '';
-    if ($supportsSaml) {
+    $client_id = null;
+    $create_contact_id = null;
+    if ($supportsCPAuth && isset($request_context) && !is_null($request_context->getUser())) {
+      $user_info = $request_context->getUser()->getEmail();
+      $client_id = $request_context->getUser()->getOwnerId();
+      $create_contact_id = $request_context->getUser()->getUserId();
+    } elseif ($supportsSaml) {
       $saml_email = GetSamlEmail();
+      $client_id = GetSamlAccount();
+      $create_contact_id = GetSamlContact();
       if (isset($saml_email)) {
         $user_info = $saml_email;
       }
@@ -2012,10 +2023,12 @@ function LogTest(&$test, $testId, $url)
       $user_info = $test['user'];
     } elseif (isset($_COOKIE['google_email']) && strlen($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
       $user_info = $_COOKIE['google_email'];
+    } else {
+      $user_info = $USER_EMAIL;
     }
 
-    $redis_server = GetSetting('redis_test_history');
-    
+    $redis_server = Util::getSetting('redis_test_history');
+
     $key = isset($test['key']) ? $test['key'] : null;
     if ($key == GetServerKey()) {
       $key = null;
@@ -2035,7 +2048,7 @@ function LogTest(&$test, $testId, $url)
         'key' => $key,
         'count' => @$pageLoads,
         'priority' => @$test['priority'],
-        'email' => $USER_EMAIL,
+        'email' => $user_info,
         'redis' => $redis_server ? '1' : '0'
     );
 
@@ -2054,7 +2067,7 @@ function LogTest(&$test, $testId, $url)
         'location' => @$test['locationText'],
         'private' => 0,
         'testUID' => @$test['uid'],
-        'testUser' => $USER_EMAIL,
+        'testUser' => $user_info,
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
@@ -2062,8 +2075,8 @@ function LogTest(&$test, $testId, $url)
         'count' => @$pageLoads,
         'runs' => @$pageLoads,
         'priority' => @$test['priority'],
-        'clientId' => GetSamlAccount(),
-        'createContactId' => GetSamlContact()
+        'clientId' => $client_id,
+        'createContactId' => $create_contact_id
       );
       if (isset($logEntry['location'])) {
         $logEntry['location'] = strip_tags($logEntry['location']);

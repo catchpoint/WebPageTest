@@ -16,6 +16,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\Customer;
+use WebPageTest\TestRecord;
 
 class CPClient
 {
@@ -165,12 +166,18 @@ class CPClient
                     'email',
                     'isWptPaidUser',
                     'isWptAccountVerified'
+                  ]),
+                (new Query('levelSummary'))
+                  ->setSelectionSet([
+                    'levelId',
+                    'levelType',
+                    'levelName',
                   ])
               ]);
 
         try {
             $account_details = $this->graphql_client->runQuery($gql, true);
-            return $account_details->getData()['userIdentity']['activeContact'];
+            return $account_details->getData()['userIdentity'];
         } catch (GuzzleException $e) {
             if ($e->getCode() == 401) {
                 throw new UnauthorizedException();
@@ -478,5 +485,39 @@ class CPClient
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
+    }
+
+    public function getTestHistory(int $days = 1): array
+    {
+        $view_hours = $days * 24;
+        $gql = (new Query('wptTestHistory'))
+        ->setVariables([
+          new Variable('viewHours', 'Int', true)
+        ])
+        ->setArguments([
+          'viewHours' => '$viewHours'
+        ])
+        ->setSelectionSet([
+          'id',
+          'testId',
+          'url',
+          'location',
+          'label',
+          'testStartTime',
+          'user',
+          'apiKey'
+        ]);
+
+        $variables = [
+        'viewHours' => $view_hours
+        ];
+
+        $test_history = [];
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptTestHistory'];
+        foreach ($data as $record) {
+            $test_history[] = new TestRecord($record);
+        }
+        return $test_history;
     }
 }
