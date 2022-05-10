@@ -128,6 +128,7 @@ if ($request_method === 'POST') {
             $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
         }
 
+        $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
         $billing_info['billing_frequency'] = $billing_frequency;
         $client_token = $billing_info['braintreeClientToken'];
     } else {

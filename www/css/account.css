@@ -140,6 +140,13 @@ body.theme-b {
   content: ':';
 }
 
+.subscription-plan .cancel span {
+  padding: 0px 10px;
+  border-radius: 2px;
+  background-color: rgb(237, 47, 47);
+  color: rgb(255, 255, 255);
+}
+
 .billing-history {
   display: block;
 }
@@ -684,3 +691,4 @@ body.theme-b {
 .account-layout body {
   background-color: rgb(234, 234, 234);
 }
+
