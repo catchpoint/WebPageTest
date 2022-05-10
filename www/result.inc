@@ -126,17 +126,43 @@ $page_description = "Website performance test result$testLabel.";
             <div id="average">
                 <?php
                 $is_test_error = $testInfo->isTestError();
+                $fvRunResults = $testResults->getRunResult($fvMedian, false);
+                $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
+                    
                 if ($fvMedian)
                 {
                     
                       echo '<h3 class="hed_sub">Observed Metrics ';
+                      $medianMetrics = array(
+                        "chromeUserTiming.CumulativeLayoutShift"=> "Cumulative Layout Shift",
+                        "firstContentfulPaint"=> "First Contentful Paint",
+                        "chromeUserTiming.LargestContentfulPaint"=> "Largest Contentful Paint",
+                        "fullyLoaded" => "Load Time",
+                        "SpeedIndex"=>"Speed Index",
+                        "render"=>"Start Render",
+                        "TTFB"=>"Time to First Byte",
+                        "TotalBlockingTime" => "Total Blocking Time"
+                      );
+                      if ($medianMetrics[$median_metric]) {
+                        $friendlyMedianMetric = $medianMetrics[$median_metric];
+                      } else{
+                        $friendlyMedianMetric = htmlspecialchars($median_metric);
+                      }
                         if ($testResults->countRuns() > 1){
-                        echo '<em>(Based on Median Run by ' . htmlspecialchars($median_metric) . ')</em>';
+                        echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em></h3>';
                         }
-                        echo '</h3>';
+                        echo "<div class='median_metric-selector'>";
+                        echo "<h3>Change Median Metric</h3>";
+                        echo "<ul>";
+
+                        $url = strtok($_SERVER["REQUEST_URI"], '?');
+                        foreach ($medianMetrics as $key => $value) {
+                          if ($pageData[$run][$cached][$key]) {
+                            echo "<li><a href='" . $url . "?medianMetric=". $key . "'>". $value . "</a></li>";
+                          }
+                        }
+                        echo "</ul></div>";
                       
-                    $fvRunResults = $testResults->getRunResult($fvMedian, false);
-                    $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
                     $resultTable->useLabelLinks(true);
                     $resultTable->disableColumns(array(
