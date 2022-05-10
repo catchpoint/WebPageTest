@@ -13,6 +13,7 @@ use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\BillingAddress;
 use WebPageTest\Customer;
+use WebPageTest\CustomerPaymentUpdateInput;
 
 class Account
 {
@@ -143,6 +144,52 @@ class Account
         try {
             $data = $request_context->getClient()->addWptSubscription($customer);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new ClientException("There was an error", "/account");
+        }
+    }
+
+    public static function updatePaymentMethod(RequestContext $request_context): void
+    {
+        $nonce = filter_input(INPUT_POST, 'nonce');
+        $city = filter_input(INPUT_POST, 'city');
+        $country = filter_input(INPUT_POST, 'country');
+        $state = filter_input(INPUT_POST, 'state');
+        $street_address = filter_input(INPUT_POST, 'streetAddress');
+        $zipcode = filter_input(INPUT_POST, 'zipcode');
+
+        if (
+            empty($nonce) ||
+            empty($city) ||
+            empty($country) ||
+            empty($state) ||
+            empty($street_address) ||
+            empty($zipcode)
+        ) {
+            throw new ClientException("Please complete all required fields", "/account");
+        }
+
+        $billing_address = new BillingAddress([
+          'city' => $city,
+          'country' => $country,
+          'state' => $state,
+          'street_address' => $street_address,
+          'zipcode' => $zipcode
+        ]);
+
+        $customer = new CustomerPaymentUpdateInput([
+          'payment_method_nonce' => $nonce,
+          'billing_address_model' => $billing_address
+        ]);
+
+        try {
+            $request_context->getClient()->updateWptSubscription($customer);
+            $protocol = $request_context->getUrlProtocol();
+            $host = Util::getSetting('host');
+            $redirect_uri = "{$protocol}://{$host}/account";
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
