@@ -8,8 +8,13 @@
         <?php echo isset($runs_renewal) ? "<li><strong>Runs Renewal</strong> {$runs_renewal}</li>" : "" ?>
         <li><strong>Price</strong> <?= "\${$braintreeCustomerDetails['subscriptionPrice']}"; ?></li>
         <li><strong>Payment</strong> <?= $billing_frequency ?></li>
+<?php if ($is_canceled): ?>
+        <li><strong>Plan Renewal</strong> <s><?= $plan_renewal ?></s></li>
+        <li class="cancel"><strong>Status</strong> <span><?= $braintreeCustomerDetails['status']; ?></span></li>
+<?php else: ?>
         <li><strong>Plan Renewal</strong> <?= $plan_renewal ?></li>
         <li><strong>Status</strong> <?= $braintreeCustomerDetails['status']; ?></li>
+<?php endif; ?>
       </ul>
     </div>
   </div>

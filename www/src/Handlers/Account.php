@@ -202,15 +202,16 @@ class Account
     {
 
         $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
-        $protocol = $request_context->getUrlProtocol();
-        $host = Util::getSetting('host');
-        $route = '/account';
-        $redirect_uri = "{$protocol}://{$host}{$route}";
 
-        header("Location: {$redirect_uri}");
-        exit();
         try {
             $request_context->getClient()->cancelWptSubscription($subscription_id);
+            $protocol = $request_context->getUrlProtocol();
+            $host = Util::getSetting('host');
+            $route = '/account';
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+
+            header("Location: {$redirect_uri}");
+            exit();
         } catch (BaseException $e) {
             error_log($e->getMessage());
             throw new ClientException("There was an error", "/account");
