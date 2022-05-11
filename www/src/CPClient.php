@@ -235,6 +235,7 @@ class CPClient
     {
         $gql = (new Query())
         ->setSelectionSet([
+          'braintreeClientToken',
           (new Query('wptApiKey'))
             ->setSelectionSet([
               'id',
@@ -409,14 +410,15 @@ class CPClient
           'company',
           'firstName',
           'lastName',
-          'email'
+          'email',
+          'loginVerificationId'
         ]);
 
         $variables_array = array('customer' => $customer->toArray());
 
         try {
             $results = $this->graphql_client->runQuery($gql, true, $variables_array);
-            return $results->getData();
+            return $results->getData()['wptAddSubscription'];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
@@ -437,6 +439,27 @@ class CPClient
           "cancellationReason" => $reason,
           "suggestion" => $suggestion
         ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function updateWptSubscription(CustomerPaymentUpdateInput $customer)
+    {
+
+        $gql = (new Mutation('braintreeUpdatePayment'))
+        ->setVariables([
+          new Variable('wptUpdatePaymentDetails', 'CustomerPaymentUpdateInputType', true)
+        ])
+        ->setArguments([
+          'braintreeCustomer' => '$wptUpdatePaymentDetails'
+        ]);
+
+        $variables_array = array('wptUpdatePaymentDetails' => $customer->toArray());
 
         try {
             $results = $this->graphql_client->runQuery($gql, true, $variables_array);

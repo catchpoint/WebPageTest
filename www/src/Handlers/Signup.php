@@ -27,6 +27,7 @@ class Signup
     public static function getStepOne(RequestContext $request_context, array $vars): string
     {
         $tpl = new Template('account/signup');
+        $tpl->setLayout('signup-flow-step-1');
 
         try {
             $wpt_plans = $request_context->getSignupClient()->getWptPlans();

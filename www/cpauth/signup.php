@@ -26,13 +26,6 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     }
 
     if ($request_method == 'POST') {
-        $csrf_token = $_POST['csrf_token'];
-        if ($csrf_token != $_SESSION['csrf_token']) {
-            $msg = "CSRF error, wanted {$_SESSION['csrf_token']} and got {$csrf_token}";
-            throw new ClientException($msg, '/signup', 403);
-        }
-        unset($_SESSION['csrf_token']);
-
         $signup_step = (int) filter_input(INPUT_POST, 'step', FILTER_SANITIZE_NUMBER_INT);
 
         switch ($signup_step) {
@@ -77,10 +70,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
         exit();
     }
 
-    $csrf_token = bin2hex(random_bytes(32));
-    unset($_SESSION['csrf_token']);
-    $_SESSION['csrf_token'] = $csrf_token;
-
+    $csrf_token = $_SESSION['csrf_token'];
 
     $vars = array(
       'csrf_token' => $csrf_token

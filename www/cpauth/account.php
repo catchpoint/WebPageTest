@@ -9,7 +9,6 @@ use WebPageTest\Util;
 use WebPageTest\ValidatorPatterns;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
-use Braintree\Gateway as BraintreeGateway;
 
 
 if (!Util::getSetting('cp_auth')) {
@@ -21,14 +20,6 @@ if (!Util::getSetting('cp_auth')) {
     header("Location: {$redirect_uri}");
     exit();
 }
-
-$gateway = new BraintreeGateway([
-  'environment' => Util::getSetting('bt_environment'),
-  'merchantId' => Util::getSetting('bt_merchant_id'),
-  'publicKey' => Util::getSetting('bt_api_key_public'),
-  'privateKey' => Util::getSetting('bt_api_key_private')
-]);
-
 
 $access_token = $request_context->getUser()->getAccessToken();
 if (is_null($access_token)) {
@@ -58,6 +49,8 @@ if ($request_method === 'POST') {
         AccountHandler::subscribeToAccount($request_context);
     } elseif ($type == "cancel-subscription") {
         AccountHandler::cancelSubscription($request_context);
+    } elseif ($type == "update-payment-method") {
+        AccountHandler::updatePaymentMethod($request_context);
     } elseif ($type == "create-api-key") {
         try {
             $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
@@ -118,6 +111,7 @@ if ($request_method === 'POST') {
 
     $billing_info = array();
     $client_token = "";
+    $country_list = Util::getCountryList();
 
     if ($is_paid) {
         $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
@@ -134,12 +128,12 @@ if ($request_method === 'POST') {
             $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
         }
 
+        $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
         $billing_info['billing_frequency'] = $billing_frequency;
-        $client_token = $gateway->clientToken()->generate($customer_details['customerId']);
+        $client_token = $billing_info['braintreeClientToken'];
     } else {
-        $countryList = Util::getCountryList();
         $info = $request_context->getClient()->getUnpaidAccountpageInfo();
-        $client_token = $gateway->clientToken()->generate();
+        $client_token = $info['braintreeClientToken'];
         $plans = $info['wptPlans'];
         $annual_plans = array();
         $monthly_plans = array();
@@ -159,10 +153,8 @@ if ($request_method === 'POST') {
             }
         }
         $billing_info = array(
-        'braintree_client_token' => $info['braintreeClientToken'],
-        'annual_plans' => $annual_plans,
-        'monthly_plans' => $monthly_plans,
-        'country_list' => $countryList
+          'annual_plans' => $annual_plans,
+          'monthly_plans' => $monthly_plans
         );
     }
 
@@ -171,6 +163,7 @@ if ($request_method === 'POST') {
     $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
     $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
     $results['bt_client_token'] = $client_token;
+    $results['country_list'] = $country_list;
 
     if (!is_null($error_message)) {
         $results['error_message'] = $error_message;
