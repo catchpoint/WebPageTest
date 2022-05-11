@@ -7,17 +7,13 @@
   </div> <!-- ./signup-hed -->
 
   <div class="signup-step-1-content">
-    <div>
+    <div class="billing-frequency-selector">
       <h3>Save 25% by paying annually!</h3>
       <div class="radiobutton-group" id="pro-plan-selector">
-        <div class="radio-button">
-          <label for="annual-plans">Annual</label>
-          <input type="radio" name="plans" value="annual" checked />
-        </div>
-        <div class="radio-button">
-          <label for="monthly-plans">Monthly</label>
-          <input type="radio" name="plans" value="monthly" />
-        </div>
+        <input type="radio" id="annual-plans" name="plans" value="annual" checked />
+        <label for="annual-plans">Annual</label>
+        <input type="radio" id="monthly-plans" name="plans" value="monthly" />
+        <label for="monthly-plans">Monthly</label>
       </div>
     </div>
     <div class="card-container">

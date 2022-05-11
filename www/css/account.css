@@ -319,7 +319,6 @@ body.theme-b {
   display: block;
   cursor: pointer;
 }
-<<<<<<< HEAD
 
 /**
  * begin signup steps
@@ -964,4 +963,42 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 
 .api-consumers .info .hidden-content {
   min-width: 21em; /* API key length */
+}
+
+.billing-frequency-selector {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.radiobutton-group {
+  display: flex;
+  justify-content: center;
+}
+
+.radiobutton-group input {
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  width: 1px;
+  border: 0;
+  overflow: hidden;
+}
+
+.radiobutton-group label {
+  background-color: #FFFFFF;
+  color: #333;
+  font-size: 1.25rem;
+  text-align: center;
+  padding: .55em 20px .5em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.radiobutton-group label:hover {
+  cursor: pointer;
+}
+
+.radiobutton-group input:checked + label {
+  background-color: #3881E5;
+  color: #FFF;
+  box-shadow: none;
 }
