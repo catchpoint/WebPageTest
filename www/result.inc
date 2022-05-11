@@ -149,8 +149,9 @@ $page_description = "Website performance test result$testLabel.";
                         $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
                         if ($testResults->countRuns() > 1){
-                        echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em></h3>';
+                        echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em>';
                         }
+                        echo '</h3>';
                         echo "<div class='median_metric-selector'>";
                         echo "<h3>Change Median Metric</h3>";
                         echo "<ul>";
