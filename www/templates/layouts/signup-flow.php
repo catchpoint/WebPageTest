@@ -4,9 +4,12 @@
 <?php
 require_once __DIR__ . '/../../common.inc';
 
+use WebPageTest\Util;
+
 global $USER_EMAIL;
 global $supportsAuth;
 global $supportsSaml;
+global $notification_alert;
 
 $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
@@ -15,6 +18,12 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
   <link href="/css/account.css" rel="stylesheet" />
   </head>
   <body>
+<?php
+$alert = $notification_alert ?? Util::getSetting('alert');
+if ($alert) {
+    echo '<div class="alert-banner">' . $alert . '</div>';
+}
+?>
     <header>
       <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a>
 <?php if ($is_plan_free): ?>

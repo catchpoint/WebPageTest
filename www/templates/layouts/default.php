@@ -10,6 +10,7 @@ global $supportsSaml;
 global $supportsCPAuth;
 global $request_context;
 global $_SESSION;
+global $notification_alert;
 
 $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
