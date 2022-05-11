@@ -16,7 +16,7 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
   <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
   <link href="/css/account.css" rel="stylesheet" />
-  <script src="/js/account.js"></script>
+  <script defer src="/js/account.js"></script>
   </head>
   <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
