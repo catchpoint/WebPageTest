@@ -92,7 +92,9 @@ if( strlen($page_description) )
     echo "\n</style>\n";
         
     // include the analytics code if it is appropriate
-    if (!isset($noanalytics))
+    if (!isset($noanalytics)) {
         include('analytics.inc');
+        require_once __DIR__ .'/catchpoint-rum.inc';
+    }
         
 ?>
