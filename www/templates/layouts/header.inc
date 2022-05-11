@@ -54,12 +54,9 @@ $tab ??= "";
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = Util::getSetting('alert');
+$alert = $notification_alert ?? Util::getSetting('alert');
 if ($alert) {
     echo '<div class="alert-banner">' . $alert . '</div>';
-}
-if (isset($error_message)) {
-    echo '<div class="error-notification-banner">' . $error_message . '</div>';
 }
 ?>
 <header>

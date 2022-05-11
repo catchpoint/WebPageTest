@@ -17,25 +17,22 @@ if (Util::getSetting('cp_auth')) {
   session_start();
 }
 
+$notification_alert = null;
 if (Util::getSetting('cp_auth')) {
+  $notification_alert = $_SESSION['notification_alert'] ?? null;
+  unset($_SESSION['notification_alert']);
+
   set_exception_handler(function($e) {
     if(is_a($e, ClientException::class)) {
-      echo 'Client Exception:';
-      echo '<pre>';
-      var_dump($e);
-      echo '</pre>';
-      exit();
-  /**
-   * for when we have notifications for errors
-   *  $route = $e->getRoute();
-   *  $message = $e->getMessage();
-   *  $host = Util::getSetting('host');
-   *  $_SESSION['error_message'] = $message;
-   *  $protocol = "https";
-   *  $location = "{$protocol}://{$host}{$route}";
-   *  header('Location: ' . $location);
-   *  exit();
-   */
+     $route = $e->getRoute();
+     $message = $e->getMessage();
+     $host = Util::getSetting('host');
+     unset($_SESSION['notification_alert']);
+     $_SESSION['notification_alert'] = $message;
+     $protocol = "https";
+     $location = "{$protocol}://{$host}{$route}";
+     header('Location: ' . $location);
+     exit();
     }
     echo '<pre>';
     var_dump($e);
