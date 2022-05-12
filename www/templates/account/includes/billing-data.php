@@ -94,22 +94,31 @@
 </div>
 
 <div class="card api-consumers">
-  <div>
-    <form method="POST" action="/account">
-      <input type="text" name="api-key-name" required />
-      <button type="submit">Create API key</button>
-      <input type="hidden" name="type" value="create-api-key" />
-      <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-    </form>
+  <h3>API Consumers</h3>
+  <div class="create-key-container">
+    <div class="create-delete-button-container">
+      <button type="button" class="new-api-key" data-toggle="open" data-targetid="create-api-key-toggle-area">New Api Key</button>
+      <button type="button" class="delete-key" disabled>Delete</button>
+    </div>
+    <div class="toggleable" id="create-api-key-toggle-area">
+      <form method="POST" action="/account">
+        <label for="api-key-name" class="sr-only">API Key Name</label>
+        <input type="text" name="api-key-name" placeholder="Enter Application Name" required />
+        <button type="submit">Save</button>
+        <button type="button" class="cancel" data-toggle="close" data-targetid="create-api-key-toggle-area">Cancel</button>
+        <input type="hidden" name="type" value="create-api-key" />
+        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+      </form>
+    </div>
   </div>
   <div class="info">
     <table class="sortable">
       <caption>
-        <h3>API Consumers</h3>
-        <span class="sr-only">, column headers with buttons are sortable.</span>
+        <span class="sr-only">API Consumers table, column headers with buttons are sortable.</span>
       </caption>
       <thead>
         <tr>
+          <th class="no-sort">Delete</th>
           <th aria-sort="ascending">
             <button>
               Name
@@ -134,16 +143,11 @@
               <span aria-hidden="true"></span>
             </button>
           </th>
-          <th class="no-sort">Delete</th>
         </tr>
       </thead>
       <tbody>
 <?php foreach($wptApiKey as $row): ?>
         <tr>
-          <td><?= $row['name'] ?></td>
-          <td><?= $row['apiKey'] ?></td>
-          <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
-          <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
           <td>
             <form method='POST' action='/account'>
               <input type='hidden' name='api-key-id' value='<?= $row['id'] ?>' />
@@ -152,6 +156,15 @@
               <button type='submit'>Delete</button>
             </form>
           </td>
+          <td><?= $row['name'] ?></td>
+          <td class="hidden-content">
+            <button type="button" class="view-button">View</button>
+            <span class="hidden-area closed">
+              <span class="api-key"><?= $row['apiKey'] ?></span>
+              <button type="button" class="hide-button"><span class="sr-only">Close</span></button></td>
+            </span>
+          <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
+          <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
         </tr>
 <?php endforeach; ?>
       </tbody>
