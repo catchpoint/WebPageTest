@@ -7,7 +7,7 @@
 
             </div>
             <div class="home_feature_hed_visual">
-                <img src="/images/wpt_home_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                <img src="/images/wpt_home_featureimg.jpg" fetchpriority="high" width="1414" height="843" alt="screenshot of wpt results page">
             </div>
         </div>
     </div>
