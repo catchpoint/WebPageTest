@@ -378,6 +378,72 @@ window.SortableTable = SortableTable;
 }(window));
 
 /**
+ * Toggle
+ */
+(function(window){
+  class Toggleable {
+    constructor(togglearea) {
+      const id = togglearea.id;
+      const buttonElements = document.querySelectorAll("[data-targetid=" + id + "]");
+      togglearea.classList.add('toggle-close');
+      this.open = false;
+      this.togglearea = togglearea;
+
+      for (let i = 0; i < buttonElements.length; i++) {
+        buttonElements[i].addEventListener('click', this.handleClick.bind(this));
+      }
+    }
+
+    handleClick(e) {
+      const command = e.target.dataset.toggle;
+      if (command == "open") {
+        this.open = true;
+        this.togglearea.classList.add('toggle-open');
+        this.togglearea.classList.remove('toggle-close');
+      } else {
+        this.open = false;
+        this.togglearea.classList.remove('toggle-open');
+        this.togglearea.classList.add('toggle-close');
+      }
+    }
+  }
+
+  window.Toggleable = Toggleable;
+}(window));
+
+/**
+ * HiddenContent
+ */
+(function(window){
+  class HiddenContent {
+    constructor(hiddenContentCell) {
+      const viewButton = hiddenContentCell.querySelector('.view-button');
+      const hideButton = hiddenContentCell.querySelector('.hide-button');
+      const hiddenArea = hiddenContentCell.querySelector('.hidden-area');
+
+      viewButton.addEventListener('click', this.showContent.bind(this));
+      hideButton.addEventListener('click', this.hideContent.bind(this));
+
+      this.viewButton = viewButton;
+      this.hideButton = hideButton;
+      this.hiddenContentCell = hiddenContentCell;
+      this.hiddenArea = hiddenArea;
+    }
+
+    hideContent() {
+      this.hiddenArea.classList.add('closed');
+      this.viewButton.classList.remove('closed');
+    }
+
+    showContent() {
+      this.viewButton.classList.add('closed');
+      this.hiddenArea.classList.remove('closed');
+    }
+  }
+
+  window.HiddenContent = HiddenContent;
+}(window));
+/**
  * Attach all the listeners
  */
 (() => {
@@ -396,9 +462,20 @@ window.SortableTable = SortableTable;
           modal.close();
         });
       });
+
       var sortableTables = document.querySelectorAll('table.sortable');
       for (var i = 0; i < sortableTables.length; i++) {
         new SortableTable(sortableTables[i]);
+      }
+
+      var toggleableAreas = document.querySelectorAll('.toggleable');
+      for (var i = 0; i < toggleableAreas.length; i++) {
+        new Toggleable(toggleableAreas[i]);
+      }
+
+      var hiddenContentCells = document.querySelectorAll('td.hidden-content');
+      for (var i = 0; i < hiddenContentCells.length; i++) {
+        new HiddenContent(hiddenContentCells[i]);
       }
     });
   } else {
@@ -418,6 +495,16 @@ window.SortableTable = SortableTable;
     var sortableTables = document.querySelectorAll('table.sortable');
     for (var i = 0; i < sortableTables.length; i++) {
       new SortableTable(sortableTables[i]);
+    }
+
+    var toggleableAreas = document.querySelectorAll('.toggleable');
+    for (var i = 0; i < toggleableAreas.length; i++) {
+      new Toggleable(toggleableAreas[i]);
+    }
+
+    var hiddenContentCells = document.querySelectorAll('td.hidden-content');
+    for (var i = 0; i < hiddenContentCells.length; i++) {
+      new HiddenContent(hiddenContentCells[i]);
     }
   }
 })();
