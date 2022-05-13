@@ -160,13 +160,13 @@ if (isset($USER_EMAIL) && GetSetting('saml_account')) {
 }
 } elseif( isset($user) ) {
 $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
-echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
 } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
 $logoutUrl = 'javascript:wptLogout();';
 $google_email = htmlspecialchars($_COOKIE['google_email']);
-echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
 } else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
+echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
 }
 }
 ?>
