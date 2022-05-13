@@ -6607,3 +6607,17 @@ div.bar {
     text-decoration: underline;
     background: #f9f9f9;
 }
+
+.logout-form button[type=submit] {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 1em;
+  padding-left: 0;
+  cursor: pointer;
+}
+
+.logout-form button[type=submit]:hover {
+  text-decoration: underline;
+}
