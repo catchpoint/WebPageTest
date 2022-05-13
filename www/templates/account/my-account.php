@@ -1,12 +1,18 @@
 <div class="my-account-page">
   <?php if (!$is_verified): ?>
-  <div>
-    <div>
-      <div></div>
-      <div>A verification link was sent to your email</div>
+  <div class="resend-email-verification-container">
+    <div class="resend-email-verification-hed">
+      <h3>A verification link was sent to your email</h3>
     </div>
     <div>Please click on the link that was sent to your email to complete your registration process.</div>
-    <div>Didn’t receive an email?<form><button type="button">Resend Verification Link</button></form></div>
+    <div class="resend-link-container">
+      <span>Didn’t receive an email?</span>
+      <form method="POST" action="/account">
+        <input type="hidden" name="type" value="resend-verification-email" />
+        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+        <button type="submit">Resend Verification Link</button>
+      </form>
+    </div>
   </div>
   <?php endif; ?>
 
