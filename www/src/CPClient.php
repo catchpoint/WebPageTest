@@ -468,4 +468,15 @@ class CPClient
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
     }
+
+    public function resendEmailVerification()
+    {
+        $gql = (new Mutation('wptResendVerificationMail'));
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
 }
