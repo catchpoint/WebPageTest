@@ -85,7 +85,7 @@ $loc = ParseLocations($locations);
     </head>
     <body class="home<?php if ($COMPACT_MODE) {echo ' compact';} ?>">
         <?php 
-            $tab = 'Home';
+            $tab = 'Start Test';
             include 'header.inc';
         ?>
         <?php if (true /* USER NOT LOGGED IN */ ) { ?>
