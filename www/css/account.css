@@ -236,6 +236,18 @@ body.theme-b {
   -ms-user-select: none;
 }
 
+/**
+ * account page specific modal things
+ */
+@media(min-width: 55rem) {
+  .account-layout .modal-open {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    max-width: 800px;
+  }
+}
+
 .plan-billing-container {
   display: flex;
   align-content: flex-start;
