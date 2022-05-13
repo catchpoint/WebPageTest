@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="signup-flow-step-1-layout">
   <head>
 <?php
 require_once __DIR__ . '/../../common.inc';
@@ -20,9 +20,9 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
   </head>
   <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
-    <div id="main">
-    <?php require_once __DIR__ . '/main_hed.inc'; ?>
+    <main>
     <?php echo $template_output; ?>
+    </main>
     <?php require_once __DIR__ . '/footer.inc'; ?>
   </body>
 </html>
