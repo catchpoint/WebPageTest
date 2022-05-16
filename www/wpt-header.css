@@ -159,7 +159,7 @@ wpt-header .wptheader_acct {
     display: flex;
     padding-left: 2rem;
     margin: 1rem;
-    padding: 2rem 1rem 2rem 2rem;
+    padding: 2rem 1rem;
     background: url(/images/icon-user.svg) left 50% no-repeat;
 }
 
