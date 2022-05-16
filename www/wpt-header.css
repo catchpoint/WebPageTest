@@ -248,6 +248,10 @@ wpt-header .wptheader_nav_menu_section a {
     color: #1E4078;
 }
 
+wpt-header .wptheader_nav_menu_content ul {
+    margin-bottom: 1rem;
+}
+
 wpt-header .wptheader_nav_menu_content li {
     display: flex;
     align-items: center;

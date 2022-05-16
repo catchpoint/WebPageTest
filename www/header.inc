@@ -78,29 +78,26 @@ if (isset($client_error)) {
                 $resultUrl = "/result/$id/";
         }
         if (!isset($navTabs) || !count($navTabs)) {
-            $navTabs['Start Test'] = '/';
-            if (!GetSetting('disableTestlog')) {
-              $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
-            }
 
-            if (is_dir('wptmonitor')) {
-                $navTabs['Monitor'] = '/wptmonitor/';
-            }
-            $apiUrl = GetSetting('api_url');
-            if ($apiUrl) {
-                $navTabs['API'] = $apiUrl;
-            }
 
-            if (GetSetting('forums_url')) {
-                $navTabs['Forums'] = GetSetting('forums_url');
-            }
-            $navTabs['Docs'] = 'https://docs.webpagetest.org/';
-            $blogUrl = GetSetting('blog_url');
-            if ($blogUrl) {
-                $navTabs['Blog'] = $blogUrl;
-            }
+            function addTab($tabName, $tabUrl, $addClass = '') {
+                // make sure we have a test result to navigate to
+                if (strlen($tabUrl)) {
+                    // highlight the current tab
+                    $target = '';
+                    $class = '';
+                    $opens = '';
+                    $classes = array();
+                    if( strlen($addClass) ){
+                        $classes[] = $addClass;
+                    }
+                    if( !strcasecmp($tabName, $tab) ){
+                        $classes[] = 'wptheader-current';
+                    }
 
-            $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
+                    if( count($classes) > 0){
+                        $classes = ' class="' . implode(' ', $classes) . '"';
+                    }
 
         }
         foreach ($navTabs as $tabName => $tabUrl) {
@@ -110,8 +107,9 @@ if (isset($client_error)) {
                 $target = '';
                 $current = '';
                 $opens = '';
-                if( !strcasecmp($tabName, $tab) )
+                if( !strcasecmp($tabName, $tab) ) {
                     $current = ' class="wptheader-current" tabindex="-1"';
+                }
                 if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
@@ -122,7 +120,79 @@ if (isset($client_error)) {
                     echo "<li><a $current href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
                 }
             }
+
+            echo addTab('Start Test','/');
+
+            if (!GetSetting('disableTestlog')) {
+              echo addTab('Test History', FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1' );
+            }
+
+            ?>
+
+            <li class="wptheader_nav_menu">
+                    <details>
+                        <summary><span>Products</span></summary>
+                        <div class="wptheader_nav_menu_content">
+                            <div class="wptheader_nav_menu_section">
+                                <img src="/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro">
+                            </div>
+                            <div class="wptheader_nav_menu_section">
+                                <ul>
+                                    <li class="wptheader_nav_menu_link"><a href="/products/experiments">Opportunities & Experiments</a></li>
+                                    <li class="wptheader_nav_menu_link"><a href="/products/api">API</a></li>
+                                </ul>
+                            </div>
+                            <div class="wptheader_nav_menu_section">
+                                <p class="wptheader_nav_cta">
+                                    <span>Ready to go <strong>Pro?</strong></span>
+                                    <a href="/products/pricing">Compare Plans</a>
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                </li>
+
+
+
+                <li><a href="/products/pricing"><span>Pricing</span></a></li>
+               
+
+                <li class="wptheader_nav_menu">
+                    <details>
+                        <summary><span>Resources</span></summary>
+                        <div class="wptheader_nav_menu_content">
+                            <div class="wptheader_nav_menu_section">
+                                <ul>
+                                    <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
+                                    <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
+                                    <li class="wptheader_nav_menu_link"><a href="https://events.webpagetest.org/">Events</a></li>
+                                    <?php
+  ;
+                                    if (GetSetting('forums_url')) {
+                                        echo '<li class="wptheader_nav_menu_link"><a href="'. GetSetting('forums_url') .'">Forums</a></li>';
+                                    }
+                                    ?>
+                                </ul>
+                            </div>
+                            <div class="wptheader_nav_menu_section">
+                                <p class="wptheader_nav_cta">Find us on...</p>
+                                <ul class="wptheader_nav_menu_linkgrid">
+                                    <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/twitter.svg" alt=""><a href="#https://twitter.com/RealWebPageTest">Twitter</a></li>
+                                    <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
+                                    <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
+                                    <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/github.svg" alt="https://github.com/WPO-Foundation/webpagetest/"><a href="#">Github</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </details>
+                </li>
+
+            <?php
+            echo addTab('Why WebPageTest', '/why-webpagetest');
+
+
         }
+        
 ?>
                     </ul>
                     <ul class="wptheader_acct">
