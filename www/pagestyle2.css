@@ -38,7 +38,8 @@ select {
     color: #fff;
 }
 
-header {
+
+/* header {
     grid-column-gap: 1.25em;
     border-bottom: 5px solid #1E2B47;
     background-color: #121D35;
@@ -48,32 +49,38 @@ header {
 
 .home header {
     border-bottom: 5px solid #6c0977;
-}
+} */
 
+
+/* 
 @media screen and (min-width: 50em) {
     header {
         display: grid;
         grid-template-columns: 1vw repeat(4, 1fr) 1vw;
         align-items: center;
     }
-}
+} */
 
 @media screen and (min-width:75em) {
     body {
         display: grid;
     }
-    header {
+    /* header {
         grid-column: gutter-start / gutter-end;
         grid-template-columns: 1vw repeat( 10, 1fr) 1vw;
-    }
+    } */
 }
 
+
+/*
 @media (min-width: 87.5em) {
     header {
         grid-template-columns: calc(50vw - 45em) repeat( 10, 1fr) calc(50vw - 45em);
     }
-}
+} */
 
+
+/* 
 header .logo {
     line-height: 0;
     margin: 1em 0;
@@ -94,9 +101,10 @@ header .logo img {
         margin-bottom: 0;
         margin-top: 1.3em;
     }
-}
+} */
 
-@media screen and (min-width:75em) {
+
+/* @media screen and (min-width:75em) {
     header .logo {
         grid-column: 2/4;
         align-self: center;
@@ -112,14 +120,15 @@ header .logo img {
 
 header a {
     color: #fff;
-}
+} */
 
-a[aria-current=page] {
+
+/* a[aria-current=page] {
     text-decoration: none;
     color: inherit;
     font-weight: 700;
     cursor: default;
-}
+} */
 
 h1 {
     font-size: 1.7em;
@@ -1141,6 +1150,8 @@ details.details_custommetrics summary {
 
 /* @media screen and (min-width:60em) { */
 
+
+/* 
 nav {
     grid-row: 2;
     grid-column: 2 / 5;
@@ -1176,33 +1187,39 @@ nav li {
 
 /* } */
 
+
+/* 
 @media screen and (min-width:75em) {
     nav {
         grid-column: 4 / 10;
         justify-self: center;
         grid-row: auto;
     }
-}
+} */
 
-nav a {
+
+/* nav a {
     padding: .5em .2em;
     margin: 0 .5em;
     display: flex;
     font-size: .9em;
     text-decoration: none;
     font-family: 'Open Sans', sans-serif;
-}
+} */
 
-nav li.current a {
+
+/* nav li.current a {
     font-weight: 700;
     border-bottom: 3px solid #F9D856;
-}
+} */
 
-nav a:hover {
+
+/* nav a:hover {
     text-decoration: underline;
-}
+} */
 
-@media screen and (min-width:50em) {
+
+/* @media screen and (min-width:50em) {
     nav a {
         padding: 1.5em .2em;
     }
@@ -1214,7 +1231,7 @@ nav a:hover {
         margin: 0 1.3em;
         font-size: 1em;
     }
-}
+} */
 
 #main {
     padding: 1.5em 0;
@@ -3916,12 +3933,10 @@ table.details td.reqMime {
     }
     .cruxembed .cruxbars svg:last-child:nth-child(4n - 1) {
         grid-column-end: -3;
-      }
-      
-      .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n + 1) {
+    }
+    .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n+1) {
         grid-column-end: 5;
-      }
-
+    }
 }
 
 .summary-container .crux h3 {
@@ -4463,25 +4478,29 @@ th.header {
     max-width: 100%;
     padding-bottom: .8em;
 }
+
+
 /* overflow shadows */
-.scrollableTable, 
+
+.scrollableTable,
 .results-filmstrip-container,
 div.waterfall-container,
 div.overflow-container,
-.breakdownFrame_item > div,
+.breakdownFrame_item>div,
 #videoDiv {
-    background: linear-gradient(90deg,#fff 33%,rgba(255,255,255,0)),linear-gradient(90deg,rgba(255,255,255,0),#fff 66%) 0 100%,radial-gradient(farthest-side at 0 50%,rgb(106 106 106 / 40%),transparent),radial-gradient(farthest-side at 100% 50%,rgba(106 106 106 / 40%),transparent) 0 100%;
+    background: linear-gradient(90deg, #fff 33%, rgba(255, 255, 255, 0)), linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 66%) 0 100%, radial-gradient(farthest-side at 0 50%, rgb(106 106 106 / 40%), transparent), radial-gradient(farthest-side at 100% 50%, rgba(106 106 106 / 40%), transparent) 0 100%;
     background-repeat: no-repeat;
-    background-size: 50px 100%,50px 100%,10px 100%,10px 100%;
-    background-position: 0 0,100%,0 0,100%;
-    background-attachment: local,local,scroll,scroll;
+    background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
+    background-position: 0 0, 100%, 0 0, 100%;
+    background-attachment: local, local, scroll, scroll;
 }
-.scrollableTable table, 
+
+.scrollableTable table,
 .results-filmstrip-container img,
-div:not(.compare_contain_wrap) > div.waterfall-container img,
-div.overflow-container > *,
-.breakdownFrame_item > div > *,
-#videoDiv > * {
+div:not(.compare_contain_wrap)>div.waterfall-container img,
+div.overflow-container>*,
+.breakdownFrame_item>div>*,
+#videoDiv>* {
     mix-blend-mode: multiply
 }
 
@@ -4568,6 +4587,7 @@ table#tableResults.pretty td {
     vertical-align: middle;
     border: 29px solid #fff;
 }
+
 .result-details #tableResults.pretty tr:not(.metric_groups) th {
     padding-right: 1rem;
     font-size: .8em;
@@ -5700,7 +5720,8 @@ div.request-dialog-radio {
 .request-details a {
     word-break: break-all;
 }
-.request-details h3{
+
+.request-details h3 {
     margin-bottom: 0;
     margin-top: .5em;
     text-decoration: underline;
@@ -6529,16 +6550,15 @@ div.bar {
 }
 
 .a11y-hidden {
-  clip: rect(1px, 1px, 1px, 1px);
-  clip-path: inset(50%);
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
 }
-
 
 .median_metric-selector {
     justify-self: center;
@@ -6550,6 +6570,7 @@ div.bar {
     margin-bottom: 2em;
     display: inline-block;
 }
+
 .median_metric-selector h3 {
     font-weight: normal;
     border-radius: 2px;
@@ -6591,10 +6612,12 @@ div.bar {
     box-sizing: border-box;
     background: #fff;
 }
+
 .has-js .median_metric-selector:hover ul,
 .has-js .median_metric-selector:focus ul {
     display: block;
 }
+
 .median_metric-selector a {
     text-decoration: none;
     color: #333333;
@@ -6606,18 +6629,4 @@ div.bar {
 .median_metric-selector a:focus {
     text-decoration: underline;
     background: #f9f9f9;
-}
-
-.logout-form button[type=submit] {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 1em;
-  padding-left: 0;
-  cursor: pointer;
-}
-
-.logout-form button[type=submit]:hover {
-  text-decoration: underline;
 }
