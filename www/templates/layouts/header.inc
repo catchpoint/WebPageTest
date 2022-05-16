@@ -110,7 +110,7 @@ if ($alert) {
                 $current = '';
                 $opens = '';
                 if( !strcasecmp($tabName, $tab) )
-                    $current = ' class="wptheader-current"';
+                    $current = ' class="wptheader-current" tabindex="-1"';
                 if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
