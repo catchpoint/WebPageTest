@@ -4223,7 +4223,15 @@ th.header {
     margin-top: 0;
     color: #111;
 }
-
+.tip ul{
+    list-style-type: disc;
+    margin-left: 1.5em;
+    margin-bottom: 1.5em;
+}
+.tip ul li{
+    margin-left: 1em;
+    padding-left: 1em;
+}
 .tip .tipHead {
     border-bottom: 1px solid #E9E9E9;
     margin-left: -1.875em;
