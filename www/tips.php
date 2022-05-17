@@ -17,7 +17,8 @@ $page_description = "Website performance optimization tips.";
         <?php $gaTemplate = 'Tips'; include ('head.inc'); ?>
         <style>
         .tip {
-            margin-bottom: 3em;
+            padding: 3rem;
+            margin: 3em;
         }
         </style>
     </head>
@@ -40,9 +41,9 @@ $page_description = "Website performance optimization tips.";
                     $tip = file_get_contents($file);
                     if( strlen($tip) )
                     {
-                        echo '<table class="tip"><tr><th>Did you know...</th></tr><tr><td>';
+                        echo '<div class="tip box"><div class="tipHead"><h2>Did you know?</h2><span class="tip_note">(all links open in a new window/tab)</span></div>';
                         echo $tip;
-                        echo "</td></table>\n";
+                        echo "</div>\n";
                     }
                 }
             }
