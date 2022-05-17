@@ -10,6 +10,8 @@ WebPageTest Global Header.
 wpt-header {
     width: 100%;
     grid-column: 1 / 13;
+    position: relative;
+    z-index: 9999999;
 }
 
 wpt-header header {
