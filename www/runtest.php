@@ -3,7 +3,6 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 require_once(__DIR__ . '/../vendor/autoload.php');
-use WebPageTest\Util;
 
     // deal with magic quotes being enabled
     if (get_magic_quotes_gpc()) {
@@ -19,7 +18,6 @@ use WebPageTest\Util;
         }
         DealWithMagicQuotes($GLOBALS);
     }
-    $experimentURL = Util::getSetting('experimentURL');
 
     // see if we are loading the test settings from a profile
     $profile_file = __DIR__ . '/settings/profiles.ini';
@@ -63,6 +61,7 @@ use WebPageTest\RateLimiter;
 
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
+    $experimentURL = Util::getSetting('experimentURL');
 
 
     set_time_limit(300);
