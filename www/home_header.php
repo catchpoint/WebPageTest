@@ -11,7 +11,7 @@
                 ">View Plans &amp; Learn More &gt;&gt;</a>
                 </div>
                 <div class="home_feature_hed_visual">
-                                <img src="https://scott.webpagetest.org/images/sample-exp-result.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                                <img src="/images/sample-exp-result.jpg" width="1414" height="843" alt="screenshot of wpt results page">
                         <button class="play" id="playbtn">Play/Pause Video</button>
                 </div>
             </div>
