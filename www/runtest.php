@@ -177,6 +177,7 @@ use WebPageTest\RateLimiter;
               $test['customHeaders'] = trim($req_customHeaders);
             if (isset($_REQUEST['injectScript']) && strlen($_REQUEST['injectScript']))
               $test['injectScript'] = $_REQUEST['injectScript'];
+            $test['injectScriptAllFrames'] = isset($_REQUEST['injectScriptAllFrames']) && $_REQUEST['injectScriptAllFrames'] ? 1 : 0;
             $test['runs'] = isset($req_runs) ? (int)$req_runs : 0;
             $test['fvonly'] = isset($req_fvonly) ? (int)$req_fvonly : 0;
             if (isset($_REQUEST['rv']))
@@ -2411,6 +2412,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if (isset($test['injectScript']))
                 $job['injectScript'] = $test['injectScript'];
+            if (isset($test['injectScriptAllFrames']) && $test['injectScriptAllFrames'])
+                $job['injectScriptAllFrames'] = 1;
             if( isset($test['noopt']) && $test['noopt'] )
                 $job['noopt'] = 1;
             if( isset($test['noimages']) && $test['noimages'] )
