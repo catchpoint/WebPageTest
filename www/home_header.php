@@ -38,8 +38,8 @@
 
     <script>
         setInterval(() => {
-            //document.body.classList.toggle("feature-pro");
-        },6000);
+            document.body.classList.toggle("feature-pro");
+        },8000);
     </script>
 
     
