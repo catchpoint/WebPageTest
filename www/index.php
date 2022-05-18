@@ -85,7 +85,7 @@ $loc = ParseLocations($locations);
         $useScreenshot = true;
         include ('head.inc'); ?>
     </head>
-    <body class="home feature-pro ">
+    <body class="home feature-pro">
         <?php 
             $tab = 'Start Test';
             include 'header.inc';
