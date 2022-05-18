@@ -11,7 +11,11 @@
                 ">View Plans &amp; Learn More &gt;&gt;</a>
                 </div>
                 <div class="home_feature_hed_visual">
-                                <img src="/images/sample-exp-result.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                        <video width="1157" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
+							<source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
+							<source src="video/pro-intro-intro-480.mp4">
+							<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">
+						</video>
                         <button class="play" id="playbtn">Play/Pause Video</button>
                 </div>
             </div>
@@ -38,8 +42,61 @@
 
     <script>
         setInterval(() => {
-            document.body.classList.toggle("feature-pro");
+            if( !document.body.classList.contains("playing") && !matchMedia("(prefers-reduced-motion: prefers-reduced)").matches ){
+                document.body.classList.toggle("feature-pro");
+            }
         },8000);
+
+
+        (function(){
+				var intro = document.querySelector("video");
+				var playbtn = document.querySelector(".play");
+				
+				function activate(){
+					intro.controls = true;
+					document.body.classList.add("playing");
+				}
+				function deactivate(){
+					intro.controls = false;
+					intro.pause();
+					document.body.classList.remove("playing");
+				}
+				
+				intro.addEventListener( "play", function(e){
+					activate();
+					playbtn.classList.add("active");
+				});
+				intro.addEventListener( "pause", function(e){
+					playbtn.classList.remove("active");
+				});
+				intro.addEventListener( "ended", function(e){
+					this.controls = false;
+					deactivate();
+					document.body.classList.remove("playing");
+				});
+				playbtn.addEventListener( "click", function(e){
+					e.preventDefault();
+					if(intro.paused){
+						intro.play();
+					} else {
+						intro.pause();
+					}
+				});
+				
+				document.body.addEventListener("mousedown",function( e ){
+					if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){
+						e.preventDefault();
+						deactivate();
+					}
+				});
+				document.body.addEventListener("keydown",function( e ){
+					if( this.classList.contains("playing") && e.keyCode === 27 ){
+						e.preventDefault();
+						deactivate();
+					}
+				});
+			}());
+
     </script>
 
     

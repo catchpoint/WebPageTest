@@ -2490,8 +2490,18 @@ details.details_custommetrics summary {
     /* opacity: 0; */
 }
 
-.header_screenshots.playing .play {
+.header_screenshots.playing .play,
+.home.playing .play {
     background-image: url("/images/src/icon_playpause.svg");
+}
+
+.home.playing .play {
+    opacity: 0;
+}
+
+.home.playing .play:hover,
+.home.playing .play:focus {
+    opacity: 0;
 }
 
 .header_screenshots {
@@ -2792,6 +2802,7 @@ body.result #main {
     border: 2px solid #2d3c60;
     margin-left: -3em;
     /* opacity: 0; */
+    transition: .3s;
     box-shadow: 0 0 10px #2f80ed59;
 }
 
@@ -3127,10 +3138,26 @@ header {
     /* object-fit: contain; */
 }
 
-.home_feature_hed_visual img {
+.home_feature_hed_visual img,
+.home_feature_hed_visual video {
     max-width: 100%;
     height: auto;
 }
+
+
+/* .home_feature_hed_visual {
+    transition: .2s linear;
+    position: relative;
+    z-index: 9999999;
+    transform-origin: right 60%;
+    overflow: visible;
+}
+
+@media (min-width: 50.0625em) {
+    .home.playing .home_feature_hed_visual {
+        transform: scale(1.4);
+    }
+} */
 
 @media (min-width: 65em) {
     .home_feature_hed .attention {
