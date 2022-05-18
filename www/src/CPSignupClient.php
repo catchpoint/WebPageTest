@@ -15,8 +15,6 @@ use GraphQL\Mutation;
 use GraphQL\Variable;
 use WebPageTest\Plan;
 use WebPageTest\Customer;
-use WebPageTest\Exception\ClientException as ExceptionClientException;
-use WebPageTest\Exception\ConflictException;
 
 class CPSignupClient
 {

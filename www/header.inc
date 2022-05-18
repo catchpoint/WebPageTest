@@ -46,9 +46,11 @@ if ($id && isset($test) && is_array($test) &&
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = $notification_alert ?? Util::getSetting('alert');
-if ($alert) {
-    echo '<div class="alert-banner">' . $alert . '</div>';
+$alert = Util::getSetting('alert');
+if (isset($client_error)) {
+  echo '<div class="error-banner">' . $alert . '</div>';
+} elseif ($alert) {
+  echo '<div class="alert-banner">' . $alert . '</div>';
 }
 ?>
 

@@ -6638,3 +6638,46 @@ div.bar {
     text-decoration: underline;
     background: #f9f9f9;
 }
+
+
+.error-banner {
+    font-size: 0.875em;
+    max-width: 100%;
+    background-color: #fce8e6;
+    color: #0E1E38;
+    text-align: center;
+}
+
+.error-banner div {
+    padding: .8em 1em 1.2em;
+}
+
+.error-banner p {
+    margin: 0 auto;
+    font-size: .9em;
+}
+
+.error-banner img {
+    max-height: 2em;
+    display: inline-block;
+    max-width: 5em;
+    margin-right: .7em;
+    position: relative;
+    top: .8em;
+    margin-top: -1em;
+}
+
+.error-banner a {
+    display: block;
+    color: #0E1E38;
+}
+
+@media screen and (min-width:35em) {
+    .error-banner {
+        grid-column: 1 / 13;
+    }
+    .error-banner a,
+    .error-banner-twitch a {
+        display: inline-block;
+    }
+}
