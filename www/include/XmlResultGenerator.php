@@ -274,6 +274,7 @@ class XmlResultGenerator {
     echo "<breakdown>" . htmlspecialchars($urlGenerator->resultPage("breakdown")) . "</breakdown>\n";
     echo "<domains>" . htmlspecialchars($urlGenerator->resultPage("domains")) . "</domains>\n";
     echo "<screenShot>" . htmlspecialchars($urlGenerator->resultPage("screen_shot")) . "</screenShot>\n";
+    echo "<opportunities>" . htmlspecialchars($urlGenerator->resultPage("experiments")) . "</opportunities>\n";
     echo "</pages>\n";
 
     // URLs for the relevant images

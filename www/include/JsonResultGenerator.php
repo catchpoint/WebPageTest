@@ -250,7 +250,7 @@ class JsonResultGenerator {
 
     $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached, $step);
     $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
-    $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
     $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
     $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, $step);
 
@@ -262,6 +262,7 @@ class JsonResultGenerator {
     $ret['pages']['breakdown'] = $urlGenerator->resultPage("breakdown");
     $ret['pages']['domains'] = $urlGenerator->resultPage("domains");
     $ret['pages']['screenShot'] = $urlGenerator->resultPage("screen_shot");
+    $ret['pages']['opportunities'] = $urlGenerator->resultPage("experiments");
 
     $ret['thumbnails'] = array();
     $ret['thumbnails']['waterfall'] = $friendlyUrlGenerator->thumbnail("waterfall.png");
