@@ -9,11 +9,14 @@ use GuzzleHttp\Exception\ClientException;
 use WebPageTest\SignupToken;
 use GraphQL\Client as GraphQLClient;
 use Exception as BaseException;
+use GraphQL\Exception\QueryError;
 use GraphQL\Query;
 use GraphQL\Mutation;
 use GraphQL\Variable;
 use WebPageTest\Plan;
 use WebPageTest\Customer;
+use WebPageTest\Exception\ClientException as ExceptionClientException;
+use WebPageTest\Exception\ConflictException;
 
 class CPSignupClient
 {
@@ -121,8 +124,12 @@ class CPSignupClient
 
         $variables_array = array('wptAccount' => $wpt_account);
 
-        $results = $this->graphql_client->runQuery($gql, true, $variables_array);
-        return $results->getData()['wptAccountCreate'];
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData()['wptAccountCreate'];
+        } catch (QueryError $e) {
+            throw new \WebPageTest\Exception\ClientException($e->getMessage());
+        }
     }
 
     /**

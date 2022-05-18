@@ -16,6 +16,7 @@ use GuzzleHttp\Exception\RequestException;
 use WebPageTest\BillingAddress;
 use WebPageTest\Customer;
 use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\ConflictException;
 
 class Signup
 {
@@ -141,12 +142,11 @@ class Signup
             'email' => $body->email,
             'password' => $body->password
             ));
-          // TODO: handle user already registered (send to login?)
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
-        } catch (\Exception $e) {
-            throw $e;
+        } catch (ClientException $e) {
+            throw new ClientException($e->getMessage(), '/signup/2');
         }
     }
 
