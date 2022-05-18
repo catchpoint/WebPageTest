@@ -1894,13 +1894,18 @@ footer ul {
     border: 0;
     padding: 0 !important;
     padding: 0 0 1rem;
-    gap: 3rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
     /* align-items: flex-start; */
 }
 
 .results_body .opportunities_summary {
     margin: 1rem 0 0;
+}
+
+.result .opportunities_summary {
+    margin: 0 0 2rem;
+    gap: 3rem;
 }
 
 .opportunities_summary a {
@@ -2039,7 +2044,7 @@ footer ul {
     justify-self: flex-start;
     /* border-bottom: 1px solid #ddd; */
     /* padding-bottom: 1rem; */
-    margin: 0em 0 1rem;
+    margin: 0em .5em 1rem 0;
 }
 
 .compare-experiment .opportunities_summary .opportunities_summary_body,
