@@ -1657,6 +1657,14 @@ footer ul {
     border-bottom: 1px solid rgba(255, 255, 255, .2);
 }
 
+#header_data h1 img {
+    flex: 0 1 8.5em;
+    display: block;
+    margin-right: 0.4em;
+    position: relative;
+    bottom: -0.1em;
+}
+
 @media (max-width: 50em) {
     #header_data {
         padding-bottom: 2rem;
