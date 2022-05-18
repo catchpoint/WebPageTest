@@ -1232,6 +1232,86 @@ h4.experiments_list_hed-recs {
     bottom: 0;
 }
 
+.experiments_foot details {
+    position: relative;
+    display: inline-block;
+}
+
+.experiments_foot details summary {
+    background: none;
+    cursor: pointer;
+    list-style: none;
+    padding-left: 1.5em;
+    text-decoration: dotted underline #888;
+    background: url(/images/src/icon_info_circle_white.svg) left 50% no-repeat;
+    background-size: 1.2em auto;
+}
+
+.experiments_foot details summary::-webkit-details-marker {
+    display: none;
+}
+
+.experiments_foot details>div {
+    position: absolute;
+    bottom: 3em;
+    color: #333;
+    background: #fafafa;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    width: 23em;
+    max-width: 90vw;
+    box-shadow: 0 0 5px rgb(0 0 0 / 40%);
+}
+
+.experiments_foot details div p.experiments_jump {
+    color: #333;
+    font-size: 1rem;
+}
+
+.experiments_foot details ol {
+    max-height: 70vh;
+    overflow: auto;
+    list-style: decimal;
+    margin: 0;
+    padding: 0;
+}
+
+.experiments_foot details ol li {
+    padding: .4em 1em;
+    list-style-position: inside;
+}
+
+.experiments_foot details ol:after {
+    content: "";
+    border-top: 0.6em solid rgb(250 250 250);
+    border-right: 0.6em solid transparent;
+    border-left: 0.6em solid transparent;
+    content: "";
+    width: 0;
+    height: 0;
+    left: 50%;
+    position: absolute;
+    bottom: -0.6em;
+    margin-left: -0.6em;
+    background-repeat: no-repeat;
+}
+
+.experiments_foot details ol button,
+.experiments_foot details ol button:focus,
+.experiments_foot details ol button:hover {
+    background: none;
+    box-shadow: none;
+    text-decoration: underline;
+    border: none;
+    color: #409023;
+    cursor: pointer;
+    display: inline-block;
+    width: auto;
+    min-width: auto;
+    text-align: left;
+}
+
 .experiments_create {
     margin-bottom: -8rem;
     /* NOTE this counters the top margin on the footer */
@@ -1278,8 +1358,7 @@ h4.experiments_list_hed-recs {
     font-weight: 500;
 }
 
-.experiments_foot input[type=submit],
-.experiments_foot button {
+.experiments_foot input[type=submit] {
     padding: .9em 2em .9em 2em;
     color: #fff;
     box-shadow: 0 0 3px rgba(0, 0, 0, .3);

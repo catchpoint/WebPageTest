@@ -406,7 +406,7 @@ $page_description = "Website performance test result$testLabel.";
                     $numRuns = $test['test']['runs'];
 
                     echo '<div class="experiments_foot">
-                    <div><p><span class="exps-active"></span> <span class="exps-cta">Ready to go?</span></p>
+                    <div><p><span class="exps-active"></span> </p>
                     <p class="exps-runcount"><label>Number of Experiment Runs:  <input type="number" min="1" max="9" class="text short" name="runs" value="'. $numRuns .'" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 1 experiment test run & 1 control test run.</small></label></p>
                     </div>';
                     
@@ -557,7 +557,23 @@ $page_description = "Website performance test result$testLabel.";
             });
             $(".experiments_foot").addClass("experiments_foot-stick");
             $(".exps-cta").text("Ready to go?");
-            $(".exps-active").html('<strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.' );
+            let expsActiveInfo = $('<details><summary><strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.</summary></details>');
+
+            let expsActiveLinks = $('<ol></ol>');
+            expsActive.each(function(){
+                let exp = $(this);
+                let newLi = $('<li><button type="button"></button></li>' );
+                newLi.find('button')
+                .html(exp.closest(".experiment_description").find('h5').text())
+                .on("click",function(){
+                    exp.closest(".experiment_description")[0].scrollIntoView({behavior: 'smooth'});
+                });
+                expsActiveLinks.append(newLi);
+            });
+
+            expsActiveLinks.appendTo(expsActiveInfo).wrap("<div></div>").before('<p class="experiments_jump">Scroll to:</p>');
+
+            $(".exps-active").empty().append(expsActiveInfo);
             $("[type=submit]").removeAttr("aria-disabled");
         } else{
             $(".experiments_foot").removeClass("experiments_foot-stick");
