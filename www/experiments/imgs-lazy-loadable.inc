@@ -1,10 +1,16 @@
 <?php
 $category = "Quick";
 $imgsOutViewport = $testStepResult->getMetric('imgs-out-viewport');
+$imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
+$imgsInViewportSrcs = array();
+foreach($imgsInViewport as $img){
+    array_push($imgsInViewportSrcs, $img["src"]);
+}
+
 $imgsThatShouldBeLazy = array();
 if(isset($imgsOutViewport) ){
     foreach($imgsOutViewport as $img) {
-        if( $img["loading"] !== "lazy" ){
+        if( $img["loading"] !== "lazy" && !in_array($img["src"], $imgsInViewportSrcs)){
             array_push($imgsThatShouldBeLazy, $img);
         }
 
