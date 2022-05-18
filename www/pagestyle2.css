@@ -2798,6 +2798,7 @@ header {
 .home_feature_hed_text_leadin {
     font-weight: 300;
     margin-right: .2em;
+    font-size: 3rem;
 }
 
 .home_feature_hed_text_line {
@@ -2822,10 +2823,9 @@ header {
 }
 
 .home_feature_hed_text_logo {
-    background: url(/images/wpt-logo-text.svg) no-repeat;
     display: inline-block;
-    text-indent: -99999px;
-    width: 365px;
+    flex: 1 1 50%;
+    width: 100%;
     background-size: contain;
     background-position: left bottom;
 }
@@ -3002,6 +3002,7 @@ header {
     font-size: 3.3125rem;
     padding: 0;
     margin: 0em 0 0px;
+    display: flex;
 }
 
 .home_feature_hed p {
@@ -3098,6 +3099,9 @@ header {
 .home_feature img {
     max-width: 100%;
     display: block;
+    align-self: end;
+    position: relative;
+    top: -.05em;
 }
 
 .home_feature_main {
