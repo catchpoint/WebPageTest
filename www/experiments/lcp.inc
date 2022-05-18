@@ -24,8 +24,7 @@
                 $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
             }
         
-            if (isset($lcp['element']['tagName']) && $lcp['element']['tagName'] === "IMG") {
-                
+            if (isset($lcp['type']) && $lcp['type'] === "image") {
                 if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                     $lcpSource = $lcp['element']['src'];
                     $lcpFullSource = $lcp['element']['src'];
@@ -39,6 +38,7 @@
                     preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
                     if ($matches) {
                         $lcpSource = $matches[3][0];
+                        $lcpFullSource = $matches[3][0];
                         $isBG = true;
                     }
                 }
