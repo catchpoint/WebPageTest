@@ -3,23 +3,23 @@
 if( $experiment ){
 
     // compare render-blocking scripts
-    $experimentBlockingJSReqs = array();
+    $experimentBlockingReqs = array();
     $experimentRequests = $tests[0]['stepResult']->getRequests();
     foreach ($experimentRequests as $request) {
-        if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript" ){
-            array_push($experimentBlockingJSReqs, $request['url'] );
+        if( $request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking"  ){
+            array_push($experimentBlockingReqs, $request['url'] );
         }
     }
 
-    $controlBlockingJSReqs = array();
+    $controlBlockingReqs = array();
     $controlRequests = $tests[1]['stepResult']->getRequests();
     foreach ($controlRequests as $request) {
-        if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript" ){
-            array_push($controlBlockingJSReqs, $request['url'] );
+        if(  $request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking" ){
+            array_push($controlBlockingReqs, $request['url'] );
         }
     }
 
-    $blockingJSReqsDiff = count($controlBlockingJSReqs) - count($experimentBlockingJSReqs);
+    $blockingReqsDiff = count($controlBlockingReqs) - count($experimentBlockingReqs);
 
 
 
@@ -52,8 +52,8 @@ if( $experiment ){
                     }
 
                     // additional non-metric comparisons
-                    if( $blockingJSReqsDiff !== 0){
-                        echo '<th align="center" valign="middle">Blocking Scripts</th>';
+                    if( $blockingReqsDiff !== 0){
+                        echo '<th align="center" valign="middle">Render-Blocking Requests</th>';
                     }
 
                 ?>
@@ -80,11 +80,11 @@ if( $experiment ){
                     }
 
                     // additional non-metric comparisons
-                    if( $blockingJSReqsDiff !== 0 ){
+                    if( $blockingReqsDiff !== 0 ){
                         $changeTerms = array("Fewer","More");
                         $units = "";
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
-                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingJSReqsDiff >= 0 ? "good" : "poor" ) .'">'. $blockingJSReqsDiff . $units . $change . '</td>';
+                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingReqsDiff >= 0 ? "good" : "poor" ) .'">'. $blockingReqsDiff . $units . $change . '</td>';
                     }
                 ?>
             </tr>
