@@ -17,6 +17,13 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
   <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
   <link href="/css/account.css" rel="stylesheet" />
+  <script type="text/javascript">
+  function changePrice(type) {
+    const result = document.querySelector('.' + type + ' .price span');
+    result.textContent = event.target.options[event.target.selectedIndex].dataset.price
+  }
+
+  </script>
   </head>
   <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
