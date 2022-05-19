@@ -5,7 +5,17 @@
   </div>
 
   <div class="signup-step-1-content">
-
+      <!-- css only tabs. The html is in this order for a reason. -->
+      <input id="annual-plans" type="radio" name="plans" value="annual" checked />
+      <input id="monthly-plans" type="radio" name="plans" value="monthly" />
+      <div class="radiobutton-group subscription-type-selector" id="pro-plan-selector">
+          <div class="radio-button">
+              <label for="annual-plans">Annual</label>
+          </div>
+          <div class="radio-button">
+              <label for="monthly-plans">Monthly</label>
+          </div>
+      </div>
       <table class="comparison-table">
           <thead>
               <tr>
@@ -14,6 +24,24 @@
                       <div class="plan-selector">
                           <form method="POST" action="/signup">
                               <p class="plan-name">API Subscription</p>
+                              <div class="plan annual">
+                                  <label class="visually-hidden" for="annual-plan">Select Number of Runs per
+                                      month</label>
+                                  <select name="plan" id="annual-plan" class="plan-select"
+                                      onchange="changePrice('annual')">
+                                      <?php foreach ($annual_plans as $plan) : ?>
+                                      <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>"
+                                          data-price-monthly="<?= $plan->getMonthlyPrice() ?>">
+                                          <?= $plan->getRuns() ?> Runs/mo
+                                          ($<?= $plan->getAnnualPrice() ?>/<?= $plan->getBillingFrequency() ?>)</option>
+                                      <?php endforeach; ?>
+                                  </select>
+                                  <div class="price">
+                                      $<span><?= $annual_plans[0]->getAnnualPrice() ?></span>
+                                      /<?= $annual_plans[0]->getBillingFrequency() ?>
+                                  </div>
+                              </div>
+
                               <div class="plan monthly">
                                   <label class="visually-hidden" for="monthly-plan">Select Number of Runs per
                                       month</label>
@@ -31,7 +59,6 @@
                                       /<?= $monthly_plans[0]->getBillingFrequency() ?>
                                   </div>
                               </div>
-
                               <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
                               <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
                               <input type="hidden" name="step" value="1" />

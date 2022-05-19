@@ -69,12 +69,14 @@
 body.theme-b {
   background: rgb(234, 234, 234);
 }
+
 .my-account-page {
   margin: 0 auto;
   width: 72%;
 }
 
-.subhed, .card {
+.subhed,
+.card {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -167,13 +169,16 @@ body.theme-b {
   background: rgba(0, 0, 0, .5);
   display: none;
 }
+
 .modal {
   visibility: hidden;
 }
+
 .modal-open {
   visibility: visible;
 }
-.modal-open + .modal_screen {
+
+.modal-open+.modal_screen {
   display: block
 }
 
@@ -206,6 +211,7 @@ body.theme-b {
   overflow: hidden;
   text-indent: -999px;
 }
+
 .modal_close:before,
 .modal_close:after {
   content: "";
@@ -217,6 +223,7 @@ body.theme-b {
   position: absolute;
   transform: rotate(-45deg);
 }
+
 .modal_close:after {
   transform: rotate(45deg);
 }
@@ -243,7 +250,7 @@ body.theme-b {
   .account-layout .modal-open {
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%, -50%);
     max-width: 800px;
   }
 }
@@ -277,15 +284,30 @@ body.theme-b {
     "country zipcode";
 }
 
-.street-address { grid-area: street-address; }
-.city { grid-area: city; }
-.state { grid-area: state; }
-.country { grid-area: country; }
-.zipcode { grid-area: zipcode; }
+.street-address {
+  grid-area: street-address;
+}
+
+.city {
+  grid-area: city;
+}
+
+.state {
+  grid-area: state;
+}
+
+.country {
+  grid-area: country;
+}
+
+.zipcode {
+  grid-area: zipcode;
+}
 
 .billing-info-section input,
 .billing-info-section select {
-  border: 1px solid rgb(204, 204, 204);;
+  border: 1px solid rgb(204, 204, 204);
+  ;
   border-radius: 2px;
   width: 100%;
   max-width: 100%;
@@ -310,7 +332,7 @@ body.theme-b {
   left: 0;
 }
 
-.form-wrapper-radio input[type=radio]:checked + .wpt-plan {
+.form-wrapper-radio input[type=radio]:checked+.wpt-plan {
   background-color: rgb(230, 242, 255);
   border: 1px solid rgb(47, 128, 237);
 }
@@ -324,7 +346,7 @@ body.theme-b {
  * begin signup step 1
  */
 
- .signup-flow-step-1-layout main {
+.signup-flow-step-1-layout main {
   grid-column: gutter-start / gutter-end;
   grid-template-columns: 1vw repeat(10, 1fr) 1vw;
   margin-top: 0;
@@ -395,17 +417,20 @@ body.theme-b {
   max-width: 780px;
   margin: 0 auto;
 }
+
 .card-container .card {
   display: block;
   width: 370px;
   height: 715px;
   padding: 0;
 }
+
 .card-container .card fieldset {
   padding: 20px 30px 30px;
   margin: 0;
   border: 0;
 }
+
 .card-container .card fieldset legend {
   padding-top: 1.875rem;
   text-align: center;
@@ -414,6 +439,7 @@ body.theme-b {
   color: #111111;
   line-height: 2.375rem;
 }
+
 .card-container .card fieldset h3 {
   font-size: 1.5rem;
   line-height: 1.6rem;
@@ -421,15 +447,18 @@ body.theme-b {
   padding: 0.5625rem 0;
   font-weight: 400;
 }
+
 .card-container .card fieldset select {
   font-size: 1.5rem;
   padding: 0.5625rem 31.5px 0.5625rem 10px;
   line-height: 1.6rem;
   border: 1px solid #666666;
 }
+
 .card-container .card fieldset .price {
   margin: 10px 0 20px;
 }
+
 .card-container .card button[type="submit"] {
   appearance: none;
   width: 100%;
@@ -438,10 +467,12 @@ body.theme-b {
   border-radius: 4px;
   padding: 1rem 0;
 }
+
 .card .annual,
 .card .monthly {
   display: none;
 }
+
 .card .annual.selected,
 .card .monthly.selected {
   display: block;
@@ -469,7 +500,7 @@ body.theme-b {
  */
 
 .signup-flow-layout * {
- box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .signup-flow-layout body {
@@ -491,12 +522,14 @@ body.theme-b {
   display: flex;
   justify-content: space-around;
 }
+
 .signup-flow-layout header li {
   margin-left: 40px;
   color: #D0D0D0;
   font-weight: 400;
   font-size: 1.125rem;
 }
+
 .signup-flow-layout header .selected {
   color: #A9C8F1;
   font-weight: 700;
@@ -518,6 +551,7 @@ body.theme-b {
   .signup-flow-layout header ol {
     margin-left: 0;
   }
+
   .signup-flow-layout header .free-plan {
     margin-left: 0;
   }
@@ -528,6 +562,7 @@ body.theme-b {
   .signup-flow-layout header ol {
     margin-left: calc(50vw - 43.4375rem);
   }
+
   .signup-flow-layout header .free-plan {
     margin-left: calc(50vw - 39rem);
   }
@@ -539,8 +574,8 @@ body.theme-b {
   grid-template-rows: 1fr 1fr;
   gap: 0px 0px;
   grid-template-areas:
-      "."
-      ".";
+    "."
+    ".";
   width: 100vw;
   height: 100vh;
 }
@@ -563,6 +598,7 @@ body.theme-b {
   width: 400px;
   margin: 0 auto;
 }
+
 .signup-flow-layout .payment-details .content {
   width: 535px;
 }
@@ -605,6 +641,7 @@ body.theme-b {
   background-color: #F9D856;
   border: 1px solid #F9D856;
   border-radius: 4px;
+  cursor: pointer;
 }
 
 a.button {
@@ -628,25 +665,29 @@ a.button {
   color: #DADADA;
   padding: 70px 30px;
 }
+
 .signup-flow-layout aside h3 {
   font-size: 1.25rem;
   line-height: 1.6875rem;
 }
+
 .signup-flow-layout .plan-name {
   font-weight: 400;
   font-size: 1.25rem;
   line-height: 1.6875rem;
 }
+
 .signup-flow-layout .plan-details {
   border-top: 1px solid #808080;
 }
+
 .signup-flow-layout .plan-details table {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr;
   gap: 0px 0px;
   grid-template-areas:
-      "." ".";
+    "."".";
 }
 
 .signup-flow-layout .plan-details table thead tr,
@@ -656,13 +697,14 @@ a.button {
   grid-template-rows: 1fr 1fr;
   gap: 0px 0px;
   grid-template-areas:
-      "."
-      ".";
+    "."
+    ".";
 }
 
 .signup-flow-layout .plan-details table th {
   text-align: left;
 }
+
 .signup-flow-layout .plan-details table td {
   text-align: right;
 }
@@ -683,11 +725,26 @@ a.button {
     "city st"
     "country zip";
 }
-.billing-address-information-container .address { grid-area: address; }
-.billing-address-information-container .city { grid-area: city; }
-.billing-address-information-container .country { grid-area: country; }
-.billing-address-information-container .zip { grid-area: zip; }
-.billing-address-information-container .state { grid-area: st; }
+
+.billing-address-information-container .address {
+  grid-area: address;
+}
+
+.billing-address-information-container .city {
+  grid-area: city;
+}
+
+.billing-address-information-container .country {
+  grid-area: country;
+}
+
+.billing-address-information-container .zip {
+  grid-area: zip;
+}
+
+.billing-address-information-container .state {
+  grid-area: st;
+}
 
 /*
  * End signup step 2
@@ -696,21 +753,25 @@ a.button {
 .signup-flow-layout header {
   padding-left: 0;
 }
+
 .signup-flow-layout header .logo {
   border-bottom: 1px solid rgba(255, 255, 255, .3);
   padding-bottom: 1.5rem;
 }
+
 .signup-flow-layout header ol {
   padding-left: 0;
   display: flex;
   justify-content: space-around;
 }
+
 .signup-flow-layout header li {
   margin-left: 40px;
   color: #D0D0D0;
   font-weight: 400;
   font-size: 1.125rem;
 }
+
 .signup-flow-layout header .selected {
   color: #A9C8F1;
   font-weight: 700;
@@ -722,8 +783,8 @@ a.button {
   grid-template-rows: 1fr 1fr;
   gap: 0px 0px;
   grid-template-areas:
-      "."
-      ".";
+    "."
+    ".";
   width: 100vw;
   height: 100vh;
 }
@@ -744,6 +805,7 @@ a.button {
   .signup-flow-layout ol {
     margin-left: 0;
   }
+
   .signup-flow-layout .free-plan {
     margin-left: 0;
   }
@@ -761,6 +823,7 @@ a.button {
   .signup-flow-layout ol {
     margin-left: calc(50vw - 43.4375rem);
   }
+
   .signup-flow-layout .free-plan {
     margin-left: calc(50vw - 39rem);
   }
@@ -778,6 +841,7 @@ a.button {
 .api-consumers .info {
   overflow: scroll;
 }
+
 /**
  * sortable table
  */
@@ -897,6 +961,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 50%;
   top: 0;
 }
+
 /**
  * End sortable table
  */
@@ -914,13 +979,13 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .create-delete-button-container {
-    font-size: 0.8125rem;
-    background-color: #f4f4f4;
-    border-bottom: 1px solid #c8c8c8;
-    border-top: 1px solid #c8c8c8;
-    display: flex;
-    align-content: center;
-    justify-content: flex-start;
+  font-size: 0.8125rem;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #c8c8c8;
+  border-top: 1px solid #c8c8c8;
+  display: flex;
+  align-content: center;
+  justify-content: flex-start;
 }
 
 .create-delete-button-container button {
@@ -1029,7 +1094,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .api-consumers .info .hidden-content {
-  min-width: 21em; /* API key length */
+  min-width: 21em;
+  /* API key length */
 }
 
 .billing-frequency-selector {
@@ -1064,7 +1130,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   cursor: pointer;
 }
 
-.radiobutton-group input:checked + label {
+.radiobutton-group input:checked+label {
   background-color: #3881E5;
   color: #FFF;
   box-shadow: none;
@@ -1248,6 +1314,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   border-radius: 4px;
 }
 
+.plan-selector .plan {
+  display: none;
+}
+
 .comparison-table .signup-button {
   font-size: 1.25rem;
 }
@@ -1272,6 +1342,57 @@ tr.custom-plan-mobile {
 }
 
 /* end of comparison table content */
+
+/* Plan subscription type labels */
+.subscription-type-selector {
+  margin-bottom: 30px;
+}
+
+.radiobutton-group label:hover {
+  font-weight: 600;
+}
+
+/* the dumbest tabs */
+.plan {
+  display: none;
+}
+
+
+@keyframes highlight {
+  0% {
+    background: #6b25cf
+  }
+
+  100% {
+    background: #3881E5;
+  }
+}
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
+  animation: highlight 1s;
+}
+
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.radiobutton-group .radio-button:nth-of-type(1) label,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.radiobutton-group .radio-button:nth-of-type(2) label {
+  background-color: #3881E5;
+  color: white;
+  font-weight: 600;
+}
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.comparison-table .plan-selector form .plan.annual,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.comparison-table .plan-selector form .plan.monthly {
+  display: block;
+}
+
+.signup-step-1-content input[type=radio] {
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  left: 0;
+}
+
 
 
 /* Typography */
