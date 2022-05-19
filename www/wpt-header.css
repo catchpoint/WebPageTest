@@ -13,6 +13,10 @@ wpt-header {
     position: relative;
     z-index: 9999999;
 }
+/* for compat with systems that set box-sizing globally */
+wpt-header * {
+    box-sizing: content-box;
+}
 
 wpt-header header {
     position: relative;
