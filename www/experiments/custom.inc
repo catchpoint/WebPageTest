@@ -260,7 +260,7 @@ $assessment[$category]["opportunities"][] = array(
                 ]
 ),
             'addmore' => true,
-'hint' => 'foo.jpg'
+            'hint' => 'foo.jpg'
             ],
             (object) [
             'id' => '040',
@@ -271,7 +271,49 @@ $assessment[$category]["opportunities"][] = array(
             "hideassets" => true,
            
 'hint' => 'foo.jpg'
-            ]
+            ],
+            (object) [
+                "id" => '049',
+                'title' => 'Make Hosts Timeout',
+                "desc" => '<p>This experiment directs specified hosts to WebPageTest\'s blackhole server, which will hang indefinitely until timing out. Use this experiment to test your site\'s ability to serve content if these services hang.</p>',
+                 "expvar" => 'experiment-spof',
+                 "expfields" => array(
+                    (object) [
+                        'label' => 'File/URL',
+                        'type' => 'text'
+                    ]
+                ),
+                'addmore' => true,
+                'hint' => 'example.com'
+            ],
+            (object) [
+                "id" => '050',
+                'title' => 'Block Requests',
+                "desc" => '<p>This experiment causes specified requests to fail immediately. Use this experiment to test your site\'s ability to serve content if these services are unavailable.</p>',
+                 "expvar" => 'experiment-block',
+                 "expfields" => array(
+                    (object) [
+                        'label' => 'File/URL',
+                        'type' => 'text'
+                    ]
+            ),
+            'addmore' => true,
+            'hint' => '/path/to/foo.jpg'
+            ],
+            (object) [
+                "id" => '051',
+                'title' => 'Self-Host Requests',
+                "desc" => '<p>This experiment will fetch these requests server-side and reference them on the same domain.</p>',
+                "expvar" => 'experiment-overrideHost',
+                "expfields" => array(
+                    (object) [
+                        'label' => 'File/URL',
+                        'type' => 'text'
+                    ]
+                ),
+                'addmore' => true,
+                'hint' => 'path/to/foo.jpg'
+            ],
     ),
     "good" =>  null,
     "inputttext" => true
