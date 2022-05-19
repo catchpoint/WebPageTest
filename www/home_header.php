@@ -11,7 +11,7 @@
                 ">View Plans &amp; Learn More &gt;&gt;</a>
                 </div>
                 <div class="home_feature_hed_visual">
-                        <video width="1157" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
+                        <video width="1152" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
 							<source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
 							<source src="video/pro-intro-intro-480.mp4">
 							<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">
