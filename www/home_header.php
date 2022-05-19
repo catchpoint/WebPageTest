@@ -42,7 +42,7 @@
 
     <script>
         setInterval(() => {
-            if( !document.body.classList.contains("playing") && !matchMedia("(prefers-reduced-motion: prefers-reduced)").matches ){
+            if( !document.body.classList.contains("playing") && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
                 document.body.classList.toggle("feature-pro");
             }
         },8000);
