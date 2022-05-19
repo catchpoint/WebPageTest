@@ -519,6 +519,9 @@ a.experiment_meta-more {
 
 a.experiment_meta-more {
     font-weight: 500;
+    background: #1071ba;
+    border-color: #1071ba;
+    color: #fff;
 }
 
 .experiment_meta details:hover summary,
@@ -527,12 +530,17 @@ a.experiment_meta-more {
     box-shadow: 0 0 5px #eee;
 }
 
-a.experiment_meta-more:hover,
-a.experiment_meta-more:focus,
 .experiment_meta_urls a:hover,
 .experiment_meta_urls a:focus {
     background-color: #fff;
     box-shadow: 0 0 5px #eee;
+}
+
+a.experiment_meta-more:hover,
+a.experiment_meta-more:focus {
+    background: #248cdb;
+    border-color: #1071ba;
+    color: #fff;
 }
 
 .experiment_meta details[open] summary {

@@ -459,7 +459,7 @@ else
                                     echo '<ul>';
                                     include __DIR__ . '/../experiments/list_applied.inc';
 
-                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOriginalExperimentsHref ."\">Experiment More...</a></li>";
+                                    echo "<li><a class=\"experiment_meta-more\" href=\"". $experimentOriginalExperimentsHref ."\">Experiment More</a></li>";
                                     echo '</ul>';
                                     echo '</div>';
                                     echo '<div class="experiment_meta_urls">';
