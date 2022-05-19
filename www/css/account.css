@@ -337,7 +337,6 @@ body.theme-b {
 .billing-info-section input,
 .billing-info-section select {
   border: 1px solid rgb(204, 204, 204);
-  ;
   border-radius: 2px;
   width: 100%;
   max-width: 100%;
