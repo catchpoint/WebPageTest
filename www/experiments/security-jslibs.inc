@@ -36,7 +36,11 @@ if( $jsLibsVulns  ){
     $secRecs = array();
     $thisRec = "";
     if( count($jsLibsVulns)){
-        $thisRec .=  '<ul>';
+        if( count($jsLibsVulns) > 6){
+            $thisRec .= '<ul class="util_overflow_more">';
+        } else{
+            $thisRec .=  '<ul>';
+        }
         foreach($jsLibsVulns as $v){
             $thisRec .=  '<li class="recommendation_level-'. $v['severity'] .'"><span>'. $v['severity'] .'</span> ' . ' ' . $v["name"] . ' ' . $v["version"] . ' <a href="'. $v["url"] .'" class="external">View recommendation on Snyk</a></li>';
             
