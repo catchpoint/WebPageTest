@@ -17,6 +17,7 @@ include("index.php");
     wpt-header
         {
         display: none !important;
+        max-width: none;
     }
     div, form, body {
         margin: 0 !important;
