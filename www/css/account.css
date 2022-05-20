@@ -346,29 +346,107 @@ body.theme-b {
   width: 25%;
 }
 
+.wpt-plans {
+  border: 0;
+  padding: 0;
+}
+
+.wpt-plans .radiobutton-group {
+  margin-bottom: 2em;
+}
+
+.wpt-plans input[name=plan-type] {
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  width: 1px;
+  border: 0;
+  overflow: hidden;
+}
+
+.wpt-plans input[name=plan-type][value=monthly]:checked ~ .radiobutton-group label[for=monthly-plans],
+.wpt-plans input[name=plan-type][value=annual]:checked ~ .radiobutton-group label[for=annual-plans] {
+  background-color: #3881E5;
+  color: #FFF;
+  box-shadow: none;
+}
+
 .wpt-plan-set {
+  display: none;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: space-between;
+}
+
+.wpt-plans input[name=plan-type][value=monthly]:checked ~ .wpt-plan-set.monthly-plans,
+.wpt-plans input[name=plan-type][value=annual]:checked ~ .wpt-plan-set.annual-plans {
   display: flex;
 }
 
-.form-wrapper-radio {
+.wpt-plan-set .form-wrapper-radio {
   position: relative;
 }
 
-.form-wrapper-radio input[type=radio] {
+.wpt-plan-set .form-wrapper-radio input[type=radio] {
   position: absolute;
   opacity: 0;
   top: 0;
   left: 0;
 }
 
-.form-wrapper-radio input[type=radio]:checked+.wpt-plan {
+.wpt-plan-set .wpt-plan {
+  display: block;
+  cursor: pointer;
+  color: rgb(67, 129, 229);
+  font-weight: normal;
+  margin-bottom: 0.5em;
+  margin-top: 0;
+  min-width: 180px;
+}
+
+.wpt-plan-set .wpt-plan h5 {
+  margin-top: 0;
+}
+
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked+.wpt-plan {
   background-color: rgb(230, 242, 255);
   border: 1px solid rgb(47, 128, 237);
 }
 
-.form-wrapper-radio .wpt-plan {
+.wpt-plan-set .wpt-plan .select-indicator {
   display: block;
-  cursor: pointer;
+  text-align: center;
+  padding: 0.5em 0.8125rem;
+  background-color: rgb(67, 129, 229);
+  color: rgb(255, 255, 255);
+  border: 1px solid rgb(0, 120, 212);
+  border-radius: 3px;
+  user-select: none;
+  margin-top: 2em;
+}
+
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked + .wpt-plan .select-indicator {
+  background-color: transparent;
+  color: rgb(0, 120, 212);
+}
+
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked + .wpt-plan .select-indicator::before,
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked + .wpt-plan .select-indicator::after {
+  display: inline-block;
+}
+
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked + .wpt-plan .select-indicator::before {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M4 10L8 14L12 10L16 6' stroke='%232F80ED' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center center no-repeat;
+  content: "";
+  width: 1.0625em;
+  height: 1.0625em;
+  margin-right: 5px;
+  position: relative;
+  top: 2px;
+}
+
+.wpt-plan-set .form-wrapper-radio input[type=radio]:checked + .wpt-plan .select-indicator::after {
+  content: "ed";
 }
 
 /**
@@ -381,8 +459,18 @@ body.theme-b {
   margin-top: 0;
 }
 
+.signup-step-1-content {
+  margin: 0 auto;
+  max-width: 1400px;
+  padding: 0 3rem;
+}
+
 .signup-step-1-content * {
   box-sizing: border-box;
+}
+
+.signup-step-1-content h2 {
+  text-align: center;
 }
 
 .signup-feature {
@@ -391,16 +479,34 @@ body.theme-b {
 }
 
 .signup-hed-contain {
-  padding: 0 3rem;
+  color: white;
   background-color: #6b25cf;
-  background-image: url(/images/signup-bg.png);
-  background-size: cover;
+  background-image: url(/images/src/white-swoop.svg), url(/images/signup-bg.png);
+  background-position: bottom -21px left 50%, bottom 0 left 50%;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100%, cover;
+  display: flex;
 }
+
+/* when your monitor is really wide */
+@media only screen and (min-width : 1025px) {
+  .signup-hed-contain {
+    background-position: bottom -60px left 50%, bottom 0 left 50%;
+  }
+}
+
+
 
 .signup-hed {
   font-size: 1.75rem;
-  padding: 0 5rem;
+  padding: 0 5rem 6.5rem;
+  line-height: 2.5rem;
 }
+
+.signup-hed p {
+  margin: 0 0 1rem;
+}
+
 
 .ico-yellowcursor {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='59' height='59' viewBox='0 0 59 59' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M39.5229 18.7224C40.0744 19.2876 40.4553 20.1964 40.1815 21.1661L40.0148 21.7564C37.4717 30.7624 34.1034 39.3992 29.9498 47.5614C29.4012 48.6394 28.2748 48.8933 27.4103 48.6681C26.5645 48.4478 25.7894 47.7565 25.5679 46.7365L23.5167 37.2938C23.29 36.2501 22.429 35.3871 21.4584 35.1679L12.2722 33.0934C11.2368 32.8596 10.578 32.0457 10.3712 31.2186C10.1635 30.3878 10.3715 29.2526 11.4336 28.6753C19.3552 24.3692 27.7422 20.869 36.4922 18.2168L37.0653 18.0431C38.057 17.7425 38.9729 18.1587 39.5229 18.7224ZM37.675 20.5529L37.2403 20.6847C28.8487 23.2283 20.8013 26.5655 13.1904 30.6571L22.0264 32.6525C24.0073 33.0998 25.6043 34.756 26.0367 36.7463L27.9875 45.7269C31.9092 37.914 35.1036 29.6589 37.5331 21.0556L37.675 20.5529Z' fill='%23FFC830'/%3E%3C/svg%3E");
@@ -634,13 +740,21 @@ body.theme-b {
   padding: 0.6875rem 1.3125rem;
 }
 
-.signup-flow-layout .form-input button[type=submit] {
+.signup-flow-layout .form-input button[type=submit],
+.signup-button {
   appearance: none;
   width: 100%;
   padding: 0.9375rem 0;
   background-color: #F9D856;
   border: 1px solid #F9D856;
   border-radius: 4px;
+  cursor: pointer;
+}
+
+a.button {
+  text-decoration: none;
+  display: block;
+  color: #111;
 }
 
 .signup-flow-layout .form-input .description,
@@ -1164,4 +1278,274 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   background: transparent;
   font-size: 1rem;
   color: #2b94ff;
+}
+
+
+
+/*  ---------------------------------------------------------------
+ REDESIGN Step 1
+ ----------------------------------------------------------------*/
+
+/* Comparison table */
+.comparison-table {
+  border-collapse: collapse;
+  font-size: 1.25rem;
+  width: 100%;
+  border: 1px solid #D0D0D0;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.comparison-table tbody tr:nth-child(odd) {
+  background-color: #F4F4F4;
+}
+
+.comparison-table tbody td.custom-plan {
+  background-color: white;
+  vertical-align: top;
+}
+
+.comparison-table tbody th {
+  text-align: left;
+}
+
+.comparison-table thead th:not(.custom-plan) {
+  vertical-align: bottom;
+}
+
+
+.comparison-table thead th.section:not(:first-child),
+.comparison-table tbody td {
+  border-left: 1px solid #D0D0D0;
+}
+
+.comparison-table tr td,
+.comparison-table tr th {
+  padding: 0.8em;
+  width: 25%;
+}
+
+
+@media screen and (max-width: 768px) {
+
+  .comparison-table tr {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+  }
+
+  .comparison-table tbody td,
+  .comparison-table thead th {
+    display: block;
+    width: 50%;
+    font-size: 20px;
+  }
+
+  .comparison-table tbody tr th:first-child {
+    background: #efefef;
+    width: 100%;
+  }
+
+  .comparison-table tbody tr td {
+    background-color: white;
+  }
+
+  .comparison-table tbody td.custom-plan,
+  .comparison-table thead th.custom-plan,
+  .comparison-table thead td {
+    display: none;
+  }
+
+  .comparison-table tr.custom-plan-mobile {
+    display: flex;
+  }
+}
+
+/* comparison table content */
+.icon.check {
+  background: #6ca71a url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+  color: #fff;
+  border-radius: 100%;
+  font-weight: 900;
+  width: 1.4em;
+  height: 1.4em;
+  display: inline-block;
+  margin: 0 0.7em 0 0.5em;
+  text-align: center;
+  line-height: 1.5;
+  background-size: contain;
+  vertical-align: middle;
+}
+
+.icon.x-in-circle-temp {
+  -webkit-filter: grayscale(100%);
+  /* Safari 6.0 - 9.0 */
+  filter: grayscale(100%);
+  background: #6ca71a url(/images/render-block-icon.png) left 50% no-repeat;
+  color: #fff;
+  border-radius: 100%;
+  font-weight: 900;
+  width: 1.4em;
+  height: 1.4em;
+  display: inline-block;
+  margin: 0 0.7em 0 0.5em;
+  text-align: center;
+  line-height: 1.5;
+  background-size: contain;
+  vertical-align: middle;
+}
+
+.new-banner {
+  background: #00A850;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  padding: 0.3rem 0.5rem;
+  color: white;
+  font-style: normal;
+  float: right;
+}
+
+.plan-selector .plan-name {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 30px;
+  color: #111111;
+  text-align: center;
+}
+
+.plan-selector select {
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+.plan-selector .plan {
+  display: none;
+}
+
+.comparison-table .signup-button {
+  font-size: 1.25rem;
+}
+
+.plan-selector .price {
+  font-family: 'Open Sans';
+  color: #666666;
+  font-style: normal;
+  font-weight: 300;
+  line-height: 3.6875rem;
+}
+
+
+.plan-selector .runs {
+  font-size: 1.75rem;
+  height: 55px;
+  padding: 12px;
+}
+
+tr.custom-plan-mobile {
+  display: none;
+}
+
+/* end of comparison table content */
+
+/* Plan subscription type labels */
+.subscription-type-selector {
+  margin-bottom: 30px;
+}
+
+.radiobutton-group label:hover {
+  font-weight: 600;
+}
+
+/* the dumbest tabs */
+.plan {
+  display: none;
+}
+
+
+@keyframes highlight {
+  0% {
+    background: #6b25cf
+  }
+
+  100% {
+    background: #3881E5;
+  }
+}
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
+  animation: highlight 1s;
+}
+
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.radiobutton-group .radio-button:nth-of-type(1) label,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.radiobutton-group .radio-button:nth-of-type(2) label {
+  background-color: #3881E5;
+  color: white;
+  font-weight: 600;
+}
+
+.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.comparison-table .plan-selector form .plan.annual,
+.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.comparison-table .plan-selector form .plan.monthly {
+  display: block;
+}
+
+.signup-step-1-content input[type=radio] {
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  left: 0;
+}
+
+
+
+/* Typography */
+
+.signup-flow-step-1-layout h1 {
+  font-weight: 600;
+  font-size: 3.3125rem;
+}
+
+.signup-flow-step-1-layout h1 span {
+  font-weight: 700;
+}
+
+.signup-flow-step-1-layout h3 {
+  color: #172A52;
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-bottom: 2px solid #D0D0D0;
+  margin-top: 35px;
+}
+
+.signup-flow-step-1-layout sup {
+  font-weight: 400;
+  color: #666666;
+  font-size: 1rem;
+  line-height: 1.25rem;
+}
+
+.plan-callout {
+  padding-left: 35px;
+  position: relative;
+  padding-top: 15px;
+}
+
+.plan-callout::before {
+  content: '';
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='59' height='59' viewBox='0 0 59 59' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M39.5229 18.7224C40.0744 19.2876 40.4553 20.1964 40.1815 21.1661L40.0148 21.7564C37.4717 30.7624 34.1034 39.3992 29.9498 47.5614C29.4012 48.6394 28.2748 48.8933 27.4103 48.6681C26.5645 48.4478 25.7894 47.7565 25.5679 46.7365L23.5167 37.2938C23.29 36.2501 22.429 35.3871 21.4584 35.1679L12.2722 33.0934C11.2368 32.8596 10.578 32.0457 10.3712 31.2186C10.1635 30.3878 10.3715 29.2526 11.4336 28.6753C19.3552 24.3692 27.7422 20.869 36.4922 18.2168L37.0653 18.0431C38.057 17.7425 38.9729 18.1587 39.5229 18.7224ZM37.675 20.5529L37.2403 20.6847C28.8487 23.2283 20.8013 26.5655 13.1904 30.6571L22.0264 32.6525C24.0073 33.0998 25.6043 34.756 26.0367 36.7463L27.9875 45.7269C31.9092 37.914 35.1036 29.6589 37.5331 21.0556L37.675 20.5529Z' fill='%23FFC830'/%3E%3C/svg%3E");
+  width: 40px;
+  height: 50px;
+  display: block;
+  position: absolute;
+  top: 8px;
+  left: -14px;
+}
+
+.signup-hed-price {
+  color: #FFC830;
+  font-weight: 700;
+  font-size: 2.75rem;
 }

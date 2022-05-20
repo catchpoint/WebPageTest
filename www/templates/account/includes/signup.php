@@ -7,33 +7,37 @@
 </div>
 <form id="wpt-account-signup" method="post" action="/account">
   <fieldset class="wpt-plans">
-    <legend>Plans</legend>
-    <h3>Annual Plans</h3>
+    <legend class="sr-only">Choose a Plan</legend>
+    <input id="annual-plans" type="radio" name="plan-type" value="annual" checked />
+    <input id="monthly-plans" type="radio" name="plan-type" value="monthly" />
+    <div class="radiobutton-group">
+      <label for="annual-plans">Annual Plans</label>
+      <label for="monthly-plans">Monthly Plans</label>
+    </div>
     <div class="wpt-plan-set annual-plans">
       <?php foreach($annual_plans as $plan):
 $plan_block = <<<HTML
       <div class="form-wrapper-radio">
         <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required />
         <label class="wpt-plan card" for="annual-{$plan['id']}">
-          <span>{$plan['name']}</span>
-          <span>\${$plan['monthly_price']}/Month</span>
-          <span>{$plan['discount']['amount']}</span>
+          <h5>{$plan['name']}</h5>
+          <div><strong>\${$plan['monthly_price']}</strong>/Month</div>
+          <span aria-hidden="true" class="select-indicator">Select</span>
         </label>
       </div>
 HTML;
 echo $plan_block;
     endforeach; ?>
     </div>
-    <h3>Monthly Plans</h3>
     <div class="wpt-plan-set monthly-plans">
       <?php foreach($monthly_plans as $plan):
 $plan_block = <<<HTML
       <div class="form-wrapper-radio">
         <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
         <label class="card wpt-plan" for="monthly-{$plan['id']}">
-          <span>{$plan['name']}</span>
-          <span>\${$plan['price']}/Month</span>
-          <span>{$plan['discount']['amount']}</span>
+          <h5>{$plan['name']}</h5>
+          <div><strong>\${$plan['price']}</strong>/Month</div>
+          <span aria-hidden="true" class="select-indicator">Select</span>
         </label>
       </div>
 HTML;

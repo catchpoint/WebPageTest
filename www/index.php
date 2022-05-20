@@ -243,7 +243,7 @@ $loc = ParseLocations($locations);
                                 <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                             </div>
                             <div class="fieldrow">
-                                <label for="lighthouse"><input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                                <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
                             </div>
                             </div>
 
@@ -609,8 +609,8 @@ $loc = ParseLocations($locations);
                                 <p>Chrome-specific advanced settings:</p>
                                 <ul class="input_fields">
                                     <li>
-                                        <label for="lighthouse" class="auto_width">
-                                        <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;"> Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
+                                        <label for="lighthouse-advanced" class="auto_width">
+                                        <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                         </label>
                                     </li>
                                     <li><label for="mobile">
