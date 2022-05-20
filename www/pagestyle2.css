@@ -10,6 +10,15 @@
     width: 1px
 }
 
+
+/* we use a lot of anchoring on tall pages. */
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
 body {
     margin: 0 0 40px;
     color: #111;
@@ -813,6 +822,11 @@ p.grade_summary {
     margin: 0;
     /* user-select: all; */
     /* display: flex; */
+}
+
+.experiments_bottlenecks>ol>li>details>summary:focus {
+    outline: none;
+    text-decoration: dotted underline #4e8e37;
 }
 
 .experiments_bottlenecks img {
