@@ -1396,6 +1396,31 @@ h4.experiments_list_hed-recs {
     pointer-events: none;
 }
 
+.util_overflow_more:not(.util_overflow_more-expanded) {
+    overflow: auto;
+    max-height: 10em;
+    border-bottom: 1px solid #ccc;
+    position: relative;
+}
+
+.util_overflow_more button {
+    position: sticky;
+    bottom: 0;
+    left: calc(50% - 3em);
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top-left-radius: .5em;
+    border-top-right-radius: .5em;
+    border-bottom: 0;
+    padding: .3em 1em;
+    cursor: pointer;
+    color: #2a3b64;
+}
+
+.util_overflow_more-expanded button {
+    display: none;
+}
+
 p {
     margin: 0 0 1em 0;
 }

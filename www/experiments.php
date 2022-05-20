@@ -203,7 +203,12 @@ $page_description = "Website performance test result$testLabel.";
                         $out .= "<li class=\"$goodbadClass\"><details open><summary>$bottleneckTitle</summary>";
                         $out .= "<div class=\"experiments_details_body\">";
                         
-                        $out .= "<div class=\"experiments_details_desc\">";
+                        if( count($bottleneckExamples) > 10 ){
+                            $out .= "<div class=\"experiments_details_desc util_overflow_more\">";
+                        } else {
+                            $out .= "<div class=\"experiments_details_desc\">";
+                        }
+                        
                         $out .= "<p>$bottleneckDesc</p>";
                         if( count($bottleneckExamples) > 0 ){
                             $out .= "<ul>";

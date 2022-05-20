@@ -36,7 +36,11 @@ if( isset( $axe ) ) {
         $thisRec = '<h6 class="recommendation_level-'. $v['impact'] .'"><span>'. $v['impact'] .'</span> ' . htmlentities($v['help']) .  ' <a href=\"'. $v['helpUrl'] .'\">More info</a></h6>';
         if( $v["nodes"] && count($v["nodes"]) ){
             //print_r($v["nodes"])
-            $thisRec .=  '<ul>';
+            if( count($v["nodes"]) > 6){
+                $thisRec .= '<ul class="util_overflow_more">';
+            } else{
+                $thisRec .=  '<ul>';
+            }
             foreach($v["nodes"] as $vnode){
                 $thisRec .=  '<li>' . htmlentities($vnode["failureSummary"]) . '<code>' . htmlentities($vnode["html"]) . '</code></li>';
             }
