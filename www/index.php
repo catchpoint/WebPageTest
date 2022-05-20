@@ -206,6 +206,7 @@ $loc = ParseLocations($locations);
                             <?php
 
                             if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                                $url = urldecode($_REQUEST['url']);
                                 $url = htmlentities($_REQUEST['url']);
                                 echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
                             } else {
