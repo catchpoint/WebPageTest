@@ -19,6 +19,9 @@ include("index.php");
         display: none !important;
         max-width: none;
     }
+    .home_content {
+        max-width: none;
+    }
     div, form, body {
         margin: 0 !important;
         padding: 0 !important;
