@@ -22,13 +22,14 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 	<script src="site2.js"></script>
 	<script src="site3.js" defer></script>
 	<script src="https://code.jquery.com/jquery-2.0.0.js" crossorigin="anonymous"></script>
-	<script src="https://example.com/this-will-fail.js"></script>
+	<script src="http://example.com/this-will-fail.js"></script>
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0-rc.3/themes/smoothness/jquery-ui.css">
 	<link rel="preload" href="foo/bar/baz.css" as="style">
 </head>
 
 <body>
-	
+	<script id="wptsnippet">(function(){ let wptframe = document.createElement("iframe"); wptframe.style.border = "none"; wptframe.style.width = "289px"; wptframe.style.height = "102px"; wptframe.loading = "lazy"; wptframe.src = "/embed.php?url=" + encodeURIComponent(location.href); document.querySelector("#wptsnippet").after(wptframe);}());</script>		<nav>
+
 	<header>
 		<script>
 			var d = new Date();
@@ -36,7 +37,7 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 		</script>
 		<p class="logo">The Metric Times</p>
 		<p class="logosub">Your source of performance antipattern test pages since 2022!</p>
-		<a class="wptlogo" href="/"><img src="/images/wpt-logo-dark.svg" alt="WebPageTest, by Catchpoint"/></a>
+		
 		<nav>
 			<ul>
 				<li><a href="#">These</a></li>
@@ -75,16 +76,20 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 
 		</marquee>
 
-		<div id="gencontent"></div>
-
+		<div id="react"></div>
 
 
 		<script>
 			setTimeout(function(){
 			jQuery("#holder").html("<h3>We give up! Several stories will rotate in this carousel because we must include them all on the homepage. <a href=\"#\">Full Story</a><h3> </p>");
 			}, 1000);
-
-			jQuery("#gencontent").html('<h1>HTML Ipsum Presents</h1><p><strong>Pellentesque habitant morbi tristique</strong> senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. <em>Aenean ultricies mi vitae est.</em> <img src="serviceworkers.jpg?cachebreak" importance="low" alt=""> Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, <code>commodo vitae</code>, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. <a href="#">Donec non enim</a> in turpis pulvinar facilisis. Ut felis.</p><h2>Header Level 2</h2><ol><li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li><li>Aliquam tincidunt mauris eu risus.</li></ol><blockquote><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus magna. Cras in mi at felis aliquet congue. Ut a est eget ligula molestie gravida. Curabitur massa. Donec eleifend, libero at sagittis mollis, tellus est malesuada tellus, at luctus turpis elit sit amet quam. Vivamus pretium ornare est.</p></blockquote><h3>Header Level 3</h3><ul><li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li><li>Aliquam tincidunt mauris eu risus.</li></ul><pre><code>#header h1 a {display: block;width: 300px;height: 80px;}</code></pre>');
+		</script>
+		<script src="https://unpkg.com/react/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+		<script id="rendered-js">
+		const root = ReactDOM.createRoot(document.getElementById('react'));
+		root.render( /*#__PURE__*/React.createElement("h1", null, "This Text Is Coming From React!"));
+		//# sourceURL=pen.js
 		</script>
 
 
