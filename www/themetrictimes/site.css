@@ -103,21 +103,25 @@ header nav ul a {
     }
 }
 
-main section:first-child {
+main section:first-child,
+.secondary section:first-child {
     flex: 0 0 65%;
 }
 
-main section img {
+main section img,
+.secondary section img {
     width: 100%;
 }
 
-main section:last-child {
+main section:last-child,
+.secondary section:last-child {
     display: flex;
     flex-flow: column;
     justify-content: space-between;
 }
 
-main section:last-child article {
+main section:last-child article,
+.secondary section:last-child article {
     display: block;
 }
 
@@ -133,7 +137,8 @@ h2 {
     line-height: 1.3;
 }
 
-main p {
+main p,
+.secondary p {
     margin: 0 0 1em;
 }
 
@@ -143,12 +148,14 @@ marquee {
     background-color: #eee;
 }
 
-main a {
+main a,
+.secondary a {
     color: blue;
 }
 
 @media (min-width: 60em) {
-    main {
+    main,
+    .secondary {
         display: flex;
         gap: 5rem;
     }

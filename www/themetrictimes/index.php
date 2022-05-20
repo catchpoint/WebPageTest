@@ -76,7 +76,31 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 
 		</marquee>
 
-		<div id="react"></div>
+
+		<div class="secondary">
+
+			<section class="headline">
+				<h1 id="react">This Text will be replaced with react text</h1>
+				<p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
+
+				<img src="dog.jpg?again">
+				
+			</section>
+
+			<section class="headlines-secondary">
+				<article>
+				<h2>Framework Developers Remind Users To Hydrate</h2>
+				<img src="delays.jpg?again" alt="">
+				</article>
+				<article>
+				<h2>Service Workers Handling Requests Beautifully</h2>
+				<img src="serviceworkers.jpg?again" importance="low" alt="">
+				</article>
+			</section>
+
+	</div>
+
+		
 
 
 		<script>
@@ -88,7 +112,7 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 		<script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
 		<script id="rendered-js">
 		const root = ReactDOM.createRoot(document.getElementById('react'));
-		root.render( /*#__PURE__*/React.createElement("h1", null, "This Text Is Coming From React!"));
+		root.render( /*#__PURE__*/React.createElement("span", null, "Have you Heard of the JavaScript Framework Called React!?"));
 		//# sourceURL=pen.js
 		</script>
 
