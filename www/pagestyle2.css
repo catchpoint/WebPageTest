@@ -1120,6 +1120,7 @@ h4.experiments_list_hed-recs {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    align-self: flex-start;
 }
 
 .experiment_description_go-multi {
