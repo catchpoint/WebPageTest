@@ -34,15 +34,14 @@ if (Util::getSetting('cp_auth')) {
      header('Location: ' . $location);
      exit();
     }
-    echo '<pre>';
-    var_dump($e);
-    echo '</pre>';
-
     /*
      * for when we ship to prod
      * throw $e;
      *
      */
+    echo '<pre>';
+    var_dump($e);
+    echo '</pre>';
     exit();
   });
 }
@@ -306,6 +305,20 @@ if (isset($_REQUEST['color'])) {
     $_REQUEST['color'] = $_REQUEST['color'];
 }
 
+if ($supportsSaml && !$supportsCPAuth) {
+  $request_context->setUser($saml_user);
+}
+
+/**
+ * Load app specific middleware
+ */
+if ($supportsCPAuth) {
+  require_once __DIR__ . '/common/AttachClient.php';
+  require_once __DIR__ . '/common/AttachUser.php';
+  require_once __DIR__ . '/common/AttachSignupClient.php';
+  require_once __DIR__ . '/common/CheckCSRF.php';
+}
+
 // Load the test-specific data
 $id = '';
 if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
@@ -435,13 +448,3 @@ if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
 
-if ($supportsSaml && !$supportsCPAuth) {
-  $request_context->setUser($saml_user);
-}
-
-if ($supportsCPAuth) {
-  require_once __DIR__ . '/common/AttachClient.php';
-  require_once __DIR__ . '/common/AttachUser.php';
-  require_once __DIR__ . '/common/AttachSignupClient.php';
-  require_once __DIR__ . '/common/CheckCSRF.php';
-}

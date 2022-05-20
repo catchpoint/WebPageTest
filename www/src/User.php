@@ -8,7 +8,7 @@ class User
 {
     private ?string $email;
     private bool $is_admin;
-    private int $owner_id;
+    private ?string $owner_id;
     private ?string $access_token;
     private ?int $user_id;
     private bool $is_paid_and_in_good_standing;
@@ -18,7 +18,7 @@ class User
     {
         $this->email = null;
         $this->is_admin = false;
-        $this->owner_id = 2445; // owner id of 2445 was for unpaid users
+        $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
         $this->user_id = null;
         $this->is_paid_and_in_good_standing = false;
@@ -42,7 +42,7 @@ class User
         $this->is_admin = $is_admin;
     }
 
-    public function getOwnerId(): int
+    public function getOwnerId(): ?string
     {
         return $this->owner_id;
     }
@@ -52,7 +52,7 @@ class User
      */
     public function setOwnerId($owner_id): void
     {
-        $this->owner_id = intval($owner_id);
+        $this->owner_id = strval($owner_id);
     }
 
     public function isPaid(): bool
