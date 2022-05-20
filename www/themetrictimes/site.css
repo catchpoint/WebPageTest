@@ -23,7 +23,7 @@ header {
 }
 
 #wptsnippet+iframe {
-    margin: 1em;
+    margin: 1em auto;
     width: 100% !important;
     position: sticky;
     top: 0;
