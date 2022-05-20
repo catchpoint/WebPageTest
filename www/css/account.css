@@ -8,6 +8,7 @@
 
 .fg-modal legend {
   font-size: 1.875rem;
+  line-height: 2rem;
 }
 
 .fg-modal .required::after {
@@ -21,20 +22,49 @@
   appearance: none;
   border: 1px solid rgb(0, 120, 212);
   color: white;
-  font-size: 13px;
+  font-size: 1rem;
   height: 30px;
   padding: 0 17px;
 }
+
+.fg-modal .save-button,
+.fg-modal .cancel-button {
+  display: inline-flex;
+}
+
+.fg-modal .cancel-button button {
+  border-radius: 2px;
+  appearance: none;
+  font-size: 1rem;
+  height: 30px;
+  padding: 0 17px;
+  border: 1px solid rgb(102, 102, 102);
+}
+
+.fg-modal .cancel-subscription-button button {
+  background-color: red;
+  border-radius: 2px;
+  appearance: none;
+  border: 1px solid rgb(212, 0, 0);
+  color: white;
+  font-size: 1rem;
+  height: 30px;
+  padding: 0 17px;
+  font-weight: 600;
+}
+
 
 .fg-modal label {
   display: block;
 }
 
+/* 
+This was messing up the change password modal
 .fg-modal .section:first-child {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
+} */
 
 .fg-modal .section:not(:first-child),
 .fg-modal .save-button {
@@ -307,7 +337,6 @@ body.theme-b {
 .billing-info-section input,
 .billing-info-section select {
   border: 1px solid rgb(204, 204, 204);
-  ;
   border-radius: 2px;
   width: 100%;
   max-width: 100%;
@@ -1250,7 +1279,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1rem;
   color: #2b94ff;
 }
-
 
 
 
