@@ -56,6 +56,8 @@
 
 <?php if ($is_paid) {
   include_once __DIR__ . '/includes/billing-data.php';
+  include_once __DIR__ . '/includes/modals/subscription-plan.php';
+  include_once __DIR__ . '/includes/modals/payment-info.php';
 } else {
   include_once __DIR__ . '/includes/signup.php';
 } ?>
@@ -66,7 +68,5 @@
 <?php
 include_once __DIR__ . '/includes/modals/contact-info.php';
 include_once __DIR__ . '/includes/modals/password.php';
-include_once __DIR__ . '/includes/modals/subscription-plan.php';
-include_once __DIR__ . '/includes/modals/payment-info.php';
 ?>
 <!-- /Modals -->
