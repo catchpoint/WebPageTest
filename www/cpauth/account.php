@@ -67,21 +67,7 @@ if ($request_method === 'POST') {
             throw new ClientException($e->getMessage(), "/account");
         }
     } elseif ($type == "delete-api-key") {
-        try {
-            $id = filter_input(INPUT_POST, 'api-key-id', FILTER_SANITIZE_NUMBER_INT);
-            $request_context->getClient()->deleteApiKey(intval($id));
-
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            throw new ClientException("There was an error", "/account");
-        }
+        AccountHandler::deleteApiKey($request_context);
     } elseif ($type == "resend-verification-email") {
         try {
             $request_context->getClient()->resendEmailVerification();

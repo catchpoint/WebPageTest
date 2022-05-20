@@ -217,4 +217,33 @@ class Account
             throw new ClientException("There was an error", "/account");
         }
     }
+
+    public static function deleteApiKey(RequestContext $request_context)
+    {
+        try {
+            $api_key_ids = $_POST['api-key-id'];
+            if (!empty($api_key_ids)) {
+                $sanitized_keys = array_filter($api_key_ids, function ($v) {
+                    return filter_var($v, FILTER_SANITIZE_NUMBER_INT);
+                });
+                $ints = array_map(function ($v) {
+                    return intval($v);
+                }, $sanitized_keys);
+
+                $request_context->getClient()->deleteApiKey($ints);
+            }
+
+
+            $protocol = $request_context->getUrlProtocol();
+            $host = Util::getSetting('host');
+            $route = '/account';
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new ClientException("There was an error", "/account");
+        }
+    }
 }

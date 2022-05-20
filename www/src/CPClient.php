@@ -379,10 +379,8 @@ class CPClient
         }
     }
 
-    public function deleteApiKey(int $id): array
+    public function deleteApiKey(array $ids): array
     {
-        $ids = [$id];
-
         $gql = (new Mutation('wptApiKeyBulkDelete'))
         ->setVariables([
           new Variable('ids', '[Int!]', true)
