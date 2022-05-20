@@ -1399,7 +1399,7 @@ h4.experiments_list_hed-recs {
 .util_overflow_more:not(.util_overflow_more-expanded) {
     overflow: auto;
     max-height: 10em;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #545f50;
     position: relative;
 }
 
@@ -1407,14 +1407,14 @@ h4.experiments_list_hed-recs {
     position: sticky;
     bottom: 0;
     left: calc(50% - 3em);
-    background: #fff;
-    border: 1px solid #ccc;
+    background: #4e8e37;
+    border: 1px solid #545f50;
     border-top-left-radius: .5em;
     border-top-right-radius: .5em;
     border-bottom: 0;
     padding: .3em 1em;
     cursor: pointer;
-    color: #2a3b64;
+    color: #fff;
 }
 
 .util_overflow_more-expanded button {
