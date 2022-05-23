@@ -12,7 +12,7 @@ use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 
-if (Util::getSetting('cp_auth')) {
+if (Util::getSetting('php_sessions')) {
   // Start session handling for this request
   session_start();
 }
@@ -36,6 +36,8 @@ if (Util::getSetting('cp_auth')) {
     }
     /*
      * for when we ship to prod
+     *
+     * error_log($e->getMessage);
      * throw $e;
      *
      */
