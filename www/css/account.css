@@ -963,10 +963,6 @@ a.button {
 /**
  * sortable table
  */
-.sr-only {
-    position: absolute;
-    top: -30em;
-}
 
 table.sortable {
     width: 100%;
@@ -1191,6 +1187,118 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 .create-key-container .toggleable button[type=submit]:hover {
     border: 1px solid #106ebe;
     background-color: #106ebe;
+}
+
+
+/** 
+ Api Consumer table
+*/
+.api-consumers table.sortable th:first-child {
+    width: 2em;
+}
+
+.ellipsis-menu {
+    position: relative;
+    display: inline-block;
+    ​ z-index: 2;
+    padding: 0;
+    margin: 0;
+    outline: 0;
+    text-align: left;
+}
+
+
+.ellipsis-icon {
+    display: block;
+    width: 50px;
+    height: 50px;
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QA/wD/AP+gvaeTAAAAeElEQVRIie2RMQqAMBAEh7zD1Hm7Ilhb+CMV9ANaGJsjRJSz24Etwk22uAMhhBAviUAP7DkDkP52I7AAh8maZ7bIze0LwzudKXN194qwmTI3N1DneJh/dgMwVYTRvF3dxHVwu44ZaMwHdzdyHXzLaQtFf7tCCCHKnI9xbjyljE9JAAAAAElFTkSuQmCC") no-repeat center;
+    vertical-align: sub;
+}
+
+.ellipsis-menu {
+    border-radius: 50%;
+    background-color: #8e8c8c;
+    width: 50px;
+    height: 50px;
+    display: block;
+}
+
+
+
+/* style for the button */
+.ellipsis-menu a:focus {
+    pointer-events: none;
+}
+
+/* If :focus detected the dropdown menu is displayed by making it visible */
+.ellipsis-menu a:focus~.ellipsis-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* style for the dropdown box */
+.ellipsis-menu-dropdown {
+    color: #111;
+    background-color: #fff;
+    width: auto;
+    margin: 3px 0 0 0;
+    padding: 10px;
+    pointer-events: auto;
+    position: absolute;
+    z-index: 1;
+    /*     opacity: 0; */
+    opacity: 1;
+    visibility: visible;
+    /*    // visibility: hidden; */
+    /*     transition: visibility 1s; */
+    box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
+}
+
+/* style the links in the dropdown */
+.ellipsis-menu-dropdown a {
+    background: transparent;
+    border: none;
+    outline: 0;
+    display: block;
+    text-decoration: none;
+    width: 160px;
+    padding: 5px 0;
+    color: #111;
+}
+
+.delete-key::before {
+    content: '';
+    height: 20px;
+    width: 25px;
+    vertical-align: sub;
+    background-repeat: no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M12 4V3C12 2.73478 11.8946 2.48043 11.7071 2.29289C11.5196 2.10536 11.2652 2 11 2H8C7.73478 2 7.48043 2.10536 7.29289 2.29289C7.10536 2.48043 7 2.73478 7 3V4H2V5H4V17C4 17.2652 4.10536 17.5196 4.29289 17.7071C4.48043 17.8946 4.73478 18 5 18H14C14.2652 18 14.5196 17.8946 14.7071 17.7071C14.8946 17.5196 15 17.2652 15 17V5H17V4H12ZM8 3H11V4H8V3ZM14 17H5V5H14V17ZM8 15H7V7H8V15ZM10 15H9V7H10V15ZM12 15H11V7H12V15Z' fill='%23006AD4'/%3E%3C/svg%3E");
+    display: inline-block;
+    background-position: center;
+}
+
+.regenerate-key::before {
+    content: '';
+    height: 20px;
+    width: 26px;
+    vertical-align: sub;
+    background-repeat: no-repeat;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAABIElEQVQ4jdXUMU5CQRDG8R8UBGpj5Qk0aGPJCaxtFEzkMCo2RIF4B2NibeIZNMYooAewMhELG6OIxS4GyTO+R6Vfss2bff+dnZ35+M8qo4MuXuLqooWlLKAijvCBW+xiG3U0InSINgppgDU8YQO5hHgOVTzjPA00F7P8TSsYCCVI1FwKyLRqeJdQ0xL6qGQE5nCHg+lAEyPcR3gW7eNq8kNFeLVRXM2UoHkc4wKvOMFOHms4xRsusRA3/6ZHPGBVeOl1nE1uuMZeyuzGKgllSrxZC72MQELJ+hJqXxZaYHMG6I8t1xamZDkFpCh5kr6pIIzTQMg06Yc8tuLB1RQHK8RMh4IRNARjqAs914uxjnQj+qVFHAqOM7avGzPY19/SJ1hcP1HXPPd6AAAAAElFTkSuQmCC");
+    display: inline-block;
+    background-position: center;
+}
+
+.copy-key::before {
+    content: '';
+    height: 20px;
+    width: 26px;
+    vertical-align: sub;
+    background-repeat: no-repeat;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAA70lEQVQ4ja3UL0sEQRjH8Y/HiaCIily3mK4bDL4Cm1hFi8UXYBP0ZZhMF8z2BaPdIAaDoEGLf9CgwXC7MC7qPOPdD5aZZ/fLd57ZgWHMmajHQ6wG+A9s4P03oFuPa9jFY0Y4wMxfwiYVeoEOs+lmvnewHeDgGlUnAy1iPyCbxYHgync4zjA9rDPc0lgT6bDJNFaS+gJvowjnsJnUV6MK77GXg0qESzhpvbvBzn+Ft75vGT7bUIlwCv16fomHn6BUuIWXpD4zvAyapIfylBMeYTnTYdGhVPXTTvGFEfmHk1jIMPNR4SuecRpY+DzAlOcLK+MkL6CmpMUAAAAASUVORK5CYII=");
+    display: inline-block;
+    background-position: center;
+    color: blue;
 }
 
 /**
