@@ -17,6 +17,7 @@ class TestRecord implements \JsonSerializable
     private string $test_start_time;
     private string $user;
     private ?string $api_key;
+    private int $test_runs;
 
     public function __construct(array $options = [])
     {
@@ -28,6 +29,7 @@ class TestRecord implements \JsonSerializable
         $this->test_start_time = $options['testStartTime'] ?? '';
         $this->user = $options['user'] ?? '';
         $this->api_key = $options['apiKey'] ?? null;
+        $this->test_runs = $options['testRuns'] ?? 1;
     }
 
     public function getId(): int
@@ -70,6 +72,11 @@ class TestRecord implements \JsonSerializable
         return $this->api_key;
     }
 
+    public function getTestRuns(): int
+    {
+        return $this->test_runs;
+    }
+
     public function jsonSerialize(): array
     {
         return [
@@ -80,7 +87,8 @@ class TestRecord implements \JsonSerializable
         'label' => $this->label,
         'testStartTime' => $this->test_start_time,
         'user' => $this->user,
-        'apiKey' => $this->api_key
+        'apiKey' => $this->api_key,
+        'testRuns' => $this->test_runs
         ];
     }
 }

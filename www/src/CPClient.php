@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
+use DateTime;
 use Exception as BaseException;
 use GraphQL\Query;
 use GraphQL\Exception\QueryError;
@@ -17,6 +18,7 @@ use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\Customer;
 use WebPageTest\TestRecord;
+use WebPageTest\Util;
 
 class CPClient
 {
@@ -554,7 +556,8 @@ class CPClient
           'label',
           'testStartTime',
           'user',
-          'apiKey'
+          'apiKey',
+          'testRuns'
         ]);
 
         $variables = [
@@ -571,5 +574,55 @@ class CPClient
             }
         }, $data);
         return $test_history;
+    }
+
+    /**
+     * Using this to get the total non-exempt runs a user has made since a passed
+     * $date (DateTime object). This will mostly be used to go from the first
+     * of the month UTC.
+     */
+    public function getTotalRunsSince(DateTime $date): int
+    {
+        $current_time = time();
+        $since_time = $date->getTimestamp();
+
+        $seconds_since = $current_time - $since_time;
+        $view_hours = ($seconds_since / 60) / 60;
+
+
+        $gql = (new Query('wptTestHistory'))
+        ->setVariables([
+          new Variable('viewHours', 'Int', true)
+        ])
+        ->setArguments([
+          'viewHours' => '$viewHours'
+        ])
+        ->setSelectionSet([
+          'url',
+          'testRuns'
+        ]);
+
+        $variables = [
+        'viewHours' => $view_hours
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptTestHistory'];
+
+        // filter exempt hosts so we don't count that against the user
+        $nonExemptRuns = array_filter($data, function ($val) {
+            $url = $val['url'];
+            $host = preg_replace('/www\./', '', parse_url($url, PHP_URL_HOST));
+            return $host != Util::getExemptHost();
+        });
+
+        $sum = array_reduce(array_map(function ($val) {
+            return $val['testRuns'];
+        }, $nonExemptRuns), function ($carry, $item) {
+            $carry += $item;
+            return $carry;
+        }, 0);
+
+        return $sum;
     }
 }
