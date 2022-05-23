@@ -18,6 +18,7 @@ require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/RunResultHtmlTable.php';
 require_once __DIR__ . '/include/TestResultsHtmlTables.php';
+require_once __DIR__ . '/experiments/user_access.inc';
 
 // if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
 if($experiment && isset($experimentOriginalExperimentsHref) ){
@@ -34,13 +35,6 @@ if ($status['statusCode'] < 200) {
 $headless = false;
 if (Util::getSetting('headless')) {
     $headless = true;
-}
-
-$paidUser = $request_context->getUser()->isPaid();
-
-// TODO TEMP
-if( isset($_REQUEST['unpaid']) ){
-    $paidUser = false;
 }
 
 
@@ -144,7 +138,7 @@ $page_description = "Website performance test result$testLabel.";
                 <?php
                 if (
                     !$headless && gz_is_file("$testPath/testinfo.json")
-                    //&& !array_key_exists('published', $test['testinfo'])
+                    && !array_key_exists('published', $test['testinfo'])
                     && ($isOwner || !$test['testinfo']['sensitive'])
                     && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
                 ) {
@@ -179,7 +173,8 @@ $page_description = "Website performance test result$testLabel.";
 
                     function observationHTML( $parts ){
                         global $expCounter;
-                        global $paidUser;
+                        global $experiments_paid;
+                        global $experiments_logged_in;
 
                         $bottleneckTitle = $parts["title"];
                         
@@ -235,7 +230,8 @@ $page_description = "Website performance test result$testLabel.";
                                     $expCounter++;
                                 }
                                 
-                                $experimentEnabled = $expCounter < 2 || $paidUser;
+                                // experiments are enabled for the following criteria
+                                $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
                                 
                                 $out .= <<<EOT
                                     <li class="experiment_description">
@@ -244,13 +240,22 @@ $page_description = "Website performance test result$testLabel.";
                                     {$exp->desc}
                                 EOT;
 
-                            
-                                $upgradeLink = <<<EOT
-                                </div>
-                                <div class="experiment_description_go">
-                                <a href="#pro"><span>Upgrade to <em class="pro-flag">Pro</em></span> <span>for unlimited experiments.</span></a>
-                                </div>
-                                EOT;
+                                if( $experiments_logged_in === false && $experiments_paid === false ){
+                                    $upgradeLink = <<<EOT
+                                    </div>
+                                    <div class="experiment_description_go">
+                                    <a href="https://webpagetest.org/login"><span>Login to WebPageTest</span> <span>to access experiments.</span></a>
+                                    </div>
+                                    EOT;
+                                }
+                                if( $experiments_logged_in === true && $experiments_paid === false ){
+                                    $upgradeLink = <<<EOT
+                                    </div>
+                                    <div class="experiment_description_go">
+                                    <a href="/products/pricing"><span>Get <img class="pro_upgrade" src="/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
+                                    </div>
+                                    EOT;
+                                } 
                     
                     
                                 if( $exp->expvar && $exp->expval ){

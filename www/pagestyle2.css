@@ -1083,26 +1083,21 @@ h4.experiments_list_hed-recs {
     box-shadow: none;
     padding-top: .6em;
     padding-bottom: .6em;
+    padding-left: 1.5em;
+    background: transparent url(/images/src/icon_lock.svg) left 0.8rem top 50% no-repeat;
+    background-size: 1.5rem auto;
 }
 
-.experiment_description_go>a .pro-flag {
+.experiment_description_go>a .pro_upgrade {
     margin: 0;
+    border: none;
+    display: inline-block;
     vertical-align: middle;
-    border-radius: .6em;
-    font-size: .6rem;
-    padding: .2em .3em;
-    ;
-    border-color: #ddd;
-    border-width: 2px;
+    width: 8em;
 }
 
 .experiment_description_go>a span {
     display: block;
-}
-
-.experiment_description_go>a span:first-child {
-    background: transparent url(/images/src/icon_lock.svg) left 1.3rem top 50% no-repeat;
-    background-size: 1rem auto;
 }
 
 .experiment_description_go>a span:last-child {
