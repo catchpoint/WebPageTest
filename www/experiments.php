@@ -173,6 +173,7 @@ $page_description = "Website performance test result$testLabel.";
 
                     function observationHTML( $parts ){
                         global $expCounter;
+                        global $test;
                         global $experiments_paid;
                         global $experiments_logged_in;
 
@@ -232,6 +233,10 @@ $page_description = "Website performance test result$testLabel.";
                                 
                                 // experiments are enabled for the following criteria
                                 $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
+                                // exception allowed for tests on the metric times
+                                if( strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes' ) ){
+                                    $experimentEnabled = true;
+                                }
                                 
                                 $out .= <<<EOT
                                     <li class="experiment_description">
