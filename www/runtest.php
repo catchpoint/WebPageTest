@@ -61,6 +61,8 @@ use WebPageTest\RateLimiter;
 
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
+    require_once __DIR__ . '/experiments/user_access.inc';
+
     $experimentURL = Util::getSetting('experimentURL');
 
 
@@ -816,141 +818,166 @@ use WebPageTest\RateLimiter;
                     }
                 } else if (isset($req_recipes) && count($req_recipes) > 0 )
                 {
-                  $test['script'] = "overrideHost\t%HOST%\t$experimentURL\r\n";
-                  $scriptNavigate = "navigate\t%URL%\r\n";
-                  $test['script'] .= $scriptNavigate;
-                  
-                  $experimentMetadata = array(
-                    "experiment" => array(
-                      "source_id" => $id,
-                      "control_id" => "",
-                      "control" => true,
-                      "recipes" => array(),
-                      "assessment" => isset($_REQUEST["assessment"]) ? json_decode(urldecode($_REQUEST["assessment"])) : null
-                    )
-                  );
-                  
-                  // this is for re-running a test with recipes enabled
-                  $recipeScript = '';
-                  $experimentSpof = "";
-                  $experimentBlock = "";
-                  foreach( $req_recipes as $key=>$value ){
+
+                  global $experiments_paid;
+                  global $experiments_logged_in;
+                  // we allow experiment runs on the metric times without paid permissions
+                  $experimentUrlException = !is_null(strpos($test['url'], 'webpagetest.org/themetrictimes' ));
+
+                  if( !$experiments_logged_in && !$experimentUrlException ){
+                    $error = "Must be logged in to use experiments.";
+                  } else {               
+
+                    $test['script'] = "overrideHost\t%HOST%\t$experimentURL\r\n";
+                    $scriptNavigate = "navigate\t%URL%\r\n";
+                    $test['script'] .= $scriptNavigate;
                     
-                    // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
-                    // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
-                    $recipeSansId = $value;
-                    $experimentId = "";
-                    $splitValue = explode("-", $value);
-                    if( count($splitValue) > 1 ){
-                      $experimentId = $splitValue[0];
-                      if( $splitValue[1] === "experiment" ){
-                        $recipeSansId = $splitValue[2];
-                      }
-                      else {
-                        $recipeSansId = $splitValue[1];
-                      }                      
-                    }
-
-                    $recipeScript .= $recipeSansId;
-                    $experimentSpof = array();
-                    $experimentBlock = array();
-                    $experimentOverrideHost = array();
-                    $experimentRunURL = null;
-                    // TODO should this be $req_$value instead, essentially?
-                    if( $_REQUEST[$value] ){
-                      $ingredients = $_REQUEST[$value];
-                      $experimentMetadata["experiment"]["recipes"][] = array( $experimentId => $ingredients );
-                      if( is_array($ingredients) ){
-                        if( $recipeSansId === "spof" ){
-                          $experimentSpof = $ingredients;
-                        }
-                        if( $recipeSansId === "block" ){
-                          $experimentBlock = $ingredients;
-                        }
-                        if( $recipeSansId === "overrideHost" ){
-                          $experimentOverrideHost = $ingredients;
-                        }
-                        if( $recipeSansId === "setinitialurl"){
-                          $experimentRunURL = $ingredients;
-                        }
-                        if( $recipeSansId === "swap" ){
-                          $experimentSwap = $ingredients;
-                          if( $ingredients[0] ){
-                            $ingredients[0] = urlencode($ingredients[0]);
-                          }
-                          if( $ingredients[1] ){
-                            $ingredients[1] = urlencode($ingredients[1]);
-                          }
-                          if( $ingredients[2] ){
-                            $ingredients[2] = true;
-                          }
-                          $ingredients = array(implode("|", $ingredients) );
-                        }
-                        $ingredients = implode($ingredients, ",");
-                      }
-                      $recipeScript .= ":=" . $ingredients;
-                    }
-                    $recipeScript .= ";";
-                  }
-                  
-
-
-                  // Recipes need a control to compare to. 
-                  // The control runs over the proxy without any recipes.
-                  // We need to build the 2 tests and
-                  // redirect to the comparison page
-                  $recipeTests = array();
-                  $test['video'] = 1;
-                  $test['label'] = 'Experiment Control';
-                  $test['metadata'] = json_encode($experimentMetadata);
-                  $id = CreateTest($test, $test['url']);
-                  
-                  if( isset($id) ) {
+                    $experimentMetadata = array(
+                      "experiment" => array(
+                        "source_id" => $id,
+                        "control_id" => "",
+                        "control" => true,
+                        "recipes" => array(),
+                        "assessment" => isset($_REQUEST["assessment"]) ? json_decode(urldecode($_REQUEST["assessment"])) : null
+                      )
+                    );
+                    
+                    // this is for re-running a test with recipes enabled
+                    $recipeScript = '';
+                    $experimentSpof = "";
+                    $experimentBlock = "";
+                    $allowedFreeExperimentIds = array('001');
+                    foreach( $req_recipes as $key=>$value ){
                       
-                      $recipeTests[] = $id;
-                      $experimentMetadata["experiment"]["control_id"] = $id;
-                      $experimentMetadata["experiment"]["control"] = false;
+                      // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
+                      // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
+                      $recipeSansId = $value;
+                      $experimentId = "";
+                      $splitValue = explode("-", $value);
+                      if( count($splitValue) > 1 ){
+                        $experimentId = $splitValue[0];
+                        if( $splitValue[1] === "experiment" ){
+                          $recipeSansId = $splitValue[2];
+                        }
+                        else {
+                          $recipeSansId = $splitValue[1];
+                        }                      
+                      }
+                      // if user isn't pro-access
+                      if( !$experiments_paid 
+                        // and the experimentID is not in the allowed array
+                        && !in_array($experimentId, allowedFreeExperimentIds)
+                        // and it's not the exception url
+                        && !$experimentUrlException ){
+                          $error = "Attempt to use unauthorized experiments feature.";
+                      } else{
+
+                        $recipeScript .= $recipeSansId;
+                        $experimentSpof = array();
+                        $experimentBlock = array();
+                        $experimentOverrideHost = array();
+                        $experimentRunURL = null;
+                        // TODO should this be $req_$value instead, essentially?
+                        if( $_REQUEST[$value] ){
+                          $ingredients = $_REQUEST[$value];
+                          $experimentMetadata["experiment"]["recipes"][] = array( $experimentId => $ingredients );
+                          if( is_array($ingredients) ){
+                            if( $recipeSansId === "spof" ){
+                              $experimentSpof = $ingredients;
+                            }
+                            if( $recipeSansId === "block" ){
+                              $experimentBlock = $ingredients;
+                            }
+                            if( $recipeSansId === "overrideHost" ){
+                              $experimentOverrideHost = $ingredients;
+                            }
+                            if( $recipeSansId === "setinitialurl"){
+                              $experimentRunURL = $ingredients;
+                            }
+                            if( $recipeSansId === "swap" ){
+                              $experimentSwap = $ingredients;
+                              if( $ingredients[0] ){
+                                $ingredients[0] = urlencode($ingredients[0]);
+                              }
+                              if( $ingredients[1] ){
+                                $ingredients[1] = urlencode($ingredients[1]);
+                              }
+                              if( $ingredients[2] ){
+                                $ingredients[2] = true;
+                              }
+                              $ingredients = array(implode("|", $ingredients) );
+                            }
+                            $ingredients = implode($ingredients, ",");
+                          }
+                          $recipeScript .= ":=" . $ingredients;
+                        }
+                        $recipeScript .= ";";
+                      }
+                    }
+                    
+
+
+                    // Recipes need a control to compare to. 
+                    // The control runs over the proxy without any recipes.
+                    // We need to build the 2 tests and
+                    // redirect to the comparison page
+
+                    if( strlen( $recipeScript ) > 0 ){
+                      $recipeTests = array();
+                      $test['video'] = 1;
+                      $test['label'] = 'Experiment Control';
                       $test['metadata'] = json_encode($experimentMetadata);
-                      $test['label'] = 'Experiment';
-
-                      // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
-                      // if experimentSpof is set...
-                      
-                      if ( $experimentSpof ) {
-                        $spofScript = buildSpofTest($experimentSpof);
-                        $test['script'] = $spofScript . "\n" . $test['script'];
-                        $test['spof'] .= ' ' . $experimentSpof;
-                      }
-
-                      if ( $experimentOverrideHost ) {
-                        $overrideHostScript = buildSelfHost($experimentOverrideHost);
-                        $test['script'] = $overrideHostScript . "\n" . $test['script'];
-                      }
-
-                      if( $experimentRunURL ){
-                        $test['url'] = urldecode(implode($experimentRunURL));
-                      }
-
-                      // if experimentBlock is set...
-                      if ( $experimentBlock ) {
-                        // if spof is passed as an array, join it by \n
-                        if( count($experimentBlock )){
-                          $experimentBlock = implode("\n", $experimentBlock);
-                        }
-                        $test['block'] .= ' ' . $experimentBlock;
-                      }
-
-                      
-
-                      //replace last step with last step plus recipes
-                      $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
-                      
-                      
                       $id = CreateTest($test, $test['url']);
+                    
                       if( isset($id) ) {
+                          
                           $recipeTests[] = $id;
+                          $experimentMetadata["experiment"]["control_id"] = $id;
+                          $experimentMetadata["experiment"]["control"] = false;
+                          $test['metadata'] = json_encode($experimentMetadata);
+                          $test['label'] = 'Experiment';
+
+                          // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
+                          // if experimentSpof is set...
+                          
+                          if ( $experimentSpof ) {
+                            $spofScript = buildSpofTest($experimentSpof);
+                            $test['script'] = $spofScript . "\n" . $test['script'];
+                            $test['spof'] .= ' ' . $experimentSpof;
+                          }
+                          
+                          if ( $experimentOverrideHost ) {
+                            $overrideHostScript = buildSelfHost($experimentOverrideHost);
+                            $test['script'] = $overrideHostScript . "\n" . $test['script'];
+                          }
+
+                          if( $experimentRunURL ){
+                            $test['url'] = urldecode(implode($experimentRunURL));
+                          }
+
+                          // if experimentBlock is set...
+                          if ( $experimentBlock ) {
+                            // if spof is passed as an array, join it by \n
+                            if( count($experimentBlock )){
+                              $experimentBlock = implode("\n", $experimentBlock);
+                            }
+                            $test['block'] .= ' ' . $experimentBlock;
+                          }
+
+                          
+
+                          //replace last step with last step plus recipes
+                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
+                          
+                          
+                          $id = CreateTest($test, $test['url']);
+                          if( isset($id) ) {
+                              $recipeTests[] = $id;
+                          }
                       }
-                  }
+                    }
+
+                  }// if logged in or exception url
                 }
                 else if( isset($test['batch_locations']) && $test['batch_locations'] && count($test['multiple_locations']) )
                 {
