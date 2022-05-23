@@ -244,7 +244,7 @@ $page_description = "Website performance test result$testLabel.";
                                     $upgradeLink = <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
-                                    <a href="https://webpagetest.org/login"><span>Login to WebPageTest</span> <span>to access experiments.</span></a>
+                                    <a href="https://webpagetest.org/login"><span>Login to WebPageTest</span> <span>to run Pro experiments.</span></a>
                                     </div>
                                     EOT;
                                 }
