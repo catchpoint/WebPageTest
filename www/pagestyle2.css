@@ -1754,8 +1754,12 @@ footer ul {
     font-size: .9em;
     white-space: pre-wrap;
     font-weight: 300;
-    max-width: 50%;
+    max-width: 30%;
     overflow: hidden;
+}
+
+.header_data_urltime li:first-child {
+    max-width: 70%;
 }
 
 .header_data_urltime li strong {
