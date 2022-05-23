@@ -443,6 +443,84 @@ window.SortableTable = SortableTable;
 
   window.HiddenContent = HiddenContent;
 }(window));
+
+/**
+ * DeleteApiKeyBoxSet
+ */
+(function(window){
+  class DeleteApiKeyBoxSet {
+    constructor(mainCheckbox) {
+      this.selectAllBox = mainCheckbox;
+      const form = this.selectAllBox.closest('form');
+      const individualBoxes = form.querySelectorAll('[data-apikeybox=individual]');
+      const deleteButtonLabel = document.querySelector('[data-apikeybox=delete-button]');
+      const deleteButton = form.querySelector('input[type=submit]');
+
+      this.individualBoxes = individualBoxes;
+      this.deleteButton = deleteButton;
+      this.deleteButtonLabel = deleteButtonLabel;
+
+      this.selectAllBox.addEventListener('change', this.handleMainBoxChange.bind(this));
+      this.individualBoxes.forEach((box) => {
+        box.addEventListener('change', this.handleIndividualBoxChange.bind(this));
+      });
+    }
+
+    handleMainBoxChange (e) {
+      if (e.target.checked) {
+        this.deleteButton.removeAttribute("disabled");
+        this.deleteButton.disabled = false;
+        this.deleteButtonLabel.classList.remove('disabled');
+
+        this.individualBoxes.forEach((box) => {
+          box.setAttribute("checked", "true");
+          box.checked = true;
+        });
+      } else {
+        this.deleteButton.setAttribute("disabled", "disabled");
+        this.deleteButton.disabled = true;
+        this.deleteButtonLabel.classList.add('disabled');
+
+        this.individualBoxes.forEach((box) => {
+          box.removeAttribute("checked");
+          box.checked = false;
+        });
+      }
+    }
+
+    handleIndividualBoxChange (e) {
+      if (e.target.checked) {
+        this.deleteButton.removeAttribute("disabled");
+        this.deleteButton.disabled = false;
+        this.deleteButtonLabel.classList.remove('disabled');
+
+        const allChecked = Array.from(this.individualBoxes).every((box) => box.checked);
+        if (allChecked) {
+          this.selectAllBox.setAttribute("checked", "true");
+          this.selectAllBox.checked = true;
+        }
+      } else {
+        const boxes = Array.from(this.individualBoxes);
+        const anyUnchecked = boxes.some((box) => !box.checked);
+        const allUnchecked = boxes.every((box) => !box.checked);
+
+        if (anyUnchecked) {
+          this.selectAllBox.removeAttribute("checked");
+          this.selectAllBox.checked = false;
+        }
+
+        if (allUnchecked) {
+          this.deleteButton.setAttribute("disabled", "disabled");
+          this.deleteButton.disabled = true;
+        this.deleteButtonLabel.classList.add('disabled');
+        }
+      }
+    }
+  }
+
+  window.DeleteApiKeyBoxSet = DeleteApiKeyBoxSet;
+}(window));
+
 /**
  * Attach all the listeners
  */
@@ -478,6 +556,11 @@ window.SortableTable = SortableTable;
         new HiddenContent(hiddenContentCells[i]);
       }
 
+      var deleteApiKeyBoxes = document.querySelectorAll('[data-apikeybox=select-all]');
+      for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
+        new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
+      }
+
       attachListenerToBillingFrequencySelector();
       handleRunUpdate();
     });
@@ -509,6 +592,12 @@ window.SortableTable = SortableTable;
     for (var i = 0; i < hiddenContentCells.length; i++) {
       new HiddenContent(hiddenContentCells[i]);
     }
+
+    var deleteApiKeyBoxes = document.querySelectorAll('[data-apikeybox=select-all]');
+    for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
+      new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
+    }
+
     attachListenerToBillingFrequencySelector();
     handleRunUpdate();
   }

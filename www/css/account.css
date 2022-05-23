@@ -1095,7 +1095,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   justify-content: flex-start;
 }
 
-.create-delete-button-container button {
+.create-delete-button-container button,
+.create-delete-button-container label {
   appearance: none;
   border: 0;
   height: 3.4em;
@@ -1108,6 +1109,9 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   cursor: pointer;
   color: #323232;
 }
+.create-delete-button-container label {
+  line-height: 3.6em;
+}
 
 .create-delete-button-container .new-api-key {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M17 9V10H10V17H9V10H2V9H9V2H10V9H17Z' fill='%23006AD4'/%3E%3C/svg%3E");
@@ -1117,7 +1121,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M12 4V3C12 2.73478 11.8946 2.48043 11.7071 2.29289C11.5196 2.10536 11.2652 2 11 2H8C7.73478 2 7.48043 2.10536 7.29289 2.29289C7.10536 2.48043 7 2.73478 7 3V4H2V5H4V17C4 17.2652 4.10536 17.5196 4.29289 17.7071C4.48043 17.8946 4.73478 18 5 18H14C14.2652 18 14.5196 17.8946 14.7071 17.7071C14.8946 17.5196 15 17.2652 15 17V5H17V4H12ZM8 3H11V4H8V3ZM14 17H5V5H14V17ZM8 15H7V7H8V15ZM10 15H9V7H10V15ZM12 15H11V7H12V15Z' fill='%23006AD4'/%3E%3C/svg%3E");
 }
 
-.create-delete-button-container .delete-key:disabled {
+.create-delete-button-container .delete-key.disabled {
   color: inherit;
   opacity: 0.3;
   cursor: auto;
@@ -1203,6 +1207,13 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 .api-consumers .info .hidden-content {
   min-width: 21em;
   /* API key length */
+}
+
+.api-consumers .select-all-box {
+  position: relative;
+  top: .5em;
+  left: 3px;
+  width: 3em;
 }
 
 .billing-frequency-selector {
