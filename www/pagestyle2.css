@@ -2839,33 +2839,34 @@ body.result #main {
 }
 
 .home .play {
-    height: 7em;
+    padding: 25% 0 0 0;
     background: #000 url("/images/src/icon_play.svg") 50% no-repeat;
     overflow: hidden;
     text-indent: -999px;
     border-radius: 100%;
     -moz-appearance: none;
     position: absolute;
-    bottom: 35%;
+    bottom: 32.5%;
     left: 50%;
     cursor: pointer;
-    width: 7em;
+    width: 25%;
     background-size: 100%;
-    border: 2px solid #2d3c60;
-    margin-left: -3em;
-    /* opacity: 0; */
+    border: 0;
+    margin-left: -12.5%;
+    opacity: .9;
     transition: .3s;
-    box-shadow: 0 0 10px #2f80ed59;
+    box-shadow: 0 0 5px #2a3c64;
+    height: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
     .home_feature_hed,
     .home_feature_hed-pro {
-        transition: all 1.5s ease-out;
+        transition: opacity 1.5s ease-out, transform 1.5s ease-out;
     }
 }
 
-.home_feature_hed:first-child {
+.home_feature_hed-main {
     position: absolute;
 }
 
@@ -2873,21 +2874,21 @@ body.result #main {
     position: relative;
 }
 
-.home_feature_hed-pro,
-.home.feature-pro .home_feature_hed_contain>.home_feature_hed {
-    transform: scale(.8);
-    opacity: 0;
-    pointer-events: none;
-}
-
-.home.feature-pro .home_feature_hed-pro {
+.home_feature_hed {
     opacity: 1;
     transform: scale(1);
     pointer-events: all;
 }
 
+.home:not(.feature-pro) .home_feature_hed-pro,
+.home.feature-pro .home_feature_hed-main {
+    transform: scale(.8);
+    opacity: 0;
+    pointer-events: none;
+}
+
 .home_feature_hed_contain {
-    transition: all 1s ease-out;
+    /* transition: all 1s ease-out; */
     overflow: hidden;
 }
 
@@ -2953,7 +2954,7 @@ header {
 .home_feature_hed_text_leadin {
     font-weight: 300;
     margin-right: .2em;
-    font-size: 3rem;
+    /* font-size: 3rem; */
 }
 
 .home_feature_hed_text_line {
@@ -2983,6 +2984,7 @@ header {
     width: 100%;
     background-size: contain;
     background-position: left bottom;
+    height: auto;
 }
 
 .result .home_feature_hed_text_logo {
@@ -3000,15 +3002,14 @@ header {
     align-items: flex-start;
 }
 
-.home_feature_hed-pro {
-    display: block;
-    padding: 0;
+.home_feature_hed {
+    /* display: block; */
 }
 
 @media (max-width: 87.5em) {
     .home_feature_hed,
     .home_feature_main {
-        max-width: 94vw;
+        max-width: 90vw;
     }
 }
 
@@ -3246,15 +3247,48 @@ header {
 }
 
 @media (max-width: 80em) {
-    .home_feature_hed .attention {
-        font-size: 2.3rem;
+    .home_feature_hed_text_line {
+        display: inline;
+    }
+}
+
+@media (max-width: 40em) {
+    .home_feature .home_feature_hed .home_feature_hed_text_logo {
+        margin: .3em 0;
+        width: 100%;
+        max-width: 300px;
+        display: block;
+        height: auto;
+    }
+    .home_feature_hed {
+        display: block;
+        padding: 2rem 0;
+    }
+    .home_feature .home_feature_hed .attention {
+        display: block;
+        font-size: 2.5em;
     }
     .home_feature_hed p {
-        font-size: 1.35rem;
-        margin: .3em 0 1.2em;
+        font-size: 1.4em
     }
-    .home_feature_hed a {
-        font-size: .8rem;
+}
+
+@media (max-width: 60em) {
+    .home_feature_hed_text_leadin {
+        font-size: 1em;
+    }
+    .home_feature_hed p {
+        margin: .4em 0 .8em;
+    }
+    .home_feature_hed_contain .pill {
+        font-size: .85em;
+        margin: 0;
+    }
+    .home_feature_hed_visual {
+        margin: 2rem 0 -30px;
+        display: block;
+        max-width: 90vw;
+        /* width: 100%; */
     }
 }
 
@@ -3286,7 +3320,7 @@ header {
     padding-bottom: 3rem;
 }
 
-@media (max-width: 45em) {
+@media (max-width: 55em) {
     .home_feature_hed,
     .home_feature_main {
         display: block;
@@ -3411,10 +3445,12 @@ header {
 
 @media (max-width: 85em) {
     .home_feature_hed .attention {
-        font-size: 2.5rem;
+        font-size: 2.3rem;
     }
     .home_feature_hed_text_logo {
-        width: 300px;
+        width: 290px;
+        flex: 0 1 auto;
+        top: 0;
     }
 }
 
