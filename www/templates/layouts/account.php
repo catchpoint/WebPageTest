@@ -11,12 +11,13 @@ global $supportsCPAuth;
 global $request_context;
 global $_SESSION;
 global $notification_alert;
+global $VER_CSS;
 
 $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
   <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
-  <link href="/css/account.css" rel="stylesheet" />
+  <link rel="stylesheet" href="<?= '/css/account.css?v={$VER_CSS}' ?>" />
   <script defer src="/js/account.js"></script>
   </head>
   <body>

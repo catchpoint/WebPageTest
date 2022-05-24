@@ -23,11 +23,6 @@ if (Util::getSetting('cp_auth')) {
   unset($_SESSION['client_error']);
 
   set_exception_handler(function($e) {
-    echo '<pre>';
-    var_dump($e);
-    echo '</pre>';
-    exit();
-
     if(is_a($e, ClientException::class)) {
      $route = $e->getRoute();
      $message = $e->getMessage();
@@ -186,6 +181,7 @@ define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown tim
                                       // is unknown, change this constant to a large
                                       // negative number.
 
+$VER_CSS = VER_CSS;
 // SEO stuff
 $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
