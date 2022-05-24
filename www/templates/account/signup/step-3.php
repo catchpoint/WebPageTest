@@ -63,12 +63,21 @@
         <th>Runs per month</th>
         <th>Price</th>
       </thead>
-      <tbody>
-        <tr>
-          <td><?= $runs ?></td>
-          <td>$<?= "{$price} {$billing_frequency}" ?></td>
-        </tr>
-      </tbody>
+            <tbody>
+                <tr>
+                    <?php if ($is_plan_free) : ?>
+                    <td>300</td>
+                    <td>Free</td>
+                    <?php else : ?>
+                    <td><?= $runs ?></td>
+                    <?php if ($billing_frequency == "Monthly") : ?>
+                    <td>$<?= "{$monthly_price} {$billing_frequency}" ?></td>
+                    <?php else : ?>
+                    <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}" ?></td>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </tr>
+            </tbody>
     </table>
   </div> <!-- /.plan-details -->
   <div class="plan-benefits">
