@@ -37,6 +37,7 @@ use WebPageTest\RequestContext;
         setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
     }
 
+    header('Clear-Site-Data: "cache", "cookies", "storage", "executionContexts"');
     header("Location: {$redirect_uri}");
     exit();
 })($request_context);
