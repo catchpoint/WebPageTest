@@ -225,7 +225,7 @@ $USER_EMAIL = null;
 // Supported Authentication types
 $supportsAuth = false;
 $supportsSaml = Util::getSetting('saml_login') !== false;
-$supportsCPAuth = Util::getSetting('cp_auth') !== false;
+$supportsCPAuth = Util::getSetting('cp_auth');
 $supportsGoogleOAuth = Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret');
 $supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
 
