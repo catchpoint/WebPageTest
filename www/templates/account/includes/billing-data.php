@@ -153,7 +153,7 @@
                                 <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $row['id'] ?>' />
                             </td>
                             <td><?= $row['name'] ?></td>
-                            <td class="hidden-content api-key">
+                            <td class="hidden-content api-key-container">
                                 <div tabindex="0" class="ellipsis-menu">
                                     <a class="ellipsis-menu-button" href="">
                                         <span class="ellipsis-icon">
@@ -166,7 +166,7 @@
                                         <a class="copy-key" href="javascript:alert('Dropdown 3')">Copy</a>
                                     </div>
                                 </div>
-                                <div>
+                                <div class="view-key">
                                     <button type="button" class="view-button">View</button>
                                     <span class="hidden-area closed">
                                         <span class="api-key"><?= $row['apiKey'] ?></span>
