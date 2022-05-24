@@ -107,6 +107,33 @@ class Signup
         $tpl = new Template('account/signup');
         $tpl->setLayout('signup-flow');
 
+        $plan_id = $vars['plan'];
+        $plan = null;
+        $plans = [];
+        try {
+            $plans = $request_context->getSignupClient()->getWptPlans();
+        } catch (Exception $e) {
+            if ($e->getCode() == 401) {
+                $auth_token = $request_context->getSignupClient()->getAuthToken();
+                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+                $plans = $request_context->getSignupClient()->getWptPlans();
+            }
+        }
+
+        foreach ($plans as $p) {
+            if ($p->getId() == $plan_id) {
+                $plan = $p;
+                break;
+            }
+        }
+        if (!is_null($plan)) {
+            $vars['runs'] = $plan->getRuns();
+            $vars['monthly_price'] = $plan->getMonthlyPrice();
+            $vars['annual_price'] = $plan->getAnnualPrice();
+            $vars['other_annual'] = $plan->getOtherAnnual();
+            $vars['billing_frequency'] = $plan->getBillingFrequency();
+        }
+
         $gateway = new BraintreeGateway([
         'environment' => Util::getSetting('bt_environment'),
         'merchantId' => Util::getSetting('bt_merchant_id'),
