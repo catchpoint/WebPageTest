@@ -2859,6 +2859,16 @@ body.result #main {
     height: 0;
 }
 
+@media (min-width: 80em) {
+    .home .play {
+        width: 100px;
+        height: 100px;
+        padding: 0;
+        margin-left: -50px;
+        bottom: calc(50% - 50px);
+    }
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .home_feature_hed,
     .home_feature_hed-pro {
@@ -3305,7 +3315,7 @@ header {
 .home_feature img {
     max-width: 100%;
     display: block;
-    align-self: flex-end;
+    align-self: end;
     position: relative;
     top: -.05em;
 }
