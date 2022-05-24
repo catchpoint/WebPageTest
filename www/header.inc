@@ -77,7 +77,6 @@ if (isset($client_error)) {
             elseif (FRIENDLY_URLS)
                 $resultUrl = "/result/$id/";
         }
-        if (!isset($navTabs) || !count($navTabs)) {
 
 
             function addTab($tabName, $tabUrl, $addClass = '') {
@@ -191,7 +190,7 @@ if (isset($client_error)) {
             echo addTab('Why WebPageTest', '/why-webpagetest');
 
 
-        }
+        
         
 ?>
                     </ul>
