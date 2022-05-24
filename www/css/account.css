@@ -299,7 +299,7 @@ body.theme-b {
   display: block;
 }
 
-.add-subscription-button-wrapper {
+.add-subscription-button-wrapper button {
   appearance: none;
   box-shadow: none;
   display: block;
