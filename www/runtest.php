@@ -3064,6 +3064,9 @@ function loggedInPerks(){
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
   global $supportsSaml;
+  global $supportsCPAuth;
+  global $request_context;
+
   $ret = true;
 
   // Only check when we have a valid remote IP
@@ -3077,6 +3080,11 @@ function CheckRateLimit($test, &$error) {
   }
 
   // let logged-in users pass
+  if ($supportsCPAuth && isset($request_context) && !is_null($request_context->getUser())) {
+    if ($request_context->getUser()->getEmail()) {
+      return true;
+    }
+  }
   if (isset($USER_EMAIL) && strlen($USER_EMAIL)) {
     return true;
   }
