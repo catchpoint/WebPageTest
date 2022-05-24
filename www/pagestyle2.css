@@ -2452,7 +2452,6 @@ form[name=filterLog] select {
     border: 1px solid #999;
     display: inline-block;
     width: auto;
-    margin-bottom: 2em;
 }
 
 form[name=filterLog] select[name=days] {
