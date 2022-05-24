@@ -3246,7 +3246,7 @@ header {
     }
 }
 
-@media (max-width: 80em) {
+@media (max-width: 90em) {
     .home_feature_hed_text_line {
         display: inline;
     }
