@@ -23,11 +23,6 @@ if (Util::getSetting('cp_auth')) {
   unset($_SESSION['client_error']);
 
   set_exception_handler(function($e) {
-    echo '<pre>';
-    var_dump($e);
-    echo '</pre>';
-    exit();
-
     if(is_a($e, ClientException::class)) {
      $route = $e->getRoute();
      $message = $e->getMessage();
