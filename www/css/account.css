@@ -299,6 +299,17 @@ body.theme-b {
   display: block;
 }
 
+.add-subscription-button-wrapper {
+  appearance: none;
+  box-shadow: none;
+  display: block;
+  text-align: center;
+  padding: 0.5em 0.8125rem;
+  background-color: rgb(67, 129, 229);
+  color: rgb(255, 255, 255);
+  border: 1px solid rgb(0, 120, 212);
+}
+
 .billing-container {
   width: 70%;
 }
