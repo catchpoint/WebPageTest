@@ -23,48 +23,52 @@
                 <td></td>
                 <th scope="col">
                     <div class="plan-selector">
-                        <form method="POST" action="/signup">
-                            <p class="plan-name">API Subscription</p>
-                            <div class="plan annual">
+
+                        <p class="plan-name">API Subscription</p>
+                        <div class="plan annual">
+                            <form method="POST" action="/signup">
                                 <label class="visually-hidden" for="annual-plan">Select Number of Runs per
                                     month</label>
-                                <select name="plan" id="annual-plan" class="plan-select"
-                                    onchange="changePrice('annual')">
+                                <select name="plan" id="annual-plan" class="plan-select" onchange="changePrice('annual')">
                                     <?php foreach ($annual_plans as $plan) : ?>
-                                    <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>"
-                                        data-price-monthly="<?= $plan->getMonthlyPrice() ?>">
-                                        <?= $plan->getRuns() ?> Runs/mo
-                                        ($<?= $plan->getAnnualPrice() ?>/<?= $plan->getBillingFrequency() ?>)</option>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>" data-price-monthly="<?= $plan->getMonthlyPrice() ?>">
+                                            <?= $plan->getRuns() ?> Runs/mo
+                                            ($<?= $plan->getAnnualPrice() ?>/<?= $plan->getBillingFrequency() ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="price">
                                     $<span><?= $annual_plans[0]->getAnnualPrice() ?></span>
                                     /<?= $annual_plans[0]->getBillingFrequency() ?>
                                 </div>
-                            </div>
+                                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                                <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
+                                <input type="hidden" name="step" value="1" />
+                                <button class="signup-button" type="submit">Select Plan</button>
+                            </form>
+                        </div>
 
-                            <div class="plan monthly">
+                        <div class="plan monthly">
+                            <form method="POST" action="/signup">
                                 <label class="visually-hidden" for="monthly-plan">Select Number of Runs per
                                     month</label>
-                                <select id="monthly-plan" name="plan" class="plan-select"
-                                    onchange="changePrice('monthly')">
+                                <select id="monthly-plan" name="plan" class="plan-select" onchange="changePrice('monthly')">
                                     <?php foreach ($monthly_plans as $plan) : ?>
-                                    <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>"
-                                        data-price-annual="<?= $plan->getAnnualPrice() ?>">
-                                        <?= $plan->getRuns() ?> Runs/mo ($<?= $plan->getMonthlyPrice() ?>/Monthly)
-                                    </option>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>" data-price-annual="<?= $plan->getAnnualPrice() ?>">
+                                            <?= $plan->getRuns() ?> Runs/mo ($<?= $plan->getMonthlyPrice() ?>/Monthly)
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="price">$
                                     <span><?= $monthly_plans[0]->getMonthlyPrice() ?></span>
                                     /<?= $monthly_plans[0]->getBillingFrequency() ?>
                                 </div>
-                            </div>
-                            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                            <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
-                            <input type="hidden" name="step" value="1" />
-                            <button class="signup-button" type="submit">Select Plan</button>
-                        </form>
+                                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                                <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
+                                <input type="hidden" name="step" value="1" />
+                                <button class="signup-button" type="submit">Select Plan</button>
+                            </form>
+                        </div>
+
                     </div>
                 </th>
                 <th scope="col">
