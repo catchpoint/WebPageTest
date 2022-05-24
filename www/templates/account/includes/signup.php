@@ -108,7 +108,7 @@ echo $plan_block;
   <input type="hidden" name="type" value="account-signup" required />
   <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
 
-  <div>
+  <div class="add-subscription-button-wrapper">
     <button type="submit">Add Subscription</button>
   </div>
 </form>
