@@ -67,13 +67,20 @@ use WebPageTest\Exception\UnauthorizedException;
                     $user->setEmail($data['email']);
                     $user->setPaid($data['isWptPaidUser']);
                     $user->setVerified($data['isWptAccountVerified']);
-                } catch (UnauthorizedException $e) {
+                } catch (Exception $e) {
                     error_log($e->getMessage());
                   // if this fails, delete all the cookies
                     setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
                     setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
                 }
             }
+        } catch (Exception $e) {
+          // Any other kind of error, kill it.
+          // Delete the cookies. Force the logout. Otherwise you
+          // can get into some weird forever redirect states
+            error_log($e->getMessage());
+            setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+            setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
         }
     }
 
