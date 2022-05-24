@@ -2854,7 +2854,7 @@ body.result #main {
     border: 0;
     margin-left: -12.5%;
     opacity: .9;
-    transition: .3s;
+    transition: opacity .3s;
     box-shadow: 0 0 5px #2a3c64;
     height: 0;
 }
