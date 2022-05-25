@@ -2816,6 +2816,12 @@ body.result #main {
     background-size: 100%, cover;
 }
 
+.home_feature_containslides {
+    position: relative;
+    margin: 0 auto;
+    max-width: 1400px;
+}
+
 @media (min-width:70em) {
     .home_feature_hed_contain {
         background-position: bottom -32px left 50%, bottom -50px left 50%;
