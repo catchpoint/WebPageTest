@@ -20,13 +20,13 @@ class TestRecord implements \JsonSerializable
 
     public function __construct(array $options = [])
     {
-        $this->id = $options['id'];
-        $this->test_id = $options['testId'];
-        $this->url = $options['url'];
-        $this->location = $options['location'];
-        $this->label = $options['label'];
-        $this->test_start_time = $options['testStartTime'];
-        $this->user = $options['user'];
+        $this->id = $options['id'] ?? 0;
+        $this->test_id = $options['testId'] ?? '';
+        $this->url = $options['url'] ?? '';
+        $this->location = $options['location'] ?? '';
+        $this->label = $options['label'] ?? '';
+        $this->test_start_time = $options['testStartTime'] ?? '';
+        $this->user = $options['user'] ?? '';
         $this->api_key = $options['apiKey'] ?? null;
     }
 
