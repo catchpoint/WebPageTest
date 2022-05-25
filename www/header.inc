@@ -97,28 +97,30 @@ if (isset($client_error)) {
                     if( count($classes) > 0){
                         $classes = ' class="' . implode(' ', $classes) . '"';
                     }
-
-        }
-        foreach ($navTabs as $tabName => $tabUrl) {
-            // make sure we have a test result to navigate to
-            if (strlen($tabUrl)) {
-                // highlight the current tab
-                $target = '';
-                $current = '';
-                $opens = '';
-                if( !strcasecmp($tabName, $tab) ) {
-                    $current = ' class="wptheader-current" tabindex="-1"';
                 }
-                if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
-                    $target = ' target="_blank" rel="noopener"';
-                    $opens = ' (opens in a new tab)';
-                }
-                if ($opens != '') {
-                    echo "<li><a $current title=\"$tabName$opens\" href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
-                } else {
-                    echo "<li><a $current href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
+                foreach ($navTabs as $tabName => $tabUrl) {
+                    // make sure we have a test result to navigate to
+                    if (strlen($tabUrl)) {
+                        // highlight the current tab
+                        $target = '';
+                        $current = '';
+                        $opens = '';
+                        if( !strcasecmp($tabName, $tab) ) {
+                            $current = ' class="wptheader-current" tabindex="-1"';
+                        }
+                        if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
+                            $target = ' target="_blank" rel="noopener"';
+                            $opens = ' (opens in a new tab)';
+                        }
+                        if ($opens != '') {
+                            echo "<li><a $current title=\"$tabName$opens\" href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
+                        } else {
+                            echo "<li><a $current href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
+                        }
+                    }
                 }
             }
+            
 
             echo addTab('Start Test','/');
 
@@ -218,33 +220,33 @@ HTML;
           echo "<li><a href='/signup'>Sign-up</a></li>";
         }
     } else if ($supportsSaml) {
-if (isset($USER_EMAIL) && GetSetting('saml_account')) {
-    $saml_account = GetSetting('saml_account');
-    $saml_logout = GetSetting('saml_logout');
-    if ($saml_logout) {
-        $saml_logout = htmlspecialchars($saml_logout);
-        $logoutUrl = "javascript:wptLogout('$saml_logout');";
-    } else {
-        $logoutUrl = "javascript:wptLogout();";
+        if (isset($USER_EMAIL) && GetSetting('saml_account')) {
+            $saml_account = GetSetting('saml_account');
+            $saml_logout = GetSetting('saml_logout');
+            if ($saml_logout) {
+                $saml_logout = htmlspecialchars($saml_logout);
+                $logoutUrl = "javascript:wptLogout('$saml_logout');";
+            } else {
+                $logoutUrl = "javascript:wptLogout();";
+            }
+            echo "<li><a href=\"$saml_account\">My Account</a></li><li><a href=\"$logoutUrl\">Logout</a></li>";
+        } else {
+            echo '<li><a href="/saml/login.php">Login</a></li>';
+            $register = GetSetting('saml_register');
+            if ($register) {
+                echo "<li><a href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+            }
+        }
+    } elseif( isset($user) ) {
+        $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
+        echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
+    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+        $logoutUrl = 'javascript:wptLogout();';
+        $google_email = htmlspecialchars($_COOKIE['google_email']);
+        echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
+    } else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+        echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
     }
-    echo "<li><a href=\"$saml_account\">My Account</a></li><li><a href=\"$logoutUrl\">Logout</a></li>";
-} else {
-    echo '<li><a href="/saml/login.php">Login</a></li>';
-    $register = GetSetting('saml_register');
-    if ($register) {
-        echo "<li><a href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
-    }
-}
-} elseif( isset($user) ) {
-$logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
-echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
-} else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-$logoutUrl = 'javascript:wptLogout();';
-$google_email = htmlspecialchars($_COOKIE['google_email']);
-echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
-} else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
-}
 }
 ?>
                         
