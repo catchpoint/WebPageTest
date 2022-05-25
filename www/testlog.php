@@ -6,7 +6,9 @@ include 'common.inc';
 
 use WebPageTest\Util;
 
-if ($admin || $privateInstall) {
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+
+if ($admin || $privateInstall || $is_logged_in) {
     set_time_limit(0);
 } else {
     set_time_limit(60);
@@ -18,14 +20,13 @@ if ($userIsBot || Util::getSetting('disableTestlog')) {
 }
 
 $test_history = [];
-$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $days = (int)$_GET["days"];
 
 if ($is_logged_in) {
   $test_history = $request_context->getClient()->getTestHistory($days);
 }
 
-// Redirect logged-in users to the hosted test history if one is configured
+// Redirect logged-in saml users to the hosted test history if one is configured
 if (!$is_logged_in && (isset($USER_EMAIL) && Util::getSetting('history_url') && !isset($_REQUEST['local']))) {
     header('Location: ' . Util::getSetting('history_url'));
     exit;
