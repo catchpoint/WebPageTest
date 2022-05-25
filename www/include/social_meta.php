@@ -8,7 +8,7 @@
     $pageURI = CreateUrlVariation($pageURI, "screenshot=1" );
 
     $d = new DateTime();
-    $socialImage = isset($useScreenshot) ? "https://wpt-screenshot.netlify.app/" . urlencode($pageURI) . "/opengraph/" . $d->format('Ymd') : "/images/social-logo.jpg";
+    $socialImage = isset($useScreenshot) ? "https://wpt-screenshot.netlify.app/" . urlencode($pageURI) . "/opengraph/" . $d->format('Ymdd') : "/images/social-logo.jpg";
     $socialTitle = isset($socialTitle) ? $socialTitle : "WebPageTest";
     $socialDesc = isset($socialDesc) ? $socialDesc : "View this on WebPageTest.org...";
     $tweetURI = '#';  //https://twitter.com/intent/tweet?text=' . urlencode($socialDesc) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
