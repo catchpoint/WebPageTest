@@ -3321,7 +3321,7 @@ header {
 .home_feature img {
     max-width: 100%;
     display: block;
-    align-self: end;
+    align-self: flex-end;
     position: relative;
     top: -.05em;
 }
