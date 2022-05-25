@@ -10,7 +10,7 @@
       global $USER_EMAIL;
       global $supportsAuth;
       global $supportsSaml;
-      global $notification_alert;
+      global $client_error;
 
       $page_title = $page_title ? $page_title : 'WebPageTest';
       ?>
@@ -20,12 +20,14 @@
 </head>
 
 <body>
-    <?php
-      $alert = $notification_alert ?? Util::getSetting('alert');
-      if ($alert) {
-            echo '<div class="alert-banner">' . $alert . '</div>';
-      }
-      ?>
+<?php
+$alert = Util::getSetting('alert');
+if (isset($client_error)) {
+  echo '<div class="error-banner">' . $client_error . '</div>';
+} elseif ($alert) {
+  echo '<div class="alert-banner">' . $alert . '</div>';
+}
+?>
     <wpt-header>
         <header>
             <a class="wptheader_logo" href="/">

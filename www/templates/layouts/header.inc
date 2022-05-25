@@ -56,7 +56,7 @@ if (!defined('EMBED')) {
 <?php
 $alert = Util::getSetting('alert');
 if (isset($client_error)) {
-  echo '<div class="error-banner">' . $alert . '</div>';
+  echo '<div class="error-banner">' . $client_error . '</div>';
 } elseif ($alert) {
   echo '<div class="alert-banner">' . $alert . '</div>';
 }

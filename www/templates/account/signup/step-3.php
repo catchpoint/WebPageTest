@@ -9,16 +9,16 @@
         <div class="form-input address">
           <label for="street-address">Street Address</label>
           <div>
-            <input name="street-address" type="text" required />
+          <input name="street-address" type="text" value="<?= $street_address ?>" required />
           </div>
         </div>
         <div class="form-input city">
           <label for="city">City</label>
-          <input name="city" type="text" required />
+          <input name="city" type="text" value="<?= $city ?>" required />
         </div>
         <div class="form-input state">
           <label for="state">State</label>
-          <input name="state" type="text" required />
+          <input name="state" type="text" value="<?= $state ?>" required />
         </div>
         <div class="form-input country">
           <label for="country">Country</label>
@@ -31,7 +31,7 @@
         <div class="form-input zip">
           <label for="zipcode">Postal Code</label>
           <div>
-            <input type="text" name="zipcode" required />
+            <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
           </div>
         </div>
       </div> <!-- /.billing-address-information-container -->
@@ -66,15 +66,15 @@
             <tbody>
                 <tr>
                     <?php if ($is_plan_free) : ?>
-                    <td>300</td>
-                    <td>Free</td>
+                        <td>300</td>
+                        <td>Free</td>
                     <?php else : ?>
-                    <td><?= $runs ?></td>
-                    <?php if ($billing_frequency == "Monthly") : ?>
-                    <td>$<?= "{$monthly_price} {$billing_frequency}" ?></td>
-                    <?php else : ?>
-                    <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}" ?></td>
-                    <?php endif; ?>
+                        <td><?= $runs ?></td>
+                        <?php if ($billing_frequency == "Monthly") : ?>
+                        <td>$<?= "{$monthly_price} {$billing_frequency}" ?></td>
+                        <?php else : ?>
+                        <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}" ?></td>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </tr>
             </tbody>
@@ -110,10 +110,17 @@
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();
+        var button = event.target.querySelector('button[type=submit]');
+        button.disabled = true;
+        button.setAttribute('disabled', 'disabled');
+        button.innerText = 'Submitted';
 
         dropinInstance.requestPaymentMethod(function (err, payload) {
           if (err) {
             // handle error
+            button.disabled = false;
+            button.removeAttribute('disabled');
+            button.innerText = 'Sign Up';
             console.error(err);
             return;
           }

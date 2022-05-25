@@ -762,6 +762,12 @@ body.theme-b {
     cursor: pointer;
 }
 
+.signup-flow-layout .form-input button[type=submit]:disabled,
+.signup-button:disabled {
+    cursor: auto;
+}
+
+
 a.button {
     text-decoration: none;
     display: block;
