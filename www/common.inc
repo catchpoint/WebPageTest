@@ -19,24 +19,24 @@ if (Util::getSetting('php_sessions')) {
 
 $client_error = null;
 if (Util::getSetting('cp_auth')) {
-  $client_error = $_SESSION['client_error'] ?? null;
-  unset($_SESSION['client_error']);
+    $client_error = $_SESSION['client_error'] ?? null;
+    unset($_SESSION['client_error']);
 
-  set_exception_handler(function($e) {
-    if(is_a($e, ClientException::class)) {
-     $route = $e->getRoute();
-     $message = $e->getMessage();
-     $host = Util::getSetting('host');
-     unset($_SESSION['client_error']);
-     $_SESSION['client_error'] = $message;
-     $protocol = "https";
-     $location = "{$protocol}://{$host}{$route}";
-     header('Location: ' . $location);
-     exit();
-    }
-    error_log($e->getMessage);
-    throw $e;
-  });
+    set_exception_handler(function($e) {
+        if(is_a($e, ClientException::class)) {
+            $route = $e->getRoute();
+            $message = $e->getMessage();
+            $host = Util::getSetting('host');
+            unset($_SESSION['client_error']);
+            $_SESSION['client_error'] = $message;
+            $protocol = "https";
+            $location = "{$protocol}://{$host}{$route}";
+            header('Location: ' . $location);
+            exit();
+        }
+        error_log($e->getMessage);
+        throw $e;
+    });
 }
 
 // Load local deps

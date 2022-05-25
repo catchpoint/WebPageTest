@@ -43,18 +43,29 @@ use WebPageTest\Handlers\Signup as SignupHandler;
             case 3:
               // gather post body
                 $body = SignupHandler::validatePostStepThree();
+
+                // Save in session values in case somebody has an error
+                $_SESSION['signup-street-address'] = $body->street_address;
+                $_SESSION['signup-city'] = $body->city;
+                $_SESSION['signup-state'] = $body->state;
+                $_SESSION['signup-zipcode'] = $body->zipcode;
+
                 $redirect_uri = SignupHandler::postStepThree($request_context, $body);
 
-              // unset values
+                // unset values
                 unset($_SESSION['signup-first-name']);
                 unset($_SESSION['signup-last-name']);
                 unset($_SESSION['signup-company-name']);
                 unset($_SESSION['signup-email']);
                 unset($_SESSION['signup-password']);
                 unset($_SESSION['signup-plan']);
+                unset($_SESSION['signup-street-address']);
+                unset($_SESSION['signup-city']);
+                unset($_SESSION['signup-state']);
+                unset($_SESSION['signup-zipcode']);
 
 
-              // send to account page
+                // send to account page
                 header("Location: {$redirect_uri}");
                 break;
             default: // step 1 or whatever somebody tries to send
