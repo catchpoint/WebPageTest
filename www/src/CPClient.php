@@ -30,7 +30,10 @@ class CPClient
     public function __construct(string $host, array $options = [])
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
-        $graphql_client_options = array();
+        $graphql_client_options = array(
+          'timeout' => 30,
+          'connect_timeout' => 30
+        );
 
         $this->client_id = $auth_client_options['client_id'] ?? null;
         $this->client_secret = $auth_client_options['client_secret'] ?? null;
@@ -510,12 +513,15 @@ class CPClient
         'viewHours' => $view_hours
         ];
 
-        $test_history = [];
         $response = $this->graphql_client->runQuery($gql, true, $variables);
         $data = $response->getData()['wptTestHistory'];
-        foreach ($data as $record) {
-            $test_history[] = new TestRecord($record);
-        }
+        $test_history = array_map(function ($record): TestRecord {
+            try {
+                return new TestRecord($record);
+            } catch (\Exception $e) {
+                error_log($e->getMessage());
+            }
+        }, $data);
         return $test_history;
     }
 }
