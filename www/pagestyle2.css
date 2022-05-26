@@ -4474,6 +4474,12 @@ form[name=filterLog] select {
     margin-bottom: 2em;
 }
 
+form[name=filterLog] select[name=days] {
+    margin-bottom: 0;
+    padding-right: 30px;
+    display: block;
+}
+
 .history_filter {
     margin: 1em 0;
     border-top: 1px solid #eee;
@@ -8694,6 +8700,62 @@ div.bar {
 .median_metric-selector a:focus {
     text-decoration: underline;
     background: #f9f9f9;
+}
+
+.logout-form button[type=submit] {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font-size: 1em;
+    padding-left: 0;
+    cursor: pointer;
+}
+
+.logout-form button[type=submit]:hover {
+    text-decoration: underline;
+}
+
+.error-banner {
+    font-size: 0.875em;
+    max-width: 100%;
+    background-color: #fce8e6;
+    color: #0E1E38;
+    text-align: center;
+}
+
+.error-banner div {
+    padding: .8em 1em 1.2em;
+}
+
+.error-banner p {
+    margin: 0 auto;
+    font-size: .9em;
+}
+
+.error-banner img {
+    max-height: 2em;
+    display: inline-block;
+    max-width: 5em;
+    margin-right: .7em;
+    position: relative;
+    top: .8em;
+    margin-top: -1em;
+}
+
+.error-banner a {
+    display: block;
+    color: #0E1E38;
+}
+
+@media screen and (min-width:35em) {
+    .error-banner {
+        grid-column: 1 / 13;
+    }
+    .error-banner a,
+    .error-banner-twitch a {
+        display: inline-block;
+    }
 }
 
 .a11y-hidden {
