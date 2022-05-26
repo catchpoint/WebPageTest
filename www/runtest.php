@@ -2245,7 +2245,8 @@ function LogTest(&$test, $testId, $url)
         'count' => @$runcount,
         'priority' => @$test['priority'],
         'email' => $user_info,
-        'redis' => $redis_server ? '1' : '0'
+        'redis' => $redis_server ? '1' : '0',
+        'lighthouse' => @$test['lighthouse']
     );
 
     $log = makeLogLine($line_data);
@@ -2272,7 +2273,8 @@ function LogTest(&$test, $testId, $url)
         'runs' => @$runcount,
         'priority' => @$test['priority'],
         'clientId' => $client_id,
-        'createContactId' => $create_contact_id
+        'createContactId' => $create_contact_id,
+        'lighthouse' => @$test['lighthouse']
       );
       if (isset($logEntry['location'])) {
         $logEntry['location'] = strip_tags($logEntry['location']);
