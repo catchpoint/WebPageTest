@@ -58,7 +58,7 @@
             <tbody>
                 <tr>
                     <?php if ($is_plan_free) : ?>
-                    <td>300</td>
+                    <td>Unlimited</td>
                     <td>Free</td>
                     <?php else : ?>
                     <td><?= $runs ?></td>
