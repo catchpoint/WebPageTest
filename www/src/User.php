@@ -13,6 +13,7 @@ class User
     private ?int $user_id;
     private bool $is_paid_and_in_good_standing;
     private bool $is_verified;
+    private bool $is_wpt_enterprise_client;
 
     public function __construct()
     {
@@ -23,6 +24,7 @@ class User
         $this->user_id = null;
         $this->is_paid_and_in_good_standing = false;
         $this->is_verified = false;
+        $this->is_wpt_enterprise_client = false;
     }
 
     public function getEmail(): ?string
@@ -119,5 +121,15 @@ class User
     public function setVerified(bool $is_verified): void
     {
         $this->is_verified = $is_verified;
+    }
+
+    public function isWptEnterpriseClient(): bool
+    {
+        return $this->is_wpt_enterprise_client;
+    }
+
+    public function setEnterpriseClient(bool $is_wpt_enterprise_client): void
+    {
+        $this->is_wpt_enterprise_client = $is_wpt_enterprise_client;
     }
 }
