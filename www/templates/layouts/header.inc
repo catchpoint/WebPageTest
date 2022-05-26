@@ -54,11 +54,9 @@ $tab ??= "";
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = Util::getSetting('alert');
-if (isset($client_error)) {
-  echo '<div class="error-banner">' . $client_error . '</div>';
-} elseif ($alert) {
-  echo '<div class="alert-banner">' . $alert . '</div>';
+$alert = $notification_alert ?? Util::getSetting('alert');
+if ($alert) {
+    echo '<div class="alert-banner">' . $alert . '</div>';
 }
 ?>
 <wpt-header>
@@ -112,7 +110,7 @@ if (isset($client_error)) {
                 $current = '';
                 $opens = '';
                 if( !strcasecmp($tabName, $tab) )
-                    $current = ' class="wptheader-current" tabindex="-1"';
+                    $current = ' class="wptheader-current"';
                 if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
