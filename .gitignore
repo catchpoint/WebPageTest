@@ -115,3 +115,5 @@ www/robots.txt
 
 tests/*.cache
 www/beanstalk.php
+
+*.log

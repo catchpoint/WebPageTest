@@ -49,6 +49,20 @@ $request_context = new RequestContext($_REQUEST, $_SERVER);
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);
+//add csp report only
+header("Content-Security-Policy-Report-Only: default-src 'self'; 
+script-src 'report-sample' 'self' 'unsafe-inline' https://g.3gl.net https://js.braintreegateway.com https://ssl.google-analytics.com;
+style-src 'report-sample' 'self' 'unsafe-inline' https://assets.braintreegateway.com;
+object-src 'none';
+base-uri 'self';
+connect-src 'self' https://*.braintree-api.com https://r.3gl.net;
+font-src 'self';
+frame-src 'self' https://assets.braintreegateway.com;
+img-src 'self' data: https://assets.braintreegateway.com https://ssl.google-analytics.com https://webpagetest.org;
+manifest-src 'self';
+media-src 'self';
+report-uri /csp-violation-report
+");
 
 if (GetSetting("serverID")) {
   header('X-WPT-Server: ' . GetSetting("serverID"));
@@ -300,17 +314,17 @@ if (isset($_REQUEST['color'])) {
 }
 
 if ($supportsSaml && !$supportsCPAuth) {
-  $request_context->setUser($saml_user);
+    $request_context->setUser($saml_user);
 }
 
 /**
  * Load app specific middleware
  */
 if ($supportsCPAuth) {
-  require_once __DIR__ . '/common/AttachClient.php';
-  require_once __DIR__ . '/common/AttachUser.php';
-  require_once __DIR__ . '/common/AttachSignupClient.php';
-  require_once __DIR__ . '/common/CheckCSRF.php';
+    require_once __DIR__ . '/common/AttachClient.php';
+    require_once __DIR__ . '/common/AttachUser.php';
+    require_once __DIR__ . '/common/AttachSignupClient.php';
+    require_once __DIR__ . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data
@@ -441,4 +455,3 @@ if (array_key_exists('medianMetric', $_REQUEST)) {
 if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
-
