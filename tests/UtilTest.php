@@ -76,7 +76,7 @@ final class UtilTest extends TestCase
     public function testGetRunCountLighthouseTest(): void
     {
         $runs = 1;
-        $fvonly = 0;
+        $fvonly = 1;
         $lighthouse = 1;
         $testtype = 'lighthouse';
         $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
