@@ -4,7 +4,7 @@ $requests = $testStepResult->getRequests();
 $redirectedRequests = array();
 
 function is300s($req){
-    return $req['responseCode'] >= 300 &&  $req['responseCode'] <= 399;
+    return $req['responseCode'] >= 300 &&  $req['responseCode'] <= 399  && $req['responseCode'] != 304;
 }
 
 foreach ($requests as $request) {
