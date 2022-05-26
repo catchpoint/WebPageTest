@@ -1405,7 +1405,6 @@ function ValidateKey(&$test, &$error, $key = null)
   global $uid;
   global $user;
   global $USER_EMAIL;
-  global $runcount;
   global $apiKey;
   global $forceValidate;
   global $server_secret;
@@ -1449,9 +1448,7 @@ function ValidateKey(&$test, &$error, $key = null)
         $keys_file = __DIR__ . '/settings/server/keys.ini';
       $keys = parse_ini_file($keys_file, true);
 
-      $runcount = max(1, $test['runs']);
-      if( !$test['fvonly'] )
-        $runcount *= 2;
+      $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
       //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
       //  $runcount *= $test['navigateCount'];
 
@@ -2176,7 +2173,6 @@ function GetRedirect($url, &$rhost, &$rurl) {
 */
 function LogTest(&$test, $testId, $url)
 {
-    global $runcount;
     global $apiKey;
     global $USER_EMAIL;
     global $supportsCPAuth;
@@ -2186,6 +2182,7 @@ function LogTest(&$test, $testId, $url)
         server_sync($apiKey, $runcount, null);
         return;
     }
+    $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
 
     if( !is_dir('./logs') )
         mkdir('./logs', 0777, true);
@@ -2245,7 +2242,7 @@ function LogTest(&$test, $testId, $url)
         'label' => @$test['label'],
         'owner' => @$test['owner'],
         'key' => $key,
-        'count' => @$pageLoads,
+        'count' => @$runcount,
         'priority' => @$test['priority'],
         'email' => $user_info,
         'redis' => $redis_server ? '1' : '0'
@@ -2271,8 +2268,8 @@ function LogTest(&$test, $testId, $url)
         'label' => @$test['label'],
         'owner' => @$test['owner'],
         'key' => $key,
-        'count' => @$pageLoads,
-        'runs' => @$pageLoads,
+        'count' => @$runcount,
+        'runs' => @$runcount,
         'priority' => @$test['priority'],
         'clientId' => $client_id,
         'createContactId' => $create_contact_id
@@ -3303,9 +3300,7 @@ function CheckRateLimit($test, &$error) {
     return true;
   }
 
-  $runcount = max(1, $test['runs']);
-  $multiplier = $test['fvonly'] ? 1 : 2;
-  $total_runs = $runcount * $multiplier;
+  $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
   $monthly_limit = Util::getSetting('rate_limit_anon_monthly') ?: 50;
   $cmrl = new RateLimiter($test['ip'], $monthly_limit);
   $passesMonthly = $cmrl->check($total_runs);
