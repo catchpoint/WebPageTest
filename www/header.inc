@@ -200,8 +200,8 @@ if ($supportsAuth && !defined('EMBED')) {
 <<<HTML
 <li>
 <form method='POST' action='/logout' class='logout-form'>
-<button type='submit'>Logout</button>
 <input type="hidden" name="csrf_token" value="{$_SESSION['csrf_token']}" />
+<button type='submit'>Logout</button>
 </form>
 </li>
 HTML;
