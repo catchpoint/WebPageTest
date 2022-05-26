@@ -60,13 +60,14 @@
   <div class="plan-details">
     <table>
       <thead>
+        <?php if (!$is_plan_free) : ?>
         <th>Runs per month</th>
+        <?php endif; ?>
         <th>Price</th>
       </thead>
             <tbody>
                 <tr>
                     <?php if ($is_plan_free) : ?>
-                        <td>Unlimited</td>
                         <td>Free</td>
                     <?php else : ?>
                         <td><?= $runs ?></td>

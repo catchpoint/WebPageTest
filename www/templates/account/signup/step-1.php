@@ -75,7 +75,7 @@
                     <div class="plan-selector">
                         <form method="POST" action="/signup">
                             <p class="plan-name">Free Account</p>
-                            <div class="runs">Unlimited</div>
+                            <div class="runs"></div>
                             <div class="price">Free</div>
                             <input type="hidden" name="plan" value="free" />
                             <input type="hidden" name="step" value="1" />
