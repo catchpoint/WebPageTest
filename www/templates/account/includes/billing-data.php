@@ -44,6 +44,7 @@
   </div>
 </div>
 
+<?php if (!$is_wpt_enterprise): ?>
 <div class="card billing-history">
   <div class="info">
     <table class="sortable">
@@ -92,6 +93,7 @@
     </table>
   </div>
 </div>
+<?php endif;// (!$is_wpt_enterprise): ?>
 
 <div class="card api-consumers">
   <h3>API Consumers</h3>

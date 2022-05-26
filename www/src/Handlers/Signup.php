@@ -251,7 +251,9 @@ class Signup
         $_SESSION['signup-company-name'] = $body->company_name;
         $_SESSION['signup-email'] = $body->email;
         $_SESSION['signup-password'] = $body->password;
-        $_SESSION['signup-plan'] = $body->plan;
+
+        $host = Util::getSetting('host');
+        setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
 
         $protocol = $request_context->getUrlProtocol();
         $host = Util::getSetting('host');
