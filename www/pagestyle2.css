@@ -47,6 +47,8 @@ select {
     color: #fff;
 }
 
+
+/* 
 header {
     grid-column-gap: 1.25em;
     border-bottom: 5px solid #1E2B47;
@@ -65,23 +67,25 @@ header {
         grid-template-columns: 1vw repeat(4, 1fr) 1vw;
         align-items: center;
     }
-}
+} */
 
 @media screen and (min-width:75em) {
     body {
         display: grid;
     }
-    header {
+    /* header {
         grid-column: gutter-start / gutter-end;
         grid-template-columns: 1vw repeat( 10, 1fr) 1vw;
-    }
+    } */
 }
 
+
+/*
 @media (min-width: 87.5em) {
     header {
         grid-template-columns: calc(50vw - 45em) repeat( 10, 1fr) calc(50vw - 45em);
     }
-}
+ }
 
 header .logo {
     line-height: 0;
@@ -128,7 +132,7 @@ a[aria-current=page] {
     color: inherit;
     font-weight: 700;
     cursor: default;
-}
+} */
 
 h1 {
     font-size: 1.7em;
@@ -833,7 +837,7 @@ p.grade_summary {
 }
 
 .experiments_details_body {
-    padding: 1em 1em 1rem 4.5em;
+    padding: 1em 0 1rem 4.5em;
 }
 
 .experiments_details_desc>ul li {
@@ -1834,6 +1838,8 @@ footer ul {
 
 /* Header */
 
+
+/* 
 #wptAuthBar {
     list-style-type: none;
 }
@@ -1898,7 +1904,7 @@ footer ul {
 
 #wptAuthBar svg {
     padding-left: .5em;
-}
+} */
 
 .results_nav_contain {
     border-bottom: 1px solid #ddd;
@@ -2258,6 +2264,102 @@ footer ul {
 .result-summary .opportunities_summary .extended {
     display: none;
 } */
+
+.experiments_bottlenecks>ol>li>details>summary {
+    padding-left: 2.7em;
+    list-style-position: outside;
+    margin-left: 1em;
+    position: relative;
+}
+
+.experiments_bottlenecks>ol>li>details>summary::marker {
+    position: absolute;
+    left: 0;
+    display: block;
+    margin: 0;
+}
+
+.experiments_bottlenecks>ol>li>details>summary:before {
+    position: absolute;
+    left: 0;
+    /* opacity: 0; */
+}
+
+@media (max-width: 60em) {
+    .opportunities_summary {
+        display: block;
+    }
+    .result .opportunities_summary {
+        margin-bottom: 0;
+    }
+    .result-opportunities .opportunities_summary {
+        margin-bottom: 3rem;
+    }
+    .result .opportunities_summary>p {
+        text-align: left;
+        margin: 0 0 1em;
+    }
+    .opportunities_summary a {
+        flex: 1 0 50%;
+        display: block;
+        margin: 0 0 1.5em;
+    }
+    .opportunities_summary a:last-child {
+        margin-bottom: 0;
+    }
+    .opportunities_summary a div p.opportunities_summary_body {
+        margin: 0 0 .5em;
+    }
+    .experiment_meta {
+        display: block;
+    }
+    .experiment_meta>*:first-child {
+        margin-bottom: 2rem;
+    }
+    .experiments_foot-stick {
+        position: relative;
+        display: block;
+    }
+    .experiments_list>li {
+        display: block;
+    }
+    .experiment_description_go {
+        justify-content: flex-start;
+        margin: 1em 0;
+    }
+    .experiments_foot>div {
+        display: block;
+    }
+    .experiments_foot p:last-child {
+        margin: 1.5em 0;
+    }
+    .experiments_foot p:last-child label small {
+        text-align: left;
+    }
+    .experiments_foot p input {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 50em) {
+    .grade_header {
+        display: block;
+        padding-top: 1rem;
+    }
+    .grade_header .grade_heading {
+        font-size: 1.3em;
+    }
+    .experiments_grades .grade_heading+p {
+        background-size: 1.2em auto !important;
+        padding: 0;
+    }
+    .experiments_grades .grade_heading+p strong {
+        padding-left: 1.8em;
+    }
+    .experiments_details_body {
+        padding-left: 2rem
+    }
+}
 
 .testinfo_meta {
     border-right: 1px solid #e9e9e9;
@@ -2659,6 +2761,8 @@ video:focus {
 
 /* @media screen and (min-width:60em) { */
 
+
+/* 
 nav {
     grid-row: 2;
     grid-column: 2 / 5;
@@ -2689,11 +2793,13 @@ nav ul {
 
 nav li {
     display: flex;
-}
+} */
 
 
 /* } */
 
+
+/* 
 @media screen and (min-width:75em) {
     nav {
         grid-column: 4 / 10;
@@ -2732,7 +2838,7 @@ nav a:hover {
         margin: 0 1.3em;
         font-size: 1em;
     }
-}
+} */
 
 #main {
     padding: 1.5em 0;
@@ -2917,13 +3023,15 @@ body.result #main {
     box-shadow: 0px 0px 5px 3px #85e0ff45;
 }
 
+
+/* 
 header {
     transition: border-color 1s ease-out;
 }
 
 .home.feature-pro header {
     border-bottom-color: #2fbded;
-}
+} */
 
 .pro-flag {
     font-size: .5em;
@@ -2996,8 +3104,8 @@ header {
 
 .home_feature_hed_text_logo {
     display: inline-block;
-    flex: 1 0 50%;
-    width: 408px;
+    flex: 1 1 50%;
+    width: 100%;
     background-size: contain;
     background-position: left bottom;
     height: auto;
@@ -3053,6 +3161,26 @@ header {
     .results_main,
     .results_nav {
         max-width: auto;
+    }
+}
+
+@media (max-width: 60em) {
+    .result .results_nav {
+        display: block;
+    }
+    .result .results_nav .test_meta_commands {
+        margin-top: 1rem;
+        position: relative;
+        z-index: 10000;
+    }
+    details.metrics_shown {
+        position: relative;
+        top: 0;
+        right: 0;
+    }
+    details.metrics_shown p:after {
+        right: auto;
+        left: 1em;
     }
 }
 
@@ -4343,6 +4471,7 @@ form[name=filterLog] select {
     border: 1px solid #999;
     display: inline-block;
     width: auto;
+    margin-bottom: 2em;
 }
 
 form[name=filterLog] select[name=days] {
@@ -5831,12 +5960,10 @@ table.details td.reqMime {
     }
     .cruxembed .cruxbars svg:last-child:nth-child(4n - 1) {
         grid-column-end: -3;
-      }
-      
-      .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n + 1) {
+    }
+    .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n+1) {
         grid-column-end: 5;
-      }
-
+    }
 }
 
 .summary-container .crux h3 {
@@ -6122,16 +6249,6 @@ th.header {
     font-size: 1em;
     margin-top: 0;
     color: #111;
-}
-
-.tip ul{
-    list-style-type: disc;
-    margin-left: 1.5em;
-    margin-bottom: 1.5em;
-}
-.tip ul li{
-    margin-left: 1em;
-    padding-left: 1em;
 }
 
 .tip .tipHead {
@@ -7674,7 +7791,8 @@ div.request-dialog-radio {
 .request-details a {
     word-break: break-all;
 }
-.request-details h3{
+
+.request-details h3 {
     margin-bottom: 0;
     margin-top: .5em;
     text-decoration: underline;
@@ -8502,6 +8620,17 @@ div.bar {
     margin-bottom: 1.5em;
 }
 
+.a11y-hidden {
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+}
+
 .median_metric-selector {
     justify-self: center;
     position: relative;
@@ -8512,6 +8641,7 @@ div.bar {
     margin-bottom: 2em;
     display: inline-block;
 }
+
 .median_metric-selector h3 {
     font-weight: normal;
     border-radius: 2px;
@@ -8553,10 +8683,12 @@ div.bar {
     box-sizing: border-box;
     background: #fff;
 }
+
 .has-js .median_metric-selector:hover ul,
 .has-js .median_metric-selector:focus ul {
     display: block;
 }
+
 .median_metric-selector a {
     text-decoration: none;
     color: #333333;
@@ -8571,17 +8703,17 @@ div.bar {
 }
 
 .logout-form button[type=submit] {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 1em;
-  padding-left: 0;
-  cursor: pointer;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font-size: 1em;
+    padding-left: 0;
+    cursor: pointer;
 }
 
 .logout-form button[type=submit]:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .error-banner {
@@ -8595,6 +8727,7 @@ div.bar {
 .error-banner div {
     padding: .8em 1em 1.2em;
 }
+
 .error-banner p {
     margin: 0 auto;
     font-size: .9em;

@@ -620,6 +620,11 @@ $page_description = "Website performance test result$testLabel.";
     // add add buttons
     $(".experiment_pair_value-add").after("<button type='button' class='experiment_pair_value_addbtn'>Add more</button>").next().on("click", function(){ $(this).before($(this).prev().clone());}); 
 
+    $('<button type="button">Expand All</button>')
+        .on('click', function(){
+            $(this).closest(".util_overflow_more").addClass("util_overflow_more-expanded");
+        })
+        .appendTo(".util_overflow_more");
 
 </script>
     </body>
