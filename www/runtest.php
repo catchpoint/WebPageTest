@@ -925,7 +925,7 @@ use WebPageTest\RateLimiter;
                     if( strlen( $recipeScript ) > 0 ){
                       $recipeTests = array();
                       $test['video'] = 1;
-                      $test['label'] = 'Experiment Control';
+                      $test['label'] = 'Original (Control Run)';
                       $test['metadata'] = json_encode($experimentMetadata);
                       $id = CreateTest($test, $test['url']);
                     
