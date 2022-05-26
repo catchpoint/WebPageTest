@@ -61,7 +61,7 @@ if ($alert) {
 <wpt-header>
         <header>
             <a class="wptheader_logo" href="/">
-                <img src="/images/wpt-logo.svg" width="200" height="48" alt="WebPageTest, by Catchpoint" />
+                <img src="/images/wpt-logo.svg"  alt="WebPageTest, by Catchpoint" />
             </a>
             <details class="wptheader_menu">
                 <summary class="wptheader_menubtn">Menu:</summary>
