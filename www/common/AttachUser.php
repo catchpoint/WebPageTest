@@ -36,6 +36,7 @@ use WebPageTest\Exception\UnauthorizedException;
             $user->setPaid($data['activeContact']['isWptPaidUser']);
             $user->setVerified($data['activeContact']['isWptAccountVerified']);
             $user->setOwnerId($data['levelSummary']['levelId']);
+            $user->setEnterpriseClient(!!$data['levelSummary']['isWptEnterpriseClient']);
             $owner = $user->getOwnerId();
         } catch (UnauthorizedException $e) {
             error_log($e->getMessage());
