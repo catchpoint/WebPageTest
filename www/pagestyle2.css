@@ -3598,6 +3598,13 @@ header {
     }
 }
 
+@media (min-width: 85em) {
+    .home_feature_hed_text_logo {
+        width: 400px;
+        top: -0.08em;
+    }
+}
+
 .home_responsive_test h2 {
     font-size: 2.5rem;
     margin: 0;
