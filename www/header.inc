@@ -78,22 +78,25 @@ if ($alert) {
 
 
             function addTab($tabName, $tabUrl, $addClass = '') {
+                global $tab;
                 // make sure we have a test result to navigate to
                 if (strlen($tabUrl)) {
                     // highlight the current tab
                     $target = '';
                     $class = '';
                     $opens = '';
+                    $tabindex = '';
                     $classes = array();
                     if( strlen($addClass) ){
                         $classes[] = $addClass;
                     }
                     if( !strcasecmp($tabName, $tab) ){
                         $classes[] = 'wptheader-current';
+                        $tabindex = ' tabindex="-1"';
                     }
 
                     if( count($classes) > 0){
-                        $classes = ' class="' . implode(' ', $classes) . '"';
+                        $class = ' class="' . implode(' ', $classes) . '"' . $tabindex;
                     }
 
                     if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
