@@ -54,9 +54,11 @@ $tab ??= "";
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = $notification_alert ?? Util::getSetting('alert');
-if ($alert) {
-    echo '<div class="alert-banner">' . $alert . '</div>';
+$alert = Util::getSetting('alert');
+if (isset($client_error)) {
+  echo '<div class="error-banner">' . $client_error . '</div>';
+} elseif ($alert) {
+  echo '<div class="alert-banner">' . $alert . '</div>';
 }
 ?>
 <wpt-header>
