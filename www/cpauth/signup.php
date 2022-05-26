@@ -50,6 +50,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 $_SESSION['signup-state'] = $body->state;
                 $_SESSION['signup-zipcode'] = $body->zipcode;
 
+                $host = Util::getSetting('host');
                 $redirect_uri = SignupHandler::postStepThree($request_context, $body);
 
                 // unset values
@@ -58,7 +59,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 unset($_SESSION['signup-company-name']);
                 unset($_SESSION['signup-email']);
                 unset($_SESSION['signup-password']);
-                unset($_SESSION['signup-plan']);
+                setcookie('signup-plan', "", time() - 3600, '/', $host);
                 unset($_SESSION['signup-street-address']);
                 unset($_SESSION['signup-city']);
                 unset($_SESSION['signup-state']);
@@ -72,8 +73,8 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 $body = SignupHandler::validatePostStepOne();
                 $redirect_uri = SignupHandler::postStepOne($request_context);
 
-                unset($_SESSION['signup-plan']);
-                $_SESSION['signup-plan'] = $body->plan;
+                $host = Util::getSetting('host');
+                setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
 
                 header("Location: {$redirect_uri}");
                 break;
@@ -88,8 +89,8 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     );
 
     $signup_step = (int) filter_input(INPUT_GET, 'step', FILTER_SANITIZE_NUMBER_INT);
-    $plan = $_SESSION['signup-plan'] ?? null;
-    $is_plan_free = is_null($plan) || $plan == 'free';
+    $plan = $_COOKIE['signup-plan'] ?? 'free';
+    $is_plan_free = $plan == 'free';
 
     $auth_token = $_SESSION['signup-auth-token'] ?? null;
     if (is_null($auth_token)) {
