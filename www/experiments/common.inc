@@ -62,6 +62,7 @@ $assessment = array(
 if(!$testStepResult && isset($tests)){
 	$testStepResult = $tests[0]['stepResult'];
 }
+$browser = $test['testinfo']['browser'];
 $events = $testStepResult->getMetric('largestPaints');
 $lcp = null;
 if (isset($events) && is_array($events)) {

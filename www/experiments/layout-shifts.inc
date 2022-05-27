@@ -12,61 +12,63 @@
         }
     }
 
+    if (isset($cls)) {
+        // if cls is present, note whether images need width/height attrs
+        if ( $cls > 0 ) {
 
-    // if cls is present, note whether images need width/height attrs
-    if (isset($cls) && $cls > 0 ) {
-
-       $cls = round($cls, 3);
-        
-       if( count($imgsNoAspect) > 0 ){
-
-            function applyValueFormatting($n) {
-                return $n['src'] . "|w". $n['naturalWidth'] ."|h" . $n['naturalHeight'];
-            }
-
-            function listSrcs($n) {
-                return $n['src'];
-            }
-
-            $imgSrcList = array_map('listSrcs', $imgsNoAspect);
-            $numImages = count($imgSrcList);
-            $expValue = array_map('applyValueFormatting', $imgsNoAspect);
-
-            $assessment[$category]["opportunities"][] = array( 
-                "title" =>  "Layout shifts exist and may be caused by images missing aspect ratio.",
-                "desc" =>  "The CLS score is $cls. ". $numImages ." layout-critical image". ($numImages > 1 ? "s are": "is") ." lacking an aspect ratio, meaning the browser has no way of knowing how tall or wide an image is until it loads. This can cause content to shift as the image loads.",
-                "examples" =>  $imgSrcList,
-                "experiments" =>  array(
-                    (object) [
-                        "id" => '012',
-                        'title' => 'Add Aspect Ratio to Images',
-                        "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
-                        "expvar" => 'imageaspectratio',
-                        "expval" => $expValue,
-                        "explabel" => $imgSrcList
-                    ]
-                ),
-                "good" =>  false
-            );
+        $cls = round($cls, 3);
             
+        if( count($imgsNoAspect) > 0 ){
+
+                function applyValueFormatting($n) {
+                    return $n['src'] . "|w". $n['naturalWidth'] ."|h" . $n['naturalHeight'];
+                }
+
+                function listSrcs($n) {
+                    return $n['src'];
+                }
+
+                $imgSrcList = array_map('listSrcs', $imgsNoAspect);
+                $numImages = count($imgSrcList);
+                $expValue = array_map('applyValueFormatting', $imgsNoAspect);
+
+                $assessment[$category]["opportunities"][] = array( 
+                    "title" =>  "Layout shifts exist and may be caused by images missing aspect ratio.",
+                    "desc" =>  "The CLS score is $cls. ". $numImages ." layout-critical image". ($numImages > 1 ? "s are": "is") ." lacking an aspect ratio, meaning the browser has no way of knowing how tall or wide an image is until it loads. This can cause content to shift as the image loads.",
+                    "examples" =>  $imgSrcList,
+                    "experiments" =>  array(
+                        (object) [
+                            "id" => '012',
+                            'title' => 'Add Aspect Ratio to Images',
+                            "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
+                            "expvar" => 'imageaspectratio',
+                            "expval" => $expValue,
+                            "explabel" => $imgSrcList
+                        ]
+                    ),
+                    "good" =>  false
+                );
+                
+            }
+            else {
+                $assessment[$category]["opportunities"][] = array(
+                    "title" =>  'Layout shifts are not caused by images lacking aspect ratio',
+                    "desc" =>  "TBD importance notes here",
+                    "examples" =>  array(),
+                    "experiments" =>   array(),
+                    "good" =>  true
+                );
+            }
         }
         else {
-            $assessment[$category]["opportunities"][] = array(
-                "title" =>  'Layout shifts are not caused by images lacking aspect ratio',
-                "desc" =>  "TBD importance notes here",
-                "examples" =>  array(),
-                "experiments" =>   array(),
-                "good" =>  true
-            );
-        }
+                $assessment[$category]["opportunities"][] = array( 
+                    "title" =>  'Zero major layout shifts detected.',
+                    "desc" =>  "TBD importance notes here",
+                    "examples" =>  array(),
+                    "experiments" =>  array(),
+                    "good" =>   true
+                );
+            }
     }
-    else {
-            $assessment[$category]["opportunities"][] = array( 
-                "title" =>  'Zero major layout shifts detected.',
-                "desc" =>  "TBD importance notes here",
-                "examples" =>  array(),
-                "experiments" =>  array(),
-                "good" =>   true
-            );
-        }
+    
 ?>
