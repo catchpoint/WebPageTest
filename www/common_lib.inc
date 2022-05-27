@@ -714,7 +714,7 @@ function BuildLocations( &$locations )
 *
 * @param mixed $locations
 */
-function FilterLocations(&$locations, $includeHidden = '',
+function FilterLocations(&$locations, $includePaid = false, $includeHidden = '',
                          $stripBrowser = null) {
     global $user, $admin;
     BuildLocations($locations);
@@ -732,6 +732,10 @@ function FilterLocations(&$locations, $includeHidden = '',
       }
       unset($locRef['hidden']);
 
+      //remove premium if not paid
+      if (isset($locRef['premium']) && !$includePaid) {
+        unset($locations[$name]);
+      }
       // see if the location is restricted
       if (isset($locations[$name]) && isset($locRef['restricted'])) {
         $remove = true;

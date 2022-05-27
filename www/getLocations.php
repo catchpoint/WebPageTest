@@ -10,7 +10,7 @@ if ($CURL_CONTEXT !== false) {
 }
 
 // load the locations
-$locations = LoadLocations();
+$locations = LoadLocations($request_context->getUser()->isPaid());
 
 // get the backlog for each location
 foreach( $locations as $id => &$location )
@@ -184,8 +184,9 @@ function outputHTMLRow($location) {
 * Load the location information and extract just the end nodes
 *
 */
-function LoadLocations()
+function LoadLocations($isPaid = false)
 {
+  $isPaid = false;
   $locations = array();
   $loc = LoadLocationsIni();
   if (isset($_REQUEST['k'])) {
@@ -194,8 +195,15 @@ function LoadLocations()
         unset($loc[$name]);
       }
     }
+  } elseif (!$isPaid) {
+    if (isset($location['premium'])) {
+      unset($loc[$name]);
+    }
   }
-  FilterLocations($loc);
+  $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+  $includePaid = $isPaid || $admin;
+
+  FilterLocations($loc, $includePaid);
   BuildLocations($loc);
 
   if( isset($loc['locations']['default']) )
