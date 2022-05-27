@@ -44,7 +44,6 @@ $testResults = TestResults::fromFiles($testInfo);
 $page_keywords = array('Results','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test result$testLabel.";
 
-
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -429,10 +428,12 @@ $page_description = "Website performance test result$testLabel.";
                     }
 
                     $numRuns = $test['test']['runs'];
+                    $fvonly = $test['testinfo']['fvonly'];
+
 
                     echo '<div class="experiments_foot">
                     <div><p><span class="exps-active"></span> </p>
-                    <p class="exps-runcount"><label>Number of Experiment Runs:  <input type="number" min="1" max="9" class="text short" name="runs" value="'. $numRuns .'" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 1 experiment test run & 1 control test run.</small></label></p>
+                    <p class="exps-runcount"><label>Experiment Runs: <input type="hidden" name="fvonly" value="'. $fvonly .'" required=""><input type="number" min="1" max="9" class="text short" name="runs" value="'. $numRuns .'" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small></label></p>
                     </div>';
                     
                     echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
@@ -611,7 +612,9 @@ $page_description = "Website performance test result$testLabel.";
     }
 
     function updateTestRunTotal(){
-        let totalRuns = $('[name=runs]').val() * 2;
+        let fvonly = $('[name=fvonly]').val();
+        let multiplier = fvonly === "1" ? 2 : 4;
+        let totalRuns = $('[name=runs]').val() * multiplier;
         $('.exps-runcount-total').text("(" + totalRuns + " total runs)" );
     }
 
