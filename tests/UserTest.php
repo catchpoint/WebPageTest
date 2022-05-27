@@ -41,6 +41,6 @@ final class UserTest extends TestCase
         $user = new User();
         $this->assertEquals($user->getUserPriority(), 9);
         $user->setUserPriority(0);
-        $this->assertTrue($user->getUserPriority(), 0);
+        $this->assertEquals($user->getUserPriority(), 0);
     }
 }
