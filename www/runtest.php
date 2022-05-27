@@ -64,13 +64,8 @@ use WebPageTest\RateLimiter;
     require_once __DIR__ . '/experiments/user_access.inc';
 
     $experimentURL = Util::getSetting('experimentURL');
-    $isPaid =  $request_context->getUser()->isPaid();
-    if ($isPaid) {
-      //calculate based on paid priority
-        $ui_priority = intval(Util::getSetting('paid_priority'), 0);
-    } else {
-        $ui_priority = intval(Util::getSetting('user_priority'), 0);
-    }
+    $ui_priority = $request_context->getUser()->getUserPriority();
+
     set_time_limit(300);
 
     $redirect_cache = array();

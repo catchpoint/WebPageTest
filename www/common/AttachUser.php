@@ -91,6 +91,13 @@ use WebPageTest\Exception\UnauthorizedException;
         $user->setPaid(false);
     }
 
+    $isPaid = $user->isPaid();
+    if ($isPaid) {
+        //calculate based on paid priority
+        $user->setUserPriority(Util::getSetting('paid_priority', 0));
+    } else {
+        $user->setUserPriority(Util::getSetting('user_priority', 0));
+    }
 
     $user_email = $user->getEmail();
 

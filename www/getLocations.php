@@ -264,7 +264,8 @@ function LoadLocations()
 function GetBacklog($dir, $locationId)
 {
     global $request_context;
-    $isPaid =  $request_context->getUser()->isPaid();
+    $ui_priority = $request_context->getUser()->getUserPriority();
+
     $backlog = array();
 
     $userCount = 0;
@@ -280,12 +281,6 @@ function GetBacklog($dir, $locationId)
         for( $i = 1; $i <= 9; $i++ ) {
             $backlog["p$i"] = $queue[$i];
             $lowCount += $queue[$i];
-        }
-        if ($isPaid) {
-            //calculate based on paid priority
-            $ui_priority = intval(Util::getSetting('paid_priority'), 0);
-        } else {
-            $ui_priority = intval(Util::getSetting('user_priority'), 0);
         }
         $backlog['Blocking'] = 0;
         for ($p = 0; $p <= $ui_priority; $p++) {
