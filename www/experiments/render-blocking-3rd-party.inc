@@ -5,15 +5,32 @@ $requests = $testStepResult->getRequests();
 $initialHost = $requests[0]["host"];
 $blocking3pReqs = array();
 $blocking3pHosts = array();
+$potentiallyBlocking3pReqs = array();
+$potentiallyB3pHosts = array();
+$blockingIndicator = false;
 
 foreach ($requests as $request) {
+    if (isset($request['renderBlocking'])) {
+        $blockingIndicator = true;
+    }
     if( $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")  ){
         array_push($blocking3pReqs, $request['full_url'] );
         array_push($blocking3pHosts, $request['host'] );
+    } else if( $initialHost !== $request['host']
+                && ($request['contentType'] === "text/css" || $request['requestType'] === "script" || $request['request_type'] === "Script")
+                && $request['all_end'] < $startRender
+    ){
+        array_push($potentiallyBlocking3pReqs, $request['full_url'] );
+        array_push($potentiallyBlocking3pHosts, $request['host'] );
     }
+
 }
 
-
+if (!$blockingIndicator){
+    //browser doesn't support the render blocking indicator so we'll use our other array
+    $blocking3pReqs = $potentiallyBlocking3pReqs; 
+    $blocking3pHosts = $potentiallyBlocking3pHosts; 
+}
 
 if( count($blocking3pReqs) > 0 ){
     $assessment[$category]["opportunities"][] = array( 
