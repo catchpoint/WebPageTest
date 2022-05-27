@@ -2,15 +2,28 @@
 $category = "Quick";
 $requests = $testStepResult->getRequests();
 $blockingJSReqs = array();
+$potentiallyBlockingJSReqs = array();
+$startRender = $testStepResult->getMetric("render");
+$blockingIndicator = false;
 
 foreach ($requests as $request) {
-    if(  ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking") && ($request['contentType'] === "application/javascript" || $request['contentType'] === "text/javascript" || $request['contentType'] === "application/x-javascript") ){
-        array_push($blockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+    if (isset($request['renderBlocking'])) {
+        $blockingIndicator = true;
+        if(
+            ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")
+            && ($request['requestType'] === "script" || $request['request_type'] === "Script")
+        ){
+            array_push($blockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+        }
+    } else if (!isset($request['renderBlocking']) && ($request['requestType'] === "script" || $request['request_type'] === "Script") && $request['all_end'] < $startRender) {
+        array_push($potentiallyBlockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
     }
 }
 
-
-
+if (!$blockingIndicator){
+    //browser doesn't support the render blocking indicator so we'll use our other array
+    $blockingJSReqs = $potentiallyBlockingJSReqs; 
+}
 if( count($blockingJSReqs) > 0 ){
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  count($blockingJSReqs) . " externally-referenced JavaScript file". (count($blockingJSReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
