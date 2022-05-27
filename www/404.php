@@ -22,7 +22,7 @@ $page_description = "Page Not Found.";
             <div class="about">
             <h1>Page Not Found</h1>
             <div class="box">
-                <p>Sorry! We can't find anything under that page. If you think you have the right link, perhaps try logging in to see if anything is there.</p>
+                <p><strong>Sorry!</strong> That page doesn't appear to exist. If you think you have the right link, perhaps try logging in to see if anything changes.</p>
 
             </div>
             </div>
