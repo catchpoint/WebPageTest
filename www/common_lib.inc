@@ -1510,6 +1510,9 @@ function GetDailyTestNum() {
 }
 
 function AddTestJob($location, $job, $test, $testId) {
+  global $request_context;
+  $isPaid =  $request_context->getUser()->isPaid();
+
   $ret = false;
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
     $testPath = GetTestPath($testId);
@@ -1527,7 +1530,12 @@ function AddTestJob($location, $job, $test, $testId) {
         $json = null;
         $ret = true;
         $json = json_decode($job, true);
-        $priority = intval(GetSetting('user_priority', 0));
+        if ($isPaid) {
+          //calculate based on paid priority
+          $priority = intval(Util::getSetting('paid_priority'), 0);
+        } else {
+          $priority = intval(Util::getSetting('user_priority'), 0);
+        }
         if (isset($json['priority'])) {
           $priority = $json['priority'];
         }
