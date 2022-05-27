@@ -10,6 +10,8 @@ use WebPageTest\Exception\UnauthorizedException;
 
 (function (RequestContext $request) {
     global $admin;
+    global $owner;
+
     $host = Util::getSetting('host');
     $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
     $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
@@ -29,10 +31,13 @@ use WebPageTest\Exception\UnauthorizedException;
     if (!is_null($access_token)) {
         try {
             $data = $request->getClient()->getUserDetails();
-            $user->setUserId($data['id']);
-            $user->setEmail($data['email']);
-            $user->setPaid($data['isWptPaidUser']);
-            $user->setVerified($data['isWptAccountVerified']);
+            $user->setUserId($data['activeContact']['id']);
+            $user->setEmail($data['activeContact']['email']);
+            $user->setPaid($data['activeContact']['isWptPaidUser']);
+            $user->setVerified($data['activeContact']['isWptAccountVerified']);
+            $user->setOwnerId($data['levelSummary']['levelId']);
+            $user->setEnterpriseClient(!!$data['levelSummary']['isWptEnterpriseClient']);
+            $owner = $user->getOwnerId();
         } catch (UnauthorizedException $e) {
             error_log($e->getMessage());
           // if this fails, Refresh and retry
@@ -63,13 +68,20 @@ use WebPageTest\Exception\UnauthorizedException;
                     $user->setEmail($data['email']);
                     $user->setPaid($data['isWptPaidUser']);
                     $user->setVerified($data['isWptAccountVerified']);
-                } catch (UnauthorizedException $e) {
+                } catch (Exception $e) {
                     error_log($e->getMessage());
                   // if this fails, delete all the cookies
                     setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
                     setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
                 }
             }
+        } catch (Exception $e) {
+          // Any other kind of error, kill it.
+          // Delete the cookies. Force the logout. Otherwise you
+          // can get into some weird forever redirect states
+            error_log($e->getMessage());
+            setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+            setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
         }
     }
 

@@ -12,42 +12,31 @@ use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 
-if (Util::getSetting('cp_auth')) {
+if (Util::getSetting('php_sessions')) {
   // Start session handling for this request
   session_start();
 }
 
+$client_error = null;
 if (Util::getSetting('cp_auth')) {
-  set_exception_handler(function($e) {
-    if(is_a($e, ClientException::class)) {
-      echo 'Client Exception:';
-      echo '<pre>';
-      var_dump($e);
-      echo '</pre>';
-      exit();
-  /**
-   * for when we have notifications for errors
-   *  $route = $e->getRoute();
-   *  $message = $e->getMessage();
-   *  $host = Util::getSetting('host');
-   *  $_SESSION['error_message'] = $message;
-   *  $protocol = "https";
-   *  $location = "{$protocol}://{$host}{$route}";
-   *  header('Location: ' . $location);
-   *  exit();
-   */
-    }
-    echo '<pre>';
-    var_dump($e);
-    echo '</pre>';
+    $client_error = $_SESSION['client_error'] ?? null;
+    unset($_SESSION['client_error']);
 
-    /*
-     * for when we ship to prod
-     * throw $e;
-     *
-     */
-    exit();
-  });
+    set_exception_handler(function($e) {
+        if(is_a($e, ClientException::class)) {
+            $route = $e->getRoute();
+            $message = $e->getMessage();
+            $host = Util::getSetting('host');
+            unset($_SESSION['client_error']);
+            $_SESSION['client_error'] = $message;
+            $protocol = "https";
+            $location = "{$protocol}://{$host}{$route}";
+            header('Location: ' . $location);
+            exit();
+        }
+        error_log($e->getMessage);
+        throw $e;
+    });
 }
 
 // Load local deps
@@ -183,8 +172,8 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', 170);                // version of the sitewide css file
-define('VER_JS', 40);                 // version of the sitewide javascript file
+define('VER_CSS', '173.1');                // version of the sitewide css file
+define('VER_JS', 41);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
@@ -192,6 +181,7 @@ define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown tim
                                       // is unknown, change this constant to a large
                                       // negative number.
 
+$VER_CSS = VER_CSS;
 // SEO stuff
 $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
@@ -227,7 +217,7 @@ $USER_EMAIL = null;
 // Supported Authentication types
 $supportsAuth = false;
 $supportsSaml = Util::getSetting('saml_login') !== false;
-$supportsCPAuth = Util::getSetting('cp_auth') !== false;
+$supportsCPAuth = Util::getSetting('cp_auth');
 $supportsGoogleOAuth = Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret');
 $supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
 
@@ -307,6 +297,20 @@ if ($privateInstall) {
 if (isset($_REQUEST['color'])) {
     setcookie('color', $_REQUEST['color'], time()+60*60*24*365, '/');
     $_REQUEST['color'] = $_REQUEST['color'];
+}
+
+if ($supportsSaml && !$supportsCPAuth) {
+  $request_context->setUser($saml_user);
+}
+
+/**
+ * Load app specific middleware
+ */
+if ($supportsCPAuth) {
+  require_once __DIR__ . '/common/AttachClient.php';
+  require_once __DIR__ . '/common/AttachUser.php';
+  require_once __DIR__ . '/common/AttachSignupClient.php';
+  require_once __DIR__ . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data
@@ -438,13 +442,3 @@ if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
 
-if ($supportsSaml && !$supportsCPAuth) {
-  $request_context->setUser($saml_user);
-}
-
-if ($supportsCPAuth) {
-  require_once __DIR__ . '/common/AttachClient.php';
-  require_once __DIR__ . '/common/AttachUser.php';
-  require_once __DIR__ . '/common/AttachSignupClient.php';
-  require_once __DIR__ . '/common/CheckCSRF.php';
-}

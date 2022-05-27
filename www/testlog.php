@@ -3,20 +3,32 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
-if ($admin || $privateInstall) {
+
+use WebPageTest\Util;
+
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+
+if ($admin || $privateInstall || $is_logged_in) {
     set_time_limit(0);
 } else {
     set_time_limit(60);
 }
 
-if ($userIsBot || GetSetting('disableTestlog')) {
+if ($userIsBot || Util::getSetting('disableTestlog')) {
   header('HTTP/1.0 403 Forbidden');
   exit;
 }
 
-// Redirect logged-in users to the hosted test history if one is configured
-if (isset($USER_EMAIL) && GetSetting('history_url') && !isset($_REQUEST['local'])) {
-    header('Location: ' . GetSetting('history_url'));
+$test_history = [];
+$days = (int)$_GET["days"];
+
+if ($is_logged_in) {
+  $test_history = $request_context->getClient()->getTestHistory($days);
+}
+
+// Redirect logged-in saml users to the hosted test history if one is configured
+if (!$is_logged_in && (isset($USER_EMAIL) && Util::getSetting('history_url') && !isset($_REQUEST['local']))) {
+    header('Location: ' . Util::getSetting('history_url'));
     exit;
 }
 
@@ -25,11 +37,11 @@ $page_description = "History of website performance speed tests run on WebPageTe
 
 $supportsGrep = false;
 $out = exec('grep --version', $output, $result_code);
-if ($result_code == 0 && isset($output) && is_array($output) && count($output))
+if ($result_code == 0 && isset($output) && is_array($output) && count($output)) {
   $supportsGrep = true;
+}
 
 
-$days      = (int)$_GET["days"];
 $from      = (isset($_GET["from"]) && strlen($_GET["from"])) ? $_GET["from"] : 'now';
 $filter    = $_GET["filter"];
 $filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \@\/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
@@ -68,43 +80,13 @@ if( $csv )
 {
     header ("Content-type: text/csv");
     echo '"Date/Time","Location","Test ID","URL","Label"' . "\r\n";
-} elseif (!isset($user) && !isset($_COOKIE['google_email']) && GetSetting('localHistory')) {
-    // For users not logged in, build a local searchable test history from the data stored in indexeddb.
+} elseif ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']) && Util::getSetting('localHistory'))) {
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
         <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-        <style>
-            /* h4 {text-align: center;}
-            .history table {text-align:left;}
-            .history thead {text-align:left;}
-            .history th {white-space:nowrap; text-decoration:underline;}
-            .history td.date {white-space:nowrap;}
-            .history th.location {
-                padding-left: 1.5em;
-            }
-            .history td {
-                white-space:nowrap;
-                max-width: 20em;
-                overflow: hidden;
-            }
-            .history td.location {
-                padding-left: 1.5em;
-                white-space: normal;
-            }
-            .history td.url {
-                padding-left: 1em;
-                white-space: normal;
-                word-break: all;
-            }
-            .history .date {
-                padding-left: 1em;
-            }
-            .history td.ip {white-space:nowrap;}
-            .history td.uid {white-space:nowrap;} */
-        </style>
     </head>
     <body class="history">
             <?php
@@ -113,16 +95,29 @@ if( $csv )
             ?>
             <div class="history_hed">
             <h1>Test History</h1>
-            
+
             <form name="filterLog" method="get" action="/testlog.php">
+
+<?php if (!$is_logged_in): ?>
             <div class="logged-out-history">
                 <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
                     <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup" class="btn-primary">Get Free Access</a>
                 </div>
-                <div class="history_filter">
-                    <label for="filter">Filter test history:</label>
-                         <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
-                </div>
+<?php endif; ?>
+              <div class="history_filter">
+                <label for="filter">Filter test history:</label>
+                <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
+<?php if ($is_logged_in): ?>
+                <label for="days" class="a11y-hidden">Select how far back you want to see</label>
+                 <select name="days">
+                    <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
+                    <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
+                    <option value="30" <?php if ($days == 30) echo "selected"; ?>>30 Days</option>
+                    <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
+                    <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
+                  </select>
+<?php endif; ?>
+              </div>
             </form>
             </div>
             <div class="box">
@@ -141,6 +136,19 @@ if( $csv )
                             <th class="label">Label</th>
                         </tr>
                     </thead>
+<?php if ($is_logged_in): ?>
+                    <tbody id="historyBody">
+  <?php foreach($test_history as $record): ?>
+                      <tr>
+                        <th><input type="checkbox" name="t[]" value="<?= $record->getTestId() ?>" /></th>
+                        <td class="url"><a href="/result/<?= $record->getTestId() ?>/"><?= $record->getUrl() ?></a></td>
+                        <td class="date"><?= date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') ?></td>
+                        <td class="location"><?= $record->getLocation() ?></td>
+                        <td class="label"><?= $record->getLabel() ?></td>
+                      </tr>
+  <?php endforeach; ?>
+                    </tbody>
+<?php endif; ?>
                 </table>
                 </div>
                 <?php
@@ -153,9 +161,17 @@ if( $csv )
                 ?>
                 </form>
             </div>
+
 <script>
-        <?php include(__DIR__ . '/js/history.js'); ?>
-        </script>
+<?php
+if ($is_logged_in):
+  include(__DIR__ . '/js/history-loggedin.js');
+else:
+  // if not logged in, build a local searchable test history from the data stored in indexeddb.
+  include(__DIR__ . '/js/history.js');
+endif;
+?>
+</script>
         <?php include('footer.inc'); ?>
     </body>
 </html>
@@ -187,7 +203,7 @@ exit;
                         <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
                         <input id="SubmitBtn" type="submit" value="Update List"><br>
                         <?php
-                        if( ($admin || !GetSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
+                        if( ($admin || !Util::getSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
                             <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                             <?php
                         }

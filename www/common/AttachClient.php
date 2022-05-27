@@ -12,6 +12,12 @@ use WebPageTest\Exception\UnauthorizedException;
 
     $host = Util::getSetting('host');
 
+    /**
+     * Force logout for old users. Remove this at end of June 2022
+     */
+    $saml_cookie = Util::getSetting('saml_cookie', 'samlu');
+    setcookie($saml_cookie, "", time() - 3600, '/', $host);
+
     $client = new CPClient(Util::getSetting('cp_services_host'), array(
         'auth_client_options' => array(
             'base_uri' => Util::getSetting('cp_auth_host'),

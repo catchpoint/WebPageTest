@@ -16,6 +16,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\Customer;
+use WebPageTest\TestRecord;
 
 class CPClient
 {
@@ -29,7 +30,10 @@ class CPClient
     public function __construct(string $host, array $options = [])
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
-        $graphql_client_options = array();
+        $graphql_client_options = array(
+          'timeout' => 30,
+          'connect_timeout' => 30
+        );
 
         $this->client_id = $auth_client_options['client_id'] ?? null;
         $this->client_secret = $auth_client_options['client_secret'] ?? null;
@@ -165,12 +169,19 @@ class CPClient
                     'email',
                     'isWptPaidUser',
                     'isWptAccountVerified'
+                  ]),
+                (new Query('levelSummary'))
+                  ->setSelectionSet([
+                    'levelId',
+                    'levelType',
+                    'levelName',
+                    'isWptEnterpriseClient'
                   ])
               ]);
 
         try {
             $account_details = $this->graphql_client->runQuery($gql, true);
-            return $account_details->getData()['userIdentity']['activeContact'];
+            return $account_details->getData()['userIdentity'];
         } catch (GuzzleException $e) {
             if ($e->getCode() == 401) {
                 throw new UnauthorizedException();
@@ -287,6 +298,53 @@ class CPClient
         }
     }
 
+    public function getPaidEnterpriseAccountPageInfo(): array
+    {
+          $gql = (new Query())
+          ->setSelectionSet([
+            'braintreeClientToken',
+            (new Query('wptApiKey'))
+              ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+              ]),
+            (new Query('braintreeCustomerDetails'))
+                ->setSelectionSet([
+                    'customerId',
+                    'wptPlanId',
+                    'subscriptionId',
+                    'ccLastFour',
+                    'daysPastDue',
+                    'subscriptionPrice',
+                    'maskedCreditCard',
+                    'nextBillingDate',
+                    'billingPeriodEndDate',
+                    'numberOfBillingCycles',
+                    'ccExpirationDate',
+                    'ccImageUrl',
+                    'status',
+                    (new Query('discount'))
+                      ->setSelectionSet([
+                        'amount',
+                        'numberOfBillingCycles'
+                      ]),
+                    'remainingRuns',
+                    'planRenewalDate',
+                    'billingFrequency',
+                    'wptPlanName'
+                ])
+          ]);
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
     public function updateUserContactInfo(string $id, array $options): array
     {
         $gql = (new Mutation('wptContactUpdate'))
@@ -372,10 +430,8 @@ class CPClient
         }
     }
 
-    public function deleteApiKey(int $id): array
+    public function deleteApiKey(array $ids): array
     {
-        $ids = [$id];
-
         $gql = (new Mutation('wptApiKeyBulkDelete'))
         ->setVariables([
           new Variable('ids', '[Int!]', true)
@@ -467,5 +523,53 @@ class CPClient
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
+    }
+
+    public function resendEmailVerification()
+    {
+        $gql = (new Mutation('wptResendVerificationMail'));
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function getTestHistory(int $days = 1): array
+    {
+        $view_hours = $days * 24;
+        $gql = (new Query('wptTestHistory'))
+        ->setVariables([
+          new Variable('viewHours', 'Int', true)
+        ])
+        ->setArguments([
+          'viewHours' => '$viewHours'
+        ])
+        ->setSelectionSet([
+          'id',
+          'testId',
+          'url',
+          'location',
+          'label',
+          'testStartTime',
+          'user',
+          'apiKey'
+        ]);
+
+        $variables = [
+        'viewHours' => $view_hours
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptTestHistory'];
+        $test_history = array_map(function ($record): TestRecord {
+            try {
+                return new TestRecord($record);
+            } catch (\Exception $e) {
+                error_log($e->getMessage());
+            }
+        }, $data);
+        return $test_history;
     }
 }

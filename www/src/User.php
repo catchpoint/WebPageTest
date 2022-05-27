@@ -8,21 +8,23 @@ class User
 {
     private ?string $email;
     private bool $is_admin;
-    private int $owner_id;
+    private ?string $owner_id;
     private ?string $access_token;
     private ?int $user_id;
     private bool $is_paid_and_in_good_standing;
     private bool $is_verified;
+    private bool $is_wpt_enterprise_client;
 
     public function __construct()
     {
         $this->email = null;
         $this->is_admin = false;
-        $this->owner_id = 2445; // owner id of 2445 was for unpaid users
+        $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
         $this->user_id = null;
         $this->is_paid_and_in_good_standing = false;
         $this->is_verified = false;
+        $this->is_wpt_enterprise_client = false;
     }
 
     public function getEmail(): ?string
@@ -42,7 +44,7 @@ class User
         $this->is_admin = $is_admin;
     }
 
-    public function getOwnerId(): int
+    public function getOwnerId(): ?string
     {
         return $this->owner_id;
     }
@@ -52,7 +54,7 @@ class User
      */
     public function setOwnerId($owner_id): void
     {
-        $this->owner_id = intval($owner_id);
+        $this->owner_id = strval($owner_id);
     }
 
     public function isPaid(): bool
@@ -119,5 +121,15 @@ class User
     public function setVerified(bool $is_verified): void
     {
         $this->is_verified = $is_verified;
+    }
+
+    public function isWptEnterpriseClient(): bool
+    {
+        return $this->is_wpt_enterprise_client;
+    }
+
+    public function setEnterpriseClient(bool $is_wpt_enterprise_client): void
+    {
+        $this->is_wpt_enterprise_client = $is_wpt_enterprise_client;
     }
 }

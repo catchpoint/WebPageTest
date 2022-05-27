@@ -64,12 +64,13 @@ if ($request_method === 'POST') {
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
-            throw new ClientException("There was an error", "/account");
+            throw new ClientException($e->getMessage(), "/account");
         }
     } elseif ($type == "delete-api-key") {
+        AccountHandler::deleteApiKey($request_context);
+    } elseif ($type == "resend-verification-email") {
         try {
-            $id = filter_input(INPUT_POST, 'api-key-id', FILTER_SANITIZE_NUMBER_INT);
-            $request_context->getClient()->deleteApiKey(intval($id));
+            $request_context->getClient()->resendEmailVerification();
 
             $protocol = $request_context->getUrlProtocol();
             $host = Util::getSetting('host');
@@ -91,6 +92,7 @@ if ($request_method === 'POST') {
 
     $is_paid = $request_context->getUser()->isPaid();
     $is_verified = $request_context->getUser()->isVerified();
+    $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
     $user_id = $request_context->getUser()->getUserId();
     $user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
     $user_email = $request_context->getUser()->getEmail();
@@ -114,7 +116,11 @@ if ($request_method === 'POST') {
     $country_list = Util::getCountryList();
 
     if ($is_paid) {
-        $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
+        if ($is_wpt_enterprise) {
+            $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
+        } else {
+            $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
+        }
         $customer_details = $billing_info['braintreeCustomerDetails'];
         $billing_frequency = $customer_details['billingFrequency'] == 12 ? "Annually" : "Monthly";
 
@@ -128,6 +134,7 @@ if ($request_method === 'POST') {
             $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
         }
 
+        $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
         $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
         $billing_info['billing_frequency'] = $billing_frequency;
         $client_token = $billing_info['braintreeClientToken'];

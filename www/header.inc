@@ -46,15 +46,24 @@ if ($id && isset($test) && is_array($test) &&
 if (!defined('EMBED')) {
 ?>
 <?php
-$alert = GetSetting('alert');
-if ($alert) {
-    echo '<div class="alert-banner">' . $alert . '</div>';
+$alert = Util::getSetting('alert');
+if (isset($client_error)) {
+  echo '<div class="error-banner">' . $client_error . '</div>';
+} elseif ($alert) {
+  echo '<div class="alert-banner">' . $alert . '</div>';
 }
 ?>
-<header>
-    <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a>
-    <nav>
-    <ul id="nav"><?php
+
+<wpt-header>
+        <header>
+            <a class="wptheader_logo" href="/">
+                <img src="https://webpagetest.org/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
+            </a>
+            <details class="wptheader_menu">
+                <summary class="wptheader_menubtn">Menu:</summary>
+                <nav>
+                    <ul class="wptheader_nav">
+                        <?php
         if ($id) {
             $resultUrl = "/results.php?test=$id";
             if (array_key_exists('end', $_REQUEST))
@@ -63,7 +72,7 @@ if ($alert) {
                 $resultUrl = "/result/$id/";
         }
         if (!isset($navTabs) || !count($navTabs)) {
-
+            $navTabs['Start Test'] = '/';
             if (!GetSetting('disableTestlog')) {
               $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
             }
@@ -96,78 +105,79 @@ if ($alert) {
                 $current = '';
                 $opens = '';
                 if( !strcasecmp($tabName, $tab) )
-                    $current = ' class="current"';
+                    $current = ' class="wptheader-current" tabindex="-1"';
                 if (substr($tabUrl, 0, 4) == 'http' && $tabName != 'API') {
                     $target = ' target="_blank" rel="noopener"';
                     $opens = ' (opens in a new tab)';
                 }
                 if ($opens != '') {
-                    echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
+                    echo "<li><a $current title=\"$tabName$opens\" href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
                 } else {
-                    echo "<li$current><a href=\"$tabUrl\"$target>$tabName</a></li>";
+                    echo "<li><a $current href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
                 }
             }
         }
-?></ul>
-    </nav>
-<?php
+?>
+                    </ul>
+                    <ul class="wptheader_acct">
 
-        if ($supportsAuth && !defined('EMBED')) {
-            echo '<ul id="wptAuthBar">';
-            if ($supportsCPAuth) {
-                $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
-                if ($is_logged_in) {
-                  echo "<li><a href='/account'>My Account</a>&nbsp;|&nbsp;";
-                  $logoutBtn =
+                    <?php
+
+if ($supportsAuth && !defined('EMBED')) {
+    if ($supportsCPAuth) {
+        $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
+        if ($is_logged_in) {
+          echo "<li><a href='/account'>My Account</a></li>";
+          $logoutBtn =
 <<<HTML
 <li>
-  <form method='POST' action='/logout' class='logout-form'>
-    <button type='submit'>Logout</button>
-    <input type="hidden" name="csrf_token" value="{$_SESSION['csrf_token']}" />
-  </form>
+<form method='POST' action='/logout' class='logout-form'>
+<input type="hidden" name="csrf_token" value="{$_SESSION['csrf_token']}" />
+<button type='submit'>Logout</button>
+</form>
 </li>
 HTML;
-                  echo $logoutBtn;
-                } else {
-                  echo '<li><a href="/login">Login';
-                  echo file_get_contents('./images/icon-login.svg');
-                  echo '</a></li>';
-                  echo "<li><a class='pill' href='/signup' >Sign-up</a></li>";
-                }
-            } else if ($supportsSaml) {
-        if (isset($USER_EMAIL) && GetSetting('saml_account')) {
-            $saml_account = GetSetting('saml_account');
-            $saml_logout = GetSetting('saml_logout');
-            if ($saml_logout) {
-                $saml_logout = htmlspecialchars($saml_logout);
-                $logoutUrl = "javascript:wptLogout('$saml_logout');";
-            } else {
-                $logoutUrl = "javascript:wptLogout();";
-            }
-            echo "<li><a href=\"$saml_account\">My Account</a>&nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
+          echo $logoutBtn;
         } else {
-            echo '<li><a href="/saml/login.php">Login';
-            echo file_get_contents('./images/icon-login.svg');
-            echo '</a></li>';
-            $register = GetSetting('saml_register');
-            if ($register) {
-                echo "<li><a class='pill' href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
-            }
+          echo '<li><a href="/login">Login</a></li>';
+          echo "<li><a href='/signup'>Sign-up</a></li>";
         }
-    } elseif( isset($user) ) {
-        $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
-        echo "<li>Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-    } else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
-        $logoutUrl = 'javascript:wptLogout();';
-        $google_email = htmlspecialchars($_COOKIE['google_email']);
-        echo "<li>Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a></li>";
-    } else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-        echo '<li> &nbsp;|&nbsp; <a href="/oauth/login.php">Login with Google</a></li>';
+    } else if ($supportsSaml) {
+if (isset($USER_EMAIL) && GetSetting('saml_account')) {
+    $saml_account = GetSetting('saml_account');
+    $saml_logout = GetSetting('saml_logout');
+    if ($saml_logout) {
+        $saml_logout = htmlspecialchars($saml_logout);
+        $logoutUrl = "javascript:wptLogout('$saml_logout');";
+    } else {
+        $logoutUrl = "javascript:wptLogout();";
     }
-    echo '</ul>';
+    echo "<li><a href=\"$saml_account\">My Account</a></li><li><a href=\"$logoutUrl\">Logout</a></li>";
+} else {
+    echo '<li><a href="/saml/login.php">Login</a></li>';
+    $register = GetSetting('saml_register');
+    if ($register) {
+        echo "<li><a href='$register' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
+    }
+}
+} elseif( isset($user) ) {
+$logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
+echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
+} else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+$logoutUrl = 'javascript:wptLogout();';
+$google_email = htmlspecialchars($_COOKIE['google_email']);
+echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
+} else if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
+}
 }
 ?>
-</header>
+                        
+                    </ul>
+                </nav>
+            </details>
+        </header>
+    </wpt-header>
 
 <?php
 } // EMBED

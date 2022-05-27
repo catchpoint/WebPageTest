@@ -106,6 +106,33 @@ class Signup
         $tpl = new Template('account/signup');
         $tpl->setLayout('signup-flow');
 
+        $plan_id = $vars['plan'];
+        $plan = null;
+        $plans = [];
+        try {
+            $plans = $request_context->getSignupClient()->getWptPlans();
+        } catch (Exception $e) {
+            if ($e->getCode() == 401) {
+                $auth_token = $request_context->getSignupClient()->getAuthToken();
+                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+                $plans = $request_context->getSignupClient()->getWptPlans();
+            }
+        }
+
+        foreach ($plans as $p) {
+            if ($p->getId() == $plan_id) {
+                $plan = $p;
+                break;
+            }
+        }
+        if (!is_null($plan)) {
+            $vars['runs'] = $plan->getRuns();
+            $vars['monthly_price'] = $plan->getMonthlyPrice();
+            $vars['annual_price'] = $plan->getAnnualPrice();
+            $vars['other_annual'] = $plan->getOtherAnnual();
+            $vars['billing_frequency'] = $plan->getBillingFrequency();
+        }
+
         $gateway = new BraintreeGateway([
         'environment' => Util::getSetting('bt_environment'),
         'merchantId' => Util::getSetting('bt_merchant_id'),
@@ -115,6 +142,11 @@ class Signup
         $client_token = $gateway->clientToken()->generate();
         $vars['bt_client_token'] = $client_token;
 
+
+        $vars['street_address'] = $_SESSION['signup-street-address'];
+        $vars['city'] = $_SESSION['signup-city'];
+        $vars['state'] = $_SESSION['signup-state'];
+        $vars['zipcode'] = $_SESSION['signup-zipcode'];
         $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";
         $vars['last_name'] = isset($_SESSION['signup-last-name']) ? htmlentities($_SESSION['signup-last-name']) : "";
         $vars['company_name'] = htmlentities($_SESSION['signup-company-name']);
@@ -141,12 +173,11 @@ class Signup
             'email' => $body->email,
             'password' => $body->password
             ));
-          // TODO: handle user already registered (send to login?)
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
-        } catch (\Exception $e) {
-            throw $e;
+        } catch (ClientException $e) {
+            throw new ClientException($e->getMessage(), '/signup/2');
         }
     }
 
@@ -220,7 +251,9 @@ class Signup
         $_SESSION['signup-company-name'] = $body->company_name;
         $_SESSION['signup-email'] = $body->email;
         $_SESSION['signup-password'] = $body->password;
-        $_SESSION['signup-plan'] = $body->plan;
+
+        $host = Util::getSetting('host');
+        setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
 
         $protocol = $request_context->getUrlProtocol();
         $host = Util::getSetting('host');
@@ -251,7 +284,7 @@ class Signup
             $message = $e->getMessages([
             'regex' => $msg
             ]);
-            throw new ClientException(implode(', ', $message));
+            throw new ClientException(implode(', ', $message), '/signup/2');
         }
 
         $contact_info_validator = new Rules\AllOf(
@@ -274,7 +307,7 @@ class Signup
             $message = $e->getMessages([
             'regex' => 'input cannot contain <, >, or &#'
             ]);
-            throw new ClientException(implode(', ', $message));
+            throw new ClientException(implode(', ', $message), '/signup/2');
         }
 
         $nonce = $_POST['nonce'];
@@ -331,21 +364,28 @@ class Signup
             return $redirect_uri;
         } catch (\Exception $e) {
             if ($e->getCode() == 401) {
-                $auth_token = $request_context->getSignupClient()->getAuthToken();
-                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+                try {
+                    $auth_token = $request_context->getSignupClient()->getAuthToken();
+                    $request_context->getSignupClient()->authenticate($auth_token->access_token);
 
-                $data = $request_context->getSignupClient()->signup(array(
-                'first_name' => $body->first_name,
-                'last_name' => $body->last_name,
-                'company' => $body->company,
-                'email' => $body->email,
-                'password' => $body->password
-                ), $customer);
+                    $data = $request_context->getSignupClient()->signup(array(
+                        'first_name' => $body->first_name,
+                        'last_name' => $body->last_name,
+                        'company' => $body->company,
+                        'email' => $body->email,
+                        'password' => $body->password
+                    ), $customer);
 
-                $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
-                return $redirect_uri;
+                    $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+                    return $redirect_uri;
+                    exit();
+                } catch (\Exception $e) {
+                    throw new ClientException($e->getMessage(), '/signup/3');
+                    exit();
+                }
             }
-            throw $e;
+            throw new ClientException($e->getMessage(), '/signup/3');
+            exit();
         }
     }
 

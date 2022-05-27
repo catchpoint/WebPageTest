@@ -1,44 +1,63 @@
 <!DOCTYPE html>
 <html class="signup-flow-layout">
-  <head>
+
+<head>
+    <?php
+      require_once __DIR__ . '/../../common.inc';
+
+      use WebPageTest\Util;
+
+      global $USER_EMAIL;
+      global $supportsAuth;
+      global $supportsSaml;
+      global $client_error;
+      global $VER_CSS;
+
+      $page_title = $page_title ? $page_title : 'WebPageTest';
+      ?>
+    <title><?php echo $page_title; ?></title>
+    <?php require_once __DIR__ . '/head.inc'; ?>
+    <link href="<?= '/css/account.css?v={$VER_CSS}' ?>" rel="stylesheet" />
+</head>
+
+<body>
 <?php
-require_once __DIR__ . '/../../common.inc';
-
-global $USER_EMAIL;
-global $supportsAuth;
-global $supportsSaml;
-
-$page_title = $page_title ? $page_title : 'WebPageTest';
+$alert = Util::getSetting('alert');
+if (isset($client_error)) {
+  echo '<div class="error-banner">' . $client_error . '</div>';
+} elseif ($alert) {
+  echo '<div class="alert-banner">' . $alert . '</div>';
+}
 ?>
-  <title><?php echo $page_title; ?></title>
-  <?php require_once __DIR__ . '/head.inc'; ?>
-  <link href="/css/account.css" rel="stylesheet" />
-  </head>
-  <body>
-    <header>
-      <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"/></a>
-<?php if ($is_plan_free): ?>
-      <ol class="free-plan">
-<?php else: ?>
-      <ol>
-<?php endif; ?>
-<?php if ($step == 2): ?>
-        <li>Choose Plan</li>
-        <li class="selected">Account Details</li>
-  <?php if (!$is_plan_free): ?>
-        <li>Payment Details</li>
-  <?php endif; ?>
-<?php else: ?>
-        <li>Choose Plan</li>
-        <li>Account Details</li>
-  <?php if (!$is_plan_free): ?>
-        <li class="selected">Payment Details</li>
-  <?php endif; ?>
-<?php endif; ?>
-      </ol>
-    </header>
+    <wpt-header>
+        <header>
+            <a class="wptheader_logo" href="/">
+                <img src="https://webpagetest.org/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
+            </a>
+            <?php if ($is_plan_free) : ?>
+            <ol class="free-plan">
+                <?php else : ?>
+                <ol>
+                    <?php endif; ?>
+                    <?php if ($step == 2) : ?>
+                    <li>Choose Plan</li>
+                    <li class="selected">Account Details</li>
+                    <?php if (!$is_plan_free) : ?>
+                    <li>Payment Details</li>
+                    <?php endif; ?>
+                    <?php else : ?>
+                    <li>Choose Plan</li>
+                    <li>Account Details</li>
+                    <?php if (!$is_plan_free) : ?>
+                    <li class="selected">Payment Details</li>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </ol>
+        </header>
+    </wpt-header>
     <main>
-    <?php echo $template_output; ?>
+        <?php echo $template_output; ?>
     </main>
-  </body>
+</body>
+
 </html>

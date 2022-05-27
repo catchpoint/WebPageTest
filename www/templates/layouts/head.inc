@@ -54,6 +54,8 @@ if( strlen($page_description) )
         include(__DIR__ . '/../../settings/customhead.inc.php');
     }
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
+    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/wpt-header.css?v=" . VER_CSS . "\">\n";
+    echo "<script src=\"{$GLOBALS['cdnPath']}/wpt-header.js?v=" . VER_JS . "\" defer></script>\n";
     echo "<style>\n";
 
     // switch to the private install logo if we're not running on webpagetest

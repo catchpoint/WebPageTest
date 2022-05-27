@@ -269,7 +269,7 @@ final class CPClientTest extends TestCase {
     ));
 
     $data = $client->getUserDetails();
-    $this->assertEquals('263425', $data['id']);
+    $this->assertEquals('263425', $data['activeContact']['id']);
   }
 
   public function testGetUserDetailsWithError () : void {
