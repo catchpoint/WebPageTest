@@ -24,7 +24,7 @@ final class UtilTest extends TestCase
     public function testGetSettingWithNullDefault(): void
     {
         $override_settings_file = __DIR__ . '/fixtures/settings.ini';
-        $value = Util('product', null, $override_settings_file);
+        $value = Util::getSetting('product', null, $override_settings_file);
         $this->assertEquals('WebPagetest', $value);
     }
 
