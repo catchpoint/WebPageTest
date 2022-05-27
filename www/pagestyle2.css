@@ -8822,7 +8822,7 @@ body.screenshot .results_nav_contain,
 body.screenshot .test_presets_more,
 body.screenshot .experiment_meta_urls,
 body.screenshot header ul,
-body.screenshot .scrollableTable+.hed_sub,
+body.screenshot .experiment_opportunities+.hed_sub,
 body.screenshot.result:not(.compare-experiment) .results_header,
 body.screenshot .metrics_shown,
 body.screenshot.result-summary .cruxembed,
@@ -8835,8 +8835,34 @@ body.screenshot.compare:not(.compare-experiment) .test_results_header,
 body.screenshot .result_plot,
 body.screenshot.result-opportunities .results_body,
 body.screenshot.result-opportunities .opportunities_summary .experiment_summary_label,
-body.screenshot footer li {
+body.screenshot footer li,
+body.screenshot header details,
+body.screenshot .play,
+body.screenshot .metric_experiment,
+body.screenshot .metric_control,
+body.screenshot footer img {
     display: none !important;
+}
+
+body.screenshot header {
+    border: 0;
+    margin: 0;
+}
+
+body.screenshot #header_container {
+    padding-top: 1rem !important;
+}
+
+body.screenshot .header_data_urltime {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+body.screenshot .header_data_urltime li {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 .5em
 }
 
 body.screenshot.result .results_body {
@@ -8862,6 +8888,8 @@ body.screenshot footer li:last-child {
 
 body.screenshot .header_screenshots {
     margin-top: -5rem;
+    z-index: 99999999;
+    align-self: center;
 }
 
 body.screenshot #videoContainer img {
@@ -8881,11 +8909,15 @@ body.screenshot .experiment_meta_included summary {
 
 body.screenshot .experiment_meta_included p,
 body.screenshot .experiment_meta_included summary {
-    font-size: 1.4rem !important;
+    font-size: 1.1rem !important;
     margin: 0;
-    padding: 0;
-    background: none;
+    padding: 0 0 0 0;
+    background: inherit;
     border: 0;
+}
+
+body.screenshot .experiment_meta_included summary {
+    margin-right: .3em;
 }
 
 body.screenshot .experiment_meta_included {
