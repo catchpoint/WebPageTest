@@ -1511,7 +1511,7 @@ function GetDailyTestNum() {
 
 function AddTestJob($location, $job, $test, $testId) {
   global $request_context;
-  $isPaid =  $request_context->getUser()->isPaid();
+  $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 
   $ret = false;
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
