@@ -6726,6 +6726,32 @@ table.pretty .metric_groups th {
     line-height: 1;
 }
 
+.metric_experiment,
+.metric_control {
+    font-size: .85rem;
+    font-weight: 300;
+    -webkit-text-stroke: 0;
+    padding: 0;
+    margin: .5em 0 0;
+    display: flex;
+    gap: .3em;
+}
+
+.metric_experiment {
+    margin-top: .8em;
+}
+
+.metric_experiment span:last-child,
+.metric_control span:last-child {
+    font-weight: 700;
+}
+
+.metric_experiment .units,
+.metric_control .units {
+    font-size: .8rem;
+    padding-left: .1em;
+}
+
 .results-filmstrip-container h4 a {
     font-weight: 500;
     color: #1071ba;

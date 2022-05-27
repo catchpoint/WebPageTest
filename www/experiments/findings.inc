@@ -62,20 +62,30 @@ if( $experiment ){
                 <?php 
                     foreach($diffMetrics as $metric){
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
-                        $thisDiff = $tests[1]['stepResult']->getMetric($metric[0]) - $experimentMetric;
+                        $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
+                        $thisDiff = $controlMetric - $experimentMetric;
                         $units = "<span class=\"units\">".$metric[2]."</span>";
                         $changeTerms = array("Faster","Slower");
                         if( $metric[3] ){
                             $changeTerms = $metric[3];
                         }
                         $thisDiff = intval(removeLeadingZero(round($thisDiff,3)));
+                        $experimentMetric = intval(removeLeadingZero(round($experimentMetric,3)));
+                        $controlMetric = intval(removeLeadingZero(round($controlMetric,3)));
+
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
+                        
+
                         
                         if($thisDiff != 0){
                             if( $metric[2] === "s" ){
                                 $thisDiff = round($thisDiff / 1000,2);
+                                $experimentMetric = round($experimentMetric / 1000,2);
+                                $controlMetric = round($controlMetric / 1000,2);
                             }
-                            echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. abs($thisDiff) . $units . $change . '</td>';
+                            $compare = '<span class="metric_experiment"><span>Experiment:</span><span>' . $experimentMetric .  $units . '</span></span>';
+                            $compare .= '<span class="metric_control"><span>Control:</span><span>' . $controlMetric .  $units . '</span></span>';
+                            echo '<td id="TTFB" valign="middle" class="'. ( $thisDiff >= 0 ? "good" : "poor" ) .'">'. abs($thisDiff) . $units . $change . $compare . '</td>';
                         }
                     }
 
@@ -83,8 +93,11 @@ if( $experiment ){
                     if( $blockingReqsDiff !== 0 ){
                         $changeTerms = array("Fewer","More");
                         $units = "";
-                        $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
-                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingReqsDiff >= 0 ? "good" : "poor" ) .'">'. $blockingReqsDiff . $units . $change . '</td>';
+                        $change = '<span class="metric_change"><em>' . ( $blockingReqsDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
+                        $compare = '<span class="metric_experiment"><span>Experiment:</span><span>' . count($experimentBlockingReqs) .  $units . '</span></span>';
+                        $compare .= '<span class="metric_control"><span>Control:</span><span>' . count($controlBlockingReqs) .  $units . '</span></span>';
+
+                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingReqsDiff >= 0 ? "good" : "poor" ) .'">'. $blockingReqsDiff . $units . $change . $compare . '</td>';
                     }
                 ?>
             </tr>
