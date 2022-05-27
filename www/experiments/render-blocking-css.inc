@@ -11,10 +11,14 @@
             if(
                 ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")
                 && $request['contentType'] === "text/css" ){
-                array_push($blockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+                if( initiatedByRoot($request) ){
+                    array_push($blockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+                }
             }
         } else if (!isset($request['renderBlocking']) && $request['contentType'] === "text/css" && $request['all_end'] < $startRender) {
-            array_push($potentiallyBlockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+            if( initiatedByRoot($request) ){
+                array_push($potentiallyBlockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+            }
         }
     }
     if (!$blockingIndicator){

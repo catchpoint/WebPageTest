@@ -6,17 +6,23 @@ $potentiallyBlockingJSReqs = array();
 $startRender = $testStepResult->getMetric("render");
 $blockingIndicator = false;
 
+
+
 foreach ($requests as $request) {
     if (isset($request['renderBlocking'])) {
         $blockingIndicator = true;
         if(
             ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")
-            && ($request['requestType'] === "script" || $request['request_type'] === "Script")
+            && (isset($request['requestType']) && $request['requestType'] === "script" || $request['request_type'] === "Script")
         ){
-            array_push($blockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+            if( initiatedByRoot($request) ){
+                array_push($blockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+            }
         }
-    } else if (!isset($request['renderBlocking']) && ($request['requestType'] === "script" || $request['request_type'] === "Script") && $request['all_end'] < $startRender) {
-        array_push($potentiallyBlockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+    } else if (!isset($request['renderBlocking']) && (isset($request['requestType']) && $request['requestType'] === "script" || $request['request_type'] === "Script") && $request['all_end'] < $startRender) {
+        if( initiatedByRoot($request) ){
+            array_push($potentiallyBlockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
+        }
     }
 }
 

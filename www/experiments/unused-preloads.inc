@@ -4,7 +4,7 @@ $requests = $testStepResult->getRequests();
 $unusedPreloads = array();
 
 foreach ($requests as $request) {
-    if( isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true" ){
+    if( initiatedByRoot($request) && isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true" ){
         array_push($unusedPreloads, documentRelativePath($request['url'], $requests[0]['url']) );
     }
 }

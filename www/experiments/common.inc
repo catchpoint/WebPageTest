@@ -87,6 +87,23 @@ if( isset($rawResultData['custom']) && count($rawResultData['custom']) ){
 $axe = $testStepResult->getMetric('axe');
 
 
+function is300s($req){
+    return $req['responseCode'] >= 300 &&  $req['responseCode'] <= 399  && $req['responseCode'] != 304;
+}
+
+$requestsInitial = $testStepResult->getRequests();
+$firstNonRedirect = $requestsInitial[0]['url'];
+foreach ($requestsInitial as $request) {
+    if( isset($request['responseCode']) && !is300s($request)){
+        $firstNonRedirect = $request['full_url'];
+        break;
+    }
+}
+function initiatedByRoot($request){
+	return $request['initiator'] == $firstNonRedirect;
+}
+
+
 // quick
 include __DIR__ . '/slow-ttfb.inc';
 include __DIR__ . '/render-blocking-scripts.inc';

@@ -12,10 +12,10 @@ foreach ($requests as $request) {
     if (isset($request['renderBlocking'])) {
         $blockingIndicator = true;
     }
-    if( $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")  ){
+    if( initiatedByRoot($request) && $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")  ){
         array_push($blocking3pReqs, $request['full_url'] );
         array_push($blocking3pHosts, $request['host'] );
-    } else if( $initialHost !== $request['host']
+    } else if( initiatedByRoot($request) && $initialHost !== $request['host']
                 && ($request['contentType'] === "text/css" || $request['requestType'] === "script" || $request['request_type'] === "Script")
                 && $request['all_end'] < $startRender
     ){
