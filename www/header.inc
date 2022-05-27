@@ -488,7 +488,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         echo '</ul></nav></div>';
 
         
-        if(!isset($tests)){ include("testinfo_command-bar.inc"); }
+        include("testinfo_command-bar.inc"); 
         
         
         echo '</div></div>';
