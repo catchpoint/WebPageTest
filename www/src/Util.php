@@ -366,4 +366,19 @@ class Util
 
         return $countryList;
     }
+    /**
+     * Helper method to get the number of runs of a test to enforce limits
+     *
+     * Pass in a name
+     */
+    public static function getRunCount($runs, $fvonly, $lighthouse, $testtype): int
+    {
+        $runcount = max(1, $runs);
+        $multiplier = $fvonly ? 1 : 2;
+        $total_runs = $runcount * $multiplier;
+        if (!$testtype == 'lighthouse' && $lighthouse == 1) {
+            $total_runs++;
+        }
+        return $total_runs;
+    }
 }
