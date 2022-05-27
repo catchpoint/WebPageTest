@@ -840,10 +840,15 @@ p.grade_summary {
     padding: 1em 0 1rem 4.5em;
 }
 
+.experiments_details_desc>ul {
+    width: 100%;
+    overflow: auto;
+}
+
 .experiments_details_desc>ul li {
     list-style: disc;
     margin-left: 1em;
-    word-break: break-all;
+    white-space: nowrap;
 }
 
 .experiments_details_desc p {
@@ -6140,7 +6145,8 @@ div.waterfall-container,
 div.overflow-container,
 .breakdownFrame_item>div,
 #videoDiv,
-.experiment_opportunities-resolved ol {
+.experiment_opportunities-resolved ol,
+.experiments_details_desc>ul {
     background: linear-gradient(90deg, #fff 33%, rgba(255, 255, 255, 0)), linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 66%) 0 100%, radial-gradient(farthest-side at 0 50%, rgb(106 106 106 / 40%), transparent), radial-gradient(farthest-side at 100% 50%, rgba(106 106 106 / 40%), transparent) 0 100%;
     background-repeat: no-repeat;
     background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
@@ -6153,7 +6159,8 @@ div:not(.compare_contain_wrap)>div.waterfall-container img,
 div.overflow-container>*,
 .breakdownFrame_item>div>*,
 #videoDiv>*,
-.experiment_opportunities-resolved ol>* {
+.experiment_opportunities-resolved ol>*,
+.experiments_details_desc>ul li {
     mix-blend-mode: multiply
 }
 .scrollableTable th,
