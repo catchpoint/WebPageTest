@@ -470,15 +470,6 @@ else
                                     <li><a href=\"". $experimentTestHref ."\">Experiment</a></li>
                                     <li><a href=\"". $controlTestHref ."\">Control</a></li>
                                     <li><a href=\"". $experimentOriginalTestHref ."\">Original</a></li>
-                                    <li>
-                                        <details>
-                                        <summary>Share...</summary>
-                                            <ul>
-                                            <li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">Download Results Image</a></li>
-                                            <li><a href=\"\">Tweet This Experiment</a></li>
-                                            </ul>
-                                        </details>
-                                    </li>
                                     </ul>";
                                     echo "</div>";
                                     echo "</div>"; ?>

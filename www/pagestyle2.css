@@ -3931,13 +3931,21 @@ label small {
     background-image: url(/images/src/icon_triangledown.svg);
     background-repeat: no-repeat;
     background-position: right .5em top 50%;
-    background-color: transparent;
+    background-size: .7em auto;
+    background-color: #1c3544;
     cursor: pointer;
+}
+
+.test_presets_more-share .test_presets_tag {
+    background-image: url(/images/src/icon_triangledown.svg), url(/images/icon-send.svg);
+    padding-left: 1.5rem;
+    background-size: .7em auto, .9em auto;
+    background-position: right .5em top 50%, left .5em top 50%;
 }
 
 .test_presets_more .details_contain {
     position: absolute;
-    background: #2a3c64;
+    background: #1c3544;
     width: 30rem;
     padding: 1rem;
     z-index: 9999999;
