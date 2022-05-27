@@ -5,7 +5,6 @@ $genContentSize = $testStepResult->getMetric('generated-content-size');
 $genContentPercent = $testStepResult->getMetric('generated-content-percent');
 
 $requests = $testStepResult->getRequests();
-$initialHost = $requests[0]["host"];
 $jsRequests = array();
 $jsHosts = array();
 foreach ($requests as $request) {

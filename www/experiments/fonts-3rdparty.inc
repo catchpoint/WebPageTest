@@ -2,7 +2,6 @@
 
 $category = "Quick";
 $requests = $testStepResult->getRequests();
-$initialHost = $requests[0]["host"];
 $Font3pReqs = array();
 $Font3pHosts = array();
 $FontsLoadedByExt = array();

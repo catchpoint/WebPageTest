@@ -37,5 +37,49 @@ final class UtilTest extends TestCase
         $fetched = Cache::fetch($key);
         $this->assertEquals($value, $fetched);
     }
-
+    public function testGetRunCountFirstViewOnly(): void
+    {
+        $runs = 1;
+        $fvonly = 1;
+        $lighthouse = 0;
+        $testtype = '';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(1, $total_runs);
+    }
+    public function testGetRunCountFirstViewOnlyWithLighthouse(): void
+    {
+        $runs = 1;
+        $fvonly = 1;
+        $lighthouse = 1;
+        $testtype = '';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(2, $total_runs);
+    }
+    public function testGetRunCountRepeatView(): void
+    {
+        $runs = 1;
+        $fvonly = 0;
+        $lighthouse = 0;
+        $testtype = '';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(2, $total_runs);
+    }
+    public function testGetRunCountRepeatViewWithLighthouse(): void
+    {
+        $runs = 1;
+        $fvonly = 0;
+        $lighthouse = 1;
+        $testtype = '';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(3, $total_runs);
+    }
+    public function testGetRunCountLighthouseTest(): void
+    {
+        $runs = 1;
+        $fvonly = 1;
+        $lighthouse = 1;
+        $testtype = 'lighthouse';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(1, $total_runs);
+    }
 }
