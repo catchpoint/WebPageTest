@@ -10,7 +10,9 @@ if ($CURL_CONTEXT !== false) {
 }
 
 // load the locations
-$locations = LoadLocations($request_context->getUser()->isPaid());
+$isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+$includePaid = $isPaid || $admin;
+$locations = LoadLocations($includePaid);
 
 // get the backlog for each location
 foreach( $locations as $id => &$location )
@@ -186,6 +188,9 @@ function outputHTMLRow($location) {
 */
 function LoadLocations($isPaid = false)
 {
+  global $request_context;
+  global $admin;
+
   $isPaid = false;
   $locations = array();
   $loc = LoadLocationsIni();
