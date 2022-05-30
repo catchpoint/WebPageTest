@@ -347,6 +347,7 @@ h6 {
 }
 
 .test_results-content h2 em.flag,
+.summary_opps em.flag,
 span.lh-flag {
     font-size: .3em;
     font-weight: 500;
@@ -359,6 +360,10 @@ span.lh-flag {
     align-self: flex-start;
     font-style: normal;
     margin: 0 1em;
+}
+
+.summary_opps em.flag {
+    font-size: .4em;
 }
 
 .pro-flag {
@@ -2580,6 +2585,36 @@ details.details_custommetrics summary {
     max-width: 45em;
     line-height: 1.5;
     font-weight: 300;
+}
+
+.summary_opps>p {
+    line-height: 1.5;
+    font-weight: 700;
+    border-bottom: 1px solid #1071ba;
+    margin: .6em 0 1em;
+    max-width: none;
+    padding-bottom: .7em;
+    display: flex;
+    color: #2a3b64;
+}
+
+.summary_opps>p a {
+    font-weight: 700;
+    font-size: .6em;
+    padding: .4em 1em;
+    border-radius: 2em;
+    color: #5c9811;
+    border: 1px solid #5c9811;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 1em;
+}
+
+.summary_opps>p a:hover,
+.summary_opps>p a:focus {
+    background-color: #5c9811;
+    border-color: #448204;
+    color: #fff;
 }
 
 @media (max-width: 60em) {

@@ -118,7 +118,14 @@ $page_description = "Website performance test result$testLabel.";
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
-                <p>Here's how this site performed in this test.</p>
+                <p>Opportunies & Experiments <em class="flag">New</em>
+                <?php
+                  if( $tabs && $tabs['Opportunities & Experiments'] ){
+                    echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
+                  }
+                ?>
+
+                </p>
           
                 <?php
                     include __DIR__ . '/experiments/common.inc';
