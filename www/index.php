@@ -1017,8 +1017,12 @@ function LoadLocations()
 function ShowBulk() {
     global $admin;
     global $USER_EMAIL;
+    global $request_context;
     if ($admin)
         return true;
+    if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
+        return true;
+    }
     if (GetSetting('bulk_disabled'))
         return false;
     if (!GetSetting('noBulk'))
