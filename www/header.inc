@@ -272,8 +272,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         <div class=\"details_contain\">
                             <ul>
                             <li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">Download Results Image</a></li>
-                            <li><a href=\"\">Tweet This Experiment</a></li>
-                            </ul>
+                            <li><a href=\"" . $emailURI . "\">Email This Result</a></li>" . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Tweet This Result</a></li>" : "") . "</ul>
                         </div></details>";
                     }
                     
