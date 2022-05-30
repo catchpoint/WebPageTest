@@ -71,7 +71,7 @@ $assessment[$category]["opportunities"][] = array(
 
 $assessment[$category]["opportunities"][] = array(
     "title" =>  "Delivery Optimizations",
-    "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. <a href='#'>See Documentation</a>.",
+    "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. Note expected syntax examples when using.",
     "examples" =>  array(),
     "experiments" =>  array(
         (object) [
@@ -124,7 +124,7 @@ $assessment[$category]["opportunities"][] = array(
             "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
 "expfields" => array(
                 (object) [
-                    'label' => 'File/URL <em>(plus <code>|w500|h600</code>)</em>',
+                    'label' => 'Src value & config: <em>(<code>foo.jpg|w500|h600</code>)</em>',
                     'type' => 'text'
                 ]
 ),
@@ -135,10 +135,10 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '031',
             'expvar' => 'inline',
             'title' => 'Inline External Files',
-            "desc" => '<p>This experiment embeds the contents of specified external scripts or stylesheets or svg Files directly into the HTML within a <code>style</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips. <strong>Note:</strong> The inline experiment may break relative references to images and other assets inside the file. These would need proper path changes in production.</p>',
-"expfields" => array(
+            "desc" => '<p>This experiment embeds the contents of specified external scripts or stylesheets directly into the HTML. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips. <strong>Note:</strong> The inline experiment may break relative references to images and other assets inside the file. These would need proper path changes or absolute URLs in production.</p>',
+            "expfields" => array(
                 (object) [
-                    'label' => 'File/URL',
+                    'label' => 'Src or Href',
                     'type' => 'text'
                 ]
 ),
@@ -153,7 +153,7 @@ $assessment[$category]["opportunities"][] = array(
             
 "expfields" => array(
                 (object) [
-                    'label' => 'File/URL',
+                    'label' => 'Url and config: <em>(<code>path/to/file.jpg|as_image</code>)</em>',
                     'type' => 'text'
                 ]
 ),
@@ -236,11 +236,11 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '038',
             'expvar' => 'addpriorityhint',
             'title' => 'Add Priority Hint',
-            "desc" => '<p><em>(Chrome-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
+            "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
             
 "expfields" => array(
                 (object) [
-                    'label' => 'File/URL <em>(plus <code>|i_high</code> or <code>|i_low</code>)</em>',
+                    'label' => 'Src/Href and config: <em>(<code>foo.jpg|i_high</code> or <code>foo.jpg|i_low</code>)</em>',
                     'type' => 'text'
                 ]
 ),

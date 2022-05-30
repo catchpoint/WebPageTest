@@ -60,7 +60,7 @@
                     $expsToAdd[] = (object) [
                         "id" => '011',
                         'title' => 'Add Priority Hint',
-                        "desc" => '<p><em>(Chrome-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
+                        "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to your LCP image, causing it to request earlier at a higher priority.</p>',
                         "expvar" => 'addpriorityhint',
                         "expval" => array($lcpSource . "|i_high"),
                         "explabel" => array($lcpSource)
@@ -96,7 +96,7 @@
         } else {
             $assessment[$category]["opportunities"][] = array(
                 "title" =>  'Largest Contentful Paint time was under 2.5 seconds',
-                "desc" =>  "If it was higher, WebPageTest would look for ways to speed it up.",
+                "desc" =>  "Great job. If LCP was higher, WebPageTest would look for ways to speed it up.",
                 "examples" =>  array(),
                 "experiments" =>  array(),
                 "good" =>  true

@@ -64,7 +64,7 @@ if( count($blockingJSReqs) > 0 ){
 else {
     $assessment[$category]["opportunities"][] = array( 
         "title" =>  'Zero render-blocking JavaScript files found.',
-        "desc" =>  "TBD importance notes here",
+        "desc" =>  "Great job. Fewer render-blocking requests mean the browser can visibly render content sooner.",
         "examples" =>  array(),
         "experiments" =>  array(),
         "good" =>  true

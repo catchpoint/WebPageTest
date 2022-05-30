@@ -53,7 +53,7 @@
             else {
                 $assessment[$category]["opportunities"][] = array(
                     "title" =>  'Layout shifts are not caused by images lacking aspect ratio',
-                    "desc" =>  "TBD importance notes here",
+                    "desc" =>  "This is great. Images with width and height attributes allow the browser to better predict the space an image will occupy in a layout before it loads, reducing layout shifts and improving your CLS metric score.",
                     "examples" =>  array(),
                     "experiments" =>   array(),
                     "good" =>  true
@@ -63,7 +63,7 @@
         else {
                 $assessment[$category]["opportunities"][] = array( 
                     "title" =>  'Zero major layout shifts detected.',
-                    "desc" =>  "TBD importance notes here",
+                    "desc" =>  "This is great. Layout shifts hinder usability and reducing layout shifts will improve your CLS metric score.",
                     "examples" =>  array(),
                     "experiments" =>  array(),
                     "good" =>   true
