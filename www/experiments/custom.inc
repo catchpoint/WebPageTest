@@ -78,7 +78,7 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '027',
             'expvar' => 'deferjs',
             'title' => 'Defer Render-Blocking Scripts',
-            "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. <a href="#">More about defer on MDN</a></p>',
+            "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source.</p>',
             'textfield' => false,
 "expfields" => array(
                 (object) [
@@ -93,7 +93,7 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '028',
             'expvar' => 'asyncjs',
             'title' => 'Async Blocking Scripts',
-            "desc" => '<p>This experiment adds a <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source. <a href="#">More about async on MDN</a></p>',
+            "desc" => '<p>This experiment adds a <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source.</p>',
 "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
