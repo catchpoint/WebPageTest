@@ -39,21 +39,21 @@ if( count($blockingJSReqs) > 0 ){
             (object) [
                 "id" => '001',
                 'title' => 'Defer Render-Blocking Scripts',
-                "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. Example implementation: <code>&lt;script src="'. $blockingJSReqs[0] .' defer"&gt;&lt;/script&gt;</code></p>',
+                "desc" => '<p>This experiment adds a <code>defer</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Deferred scripts still execute in the order they are defined in source. Example implementation: <code>&lt;script src="'. $blockingJSReqs[0] .'" defer&gt;&lt;/script&gt;</code></p>',
                 "expvar" => 'deferjs',
                 "expval" => array_unique($blockingJSReqs)
             ],
             (object) [
                 "id" => '041',
                 'title' => 'Async Render-Blocking Scripts',
-                "desc" => '<p>This experiment adds an <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source. Example implementation: <code>&lt;script src="'. $blockingJSReqs[0] .' async"&gt;&lt;/script&gt;</code></p>',
+                "desc" => '<p>This experiment adds an <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source. Example implementation: <code>&lt;script src="'. $blockingJSReqs[0] .'" async&gt;&lt;/script&gt;</code></p>',
                 "expvar" => 'asyncjs',
                 "expval" => array_unique($blockingJSReqs)
             ],
             (object) [
                 "id" => '002',
                     'title' => 'Inline Render-Blocking Scripts',
-                    "desc" => '<p>This experiment embeds the contents of specified external scripts directly into the HTML within a <code>script</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.Example implementation: <code>&lt;script&gt;/* contents from '. $blockingJSReqs[0] .' here...&lt;/script&gt;</code></p>',
+                    "desc" => '<p>This experiment embeds the contents of specified external scripts directly into the HTML within a <code>script</code> element. This increases the size of the HTML, but can often allow page page to display sooner by avoiding server round trips.Example implementation: <code>&lt;script&gt;/* contents from '. $blockingJSReqs[0] .' here...*/&lt;/script&gt;</code></p>',
                     "expvar" => 'inline',
                     "expval" => array_unique($blockingJSReqs)
                 ]
