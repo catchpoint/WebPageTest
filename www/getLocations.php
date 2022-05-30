@@ -263,6 +263,9 @@ function LoadLocations()
 */
 function GetBacklog($dir, $locationId)
 {
+    global $request_context;
+    $ui_priority = $request_context->getUser()->getUserPriority();
+
     $backlog = array();
 
     $userCount = 0;
@@ -279,7 +282,6 @@ function GetBacklog($dir, $locationId)
             $backlog["p$i"] = $queue[$i];
             $lowCount += $queue[$i];
         }
-        $ui_priority = intval(GetSetting('user_priority', 0));
         $backlog['Blocking'] = 0;
         for ($p = 0; $p <= $ui_priority; $p++) {
           if (isset($queue[$p])) {

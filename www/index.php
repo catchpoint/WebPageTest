@@ -971,6 +971,9 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
+    global $request_context;
+    $ui_priority = $request_context->getUser()->getUserPriority();
+
     $locations = LoadLocationsIni();
     FilterLocations( $locations );
 
@@ -983,7 +986,6 @@ function LoadLocations()
             if (isset($queues) && is_array($queues) && isset($queues[0])) {
                 // Sum up the queue lengths for anything higher priority than the UI priority
                 $loc['backlog'] = 0;
-                $ui_priority = intval(GetSetting('user_priority', 0));
                 for ($p = 0; $p <= $ui_priority; $p++) {
                     if (isset($queues[$p])) {
                         $loc['backlog'] += $queues[$p];
