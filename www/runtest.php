@@ -64,7 +64,7 @@ use WebPageTest\RateLimiter;
     require_once __DIR__ . '/experiments/user_access.inc';
 
     $experimentURL = Util::getSetting('experimentURL');
-
+    $ui_priority = $request_context->getUser()->getUserPriority();
 
     set_time_limit(300);
 
@@ -246,7 +246,7 @@ use WebPageTest\RateLimiter;
             $test['median_video'] = isset($req_mv) ? (int)$req_mv : 0;
             if (isset($req_addr))
               $test['ip'] = $req_addr;
-            $test['priority'] = isset($req_priority) ? (int)$req_priority : intval(GetSetting('user_priority', 0));
+            $test['priority'] = isset($req_priority) ? (int)$req_priority : $ui_priority;
             if( isset($req_bwIn) && !isset($req_bwDown) )
                 $test['bwIn'] = (int)$req_bwIn;
             else
@@ -689,7 +689,7 @@ use WebPageTest\RateLimiter;
                 unset($test['path']);
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
-            $test['priority'] = intval(GetSetting('user_priority', 0));
+            $test['priority'] = $ui_priority;
         }
 
         if ($test['mobile']) {
@@ -1548,8 +1548,8 @@ function ValidateKey(&$test, &$error, $key = null)
                     $test['accountId'] = $account['accountId'];
                     $test['contactId'] = $account['contactId'];
                     // success.  See if there is a priority override for redis-based API tests
-                    if (GetSetting('redis_api_priority', FALSE) !== FALSE) {
-                      $test['priority'] = intval(GetSetting('redis_api_priority'));
+                    if (Util::getSetting('paid_priority')) {
+                      $test['priority'] = intval(Util::getSetting('paid_priority'));
                     }
                   } else {
                     $error = 'The test request will exceed the remaining test balance for the given API key';

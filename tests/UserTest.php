@@ -35,4 +35,12 @@ final class UserTest extends TestCase
         $user->setAdmin(true);
         $this->assertTrue($user->isAdmin());
     }
+
+    public function testSettingPriority(): void
+    {
+        $user = new User();
+        $this->assertEquals($user->getUserPriority(), 9);
+        $user->setUserPriority(0);
+        $this->assertEquals($user->getUserPriority(), 0);
+    }
 }

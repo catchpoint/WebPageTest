@@ -1514,6 +1514,9 @@ function GetDailyTestNum() {
 }
 
 function AddTestJob($location, $job, $test, $testId) {
+  global $request_context;
+  $priority = $request_context->getUser()->getUserPriority();
+
   $ret = false;
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
     $testPath = GetTestPath($testId);
@@ -1531,7 +1534,6 @@ function AddTestJob($location, $job, $test, $testId) {
         $json = null;
         $ret = true;
         $json = json_decode($job, true);
-        $priority = intval(GetSetting('user_priority', 0));
         if (isset($json['priority'])) {
           $priority = $json['priority'];
         }

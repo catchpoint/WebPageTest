@@ -24,6 +24,7 @@ class User
         $this->user_id = null;
         $this->is_paid_and_in_good_standing = false;
         $this->is_verified = false;
+        $this->user_priority = 9; //default to lowest possible priority
         $this->is_wpt_enterprise_client = false;
     }
 
@@ -131,5 +132,15 @@ class User
     public function setEnterpriseClient(bool $is_wpt_enterprise_client): void
     {
         $this->is_wpt_enterprise_client = $is_wpt_enterprise_client;
+    }
+
+    public function setUserPriority(int $user_priority): void
+    {
+        $this->user_priority = $user_priority;
+    }
+
+    public function getUserPriority(): ?int
+    {
+        return $this->user_priority;
     }
 }

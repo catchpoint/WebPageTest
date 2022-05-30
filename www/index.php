@@ -975,6 +975,8 @@ function LoadLocations()
     global $admin;
     $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
     $includePaid = $isPaid || $admin;
+    $ui_priority = $request_context->getUser()->getUserPriority();
+
     $locations = LoadLocationsIni();
     FilterLocations( $locations, $includePaid );
 
@@ -987,7 +989,6 @@ function LoadLocations()
             if (isset($queues) && is_array($queues) && isset($queues[0])) {
                 // Sum up the queue lengths for anything higher priority than the UI priority
                 $loc['backlog'] = 0;
-                $ui_priority = intval(GetSetting('user_priority', 0));
                 for ($p = 0; $p <= $ui_priority; $p++) {
                     if (isset($queues[$p])) {
                         $loc['backlog'] += $queues[$p];

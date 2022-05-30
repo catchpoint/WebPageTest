@@ -85,6 +85,20 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
+  // TEMP FLAG TEMP FLAG
+    $user->setPaid(true);
+    if (isset($_REQUEST['unpaid'])) {
+        $user->setPaid(false);
+    }
+
+    $isPaid = $user->isPaid();
+    if ($isPaid) {
+        //calculate based on paid priority
+        $user->setUserPriority(Util::getSetting('paid_priority', 0));
+    } else {
+        $user->setUserPriority(Util::getSetting('user_priority', 0));
+    }
+
     $user_email = $user->getEmail();
 
     if (!$admin && !is_null($user_email)) {
