@@ -72,7 +72,10 @@ function GetAllAddresses($include_sensitive = true) {
   }
 
   BuildLocations($loc);
-  FilterLocations($loc, $include_sensitive);
+  $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+  $includePaid = $isPaid || $admin;
+
+  FilterLocations($loc, $includePaid, $include_sensitive);
 
   $i = 1;
   while (isset($loc['locations'][$i])) {

@@ -201,8 +201,12 @@ $page_description = "Test network path from multiple locations around the world 
 */
 function LoadLocations()
 {
+    global $request_context;
+    global $admin;
+    $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+    $includePaid = $isPaid || $admin;
     $locations = LoadLocationsIni();
-    FilterLocations( $locations );
+    FilterLocations( $locations, $includePaid );
 
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )

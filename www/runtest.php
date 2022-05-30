@@ -77,7 +77,8 @@ use WebPageTest\RateLimiter;
     $runcount = 0;
     $apiKey = null;
     $is_mobile = false;
-
+    $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+    $includePaid = $isPaid || $admin;
     // load the secret key (if there is one)
     $server_secret = Util::getServerSecret();
     $api_keys = null;
@@ -107,6 +108,13 @@ use WebPageTest\RateLimiter;
     if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() && isset($api_keys) && !isset($api_keys[$_REQUEST['k']])) {
       foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['noapi'])) {
+            unset($locations[$name]);
+        }
+      }
+    } else if (!$includePaid){
+      //no key, so we need to look at user status for paid
+      foreach ($locations as $name => $location) {
+        if (isset($location['browser']) && isset($location['premium'])) {
             unset($locations[$name]);
         }
       }
