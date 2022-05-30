@@ -1022,6 +1022,8 @@ function ShowBulk() {
         return true;
     if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
         return true;
+    } else if (!is_null($request_context->getUser())) {
+        return false;
     }
     if (GetSetting('bulk_disabled'))
         return false;
