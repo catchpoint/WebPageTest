@@ -100,7 +100,8 @@ foreach ($requestsInitial as $request) {
     }
 }
 function initiatedByRoot($request){
-	return $request['initiator'] == $firstNonRedirect;
+	return true;
+	//return $request['initiator'] == $firstNonRedirect;
 }
 
 
