@@ -17,16 +17,16 @@
 </div>
 <?php
 $quotes = array(
-    array('quote' => 'Experiments are a game changer for quantifying the speed impact of performance optimizations. What took days of technical work is now just a few clicks. Not only will this save tons of time, it will let us test and iterate ideas to find the right mix of recommendations efficiently. <b>I’m blown away this exists, it feels like magic.</b>',
+    array('quote' => '<a href="https://product.webpagetest.org/experiments">Experiments</a> are a game changer for quantifying the speed impact of performance optimizations. What took days of technical work is now just a few clicks. Not only will this save tons of time, it will let us test and iterate ideas to find the right mix of recommendations efficiently.<br><b>I’m blown away this exists, it feels like magic.</b>',
           'author' => 'Todd Parker <span>Partner, Filament Group</span>'),
-    array('quote' => 'The best professional web performance investigators I know use WPT as a critical part of their workflows, and it\'s the center of mine.',
+    /*array('quote' => 'The best professional web performance investigators I know use WPT as a critical part of their workflows, and it\'s the center of mine.',
           'author' => 'Alex Russell <span>Program Manager, Microsoft Edge</span>'),
     array('quote' => 'One of the cool features of WebPageTest is that it can generate a filmstrip of screen snapshots taken during a web page load, enabling us to quantify how a page loads, visually. This view makes it significantly easier to determine how long the page is blank for, and how long it takes for the most important content to render.</p><p>Being able to look at the results in this way, provides the ability to empathise with the user.',
           'author' => 'Andrew Galloni <span>Engineering Director at Cloudflare</span>'),
     array('quote' => 'WebPage Test measures web performance metrics in real browsers, is highly programmable, and could scale to test millions of sites per day.',
           'author' => 'Yevgen Safranov <span>Software Engineer at Cloudflare</span>'),
     array('quote' => 'Snyk uses WebPageTest to perform 3rd party library detection and vulnerability scanning that reveals potential security vulnerabilities in your website pages.',
-          'author' => 'Liran Tal <span>Developer Relations at Snyk</span>'),
+          'author' => 'Liran Tal <span>Developer Relations at Snyk</span>'),*/
 );
 $quote = $quotes[array_rand($quotes)];
 ?>
