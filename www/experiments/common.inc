@@ -89,10 +89,10 @@ function is300s($req){
 }
 
 $requestsInitial = $testStepResult->getRequests();
-$firstNonRedirect = $pageData[$run][$cached]['final_url'];
 
 function initiatedByRoot($request){
-	return $request['initiator'] == $firstNonRedirect;
+	global $rootURL;
+	return strcasecmp($request['initiator'],$rootURL) === 0;
 }
 
 

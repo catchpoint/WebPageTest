@@ -127,9 +127,11 @@ $page_description = "Website performance test result$testLabel.";
                     $requests = $testStepResult->getRequests();
                     // initial host is used by a few opps, so we'll calculate it here
                     $initialHost = null;
+                    $rootURL = null; 
                     foreach ($requests as $request) {
                         if ($request['is_base_page'] == "true") {
                             $initialHost = $request['host'];
+                            $rootURL = trim($request['full_url']);
                             break;
                         }
                     }
