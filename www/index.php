@@ -501,9 +501,11 @@ $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $
                                     <li>
                                       <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
                                     </li>
+<?php if($is_paid): ?>
                                     <li>
                                       <label for="private-advanced"><input type="checkbox" name="private" id="private-advanced" class="checkbox"> Make Test Private</label>
                                     </li>
+<?php endif; ?>
                                     <li>
                                         <label for="label">Label</label>
                                         <?php
