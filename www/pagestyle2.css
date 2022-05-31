@@ -4416,6 +4416,17 @@ th.header {
     border-bottom: 1px solid #010102;
     /* border-bottom: 1px solid ; */
 }
+.alert-banner-savedate {
+    color: #fff;
+    padding: 1em !important;
+    background:#3c0452 ;
+    font-size: 1.1em !important;
+    
+}
+.alert-banner-savedate a {
+    margin: 0 .5em;
+    font-weight: 700;
+}
 
 .alert-banner img,
 .alert-banner-twitch img {
