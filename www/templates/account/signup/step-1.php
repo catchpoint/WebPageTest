@@ -308,7 +308,7 @@
             <dd>
                 <div id="faq2_desc" class="desc">You should come to the Parking office and report the
                     <p><em>FOR ALL PLANS,</em> A test on WebPageTest is comprised of one or more test runs. A test run is defined as a single page load within a test. Here are a few examples:</p>
-                    <ul>
+                    <ul class="bulleted-list">
                         <li>A test from a single browser and location, with 3 test runs, first view only, counts as three test runs. (3 runs * 1 load per run)</li>
                         <li>A test from a single browser and location, with 5 test runs, first and repeat views for each run, counts as 10 test runs (5 runs * 2 loads per run)</li>
                         <li>A test from a single browser and location, with 4 tests runs, first and repeat views for each run, and an additional Lighthouse run, counts as 9 test runs ( (4 runs * 2 loads per run) + 1 Lighthouse run)</li>
@@ -317,13 +317,13 @@
                 </div>
             </dd>
             <dt>
-                <button type="button" aria-expanded="false" aria-controls="faq3_desc">• What countries and browsers do you support with the WebPageTest </button>
+                <button type="button" aria-expanded="false" aria-controls="faq3_desc">What countries and browsers do you support with the WebPageTest </button>
             </dt>
             <dd>
                 <div id="faq3_desc" class="desc">
-                    <p>WebPageTest Starter gives you access to 30 locations worldwide, including mainland China. With WebPageTest Pro, you get access to 11 more premium locations. </p>
+                    <p><strong>WebPageTest Starter</strong> gives you access to 30 locations worldwide, including mainland China. With WebPageTest Pro, you get access to 11 more premium locations. </p>
                     <p>WebPageTest is always up-to-date on the current version of every browser and you can test on Chrome (stable, beta, canary), Firefox (stable, beta, ESR), Microsoft Edge (dev) and Brave. </p>
-                    <p>WebPageTest Pro also supports mobile emulation testing. You can test mobile content by emulating an Android browser by passing “mobile=1” as an API option.</p>
+                    <p><strong>WebPageTest Pro</strong> also supports mobile emulation testing. You can test mobile content by emulating an Android browser by passing “mobile=1” as an API option.</p>
 
                 </div>
             </dd>
@@ -335,7 +335,7 @@
                     <p>Opportunities and Experiments are a powerful combination that will let you quickly identify areas of improvement for your website and test the impact of any relevant optimizations without ever having to write a line of code.</p>
                     <p>
                         Opportunities are recommendations that are broken down into three categories:</p>
-                    <ul>
+                    <ul class="bulleted-list">
                         <li>Quickness</li>
                         <li>Usability</li>
                         <li>Resilience</li>
