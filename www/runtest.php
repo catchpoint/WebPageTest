@@ -2559,6 +2559,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         AddIniLine($testInfo, "batch", $batch);
         AddIniLine($testInfo, "batch_locations", $batch_locations);
         AddIniLine($testInfo, "sensitive", $test['sensitive']);
+        AddIniLine($testInfo, "private", $test['private']);
         if( isset($test['login']) && strlen($test['login']) )
             AddIniLine($testInfo, "authenticated", "1");
         AddIniLine($testInfo, "connections", $test['connections']);
