@@ -326,6 +326,8 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
 $median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
 $testLabel = '';
 $page_title = 'WebPageTest Test';
+$test_is_private = false;
+
 if (strlen($id)) {
     if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
@@ -432,7 +434,7 @@ if (strlen($id)) {
         $test['testinfo'] = array();
     }
 
-    
+
     $experiment = false;
     if( $test['testinfo'] ){
       $testTestInfo = $test['testinfo'];
@@ -441,7 +443,7 @@ if (strlen($id)) {
         $metaInfo = json_decode($metaInfo, true);
         if( $metaInfo['experiment'] && $metaInfo['experiment']['control'] === false ){
           $experiment = true;
-          
+
           require_once __DIR__ . '/include/UrlGenerator.php';
 
           $experimentOriginalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0 );
