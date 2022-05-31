@@ -523,6 +523,7 @@ body.theme-b {
 
 .signup-hed p {
   margin: 0 0 1rem;
+  max-width: 700px;
 }
 
 
@@ -1632,19 +1633,40 @@ ul.bulleted-list {
 }
 
 @media (max-width: 85em) {
+
   .signup-flow-step-1-layout h1 {
     font-size: 2.3rem;
+    margin: 1em 0 .5em
   }
 
   .plan-callout {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
+    padding-left: 27px;
+    padding-top: 0;
+  }
+
+  .signup-hed-price {
+    font-size: 2rem;
   }
 
   .signup-hed {
     padding: 0 1.5rem 1.5rem;
+    line-height: 1.5;
+    font-size: 1.15rem;
   }
 
   .signup-step-1-content {
     padding: 0 1.5rem;
+  }
+
+  .signup-step-1-content h2 {
+    margin: 2rem 0;
+  }
+
+  .plan-callout::before {
+    top: 8px;
+    left: -9px;
+    background-size: 40px;
+    background-repeat: no-repeat;
   }
 }
