@@ -1622,3 +1622,8 @@ dl.faq button[aria-expanded="true"]::after {
   font-weight: 700;
   font-size: 2.75rem;
 }
+
+ul.bulleted-list {
+  list-style: disc;
+  margin-left: 2rem;
+}
