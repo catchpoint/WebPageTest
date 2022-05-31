@@ -3012,7 +3012,7 @@ body.result #main {
     height: 0;
 }
 
-@media (min-width: 80em) {
+@media (min-width: 40em) {
     .home .play {
         width: 100px;
         height: 100px;
@@ -3514,7 +3514,7 @@ header {
     padding-bottom: 3rem;
 }
 
-@media (max-width: 55em) {
+@media (max-width: 70em) {
     .home_feature_hed,
     .home_feature_main {
         display: block;
