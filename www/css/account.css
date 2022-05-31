@@ -1543,13 +1543,14 @@ tr.custom-plan-mobile {
 dl.faq button {
   margin: 0;
   margin-top: 16px;
-  padding: 4px 0px;
+  padding: 4px 25px 0px;
   font-weight: 700;
   font-size: 1.25rem;
   border: none;
   background-color: transparent;
   width: 100%;
   text-align: left;
+  display: relative;
 }
 
 dl dd {
@@ -1564,7 +1565,7 @@ dl.faq .desc {
   margin-top: 0.25em;
   font-size: 1.25rem;
   display: none;
-  line-height: 1.75rem;
+  line-height: 1.5;
 }
 
 dl.faq button:hover,
@@ -1573,13 +1574,15 @@ dl.faq button:focus {
 }
 
 dl.faq button[aria-expanded="false"]::after {
-  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgNGwtMTEuMjQ1IDE0LjM3NC0xMS4yMTktMTQuMzc0LS43ODEuNjE5IDEyIDE1LjM4MSAxMi0xNS4zOTEtLjc1NS0uNjA5eiIvPjwvc3ZnPg==");
-  float: right;
+  content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
+  position: absolute;
+  right: 0;
 }
 
 dl.faq button[aria-expanded="true"]::after {
-  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgMjBsLTExLjI0NS0xNC4zNzQtMTEuMjE5IDE0LjM3NC0uNzgxLS42MTkgMTItMTUuMzgxIDEyIDE1LjM5MS0uNzU1LjYwOXoiLz48L3N2Zz4=");
-  float: right;
+  content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
+  position: absolute;
+  right: 0;
 }
 
 /* Typography */
@@ -1672,5 +1675,10 @@ ul.bulleted-list {
     left: -9px;
     background-size: 40px;
     background-repeat: no-repeat;
+  }
+
+  dl.faq .desc,
+  dl.faq button {
+    font-size: 1.15rem;
   }
 }
