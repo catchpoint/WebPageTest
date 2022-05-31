@@ -1,8 +1,9 @@
 <div class="signup-hed-contain">
     <div class="signup-hed ">
-        <h1>Ready to go <span>Pro?</span></h1>
-        <p>All the WebPageTest features you already love</p>
-        <p><strong>plus API Access &amp; unlimited 1-click experiments!</strong></p>
+        <h1>Ready to go Pro?</h1>
+        <p>All the WebPageTest features you already love,
+            <strong>plus API Access &amp; No-Code Experiments!</strong>
+        </p>
         <p class="plan-callout">Plans start at just <span class="signup-hed-price">$5/mo</span></p>
     </div> <!-- ./signup-hed -->
 </div>
@@ -306,7 +307,7 @@
                 <button type="button" aria-expanded="false" aria-controls="faq2_desc">How do you define a test run?</button>
             </dt>
             <dd>
-                <div id="faq2_desc" class="desc">You should come to the Parking office and report the
+                <div id="faq2_desc" class="desc">
                     <p><em>FOR ALL PLANS,</em> A test on WebPageTest is comprised of one or more test runs. A test run is defined as a single page load within a test. Here are a few examples:</p>
                     <ul class="bulleted-list">
                         <li>A test from a single browser and location, with 3 test runs, first view only, counts as three test runs. (3 runs * 1 load per run)</li>

@@ -492,8 +492,8 @@ body.theme-b {
 .signup-hed-contain {
   color: white;
   background-color: #6b25cf;
-  background-image: url(/images/src/white-swoop.svg), url(/images/signup-bg.png);
-  background-position: bottom -21px left 50%, bottom 0 left 50%;
+  background-image: url(/images/src/white-swoop.svg), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%237D0688'/%3E%3Cstop offset='1' stop-color='%23150033'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23D617C5' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23D617C5' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.49'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: bottom -12px left 50%, bottom 0 left 50%;
   background-repeat: no-repeat, no-repeat;
   background-size: 100%, cover;
   display: flex;
@@ -523,6 +523,7 @@ body.theme-b {
 
 .signup-hed p {
   margin: 0 0 1rem;
+  max-width: 700px;
 }
 
 
@@ -1326,7 +1327,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   border-collapse: collapse;
   font-size: 1.25rem;
   width: 100%;
-  border: 1px solid #D0D0D0;
   border-radius: 10px;
   margin-bottom: 15px;
 }
@@ -1351,7 +1351,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 
 .comparison-table thead th.section:not(:first-child),
 .comparison-table tbody td {
-  border-left: 1px solid #D0D0D0;
+  border-left: 1px solid white;
 }
 
 .comparison-table tr td,
@@ -1383,6 +1383,11 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 
   .comparison-table tbody tr td {
     background-color: white;
+  }
+
+  .comparison-table thead th.section:not(:first-child),
+  .comparison-table tbody td {
+    border: 1px solid #D0D0D0;
   }
 
   .comparison-table tbody td.custom-plan,
@@ -1538,13 +1543,14 @@ tr.custom-plan-mobile {
 dl.faq button {
   margin: 0;
   margin-top: 16px;
-  padding: 4px 0px;
+  padding: 4px 25px 0 0;
   font-weight: 700;
   font-size: 1.25rem;
   border: none;
   background-color: transparent;
   width: 100%;
   text-align: left;
+  position: relative;
 }
 
 dl dd {
@@ -1559,7 +1565,7 @@ dl.faq .desc {
   margin-top: 0.25em;
   font-size: 1.25rem;
   display: none;
-  line-height: 1.75rem;
+  line-height: 1.5;
 }
 
 dl.faq button:hover,
@@ -1568,13 +1574,16 @@ dl.faq button:focus {
 }
 
 dl.faq button[aria-expanded="false"]::after {
-  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgNGwtMTEuMjQ1IDE0LjM3NC0xMS4yMTktMTQuMzc0LS43ODEuNjE5IDEyIDE1LjM4MSAxMi0xNS4zOTEtLjc1NS0uNjA5eiIvPjwvc3ZnPg==");
-  float: right;
+  content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
+  position: absolute;
+  right: 0;
 }
 
 dl.faq button[aria-expanded="true"]::after {
-  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgMjBsLTExLjI0NS0xNC4zNzQtMTEuMjE5IDE0LjM3NC0uNzgxLS42MTkgMTItMTUuMzgxIDEyIDE1LjM5MS0uNzU1LjYwOXoiLz48L3N2Zz4=");
-  float: right;
+  content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
+  position: absolute;
+  right: 0;
+  transform: rotate(180deg);
 }
 
 /* Typography */
@@ -1629,4 +1638,48 @@ dl.faq button[aria-expanded="true"]::after {
 ul.bulleted-list {
   list-style: disc;
   margin-left: 2rem;
+}
+
+@media (max-width: 85em) {
+
+  .signup-flow-step-1-layout h1 {
+    font-size: 2.3rem;
+    margin: 1em 0 .5em
+  }
+
+  .plan-callout {
+    font-size: 1.15rem;
+    padding-left: 27px;
+    padding-top: 0;
+  }
+
+  .signup-hed-price {
+    font-size: 2rem;
+  }
+
+  .signup-hed {
+    padding: 0 1.5rem 1.5rem;
+    line-height: 1.5;
+    font-size: 1.15rem;
+  }
+
+  .signup-step-1-content {
+    padding: 0 1.5rem;
+  }
+
+  .signup-step-1-content h2 {
+    margin: 2rem 0;
+  }
+
+  .plan-callout::before {
+    top: 8px;
+    left: -9px;
+    background-size: 40px;
+    background-repeat: no-repeat;
+  }
+
+  dl.faq .desc,
+  dl.faq button {
+    font-size: 1.15rem;
+  }
 }
