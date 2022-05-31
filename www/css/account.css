@@ -482,7 +482,7 @@ body.theme-b {
 
 .signup-step-1-content h2 {
   text-align: center;
-}
+font-size: 1.3em;margin: 0 0 1em;}
 
 .signup-feature {
   background: #fff;
@@ -1693,5 +1693,10 @@ ul.bulleted-list {
 @media (min-width: 50em) {
   .signup-hed {
     padding-left: 3rem
+  }
+}
+@media (min-width: 40em) {
+  .signup-hed {
+    padding-bottom: 6rem;
   }
 }
