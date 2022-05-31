@@ -7341,7 +7341,9 @@ td.legend {
     margin-bottom: 0.5rem;
     font-style: italic;
 }
-
+.testimonial blockquote a {
+    color: inherit;
+}
 @media (max-width: 50em) {
     .testimonial {
         font-size: .8em;
