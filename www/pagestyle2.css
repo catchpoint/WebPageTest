@@ -7323,12 +7323,12 @@ td.legend {
     text-align: center;
     /* box-shadow: 1px 1px 70px rgb(0 0 0 / 50%); */
     border-radius: 1rem;
-    margin-bottom: 6em;
+    /* margin-bottom: 0em; */
     max-width: 50em;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 6rem;
-}
+    /* margin-top: 6rem; */
+margin: 0 auto;}
 
 .testimonial blockquote {
     font-size: 1.375em;
@@ -7517,12 +7517,14 @@ td.legend {
     padding: 0 0 1.4em 2.4em;
     display: inline-block;
     cursor: pointer;
-    border-bottom: 1px solid rgb(255 255 255 / 20%);
     display: block;
     margin-bottom: 1em;
     position: relative;
 }
 
+.simpleadvancedfields_contain:last-child  {
+border-bottom: 1px solid #ddd;
+}
 .simpleadvancedfields_contain>input+label:before {
     content: "";
     background: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%23fff' fill='none' stroke-width='2'/%3e%3c/svg%3e");
