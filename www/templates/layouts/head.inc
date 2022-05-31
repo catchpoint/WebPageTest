@@ -99,6 +99,7 @@ if( strlen($page_description) )
 
     // include the analytics code if it is appropriate
     if (!isset($noanalytics)) {
+        include('analytics.inc');
         include('catchpoint-rum.inc');
     }
 
