@@ -11,6 +11,7 @@ global $supportsCPAuth;
 global $request_context;
 global $_SESSION;
 global $client_error;
+global $test_is_private;
 
 $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>

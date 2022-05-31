@@ -97,6 +97,10 @@ if( strlen($page_description) )
         include('analytics.inc');
         include('catchpoint-rum.inc');
     }
-        
+
+    if (isset($test_is_private) && !$test_is_private) {
+        include __DIR__ . '/../../include/social_meta.php';
+    }
+
 
 ?>

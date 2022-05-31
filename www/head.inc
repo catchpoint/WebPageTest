@@ -102,6 +102,7 @@ if( strlen($page_description) )
 
 
 
-
+    if (isset($test_is_private) && !$test_is_private) {
         include __DIR__ . '/include/social_meta.php';
+    }
 ?>
