@@ -64,10 +64,13 @@ use WebPageTest\Exception\UnauthorizedException;
                         $host
                     );
                     $data = $request->getClient()->getUserDetails();
-                    $user->setUserId($data['id']);
-                    $user->setEmail($data['email']);
-                    $user->setPaid($data['isWptPaidUser']);
-                    $user->setVerified($data['isWptAccountVerified']);
+                    $user->setUserId($data['activeContact']['id']);
+                    $user->setEmail($data['activeContact']['email']);
+                    $user->setPaid($data['activeContact']['isWptPaidUser']);
+                    $user->setVerified($data['activeContact']['isWptAccountVerified']);
+                    $user->setOwnerId($data['levelSummary']['levelId']);
+                    $user->setEnterpriseClient(!!$data['levelSummary']['isWptEnterpriseClient']);
+                    $owner = $user->getOwnerId();
                 } catch (Exception $e) {
                     error_log($e->getMessage());
                   // if this fails, delete all the cookies
