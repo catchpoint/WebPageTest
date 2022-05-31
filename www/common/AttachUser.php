@@ -85,18 +85,20 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
-  // TEMP FLAG TEMP FLAG
-    $user->setPaid(true);
-    if (isset($_REQUEST['unpaid'])) {
-        $user->setPaid(false);
+    // In a dev environment, default to showing paid content, use a flag for unpaid
+    if (Util::getSetting('environment') == 'dev') {
+        $user->setPaid(true);
+        if (isset($_REQUEST['unpaid'])) {
+            $user->setPaid(false);
+        }
     }
 
     $isPaid = $user->isPaid();
     if ($isPaid) {
         //calculate based on paid priority
-        $user->setUserPriority(Util::getSetting('paid_priority', 0));
+        $user->setUserPriority((int)Util::getSetting('paid_priority', 0));
     } else {
-        $user->setUserPriority(Util::getSetting('user_priority', 0));
+        $user->setUserPriority((int)Util::getSetting('user_priority', 0));
     }
 
     $user_email = $user->getEmail();
