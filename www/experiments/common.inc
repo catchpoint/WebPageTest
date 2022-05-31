@@ -11,9 +11,6 @@ function documentRelativePath($url, $path){
     return $url;
 }
 
-
-
-
 if( $metaInfo ){
 	$assessmentData = $metaInfo['experiment']['assessment'];
 
@@ -92,16 +89,10 @@ function is300s($req){
 }
 
 $requestsInitial = $testStepResult->getRequests();
-$firstNonRedirect = $requestsInitial[0]['url'];
-foreach ($requestsInitial as $request) {
-    if( isset($request['responseCode']) && !is300s($request)){
-        $firstNonRedirect = $request['full_url'];
-        break;
-    }
-}
+$firstNonRedirect = $pageData[$run][$cached]['final_url'];
+
 function initiatedByRoot($request){
-	return true;
-	//return $request['initiator'] == $firstNonRedirect;
+	return $request['initiator'] == $firstNonRedirect;
 }
 
 
