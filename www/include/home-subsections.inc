@@ -1,20 +1,4 @@
-<div class="tri-col feature-callouts">
-    <div>
-        <img src="/images/real-experience-icon.svg" alt="">
-        <h2 class="alt">Real Experience</h2>
-        <p>Test your user’s real experience with global locations, modern devices, and the latest browser versions.</p>
-    </div>
-    <div>
-        <img src="/images/video-capture-icon.svg" alt="">
-        <h2 class="alt">Video Capture</h2>
-        <p>Correlate your user’s visual experience to the technical measurements of your site.</p>
-    </div>
-    <div>
-        <img src="/images/indepth-metrics-icon.svg" alt="">
-        <h2 class="alt">In-Depth Metrics</h2>
-        <p>Dive into the anatomy of your webpage with components like DNS, TCP, TLS, and more.</p>
-    </div>
-</div>
+
 <?php
 $quotes = array(
     array('quote' => '<a href="https://product.webpagetest.org/experiments">Experiments</a> are a game changer for quantifying the speed impact of performance optimizations. What took days of technical work is now just a few clicks. Not only will this save tons of time, it will let us test and iterate ideas to find the right mix of recommendations efficiently.<br><b>I’m blown away this exists, it feels like magic.</b>',
@@ -36,6 +20,23 @@ $quote = $quotes[array_rand($quotes)];
     </blockquote>
     <figcaption><cite><?php echo $quote['author']; ?></cite></figcaption>
 </figure>
+<div class="tri-col feature-callouts">
+    <div>
+        <img src="/images/real-experience-icon.svg" alt="">
+        <h2 class="alt">Real Experience</h2>
+        <p>Test your user’s real experience with global locations, modern devices, and the latest browser versions.</p>
+    </div>
+    <div>
+        <img src="/images/video-capture-icon.svg" alt="">
+        <h2 class="alt">Video Capture</h2>
+        <p>Correlate your user’s visual experience to the technical measurements of your site.</p>
+    </div>
+    <div>
+        <img src="/images/indepth-metrics-icon.svg" alt="">
+        <h2 class="alt">In-Depth Metrics</h2>
+        <p>Dive into the anatomy of your webpage with components like DNS, TCP, TLS, and more.</p>
+    </div>
+</div>
 <h2 class="light">What's new on the WebPageTest Blog</h2>
 <div class="tri-col">
     <div class="resource-block">
