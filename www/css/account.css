@@ -902,6 +902,7 @@ a.button {
   padding-left: 0;
   display: flex;
   justify-content: space-around;
+  align-items: center;
 }
 
 .signup-flow-layout header li {
