@@ -23,7 +23,7 @@
 						<video width="1152" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
 							<source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
 							<source src="/images/pro-intro-480.mp4">
-							<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">
+							<!--<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">-->
 						</video>
 						<button class="play" id="playbtn">Play/Pause Video</button>
 				</div>
