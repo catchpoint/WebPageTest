@@ -1017,8 +1017,9 @@ use WebPageTest\RateLimiter;
                       }
                     }
                 }
-                elseif( isset($test['batch']) && $test['batch'] )
-                {
+                elseif( isset($test['batch']) && $test['batch'] ) {
+                  //first, we see if they're a paid user
+                  if ($isPaid || $admin) {
                     // build up the full list of URLs
                     $bulk = array();
                     $bulk['urls'] = array();
@@ -1151,19 +1152,20 @@ use WebPageTest\RateLimiter;
                         }
 
                         // write out the list of URLs and the test ID for each
-                        if( $testCount )
-                        {
+                        if( $testCount ) {
                             $path = GetTestPath($test['id']);
                             gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
+                        } else {
+                          $error = 'URLs could not be submitted for testing';
                         }
-                        else
-                            $error = 'URLs could not be submitted for testing';
-                    }
-                    else
+                    } else {
                         $error = "No valid URLs submitted for bulk testing";
-                }
-                else
-                {
+                    }
+                  } else {
+                    $error = 'Bulk testing is only available for WebPageTest Pro subscribers.';
+                  }
+                    
+                } else {
                     $test['id'] = CreateTest($test, $test['url']);
                     if( !$test['id'] && !strlen($error) )
                         $error = 'Error submitting URL for testing';
