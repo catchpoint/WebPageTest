@@ -73,14 +73,14 @@ if ($id) {
                         </div>
                         <div class="wptheader_nav_menu_section">
                             <ul>
-                                <li class="wptheader_nav_menu_link"><a href="/products/experiments">Opportunities & Experiments</a></li>
-                                <li class="wptheader_nav_menu_link"><a href="/products/api">API</a></li>
+                                <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
+                                <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/api">API</a></li>
                             </ul>
                         </div>
                         <div class="wptheader_nav_menu_section">
                             <p class="wptheader_nav_cta">
                                 <span>Ready to go <strong>Pro?</strong></span>
-                                <a href="/products/pricing">Compare Plans</a>
+                                <a href="/signup">Compare Plans</a>
                             </p>
                         </div>
                     </div>
@@ -89,7 +89,7 @@ if ($id) {
 
 
 
-            <li><a href="/products/pricing"><span>Pricing</span></a></li>
+            <li><a href="/signup"><span>Pricing</span></a></li>
 
 
             <li class="wptheader_nav_menu">
@@ -100,7 +100,7 @@ if ($id) {
                             <ul>
                                 <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
                                 <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
-                                <li class="wptheader_nav_menu_link"><a href="https://events.webpagetest.org/">Events</a></li>
+                                <li class="wptheader_nav_menu_link"><a href="https://www.webpagetest.org/events/wpt-upcoming-events-2022">Events</a></li>
 <?php if (Util::getSetting('forums_url')): ?>
                                 <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
 <?php endif; //(Util::getSetting('forums_url')): ?>
@@ -118,7 +118,7 @@ if ($id) {
                     </div>
                 </details>
             </li>
-          <?= addTab('Why WebPageTest', '/why-webpagetest'); ?>
+          <?= addTab('About', '/about'); ?>
             </ul>
                 <ul class="wptheader_acct">
 
