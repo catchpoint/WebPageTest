@@ -15,7 +15,7 @@
 				<div class="home_feature_hed_text">
 					<h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
 								<p>All of the WebPageTest features you already love, <span class="home_feature_hed_text_line">plus <b>API Access</b> &amp; <b>No-Code Experiments!</b></span></p>
-					<a class="pill" href="#" style="
+					<a class="pill" href="/signup" style="
 					padding: .9em 1.5em;
 				">View Plans &amp; Learn More &gt;&gt;</a>
 				</div>
