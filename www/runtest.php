@@ -206,12 +206,17 @@ use WebPageTest\RateLimiter;
             if ($run_time_limit)
               $test['run_time_limit'] = (int)$run_time_limit;
             $test['connections'] = isset($req_connections) ? (int)$req_connections : 0;
-            // Currently, we do nothing to designate the difference between public and private tests
-            // This creates a problem in that people assume their tests are actually private.
-            // But they're more private in the way that github gists are private, we don't advertise
-            // them, but they're accessible to those that know the url. Until we can create a truly
-            // private test, we are going to treat all tests as public
-            $test['private'] = 0;
+
+            /**
+             * True private tests are a paid feature (we formerly said we had
+             * private tests, but they weren't actually private
+             */
+            $is_private = 0;
+            if ($isPaid) {
+              $is_private ??= $req_private;
+            }
+            $test['private'] = $is_private;
+
             if (isset($req_web10))
               $test['web10'] = $req_web10;
             if (isset($req_ignoreSSL))

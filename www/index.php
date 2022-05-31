@@ -76,6 +76,9 @@ if( isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l']) )
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
 
+// Is the user a logged in and paid user?
+$is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -241,17 +244,20 @@ $loc = ParseLocations($locations);
                                 </div>
                             </div>
                             <div class="test_presets_easy_checks">
-                            <div class="fieldrow" id="description"></div>
-                            <div class="fieldrow">
-                                <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
-                            </div>
-                            <div class="fieldrow">
-                                <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
-                            </div>
+                              <div class="fieldrow" id="description"></div>
+                              <div class="fieldrow">
+                                  <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
+                              </div>
+                              <div class="fieldrow">
+                                  <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                              </div>
+<?php if($is_paid): ?>
+                              <div class="fieldrow">
+                                  <label for="private-simple"><input type="checkbox" name="private" id="private-simple" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                              </div>
+<?php endif; ?>
                             </div>
 
-
-                            
                             <div class="test_presets_easy_submit">
                             <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                         </div>
@@ -494,6 +500,9 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                       <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
+                                    </li>
+                                    <li>
+                                      <label for="private-advanced"><input type="checkbox" name="private" id="private-advanced" class="checkbox"> Make Test Private</label>
                                     </li>
                                     <li>
                                         <label for="label">Label</label>
@@ -766,10 +775,9 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                                 <div class="notification-container">
-                                    <div class="notification"><div class="warning">
-                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
-                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
-                                    </div></div>
+                                  <div class="notification">
+                                    <div class="warning">PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.</div>
+                                  </div>
                                 </div>
                             </div>
                             <?php } ?>

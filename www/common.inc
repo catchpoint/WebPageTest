@@ -11,6 +11,7 @@ use WebPageTest\Util;
 use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\ForbiddenException;
 
 if (Util::getSetting('php_sessions')) {
   // Start session handling for this request
@@ -23,7 +24,10 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function($e) {
-        if(is_a($e, ClientException::class)) {
+        if(is_a($e, ForbiddenException::class)) {
+          http_response_code(404);
+          die();
+        } else if(is_a($e, ClientException::class)) {
             $route = $e->getRoute();
             $message = $e->getMessage();
             $host = Util::getSetting('host');
@@ -357,12 +361,20 @@ if (strlen($id)) {
     $cachedText = $cached ? '_Cached' : '';
     $testDate = null;
     if ($test['testinfo']) {
-      if( array_key_exists('completed', $test['testinfo']))
+      if( array_key_exists('completed', $test['testinfo'])) {
           $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
-      if (array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'])
-          $isOwner = true;
-      elseif (array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'])
-          $isOwner = true;
+      }
+
+      // $owner is set by CP details in AttachUser middleware if loaded
+      $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
+      $uid_matches_test = array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'];
+
+      $isOwner = $owner_id_matches_test || $uid_matches_test;
+      $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'];
+
+      if ($test_is_private && !$isOwner) {
+        throw new ForbiddenException();
+      }
 
       $url = array_key_exists('url', $test['testinfo']) ? htmlspecialchars($test['testinfo']['url']) : null;
       $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
