@@ -1595,7 +1595,11 @@ function ValidateKey(&$test, &$error, $key = null)
 function ValidateParameters(&$test, $locations, &$error, $destination_url = null)
 {
     global $use_closest;
-
+    global $admin;
+    global $experiments_paid;
+    global $experiments_logged_in;
+    global $experimentURL;
+    
     if( isset($test['script']) && strlen($test['script']) )
     {
         $url = ValidateScript($test['script'], $error);
@@ -1605,6 +1609,10 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
     if( strlen($test['url']) || $test['batch'] )
     {
+      if ((stripos($test['url'], $experimentURL) !== false)
+        && (!$admin && !$experimentsPaid)) {
+        $error = "Experiments are only available for WebPageTest Pro subscribers.";
+      } else {
         $maxruns = (int)GetSetting('maxruns', 0);
         if( isset($_COOKIE['maxruns']) && $_COOKIE['maxruns'] )
             $maxruns = (int)$_COOKIE['maxruns'];
@@ -1773,6 +1781,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
         }
+      }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
     }
@@ -1787,6 +1796,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 function ValidateScript(&$script, &$error)
 {
     global $test;
+    global $admin;
+    global $experiments_paid;
+    global $experiments_logged_in;
+    global $experimentURL;
+
     $url = null;
     if (stripos($script, 'webdriver.Builder(') === false) {
         global $test;
@@ -1841,6 +1855,14 @@ function ValidateScript(&$script, &$error)
               if ($loggingData) {
                 $stepCount++;
               }
+            } elseif ( !strcasecmp($command, 'overrideHost') ) {
+              //check if experiment URL is being used
+              if (stripos($tokens[2], $experimentURL) !== false
+                && (!$admin && !$experimentsPaid)
+              ) {
+                $error = "Experiments are only available for WebPageTest Pro subscribers.";
+              }
+
             }
         }
         if (!isset($test['steps']) || $stepCount > $test['steps']) {
