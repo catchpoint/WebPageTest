@@ -86,7 +86,7 @@ agent/webdriver/out/1.0.histograms.json.gz
 agent/wptdriver/Registry.pol
 www/gce.php
 
-# docker 
+# docker
 docker/local/results/*
 !docker/local/results/.gitkeep
 
@@ -114,3 +114,5 @@ www/robots.txt
 
 tests/*.cache
 www/beanstalk.php
+.vscode/*
+*/.vscode/*
