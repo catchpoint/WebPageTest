@@ -29,6 +29,20 @@
                 <td></td>
                 <th scope="col">
                     <div class="plan-selector">
+                        <form method="POST" action="/signup">
+                            <p class="plan-name">Starter</p>
+                            <div class="runs"><b>300 Runs</b>/mo</div>
+                            <div class="price">Free</div>
+                            <input type="hidden" name="plan" value="free" />
+                            <input type="hidden" name="step" value="1" />
+                            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                            <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
+                            <button type="submit" class="signup-button">Start for free</button>
+                        </form>
+                    </div>
+                </th>
+                <th scope="col">
+                    <div class="plan-selector">
                         <p class="plan-name">Pro</p>
                         <div class="plan annual">
                             <form method="POST" action="/signup">
@@ -77,20 +91,7 @@
 
                     </div>
                 </th>
-                <th scope="col">
-                    <div class="plan-selector">
-                        <form method="POST" action="/signup">
-                            <p class="plan-name">Starter</p>
-                            <div class="runs"><b>300 Runs</b>/mo</div>
-                            <div class="price">Free</div>
-                            <input type="hidden" name="plan" value="free" />
-                            <input type="hidden" name="step" value="1" />
-                            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                            <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
-                            <button type="submit" class="signup-button">Start for free</button>
-                        </form>
-                    </div>
-                </th>
+
                 <th scope="col" class="custom-plan">
                     <div class="plan-selector">
                         Looking to run more than 20k runs a month, custom integrations or have additional questions?
@@ -102,8 +103,9 @@
         <tbody>
             <tr>
                 <th scope="col">Runs Included</th>
-                <td>Unlimted per plan</td>
                 <td>300</td>
+                <td>Unlimted per plan</td>
+
                 <td rowspan="17" class="custom-plan">
                     <a class="button signup-button" href="mailto:support@webpagetest.org">Contact Us</a>
                 </td>
@@ -111,8 +113,9 @@
 
             <tr>
                 <th scope="col">Locations</th>
-                <td>40 <sup><a href="#fn1" id="ref1">*</a></sup></td>
                 <td>30</td>
+                <td>40 <sup><a href="#fn1" id="ref1">*</a></sup></td>
+
             </tr>
 
             <tr>
@@ -172,74 +175,80 @@
             <tr>
                 <th scope="col">Priority Tests</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
 
             <tr>
                 <th scope="col">Priority Tests</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
 
 
             <tr>
                 <th scope="col">API Access</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
 
             <tr>
                 <th scope="col">Integrations</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
 
             <tr>
                 <th scope="col">Private Tests <em class="new-banner">NEW</em></th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
 
             <tr>
                 <th scope="col">Bulk Testing <em class="new-banner">NEW</em></th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
             </tr>
             <tr>
                 <th scope="col">Opportunities <em class="new-banner">NEW</em></th>
@@ -255,23 +264,24 @@
             <tr>
                 <th scope="col">Experiments</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+
 
             <tr>
                 <th scope="col">Dedicated Support</th>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-                <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
                 </td>
             </tr>
 
