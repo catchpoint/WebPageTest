@@ -514,8 +514,11 @@ body.theme-b {
 
 .signup-hed {
   font-size: 1.75rem;
-  padding: 0 5rem 6.5rem;
+  padding: 0 3rem 6.5rem;
   line-height: 2.5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .signup-hed p {
