@@ -213,7 +213,7 @@ use WebPageTest\RateLimiter;
              */
             $is_private = 0;
             if ($isPaid) {
-              $is_private ??= $req_private;
+              $is_private = $req_private ?? 0;
             }
             $test['private'] = $is_private;
 
