@@ -723,7 +723,7 @@ body.theme-b {
 .signup-flow-layout section .content {
   width: 400px;
   margin: 0 auto;
-}
+max-width: 90vw;}
 
 .signup-flow-layout .payment-details .content {
   width: 535px;
