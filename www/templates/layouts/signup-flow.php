@@ -32,7 +32,7 @@ if (isset($client_error)) {
     <wpt-header>
         <header>
             <a class="wptheader_logo" href="/">
-                <img src="https://webpagetest.org/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
+                <img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
             </a>
             <?php if ($is_plan_free) : ?>
             <ol class="free-plan">
