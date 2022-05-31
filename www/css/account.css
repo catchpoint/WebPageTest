@@ -506,6 +506,10 @@ body.theme-b {
   }
 }
 
+.signnup-hed .price {
+  color: #F9D856;
+  font-weight: 600;
+}
 
 
 .signup-hed {
@@ -767,6 +771,12 @@ body.theme-b {
   cursor: auto;
 }
 
+
+a.button {
+  text-decoration: none;
+  display: block;
+  color: #111;
+}
 
 a.button {
   text-decoration: none;
@@ -1228,13 +1238,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   /* API key length */
 }
 
-.api-consumers .select-all-box {
-  position: relative;
-  top: .5em;
-  left: 3px;
-  width: 3em;
-}
-
 .billing-frequency-selector {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -1309,7 +1312,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1rem;
   color: #2b94ff;
 }
-
 
 
 /*  ---------------------------------------------------------------
@@ -1529,7 +1531,48 @@ tr.custom-plan-mobile {
   left: 0;
 }
 
+/* FAQ section */
+dl.faq button {
+  margin: 0;
+  margin-top: 16px;
+  padding: 4px 0px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  border: none;
+  background-color: transparent;
+  width: 100%;
+  text-align: left;
+}
 
+dl dd {
+  margin: 0;
+  padding: 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #D0D0D0;
+}
+
+dl.faq .desc {
+  margin: 0;
+  margin-top: 0.25em;
+  font-size: 1.25rem;
+  display: none;
+  line-height: 1.75rem;
+}
+
+dl.faq button:hover,
+dl.faq button:focus {
+  cursor: pointer;
+}
+
+dl.faq button[aria-expanded="false"]::after {
+  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgNGwtMTEuMjQ1IDE0LjM3NC0xMS4yMTktMTQuMzc0LS43ODEuNjE5IDEyIDE1LjM4MSAxMi0xNS4zOTEtLjc1NS0uNjA5eiIvPjwvc3ZnPg==");
+  float: right;
+}
+
+dl.faq button[aria-expanded="true"]::after {
+  content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgMjBsLTExLjI0NS0xNC4zNzQtMTEuMjE5IDE0LjM3NC0uNzgxLS42MTkgMTItMTUuMzgxIDEyIDE1LjM5MS0uNzU1LjYwOXoiLz48L3N2Zz4=");
+  float: right;
+}
 
 /* Typography */
 
