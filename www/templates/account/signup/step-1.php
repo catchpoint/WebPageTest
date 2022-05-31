@@ -307,7 +307,7 @@
                 <button type="button" aria-expanded="false" aria-controls="faq2_desc">How do you define a test run?</button>
             </dt>
             <dd>
-                <div id="faq2_desc" class="desc">You should come to the Parking office and report the
+                <div id="faq2_desc" class="desc">
                     <p><em>FOR ALL PLANS,</em> A test on WebPageTest is comprised of one or more test runs. A test run is defined as a single page load within a test. Here are a few examples:</p>
                     <ul class="bulleted-list">
                         <li>A test from a single browser and location, with 3 test runs, first view only, counts as three test runs. (3 runs * 1 load per run)</li>

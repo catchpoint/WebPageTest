@@ -1543,14 +1543,14 @@ tr.custom-plan-mobile {
 dl.faq button {
   margin: 0;
   margin-top: 16px;
-  padding: 4px 25px 0px;
+  padding: 4px 25px 0 0;
   font-weight: 700;
   font-size: 1.25rem;
   border: none;
   background-color: transparent;
   width: 100%;
   text-align: left;
-  display: relative;
+  position: relative;
 }
 
 dl dd {
@@ -1583,6 +1583,7 @@ dl.faq button[aria-expanded="true"]::after {
   content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
   position: absolute;
   right: 0;
+  transform: rotate(180deg);
 }
 
 /* Typography */
