@@ -1630,3 +1630,21 @@ ul.bulleted-list {
   list-style: disc;
   margin-left: 2rem;
 }
+
+@media (max-width: 85em) {
+  .signup-flow-step-1-layout h1 {
+    font-size: 2.3rem;
+  }
+
+  .plan-callout {
+    font-size: 1.5rem;
+  }
+
+  .signup-hed {
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .signup-step-1-content {
+    padding: 0 1.5rem;
+  }
+}

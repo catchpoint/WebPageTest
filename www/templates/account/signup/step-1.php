@@ -1,6 +1,6 @@
 <div class="signup-hed-contain">
     <div class="signup-hed ">
-        <h1>Ready to go <span>Pro?</span></h1>
+        <h1>Ready to go Pro?</h1>
         <p>All the WebPageTest features you already love</p>
         <p><strong>plus API Access &amp; unlimited 1-click experiments!</strong></p>
         <p class="plan-callout">Plans start at just <span class="signup-hed-price">$5/mo</span></p>
