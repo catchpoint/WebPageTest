@@ -109,10 +109,10 @@ if ($id) {
                         <div class="wptheader_nav_menu_section">
                             <p class="wptheader_nav_cta">Find us on...</p>
                             <ul class="wptheader_nav_menu_linkgrid">
-                                <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/twitter.svg" alt=""><a href="#https://twitter.com/RealWebPageTest">Twitter</a></li>
+                                <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/twitter.svg" alt=""><a href="https://twitter.com/RealWebPageTest">Twitter</a></li>
                                 <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
                                 <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
-                                <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/github.svg" alt="https://github.com/WPO-Foundation/webpagetest/"><a href="#">Github</a></li>
+                                <li class="wptheader_nav_menu_link"><img src="https://webpagetest.org/images/github.svg" alt=""><a href="https://github.com/WPO-Foundation/webpagetest/">Github</a></li>
                             </ul>
                         </div>
                     </div>
