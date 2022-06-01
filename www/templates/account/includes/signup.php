@@ -3,7 +3,7 @@
     <div class="info">
       <p style="line-height: 1.5">WebPageTest Pro plans bring full access to the power and depth of WebPageTest's analysis, letting you pull performance data into your existing workflows and processes. It also includes access to No-Code Experiments, the WebPageTest API, bulk testing, and more!</p>
       <h3>Plan Features Comparison</h3>
-      <img style="max-width: 100%" src="/images/plans-breakdown.png" alt="Pro Plan table breakdown">
+      <img style="max-width: 100%" src="/images/plans-breakdown.png" alt="Pro Plan table breakdown: temporarily a table as we work through launch day hiccups. major apologies!">
     </div>
   </div>
 </div>
