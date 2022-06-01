@@ -19,7 +19,7 @@ foreach ($requests as $request) {
 function joinValues($arr){
     $oneLevel = array();
     foreach($arr as $item){
-        array_push($oneLevel, '<b>From: </b>' . implode(" <b>To: </b>",$item));
+        array_push($oneLevel, 'FROM: ' . implode(" TO: ",$item));
     }
     return $oneLevel;
 }
