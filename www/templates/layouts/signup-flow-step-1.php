@@ -15,7 +15,7 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
 ?>
 <title><?php echo $page_title; ?></title>
 <?php require_once __DIR__ . '/head.inc'; ?>
-<link href="<?= '/css/account.css?v={$VER_CSS}' ?>" rel="stylesheet" />
+<link href="<?= "/css/account.css?v={$VER_CSS}" ?>" rel="stylesheet" />
 <script defer src="/js/accessible-faq.js"></script>
 <script defer src="/js/signup-price-changer.js"></script>
 </head>
