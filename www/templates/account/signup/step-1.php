@@ -287,7 +287,7 @@
                 <th>Looking to run more than 20k runs a month, custom integrations or have additional questions?</th>
 
                 <td style="border:none">
-                    <a class="button signup-button" href="mailto:support@webpagetest.org">Contact Us</a>
+                    <a class="button signup-button" href="https://product.webpagetest.org/contact">Contact Us</a>
                 </td>
             </tr>
 
