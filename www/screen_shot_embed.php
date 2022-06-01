@@ -2,7 +2,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include __DIR__ . '/common.inc';
+require_once __DIR__ . '/common.inc';
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/FileHandler.php';
 require_once __DIR__ . '/include/TestPaths.php';
