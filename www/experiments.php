@@ -416,7 +416,7 @@ $page_description = "Website performance test result$testLabel.";
                             <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
                         </div>
                         <div class="experiments_bottlenecks">
-                            <p>WebPageTest checked for bottlenecks related to this category and found ${opps}</p>
+                            <p>WebPageTest ran ${opps} diagnostic checks related to this category and found ${bad} opportunities.</p>
                             <ol>
 
                         EOT;
