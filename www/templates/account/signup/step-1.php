@@ -94,7 +94,7 @@
 
                 <th scope="col" class="custom-plan">
                     <div class="plan-selector">
-                        Want more than 20k runs/month, custom integrations, or have additional questions?
+                    Custom Plans/Integrations?
                     </div>
                 </th>
             </tr>
