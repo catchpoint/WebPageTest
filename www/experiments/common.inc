@@ -127,7 +127,6 @@ include __DIR__ . '/custom.inc';
 
 
 
-
 // fill out high-level info in 
 foreach($assessment as $key => $cat ){
 	$opps = $assessment[$key]["opportunities"];
@@ -170,39 +169,56 @@ foreach($assessment as $key => $cat ){
 		$summary .= " to connect and deliver initial code. It began rendering content ";
 
 		$fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
+		$fcpCheck = $fcpCheck / 1000;
 		if( $fcpCheck > 5 ){
-			$summary .= " with considerable delay ";
+			$summary .= " with considerable delay.";
 		} else if( $fcpCheck > 2 ){
-			$summary .= " with little delay ";
+			$summary .= " with little delay.";
 		}
 		else {
-			$summary .= " very quickly ";
+			$summary .= " very quickly.";
 		}
 
-		$tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
-		$summary .= "after that. It took ";
-		if( $tbtCheck > 2 ){
-			$summary .= " a long time ";
-		} else if( $tbtCheck > 1 ){
-			$summary .= " considerable time ";
+		if( isset($lcp) ){
+			$summary .= " The largest contentful paint time was ";
+			if(  $lcp['time'] > 3500 ){
+				$summary .= " slower than ideal.";
+			} else if(  $lcp['time'] > 2500 ){
+				$summary .= " a little slow.";
+			}
+			else {
+				$summary .= " good.";
+			}
 		}
-		else {
-			$summary .= " little time ";
-		}
-		$summary .= " to become interactive.";
+
+		
 	} else if( $key === "Usable" ) {
 		// build sentiment
 		$summary = "This site ";
 		if( isset($cls) ){
 			if( $cls > .25 ){
 				$summary .= "had major layout shifts";
-			} else if( $cls > .1 ){
+			} else if( $cls > 0 ){
 				$summary .= "had minor layout shifts";
 			}
 			else {
 				$summary .= "had good layout stability";
 			}
 			$summary .= ".";
+		}
+
+		$tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
+		if( isset($tbtCheck) ){
+			$summary .= "It took ";
+			if(  $tbtCheck > 2 ){
+				$summary .= " a long time ";
+			} else if( $tbtCheck > 1 ){
+				$summary .= " some time ";
+			}
+			else {
+				$summary .= " little time ";
+			}
+			$summary .= " to become interactive. ";
 		}
 		
 		if( isset($axe) && count($axe['violations']) ){
@@ -224,7 +240,7 @@ foreach($assessment as $key => $cat ){
 			$genContentPercent = intval($genContentPercent);
 		
 			if( $genContentSize > .5 || $genContentPercent > 1 ){
-				$summary .= " " . $genContentSize ."kb of HTML (".$genContentPercent."%) was generated client-side, delaying usability.";
+				$summary .= " " . $genContentPercent. "% of HTML was generated client-side, delaying usability.";
 			}
 			else {
 				$summary .= " HTML content was mostly generated server-side.";
@@ -280,7 +296,12 @@ foreach($assessment as $key => $cat ){
 	if( $key === "Custom" ){
 		$assessment[$key]["grade"] = "";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Advanced.</span>";
-	} else if( $numRecommended > 2 ){
+	} else if( $numRecommended > 2
+		// and it's the quickness category and fcp is reasonably slow
+		&& ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
+		&& ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
+		&& ($key !== "Usable" || $key === "Usable" && isset($cls) && $cls > 0  )
+	){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
 		
