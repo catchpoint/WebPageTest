@@ -71,7 +71,7 @@
     </div> <!-- /.plan-details -->
     <div class="plan-benefits">
         <h4>Plan Benefits</h4>
-        <? if ($is_plan_free) : ?>
+        <?php if ($is_plan_free) : ?>
         <ul>
             <li>Access to real browsers in real locations around the world, always running the latest versions.</li>
             <li>Testing on real connection speeds with gold-standard, accurate throttling.</li>
