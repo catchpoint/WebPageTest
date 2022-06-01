@@ -43,7 +43,7 @@ if (isset($tbtMetric)) {
         function joinTimeUrlValues($arr){
             $oneLevel = array();
             foreach($arr as $url => $time){
-                array_push($oneLevel, "$time ms: $url")
+                array_push($oneLevel, "$time ms: $url");
             }
             return $oneLevel;
         }
