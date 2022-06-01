@@ -1,5 +1,4 @@
 <?php
-
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -220,7 +219,10 @@ $page_description = "Website performance test result$testLabel.";
                         if( count($bottleneckExamples) > 0 ){
                             $out .= "<ul>";
                             foreach( $bottleneckExamples as $ex ) {
-                                $out .= "<li>". htmlentities($ex) ."</li>";
+                                if (!is_null($ex)){
+                                    $out .= "<li>". htmlentities($ex) ."</li>";
+                                }
+                                
                             }
                             $out .= "</ul>";
                         }
@@ -285,7 +287,10 @@ $page_description = "Website performance test result$testLabel.";
                                             if( isset($exp->explabel) ){
                                                 $label = $exp->explabel[$in];
                                             }
-                                            $label = htmlentities($label);
+                                            if (isset($label)) {
+                                                $label = htmlentities($label);
+                                            }
+                                            
                                             if( count($exp->expval) > 1 ){
                                             $out .= <<<EOT
                                                 <li><label><input type="checkbox" name="{$expNum}-{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>

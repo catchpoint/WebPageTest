@@ -101,14 +101,14 @@ if ($request_method === 'POST') {
     $company_name = $user_contact_info['companyName'] ?? "";
 
     $contact_info = array(
-    'layout_theme' => 'b',
-    'is_paid' => $is_paid,
-    'is_verified' => $is_verified,
-    'first_name' => htmlspecialchars($first_name),
-    'last_name' => htmlspecialchars($last_name),
-    'email' => $user_email,
-    'company_name' => htmlspecialchars($company_name),
-    'id' => $user_id
+        'layout_theme' => 'b',
+        'is_paid' => $is_paid,
+        'is_verified' => $is_verified,
+        'first_name' => htmlspecialchars($first_name),
+        'last_name' => htmlspecialchars($last_name),
+        'email' => $user_email,
+        'company_name' => htmlspecialchars($company_name),
+        'id' => $user_id
     );
 
     $billing_info = array();
@@ -153,15 +153,17 @@ if ($request_method === 'POST') {
         foreach ($plans as $plan) {
             if ($plan['billingFrequency'] == 1) {
                 $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+                $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
                 $monthly_plans[] = $plan;
             } else {
+                $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
                 $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
                 $annual_plans[] = $plan;
             }
         }
         $billing_info = array(
-          'annual_plans' => $annual_plans,
-          'monthly_plans' => $monthly_plans
+            'annual_plans' => $annual_plans,
+            'monthly_plans' => $monthly_plans
         );
     }
 
