@@ -361,7 +361,7 @@
             </dt>
             <dd>
                 <div id="faq5_desc" class="desc">
-                    <p>We provide 1 free experiment per test for you to check out WebPageTest Experiments. You can also run Experiments from our inhouse webpage called The Metric Times (link to be added) where we have builti in anti-patterns for easy testing.</p>
+                    <p>We provide 1 free experiment per test for you to check out WebPageTest Experiments. You can also run Experiments from our inhouse webpage called <a href="https://www.webpagetest.org/themetrictimes/index.php">The Metric Times</a> where we have builti in anti-patterns for easy testing.</p>
                     <p>We do not have a free trial option apart from the above 2 options, since Web PageTest Pro gives you all the metrics (except for the option to run the experiments) you see on a typical WebPageTest test result page as well as in the JSON today for any test you run on <a href="https://www.webpagetest.org">www.webpagetest.org</a>.</p>
                 </div>
             </dd>
@@ -391,7 +391,7 @@
                 <div id="faq8_desc" class="desc">
                     <p>For monthly and annual subscriptions plans, your credit card will be automatically billed when you sign up and purchase the subscription, you'll be able to access your payment history under Billing History in My Account on <a href="https://www.webpagetest.org">www.webpagetest.org</a>. All subscription plans can be canceled at any time without penalty. Once you choose to cancel, it stops the WebPageTest Pro subscription from auto-renewing for the next billing cycle. You’ll continue to have access to run tests for that plan, until the end of your current billing period.
                     </p>
-                    <p>For Custom Enterprise plans where you want to run more than 20000 tests per month, please <a href="mailto:support@webpagetest.org">contact us</a>.
+                    <p>For Custom Enterprise plans where you want to run more than 20000 tests per month, please <a href="https://product.webpagetest.org/contact">contact us</a>.
                     </p>
                     <p>If you are based out of the United States of America, You will be charged in US Dollars, but the exact amount you will see on your credit card statement may vary, depending on foreign exchange rates and any foreign transaction fees your bank may impose.</p>
 
