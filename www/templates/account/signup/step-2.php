@@ -71,11 +71,25 @@
     </div> <!-- /.plan-details -->
     <div class="plan-benefits">
         <h4>Plan Benefits</h4>
+        <? if ($is_plan_free) : ?>
         <ul>
-            <li>Access to real browsers in real locations with the latest OS versions.</li>
-            <li>Test on real connection speeds.</li>
-            <li>Run page level and user journey tests including custom scripts.</li>
-            <li>Access to test history for 13 months.</li>
+            <li>Access to real browsers in real locations around the world, always running the latest versions.</li>
+            <li>Testing on real connection speeds with gold-standard, accurate throttling.</li>
+            <li>Custom scripting to let you interact with the page or script user journey flows.</li> 
+            <li>Access to test history for 13 months to allow for easy comparisons and over time.</li>
+            <li>Opportunities report [NEW] to help you zero in on ways to improve the overall effectiveness of your websites.</li>
         </ul>
+        <?php else : ?>
+            <ul>
+                <li>Everything in the Starter plan, including real browsers in real locations, custom scripting for page level and user journey measurements, access to 13 months of test history, and the all new Opportunities report to help you zero in on areas of improvement. </li>
+                <li>Access to all new no-code Experiments </li>
+                <li>API access for easier integration into your CI/CD, visualizations, alerting and more </li>
+                <li>High priority tests to help you jump the queue and experience lower wait times </li>
+                <li>Access to new and exclusive, premium-only, test locations </li>
+                <li>Dedicated support to help you get back to work faster </li>
+                <li>Bulk testing to enable testing of many pages at once </li>
+                <li>Private tests for ensuring your private test results stay that way</li>
+            </ul>
+        <?php endif; ?>
     </div> <!-- /.plan-benefits -->
 </aside>
