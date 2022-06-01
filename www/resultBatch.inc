@@ -130,14 +130,34 @@ else
         </style>
         </style>
     </head>
-    <body>
+    <body class="common">
             <?php
             $tab = 'Test Result';
             include 'header.inc';
             ?>
             <div id="result">
-                <div id="download">
-                    <div id="testinfo">
+
+                <?php
+                if ($complete)
+                {
+                    echo "<div id='result' class='results_body'>";
+                    if (strlen($test['testinfo']['label']))
+                    {
+                        $label = $test['testinfo']['label'];
+                        echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
+                    }
+                    echo "<h3 class='hed_sub'>Full test results <em>(Based on Median Run by Speed Index)</em></h3>";
+                }
+                else
+                {
+                    ?>
+                    <h1>Testing...</h1>
+                    <div id="runningHeader" class="box runningHeaderBatch">
+                        <form action="/cancelTest.php" method="get">
+                        <input type="hidden" name="test" value="<?php echo $id;?>">
+                        <input type="submit" value="Cancel Test"/>
+                        </form>
+                        <p class="runningDetails">
                         <?php
                             if( $test['test']['batch'] )
                             {
@@ -149,21 +169,8 @@ else
                             }
                             echo GetTestInfoHtml();
                         ?>
-                    </div>
-                </div>
-                <div class="cleared"></div>
-                <?php
-                if ($complete)
-                {
-                    if (strlen($test['testinfo']['label']))
-                    {
-                        $label = $test['testinfo']['label'];
-                        echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
-                    }
-                }
-                else
-                {
-                    echo '<h2>Please wait while the testing is performed<br><span class="small">This page will automatically update until the test is complete</span></h2>';
+                        </p>
+                    <?php
                 }
 
                 if( count($tests['variations']) )
@@ -203,7 +210,8 @@ else
                         echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
                     else
                         echo "<br>Download Combined Raw: <a href=\"/csv.php?test=$id\">Page Data</a> - <a href=\"/csv.php?test=$id&requests=1\">Object Data</a>";
-                    echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Aggregate Statistics</a>";
+                    echo "<br><br><p><a href=\"/aggregate.php?test=$id\">Download Aggregate Statistics</a></p>";
+                echo "</div><!-- .box -->";
                 }
                 else
                 {
@@ -244,10 +252,14 @@ function DisplayTests(&$tests)
     if ($videoCaptured) {
         echo "<form name=\"compare\" method=\"get\" action=\"/video/compare.php\">";
     }
-    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
+    echo '<br><table class="pretty" border="1" cellpadding="10" cellspacing="0">
         <tr>';
     if ($videoCaptured) {
-        echo    '<th><input style="font-size: 90%; padding: 2px;" id="CompareBtn" type="submit" value="Compare"></th>';
+        ?>
+<div class="history-controls">
+                <input id="CompareBtn" type="submit" value="Compare Selected Tests">
+                </div>
+        <?php
     }
     echo    '<th>Test</th>
             <th>Median load time<br>(First view)</th>';
@@ -285,10 +297,14 @@ function DisplayTestsWithVariations(&$tests)
     if ($videoCaptured) {
         echo "<form name=\"compare\" method=\"get\" action=\"/video/compare.php\">";
     }
-    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
+    echo '<br><table class="pretty" border="1" cellpadding="10" cellspacing="0">
         <tr>';
     if ($videoCaptured) {
-        echo    '<th><input style="font-size: 90%; padding: 2px;" id="CompareBtn" type="submit" value="Compare"></th>';
+    ?>
+<div class="history-controls">
+                <input id="CompareBtn" type="submit" value="Compare Selected Tests">
+                </div>
+    <?php
     }
     echo    '<th>Test</th>
             <th>Median load time<br>(First view)</th>';
