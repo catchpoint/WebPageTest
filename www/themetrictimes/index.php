@@ -112,7 +112,7 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 		<script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
 		<script id="rendered-js">
 		const root = ReactDOM.createRoot(document.getElementById('react'));
-		root.render( /*#__PURE__*/React.createElement("span", null, "Have you Heard of the JavaScript Framework Called React!?"));
+		root.render( /*#__PURE__*/React.createElement("span", null, "We Loaded ALL of React to Render This Heading!"));
 		//# sourceURL=pen.js
 		</script>
 
