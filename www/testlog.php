@@ -2,9 +2,12 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 
 use WebPageTest\Util;
+
+$host = Util::getSetting('host');
+$protocol = $request_context->getUrlProtocol();
 
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 
@@ -101,7 +104,7 @@ if( $csv )
 <?php if (!$is_logged_in): ?>
             <div class="logged-out-history">
                 <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
-                    <a href="https://app.webpagetest.org/ui/entry/wpt/signup?utm_source=forum&utm_medium=forum&utm_campaign=signup&utm_content=signup" class="btn-primary">Get Free Access</a>
+                <a href="<?= "{$protocol}://{$host}/signup" ?>" class="btn-primary">Get Free Access</a>
                 </div>
 <?php endif; ?>
               <div class="history_filter">
