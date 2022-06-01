@@ -239,7 +239,7 @@ foreach($assessment as $key => $cat ){
 			if( $blocking3pReqs > 2 ){
 				$summary .= "had many";
 			} else if( $blocking3pReqs > 0 ){
-				$summary .= "had several";
+				$summary .= "had ";
 			}
 			else {
 				$summary .= "had zero";
