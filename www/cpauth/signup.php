@@ -19,6 +19,17 @@ use WebPageTest\Handlers\Signup as SignupHandler;
         exit();
     }
 
+    //check if they already have an account
+    if ($request_context->getUser()->getEmail()) {
+        $protocol = $request_context->getUrlProtocol();
+        $host = Util::getSetting('host');
+        $route = '/account';
+        $redirect_uri = "{$protocol}://{$host}{$route}";
+
+        header("Location: {$redirect_uri}");
+        exit();
+    }
+
     $request_method = $request_context->getRequestMethod();
 
     if ($request_method != 'POST' && $request_method != 'GET') {
