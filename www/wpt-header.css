@@ -338,7 +338,7 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
         min-height: auto;
         right: auto;
         align-items: center;
-        justify-content: space-around;
+        justify-content: space-between;
     }
     wpt-header nav>ul {
         display: flex;
