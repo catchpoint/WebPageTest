@@ -50,7 +50,7 @@ HTML;
     </fieldset>
     <div class="card">
         <div>Looking to run more than 20,000 tests in a month?</div>
-        <div><a href="#">Contact Us</a></div>
+        <div><a href=" https://www.product.webpagetest.org/contact">Contact Us</a></div>
     </div>
     <div class="plan-billing-container">
         <div class="card billing-container">

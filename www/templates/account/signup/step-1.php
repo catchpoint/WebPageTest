@@ -94,7 +94,7 @@
 
                 <th scope="col" class="custom-plan">
                     <div class="plan-selector">
-                    Custom Plans/Integrations?
+                        Custom Plans/Integrations?
                     </div>
                 </th>
             </tr>
@@ -107,7 +107,7 @@
                 <td>Unlimited per plan</td>
 
                 <td rowspan="17" class="custom-plan">
-                    <a class="button signup-button" href="mailto:support@webpagetest.org">Contact Us</a>
+                    <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
                 </td>
             </tr>
 
@@ -287,7 +287,7 @@
                 <th>Looking for something custom or have additional questions?</th>
 
                 <td style="border:none">
-                    <a class="button signup-button" href="https://product.webpagetest.org/contact">Contact Us</a>
+                    <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
                 </td>
             </tr>
 
@@ -405,7 +405,7 @@
                 <div id="faq9_desc" class="desc">
                     <p>We accept payment via Credit Card (VISA, Mastercard, American Express, JCB, Maestro, Discover, Diners Club International, UnionPay). Please ensure the accuracy of your payment method and that it is properly funded to avoid any issues with payment acceptance.</p>
                     <p>We do not accept and will not ask you to provide payments with cash or a physical check.</p>
-                    <p>For Custom Enterprise plans, requiring more than 20K tests per month, please <a href="mailto:support@webpagetest.org">contact us</a>.</p>
+                    <p>For Custom Enterprise plans, requiring more than 20K tests per month, please <a href="https://www.product.webpagetest.org/contact">contact us</a>.</p>
                 </div>
             </dd>
 
