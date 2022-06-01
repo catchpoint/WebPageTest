@@ -4,7 +4,7 @@ $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
 $imgsThatShouldNotBeLazy = array();
 if(isset($imgsInViewport) ){
     foreach($imgsInViewport as $img) {
-        if( $img["loading"] === "lazy" ){
+        if( $img["loading"] === "lazy" && strpos($img["src"], 'data:') !== 0 ){
             array_push($imgsThatShouldNotBeLazy, $img);
         }
 
