@@ -84,9 +84,11 @@ $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $
 <html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
-        <?php $gaTemplate = 'Main'; 
-        $useScreenshot = true;
-        include ('head.inc'); ?>
+<?php
+$gaTemplate = 'Main';
+$useScreenshot = true;
+require_once __DIR__ . '/head.inc';
+?>
     </head>
     <body class="home feature-pro">
         <?php 
