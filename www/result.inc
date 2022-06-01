@@ -2,6 +2,8 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
+require_once __DIR__ . '/common.inc';
+
 require_once __DIR__ . '/optimization_detail.inc.php';
 require_once __DIR__ . '/breakdown.inc';
 require_once __DIR__ . '/testStatus.inc';
@@ -14,8 +16,9 @@ require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 $breakdown = array();
 $testComplete = true;
 $status = GetTestStatus($id, false);
-if( $status['statusCode'] < 200 )
+if( $status['statusCode'] < 200 ) {
     $testComplete = false;
+}
 $headless = false;
 if (GetSetting('headless')) {
     $headless = true;
@@ -61,13 +64,13 @@ $page_description = "Website performance test result$testLabel.";
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
-        <?php } 
+        <?php }
         $useScreenshot = true;
          $socialTitle = "WebPageTest Performance Test Results";
          $socialDesc = "Check out these performance test results on WebPageTest.org...";
         ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
-        
+
     </head>
     <body class="result result-summary <?php if($req_screenshot){ echo ' screenshot'; } ?>">
             <?php
@@ -75,7 +78,7 @@ $page_description = "Website performance test result$testLabel.";
             $subtab = 'Performance Summary';
             include 'header.inc';
             ?>
-            
+
 
             <div class="results_main_contain">
         <div class="results_main">
@@ -110,15 +113,15 @@ $page_description = "Website performance test result$testLabel.";
 
 
            <div class="results_and_command">
-            
 
-            
 
-            
+
+
+
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
-                <p>Opportunies & Experiments <em class="flag">New</em>
+                <p>Opportunies &amp; Experiments <em class="flag">New</em>
                 <?php
                   if( $tabs && $tabs['Opportunities & Experiments'] ){
                     echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
@@ -126,14 +129,14 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
 
                 </p>
-          
+
                 <?php
                     include __DIR__ . '/experiments/common.inc';
                     include __DIR__ . '/experiments/summary.inc';
 
                 ?>
                 </div>
-                
+
 
 
 
@@ -142,22 +145,22 @@ $page_description = "Website performance test result$testLabel.";
             </div>
 
 
-          
+
 
 
             <div id="result" class="results_body">
 
-            
-            
+
+
             <div id="average">
                 <?php
                 $is_test_error = $testInfo->isTestError();
                 $fvRunResults = $testResults->getRunResult($fvMedian, false);
                 $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
-                    
+
                 if ($fvMedian)
                 {
-                    
+
                       echo '<h3 class="hed_sub">Observed Metrics ';
                       $medianMetrics = array(
                         "chromeUserTiming.CumulativeLayoutShift"=> "Cumulative Layout Shift",
@@ -252,8 +255,8 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
             </div>
 
-            
-            
+
+
             <?php
             if (isset($fvRunResults)) {
               echo '<div class="cruxembed">';
@@ -264,12 +267,12 @@ $page_description = "Website performance test result$testLabel.";
             ?>
             <?php } ?>
 
-           
+
 
             <div id="tables" style="text-align:left;">
             <h3 class="hed_sub">Individual Runs</h3>
 
-            
+
 
             <?php
             $tcpDumpView = GetSetting('tcpdump_view') ? GetSetting('tcpdump_view') : null;
