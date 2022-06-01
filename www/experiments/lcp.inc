@@ -72,8 +72,7 @@
                     "title" =>  "Largest Contentful Paint is high (over 2.5s).",
                     "desc" =>  "The element driving your LCP is a" . ($isBG ? " background" : "n")  . " image. Some optimizations can help that image fetch earlier.",
                     "examples" =>  array(
-                        "<strong>LCP Image:</strong> <img src=\"" . $lcpFullSource . "\" alt=\"\">",
-                        "<strong>LCP HTML:</strong>" . $lcpHTML
+                        "LCP Image: $lcpFullSource"
                     ),
                     "experiments" => $expsToAdd,
                     "good" =>  false
