@@ -3,17 +3,10 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/../../common.inc';
-
 require_once __DIR__ . '/../../page_data.inc';
 require_once __DIR__ . '/../../include/TestInfo.php';
 require_once __DIR__ . '/../../include/TestResults.php';
 require_once __DIR__ . '/../../include/TestRunResults.php';
-
-use WebPageTest\Util;
-
-$host = Util::getSetting('host');
-$protocol = $request_context->getUrlProtocol();
 
 //If we're looking at a test result, include the extra header section and sub-menu
 if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED') )
@@ -44,7 +37,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 ?>
                 <div class="cta-banner">
                     <p><strong>Save Test Results</strong> with a <strong>Free Account</strong>
-                    <a class="btn-primary btn-primary-compact" href="<?= "{$host}://{$protocol}/signup" ?>">Sign Up &amp; Save Test Result</a></p>
+                    <a class="btn-primary btn-primary-compact" href="/signup">Sign Up &amp; Save Test Result</a></p>
                 </div>
                 <?php
         }
