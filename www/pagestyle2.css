@@ -4566,15 +4566,16 @@ form[name=filterLog] .history_filter input[type=text] {
 
 .history-controls {
     border-bottom: 1px solid #ddd;
-    padding-left: 1.875em;
+    padding-left: 0;
     padding-top: .5em;
     padding-bottom: .5em;
 }
 
-#CompareBtn {
+#CompareBtn,
+#runningHeader #CompareBtn {
     position: relative;
     background: #fff url('/images/icon-compare.svg') 1em center no-repeat;
-    border-radius: 2em;
+    border-radius: 4px;
     border: 1px solid #ddd;
     padding: .6em 1.5em .6em 1.8em;
     margin: .5em 0;
@@ -6205,10 +6206,15 @@ th.header {
     padding: 1em;
     line-height: 1.4;
     background: #fafafa;
+    clear: both;
 }
 
 #runningHeader form {
     float: right;
+    margin-bottom: 1em;
+}
+#runningHeader.runningHeaderBatch form[name=compare]{
+    float: none;
 }
 
 #runningHeader input[type="submit"] {
@@ -6526,12 +6532,16 @@ th.header {
     }
 }
 
+.runningHeaderBatch form[name=compare]{
+    width: 100%;
+}
 .batchResults {
     margin-left: auto;
     margin-right: auto;
     background-color: #fff;
     border-collapse: collapse;
     border: 0px white solid;
+    width: 100%;
 }
 
 .batchResults th,
