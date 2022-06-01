@@ -175,6 +175,9 @@ $page_description = "Website performance test result$testLabel.";
                         $hmac = sha1($hashStr);
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
+                    
+                    // this is to capture the first host that is a successful response and not a redirect. that'll be the one we want to override in an experiment
+                    echo '<input type="hidden" name="initialHostNonRedirect" value="'. $initialHost .'">';
 
                     // used for tracking exp access
                     $expCounter = 0;
