@@ -25,6 +25,11 @@ if( !strpos( $_SERVER['REQUEST_URI'], "index.php" ) ){
 	<script src="http://example.com/this-will-fail.js"></script>
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0-rc.3/themes/smoothness/jquery-ui.css">
 	<link rel="preload" href="foo/bar/baz.css" as="style">
+	<link rel="apple-touch-icon" sizes="96x96" href="/images/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+
 </head>
 
 <body>
