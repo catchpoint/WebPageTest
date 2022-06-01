@@ -836,9 +836,10 @@ use WebPageTest\RateLimiter;
 
                   if( !$experiments_logged_in && !$experimentUrlException ){
                     $error = "Must be logged in to use experiments.";
-                  } else {               
-
-                    $test['script'] = "overrideHost\t%HOST%\t$experimentURL\r\n";
+                  } else { 
+                    // the first non-redirect host is passed in from experiments
+                    $hostToUse = isset( $req_initialHostNonRedirect ) ? $req_initialHostNonRedirect : '%HOST%';
+                    $test['script'] = "overrideHost\t". $hostToUse ."\t$experimentURL\r\n";
                     $scriptNavigate = "navigate\t%URL%\r\n";
                     $test['script'] .= $scriptNavigate;
                     
