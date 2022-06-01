@@ -4,12 +4,12 @@
         <p>All the WebPageTest features you already love,
             <strong>plus API Access &amp; No-Code Experiments!</strong>
         </p>
-        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$5/mo</span></p>
+        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15/mo</span></p>
     </div> <!-- ./signup-hed -->
 </div>
 
 <div class="signup-step-1-content">
-    <h2> Save 25% by paying annually!</h2>
+    <h2> Save 20% by paying annually!</h2>
     <!-- css only tabs. The html is in this order for a reason. -->
     <label for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</label>
     <input id="annual-plans" type="radio" name="plans" value="annual" checked />
@@ -262,7 +262,7 @@
                 </td>
             </tr>
             <tr>
-                <th scope="col">Experiments</th>
+                <th scope="col">Experiments <em class="new-banner">NEW</em></th>
                 <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
@@ -274,14 +274,12 @@
 
 
             <tr>
-                <th scope="col">Dedicated Support</th>
+                <th scope="col">Support</th>
                 <td>
-                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
-                    <span class="visually-hidden">No</span>
+                    Forums
                 </td>
                 <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
+                    Dedicated Support
                 </td>
             </tr>
 
