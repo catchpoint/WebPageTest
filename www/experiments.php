@@ -220,7 +220,7 @@ $page_description = "Website performance test result$testLabel.";
                         if( count($bottleneckExamples) > 0 ){
                             $out .= "<ul>";
                             foreach( $bottleneckExamples as $ex ) {
-                                $out .= "<li>$ex</li>";
+                                $out .= "<li>". htmlentities($ex) ."</li>";
                             }
                             $out .= "</ul>";
                         }
