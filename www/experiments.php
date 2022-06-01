@@ -247,7 +247,7 @@ $page_description = "Website performance test result$testLabel.";
                                 // experiments are enabled for the following criteria
                                 $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
                                 // exception allowed for tests on the metric times
-                                if( strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes' ) ){
+                                if( strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes' ) && $experiments_logged_in ){
                                     $experimentEnabled = true;
                                 }
                                 
