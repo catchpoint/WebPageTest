@@ -17,7 +17,7 @@
       ?>
     <title><?php echo $page_title; ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
-    <link href="<?= '/css/account.css?v={$VER_CSS}' ?>" rel="stylesheet" />
+    <link href="<?= "/css/account.css?v={$VER_CSS}" ?>" rel="stylesheet" />
 </head>
 
 <body>
