@@ -1,3 +1,7 @@
+<?php if (!isset($noanalytics)) {
+  require_once __DIR__ . '/templates/layouts/google-tag-manager.inc';
+} ?>
+
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <?php
 // Copyright 2020 Catchpoint Systems Inc.
@@ -17,7 +21,6 @@ if( strlen($page_description) )
 <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-
 
 <style>
 @font-face {
@@ -59,7 +62,7 @@ if( strlen($page_description) )
     echo "<script src=\"{$GLOBALS['cdnPath']}/wpt-header.js?v=" . VER_JS . "\" defer></script>\n";
 
     echo "<style>\n";
-    
+
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;
     if( stristr($_SERVER['HTTP_HOST'] , 'webpagetest.org') !== false )
@@ -75,7 +78,7 @@ if( strlen($page_description) )
                 $blkLogo = true;
         }
     }
-            
+
     if( $privateInstall )
     {
         if( $blkLogo )
@@ -93,14 +96,13 @@ if( strlen($page_description) )
         include('./settings/custom.css');
 
     echo "\n</style>\n";
-        
+
     // include the analytics code if it is appropriate
     if (!isset($noanalytics)) {
-        include('analytics.inc');
-        require_once __DIR__ .'/catchpoint-rum.inc';
+        echo "<script>";
+        require_once __DIR__ .'/js/catchpoint-rum.js';
+        echo "</script>";
     }
-
-
 
     if (isset($test_is_private) && !$test_is_private) {
         include __DIR__ . '/include/social_meta.php';
