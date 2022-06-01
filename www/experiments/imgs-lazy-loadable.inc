@@ -10,7 +10,7 @@ foreach($imgsInViewport as $img){
 $imgsThatShouldBeLazy = array();
 if(isset($imgsOutViewport) ){
     foreach($imgsOutViewport as $img) {
-        if( $img["loading"] !== "lazy" && !in_array($img["src"], $imgsInViewportSrcs)){
+        if( $img["loading"] !== "lazy" && !in_array($img["src"], $imgsInViewportSrcs) && strpos($img["src"], 'data:') !== 0 ){
             array_push($imgsThatShouldBeLazy, $img);
         }
 
