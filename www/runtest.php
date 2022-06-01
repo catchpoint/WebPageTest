@@ -211,10 +211,7 @@ use WebPageTest\RateLimiter;
              * True private tests are a paid feature (we formerly said we had
              * private tests, but they weren't actually private
              */
-            $is_private = 0;
-            if ($isPaid) {
-              $is_private = $req_private ?? 0;
-            }
+            $is_private = ($isPaid && ($_POST['private'] == 'on')) ? 1 : 0;
             $test['private'] = $is_private;
 
             if (isset($req_web10))
@@ -2272,7 +2269,7 @@ function LogTest(&$test, $testId, $url)
         'guid' => @$testId,
         'url' => @$url,
         'location' => @$test['locationText'],
-        'private' => 0,
+        'private' => $test['private'],
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
         'video' => @$video,
@@ -2299,7 +2296,7 @@ function LogTest(&$test, $testId, $url)
         'guid' => @$testId,
         'url' => @$url,
         'location' => @$test['locationText'],
-        'private' => 0,
+        'private' => $test['private'],
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
         'video' => @$video,
