@@ -24,6 +24,8 @@ use WebPageTest\Handlers\Signup as SignupHandler;
         $protocol = $request_context->getUrlProtocol();
         $host = Util::getSetting('host');
         $route = '/account';
+        $redirect_uri = "{$protocol}://{$host}{$route}";
+
         header("Location: {$redirect_uri}");
         exit();
     }
