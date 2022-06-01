@@ -44,7 +44,7 @@
 </section>
 <aside>
     <h3>Selected Plan</h3>
-    <div class="plan-name"><?= $is_plan_free ? "Free" : "API Subscription"; ?></div>
+    <div class="plan-name"><?= $is_plan_free ? "STARTER" : "PRO"; ?></div>
     <div class="plan-details">
         <table>
             <thead>
@@ -72,13 +72,13 @@
     <div class="plan-benefits">
         <h4>Plan Benefits</h4>
         <?php if ($is_plan_free) : ?>
-        <ul>
-            <li>Access to real browsers in real locations around the world, always running the latest versions.</li>
-            <li>Testing on real connection speeds with gold-standard, accurate throttling.</li>
-            <li>Custom scripting to let you interact with the page or script user journey flows.</li> 
-            <li>Access to test history for 13 months to allow for easy comparisons and over time.</li>
-            <li>Opportunities report [NEW] to help you zero in on ways to improve the overall effectiveness of your websites.</li>
-        </ul>
+            <ul>
+                <li>Access to real browsers in real locations around the world, always running the latest versions.</li>
+                <li>Testing on real connection speeds with gold-standard, accurate throttling.</li>
+                <li>Custom scripting to let you interact with the page or script user journey flows.</li>
+                <li>Access to test history for 13 months to allow for easy comparisons and over time.</li>
+                <li>Opportunities report [NEW] to help you zero in on ways to improve the overall effectiveness of your websites.</li>
+            </ul>
         <?php else : ?>
             <ul>
                 <li>Everything in the Starter plan, including real browsers in real locations, custom scripting for page level and user journey measurements, access to 13 months of test history, and the all new Opportunities report to help you zero in on areas of improvement. </li>
