@@ -285,6 +285,7 @@ $page_description = "Website performance test result$testLabel.";
                                             if( isset($exp->explabel) ){
                                                 $label = $exp->explabel[$in];
                                             }
+                                            $label = htmlentities($label);
                                             if( count($exp->expval) > 1 ){
                                             $out .= <<<EOT
                                                 <li><label><input type="checkbox" name="{$expNum}-{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
