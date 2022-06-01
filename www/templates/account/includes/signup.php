@@ -1,7 +1,9 @@
 <div class="card subscribe">
   <div class="card-section">
     <div class="info">
-      <p>The WebPageTest API gives full access to the power and depth of WebPageTest's analysis, letting you pull performance data into your existing workflows and processes.</p>
+      <p style="line-height: 1.5">WebPageTest Pro plans bring full access to the power and depth of WebPageTest's analysis, letting you pull performance data into your existing workflows and processes. It also includes access to No-Code Experiments, the WebPageTest API, bulk testing, and more!</p>
+      <h3>Plan Features Comparison</h3>
+      <img style="max-width: 100%" src="/images/plans-breakdown.png" alt="Pro Plan table breakdown">
     </div>
   </div>
 </div>
@@ -91,16 +93,17 @@ echo $plan_block;
     </div> <!-- /.billing-container -->
 
     <div class="card plan-details-container">
-      <h3>All Plans Include</h3>
+      <h3>WebPageTest Pro plans include</h3>
       <ul>
-        <li>Access to real browsers in real locations with the latest OS versions.</li>
-        <li>Test on real connection speeds.</li>
-        <li>Run page level and user journey tests including custom scripts.</li>
-        <li>Access to test history for 13 months.</li>
-        <li>Access to API integrations (Github Action, NodeJS wrapper, Slackbot and community-built integrations)</li>
-        <li>Access to support and expert documentation.&nbsp;<a href="https://docs.webpagetest.org/api" target="_blank" rel="noopener">Learn More</a>.</li>
+          <li>Everything in the Starter plan, including real browsers in real locations, custom scripting for page level and user journey measurements, access to 13 months of test history, and the all new Opportunities report to help you zero in on areas of improvement. </li>
+          <li>Access to all new no-code Experiments</li>
+          <li>API access for easier integration into your CI/CD, visualizations, alerting and more </li>
+          <li>High priority tests to help you jump the queue and experience lower wait times </li>
+          <li>Access to new and exclusive, premium-only, test locations </li>
+          <li>Dedicated support to help you get back to work faster </li>
+          <li>Bulk testing to enable testing of many pages at once </li>
+          <li>Private tests for ensuring your private test results stay that way</li>
       </ul>
-      <div>To learn more about <b>Custom Enterprise Plan</b>, please&nbsp;<a href="https://www.product.webpagetest.org/contact" target="_blank" rel="noopener noreferrer">Contact Us</a>.</div>
     </div> <!-- /.plan-details-container -->
   </div> <!-- /.plan-billing-container -->
 

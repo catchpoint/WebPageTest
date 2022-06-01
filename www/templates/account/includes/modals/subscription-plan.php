@@ -2,6 +2,7 @@
     data-modal="subscription-plan-modal-confirm">
     <h3 class="modal_title">Subscription Details</h3>
     <p>Active Plan: <?= "{$braintreeCustomerDetails['wptPlanName']}" ?></p>
+    <p>Please <a href="https://support.webpagetest.org">contact support</a> with for any upgrades or other changes to your plan.</p>
     <div class="cancel-subscription-button">
         <button>Cancel Subscription</button>
     </div>
