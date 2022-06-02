@@ -1346,6 +1346,13 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   }
 }
 
+@media screen and (max-width: 370px) {
+
+  .comparison-table tbody td,
+  .comparison-table thead th {
+    font-size: 0.9rem;
+  }
+}
 
 /* comparison table content */
 
@@ -1607,6 +1614,8 @@ ul.bulleted-list {
   margin-left: 2rem;
 }
 
+
+
 @media (max-width: 85em) {
   .signup-flow-step-1-layout h1 {
     font-size: 2.3rem;
@@ -1629,7 +1638,7 @@ ul.bulleted-list {
   }
 
   .signup-step-1-content {
-    padding: 0 1.5rem;
+    padding: 0 1rem;
   }
 
   .signup-step-1-content h2 {
@@ -1648,7 +1657,9 @@ ul.bulleted-list {
     font-size: 1.15rem;
   }
 
-  .comparison-table .signup-button {}
+  .comparison-table .signup-button {
+    padding: 0.7em 0.7em;
+  }
 }
 
 @media (min-width: 40em) {
