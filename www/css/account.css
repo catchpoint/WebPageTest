@@ -701,7 +701,6 @@ body.theme-b {
 .signup-button {
   appearance: none;
   width: auto;
-  padding: 0.9375rem 0;
   background-color: #F9D856;
   border: 0;
   border-radius: 2rem;
@@ -1648,6 +1647,8 @@ ul.bulleted-list {
   dl.faq button {
     font-size: 1.15rem;
   }
+
+  .comparison-table .signup-button {}
 }
 
 @media (min-width: 40em) {
