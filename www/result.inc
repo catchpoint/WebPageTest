@@ -121,7 +121,7 @@ $page_description = "Website performance test result$testLabel.";
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
-                <p>Opportunies &amp; Experiments <em class="flag">New</em>
+                <p>Opportunities &amp; Experiments <em class="flag">New</em>
                 <?php
                   if( $tabs && $tabs['Opportunities & Experiments'] ){
                     echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
