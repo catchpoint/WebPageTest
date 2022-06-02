@@ -2,7 +2,7 @@ var imgsInViewport = [];
 var allImgs = document.querySelectorAll("img");
 for (var i = 0; i < allImgs.length; i++) {
     var boundingClientRect = allImgs[i].getBoundingClientRect();
-    if (boundingClientRect.top < window.innerHeight) {
+    if (boundingClientRect.top < window.innerHeight && window.getComputedStyle(allImgs[i]).display !== "none") {
         imgsInViewport.push({
             src: allImgs[i].getAttribute("src"),
             html: allImgs[i].outerHTML,
