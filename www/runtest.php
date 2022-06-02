@@ -907,10 +907,10 @@ use WebPageTest\RateLimiter;
                             if( $recipeSansId === "swap" ){
                               $experimentSwap = $ingredients;
                               if( $ingredients[0] ){
-                                $ingredients[0] = urlencode($ingredients[0]);
+                                $ingredients[0] = rawurlencode($ingredients[0]);
                               }
                               if( $ingredients[1] ){
-                                $ingredients[1] = urlencode($ingredients[1]);
+                                $ingredients[1] = rawurlencode($ingredients[1]);
                               }
                               if( $ingredients[2] ){
                                 $ingredients[2] = true;
@@ -918,6 +918,12 @@ use WebPageTest\RateLimiter;
                               $ingredients = array(implode("|", $ingredients) );
                             }
                             $ingredients = implode($ingredients, ",");
+                          }
+                          // these recipes need encoded values. they all do afterwards! TODO
+                          if( $recipeSansId === "insertheadstart" 
+                            || $recipeSansId === "insertheadend"
+                            || $recipeSansId === "insertbodyend" ){
+                              $ingredients = rawurlencode($ingredients);
                           }
                           $recipeScript .= ":=" . $ingredients;
                         }
@@ -977,7 +983,7 @@ use WebPageTest\RateLimiter;
                           
 
                           //replace last step with last step plus recipes
-                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
+                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . rawurlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
                           
                           
                           $id = CreateTest($test, $test['url']);
