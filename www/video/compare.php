@@ -486,19 +486,19 @@ echo "</div>";
                                     <div class="experiment_opportunities">
                                     <?php 
                                         include __DIR__ . '/../experiments/compare-assessments.inc'; 
-                                        if(count($assessmentChanges)){
-                                            $numAssessmentChanged = count($assessmentChanges);
-                                            $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
-                                            echo '<div class="experiment_opportunities-resolved">
-                                                <h3 class="hed_sub">Resolved Opportunities</h3>
-                                                <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
-                                                    <ol>';
+                                        // if(count($assessmentChanges)){
+                                        //     $numAssessmentChanged = count($assessmentChanges);
+                                        //     $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
+                                        //     echo '<div class="experiment_opportunities-resolved">
+                                        //         <h3 class="hed_sub">Resolved Opportunities</h3>
+                                        //         <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
+                                        //             <ol>';
                                                 
-                                            foreach($assessmentChanges as $change){
-                                                echo '<li class="good">' . $change . '</li>';
-                                            }
-                                        echo '</ol></div>';
-                                        }
+                                        //     foreach($assessmentChanges as $change){
+                                        //         echo '<li class="good">' . $change . '</li>';
+                                        //     }
+                                        // echo '</ol></div>';
+                                        // }
                                     ?>
 
                                         
