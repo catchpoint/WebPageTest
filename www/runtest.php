@@ -871,12 +871,12 @@ use WebPageTest\RateLimiter;
                         }
                         else {
                           $recipeSansId = $splitValue[1];
-                        }                      
+                        }
                       }
                       // if user isn't pro-access
-                      if( !$experiments_paid 
+                      if( !$experiments_paid
                         // and the experimentID is not in the allowed array
-                        && !in_array($experimentId, allowedFreeExperimentIds)
+                        && !in_array($experimentId, $allowedFreeExperimentIds)
                         // and it's not the exception url
                         && !$experimentUrlException ){
                           $error = "Attempt to use unauthorized experiments feature.";
@@ -917,7 +917,7 @@ use WebPageTest\RateLimiter;
                               }
                               $ingredients = array(implode("|", $ingredients) );
                             }
-                            $ingredients = implode($ingredients, ",");
+                            $ingredients = implode(",", $ingredients);
                           }
                           // these recipes need encoded values. they all do afterwards! TODO
                           if( $recipeSansId === "insertheadstart" 
