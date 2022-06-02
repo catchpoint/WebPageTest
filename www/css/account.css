@@ -558,92 +558,7 @@ body.theme-b {
  * End signup step 1
  */
 
-.card-container {
-  display: flex;
-  flex-direction: row;
-  align-content: center;
-  justify-content: space-around;
-  max-width: 780px;
-  margin: 0 auto;
-}
 
-.card-container .card {
-  display: block;
-  width: 370px;
-  height: 715px;
-  padding: 0;
-}
-
-.card-container .card fieldset {
-  padding: 20px 30px 30px;
-  margin: 0;
-  border: 0;
-}
-
-.card-container .card fieldset legend {
-  padding-top: 1.875rem;
-  text-align: center;
-  font-size: 28px;
-  font-weight: 300;
-  color: #111111;
-  line-height: 2.375rem;
-}
-
-.card-container .card fieldset h3 {
-  font-size: 1.5rem;
-  line-height: 1.6rem;
-  margin: 0;
-  padding: 0.5625rem 0;
-  font-weight: 400;
-}
-
-.card-container .card fieldset select {
-  font-size: 1.5rem;
-  padding: 0.5625rem 31.5px 0.5625rem 10px;
-  line-height: 1.6rem;
-  border: 1px solid #666666;
-}
-
-.card-container .card fieldset .price {
-  margin: 10px 0 20px;
-}
-
-.card-container .card button[type="submit"] {
-  appearance: none;
-  width: 100%;
-  border: 0;
-  background: #F9D856;
-  border-radius: 4px;
-  padding: 1rem 0;
-}
-
-.card .annual,
-.card .monthly {
-  display: none;
-}
-
-.card .annual.selected,
-.card .monthly.selected {
-  display: block;
-}
-
-.benefits-list {
-  border-top: 1px solid #D0D0D0;
-  margin-top: 1rem;
-}
-
-.benefits-list li {
-  padding: .5rem 20px;
-}
-
-.benefits-list li:nth-child(even) {
-  background: #F8F8F8;
-}
-
-
-/**
- * end signup steps
- */
 
 
 /**
@@ -1404,7 +1319,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   .comparison-table thead th {
     display: block;
     width: 50%;
-    font-size: 20px;
+    font-size: 1rem;
   }
 
   .comparison-table tbody tr th:first-child {
@@ -1482,7 +1397,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 1.375rem;
   line-height: 30px;
   color: #2f80ed;
   text-align: center;
