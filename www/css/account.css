@@ -1321,6 +1321,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     font-size: 1rem;
   }
 
+  .comparison-table thead th {
+    padding: 0.8em 0.3em;
+  }
+
   .comparison-table tbody tr th:first-child {
     background: #efefef;
     width: 100%;
@@ -1617,6 +1621,11 @@ ul.bulleted-list {
 
 
 @media (max-width: 85em) {
+  .plan-selector .runs {
+    height: 45px;
+    padding: 0.5em;
+  }
+
   .signup-flow-step-1-layout h1 {
     font-size: 2.3rem;
   }
