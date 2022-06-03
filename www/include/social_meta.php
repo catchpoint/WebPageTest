@@ -12,7 +12,7 @@
     $socialTitle = isset($socialTitle) ? $socialTitle : "WebPageTest";
     $socialDesc = isset($socialDesc) ? $socialDesc : "View this on WebPageTest.org...";
     $emailSubject = "View this on WebPageTest!";
-    //$tweetURI =  https://twitter.com/intent/tweet?text=' . urlencode($socialDesc) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
+    $tweetURI =  'https://twitter.com/intent/tweet?text=' . urlencode($socialDesc) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
     $emailURI = 'mailto:?subject=' . urlencode($emailSubject) . '&body=' . urlencode($socialDesc) . '  %0D%0A ' . urlencode($pageURI);
 ?>
 
