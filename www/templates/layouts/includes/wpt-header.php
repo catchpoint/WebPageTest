@@ -61,7 +61,7 @@ if ($id) {
 <?= addTab('Start Test', '/'); ?>
 
 <?php if (!Util::getSetting('disableTestlog')): ?>
-<?= addTab('Test History', FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1'); ?>
+<?= addTab('Test History', FRIENDLY_URLS ? '/testlog/7/' : '/testlog.php?days=7'); ?>
 <?php endif; //if (!Util::getSetting('disableTestlog')): ?>
 
         <li class="wptheader_nav_menu">
