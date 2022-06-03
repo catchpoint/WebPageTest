@@ -67,7 +67,7 @@ if (isset($tbtMetric)) {
                     'id' => '052',
                     'title' => 'Block Specific Requests',
                     "desc" => '<p>This experiment causes specified requests to fail immediately, allowing you to test the usability impact of particular problematic scripts.</p>',
-                     "expvar" => 'experiment-spof',
+                     "expvar" => 'experiment-block',
                      "expval" => array_keys($highBlockingTimeUrls)
                     ]
             ),
