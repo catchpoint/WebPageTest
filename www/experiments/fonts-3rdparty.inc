@@ -13,7 +13,7 @@ foreach ($requests as $request) {
         array_push($Font3pHosts, $request['host'] );
     }
     // find fonts loaded from files that aren't the first doc
-    if( preg_match("/woff|ttf|eot/", $request['contentType']) && isset($request['initiator']) &&  $request['initiator'] !== $requests[0]["full_url"]  ){
+    if( preg_match("/woff|ttf|eot/", $request['contentType']) && isset($request['initiator']) &&  $request['initiator'] !== $rootURL  ){
         array_push($FontsLoadedByExt, $request['full_url'] );
         array_push($FilesLoadingFonts, $request['initiator'] );
     }
