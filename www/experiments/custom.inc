@@ -303,7 +303,7 @@ $assessment[$category]["opportunities"][] = array(
             (object) [
                 "id" => '051',
                 'title' => 'Self-Host Requests',
-                "desc" => '<p>This experiment will fetch these requests server-side and reference them on the same domain.</p>',
+                "desc" => '<p>This experiment will fetch these requests server-side and reference them on the same domain.  Note: the overrides happen at the host level, so any requests from that host will now be self-hosted.</p>',
                 "expvar" => 'experiment-overrideHost',
                 "expfields" => array(
                     (object) [
