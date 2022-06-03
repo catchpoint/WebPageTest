@@ -2,7 +2,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
