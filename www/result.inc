@@ -67,7 +67,7 @@ $page_description = "Website performance test result$testLabel.";
         <?php }
         $useScreenshot = true;
          $socialTitle = "WebPageTest Performance Test Results";
-         $socialDesc = "Check out these performance test results on WebPageTest.org...";
+         $socialDesc = "Check out these web performance test results on WebPageTest.org: ";
         ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
 

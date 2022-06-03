@@ -30,9 +30,9 @@ if( count($Font3pReqs) > 0 ){
             (object) [
                 "id" => '045',
                 'title' => 'Self-Host 3rd Party Files',
-                "desc" => '<p>This experiment will fetch specified files server-side and reference them on the same domain.</p>',
+                "desc" => '<p>This experiment will fetch specified files server-side and reference them on the same domain.  Note: the overrides happen at the host level, so any requests from that host will now be self-hosted.</p>',
                  "expvar" => 'experiment-overrideHost',
-                 "expval" => array_unique($Font3pReqs)
+                 "expval" => array_unique($Font3pHosts)
             ],
             (object) [
                 "id" => '043',
