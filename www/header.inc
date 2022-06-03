@@ -105,7 +105,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $firstRunResults = $testResults->getRunResult(1, false);
 
         echo '<div class="results_header_contain">';
-        include ( __DIR__ . '/cta-banner.inc');
+        require_once ( __DIR__ . '/cta-banner.inc');
 
         echo '<div id="header_container">';
 
