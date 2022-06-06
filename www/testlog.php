@@ -23,7 +23,8 @@ if ($userIsBot || Util::getSetting('disableTestlog')) {
 }
 
 $test_history = [];
-$days = (int)$_GET["days"];
+$default_days = 7;
+$days = (int)($_GET["days"] ?? $default_days);
 
 if ($is_logged_in) {
   $test_history = $request_context->getClient()->getTestHistory($days);

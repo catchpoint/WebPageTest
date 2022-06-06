@@ -105,7 +105,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $firstRunResults = $testResults->getRunResult(1, false);
 
         echo '<div class="results_header_contain">';
-        include ( __DIR__ . '/cta-banner.inc');
+        require_once ( __DIR__ . '/cta-banner.inc');
 
         echo '<div id="header_container">';
 
@@ -275,8 +275,10 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         echo "<details class=\"test_presets_more test_presets_more-share\"><summary><span class=\"test_presets_tag\">Share</span></summary>
                         <div class=\"details_contain\">
                             <ul>
-                            <li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">Download Results Image</a></li>
-                            <li><a href=\"" . $emailURI . "\">Email This Result</a></li>" . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Tweet This Result</a></li>" : "") . "</ul>
+                            <li><a href=\"" . $emailURI . "\">Share via Email</a></li>" 
+                            . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Share on Twitter</a></li>" : "") 
+                            . "<li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">View Formatted Screenshot Image</a></li>"
+                            . "</ul>
                         </div></details>";
                     }
                     

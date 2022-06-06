@@ -88,7 +88,7 @@ use WebPageTest\RateLimiter;
         $keys_file = __DIR__ . '/settings/common/keys.ini';
       if (file_exists(__DIR__ . '/settings/server/keys.ini'))
         $keys_file = __DIR__ . '/settings/server/keys.ini';
-      $api_keys = parse_ini_file($keys_file, true);	
+      $api_keys = parse_ini_file($keys_file, true);
     }
 
     if( isset($req_f) && !strcasecmp($req_f, 'xml') )
@@ -470,13 +470,13 @@ use WebPageTest\RateLimiter;
               $test['metadata'] = $metadata;
             }
 
-            // see if we need to process a template for these requests	
+            // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
-              if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {	
-                  $template = $api_keys[$req_k]['template'];	
-                  if (is_file("./settings/common/templates/$template.php"))	
-                      include("./settings/common/templates/$template.php");	
-              }	
+              if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {
+                  $template = $api_keys[$req_k]['template'];
+                  if (is_file("./settings/common/templates/$template.php"))
+                      include("./settings/common/templates/$template.php");
+              }
             }
 
             // Extract the location, browser and connectivity.
@@ -570,7 +570,7 @@ use WebPageTest\RateLimiter;
                 }
               }
             }
-        
+
             if (!$test['mobile'] && (!$test['browser_width'] || !$test['browser_height'])) {
               $browser_size = GetSetting('default_browser_size');
               if ($browser_size) {
@@ -813,7 +813,7 @@ use WebPageTest\RateLimiter;
                         $script = '';
                         $hosts = explode("\n", $req_spof);
                         $script = buildSpofTest($hosts);
-                        
+
                         if (strlen($script)) {
                             if (strlen($test['script'])) {
                                 $test['script'] = $script . $test['script'];
@@ -842,7 +842,7 @@ use WebPageTest\RateLimiter;
                     $test['script'] = "overrideHost\t". $hostToUse ."\t$experimentURL\r\n";
                     $scriptNavigate = "navigate\t%URL%\r\n";
                     $test['script'] .= $scriptNavigate;
-                    
+
                     $experimentMetadata = array(
                       "experiment" => array(
                         "source_id" => $id,
@@ -852,14 +852,14 @@ use WebPageTest\RateLimiter;
                         "assessment" => isset($_REQUEST["assessment"]) ? json_decode(urldecode($_REQUEST["assessment"])) : null
                       )
                     );
-                    
+
                     // this is for re-running a test with recipes enabled
                     $recipeScript = '';
                     $experimentSpof = "";
                     $experimentBlock = "";
                     $allowedFreeExperimentIds = array('001');
                     foreach( $req_recipes as $key=>$value ){
-                      
+
                       // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
                       // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
                       $recipeSansId = $value;
@@ -872,12 +872,12 @@ use WebPageTest\RateLimiter;
                         }
                         else {
                           $recipeSansId = $splitValue[1];
-                        }                      
+                        }
                       }
                       // if user isn't pro-access
-                      if( !$experiments_paid 
+                      if( !$experiments_paid
                         // and the experimentID is not in the allowed array
-                        && !in_array($experimentId, allowedFreeExperimentIds)
+                        && !in_array($experimentId, $allowedFreeExperimentIds)
                         // and it's not the exception url
                         && !$experimentUrlException ){
                           $error = "Attempt to use unauthorized experiments feature.";
@@ -908,27 +908,33 @@ use WebPageTest\RateLimiter;
                             if( $recipeSansId === "swap" ){
                               $experimentSwap = $ingredients;
                               if( $ingredients[0] ){
-                                $ingredients[0] = urlencode($ingredients[0]);
+                                $ingredients[0] = rawurlencode($ingredients[0]);
                               }
                               if( $ingredients[1] ){
-                                $ingredients[1] = urlencode($ingredients[1]);
+                                $ingredients[1] = rawurlencode($ingredients[1]);
                               }
                               if( $ingredients[2] ){
                                 $ingredients[2] = true;
                               }
                               $ingredients = array(implode("|", $ingredients) );
                             }
-                            $ingredients = implode($ingredients, ",");
+                            $ingredients = implode(",", $ingredients);
+                          }
+                          // these recipes need encoded values. they all do afterwards! TODO
+                          if( $recipeSansId === "insertheadstart"
+                            || $recipeSansId === "insertheadend"
+                            || $recipeSansId === "insertbodyend" ){
+                              $ingredients = rawurlencode($ingredients);
                           }
                           $recipeScript .= ":=" . $ingredients;
                         }
                         $recipeScript .= ";";
                       }
                     }
-                    
 
 
-                    // Recipes need a control to compare to. 
+
+                    // Recipes need a control to compare to.
                     // The control runs over the proxy without any recipes.
                     // We need to build the 2 tests and
                     // redirect to the comparison page
@@ -939,9 +945,9 @@ use WebPageTest\RateLimiter;
                       $test['label'] = 'Original (Control Run)';
                       $test['metadata'] = json_encode($experimentMetadata);
                       $id = CreateTest($test, $test['url']);
-                    
+
                       if( isset($id) ) {
-                          
+
                           $recipeTests[] = $id;
                           $experimentMetadata["experiment"]["control_id"] = $id;
                           $experimentMetadata["experiment"]["control"] = false;
@@ -950,13 +956,13 @@ use WebPageTest\RateLimiter;
 
                           // Default WPT test settings that are meant to be used for the experiment will have a experiment- prefix
                           // if experimentSpof is set...
-                          
+
                           if ( $experimentSpof ) {
                             $spofScript = buildSpofTest($experimentSpof);
                             $test['script'] = $spofScript . "\n" . $test['script'];
                             $test['spof'] .= ' ' . $experimentSpof;
                           }
-                          
+
                           if ( $experimentOverrideHost ) {
                             $overrideHostScript = buildSelfHost($experimentOverrideHost);
                             $test['script'] = $overrideHostScript . "\n" . $test['script'];
@@ -975,12 +981,12 @@ use WebPageTest\RateLimiter;
                             $test['block'] .= ' ' . $experimentBlock;
                           }
 
-                          
+
 
                           //replace last step with last step plus recipes
-                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
-                          
-                          
+                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . rawurlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
+
+
                           $id = CreateTest($test, $test['url']);
                           if( isset($id) ) {
                               $recipeTests[] = $id;
@@ -1167,7 +1173,7 @@ use WebPageTest\RateLimiter;
                   } else {
                     $error = 'Bulk testing is only available for WebPageTest Pro subscribers.';
                   }
-                    
+
                 } else {
                     $test['id'] = CreateTest($test, $test['url']);
                     if( !$test['id'] && !strlen($error) )
@@ -1604,7 +1610,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
     global $experiments_paid;
     global $experiments_logged_in;
     global $experimentURL;
-    
+
     if( isset($test['script']) && strlen($test['script']) )
     {
         $url = ValidateScript($test['script'], $error);
@@ -1827,9 +1833,9 @@ function ValidateScript(&$script, &$error)
                 }
                 $ok = true;
                 $url = trim($tokens[1]);
-                if (stripos($url, '%URL%') !== false || 
-                        stripos($url, '%ORIGIN%') !== false || 
-                        stripos($url, '%HOST%') !== false || 
+                if (stripos($url, '%URL%') !== false ||
+                        stripos($url, '%ORIGIN%') !== false ||
+                        stripos($url, '%HOST%') !== false ||
                         stripos($url, '%HOSTR%') !== false ||
                         stripos($url, '%HOST_REGEX%') !== false) {
                     $url = null;
@@ -2511,7 +2517,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
         // generate the test ID
         $testId = GenerateTestID($test['private'], $locationShard);
-        
+
         // if this is an experiment, and it's a control run, it needs its control_id field set to its own id
         if( $test['metadata'] ){
           $meta = json_decode($test['metadata']);
@@ -2523,13 +2529,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
           }
         }
 
-        
+
         $test['path'] = './' . GetTestPath($testId);
 
         // create the folder for the test results
-        if( !is_dir($test['path']) ) 
+        if( !is_dir($test['path']) )
             mkdir($test['path'], 0777, true);
-        
+
         // Fetch the CrUX data for the URL
         $crux_data = GetCruxDataForURL($url, $is_mobile);
         if (isset($crux_data) && strlen($crux_data)) {
@@ -2843,7 +2849,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // Write out the json before submitting the test to the queue
             $oldUrl = @$test['url'];
             $test['url'] = $url;
-            $test['id'] = $testId; 
+            $test['id'] = $testId;
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
 
@@ -2852,7 +2858,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         } elseif (isset($testId)) {
             $oldUrl = @$test['url'];
             $test['url'] = $url;
-            $test['id'] = $testId; 
+            $test['id'] = $testId;
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
         }
@@ -3228,7 +3234,7 @@ function ReportAnalytics(&$test, $testId)
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
         $ip = $test['ip'];
-    
+
     $eventName = $usingAPI ? 'API' : 'Manual';
     if ($usingApi2) {
       $eventName = 'API2';

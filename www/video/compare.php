@@ -164,8 +164,8 @@ else
                 }
                 $gaTemplate = 'Visual Comparison';
                 $useScreenshot = true;
-                $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Comparison";
-                $socialDesc = $experiment ? "Check out the impact of the optimizatations in this WebPageTest Pro Experiment..." : "Check out how these web performance tests compare visually.";
+                $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
+                $socialDesc = $experiment ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
 
                 include ('head.inc');
             ?>
@@ -486,19 +486,19 @@ echo "</div>";
                                     <div class="experiment_opportunities">
                                     <?php 
                                         include __DIR__ . '/../experiments/compare-assessments.inc'; 
-                                        if(count($assessmentChanges)){
-                                            $numAssessmentChanged = count($assessmentChanges);
-                                            $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
-                                            echo '<div class="experiment_opportunities-resolved">
-                                                <h3 class="hed_sub">Resolved Opportunities</h3>
-                                                <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
-                                                    <ol>';
+                                        // if(count($assessmentChanges)){
+                                        //     $numAssessmentChanged = count($assessmentChanges);
+                                        //     $assessEnding = $numAssessmentChanged === 1 ? "" : "s";
+                                        //     echo '<div class="experiment_opportunities-resolved">
+                                        //         <h3 class="hed_sub">Resolved Opportunities</h3>
+                                        //         <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
+                                        //             <ol>';
                                                 
-                                            foreach($assessmentChanges as $change){
-                                                echo '<li class="good">' . $change . '</li>';
-                                            }
-                                        echo '</ol></div>';
-                                        }
+                                        //     foreach($assessmentChanges as $change){
+                                        //         echo '<li class="good">' . $change . '</li>';
+                                        //     }
+                                        // echo '</ol></div>';
+                                        // }
                                     ?>
 
                                         

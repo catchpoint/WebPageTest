@@ -185,19 +185,6 @@
 
             </tr>
 
-            <tr>
-                <th scope="col">Priority Tests</th>
-                <td>
-                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
-                    <span class="visually-hidden">No</span>
-                </td>
-                <td>
-                    <i class="icon check" aria-hidden="true"></i>
-                    <span class="visually-hidden">Yes</span>
-                </td>
-
-            </tr>
-
 
             <tr>
                 <th scope="col">API Access</th>

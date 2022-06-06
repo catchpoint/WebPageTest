@@ -1,7 +1,7 @@
 <?php
-
 //if not logged in, let's encourage sign-up
-        if( $supportsCPAuth && isset($request_context) && is_null($request_context->getUser()->getEmail() ))
+        if( $supportsCPAuth && isset($request_context)
+            && is_null($request_context->getUser()) || is_null($request_context->getUser()->getEmail() ))
         {
             ?>
             <div class="cta-banner">
