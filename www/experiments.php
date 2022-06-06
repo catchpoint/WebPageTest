@@ -127,10 +127,12 @@ $page_description = "Website performance test result$testLabel.";
                     // initial host is used by a few opps, so we'll calculate it here
                     $initialHost = null;
                     $rootURL = null; 
+                    $initialOrigin = null;
                     foreach ($requests as $request) {
                         if ($request['is_base_page'] == "true") {
                             $initialHost = $request['host'];
                             $rootURL = trim($request['full_url']);
+                            $initialOrigin = "http" . (strpos( $rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
                             break;
                         }
                     }
@@ -178,6 +180,7 @@ $page_description = "Website performance test result$testLabel.";
                     
                     // this is to capture the first host that is a successful response and not a redirect. that'll be the one we want to override in an experiment
                     echo '<input type="hidden" name="initialHostNonRedirect" value="'. $initialHost .'">';
+                    echo '<input type="hidden" name="initialOriginNonRedirect" value="'. $initialOrigin .'">';
 
                     // used for tracking exp access
                     $expCounter = 0;
