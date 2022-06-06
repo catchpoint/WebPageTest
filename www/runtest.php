@@ -839,6 +839,7 @@ use WebPageTest\RateLimiter;
                   } else { 
                     // the first non-redirect host is passed in from experiments
                     $hostToUse = isset( $req_initialHostNonRedirect ) ? $req_initialHostNonRedirect : '%HOST%';
+                    $originToUse = isset( $req_initialOriginNonRedirect ) ? $req_initialOriginNonRedirect : '%ORIGIN%';
                     $test['script'] = "overrideHost\t". $hostToUse ."\t$experimentURL\r\n";
                     $scriptNavigate = "navigate\t%URL%\r\n";
                     $test['script'] .= $scriptNavigate;
@@ -984,7 +985,7 @@ use WebPageTest\RateLimiter;
 
 
                           //replace last step with last step plus recipes
-                          $test['script'] = str_replace($scriptNavigate, "setCookie\t%ORIGIN%\twpt-experiments=" . rawurlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
+                          $test['script'] = str_replace($scriptNavigate, "setCookie\t". $originToUse ."\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script'] );
 
 
                           $id = CreateTest($test, $test['url']);
