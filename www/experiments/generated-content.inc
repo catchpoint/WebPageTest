@@ -34,6 +34,7 @@ if ( isset($genContentSize) && isset($genContentPercent) ) {
             ),
             "experiments" =>  array(
                 (object) [
+                    "id" => '053',
                     'title' => 'Mimic Pre-rendered HTML',
                     "desc" => '<p>This experiment mimics server-generated HTML by swapping the initial HTML with the fully rendered HTML from this test run. <strong>Note:</strong> this will very likely break site behavior, but is potentially useful for comparing early metrics and assessing whether moving logic to the server is worth the effort.</p>',
                     "expvar" => 'prerender',
