@@ -65,6 +65,7 @@ if (defined('EMBED')) {
 
 <?php
 $alert = Util::getSetting('alert');
+// in settings.ini add alert_expiration as a non unix timestamp '2021-11-17 13:02:18'
 $alert_expiration = Util::getSetting('alert_expiration');
 if (isset($client_error)) {
     echo '<div class="error-banner">' . $client_error . '</div>';
