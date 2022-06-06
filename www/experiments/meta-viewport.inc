@@ -20,7 +20,7 @@ if ( $metaMetric ) {
                 (object) [
                     "id" => '009',
                     'title' => 'Add a Meta Viewport Tag',
-                    "desc" => '<p>This experiment inserts a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.</p>',
+                    "desc" => 'This experiment inserts a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.',
                     "expvar" => 'swap',
                     "expval" => array(encodeURIComponent("</head>") . "|" . encodeURIComponent( '<meta name="viewport" content="width=device-width, initial-scale=1"></head>' ))
                 ]
