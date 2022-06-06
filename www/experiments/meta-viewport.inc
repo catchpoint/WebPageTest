@@ -14,13 +14,13 @@ if ( $metaMetric ) {
             "title" =>  'Meta Viewport not configured properly for mobile-friendly layout.',
             "desc" =>  'A meta viewport tag will help a mobile-friendly site scale and display properly on small screen devices.',
             "examples" =>  array(
-                ($metaMetric === "Not found" ? "<p>It looks like no meta viewport tag is present.</p>" : "<p>The current meta viewport tag has a content property value of $metaMetric</p>")
+                ($metaMetric === "Not found" ? "<p>It looks like no meta viewport tag is present.</p>" : "<p>The current meta viewport tag has a content property value of ". htmlentities($metaMetric) ."</p>")
             ),
             "experiments" =>  array(
                 (object) [
                     "id" => '009',
                     'title' => 'Add a Meta Viewport Tag',
-                    "desc" => '<p>This experiment inserts a <code>'. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .'</code> in the <code>head</code> of this site.</p>',
+                    "desc" => 'This experiment inserts a '. htmlentities('<meta name="viewport" content="width=device-width, initial-scale=1">') .' in the <code>head</code> of this site.',
                     "expvar" => 'swap',
                     "expval" => array(encodeURIComponent("</head>") . "|" . encodeURIComponent( '<meta name="viewport" content="width=device-width, initial-scale=1"></head>' ))
                 ]
