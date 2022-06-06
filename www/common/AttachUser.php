@@ -106,7 +106,7 @@ use WebPageTest\Exception\UnauthorizedException;
 
     $user_email = $user->getEmail();
 
-    if (!$admin && !is_null($user_email)) {
+    if (!$admin && !is_null($user_email) && $user->isVerified()) {
         $admin_users = Util::getSetting("admin_users");
         if ($admin_users) {
             $admin_users = explode(',', $admin_users);
