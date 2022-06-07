@@ -48,7 +48,7 @@
                 $expsToAdd[] = (object) [
                     "id" => '010',
                     'title' => 'Preload LCP Image',
-                    "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
+                    "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" as="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the image earlier and at a higher priority than it otherwise might.</p>',
                     "expvar" => 'addpreload',
                     "expval" => array($lcpSource . "|as_image"),
                     "explabel" => array($lcpSource)
