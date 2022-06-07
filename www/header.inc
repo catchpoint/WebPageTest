@@ -31,9 +31,9 @@ if (isset($testResults)) {
 }
 
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
-if ($id && isset($test) && is_array($test) && 
-        isset($test['testinfo']['created']) && 
-        isset($test['testinfo']['url']) && 
+if ($id && isset($test) && is_array($test) &&
+        isset($test['testinfo']['created']) &&
+        isset($test['testinfo']['url']) &&
         !isset($user) && !isset($_COOKIE['google_email'])) {
     $history = array(
         'id' => $id,
@@ -52,15 +52,20 @@ if( !isset($experiment) ){
     $experiment = false;
 }
 
-
 if (!defined('EMBED')) {
 ?>
 <?php
 $alert = Util::getSetting('alert');
+// in settings.ini add alert_expiration as a non unix timestamp '2021-11-17 13:02:18'
+$alert_expiration = Util::getSetting('alert_expiration');
 if (isset($client_error)) {
-  echo '<div class="error-banner">' . $client_error . '</div>';
-} elseif ($alert) {
-  echo '<div class="alert-banner">' . $alert . '</div>';
+    echo '<div class="error-banner">' . $client_error . '</div>';
+}
+elseif ($alert && $alert_expiration && new DateTime() < new DateTime($alert_expiration)) {
+    echo '<div class="alert-banner">' . $alert . '</div>';
+}
+elseif ($alert && empty($alert_expiration)) {
+    echo '<div class="alert-banner">' . $alert . '</div>';
 }
 
 require_once __DIR__ . '/templates/layouts/includes/wpt-header.php';
@@ -75,7 +80,7 @@ require_once __DIR__ . '/templates/layouts/includes/wpt-header.php';
 <?php
 
 
-                       
+
 
 
 
@@ -83,7 +88,7 @@ require_once __DIR__ . '/templates/layouts/includes/wpt-header.php';
 if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED') )
 {
 
-    
+
     // make sure the test is actually complete
     if(isset($test['test']['completeTime']))
     {
@@ -109,10 +114,10 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
         echo '<div id="header_container">';
 
-        
-        
-        
-        
+
+
+
+
         echo "<div id=\"header_data\"$data_class>";
         // for multistep, link the first URL and show additional text. Otherwise take the test URL
         $numSteps = $gradeRunResults->countSteps();
@@ -120,7 +125,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<ul class=\"header_data_urltime\">";
-            
+
             echo "<li><strong>URL: </strong>";
             if (GetSetting('nolinks')) {
                 echo "<span class=\"page-tested\">$shortUrl</span>";
@@ -129,7 +134,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
             echo "</li>";
             echo "<li><strong>Date: </strong>";
-           
+
             if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started'])) )
             {
                 if (isset($test['testinfo']['completed'])) {
@@ -151,7 +156,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             }
 
-            
+
             $flags = array(
                     'ec2-us-east-1' => 'US',
                     'gce-us-west3' => 'US',
@@ -169,17 +174,17 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     'ec2-me-south-1' => 'BS',
                     'azure-uae-north' => 'AE',
                     'ap-south-1' => 'IN',
-                    'tencent-bangkok' => 'TH',         
-                    'ec2-ap-southeast-1' => 'SG',      
-                    'gce-asia-southeast2' => 'MC',     
-                    'ec2-ap-east-1' => 'HK',           
-                    'tencent-shanghai' => 'CN',        
-                    'ec2-cn-north-1' => 'CN',          
-                    'tencent-beijing' => 'CN',         
-                    'ec2-cn-northwest-1' =>  'CN',     
-                    'ec2-ap-northeast-2' =>  'KR',     
-                    'ec2-ap-northeast-1' => 'JP',      
-                    'ec2-ap-northeast-3' => 'JP',      
+                    'tencent-bangkok' => 'TH',
+                    'ec2-ap-southeast-1' => 'SG',
+                    'gce-asia-southeast2' => 'MC',
+                    'ec2-ap-east-1' => 'HK',
+                    'tencent-shanghai' => 'CN',
+                    'ec2-cn-north-1' => 'CN',
+                    'tencent-beijing' => 'CN',
+                    'ec2-cn-northwest-1' =>  'CN',
+                    'ec2-ap-northeast-2' =>  'KR',
+                    'ec2-ap-northeast-1' => 'JP',
+                    'ec2-ap-northeast-3' => 'JP',
                     'azure-australia-southeast' => 'AU',
                     'ec2-ap-southeast-2' => 'AU',
                     'LosAngeles_M1MacMini' => 'US',
@@ -200,7 +205,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 } else {
                     $browserIcon = false;
                 }
-            
+
             if ($test['testinfo']['mobile'] == 1) {
                 $device = strtolower( $test['testinfo']['mobileDevice'] );
             } else {
@@ -211,10 +216,10 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             <div class="test_presets">
                 <ul>
-                    <?php 
-                    
+                    <?php
+
                     echo '<li>';
-                    
+
                     if ( $test['testinfo'] && $test['testinfo']['label'] ) {
                         $labelClass = "test_presets_tag-label";
                         if( $experiment ){
@@ -225,8 +230,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
                     echo '<b>Settings:</b> <strong>'.$device.'</strong>';
-                    
-                    
+
+
                     //browser and version
                     if (isset($browser)){
                         echo '<span class="test_presets_tag">';
@@ -240,7 +245,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         }
                         echo '</span>';
                     }
-                    
+
                     //connectivity
                     echo '<span class="test_presets_tag">'. $connectivity . '</span>';
                     //location
@@ -249,12 +254,12 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     if( $flags[$test['test']['loc']] ){
                         echo '<img src="/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
                     }
-                    
+
                     echo $locationSimple;
                     echo '</span>';
 
-                    
-                    
+
+
 
 
                     // TODO what is show sensitive?
@@ -275,13 +280,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         echo "<details class=\"test_presets_more test_presets_more-share\"><summary><span class=\"test_presets_tag\">Share</span></summary>
                         <div class=\"details_contain\">
                             <ul>
-                            <li><a href=\"" . $emailURI . "\">Share via Email</a></li>" 
-                            . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Share on Twitter</a></li>" : "") 
+                            <li><a href=\"" . $emailURI . "\">Share via Email</a></li>"
+                            . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Share on Twitter</a></li>" : "")
                             . "<li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">View Formatted Screenshot Image</a></li>"
                             . "</ul>
                         </div></details>";
                     }
-                    
+
                     ?>
                     </li>
 
@@ -292,7 +297,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
     <?php
-    
+
         echo '<div class="header_screenshots">';
 
         if( $experiment && isset($tests) && count($tests) === 2 ){
@@ -316,7 +321,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 var container = document.querySelector(".header_screenshots");
 				var video = container.querySelector("video");
 				var playbtn = container.querySelector(".play");
-				
+
 				function activate(){
 					container.classList.add("playing");
 				}
@@ -337,8 +342,8 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 						video.pause();
 					}
 				});
-				
-				
+
+
 			}());
             </script>
         <?php
@@ -346,13 +351,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         else {
             require_once __DIR__ . '/screen_shot_embed.php';
         }
- 
+
         echo '</div></div></div>';
 
 ?>
 
-       
-      <?php 
+
+      <?php
         if( !isset($hideResultsNav) ){
         ?>
         <div class="results_nav_contain">
@@ -362,9 +367,9 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
               <nav class="link_select" tabindex="0" aria-label="Test Type">
         <span class="link_select_label"><?php echo $subtab; ?></span>
         <span class="visually-hidden"> or...</span>
-        
 
-        <?php 
+
+        <?php
             if( !$id && $test['id'] && isset($tests) ){
                 $id = $test['id'];
             }
@@ -372,7 +377,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 $run = $gradeRun;
 
 
-        // create the results nav. 
+        // create the results nav.
         // if it's a regular result or Same ID compare, it'll be a normal result nav
         // if it's an experiment compare, it'll just have experiment links
         echo '<ul>';
@@ -384,13 +389,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
             $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
-            
+
 
             if( $experiment ){
                 $tabs['Opportunities & Experiments'] = $experimentOriginalExperimentsHref;
                 $tabs['Experiment Results (Filmstrip)'] = $experimentResultsHref;
             } else {
-                $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);    
+                $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);
                 $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
             }
             $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
@@ -412,10 +417,10 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
             $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
             }
-            
-            
 
-        
+
+
+
             foreach( $tabs as $tabName => $tabUrl )
             {
                 // make sure we have a test result to navigate to
@@ -428,11 +433,11 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
                 }
             }
-          
+
             if (isset($firstRunResults)){
                 $lighthouse = $firstRunResults->getLighthouseScore();
                 $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
-                
+
                 if (isset($lighthouse)) {
                     $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
                     $lhClass = 'poor';
@@ -440,7 +445,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         $lhClass = 'good';
                     elseif ($lighthouse >= 50)
                         $lhClass = 'ok';
-                    
+
                 echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag ". $lhClass ."\">". $lighthouse ."</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
                 }
             }
@@ -476,7 +481,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
             echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
             "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
-        
+
             if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
 
                 // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
@@ -491,21 +496,21 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 }
                 require_once('security_checks.php');
                 $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
-        
+
                 $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Snyk']);}}catch(err){}";
                 $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
                 echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
-        
+
             }
 
-    
+
 
         echo '</ul></nav></div>';
 
-        
-        include("testinfo_command-bar.inc"); 
-        
-        
+
+        include("testinfo_command-bar.inc");
+
+
         echo '</div></div>';
 
         }
@@ -515,13 +520,13 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
 
-        
+
 
 <?php
         echo '<div id="test_results-container">';
 
         echo '<div id="test-1" class="test_results">';
-        
+
         echo '<div class="test_results-content">';
     }
     else
