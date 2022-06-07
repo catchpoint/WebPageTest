@@ -15,8 +15,9 @@ if (isset($test['test'])) {
             $tests = array();
             $tests['variations'] = array();
             $tests['urls'] = array();
-            foreach ($legacyData as &$legacyTest)
+            foreach ($legacyData as &$legacyTest) {
                 $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
+            }
         } elseif (gz_is_file("$testPath/bulk.json")) {
             $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
         }
