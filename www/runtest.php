@@ -783,6 +783,7 @@ use WebPageTest\RateLimiter;
         }
 
         function buildSelfHost($hosts){
+          global $experimentURL;
           $selfHostScript = "";
           foreach($hosts as $host) {
             $host = trim($host);
