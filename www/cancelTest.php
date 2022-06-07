@@ -37,7 +37,9 @@ if (isset($test['test'])) {
         if (CancelTest($id)) {
             echo '<h3 align="center">Test cancelled!</h3>';
         } else {
-            echo '<h3>Sorry, the test could not be cancelled.  It might have already started or been cancelled</h3>';
+            if (isset($_SERVER["HTTP_REFERER"])) {
+                header("Location: " . $_SERVER["HTTP_REFERER"]);
+            }
         }
     }
     echo '<form><input type="button" value="Back" onClick="history.go(-1);return true;"> </form>';
