@@ -16,9 +16,7 @@
                 }
             }
         } else if (!isset($request['renderBlocking']) && $request['contentType'] === "text/css" && $request['all_end'] < $startRender) {
-            if( initiatedByRoot($request) ){
-                array_push($potentiallyBlockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
-            }
+            array_push($potentiallyBlockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
         }
     }
     if (!$blockingIndicator){
