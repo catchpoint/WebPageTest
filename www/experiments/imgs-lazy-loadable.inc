@@ -31,7 +31,7 @@ if( count($imgsThatShouldBeLazy) ){
             (object) [
                 "id" => '014',
                 'title' => 'Add loading="lazy" to images',
-                "desc" => '<p>This experiment adds <code>loading="lazy"</code> attributes to images that are inside the viewport at load.</p>',
+                "desc" => '<p>This experiment adds <code>loading="lazy"</code> attributes to images that are outside the viewport at load.</p>',
                 "expvar" => 'addloadinglazy',
                 "expval" => array_unique($shouldBeLazySrcs)            ]
         ),
