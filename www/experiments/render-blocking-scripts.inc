@@ -20,9 +20,7 @@ foreach ($requests as $request) {
             }
         }
     } else if (!isset($request['renderBlocking']) && (isset($request['requestType']) && $request['requestType'] === "script" || $request['request_type'] === "Script") && $request['all_end'] < $startRender) {
-        if( initiatedByRoot($request) ){
-            array_push($potentiallyBlockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
-        }
+        array_push($potentiallyBlockingJSReqs, documentRelativePath($request['url'], $requests[0]['url']) );
     }
 }
 
