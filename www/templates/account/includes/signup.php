@@ -10,12 +10,16 @@
 <form id="wpt-account-signup" method="post" action="/account">
     <h3>Save 20% by paying annually!</h3>
     <fieldset class="wpt-plans radiobutton-tab-container">
-        <legend class="sr-only">Choose a Plan</legend>
-        <input id="annual-plans" type="radio" name="plan-type" value="annual" checked />
-        <input id="monthly-plans" type="radio" name="plan-type" value="monthly" />
-        <div class="radiobutton-group">
-            <label for="annual-plans">Annual Plans</label>
-            <label for="monthly-plans">Monthly Plans</label>
+        <legend for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</legend>
+        <input id="annual-plans" type="radio" name="plans" value="annual" checked />
+        <input id="monthly-plans" type="radio" name="plans" value="monthly" />
+        <div class="radiobutton-group subscription-type-selector" id="pro-plan-selector">
+            <div class="radio-button">
+                <label for="annual-plans">Annual</label>
+            </div>
+            <div class="radio-button">
+                <label for="monthly-plans">Monthly</label>
+            </div>
         </div>
         <div class="wpt-plan-set annual-plans">
             <?php foreach ($annual_plans as $plan) :
@@ -25,7 +29,7 @@
         <label class="wpt-plan card" for="annual-{$plan['id']}">
           <h5>{$plan['name']}</h5>
           <div><strong>\${$plan['annual_price']}</strong>/Year</div>
-          <span aria-hidden="true" class="select-indicator">Select</span>
+          <span aria-hidden="true" class="pill-button yellow">Select</span>
         </label>
       </div>
 HTML;
@@ -40,7 +44,7 @@ HTML;
         <label class="card wpt-plan" for="monthly-{$plan['id']}">
           <h5>{$plan['name']}</h5>
           <div><strong>\${$plan['price']}</strong>/Month</div>
-          <span aria-hidden="true" class="select-indicator">Select</span>
+          <span aria-hidden="true" class="pill-button yellow">Select</span>
         </label>
       </div>
 HTML;
@@ -113,7 +117,7 @@ HTML;
     <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
 
     <div class="add-subscription-button-wrapper">
-        <button type="submit">Add Subscription</button>
+        <button type="submit" class="pill-button blue">Add Subscription</button>
     </div>
 </form>
 

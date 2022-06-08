@@ -385,6 +385,11 @@ body.theme-b {
   flex-wrap: wrap;
   align-content: center;
   justify-content: space-between;
+  text-align: center;
+}
+
+.wpt-plan-set .pill-button {
+  margin-top: 1rem;
 }
 
 .wpt-plans input[name=plan-type][value=monthly]:checked~.wpt-plan-set.monthly-plans,
@@ -1481,6 +1486,10 @@ tr.custom-plan-mobile {
   }
 }
 
+.radiobutton-tab-container {
+  position: relative;
+}
+
 .radiobutton-tab-container input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
 .radiobutton-tab-container input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
   animation: highlight 1s;
@@ -1493,9 +1502,16 @@ tr.custom-plan-mobile {
   font-weight: 600;
 }
 
+/* sign up step 1 */
 .radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.comparison-table .plan-selector .plan.annual,
 .radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.comparison-table .plan-selector .plan.monthly {
   display: block;
+}
+
+/* account page sign up */
+.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.annual-plans,
+.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.monthly-plans {
+  display: flex;
 }
 
 .radiobutton-tab-container input[type=radio] {
