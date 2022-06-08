@@ -26,13 +26,8 @@
         
             if (isset($lcp['type']) && $lcp['type'] === "image") {
                 if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
-                    $lcpSource = $lcp['element']['src'];
-                    $lcpFullSource = $lcp['element']['src'];
-                    // get actual source attribute if we can.
-                    $srcAttrVal = preg_match_all('/src\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches );
-                    if( $srcmatches ){
-                        $lcpSource = $srcmatches[1][0];
-                    }
+                    $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
+                    $lcpFullSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                 }
                 if (isset($lcp['element']['background-image'])) {
                     preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
