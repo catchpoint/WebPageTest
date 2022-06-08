@@ -8,7 +8,7 @@
             $page_description = "Website speed test cancelled.";
             include ('head.inc');
         ?>
-        <link rel="stylesheet" href="<?= "/css/button.css?v={$VER_CSS}" ?>" />
+        <link rel="stylesheet" href="/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
     </head>
     <body class="history">
             <?php

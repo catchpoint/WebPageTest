@@ -56,11 +56,13 @@ if( strlen($page_description) )
     } elseif (file_exists('./settings/customhead.inc.php')) {
         include('./settings/customhead.inc.php');
     }
+?>
 
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/wpt-header.css?v=" . VER_CSS . "\">\n";
-    echo "<script src=\"{$GLOBALS['cdnPath']}/wpt-header.js?v=" . VER_JS . "\" defer></script>\n";
+    <link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
+    <link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
+    <script src="<?= "{$GLOBALS['cdnPath']}/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
 
+<?php
     echo "<style>\n";
 
     // switch to the private install logo if we're not running on webpagetest
