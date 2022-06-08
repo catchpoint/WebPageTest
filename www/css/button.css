@@ -9,6 +9,7 @@
   padding: 0.7em 2.2em;
   text-decoration: none;
   color: #111;
+  font-size: 1rem;
 }
 
 .box-button {
@@ -35,6 +36,7 @@ update all the yellow buttons on the site
 
 .blue {
   background-color: #3881E5;
+  color: #fff;
 }
 
 /**
@@ -50,4 +52,8 @@ TODO update the NEW buttons on signup to this green
 
 .purple {
   background-color: #6b25cf
+}
+
+.grey-outline {
+  border: 1px solid rgb(204, 204, 204)
 }

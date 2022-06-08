@@ -16,41 +16,9 @@
   content: '*';
 }
 
-.fg-modal .save-button button {
-  background-color: #2c97ff;
-  border-radius: 2px;
-  appearance: none;
-  border: 1px solid rgb(0, 120, 212);
-  color: white;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-}
-
 .fg-modal .save-button,
 .fg-modal .cancel-button {
   display: inline-flex;
-}
-
-.fg-modal .cancel-button button {
-  border-radius: 2px;
-  appearance: none;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-  border: 1px solid rgb(102, 102, 102);
-}
-
-.fg-modal .cancel-subscription-button button {
-  background-color: red;
-  border-radius: 2px;
-  appearance: none;
-  border: 1px solid rgb(212, 0, 0);
-  color: white;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-  font-weight: 600;
 }
 
 .fg-modal label {
@@ -304,17 +272,6 @@ body.theme-b {
 
 .plan-billing-container .card {
   display: block;
-}
-
-.add-subscription-button-wrapper button {
-  appearance: none;
-  box-shadow: none;
-  display: block;
-  text-align: center;
-  padding: 0.5em 0.8125rem;
-  background-color: rgb(67, 129, 229);
-  color: rgb(255, 255, 255);
-  border: 1px solid rgb(0, 120, 212);
 }
 
 .billing-container {
