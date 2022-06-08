@@ -251,10 +251,9 @@ foreach($assessment as $key => $cat ){
 		// build sentiment
 		$summary = "This site ";
 		if( isset($blocking3pReqs) ){
-			
-			if( $blocking3pReqs > 2 ){
+			if( count($blocking3pReqs) > 2 ){
 				$summary .= "had many";
-			} else if( $blocking3pReqs > 0 ){
+			} else if( count($blocking3pReqs) > 0 ){
 				$summary .= "had ";
 			}
 			else {

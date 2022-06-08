@@ -14,7 +14,7 @@ if ( $metaMetric ) {
             "title" =>  'Meta Viewport not configured properly for mobile-friendly layout.',
             "desc" =>  'A meta viewport tag will help a mobile-friendly site scale and display properly on small screen devices.',
             "examples" =>  array(
-                ($metaMetric === "Not found" ? "<p>It looks like no meta viewport tag is present.</p>" : "<p>The current meta viewport tag has a content property value of ". htmlentities($metaMetric) ."</p>")
+                ($metaMetric === "Not found" ? "It looks like no meta viewport tag is present." : "The current meta viewport tag has a content property value of ". htmlentities($metaMetric) .".")
             ),
             "experiments" =>  array(
                 (object) [
