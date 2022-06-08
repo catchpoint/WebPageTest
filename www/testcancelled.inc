@@ -8,16 +8,18 @@
             $page_description = "Website speed test cancelled.";
             include ('head.inc');
         ?>
+        <link rel="stylesheet" href="<?= "/css/button.css?v={$VER_CSS}" ?>" />
     </head>
-    <body>
+    <body class="history">
             <?php
             $tab = 'Test Result';
             $nosubheader = true;
             include 'header.inc';
             ?>
-            <div align="center" class="box">
-                <h3>Sorry, this test was cancelled before it ran!</h3>
-                <form><input type="button" value="Back" onClick="history.go(-1);return true;"> </form>
+            <div class="history_hed">
+                <h1>Test Run Cancelled</h1>
+                <p>Sorry, this test was cancelled before it ran!</p>
+                <form><input class="yellow-pill-button" type="button" value="Back" onClick="history.go(-1);return true;"> </form>
             </div>
         </div>
     </body>

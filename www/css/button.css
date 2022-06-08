@@ -1,0 +1,10 @@
+.yellow-pill-button {
+  appearance: none;
+  width: auto;
+  background-color: #F9D856;
+  border: 0;
+  border-radius: 2rem;
+  cursor: pointer;
+  display: inline-block;
+  padding: 0.7em 2.2em;
+}
