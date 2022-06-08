@@ -25,7 +25,7 @@
                     <label for="country">Country</label>
                     <select name="country">
                         <?php foreach ($country_list as $country) : ?>
-                        <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
+                            <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -42,7 +42,7 @@
             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
 
             <div class="save-button">
-                <button type="submit">Save</button>
+                <button type="submit" class="pill-button blue">Save</button>
             </div>
         </fieldset>
     </form>
@@ -53,31 +53,31 @@
 
 
 <script>
-braintree.dropin.create({
-    authorization: "<?= $bt_client_token ?>",
-    container: '#braintree-container',
-    card: {
-        cardholderName: {
-            required: true
-        }
-    }
-}, (error, dropinInstance) => {
-    var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
-    var form = document.querySelector("#update-payment-form");
-
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        dropinInstance.requestPaymentMethod(function(err, payload) {
-            if (err) {
-                // handle error
-                console.error(err);
-                return;
+    braintree.dropin.create({
+        authorization: "<?= $bt_client_token ?>",
+        container: '#braintree-container',
+        card: {
+            cardholderName: {
+                required: true
             }
+        }
+    }, (error, dropinInstance) => {
+        var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
+        var form = document.querySelector("#update-payment-form");
 
-            hiddenNonceInput.value = payload.nonce;
-            form.submit();
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            dropinInstance.requestPaymentMethod(function(err, payload) {
+                if (err) {
+                    // handle error
+                    console.error(err);
+                    return;
+                }
+
+                hiddenNonceInput.value = payload.nonce;
+                form.submit();
+            });
         });
     });
-});
 </script>

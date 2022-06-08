@@ -8,7 +8,7 @@
     </div> <!-- ./signup-hed -->
 </div>
 
-<div class="signup-step-1-content">
+<div class="signup-step-1-content radiobutton-tab-container">
     <h2> Save 20% by paying annually!</h2>
     <!-- css only tabs. The html is in this order for a reason. -->
     <label for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</label>
