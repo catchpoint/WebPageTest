@@ -9,7 +9,7 @@
 </div>
 <form id="wpt-account-signup" method="post" action="/account">
     <h3>Save 20% by paying annually!</h3>
-    <fieldset class="wpt-plans">
+    <fieldset class="wpt-plans radiobutton-tab-container">
         <legend class="sr-only">Choose a Plan</legend>
         <input id="annual-plans" type="radio" name="plan-type" value="annual" checked />
         <input id="monthly-plans" type="radio" name="plan-type" value="monthly" />
