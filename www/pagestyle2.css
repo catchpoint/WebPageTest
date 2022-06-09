@@ -6605,7 +6605,6 @@ div.overflow-container,
 div:not(.compare_contain_wrap)>div.waterfall-container img,
 div.overflow-container>*,
 .breakdownFrame_item>div>*,
-#videoDiv>*,
 .experiment_opportunities-resolved ol>*,
 .experiments_details_desc>ul li {
     mix-blend-mode: multiply
