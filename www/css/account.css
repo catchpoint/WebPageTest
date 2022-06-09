@@ -71,6 +71,22 @@ body.theme-b {
 .my-account-page {
   margin: 0 auto;
   width: 72%;
+  box-sizing: border-box;
+}
+
+/** Account page mobile styles **/
+@media screen and (max-width: 370px) {
+  .my-account-page {
+    width: 100%;
+  }
+
+  .subhed {
+    margin-left: 1.5rem;
+  }
+
+  .card.subscribe {
+    padding: 0;
+  }
 }
 
 .subhed,
@@ -264,6 +280,7 @@ body.theme-b {
   display: flex;
   align-content: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .plan-billing-container * {
@@ -317,7 +334,6 @@ body.theme-b {
 .plan-details-container {
   width: 25%;
 }
-
 .wpt-plans {
   border: 0;
   padding: 0;
@@ -419,7 +435,6 @@ body.theme-b {
 .wpt-plan-set .form-wrapper-radio input[type=radio]:checked+.wpt-plan .select-indicator::after {
   content: "ed";
 }
-
 
 /**
  * begin signup step 1
@@ -1275,6 +1290,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     display: block;
     width: 50%;
     font-size: 1rem;
+    box-sizing: border-box;
   }
 
   .comparison-table thead th {
@@ -1301,7 +1317,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     display: none;
   }
 
-  .comparison-table tr.custom-plan-mobile {
+  .comparison-table tbody tr.custom-plan-mobile {
+    background-color: white;
     display: flex;
   }
 }
@@ -1311,6 +1328,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   .comparison-table tbody td,
   .comparison-table thead th {
     font-size: 0.9rem;
+    box-sizing: border-box;
   }
 }
 
@@ -1638,12 +1656,6 @@ ul.bulleted-list {
   }
 }
 
-@media (min-width: 40em) {
-  .signup-hed {
-    padding-bottom: 4rem;
-  }
-}
-
 @media (min-width: 50em) {
   .signup-hed {
     padding-left: 3rem
@@ -1653,5 +1665,17 @@ ul.bulleted-list {
 @media (min-width: 40em) {
   .signup-hed {
     padding-bottom: 6rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .form-wrapper-radio {
+    width: 100%;
+  }
+  .billing-container,
+  .plan-details-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
   }
 }
