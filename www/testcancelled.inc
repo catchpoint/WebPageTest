@@ -19,7 +19,7 @@
             <div class="history_hed">
                 <h1>Test Run Cancelled</h1>
                 <p>Sorry, this test was cancelled before it ran!</p>
-                <form><input class="yellow-pill-button" type="button" value="Back" onClick="history.go(-1);return true;"> </form>
+                <form><input class="yellow pill-button" type="button" value="Back" onClick="history.go(-1);return true;"> </form>
             </div>
         </div>
     </body>

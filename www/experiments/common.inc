@@ -251,10 +251,9 @@ foreach($assessment as $key => $cat ){
 		// build sentiment
 		$summary = "This site ";
 		if( isset($blocking3pReqs) ){
-			
-			if( $blocking3pReqs > 2 ){
+			if( count($blocking3pReqs) > 2 ){
 				$summary .= "had many";
-			} else if( $blocking3pReqs > 0 ){
+			} else if( count($blocking3pReqs) > 0 ){
 				$summary .= "had ";
 			}
 			else {
@@ -300,7 +299,7 @@ foreach($assessment as $key => $cat ){
 		// and it's the quickness category and fcp is reasonably slow
 		&& ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
 		&& ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
-		&& ($key !== "Usable" || $key === "Usable" && isset($cls) && $cls > 0  )
+		&& ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2))  )
 	){
 		$assessment[$key]["grade"] = "f";
 		$assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";

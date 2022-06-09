@@ -16,41 +16,9 @@
   content: '*';
 }
 
-.fg-modal .save-button button {
-  background-color: #2c97ff;
-  border-radius: 2px;
-  appearance: none;
-  border: 1px solid rgb(0, 120, 212);
-  color: white;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-}
-
 .fg-modal .save-button,
 .fg-modal .cancel-button {
   display: inline-flex;
-}
-
-.fg-modal .cancel-button button {
-  border-radius: 2px;
-  appearance: none;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-  border: 1px solid rgb(102, 102, 102);
-}
-
-.fg-modal .cancel-subscription-button button {
-  background-color: red;
-  border-radius: 2px;
-  appearance: none;
-  border: 1px solid rgb(212, 0, 0);
-  color: white;
-  font-size: 1rem;
-  height: 30px;
-  padding: 0 17px;
-  font-weight: 600;
 }
 
 .fg-modal label {
@@ -306,17 +274,6 @@ body.theme-b {
   display: block;
 }
 
-.add-subscription-button-wrapper button {
-  appearance: none;
-  box-shadow: none;
-  display: block;
-  text-align: center;
-  padding: 0.5em 0.8125rem;
-  background-color: rgb(67, 129, 229);
-  color: rgb(255, 255, 255);
-  border: 1px solid rgb(0, 120, 212);
-}
-
 .billing-container {
   width: 70%;
 }
@@ -379,18 +336,17 @@ body.theme-b {
   overflow: hidden;
 }
 
-.wpt-plans input[name=plan-type][value=monthly]:checked~.radiobutton-group label[for=monthly-plans],
-.wpt-plans input[name=plan-type][value=annual]:checked~.radiobutton-group label[for=annual-plans] {
-  background-color: #3881E5;
-  color: #FFF;
-  box-shadow: none;
-}
 
 .wpt-plan-set {
   display: none;
   flex-wrap: wrap;
   align-content: center;
   justify-content: space-between;
+  text-align: center;
+}
+
+.wpt-plan-set .pill-button {
+  margin-top: 1rem;
 }
 
 .wpt-plans input[name=plan-type][value=monthly]:checked~.wpt-plan-set.monthly-plans,
@@ -1487,24 +1443,35 @@ tr.custom-plan-mobile {
   }
 }
 
-.signup-step-1-content input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
-.signup-step-1-content input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
+.radiobutton-tab-container {
+  position: relative;
+}
+
+.radiobutton-tab-container input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
+.radiobutton-tab-container input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
   animation: highlight 1s;
 }
 
-.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.radiobutton-group .radio-button:nth-of-type(1) label,
-.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.radiobutton-group .radio-button:nth-of-type(2) label {
+.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.radiobutton-group .radio-button:nth-of-type(1) label,
+.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.radiobutton-group .radio-button:nth-of-type(2) label {
   background-color: #3881E5;
   color: white;
   font-weight: 600;
 }
 
-.signup-step-1-content input[type="radio"]:nth-of-type(1):checked~.comparison-table .plan-selector .plan.annual,
-.signup-step-1-content input[type="radio"]:nth-of-type(2):checked~.comparison-table .plan-selector .plan.monthly {
+/* sign up step 1 */
+.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.comparison-table .plan-selector .plan.annual,
+.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.comparison-table .plan-selector .plan.monthly {
   display: block;
 }
 
-.signup-step-1-content input[type=radio] {
+/* account page sign up */
+.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.annual-plans,
+.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.monthly-plans {
+  display: flex;
+}
+
+.radiobutton-tab-container input[type=radio] {
   position: absolute;
   opacity: 0;
   top: 0;

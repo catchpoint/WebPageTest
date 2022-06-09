@@ -54,7 +54,7 @@ if( isset( $axe ) ) {
     
 
     $assessment[$category]["opportunities"][] = array(
-		"title" => "Accessiblity Issues were Detected",
+		"title" => "Accessibility Issues were Detected",
 		"desc" => "Axe found $num_violations accessibility issues: " . 
             ($num_critical > 0 ? "$num_critical critical, " : '') .
             ($num_serious > 0 ? "$num_serious serious, " : '') .
@@ -74,7 +74,7 @@ if( isset( $axe ) ) {
 }
 else {
     $assessment[$category]["opportunities"][] = array(
-		"title" => "Zero Accessiblity Issues were Detected",
+		"title" => "Zero Accessibility Issues were Detected",
 		"desc" => "Axe found no accessibility issues. ",
 		"examples" =>  array(),
 		"experiments" => array(),
