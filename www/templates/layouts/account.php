@@ -12,23 +12,22 @@
     global $request_context;
     global $_SESSION;
     global $client_error;
-    global $VER_CSS;
+    global $site_js_loaded;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     ?>
-    <title><?php echo $page_title; ?></title>
+    <title><?= $page_title ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
-    <link rel="stylesheet" href="<?= "/css/button.css?v={$VER_CSS}" ?>" />
-    <link rel="stylesheet" href="<?= "/css/account.css?v={$VER_CSS}" ?>" />
+    <link rel="stylesheet" href="/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
+    <link rel="stylesheet" href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
     <script defer src="/js/account.js"></script>
 </head>
-
 <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
     <div id="main">
         <?php require_once __DIR__ . '/main_hed.inc'; ?>
-        <?php echo $template_output; ?>
-        <?php require_once __DIR__ . '/footer.inc'; ?>
+        <?= $template_output ?>
+    </div>
+    <?php require_once __DIR__ . '/footer.inc'; ?>
 </body>
-
 </html>

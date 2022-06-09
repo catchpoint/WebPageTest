@@ -25,34 +25,33 @@
     <?php endif; ?>
   </div>
 
-  <div>
-    <div class="card contact-info" data-modal="contact-info-modal">
-      <div class="card-section">
-        <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
-        <div class="info">
-          <div><?= htmlspecialchars($email) ?></div>
-        </div>
-      </div>
-      <div class="card-section">
-        <div class="edit-button">
-          <button><span>Edit</span></button>
-        </div>
+  <div class="card contact-info" data-modal="contact-info-modal">
+    <div class="card-section">
+      <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
+      <div class="info">
+        <div><?= htmlspecialchars($email) ?></div>
       </div>
     </div>
+    <div class="card-section">
+      <div class="edit-button">
+        <button><span>Edit</span></button>
+      </div>
+    </div>
+  </div>
 
-    <div class="card password" data-modal="password-modal">
-      <div class="card-section">
-        <h3>Password</h3>
-        <div class="info">
-          <div>************</div>
-        </div>
-      </div>
-      <div class="card-section">
-        <div class="edit-button">
-          <button><span>Edit</span></button>
-        </div>
+  <div class="card password" data-modal="password-modal">
+    <div class="card-section">
+      <h3>Password</h3>
+      <div class="info">
+        <div>************</div>
       </div>
     </div>
+    <div class="card-section">
+      <div class="edit-button">
+        <button><span>Edit</span></button>
+      </div>
+    </div>
+  </div>
 
 <?php if ($is_paid) {
   include_once __DIR__ . '/includes/billing-data.php';
