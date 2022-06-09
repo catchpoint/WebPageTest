@@ -22,22 +22,25 @@
             </div>
         </div>
         <div class="wpt-plan-set annual-plans">
-            <?php foreach ($annual_plans as $plan) :
+            <?php 
+            foreach ($annual_plans as $key=>$plan) :
+                $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
-      <div class="form-wrapper-radio">
-        <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required />
-        <label class="wpt-plan card" for="annual-{$plan['id']}">
-          <h5>{$plan['name']}</h5>
-          <div><strong>\${$plan['annual_price']}</strong>/Year</div>
-          <span aria-hidden="true" class="pill-button yellow">Select</span>
-        </label>
-      </div>
-HTML;
+                  <div class="form-wrapper-radio">
+                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required  {$selected}/>
+                    <label class="wpt-plan card" for="annual-{$plan['id']}">
+                      <h5>{$plan['name']}</h5>
+                      <div><strong>\${$plan['annual_price']}</strong>/Year</div>
+                      <span aria-hidden="true" class="pill-button yellow">Select</span>
+                    </label>
+                  </div>
+                HTML;
                 echo $plan_block;
             endforeach; ?>
         </div>
         <div class="wpt-plan-set monthly-plans">
-            <?php foreach ($monthly_plans as $plan) :
+            <?php foreach ($monthly_plans as $key=>$plan) :
+                           
                 $plan_block = <<<HTML
       <div class="form-wrapper-radio">
         <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
