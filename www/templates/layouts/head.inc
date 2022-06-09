@@ -1,17 +1,20 @@
+<?php
+// Copyright 2020 Catchpoint Systems Inc.
+// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
+// found in the LICENSE.md file.
+?>
 <?php if (!isset($noanalytics)) {
 require_once __DIR__ . '/google-tag-manager.inc';
 } ?>
 
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-<?php
-// Copyright 2020 Catchpoint Systems Inc.
-// Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
-// found in the LICENSE.md file.
-if( count($page_keywords) )
-    echo '<meta name="keywords" content="' . implode(',', $page_keywords) . "\">\n";  //"
-if( strlen($page_description) )
-    echo "<meta name=\"description\" content=\"$page_description\">\n";
-?>
+
+<?php if( count($page_keywords) ): ?>
+<meta name="keywords" content="<?= implode(',', $page_keywords) ?>" />
+<?php endif; ?>
+<?php if( strlen($page_description) ): ?>
+  <meta name="description" content="<?= $page_description ?>" />
+<?php endif; ?>
 <meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,9 +61,13 @@ if( strlen($page_description) )
         include(__DIR__ . '/../../settings/common/customhead.inc.php');
     } elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) { include(__DIR__ . '/../../settings/customhead.inc.php');
     }
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . VER_CSS . "\">\n";
-    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/wpt-header.css?v=" . VER_CSS . "\">\n";
-    echo "<script src=\"{$GLOBALS['cdnPath']}/wpt-header.js?v=" . VER_JS . "\" defer></script>\n";
+?>
+
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
+<script src="<?= "{$GLOBALS['cdnPath']}/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
+
+<?php
     echo "<style>\n";
 
     // switch to the private install logo if we're not running on webpagetest

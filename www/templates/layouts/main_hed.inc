@@ -157,7 +157,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
         if( !$run )
             $run = $gradeRun;
-        $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
+        $useFriendlyUrls = !isset($_REQUEST['end']) && constant('FRIENDLY_URLS');
         $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $run, !empty($cached));
         $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
