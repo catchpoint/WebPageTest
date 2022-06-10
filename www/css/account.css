@@ -75,9 +75,9 @@ body.theme-b {
 }
 
 /** Account page mobile styles **/
-@media screen and (max-width: 370px) {
+@media screen and (max-width: 400px) {
   .my-account-page {
-    width: 100%;
+    width: 95%;
   }
 
   .subhed {
@@ -121,7 +121,7 @@ body.theme-b {
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   margin-bottom: 30px;
-  padding: 30px;
+  padding: 1.5rem;
   border-radius: 10px;
   box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
 }
@@ -291,10 +291,6 @@ body.theme-b {
   display: block;
 }
 
-.billing-container {
-  width: 70%;
-}
-
 .billing-info-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -331,9 +327,24 @@ body.theme-b {
   max-width: 100%;
 }
 
-.plan-details-container {
-  width: 25%;
+.billing-container {
+  width: 100%;
 }
+
+@media (min-width: 1400px) {
+  .plan-details-container {
+    width: 25%;
+  }
+
+  .billing-container {
+    width: 70%;
+  }
+
+  .wpt-plan-set .wpt-plan {
+    min-width: 180px;
+  }
+}
+
 .wpt-plans {
   border: 0;
   padding: 0;
@@ -388,7 +399,6 @@ body.theme-b {
   font-weight: normal;
   margin-bottom: 0.5em;
   margin-top: 0;
-  min-width: 180px;
 }
 
 .wpt-plan-set .wpt-plan h5 {
@@ -1665,17 +1675,5 @@ ul.bulleted-list {
 @media (min-width: 40em) {
   .signup-hed {
     padding-bottom: 6rem;
-  }
-}
-
-@media (max-width: 500px) {
-  .form-wrapper-radio {
-    width: 100%;
-  }
-  .billing-container,
-  .plan-details-container {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
   }
 }

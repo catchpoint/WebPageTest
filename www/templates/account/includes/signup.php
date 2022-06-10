@@ -217,8 +217,8 @@
             </div>
         </div>
         <div class="wpt-plan-set annual-plans">
-            <?php 
-            foreach ($annual_plans as $key=>$plan) :
+            <?php
+            foreach ($annual_plans as $key => $plan) :
                 $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
@@ -234,8 +234,8 @@
             endforeach; ?>
         </div>
         <div class="wpt-plan-set monthly-plans">
-            <?php foreach ($monthly_plans as $key=>$plan) :
-                           
+            <?php foreach ($monthly_plans as $key => $plan) :
+
                 $plan_block = <<<HTML
       <div class="form-wrapper-radio">
         <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
@@ -297,7 +297,7 @@ HTML;
 
         <div class="card plan-details-container">
             <h3>WebPageTest Pro plans include</h3>
-            <ul>
+            <ul class="bulleted-list">
                 <li>Everything in the Starter plan, including real browsers in real locations, custom scripting for page level and user journey measurements, access to 13 months of test history, and the all new Opportunities report to help you zero in on areas of improvement. </li>
                 <li>Access to all new no-code Experiments</li>
                 <li>API access for easier integration into your CI/CD, visualizations, alerting and more </li>
