@@ -1682,3 +1682,72 @@ ul.bulleted-list {
     padding-bottom: 6rem;
   }
 }
+
+
+/* Vertical responsive table for showing billing data */
+
+.responsive-vertical-table tr {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.responsive-vertical-table th {
+  display: none;
+}
+
+.responsive-vertical-table td {
+  display: block;
+}
+
+.responsive-vertical-table td:first-child {
+  padding-top: .5em;
+}
+
+.responsive-vertical-table td:last-child {
+  padding-bottom: .5em;
+}
+
+.responsive-vertical-table td:before {
+  content: attr(data-th) ": ";
+  font-weight: bold;
+  width: 6.5em;
+  display: inline-block;
+}
+
+@media (min-width: 1030px) {
+  .responsive-vertical-table td:before {
+    display: none;
+  }
+}
+
+.responsive-vertical-table th,
+.responsive-vertical-table td {
+  text-align: left;
+}
+
+@media (min-width: 1030px) {
+
+  .responsive-vertical-table th,
+  .responsive-vertical-table td {
+    display: table-cell;
+  }
+
+  .responsive-vertical-table th:first-child,
+  .responsive-vertical-table td:first-child {
+    padding-left: 0;
+  }
+
+  .responsive-vertical-table th:last-child,
+  .responsive-vertical-table td:last-child {
+    padding-right: 0;
+  }
+}
+
+.responsive-vertical-table {
+  border-radius: .4em;
+  overflow: hidden;
+}
+
+.responsive-vertical-table tr {
+  border-color: #46637f;
+}
