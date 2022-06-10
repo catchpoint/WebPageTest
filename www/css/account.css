@@ -71,6 +71,27 @@ body.theme-b {
 .my-account-page {
   margin: 0 auto;
   width: 72%;
+  box-sizing: border-box;
+}
+
+/** Account page mobile styles **/
+@media screen and (max-width: 400px) {
+  .my-account-page {
+    width: 95%;
+  }
+
+  .subhed {
+    margin-left: 1.5rem;
+  }
+
+  .card.subscribe {
+    padding: 0;
+  }
+
+  .card.subscribe h3,
+  .card.subscribe p {
+    padding: 1.5rem;
+  }
 }
 
 .subhed,
@@ -105,7 +126,7 @@ body.theme-b {
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   margin-bottom: 30px;
-  padding: 30px;
+  padding: 1.5rem;
   border-radius: 10px;
   box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
 }
@@ -264,6 +285,7 @@ body.theme-b {
   display: flex;
   align-content: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .plan-billing-container * {
@@ -272,10 +294,6 @@ body.theme-b {
 
 .plan-billing-container .card {
   display: block;
-}
-
-.billing-container {
-  width: 70%;
 }
 
 .billing-info-section {
@@ -314,8 +332,22 @@ body.theme-b {
   max-width: 100%;
 }
 
-.plan-details-container {
-  width: 25%;
+.billing-container {
+  width: 100%;
+}
+
+@media (min-width: 1400px) {
+  .plan-details-container {
+    width: 25%;
+  }
+
+  .billing-container {
+    width: 70%;
+  }
+
+  .wpt-plan-set .wpt-plan {
+    min-width: 180px;
+  }
 }
 
 .wpt-plans {
@@ -372,7 +404,6 @@ body.theme-b {
   font-weight: normal;
   margin-bottom: 0.5em;
   margin-top: 0;
-  min-width: 180px;
 }
 
 .wpt-plan-set .wpt-plan h5 {
@@ -419,7 +450,6 @@ body.theme-b {
 .wpt-plan-set .form-wrapper-radio input[type=radio]:checked+.wpt-plan .select-indicator::after {
   content: "ed";
 }
-
 
 /**
  * begin signup step 1
@@ -1275,6 +1305,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     display: block;
     width: 50%;
     font-size: 1rem;
+    box-sizing: border-box;
   }
 
   .comparison-table thead th {
@@ -1301,7 +1332,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     display: none;
   }
 
-  .comparison-table tr.custom-plan-mobile {
+  .comparison-table tbody tr.custom-plan-mobile {
+    background-color: white;
     display: flex;
   }
 }
@@ -1311,6 +1343,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   .comparison-table tbody td,
   .comparison-table thead th {
     font-size: 0.9rem;
+    box-sizing: border-box;
   }
 }
 
@@ -1638,12 +1671,6 @@ ul.bulleted-list {
   }
 }
 
-@media (min-width: 40em) {
-  .signup-hed {
-    padding-bottom: 4rem;
-  }
-}
-
 @media (min-width: 50em) {
   .signup-hed {
     padding-left: 3rem
@@ -1654,4 +1681,73 @@ ul.bulleted-list {
   .signup-hed {
     padding-bottom: 6rem;
   }
+}
+
+
+/* Vertical responsive table for showing billing data */
+
+.responsive-vertical-table tr {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.responsive-vertical-table th {
+  display: none;
+}
+
+.responsive-vertical-table td {
+  display: block;
+}
+
+.responsive-vertical-table td:first-child {
+  padding-top: .5em;
+}
+
+.responsive-vertical-table td:last-child {
+  padding-bottom: .5em;
+}
+
+.responsive-vertical-table td:before {
+  content: attr(data-th) ": ";
+  font-weight: bold;
+  width: 6.5em;
+  display: inline-block;
+}
+
+@media (min-width: 1030px) {
+  .responsive-vertical-table td:before {
+    display: none;
+  }
+}
+
+.responsive-vertical-table th,
+.responsive-vertical-table td {
+  text-align: left;
+}
+
+@media (min-width: 1030px) {
+
+  .responsive-vertical-table th,
+  .responsive-vertical-table td {
+    display: table-cell;
+  }
+
+  .responsive-vertical-table th:first-child,
+  .responsive-vertical-table td:first-child {
+    padding-left: 0;
+  }
+
+  .responsive-vertical-table th:last-child,
+  .responsive-vertical-table td:last-child {
+    padding-right: 0;
+  }
+}
+
+.responsive-vertical-table {
+  border-radius: .4em;
+  overflow: hidden;
+}
+
+.responsive-vertical-table tr {
+  border-color: #46637f;
 }
