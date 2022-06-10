@@ -87,6 +87,11 @@ body.theme-b {
   .card.subscribe {
     padding: 0;
   }
+
+  .card.subscribe h3,
+  .card.subscribe p {
+    padding: 1.5rem;
+  }
 }
 
 .subhed,
