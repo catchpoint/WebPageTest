@@ -72,8 +72,6 @@ body.theme-b {
 }
 
 .my-account-page {
-  margin: 0 auto;
-  width: 72%;
   box-sizing: border-box;
 }
 
@@ -84,6 +82,7 @@ body.theme-b {
   }
 
   .subhed {
+    padding: 3rem;
     margin-left: 1.5rem;
   }
 
@@ -128,11 +127,7 @@ body.theme-b {
 
 .card {
   align-items: flex-start;
-  background-color: rgb(255, 255, 255);
-  margin-bottom: 30px;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
+  padding: 3rem;
 }
 
 .edit-button button {
@@ -913,10 +908,6 @@ a.button {
   .signup-flow-layout .free-plan {
     margin-left: calc(50vw - 39rem);
   }
-}
-
-.account-layout body {
-  background-color: rgb(234, 234, 234);
 }
 
 .card.api-consumers,
