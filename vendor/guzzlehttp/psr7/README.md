@@ -527,6 +527,17 @@ When fopen fails, PHP normally raises a warning. This function adds an
 error handler that checks for errors and throws an exception instead.
 
 
+## `GuzzleHttp\Psr7\Utils::tryGetContents`
+
+`public static function tryGetContents(resource $stream): string`
+
+Safely gets the contents of a given stream.
+
+When stream_get_contents fails, PHP normally raises a warning. This
+function adds an error handler that checks for errors and throws an
+exception instead.
+
+
 ## `GuzzleHttp\Psr7\Utils::uriFor`
 
 `public static function uriFor(string|UriInterface $uri): UriInterface`
@@ -807,6 +818,12 @@ Whether two URIs can be considered equivalent. Both URIs are normalized automati
 This of course assumes they will be resolved against the same base URI. If this is not the case, determination of
 equivalence or difference of relative references does not mean anything.
 
+## Version Guidance
+
+| Version | Status         | PHP Version      |
+|---------|----------------|------------------|
+| 1.x     | Security fixes | >= 5.4, < 8.2    |
+| 2.x     | Latest         | ^7.2.5 \|\| ^8.0 |
 
 ## Security
 

@@ -47,7 +47,8 @@ TODO update the NEW buttons on signup to this green
 }
 
 .red {
-  color: #d02424;
+  background-color: #d02424;
+  color: #fff;
 }
 
 .purple {

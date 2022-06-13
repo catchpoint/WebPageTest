@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 2.3.0 - 2022-06-09
+
+### Fixed
+
+- Added `Header::splitList()`
+- Added `Utils::tryGetContents`
+- Improved `Stream::getContents()`
+- Updated mimetype mappings
+
+## 2.2.2 - 2022-06-08
+
+### Fixed
+
+- Fix `Message::parseRequestUri()` for numeric headers
+- Re-wrap exceptions thrown in `fread` into runtime exceptions
+- Throw an exception when multipart options is misformatted
+
 ## 2.2.1 - 2022-03-20
 
 ### Fixed
