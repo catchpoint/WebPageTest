@@ -18,8 +18,8 @@ foreach ($requests as $request) {
 
 
 if ( isset($genContentSize) && isset($genContentPercent) ) { 
-    $genContentSize = intval($genContentSize);
-    $genContentPercent = intval($genContentPercent);
+    $genContentSize = floatval($genContentSize);
+    $genContentPercent = floatval($genContentPercent);
 
     if( $genContentSize > .5 || $genContentPercent > 1 ){
 

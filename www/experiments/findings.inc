@@ -45,8 +45,8 @@ if( $experiment ){
                     foreach($diffMetrics as $metric){
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $thisDiff = $tests[1]['stepResult']->getMetric($metric[0]) - $experimentMetric;
-                        $thisDiff = intval(removeLeadingZero(round($thisDiff,3)));
-                        if($thisDiff !== 0){
+                        $thisDiff = floatval(removeLeadingZero(round($thisDiff,3)));
+                        if(abs($thisDiff) > 0){
                             echo '<th align="center" valign="middle">' . $metric[1] . '</th>';
                         }
                     }
@@ -69,15 +69,15 @@ if( $experiment ){
                         if( $metric[3] ){
                             $changeTerms = $metric[3];
                         }
-                        $thisDiff = intval(removeLeadingZero(round($thisDiff,3)));
-                        $experimentMetric = intval(removeLeadingZero(round($experimentMetric,3)));
-                        $controlMetric = intval(removeLeadingZero(round($controlMetric,3)));
+                        $thisDiff = floatval(removeLeadingZero(round($thisDiff,3)));
+                        $experimentMetric = floatval(removeLeadingZero(round($experimentMetric,3)));
+                        $controlMetric = floatval(removeLeadingZero(round($controlMetric,3)));
 
                         $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
                         
 
                         
-                        if($thisDiff != 0){
+                        if(abs($thisDiff) > 0){
                             if( $metric[2] === "s" ){
                                 $thisDiff = round($thisDiff / 1000,2);
                                 $experimentMetric = round($experimentMetric / 1000,2);

@@ -236,8 +236,8 @@ foreach($assessment as $key => $cat ){
 			$summary .= ".";
 		}
 		if( isset($genContentSize) && isset($genContentPercent) ){
-			$genContentSize = intval($genContentSize);
-			$genContentPercent = intval($genContentPercent);
+			$genContentSize = floatval($genContentSize);
+			$genContentPercent = floatval($genContentPercent);
 		
 			if( $genContentSize > .5 || $genContentPercent > 1 ){
 				$summary .= " " . $genContentPercent. "% of HTML was generated client-side, delaying usability.";
@@ -277,8 +277,8 @@ foreach($assessment as $key => $cat ){
 			$summary .= " It had no security issues detected."; 
 		}
 		if( isset($genContentSize) && isset($genContentPercent) ){
-			$genContentSize = intval($genContentSize);
-			$genContentPercent = intval($genContentPercent);
+			$genContentSize = floatval($genContentSize);
+			$genContentPercent = floatval($genContentPercent);
 		
 			if( $genContentSize > .5 || $genContentPercent > 1 ){
 				$summary .= " Dependence on client-generated HTML risks fragility.";
