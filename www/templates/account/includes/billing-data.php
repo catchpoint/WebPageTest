@@ -1,4 +1,4 @@
-<div class="card subscription-plan" data-modal="subscription-plan-modal">
+<div class="box card subscription-plan" data-modal="subscription-plan-modal">
     <div class="card-section">
         <h3>Subscription Plan</h3>
         <div class="info">
@@ -27,7 +27,7 @@
     </div>
 </div>
 
-<div class="card payment-info" data-modal="payment-info-modal">
+<div class="box card payment-info" data-modal="payment-info-modal">
     <div class="card-section">
         <div class="info">
             <div class="cc-type">
@@ -46,7 +46,8 @@
     </div>
 </div>
 
-<div class="card billing-history">
+<?php if (!$is_wpt_enterprise) : ?>
+<div class="box billing-history">
     <div class="info">
         <table class="sortable responsive-vertical-table">
             <caption>
@@ -93,3 +94,5 @@
         </table>
     </div>
 </div>
+<?php endif; // (!$is_wpt_enterprise):
+?>
