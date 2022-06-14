@@ -366,6 +366,7 @@ class Util
 
         return $countryList;
     }
+
     /**
      * Helper method to get the number of runs of a test to enforce limits
      *
@@ -380,5 +381,13 @@ class Util
             $total_runs++;
         }
         return $total_runs;
+    }
+
+    /**
+     * This is used to determine which hosts don't get counted in test runs
+     */
+    public static function getExemptHost(): string
+    {
+        return 'webpagetest.org';
     }
 }
