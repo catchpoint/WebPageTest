@@ -20,7 +20,7 @@
     <?php require_once __DIR__ . '/head.inc'; ?>
     <link rel="stylesheet" href="/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
     <link rel="stylesheet" href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
-    <script defer src="/js/account.js"></script>
+    <script defer src="/js/account.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
 </head>
 <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
