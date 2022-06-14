@@ -97,7 +97,7 @@ if( $experiment ){
                         $compare = '<span class="metric_experiment"><span>Experiment:</span><span>' . count($experimentBlockingReqs) .  $units . '</span></span>';
                         $compare .= '<span class="metric_control"><span>Control:</span><span>' . count($controlBlockingReqs) .  $units . '</span></span>';
 
-                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingReqsDiff >= 0 ? "good" : "poor" ) .'">'. $blockingReqsDiff . $units . $change . $compare . '</td>';
+                        echo '<td id="TTFB" valign="middle" class="'. ( $blockingReqsDiff >= 0 ? "good" : "poor" ) .'">'. abs($blockingReqsDiff) . $units . $change . $compare . '</td>';
                     }
                 ?>
             </tr>
