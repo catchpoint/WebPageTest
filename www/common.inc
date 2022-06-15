@@ -442,7 +442,7 @@ if (strlen($id)) {
     if( $test['testinfo'] ){
       $testTestInfo = $test['testinfo'];
       $metaInfo = $testTestInfo['metadata'];
-      if( $metaInfo ){
+      if( isset($metaInfo) && is_string($metaInfo) ){
         $metaInfo = json_decode($metaInfo, true);
         if( $metaInfo['experiment'] && $metaInfo['experiment']['control'] === false ){
           $experiment = true;
