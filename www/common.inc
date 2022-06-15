@@ -186,6 +186,8 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
+define('VER_TYPOGRAPHY_CSS', @md5_file(__DIR__ . '/css/typography.css'));          // version of the typography css file
+define('VER_LAYOUT_CSS', @md5_file(__DIR__ . '/css/layout.css'));          // version of the layout css file
 define('VER_CSS', @md5_file(__DIR__ . '/pagestyle2.css'));          // version of the sitewide css file
 define('VER_HEADER_CSS', @md5_file(__DIR__ . '/wpt-header.css')); // version of the header css file
 define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/css/account.css')); // version of the account css file
