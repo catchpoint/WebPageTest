@@ -1,7 +1,5 @@
-<div class="my-account-page">
-    <?php
-
-    if (!$is_verified) : ?>
+<div class="my-account-page page_content">
+    <?php if (!$is_verified) : ?>
         <div class="resend-email-verification-container">
             <div class="resend-email-verification-hed">
                 <h3>A verification link was sent to your email</h3>
@@ -27,10 +25,9 @@
         <?php endif; ?>
     </div>
 
-
-
-    <div class="card contact-info" data-modal="contact-info-modal">
-        <div class="card-section">
+    <div class="box card contact-info" data-modal="contact-info-modal">
+        <div class="card-section user-info">
+            <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
             <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
             <div class="info">
                 <div><?= htmlspecialchars($email) ?></div>
@@ -83,7 +80,6 @@
         <?php include_once __DIR__ . '/includes/signup.php'; ?>
     <?php endif; ?>
 </div>
-
 
 <!-- Modals -->
 <?php
