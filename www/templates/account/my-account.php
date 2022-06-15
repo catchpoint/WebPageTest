@@ -1,7 +1,5 @@
-<div class="my-account-page">
-    <?php
-
-    if (!$is_verified) : ?>
+<div class="my-account-page page_content">
+    <?php if (!$is_verified) : ?>
         <div class="resend-email-verification-container">
             <div class="resend-email-verification-hed">
                 <h3>A verification link was sent to your email</h3>
@@ -25,65 +23,79 @@
                 <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
-    </div>
 
-
-
-    <div class="card contact-info" data-modal="contact-info-modal">
-        <div class="card-section">
-            <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
-            <div class="info">
-                <div><?= htmlspecialchars($email) ?></div>
-            </div>
-        </div>
-        <div class="card-section">
-            <div class="edit-button">
-                <button><span>Edit</span></button>
-            </div>
-        </div>
-    </div>
-
-    <div class="card password" data-modal="password-modal">
-        <div class="card-section">
-            <h3>Password</h3>
-            <div class="info">
-                <div>************</div>
-            </div>
-        </div>
-        <div class="card-section">
-            <div class="edit-button">
-                <button><span>Edit</span></button>
-            </div>
-        </div>
-    </div>
-
-    <?php if ($is_paid) : ?>
-        <?php
-            include_once __DIR__ . '/includes/billing-data.php';
-            include_once __DIR__ . '/includes/modals/subscription-plan.php';
-            include_once __DIR__ . '/includes/modals/payment-info.php';
-        ?>
-    <?php else : ?>
-        <div class="card ">
-            <div class="card-section">
-                <h3>Subscription Plan</h3>
+        <div class="box card contact-info" data-modal="contact-info-modal">
+            <div class="card-section user-info">
+                <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
+                <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
                 <div class="info">
-                    <ul>
-                        <li><strong>Plan</strong>: Starter</li>
-                        <li><strong>Remaining Runs: </strong><?= $remainingRuns ?></li>
-                        <li><strong>Price</strong>: Free</li>
-                    </ul>
+                    <div><?= htmlspecialchars($email) ?></div>
                 </div>
             </div>
+            <div class="card-section">
+                <div class="edit-button">
+                    <button><span>Edit</span></button>
+                </div>
+            </div>
+
+
+
+            <div class="card contact-info" data-modal="contact-info-modal">
+                <div class="card-section">
+                    <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
+                    <div class="info">
+                        <div><?= htmlspecialchars($email) ?></div>
+                    </div>
+                </div>
+                <div class="card-section">
+                    <div class="edit-button">
+                        <button><span>Edit</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card password" data-modal="password-modal">
+                <div class="card-section">
+                    <h3>Password</h3>
+                    <div class="info">
+                        <div>************</div>
+                    </div>
+                </div>
+                <div class="card-section">
+                    <div class="edit-button">
+                        <button><span>Edit</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <?php if (!$is_paid) : ?>
+                <div class="card ">
+                    <div class="card-section">
+                        <h3>Subscription Plan</h3>
+                        <div class="info">
+                            <ul>
+                                <li><strong>Plan</strong>: Starter</li>
+                                <li><strong>Remaining Runs: </strong><?= $remainingRuns ?></li>
+                                <li><strong>Price</strong>: Free</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($is_paid) {
+                include_once __DIR__ . '/includes/billing-data.php';
+                include_once __DIR__ . '/includes/modals/subscription-plan.php';
+                include_once __DIR__ . '/includes/modals/payment-info.php';
+            } else {
+                include_once __DIR__ . '/includes/signup.php';
+            } ?>
         </div>
-        <?php include_once __DIR__ . '/includes/signup.php'; ?>
-    <?php endif; // $is_paid ?>
-</div>
 
 
-<!-- Modals -->
-<?php
-include_once __DIR__ . '/includes/modals/contact-info.php';
-include_once __DIR__ . '/includes/modals/password.php';
-?>
-<!-- /Modals -->
+        <!-- Modals -->
+        <?php
+        include_once __DIR__ . '/includes/modals/contact-info.php';
+        include_once __DIR__ . '/includes/modals/password.php';
+        ?>
+        <!-- /Modals -->

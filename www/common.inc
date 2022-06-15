@@ -199,6 +199,8 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
+define('VER_TYPOGRAPHY_CSS', @md5_file(__DIR__ . '/assets/css/typography.css'));          // version of the typography css file
+define('VER_LAYOUT_CSS', @md5_file(__DIR__ . '/assets/css/layout.css'));          // version of the layout css file
 define('VER_CSS', @md5_file(__DIR__ . '/assets/css/pagestyle2.css'));          // version of the sitewide css file
 define('VER_HEADER_CSS', @md5_file(__DIR__ . '/assets/css/wpt-header.css')); // version of the header css file
 define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/assets/css/account.css')); // version of the account css file
@@ -209,7 +211,7 @@ define('VER_JS', @md5_file(__DIR__ . '/assets/js/site.js'));                 // 
 define('VER_JS_TEST', @md5_file(__DIR__ . '/assets/js/test.js'));            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', @md5_file(__DIR__ . '/assets/js/running.js'));          // version of the javascript specific to the test running status page
 define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/assets/js/account.js'));          // version of the javascript specific to the test running status page
-define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
+// Value used as a flag for an unknown time.
 // To find code that fails to check that a time
 // is unknown, change this constant to a large
 // negative number.
