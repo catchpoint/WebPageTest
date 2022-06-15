@@ -26,3 +26,7 @@ Our workflow for ADRs will be:
 - We'll have a concrete artifact for us to focus our discussion before finalizing decisions.
 - Decisions will be made deliberately, as a group.
 - We will have a useful set of documentation by default, providing a persisitent record of why decisions were made.
+
+## 📝 Changelog
+- 06/15/2021 Proposed
+- 06/15/2021 Added Changelog
