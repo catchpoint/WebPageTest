@@ -372,7 +372,7 @@ if (strlen($id)) {
 
       // $owner is set by CP details in AttachUser middleware if loaded
       $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
-      $uid_matches_test = array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'];
+      $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
 
       $isOwner = $owner_id_matches_test || $uid_matches_test;
       $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'];

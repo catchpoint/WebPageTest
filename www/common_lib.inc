@@ -334,7 +334,7 @@ function GenerateVideoThumbnail($dir)
     if( is_file("$dir/video.mp4") && !is_file("$dir/video.png") )
     {
         $output = array();
-        $result;
+        $result = null;
         $command = "ffmpeg -i \"$dir/video.mp4\" -vframes 1 -ss 00:00:00 -f image2 \"$dir/video.png\"";
         $retStr = exec($command, $output, $result);
     }
@@ -730,7 +730,8 @@ function FilterLocations(&$locations, $includePaid = false, $includeHidden = '',
           unset($locations[$name]);
         }
       }
-      unset($locRef['hidden']);
+      if (isset($locRef) && is_array($locRef))
+        unset($locRef['hidden']);
 
       //remove premium if not paid
       if (isset($locRef['premium']) && !$includePaid) {
@@ -1515,7 +1516,7 @@ function GetDailyTestNum() {
 
 function AddTestJob($location, $job, $test, $testId) {
   global $request_context;
-  $priority = $request_context->getUser()->getUserPriority();
+  $priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;
 
   $ret = false;
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
@@ -1789,7 +1790,7 @@ function cp_http_get_file($url, $cpid, $file) {
         if ($error_log) {
           error_log(gmdate('Y/m/d H:i:s - ') . "GET File $url : $error\n", 3, $error_log);
         }
-        unlink($file_stream);
+        @unlink($file);
       }
       curl_close($ch);
     }
@@ -3645,7 +3646,7 @@ function TestArchiveExpired($id) {
  * Generate a unique test ID
  */
 function GenerateTestID($private=false, $locationShard=null) {
-  $test_num;
+  $test_num = null;
   $id = uniqueId($test_num);
   if( $private )
       $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));

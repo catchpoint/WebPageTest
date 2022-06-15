@@ -987,7 +987,7 @@ function LoadLocations()
     global $admin;
     $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
     $includePaid = $isPaid || $admin;
-    $ui_priority = $request_context->getUser()->getUserPriority();
+    $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;
 
     $locations = LoadLocationsIni();
     FilterLocations( $locations, $includePaid );
