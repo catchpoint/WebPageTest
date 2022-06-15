@@ -730,8 +730,9 @@ function FilterLocations(&$locations, $includePaid = false, $includeHidden = '',
           unset($locations[$name]);
         }
       }
-      if (isset($locRef) && is_array($locRef))
+      if (isset($locRef) && is_array($locRef)) {
         unset($locRef['hidden']);
+      }
 
       //remove premium if not paid
       if (isset($locRef['premium']) && !$includePaid) {
