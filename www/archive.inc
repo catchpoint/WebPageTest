@@ -5,7 +5,6 @@
 require_once(__DIR__ . '/testStatus.inc');
 require_once(__DIR__ . '/logging.inc');
 require_once(__DIR__ . '/common_lib.inc');
-
 /**
 * See if the file should be skipped when archiving (usually just cache files)
 *
@@ -49,7 +48,7 @@ function ArchiveFilterLargeFile($file) {
 */
 function ArchiveTest($id, $delete = false) {
     global $api_keys;
-
+    $isSaaSTest = (stripos($id, '_saas_') !== false);
     // Short-circuit tests that are already archived
     $testPath = realpath('./' . GetTestPath($id));
     if (is_file("$testPath/.archived")) {
@@ -151,7 +150,10 @@ function ArchiveTest($id, $delete = false) {
 
                                 // move the archive to its final destination
                                 if ($count && is_file($zipFile)) {
-                                    if ($capture_server && $capture_salt) {
+                                    if ($isSaaSTest){
+                                        //SaaS test is already archived on the log server, so we're just gonna delete
+                                        $ret = true;
+                                    } elseif ($capture_server && $capture_salt) {
                                         $host = str_replace('.', '', trim(GetSetting('host')));
                                         $cpid = GetCPID($host, $capture_salt);
                                         $url = "{$capture_server}hawkcaptureserver/up-wpt.ashx?test=$id&node=$host";
@@ -394,6 +396,7 @@ function RestoreArchive($id) {
 */
 function VerifyArchive($id) {
     $valid = true;
+    $isSaaSTest = (stripos($id, '_saas_') !== false);
 
     // Get the capture server settings if configured and the test ID specifies a capture server
     $capture_server = null;
@@ -406,7 +409,10 @@ function VerifyArchive($id) {
         }
     }
     
-    if (!isset($capture_server) && !GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
+    if ( $isSaaSTest) {
+        //saas tests are safely archived on log server so just kill
+        $valid = true;
+    } elseif (!isset($capture_server) && !GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
         $testPath = './' . GetTestPath($id);
         if (GetSetting('archive_dir')) {
             // local
