@@ -310,6 +310,9 @@ foobar(protected: $value, /* testReservedKeywordProtected2 */ protected: $value)
 /* testReservedKeywordPublic1 */
 foobar(public: $value, /* testReservedKeywordPublic2 */ public: $value);
 
+/* testReservedKeywordReadonly1 */
+foobar(readonly: $value, /* testReservedKeywordReadonly2 */ readonly: $value);
+
 /* testReservedKeywordRequire1 */
 foobar(require: $value, /* testReservedKeywordRequire2 */ require: $value);
 
@@ -396,3 +399,6 @@ foobar(parent: $value, /* testReservedKeywordParent2 */ parent: $value);
 
 /* testReservedKeywordSelf1 */
 foobar(self: $value, /* testReservedKeywordSelf2 */ self: $value);
+
+/* testReservedKeywordNever1 */
+foobar(never: $value, /* testReservedKeywordNever2 */ never: $value);

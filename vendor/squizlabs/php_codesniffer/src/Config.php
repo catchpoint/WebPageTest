@@ -80,7 +80,7 @@ class Config
      *
      * @var string
      */
-    const VERSION = '3.6.2';
+    const VERSION = '3.7.0';
 
     /**
      * Package stability; either stable, beta or alpha.
@@ -368,7 +368,7 @@ class Config
         }//end if
 
         if (defined('STDIN') === false
-            || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+            || stripos(PHP_OS, 'WIN') === 0
         ) {
             return;
         }
@@ -1517,7 +1517,7 @@ class Config
             return self::$executablePaths[$name];
         }
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if (stripos(PHP_OS, 'WIN') === 0) {
             $cmd = 'where '.escapeshellarg($name).' 2> nul';
         } else {
             $cmd = 'which '.escapeshellarg($name).' 2> /dev/null';
@@ -1597,7 +1597,7 @@ class Config
         if ($temp === false) {
             $output  = '<'.'?php'."\n".' $phpCodeSnifferConfig = ';
             $output .= var_export($phpCodeSnifferConfig, true);
-            $output .= "\n?".'>';
+            $output .= ";\n?".'>';
 
             if (file_put_contents($configFile, $output) === false) {
                 $error = 'ERROR: Config file '.$configFile.' could not be written'.PHP_EOL.PHP_EOL;

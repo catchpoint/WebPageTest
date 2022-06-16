@@ -9,14 +9,21 @@
     "scripts": {
       "test": "phpunit --configuration tests/phpunit.xml",
       "lint": "phpcs --standard=PSR12 www/src www/cpauth www/common",
-      "format": "phpcbf --standard=PSR12 www/src www/cpauth www/common"
+      "format": "phpcbf --standard=PSR12 www/src www/cpauth www/common",
+      "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
     },
     "require": {
         "braintree/braintree_php": "^6.8",
         "gmostafa/php-graphql-client": "^1.13",
         "guzzlehttp/guzzle": "^7.4",
         "paragonie/random-lib": "^2.0",
-        "php": "^7.4.0",
-        "respect/validation": "^2.2"
+        "php": "^8.0",
+        "respect/validation": "^2.2",
+        "google/apiclient": "^2.12.1"
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Oauth2"
+        ]
     }
 }

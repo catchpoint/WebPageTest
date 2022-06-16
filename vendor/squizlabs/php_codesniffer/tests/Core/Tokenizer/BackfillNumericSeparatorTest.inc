@@ -34,6 +34,12 @@ $foo = 0b0101_1111;
 /* testOctal */
 $foo = 0137_041;
 
+/* testExplicitOctal */
+$foo = 0o137_041;
+
+/* testExplicitOctalCapitalised */
+$foo = 0O137_041;
+
 /* testIntMoreThanMax */
 $foo = 10_223_372_036_854_775_807;
 
@@ -70,6 +76,12 @@ $testValue = 107_925_284 .88;
 
 /* testInvalid10 */
 $testValue = 107_925_284/*comment*/.88;
+
+/* testInvalid11 */
+$foo = 0o_137;
+
+/* testInvalid12 */
+$foo = 0O_41;
 
 /*
  * Ensure that legitimate calculations are not touched by the backfill.

@@ -35,5 +35,14 @@ $r = Match ($x) {
     DEFAULT, => 3,
 };
 
+class Reading {
+    Public READOnly int $var;
+}
+
+EnuM ENUM: string
+{
+    Case HEARTS;
+}
+
 __HALT_COMPILER(); // An exception due to phar support.
 function
