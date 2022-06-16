@@ -17,7 +17,7 @@
         "gmostafa/php-graphql-client": "^1.13",
         "guzzlehttp/guzzle": "^7.4",
         "paragonie/random-lib": "^2.0",
-        "php": "^8.0",
+        "php": "^7.4.0||^8.0",
         "respect/validation": "^2.2",
         "google/apiclient": "^2.12.1"
     },
