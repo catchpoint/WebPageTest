@@ -14,9 +14,71 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\BillingAddress;
 use WebPageTest\Customer;
 use WebPageTest\CustomerPaymentUpdateInput;
+use WebPageTest\Template;
+use GuzzleHttp\Exception\RequestException;
 
 class Account
 {
+
+
+    public static function updatePlan(RequestContext $request_context, array $vars): string
+    {
+        $tpl = new Template('account/plans');
+        $tpl->setLayout('account');
+
+        try {
+            // get all plans to show on update plan page
+            $wpt_plans = $request_context->getSignupClient()->getWptPlans();
+            $annual_plans = array();
+            $monthly_plans = array();
+            usort($wpt_plans, function ($a, $b) {
+                if ($a->getPrice() == $b->getPrice()) {
+                    return 0;
+                }
+                return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
+            });
+            foreach ($wpt_plans as $plan) {
+                if ($plan->getBillingFrequency() == "Monthly") {
+                    $monthly_plans[] = $plan;
+                } else {
+                    $annual_plans[] = $plan;
+                }
+            }
+            $vars['annual_plans'] = $annual_plans;
+            $vars['monthly_plans'] = $monthly_plans;
+        } catch (RequestException $e) {
+            if ($e->getCode() == 401) {
+                // get auth token again and retry!
+                unset($_SESSION['signup-auth-token']);
+                $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
+                $_SESSION['signup-auth-token'] = $auth_token;
+                $request_context->getSignupClient()->authenticate($auth_token);
+                unset($vars['auth_token']);
+                $vars['auth_token'] = $auth_token;
+                $vars['wpt_plans'] = $request_context->getSignupClient()->getWptPlans();
+            } else {
+                throw $e;
+            }
+        }
+
+        return $tpl->render('upgrade-plan', $vars);
+    }
+
+    public static function viewPlanSummary(RequestContext $request_context, array $vars): string
+    {
+        $tpl = new Template('account/plans');
+        $tpl->setLayout('account');
+        return $tpl->render('plan-summary', $vars);
+    }
+
+    public static function updateBillingCycle(RequestContext $request_context, array $vars): string
+    {
+        $tpl = new Template('account/billing');
+        $tpl->setLayout('account');
+        return $tpl->render('billing-cycle', $vars);
+    }
+
+
     public static function changeContactInfo(RequestContext $request_context): void
     {
         $contact_info_validator = new Rules\AllOf(
@@ -35,7 +97,7 @@ class Account
             $contact_info_validator->assert($company_name);
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
-            'regex' => 'input cannot contain <, >, or &#'
+                'regex' => 'input cannot contain <, >, or &#'
             ]);
             throw new ClientException(implode(', ', $message));
         }
@@ -43,10 +105,10 @@ class Account
         $email = $request_context->getUser()->getEmail();
 
         $options = array(
-        'email' => $email,
-        'first_name' => $first_name,
-        'last_name' => $last_name,
-        'company_name' => $company_name
+            'email' => $email,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'company_name' => $company_name
         );
 
         try {
@@ -86,7 +148,7 @@ class Account
             $msg .= "letter and symbol. No <, >.";
 
             $message = $e->getMessages([
-            'regex' => $msg
+                'regex' => $msg
             ]);
             throw new ClientException(implode(', ', $message));
         }
@@ -128,17 +190,17 @@ class Account
         }
 
         $billing_address = new BillingAddress([
-          'city' => $city,
-          'country' => $country,
-          'state' => $state,
-          'street_address' => $street_address,
-          'zipcode' => $zipcode
+            'city' => $city,
+            'country' => $country,
+            'state' => $state,
+            'street_address' => $street_address,
+            'zipcode' => $zipcode
         ]);
 
         $customer = new Customer([
-          'payment_method_nonce' => $nonce,
-          'billing_address_model' => $billing_address,
-          'subscription_plan_id' => $plan
+            'payment_method_nonce' => $nonce,
+            'billing_address_model' => $billing_address,
+            'subscription_plan_id' => $plan
         ]);
 
         try {
@@ -173,16 +235,16 @@ class Account
         }
 
         $billing_address = new BillingAddress([
-          'city' => $city,
-          'country' => $country,
-          'state' => $state,
-          'street_address' => $street_address,
-          'zipcode' => $zipcode
+            'city' => $city,
+            'country' => $country,
+            'state' => $state,
+            'street_address' => $street_address,
+            'zipcode' => $zipcode
         ]);
 
         $customer = new CustomerPaymentUpdateInput([
-          'payment_method_nonce' => $nonce,
-          'billing_address_model' => $billing_address
+            'payment_method_nonce' => $nonce,
+            'billing_address_model' => $billing_address
         ]);
 
         try {
