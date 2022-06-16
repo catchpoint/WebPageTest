@@ -1,4 +1,4 @@
-<div class="card api-consumers">
+<div class="box card api-consumers">
     <h3>API Consumers</h3>
     <div class="create-key-container">
         <div class="create-delete-button-container">

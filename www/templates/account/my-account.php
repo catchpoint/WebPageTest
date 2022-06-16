@@ -25,63 +25,119 @@
         <?php endif; ?>
     </div>
 
-    <div class="box card contact-info" data-modal="contact-info-modal">
-        <div class="card-section user-info">
-            <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
-            <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
-            <div class="info">
-                <div><?= htmlspecialchars($email) ?></div>
-            </div>
-        </div>
-        <div class="card-section">
-            <div class="edit-button">
-                <button><span>Edit</span></button>
-            </div>
-        </div>
-    </div>
+    <!-- account tabs for Settings, Invoices and APIs -->
+    <div class="tabs-container">
+        <!-- radio buttons control the JS-less tabs-->
+        <input type="radio" name="account-tabs" id="account-settings" value="account settings" checked />
+        <!-- these sections only exist for paid users-->
+        <?php if ($is_paid) : ?>
+            <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
+            <input type="radio" name="account-tabs" id="api-consumers" value="api consumers" />
+        <?php endif; ?>
 
-    <div class="card password" data-modal="password-modal">
-        <div class="card-section">
-            <h3>Password</h3>
-            <div class="info">
-                <div>************</div>
-            </div>
+        <!-- these link to sections on the account page, but have subpages for modifications,  use hash deep linking -->
+        <div class="tab-labels">
+            <label for="account-settings">Account Settings</label>
+            <!-- these sections only exist for paid users-->
+            <?php if ($is_paid) : ?>
+                <label for="payments-invoices">Payments and Invoices</label>
+                <label for="api-consumers">Api Consumers</label>
+            <?php endif; ?>
         </div>
-        <div class="card-section">
-            <div class="edit-button">
-                <button><span>Edit</span></button>
-            </div>
-        </div>
-    </div>
 
-    <?php if ($is_paid) : ?>
-        <?php
-            if (!$is_wpt_enterprise) {
-                include_once __DIR__ . '/includes/billing-data.php';
-                include_once __DIR__ . '/includes/modals/subscription-plan.php';
-                include_once __DIR__ . '/includes/modals/payment-info.php';
-            }
-            include_once __DIR__ . '/includes/api-keys.php';
-        ?>
-    <?php else : ?>
-        <div class="card ">
-            <div class="card-section">
-                <h3>Subscription Plan</h3>
-                <div class="info">
-                    <ul>
-                        <li><strong>Plan</strong>: Starter</li>
-                        <li><strong>Remaining Runs: </strong><?= $remainingRuns ?></li>
-                        <li><strong>Price</strong>: Free</li>
-                    </ul>
+        <!-- account settings tab -->
+        <div class="tab-content" id="account-settings-content">
+            <div class="box card contact-info" data-modal="contact-info-modal">
+                <div class="card-section user-info">
+                    <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
+                    <div>
+                        <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
+                        <div class="info">
+                            <div><?= htmlspecialchars($email) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section">
+                    <div class="edit-button">
+                        <button><span>Edit</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box card password" data-modal="password-modal">
+                <div class="card-section">
+                    <h3>Password</h3>
+                    <div class="info">
+                        <div>************</div>
+                    </div>
+                </div>
+                <div class="card-section">
+                    <div class="edit-button">
+                        <button><span>Edit</span></button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <?php include_once __DIR__ . '/includes/signup.php'; ?>
+        <div class="box card-section">
+            <h3>Current Plan</h3>
+            <?php if ($is_paid) : ?>
+                <div class="card-section-subhed">
+                    <?= "{$braintreeCustomerDetails['wptPlanName']}"; ?>
+                    <?php if ($is_canceled) : ?>
+                        <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                    <?php else : ?>
+                        <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                    <?php endif; ?>
+                </div>
+                <ul>
+                    <li><strong>Runs per month:</strong> 50</li>
+                    <li><strong>Remaining runs:</strong> <?= $braintreeCustomerDetails['remainingRuns'] ?> </li>
+                    <li><strong>Run renewal:</strong> date here</li>
+                    <li><strong>Price:</strong> <?= $braintreeCustomerDetails['subscriptionPrice'] ?></li>
+                    <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
+                    <li><strong>Plan Renewal:</strong> <?= $runs_renewa ?></li>
+                </ul>
+            <?php else : ?>
+                <div class="card-section-subhed">
+                    Starter
+                    <span class="status">Active</span>
+                </div>
+                <ul>
+                    <li><strong>Runs per month:</strong> 50</li>
+                    <li><strong>Remaining runs:</strong> 50</li>
+                    <li><strong>Run renewal:</strong> date here</li>
+                </ul>
+            <?php endif; ?>
+        </div>
+    </div>
+
+
+    <!-- PAYING ONLY: Billing Invoice tab -->
+    <?php if ($is_paid) : ?>
+        <div class="tab-content" id="billing-settings-content">
+            <?php if ($is_paid) {
+                if (!$is_wpt_enterprise) {
+                    include_once __DIR__ . '/includes/billing-data.php';
+                }
+            } else {
+                include_once __DIR__ . '/includes/signup.php';
+            } ?>
+        </div>
+    <?php endif; ?>
+
+
+    <!-- PAYING ONLY:  API tab -->
+    <?php if ($is_paid): ?>
+        <div class="tab-content" id="api-settings-content">
+            <?php include_once __DIR__ . '/includes/api-keys.php'; ?>
+        </div>
     <?php endif; ?>
 </div>
 
+
 <!-- Modals -->
+
 <?php
 include_once __DIR__ . '/includes/modals/contact-info.php';
 include_once __DIR__ . '/includes/modals/password.php';

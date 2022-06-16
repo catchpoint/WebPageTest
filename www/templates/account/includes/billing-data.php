@@ -94,5 +94,4 @@
         </table>
     </div>
 </div>
-<?php endif; // (!$is_wpt_enterprise):
-?>
+<?php endif; // (!$is_wpt_enterprise): ?>
