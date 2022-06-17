@@ -150,7 +150,7 @@
                     </div>
                     <div class="info">
                         <form method='POST' action='/account'>
-                            <table class="sortable responsive-vertical-table">
+                            <table class="sortable responsive-vertical-table selectable-table">
                                 <caption>
                                     <span class="sr-only">API Consumers table, column headers with buttons are sortable.</span>
                                 </caption>
@@ -186,19 +186,19 @@
                                 <tbody>
                                     <?php foreach ($wptApiKey as $row) : ?>
                                         <tr>
-                                            <td data-th="Select:">
+                                            <td data-th="Select">
                                                 <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $row['id'] ?>' />
                                             </td>
-                                            <td data-th="Name:"><?= $row['name'] ?></td>
-                                            <td data-th="API key:" class="hidden-content">
+                                            <td data-th="Name"><?= $row['name'] ?></td>
+                                            <td data-th="API key" class="hidden-content">
                                                 <button type="button" class="view-button">View</button>
                                                 <span class="hidden-area closed">
                                                     <span class="api-key"><?= $row['apiKey'] ?></span>
                                                     <button type="button" class="hide-button"><span class="sr-only">Close</span></button>
                                             </td>
                                             </span>
-                                            <td data-th="Created:"><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
-                                            <td data-th="Last updated:"><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Created"><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Updated"><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
