@@ -1762,11 +1762,6 @@ ul.bulleted-list {
     display: table-cell;
   }
 
-  .responsive-vertical-table th:first-child,
-  .responsive-vertical-table td:first-child {
-    padding-left: 0;
-  }
-
   .responsive-vertical-table th:last-child,
   .responsive-vertical-table td:last-child {
     padding-right: 0;
