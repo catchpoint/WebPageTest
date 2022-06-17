@@ -1,5 +1,5 @@
 <div class="box card api-consumers">
-    <h3>API Consumers</h3>
+    <h2>API Consumers</h2>
     <div class="create-key-container">
         <div class="create-delete-button-container">
             <button type="button" class="new-api-key" data-toggle="open" data-targetid="create-api-key-toggle-area">New Api Key</button>
