@@ -13,32 +13,33 @@ namespace Monolog\Handler;
 
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\HtmlFormatter;
-use Monolog\LogRecord;
 
 /**
  * Base class for all mail handlers
  *
  * @author Gyula Sallai
+ *
+ * @phpstan-import-type Record from \Monolog\Logger
  */
 abstract class MailHandler extends AbstractProcessingHandler
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function handleBatch(array $records): void
     {
         $messages = [];
 
         foreach ($records as $record) {
-            if ($record->level->isLowerThan($this->level)) {
+            if ($record['level'] < $this->level) {
                 continue;
             }
-
+            /** @var Record $message */
             $message = $this->processRecord($record);
             $messages[] = $message;
         }
 
-        if (\count($messages) > 0) {
+        if (!empty($messages)) {
             $this->send((string) $this->getFormatter()->formatBatch($messages), $messages);
         }
     }
@@ -49,26 +50,27 @@ abstract class MailHandler extends AbstractProcessingHandler
      * @param string $content formatted email body to be sent
      * @param array  $records the array of log records that formed this content
      *
-     * @phpstan-param non-empty-array<LogRecord> $records
+     * @phpstan-param Record[] $records
      */
     abstract protected function send(string $content, array $records): void;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected function write(LogRecord $record): void
+    protected function write(array $record): void
     {
-        $this->send((string) $record->formatted, [$record]);
+        $this->send((string) $record['formatted'], [$record]);
     }
 
     /**
-     * @phpstan-param non-empty-array<LogRecord> $records
+     * @phpstan-param non-empty-array<Record> $records
+     * @phpstan-return Record
      */
-    protected function getHighestRecord(array $records): LogRecord
+    protected function getHighestRecord(array $records): array
     {
         $highestRecord = null;
         foreach ($records as $record) {
-            if ($highestRecord === null || $record->level->isHigherThan($highestRecord->level)) {
+            if ($highestRecord === null || $highestRecord['level'] < $record['level']) {
                 $highestRecord = $record;
             }
         }
@@ -83,6 +85,8 @@ abstract class MailHandler extends AbstractProcessingHandler
 
     /**
      * Gets the default formatter.
+     *
+     * @return FormatterInterface
      */
     protected function getDefaultFormatter(): FormatterInterface
     {

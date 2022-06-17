@@ -12,10 +12,9 @@
 namespace Monolog\Handler;
 
 use DateTimeInterface;
-use Monolog\Level;
+use Monolog\Logger;
 use Monolog\Handler\SyslogUdp\UdpSocket;
 use Monolog\Utils;
-use Monolog\LogRecord;
 
 /**
  * A Handler for logging to a remote syslogd server.
@@ -30,29 +29,31 @@ class SyslogUdpHandler extends AbstractSyslogHandler
     const RFC5424e = 2;
 
     /** @var array<self::RFC*, string> */
-    private array $dateFormats = [
+    private $dateFormats = array(
         self::RFC3164 => 'M d H:i:s',
         self::RFC5424 => \DateTime::RFC3339,
         self::RFC5424e => \DateTime::RFC3339_EXTENDED,
-    ];
+    );
 
-    protected UdpSocket $socket;
-    protected string $ident;
+    /** @var UdpSocket */
+    protected $socket;
+    /** @var string */
+    protected $ident;
     /** @var self::RFC* */
-    protected int $rfc;
+    protected $rfc;
 
     /**
-     * @param  string                    $host     Either IP/hostname or a path to a unix socket (port must be 0 then)
-     * @param  int                       $port     Port number, or 0 if $host is a unix socket
-     * @param  string|int                $facility Either one of the names of the keys in $this->facilities, or a LOG_* facility constant
-     * @param  bool                      $bubble   Whether the messages that are handled can bubble up the stack or not
-     * @param  string                    $ident    Program name or tag for each log message.
-     * @param  int                       $rfc      RFC to format the message for.
+     * @param string     $host     Either IP/hostname or a path to a unix socket (port must be 0 then)
+     * @param int        $port     Port number, or 0 if $host is a unix socket
+     * @param string|int $facility Either one of the names of the keys in $this->facilities, or a LOG_* facility constant
+     * @param bool       $bubble   Whether the messages that are handled can bubble up the stack or not
+     * @param string     $ident    Program name or tag for each log message.
+     * @param int        $rfc      RFC to format the message for.
      * @throws MissingExtensionException
      *
      * @phpstan-param self::RFC* $rfc
      */
-    public function __construct(string $host, int $port = 514, string|int $facility = LOG_USER, int|string|Level $level = Level::Debug, bool $bubble = true, string $ident = 'php', int $rfc = self::RFC5424)
+    public function __construct(string $host, int $port = 514, $facility = LOG_USER, $level = Logger::DEBUG, bool $bubble = true, string $ident = 'php', int $rfc = self::RFC5424)
     {
         if (!extension_loaded('sockets')) {
             throw new MissingExtensionException('The sockets extension is required to use the SyslogUdpHandler');
@@ -66,11 +67,11 @@ class SyslogUdpHandler extends AbstractSyslogHandler
         $this->socket = new UdpSocket($host, $port);
     }
 
-    protected function write(LogRecord $record): void
+    protected function write(array $record): void
     {
-        $lines = $this->splitMessageIntoLines($record->formatted);
+        $lines = $this->splitMessageIntoLines($record['formatted']);
 
-        $header = $this->makeCommonSyslogHeader($this->toSyslogPriority($record->level), $record->datetime);
+        $header = $this->makeCommonSyslogHeader($this->logLevels[$record['level']], $record['datetime']);
 
         foreach ($lines as $line) {
             $this->socket->write($line, $header);
@@ -95,7 +96,6 @@ class SyslogUdpHandler extends AbstractSyslogHandler
         $lines = preg_split('/$\R?^/m', (string) $message, -1, PREG_SPLIT_NO_EMPTY);
         if (false === $lines) {
             $pcreErrorCode = preg_last_error();
-
             throw new \RuntimeException('Could not preg_split: ' . $pcreErrorCode . ' / ' . Utils::pcreLastErrorMessage($pcreErrorCode));
         }
 
@@ -109,13 +109,11 @@ class SyslogUdpHandler extends AbstractSyslogHandler
     {
         $priority = $severity + $this->facility;
 
-        $pid = getmypid();
-        if (false === $pid) {
+        if (!$pid = getmypid()) {
             $pid = '-';
         }
 
-        $hostname = gethostname();
-        if (false === $hostname) {
+        if (!$hostname = gethostname()) {
             $hostname = '-';
         }
 

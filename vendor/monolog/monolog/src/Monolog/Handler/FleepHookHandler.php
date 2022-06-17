@@ -13,8 +13,7 @@ namespace Monolog\Handler;
 
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Level;
-use Monolog\LogRecord;
+use Monolog\Logger;
 
 /**
  * Sends logs to Fleep.io using Webhook integrations
@@ -23,6 +22,8 @@ use Monolog\LogRecord;
  *
  * @see https://fleep.io/integrations/webhooks/ Fleep Webhooks Documentation
  * @author Ando Roots <ando@sqroot.eu>
+ *
+ * @phpstan-import-type FormattedRecord from AbstractProcessingHandler
  */
 class FleepHookHandler extends SocketHandler
 {
@@ -33,7 +34,7 @@ class FleepHookHandler extends SocketHandler
     /**
      * @var string Webhook token (specifies the conversation where logs are sent)
      */
-    protected string $token;
+    protected $token;
 
     /**
      * Construct a new Fleep.io Handler.
@@ -41,12 +42,12 @@ class FleepHookHandler extends SocketHandler
      * For instructions on how to create a new web hook in your conversations
      * see https://fleep.io/integrations/webhooks/
      *
-     * @param  string                    $token Webhook token
+     * @param  string                    $token  Webhook token
      * @throws MissingExtensionException
      */
     public function __construct(
         string $token,
-        $level = Level::Debug,
+        $level = Logger::DEBUG,
         bool $bubble = true,
         bool $persistent = false,
         float $timeout = 0.0,
@@ -88,16 +89,16 @@ class FleepHookHandler extends SocketHandler
     /**
      * Handles a log record
      */
-    public function write(LogRecord $record): void
+    public function write(array $record): void
     {
         parent::write($record);
         $this->closeSocket();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected function generateDataStream(LogRecord $record): string
+    protected function generateDataStream(array $record): string
     {
         $content = $this->buildContent($record);
 
@@ -120,11 +121,13 @@ class FleepHookHandler extends SocketHandler
 
     /**
      * Builds the body of API call
+     *
+     * @phpstan-param FormattedRecord $record
      */
-    private function buildContent(LogRecord $record): string
+    private function buildContent(array $record): string
     {
         $dataArray = [
-            'message' => $record->formatted,
+            'message' => $record['formatted'],
         ];
 
         return http_build_query($dataArray);

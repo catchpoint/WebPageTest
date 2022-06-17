@@ -12,28 +12,31 @@
 namespace Monolog\Handler;
 
 use Monolog\Formatter\FormatterInterface;
-use Monolog\Level;
+use Monolog\Logger;
 use Monolog\Utils;
 use Monolog\Handler\Slack\SlackRecord;
-use Monolog\LogRecord;
 
 /**
  * Sends notifications through Slack API
  *
  * @author Greg Kedzierski <greg@gregkedzierski.com>
  * @see    https://api.slack.com/
+ *
+ * @phpstan-import-type FormattedRecord from AbstractProcessingHandler
  */
 class SlackHandler extends SocketHandler
 {
     /**
      * Slack API token
+     * @var string
      */
-    private string $token;
+    private $token;
 
     /**
      * Instance of the SlackRecord util class preparing data for Slack API.
+     * @var SlackRecord
      */
-    private SlackRecord $slackRecord;
+    private $slackRecord;
 
     /**
      * @param  string                    $token                  Slack API token
@@ -52,11 +55,11 @@ class SlackHandler extends SocketHandler
         ?string $username = null,
         bool $useAttachment = true,
         ?string $iconEmoji = null,
-        $level = Level::Critical,
+        $level = Logger::CRITICAL,
         bool $bubble = true,
         bool $useShortAttachment = false,
         bool $includeContextAndExtra = false,
-        array $excludeFields = [],
+        array $excludeFields = array(),
         bool $persistent = false,
         float $timeout = 0.0,
         float $writingTimeout = 10.0,
@@ -102,9 +105,9 @@ class SlackHandler extends SocketHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected function generateDataStream(LogRecord $record): string
+    protected function generateDataStream(array $record): string
     {
         $content = $this->buildContent($record);
 
@@ -113,8 +116,10 @@ class SlackHandler extends SocketHandler
 
     /**
      * Builds the body of API call
+     *
+     * @phpstan-param FormattedRecord $record
      */
-    private function buildContent(LogRecord $record): string
+    private function buildContent(array $record): string
     {
         $dataArray = $this->prepareContentData($record);
 
@@ -122,14 +127,15 @@ class SlackHandler extends SocketHandler
     }
 
     /**
+     * @phpstan-param FormattedRecord $record
      * @return string[]
      */
-    protected function prepareContentData(LogRecord $record): array
+    protected function prepareContentData(array $record): array
     {
         $dataArray = $this->slackRecord->getSlackData($record);
         $dataArray['token'] = $this->token;
 
-        if (isset($dataArray['attachments']) && is_array($dataArray['attachments']) && \count($dataArray['attachments']) > 0) {
+        if (!empty($dataArray['attachments'])) {
             $dataArray['attachments'] = Utils::jsonEncode($dataArray['attachments']);
         }
 
@@ -151,9 +157,9 @@ class SlackHandler extends SocketHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected function write(LogRecord $record): void
+    protected function write(array $record): void
     {
         parent::write($record);
         $this->finalizeWrite();

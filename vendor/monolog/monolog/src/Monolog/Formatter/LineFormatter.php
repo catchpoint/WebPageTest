@@ -11,9 +11,7 @@
 
 namespace Monolog\Formatter;
 
-use Closure;
 use Monolog\Utils;
-use Monolog\LogRecord;
 
 /**
  * Formats incoming records into a one-line string
@@ -27,16 +25,22 @@ class LineFormatter extends NormalizerFormatter
 {
     public const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
-    protected string $format;
-    protected bool $allowInlineLineBreaks;
-    protected bool $ignoreEmptyContextAndExtra;
-    protected bool $includeStacktraces;
-    protected Closure|null $stacktracesParser = null;
+    /** @var string */
+    protected $format;
+    /** @var bool */
+    protected $allowInlineLineBreaks;
+    /** @var bool */
+    protected $ignoreEmptyContextAndExtra;
+    /** @var bool */
+    protected $includeStacktraces;
+    /** @var ?callable */
+    protected $stacktracesParser;
 
     /**
-     * @param string|null $format                The format of the message
-     * @param string|null $dateFormat            The format of the timestamp: one supported by DateTime::format
-     * @param bool        $allowInlineLineBreaks Whether to allow inline line breaks in log entries
+     * @param string|null $format                     The format of the message
+     * @param string|null $dateFormat                 The format of the timestamp: one supported by DateTime::format
+     * @param bool        $allowInlineLineBreaks      Whether to allow inline line breaks in log entries
+     * @param bool        $ignoreEmptyContextAndExtra
      */
     public function __construct(?string $format = null, ?string $dateFormat = null, bool $allowInlineLineBreaks = false, bool $ignoreEmptyContextAndExtra = false, bool $includeStacktraces = false)
     {
@@ -47,7 +51,7 @@ class LineFormatter extends NormalizerFormatter
         parent::__construct($dateFormat);
     }
 
-    public function includeStacktraces(bool $include = true, ?Closure $parser = null): self
+    public function includeStacktraces(bool $include = true, ?callable $parser = null): self
     {
         $this->includeStacktraces = $include;
         if ($this->includeStacktraces) {
@@ -73,13 +77,14 @@ class LineFormatter extends NormalizerFormatter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function format(LogRecord $record): string
+    public function format(array $record): string
     {
         $vars = parent::format($record);
 
         $output = $this->format;
+
         foreach ($vars['extra'] as $var => $val) {
             if (false !== strpos($output, '%extra.'.$var.'%')) {
                 $output = str_replace('%extra.'.$var.'%', $this->stringify($val), $output);
@@ -95,12 +100,12 @@ class LineFormatter extends NormalizerFormatter
         }
 
         if ($this->ignoreEmptyContextAndExtra) {
-            if (\count($vars['context']) === 0) {
+            if (empty($vars['context'])) {
                 unset($vars['context']);
                 $output = str_replace('%context%', '', $output);
             }
 
-            if (\count($vars['extra']) === 0) {
+            if (empty($vars['extra'])) {
                 unset($vars['extra']);
                 $output = str_replace('%extra%', '', $output);
             }
@@ -117,7 +122,6 @@ class LineFormatter extends NormalizerFormatter
             $output = preg_replace('/%(?:extra|context)\..+?%/', '', $output);
             if (null === $output) {
                 $pcreErrorCode = preg_last_error();
-
                 throw new \RuntimeException('Failed to run preg_replace: ' . $pcreErrorCode . ' / ' . Utils::pcreLastErrorMessage($pcreErrorCode));
             }
         }
@@ -147,7 +151,7 @@ class LineFormatter extends NormalizerFormatter
     {
         $str = $this->formatException($e);
 
-        if (($previous = $e->getPrevious()) instanceof \Throwable) {
+        if ($previous = $e->getPrevious()) {
             do {
                 $str .= "\n[previous exception] " . $this->formatException($previous);
             } while ($previous = $previous->getPrevious());
@@ -176,7 +180,7 @@ class LineFormatter extends NormalizerFormatter
     {
         if ($this->allowInlineLineBreaks) {
             if (0 === strpos($str, '{')) {
-                return str_replace(['\r', '\n'], ["\r", "\n"], $str);
+                return str_replace(array('\r', '\n'), array("\r", "\n"), $str);
             }
 
             return $str;
@@ -218,7 +222,7 @@ class LineFormatter extends NormalizerFormatter
     {
         $trace = $e->getTraceAsString();
 
-        if ($this->stacktracesParser !== null) {
+        if ($this->stacktracesParser) {
             $trace = $this->stacktracesParserCustom($trace);
         }
 

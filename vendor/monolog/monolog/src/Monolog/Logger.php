@@ -11,10 +11,8 @@
 
 namespace Monolog;
 
-use Closure;
 use DateTimeZone;
 use Monolog\Handler\HandlerInterface;
-use Monolog\Processor\ProcessorInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
@@ -28,13 +26,15 @@ use Stringable;
  * and uses them to store records that are added to it.
  *
  * @author Jordi Boggiano <j.boggiano@seld.be>
+ *
+ * @phpstan-type Level Logger::DEBUG|Logger::INFO|Logger::NOTICE|Logger::WARNING|Logger::ERROR|Logger::CRITICAL|Logger::ALERT|Logger::EMERGENCY
+ * @phpstan-type LevelName 'DEBUG'|'INFO'|'NOTICE'|'WARNING'|'ERROR'|'CRITICAL'|'ALERT'|'EMERGENCY'
+ * @phpstan-type Record array{message: string, context: mixed[], level: Level, level_name: LevelName, channel: string, datetime: \DateTimeImmutable, extra: mixed[]}
  */
 class Logger implements LoggerInterface, ResettableInterface
 {
     /**
      * Detailed debug information
-     *
-     * @deprecated Use \Monolog\Level::Debug
      */
     public const DEBUG = 100;
 
@@ -42,15 +42,11 @@ class Logger implements LoggerInterface, ResettableInterface
      * Interesting events
      *
      * Examples: User logs in, SQL logs.
-     *
-     * @deprecated Use \Monolog\Level::Info
      */
     public const INFO = 200;
 
     /**
      * Uncommon events
-     *
-     * @deprecated Use \Monolog\Level::Notice
      */
     public const NOTICE = 250;
 
@@ -59,15 +55,11 @@ class Logger implements LoggerInterface, ResettableInterface
      *
      * Examples: Use of deprecated APIs, poor use of an API,
      * undesirable things that are not necessarily wrong.
-     *
-     * @deprecated Use \Monolog\Level::Warning
      */
     public const WARNING = 300;
 
     /**
      * Runtime errors
-     *
-     * @deprecated Use \Monolog\Level::Error
      */
     public const ERROR = 400;
 
@@ -75,8 +67,6 @@ class Logger implements LoggerInterface, ResettableInterface
      * Critical conditions
      *
      * Example: Application component unavailable, unexpected exception.
-     *
-     * @deprecated Use \Monolog\Level::Critical
      */
     public const CRITICAL = 500;
 
@@ -85,15 +75,11 @@ class Logger implements LoggerInterface, ResettableInterface
      *
      * Example: Entire website down, database unavailable, etc.
      * This should trigger the SMS alerts and wake you up.
-     *
-     * @deprecated Use \Monolog\Level::Alert
      */
     public const ALERT = 550;
 
     /**
      * Urgent alert.
-     *
-     * @deprecated Use \Monolog\Level::Emergency
      */
     public const EMERGENCY = 600;
 
@@ -102,59 +88,91 @@ class Logger implements LoggerInterface, ResettableInterface
      *
      * This is only bumped when API breaks are done and should
      * follow the major version of the library
+     *
+     * @var int
      */
-    public const API = 3;
+    public const API = 2;
 
-    protected string $name;
+    /**
+     * This is a static variable and not a constant to serve as an extension point for custom levels
+     *
+     * @var array<int, string> $levels Logging levels with the levels as key
+     *
+     * @phpstan-var array<Level, LevelName> $levels Logging levels with the levels as key
+     */
+    protected static $levels = [
+        self::DEBUG     => 'DEBUG',
+        self::INFO      => 'INFO',
+        self::NOTICE    => 'NOTICE',
+        self::WARNING   => 'WARNING',
+        self::ERROR     => 'ERROR',
+        self::CRITICAL  => 'CRITICAL',
+        self::ALERT     => 'ALERT',
+        self::EMERGENCY => 'EMERGENCY',
+    ];
+
+    /**
+     * @var string
+     */
+    protected $name;
 
     /**
      * The handler stack
      *
-     * @var list<HandlerInterface>
+     * @var HandlerInterface[]
      */
-    protected array $handlers;
+    protected $handlers;
 
     /**
      * Processors that will process all log records
      *
      * To process records of a single handler instead, add the processor on that specific handler
      *
-     * @var array<(callable(LogRecord): LogRecord)|ProcessorInterface>
+     * @var callable[]
      */
-    protected array $processors;
-
-    protected bool $microsecondTimestamps = true;
-
-    protected DateTimeZone $timezone;
-
-    protected Closure|null $exceptionHandler = null;
+    protected $processors;
 
     /**
-     * Keeps track of depth to prevent infinite logging loops
+     * @var bool
      */
-    private int $logDepth = 0;
+    protected $microsecondTimestamps = true;
 
     /**
-     * Whether to detect infinite logging loops
+     * @var DateTimeZone
+     */
+    protected $timezone;
+
+    /**
+     * @var callable|null
+     */
+    protected $exceptionHandler;
+
+    /**
+     * @var int Keeps track of depth to prevent infinite logging loops
+     */
+    private $logDepth = 0;
+
+    /**
+     * @var bool Whether to detect infinite logging loops
      *
      * This can be disabled via {@see useLoggingLoopDetection} if you have async handlers that do not play well with this
      */
-    private bool $detectCycles = true;
+    private $detectCycles = true;
 
     /**
+     * @psalm-param array<callable(array): array> $processors
+     *
      * @param string             $name       The logging channel, a simple descriptive name that is attached to all log records
      * @param HandlerInterface[] $handlers   Optional stack of handlers, the first one in the array is called first, etc.
      * @param callable[]         $processors Optional array of processors
      * @param DateTimeZone|null  $timezone   Optional timezone, if not provided date_default_timezone_get() will be used
-     *
-     * @phpstan-param array<(callable(LogRecord): LogRecord)|ProcessorInterface> $processors
      */
-    public function __construct(string $name, array $handlers = [], array $processors = [], DateTimeZone|null $timezone = null)
+    public function __construct(string $name, array $handlers = [], array $processors = [], ?DateTimeZone $timezone = null)
     {
         $this->name = $name;
         $this->setHandlers($handlers);
         $this->processors = $processors;
-        $this->timezone = $timezone ?? new DateTimeZone(date_default_timezone_get());
+        $this->timezone = $timezone ?: new DateTimeZone(date_default_timezone_get() ?: 'UTC');
     }
 
     public function getName(): string
@@ -190,7 +208,7 @@ class Logger implements LoggerInterface, ResettableInterface
      */
     public function popHandler(): HandlerInterface
     {
-        if (0 === \count($this->handlers)) {
+        if (!$this->handlers) {
             throw new \LogicException('You tried to pop from an empty handler stack.');
         }
 
@@ -202,7 +220,7 @@ class Logger implements LoggerInterface, ResettableInterface
      *
      * If a map is passed, keys will be ignored.
      *
-     * @param list<HandlerInterface> $handlers
+     * @param HandlerInterface[] $handlers
      */
     public function setHandlers(array $handlers): self
     {
@@ -215,7 +233,7 @@ class Logger implements LoggerInterface, ResettableInterface
     }
 
     /**
-     * @return list<HandlerInterface>
+     * @return HandlerInterface[]
      */
     public function getHandlers(): array
     {
@@ -224,10 +242,8 @@ class Logger implements LoggerInterface, ResettableInterface
 
     /**
      * Adds a processor on to the stack.
-     *
-     * @phpstan-param ProcessorInterface|(callable(LogRecord): LogRecord) $callback
      */
-    public function pushProcessor(ProcessorInterface|callable $callback): self
+    public function pushProcessor(callable $callback): self
     {
         array_unshift($this->processors, $callback);
 
@@ -237,12 +253,12 @@ class Logger implements LoggerInterface, ResettableInterface
     /**
      * Removes the processor on top of the stack and returns it.
      *
-     * @phpstan-return ProcessorInterface|(callable(LogRecord): LogRecord)
      * @throws \LogicException If empty processor stack
+     * @return callable
      */
     public function popProcessor(): callable
     {
-        if (0 === \count($this->processors)) {
+        if (!$this->processors) {
             throw new \LogicException('You tried to pop from an empty processor stack.');
         }
 
@@ -251,7 +267,6 @@ class Logger implements LoggerInterface, ResettableInterface
 
     /**
      * @return callable[]
-     * @phpstan-return array<ProcessorInterface|(callable(LogRecord): LogRecord)>
      */
     public function getProcessors(): array
     {
@@ -292,9 +307,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param  DateTimeImmutable $datetime Optional log date to log into the past or future
      * @return bool              Whether the record has been processed
      *
-     * @phpstan-param value-of<Level::VALUES>|Level $level
+     * @phpstan-param Level $level
      */
-    public function addRecord(int|Level $level, string $message, array $context = [], DateTimeImmutable $datetime = null): bool
+    public function addRecord(int $level, string $message, array $context = [], DateTimeImmutable $datetime = null): bool
     {
         if ($this->detectCycles) {
             $this->logDepth += 1;
@@ -307,30 +322,31 @@ class Logger implements LoggerInterface, ResettableInterface
         }
 
         try {
-            $recordInitialized = count($this->processors) === 0;
-
-            $record = new LogRecord(
-                message: $message,
-                context: $context,
-                level: self::toMonologLevel($level),
-                channel: $this->name,
-                datetime: $datetime ?? new DateTimeImmutable($this->microsecondTimestamps, $this->timezone),
-                extra: [],
-            );
-            $handled = false;
+            $record = null;
 
             foreach ($this->handlers as $handler) {
-                if (false === $recordInitialized) {
-                    // skip initializing the record as long as no handler is going to handle it
-                    if (!$handler->isHandling($record)) {
+                if (null === $record) {
+                    // skip creating the record as long as no handler is going to handle it
+                    if (!$handler->isHandling(['level' => $level])) {
                         continue;
                     }
+
+                    $levelName = static::getLevelName($level);
+
+                    $record = [
+                        'message' => $message,
+                        'context' => $context,
+                        'level' => $level,
+                        'level_name' => $levelName,
+                        'channel' => $this->name,
+                        'datetime' => $datetime ?? new DateTimeImmutable($this->microsecondTimestamps, $this->timezone),
+                        'extra' => [],
+                    ];
 
                     try {
                         foreach ($this->processors as $processor) {
                             $record = $processor($record);
                         }
-                        $recordInitialized = true;
                     } catch (Throwable $e) {
                         $this->handleException($e, $record);
 
@@ -338,9 +354,8 @@ class Logger implements LoggerInterface, ResettableInterface
                     }
                 }
 
-                // once the record is initialized, send it to all handlers as long as the bubbling chain is not interrupted
+                // once the record exists, send it to all handlers as long as the bubbling chain is not interrupted
                 try {
-                    $handled = true;
                     if (true === $handler->handle($record)) {
                         break;
                     }
@@ -350,13 +365,13 @@ class Logger implements LoggerInterface, ResettableInterface
                     return true;
                 }
             }
-
-            return $handled;
         } finally {
             if ($this->detectCycles) {
                 $this->logDepth--;
             }
         }
+
+        return null !== $record;
     }
 
     /**
@@ -402,77 +417,77 @@ class Logger implements LoggerInterface, ResettableInterface
     }
 
     /**
-     * Gets the name of the logging level as a string.
+     * Gets all supported logging levels.
      *
-     * This still returns a string instead of a Level for BC, but new code should not rely on this method.
+     * @return array<string, int> Assoc array with human-readable level names => level codes.
+     * @phpstan-return array<LevelName, Level>
+     */
+    public static function getLevels(): array
+    {
+        return array_flip(static::$levels);
+    }
+
+    /**
+     * Gets the name of the logging level.
      *
      * @throws \Psr\Log\InvalidArgumentException If level is not defined
      *
-     * @phpstan-param  value-of<Level::VALUES>|Level $level
-     * @phpstan-return value-of<Level::NAMES>
-     *
-     * @deprecated Since 3.0, use {@see toMonologLevel} or {@see \Monolog\Level->getName()} instead
+     * @phpstan-param  Level     $level
+     * @phpstan-return LevelName
      */
-    public static function getLevelName(int|Level $level): string
+    public static function getLevelName(int $level): string
     {
-        return self::toMonologLevel($level)->getName();
+        if (!isset(static::$levels[$level])) {
+            throw new InvalidArgumentException('Level "'.$level.'" is not defined, use one of: '.implode(', ', array_keys(static::$levels)));
+        }
+
+        return static::$levels[$level];
     }
 
     /**
      * Converts PSR-3 levels to Monolog ones if necessary
      *
-     * @param  int|string|Level|LogLevel::* $level Level number (monolog) or name (PSR-3)
-     * @throws \Psr\Log\InvalidArgumentException      If level is not defined
+     * @param  string|int                        $level Level number (monolog) or name (PSR-3)
+     * @throws \Psr\Log\InvalidArgumentException If level is not defined
      *
-     * @phpstan-param value-of<Level::VALUES>|value-of<Level::NAMES>|Level|LogLevel::* $level
+     * @phpstan-param  Level|LevelName|LogLevel::* $level
+     * @phpstan-return Level
      */
-    public static function toMonologLevel(string|int|Level $level): Level
+    public static function toMonologLevel($level): int
     {
-        if ($level instanceof Level) {
-            return $level;
-        }
-
-        if (\is_string($level)) {
-            if (\is_numeric($level)) {
-                $levelEnum = Level::tryFrom((int) $level);
-                if ($levelEnum === null) {
-                    throw new InvalidArgumentException('Level "'.$level.'" is not defined, use one of: '.implode(', ', Level::NAMES + Level::VALUES));
-                }
-
-                return $levelEnum;
+        if (is_string($level)) {
+            if (is_numeric($level)) {
+                /** @phpstan-ignore-next-line */
+                return intval($level);
             }
 
-            // Contains first char of all log levels and avoids using strtoupper() which may have
+            // Contains chars of all log levels and avoids using strtoupper() which may have
             // strange results depending on locale (for example, "i" will become "İ" in Turkish locale)
-            $upper = strtr(substr($level, 0, 1), 'dinweca', 'DINWECA') . strtolower(substr($level, 1));
-            if (defined(Level::class.'::'.$upper)) {
-                return constant(Level::class . '::' . $upper);
+            $upper = strtr($level, 'abcdefgilmnortuwy', 'ABCDEFGILMNORTUWY');
+            if (defined(__CLASS__.'::'.$upper)) {
+                return constant(__CLASS__ . '::' . $upper);
             }
 
-            throw new InvalidArgumentException('Level "'.$level.'" is not defined, use one of: '.implode(', ', Level::NAMES + Level::VALUES));
+            throw new InvalidArgumentException('Level "'.$level.'" is not defined, use one of: '.implode(', ', array_keys(static::$levels) + static::$levels));
         }
 
-        $levelEnum = Level::tryFrom($level);
-        if ($levelEnum === null) {
-            throw new InvalidArgumentException('Level "'.var_export($level, true).'" is not defined, use one of: '.implode(', ', Level::NAMES + Level::VALUES));
+        if (!is_int($level)) {
+            throw new InvalidArgumentException('Level "'.var_export($level, true).'" is not defined, use one of: '.implode(', ', array_keys(static::$levels) + static::$levels));
         }
 
-        return $levelEnum;
+        return $level;
     }
 
     /**
      * Checks whether the Logger has a handler that listens on the given level
      *
-     * @phpstan-param value-of<Level::VALUES>|value-of<Level::NAMES>|Level|LogLevel::* $level
+     * @phpstan-param Level $level
      */
-    public function isHandling(int|string|Level $level): bool
+    public function isHandling(int $level): bool
     {
-        $record = new LogRecord(
-            datetime: new DateTimeImmutable($this->microsecondTimestamps, $this->timezone),
-            channel: $this->name,
-            message: '',
-            level: self::toMonologLevel($level),
-        );
+        $record = [
+            'level' => $level,
+        ];
 
         foreach ($this->handlers as $handler) {
             if ($handler->isHandling($record)) {
@@ -486,16 +501,16 @@ class Logger implements LoggerInterface, ResettableInterface
     /**
      * Set a custom exception handler that will be called if adding a new record fails
      *
-     * The Closure will receive an exception object and the record that failed to be logged
+     * The callable will receive an exception object and the record that failed to be logged
      */
-    public function setExceptionHandler(Closure|null $callback): self
+    public function setExceptionHandler(?callable $callback): self
     {
         $this->exceptionHandler = $callback;
 
         return $this;
     }
 
-    public function getExceptionHandler(): Closure|null
+    public function getExceptionHandler(): ?callable
     {
         return $this->exceptionHandler;
     }
@@ -509,12 +524,12 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      *
-     * @phpstan-param Level|LogLevel::* $level
+     * @phpstan-param Level|LevelName|LogLevel::* $level
      */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, $message, array $context = []): void
     {
-        if (!is_string($level) && !is_int($level) && !$level instanceof Level) {
-            throw new \InvalidArgumentException('$level is expected to be a string, int or '.Level::class.' instance');
+        if (!is_int($level) && !is_string($level)) {
+            throw new \InvalidArgumentException('$level is expected to be a string or int');
         }
 
         $level = static::toMonologLevel($level);
@@ -530,9 +545,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function debug(string|\Stringable $message, array $context = []): void
+    public function debug($message, array $context = []): void
     {
-        $this->addRecord(Level::Debug, (string) $message, $context);
+        $this->addRecord(static::DEBUG, (string) $message, $context);
     }
 
     /**
@@ -543,9 +558,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function info(string|\Stringable $message, array $context = []): void
+    public function info($message, array $context = []): void
     {
-        $this->addRecord(Level::Info, (string) $message, $context);
+        $this->addRecord(static::INFO, (string) $message, $context);
     }
 
     /**
@@ -556,9 +571,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function notice(string|\Stringable $message, array $context = []): void
+    public function notice($message, array $context = []): void
     {
-        $this->addRecord(Level::Notice, (string) $message, $context);
+        $this->addRecord(static::NOTICE, (string) $message, $context);
     }
 
     /**
@@ -569,9 +584,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function warning(string|\Stringable $message, array $context = []): void
+    public function warning($message, array $context = []): void
     {
-        $this->addRecord(Level::Warning, (string) $message, $context);
+        $this->addRecord(static::WARNING, (string) $message, $context);
     }
 
     /**
@@ -582,9 +597,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function error(string|\Stringable $message, array $context = []): void
+    public function error($message, array $context = []): void
     {
-        $this->addRecord(Level::Error, (string) $message, $context);
+        $this->addRecord(static::ERROR, (string) $message, $context);
     }
 
     /**
@@ -595,9 +610,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function critical(string|\Stringable $message, array $context = []): void
+    public function critical($message, array $context = []): void
     {
-        $this->addRecord(Level::Critical, (string) $message, $context);
+        $this->addRecord(static::CRITICAL, (string) $message, $context);
     }
 
     /**
@@ -608,9 +623,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function alert(string|\Stringable $message, array $context = []): void
+    public function alert($message, array $context = []): void
     {
-        $this->addRecord(Level::Alert, (string) $message, $context);
+        $this->addRecord(static::ALERT, (string) $message, $context);
     }
 
     /**
@@ -621,9 +636,9 @@ class Logger implements LoggerInterface, ResettableInterface
      * @param string|Stringable $message The log message
      * @param mixed[]           $context The log context
      */
-    public function emergency(string|\Stringable $message, array $context = []): void
+    public function emergency($message, array $context = []): void
     {
-        $this->addRecord(Level::Emergency, (string) $message, $context);
+        $this->addRecord(static::EMERGENCY, (string) $message, $context);
     }
 
     /**
@@ -647,10 +662,13 @@ class Logger implements LoggerInterface, ResettableInterface
     /**
      * Delegates exception management to the custom exception handler,
      * or throws the exception if no custom handler is set.
+     *
+     * @param array $record
+     * @phpstan-param Record $record
      */
-    protected function handleException(Throwable $e, LogRecord $record): void
+    protected function handleException(Throwable $e, array $record): void
     {
-        if (null === $this->exceptionHandler) {
+        if (!$this->exceptionHandler) {
             throw $e;
         }
 

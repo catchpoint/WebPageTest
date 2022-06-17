@@ -122,7 +122,7 @@ final class Utils
         if (is_string($data)) {
             self::detectAndCleanUtf8($data);
         } elseif (is_array($data)) {
-            array_walk_recursive($data, ['Monolog\Utils', 'detectAndCleanUtf8']);
+            array_walk_recursive($data, array('Monolog\Utils', 'detectAndCleanUtf8'));
         } else {
             self::throwEncodeError($code, $data);
         }
@@ -165,16 +165,27 @@ final class Utils
      * @param  int               $code return code of json_last_error function
      * @param  mixed             $data data that was meant to be encoded
      * @throws \RuntimeException
+     *
+     * @return never
      */
-    private static function throwEncodeError(int $code, $data): never
+    private static function throwEncodeError(int $code, $data): void
     {
-        $msg = match ($code) {
-            JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
-            JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
-            JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
-            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters, possibly incorrectly encoded',
-            default => 'Unknown error',
-        };
+        switch ($code) {
+            case JSON_ERROR_DEPTH:
+                $msg = 'Maximum stack depth exceeded';
+                break;
+            case JSON_ERROR_STATE_MISMATCH:
+                $msg = 'Underflow or the modes mismatch';
+                break;
+            case JSON_ERROR_CTRL_CHAR:
+                $msg = 'Unexpected control character found';
+                break;
+            case JSON_ERROR_UTF8:
+                $msg = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+                break;
+            default:
+                $msg = 'Unknown error';
+        }
 
         throw new \RuntimeException('JSON encoding failed: '.$msg.'. Encoding: '.var_export($data, true));
     }
@@ -196,7 +207,7 @@ final class Utils
      */
     private static function detectAndCleanUtf8(&$data): void
     {
-        if (is_string($data) && preg_match('//u', $data) !== 1) {
+        if (is_string($data) && !preg_match('//u', $data)) {
             $data = preg_replace_callback(
                 '/[\x80-\xFF]+/',
                 function ($m) {
@@ -206,7 +217,6 @@ final class Utils
             );
             if (!is_string($data)) {
                 $pcreErrorCode = preg_last_error();
-
                 throw new \RuntimeException('Failed to preg_replace_callback: ' . $pcreErrorCode . ' / ' . self::pcreLastErrorMessage($pcreErrorCode));
             }
             $data = str_replace(
@@ -220,8 +230,8 @@ final class Utils
     /**
      * Converts a string with a valid 'memory_limit' format, to bytes.
      *
-     * @param  string|false $val
-     * @return int|false    Returns an integer representing bytes. Returns FALSE in case of error.
+     * @param string|false $val
+     * @return int|false Returns an integer representing bytes. Returns FALSE in case of error.
      */
     public static function expandIniShorthandBytes($val)
     {
@@ -234,7 +244,7 @@ final class Utils
             return (int) $val;
         }
 
-        if (preg_match('/^\s*(?<val>\d+)(?:\.\d+)?\s*(?<unit>[gmk]?)\s*$/i', $val, $match) !== 1) {
+        if (!preg_match('/^\s*(?<val>\d+)(?:\.\d+)?\s*(?<unit>[gmk]?)\s*$/i', $val, $match)) {
             return false;
         }
 
@@ -242,10 +252,8 @@ final class Utils
         switch (strtolower($match['unit'] ?? '')) {
             case 'g':
                 $val *= 1024;
-                // no break
             case 'm':
                 $val *= 1024;
-                // no break
             case 'k':
                 $val *= 1024;
         }
@@ -253,22 +261,24 @@ final class Utils
         return $val;
     }
 
-    public static function getRecordMessageForException(LogRecord $record): string
+    /**
+     * @param array<mixed> $record
+     */
+    public static function getRecordMessageForException(array $record): string
     {
         $context = '';
         $extra = '';
-
         try {
-            if (\count($record->context) > 0) {
-                $context = "\nContext: " . json_encode($record->context, JSON_THROW_ON_ERROR);
+            if ($record['context']) {
+                $context = "\nContext: " . json_encode($record['context']);
             }
-            if (\count($record->extra) > 0) {
-                $extra = "\nExtra: " . json_encode($record->extra, JSON_THROW_ON_ERROR);
+            if ($record['extra']) {
+                $extra = "\nExtra: " . json_encode($record['extra']);
             }
         } catch (\Throwable $e) {
             // noop
         }
 
-        return "\nThe exception occurred while attempting to log: " . $record->message . $context . $extra;
+        return "\nThe exception occurred while attempting to log: " . $record['message'] . $context . $extra;
     }
 }

@@ -12,10 +12,9 @@
 namespace Monolog\Handler;
 
 use Monolog\Formatter\FormatterInterface;
-use Monolog\Level;
+use Monolog\Logger;
 use Monolog\Utils;
 use Monolog\Handler\Slack\SlackRecord;
-use Monolog\LogRecord;
 
 /**
  * Sends notifications through Slack Webhooks
@@ -27,13 +26,15 @@ class SlackWebhookHandler extends AbstractProcessingHandler
 {
     /**
      * Slack Webhook token
+     * @var string
      */
-    private string $webhookUrl;
+    private $webhookUrl;
 
     /**
      * Instance of the SlackRecord util class preparing data for Slack API.
+     * @var SlackRecord
      */
-    private SlackRecord $slackRecord;
+    private $slackRecord;
 
     /**
      * @param string      $webhookUrl             Slack Webhook URL
@@ -53,9 +54,9 @@ class SlackWebhookHandler extends AbstractProcessingHandler
         ?string $iconEmoji = null,
         bool $useShortAttachment = false,
         bool $includeContextAndExtra = false,
-        $level = Level::Critical,
+        $level = Logger::CRITICAL,
         bool $bubble = true,
-        array $excludeFields = []
+        array $excludeFields = array()
     ) {
         if (!extension_loaded('curl')) {
             throw new MissingExtensionException('The curl extension is needed to use the SlackWebhookHandler');
@@ -87,21 +88,21 @@ class SlackWebhookHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected function write(LogRecord $record): void
+    protected function write(array $record): void
     {
         $postData = $this->slackRecord->getSlackData($record);
         $postString = Utils::jsonEncode($postData);
 
         $ch = curl_init();
-        $options = [
+        $options = array(
             CURLOPT_URL => $this->webhookUrl,
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-type: application/json'],
+            CURLOPT_HTTPHEADER => array('Content-type: application/json'),
             CURLOPT_POSTFIELDS => $postString,
-        ];
+        );
         if (defined('CURLOPT_SAFE_UPLOAD')) {
             $options[CURLOPT_SAFE_UPLOAD] = true;
         }

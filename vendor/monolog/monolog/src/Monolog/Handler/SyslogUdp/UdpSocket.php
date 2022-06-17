@@ -18,9 +18,12 @@ class UdpSocket
 {
     protected const DATAGRAM_MAX_LENGTH = 65023;
 
-    protected string $ip;
-    protected int $port;
-    protected ?Socket $socket = null;
+    /** @var string */
+    protected $ip;
+    /** @var int */
+    protected $port;
+    /** @var resource|Socket|null */
+    protected $socket = null;
 
     public function __construct(string $ip, int $port = 514)
     {
@@ -28,20 +31,28 @@ class UdpSocket
         $this->port = $port;
     }
 
-    public function write(string $line, string $header = ""): void
+    /**
+     * @param  string $line
+     * @param  string $header
+     * @return void
+     */
+    public function write($line, $header = "")
     {
         $this->send($this->assembleMessage($line, $header));
     }
 
     public function close(): void
     {
-        if ($this->socket instanceof Socket) {
+        if (is_resource($this->socket) || $this->socket instanceof Socket) {
             socket_close($this->socket);
             $this->socket = null;
         }
     }
 
-    protected function getSocket(): Socket
+    /**
+     * @return resource|Socket
+     */
+    protected function getSocket()
     {
         if (null !== $this->socket) {
             return $this->socket;
@@ -55,12 +66,12 @@ class UdpSocket
             $protocol = IPPROTO_IP;
         }
 
-        $socket = socket_create($domain, SOCK_DGRAM, $protocol);
-        if ($socket instanceof Socket) {
-            return $this->socket = $socket;
+        $this->socket = socket_create($domain, SOCK_DGRAM, $protocol) ?: null;
+        if (null === $this->socket) {
+            throw new \RuntimeException('The UdpSocket to '.$this->ip.':'.$this->port.' could not be opened via socket_create');
         }
 
-        throw new \RuntimeException('The UdpSocket to '.$this->ip.':'.$this->port.' could not be opened via socket_create');
+        return $this->socket;
     }
 
     protected function send(string $chunk): void

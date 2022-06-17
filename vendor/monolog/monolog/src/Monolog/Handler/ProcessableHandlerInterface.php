@@ -12,19 +12,20 @@
 namespace Monolog\Handler;
 
 use Monolog\Processor\ProcessorInterface;
-use Monolog\LogRecord;
 
 /**
  * Interface to describe loggers that have processors
  *
  * @author Jordi Boggiano <j.boggiano@seld.be>
+ *
+ * @phpstan-import-type Record from \Monolog\Logger
  */
 interface ProcessableHandlerInterface
 {
     /**
      * Adds a processor in the stack.
      *
-     * @phpstan-param ProcessorInterface|(callable(LogRecord): LogRecord) $callback
+     * @psalm-param ProcessorInterface|callable(Record): Record $callback
      *
      * @param  ProcessorInterface|callable $callback
      * @return HandlerInterface            self
@@ -34,7 +35,7 @@ interface ProcessableHandlerInterface
     /**
      * Removes the processor on top of the stack and returns it.
      *
-     * @phpstan-return ProcessorInterface|(callable(LogRecord): LogRecord) $callback
+     * @psalm-return ProcessorInterface|callable(Record): Record $callback
      *
      * @throws \LogicException             In case the processor stack is empty
      * @return callable|ProcessorInterface

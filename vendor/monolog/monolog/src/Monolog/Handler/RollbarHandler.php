@@ -11,10 +11,9 @@
 
 namespace Monolog\Handler;
 
-use Monolog\Level;
 use Rollbar\RollbarLogger;
 use Throwable;
-use Monolog\LogRecord;
+use Monolog\Logger;
 
 /**
  * Sends errors to Rollbar
@@ -34,19 +33,37 @@ use Monolog\LogRecord;
  */
 class RollbarHandler extends AbstractProcessingHandler
 {
-    protected RollbarLogger $rollbarLogger;
+    /**
+     * @var RollbarLogger
+     */
+    protected $rollbarLogger;
+
+    /** @var string[] */
+    protected $levelMap = [
+        Logger::DEBUG     => 'debug',
+        Logger::INFO      => 'info',
+        Logger::NOTICE    => 'info',
+        Logger::WARNING   => 'warning',
+        Logger::ERROR     => 'error',
+        Logger::CRITICAL  => 'critical',
+        Logger::ALERT     => 'critical',
+        Logger::EMERGENCY => 'critical',
+    ];
 
     /**
      * Records whether any log records have been added since the last flush of the rollbar notifier
+     *
+     * @var bool
      */
-    private bool $hasRecords = false;
+    private $hasRecords = false;
 
-    protected bool $initialized = false;
+    /** @var bool */
+    protected $initialized = false;
 
     /**
      * @param RollbarLogger $rollbarLogger RollbarLogger object constructed with valid token
      */
-    public function __construct(RollbarLogger $rollbarLogger, int|string|Level $level = Level::Error, bool $bubble = true)
+    public function __construct(RollbarLogger $rollbarLogger, $level = Logger::ERROR, bool $bubble = true)
     {
         $this->rollbarLogger = $rollbarLogger;
 
@@ -54,41 +71,22 @@ class RollbarHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Translates Monolog log levels to Rollbar levels.
-     *
-     * @return 'debug'|'info'|'warning'|'error'|'critical'
+     * {@inheritDoc}
      */
-    protected function toRollbarLevel(Level $level): string
-    {
-        return match ($level) {
-            Level::Debug     => 'debug',
-            Level::Info      => 'info',
-            Level::Notice    => 'info',
-            Level::Warning   => 'warning',
-            Level::Error     => 'error',
-            Level::Critical  => 'critical',
-            Level::Alert     => 'critical',
-            Level::Emergency => 'critical',
-        };
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function write(LogRecord $record): void
+    protected function write(array $record): void
     {
         if (!$this->initialized) {
             // __destructor() doesn't get called on Fatal errors
-            register_shutdown_function([$this, 'close']);
+            register_shutdown_function(array($this, 'close'));
             $this->initialized = true;
         }
 
-        $context = $record->context;
-        $context = array_merge($context, $record->extra, [
-            'level' => $this->toRollbarLevel($record->level),
-            'monolog_level' => $record->level->getName(),
-            'channel' => $record->channel,
-            'datetime' => $record->datetime->format('U'),
+        $context = $record['context'];
+        $context = array_merge($context, $record['extra'], [
+            'level' => $this->levelMap[$record['level']],
+            'monolog_level' => $record['level_name'],
+            'channel' => $record['channel'],
+            'datetime' => $record['datetime']->format('U'),
         ]);
 
         if (isset($context['exception']) && $context['exception'] instanceof Throwable) {
@@ -96,7 +94,7 @@ class RollbarHandler extends AbstractProcessingHandler
             unset($context['exception']);
             $toLog = $exception;
         } else {
-            $toLog = $record->message;
+            $toLog = $record['message'];
         }
 
         // @phpstan-ignore-next-line
@@ -114,7 +112,7 @@ class RollbarHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function close(): void
     {
@@ -122,9 +120,9 @@ class RollbarHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function reset(): void
+    public function reset()
     {
         $this->flush();
 
