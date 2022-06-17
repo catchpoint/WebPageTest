@@ -179,10 +179,12 @@ body.theme-b {
 
 .modal {
   visibility: hidden;
+  display: none;
 }
 
 .modal-open {
   visibility: visible;
+  display: block;
 }
 
 .modal-open + .modal_screen {
@@ -898,7 +900,13 @@ a.button {
 }
 
 .api-consumers .info {
-  overflow: scroll;
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .api-consumers .info {
+    overflow: scroll;
+  }
 }
 
 /**
@@ -1778,7 +1786,6 @@ ul.bulleted-list {
   align-items: center;
   font-weight: 700;
   font-size: 1.25rem;
-  margin-right: 20px;
   margin-top: 15px;
 }
 
@@ -1789,10 +1796,20 @@ ul.bulleted-list {
   align-items: flex-start;
 }
 
-/** Account tabs **/
+.user-info .image {
+  margin-right: 20px;
+}
+
+/** -----------------------
+    Account tabs
+----------------------------**/
 .tab-labels {
   border-bottom: 2px solid rgb(0 0 0 / 20%);
   margin-bottom: 30px;
+}
+
+.tab-labels label:not(:first-of-type) {
+  margin-left: 2em;
 }
 
 .tabs-container .tab-content {
@@ -1833,4 +1850,21 @@ ul.bulleted-list {
   opacity: 0;
   top: 0;
   left: 0;
+}
+
+.payment-info {
+  background: #f4f4f4;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  padding: 1em;
+}
+
+.box.api-consumers {
+  padding: 1em 0;
+}
+
+.box.api-consumers > h3,
+.box.api-consumers > .info,
+.box.api-consumers > .create-key-container > div {
+  padding: 0 2em;
 }
