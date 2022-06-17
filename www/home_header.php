@@ -3,7 +3,7 @@
 		<div class="home_feature_containslides">
 			<?php 			
 
-			if( $experiments_paid && experiments_logged_in ){
+			if( $experiments_paid && $experiments_logged_in ){
 			?>
 				<div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
 					<div class="home_feature_hed_text">
