@@ -49,7 +49,7 @@
         <div class="tab-content" id="account-settings-content">
             <div class="box card contact-info" data-modal="contact-info-modal">
                 <div class="card-section user-info">
-                    <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
+                    <span class="dot image"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
                     <div>
                         <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
                         <div class="info">
@@ -79,6 +79,7 @@
             </div>
         </div>
 
+        <?php if (!$is_wpt_enterprise): ?>
         <div class="box card-section">
             <h3>Current Plan</h3>
             <?php if ($is_paid) : ?>
@@ -110,29 +111,31 @@
                 </ul>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
     </div>
 
 
-    <!-- PAYING ONLY: Billing Invoice tab -->
-    <?php if ($is_paid) : ?>
-        <div class="tab-content" id="billing-settings-content">
-            <?php if ($is_paid) {
-                if (!$is_wpt_enterprise) {
-                    include_once __DIR__ . '/includes/billing-data.php';
-                }
-            } else {
-                include_once __DIR__ . '/includes/signup.php';
-            } ?>
-        </div>
-    <?php endif; ?>
+        <!-- PAYING ONLY: Billing Invoice tab -->
+        <?php if ($is_paid) : ?>
+            <div class="tab-content" id="billing-settings-content">
+                <?php if ($is_paid) {
+                    if (!$is_wpt_enterprise) {
+                        include_once __DIR__ . '/billing/invoice-history.php';
+                    }
+                } else {
+                    include_once __DIR__ . '/includes/signup.php';
+                } ?>
+            </div>
+        <?php endif; ?>
 
 
-    <!-- PAYING ONLY:  API tab -->
-    <?php if ($is_paid): ?>
-        <div class="tab-content" id="api-settings-content">
-            <?php include_once __DIR__ . '/includes/api-keys.php'; ?>
-        </div>
-    <?php endif; ?>
+        <!-- PAYING ONLY:  API tab -->
+        <?php if ($is_paid) : ?>
+            <div class="tab-content" id="api-settings-content">
+                <?php include_once __DIR__ . '/includes/api-keys.php'; ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 
