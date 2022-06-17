@@ -1,33 +1,44 @@
 <div class="home_feature">
     <div class="home_feature_hed_contain">
 		<div class="home_feature_containslides">
-			<div class="home_feature_hed home_feature_hed-main">
-				<div class="home_feature_hed_text">
-					<h1 class="attention">Test. Optimize. Repeat!</h1>
-					<p>Instantly test your site’s speed, usability, and resilience in real <b>browsers</b>, <b>devices</b>, and <b>locations</b> around the&nbsp;world. </p>
+			<?php 			
 
+			if( $experiments_paid && experiments_logged_in ){
+			?>
+				<div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
+					<div class="home_feature_hed_text">
+						<h1 class="attention"><span class="home_feature_hed_text_leadin">Welcome to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
+						<p><b>You're ready to go!</b> Enjoy premium locations, bulk runs, test priority, our API, & No-Code Experiments!</p>
+					</div>
 				</div>
-				<div class="home_feature_hed_visual">
-					<img src="/images/wpt_home_featureimg.jpg" fetchpriority="high" width="1414" height="843" alt="screenshot of wpt results page">
+
+			<?php } else { ?>
+				<div class="home_feature_hed home_feature_hed-main">
+					<div class="home_feature_hed_text">
+						<h1 class="attention">Test. Optimize. Repeat!</h1>
+						<p>Instantly test your site’s speed, usability, and resilience in real <b>browsers</b>, <b>devices</b>, and <b>locations</b> around the&nbsp;world. </p>
+
+					</div>
+					<div class="home_feature_hed_visual">
+						<img src="/images/wpt_home_featureimg.jpg" fetchpriority="high" width="1414" height="843" alt="screenshot of wpt results page">
+					</div>
 				</div>
-			</div>
-			<div class="home_feature_hed home_feature_hed-pro">
-				<div class="home_feature_hed_text">
-					<h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
-								<p>All of the WebPageTest features you already love, <span class="home_feature_hed_text_line">plus <b>API Access</b> &amp; <b>No-Code Experiments!</b></span></p>
-					<a class="pill" href="/signup" style="
-					padding: .9em 1.5em;
-				">View Plans &amp; Learn More &gt;&gt;</a>
+				<div class="home_feature_hed home_feature_hed-pro">
+					<div class="home_feature_hed_text">
+						<h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
+									<p>All of the WebPageTest features you already love, <span class="home_feature_hed_text_line">plus <b>API Access</b> &amp; <b>No-Code Experiments!</b></span></p>
+						<a class="pill" href="/signup" style="padding: .9em 1.5em;">View Plans &amp; Learn More &gt;&gt;</a>
+					</div>
+					<div class="home_feature_hed_visual">
+							<video width="1152" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
+								<source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
+								<source src="/images/pro-intro-480.mp4">
+								<!--<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">-->
+							</video>
+							<button class="play" id="playbtn">Play/Pause Video</button>
+					</div>
 				</div>
-				<div class="home_feature_hed_visual">
-						<video width="1152" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
-							<source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
-							<source src="/images/pro-intro-480.mp4">
-							<!--<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">-->
-						</video>
-						<button class="play" id="playbtn">Play/Pause Video</button>
-				</div>
-			</div>
+			<?php } ?>
 		</div>
 
 
@@ -41,7 +52,7 @@
 
     <script>
         setInterval(() => {
-            if( !document.body.classList.contains("playing") && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
+            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
                 document.body.classList.toggle("feature-pro");
             }
         },8000);

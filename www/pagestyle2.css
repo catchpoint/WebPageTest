@@ -3101,6 +3101,14 @@ header {
     border: 3px solid #fff;
 }
 
+header .pro-flag {
+    border-width: 2px;
+    align-self: center;
+    display: inline-block;
+    font-size: .8em;
+    padding: .4em;
+}
+
 .result .results_header_contain .pro-flag {
     border-width: 2px;
     margin-right: 1em;
@@ -3494,6 +3502,25 @@ header {
     .home_feature_hed p {
         font-size: 1.15rem;
         margin: .5em 0 1.2em;
+    }
+}
+
+@media (min-width: 30em) {
+    .home_feature_hed-pro-loggedin {
+        padding-bottom: 3rem;
+    }
+}
+
+@media (min-width: 40em) {
+    .home_feature_hed-pro-loggedin {
+        padding-bottom: 5rem;
+    }
+}
+
+@media (min-width: 60em) {
+    .home_feature_hed-pro-loggedin {
+        padding-bottom: 9rem;
+        padding-top: 2rem;
     }
 }
 
@@ -6214,7 +6241,8 @@ th.header {
     float: right;
     margin-bottom: 1em;
 }
-#runningHeader.runningHeaderBatch form[name=compare]{
+
+#runningHeader.runningHeaderBatch form[name=compare] {
     float: none;
 }
 
@@ -6533,9 +6561,10 @@ th.header {
     }
 }
 
-.runningHeaderBatch form[name=compare]{
+.runningHeaderBatch form[name=compare] {
     width: 100%;
 }
+
 .batchResults {
     margin-left: auto;
     margin-right: auto;
@@ -7338,7 +7367,8 @@ td.legend {
     margin-left: auto;
     margin-right: auto;
     /* margin-top: 6rem; */
-margin: 0 auto;}
+    margin: 0 auto;
+}
 
 .testimonial blockquote {
     font-size: 1.375em;
@@ -7351,9 +7381,11 @@ margin: 0 auto;}
     margin-bottom: 0.5rem;
     font-style: italic;
 }
+
 .testimonial blockquote a {
     color: inherit;
 }
+
 @media (max-width: 50em) {
     .testimonial {
         font-size: .8em;
@@ -7532,9 +7564,10 @@ margin: 0 auto;}
     position: relative;
 }
 
-.simpleadvancedfields_contain:last-child  {
-border-bottom: 1px solid #ddd;
+.simpleadvancedfields_contain:last-child {
+    border-bottom: 1px solid #ddd;
 }
+
 .simpleadvancedfields_contain>input+label:before {
     content: "";
     background: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%23fff' fill='none' stroke-width='2'/%3e%3c/svg%3e");

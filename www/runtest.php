@@ -2,7 +2,22 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-  require_once(__DIR__ . '/../vendor/autoload.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
+
+    // deal with magic quotes being enabled
+    if (get_magic_quotes_gpc()) {
+        function DealWithMagicQuotes(&$arr) {
+            foreach ($arr as $key => &$val) {
+                if ($key == "GLOBALS") { continue; }
+                if (is_array($val)) {
+                    DealWithMagicQuotes($val);
+                } else {
+                    $val = stripslashes($val);
+                }
+            }
+        }
+        DealWithMagicQuotes($GLOBALS);
+    }
 
     // see if we are loading the test settings from a profile
     $profile_file = __DIR__ . '/settings/profiles.ini';
@@ -46,10 +61,9 @@ use WebPageTest\RateLimiter;
 
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
-    require_once __DIR__ . '/experiments/user_access.inc';
 
-    $experimentURL = Util::getSetting('experimentURL', null);
-    $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;
+    $experimentURL = Util::getSetting('experimentURL');
+    $ui_priority = $request_context->getUser()->getUserPriority();
 
     set_time_limit(300);
 
@@ -1064,7 +1078,7 @@ use WebPageTest\RateLimiter;
                                     $script[] = $line;
                                 } else {
                                     if (substr($line, 0, 1) == '[') {
-                                        if (isset($script) && count($script)) {
+                                        if (count($script)) {
                                             $entry = ParseBulkScript($script);
                                             if( $entry )
                                                 $bulk['urls'][] = $entry;
@@ -1415,7 +1429,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $forceValidate;
   global $server_secret;
   $invalid_key_message = 'Invalid API key. To continue running tests via the WebPageTest API, you\'ll need to update your current key for the enhanced WebPageTest API. Read more here: https://product.webpagetest.org/api';
-  if (isset($privateInstall) && $privateInstall) {
+  if ($privateInstall) {
     $invalid_key_message = 'Invalid API key.';
   }
 
@@ -1575,7 +1589,7 @@ function ValidateKey(&$test, &$error, $key = null)
           $usingAPI = true;
       }
     }elseif (!isset($admin) || !$admin) {
-      if (isset($privateInstall) && $privateInstall) {
+      if ($privateInstall) {
         $error = 'An error occurred processing your request (missing API key).';
       } else {
         $error = 'An error occurred processing your request (missing API key). If you do not have an API key you can purchase one here: https://product.webpagetest.org/api';
@@ -1607,7 +1621,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
     if( strlen($test['url']) || $test['batch'] )
     {
-      if (isset($experimentURL) && (stripos($test['url'], $experimentURL) !== false)
+      if ((stripos($test['url'], $experimentURL) !== false)
         && (!$admin && !$experimentsPaid)) {
         $error = "Experiments are only available for WebPageTest Pro subscribers.";
       } else {
@@ -2205,8 +2219,6 @@ function LogTest(&$test, $testId, $url)
     global $USER_EMAIL;
     global $supportsCPAuth;
     global $request_context;
-    global $supportsSaml;
-    $runcount = null;
 
     if (GetSetting('logging_off')) {
         server_sync($apiKey, $runcount, null);
@@ -2885,8 +2897,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 function ParseBulkUrl($line)
 {
     $entry = null;
-    $err = null;
+    $err;
     $noscript = 0;
+
+
 
     $pos = stripos($line, 'noscript');
     if( $pos !== false )
@@ -3159,6 +3173,7 @@ function ProcessTestScript($url, &$test) {
   // Handle HTTP Basic Auth
   if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {
     $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
+    $testFile .= "Basic Auth={$test['login']}:{$test['password']}\r\n";
     if (!isset($script) || !strlen($script))
       $script = "navigate\t$url";
     $script = "addHeader\t$header\r\n" . $script;
@@ -3285,7 +3300,7 @@ function ReportAnalytics(&$test, $testId)
 
 function loggedOutLoginForm(){
   $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
-  $reg = GetSetting('saml_register');
+  $reg .= GetSetting('saml_register');
   if ($reg) {
     $ret .= "<li><a class='pill' href='$reg' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
   }
