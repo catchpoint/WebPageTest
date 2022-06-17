@@ -943,7 +943,7 @@ table.sortable tbody tr:hover {
 table.sortable td,
 table.sortable th {
   text-align: left;
-  font-size: 0.8125rem;
+  font-size: 1rem;
 }
 
 table.sortable th {
@@ -1010,6 +1010,12 @@ table.show-unsorted-icon th:not([aria-sort]) button span::after {
 
 table.sortable td.num {
   text-align: right;
+}
+
+/* Tables with selectable rows*/
+.selectable-table tr th:first-child,
+.selectable-table tr td:first-child {
+  width: 3%;
 }
 
 /* Focus and hover styling */
@@ -1770,10 +1776,6 @@ ul.bulleted-list {
 .responsive-vertical-table {
   border-radius: 0.4em;
   overflow: hidden;
-}
-
-.responsive-vertical-table tr {
-  border-color: #46637f;
 }
 
 .dot {
