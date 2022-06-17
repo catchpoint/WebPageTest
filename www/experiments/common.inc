@@ -139,7 +139,7 @@ foreach($assessment as $key => $cat ){
 		if( $op["good"] ){
 			$numGood++;
 			array_push($checkTitles, $op["title"]);
-		} else {
+		} elseif (isset($op["experiments"])) {
 			array_push($oppTitles, $op["title"]);
 			$numExperiments+= count($op["experiments"]);
 		}
