@@ -236,7 +236,7 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '038',
             'expvar' => 'addpriorityhint',
             'title' => 'Add Priority Hint',
-            "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
+            "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute  attribute from links, images, and scripts specified by url fragment, causing them to request earlier at a higher priority.</p>',
             
 "expfields" => array(
                 (object) [
@@ -251,7 +251,7 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '039',
             'expvar' => 'removepriorityhint',
             'title' => 'Remove Priority Hint',
-            "desc" => '<p><em>(Chrome-only)</em> This experiment removes an existing <code>fetchpriority</code> attribute to specified images, causing them to request at their default priority.</p>',
+            "desc" => '<p><em>(Chrome-only)</em> This experiment removes an existing <code>fetchpriority</code> attribute from links, images, and scripts specified by url fragment, causing them to request at their default priority.</p>',
             
 "expfields" => array(
                 (object) [
