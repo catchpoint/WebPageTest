@@ -49,7 +49,7 @@
         <div class="tab-content" id="account-settings-content">
             <div class="box card contact-info" data-modal="contact-info-modal">
                 <div class="card-section user-info">
-                    <span class="dot"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
+                    <span class="dot image"><?= htmlspecialchars($first_name)[0] . ' ' . htmlspecialchars($last_name)[0] ?> </span>
                     <div>
                         <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
                         <div class="info">
@@ -119,7 +119,7 @@
         <?php if ($is_paid) : ?>
             <div class="tab-content" id="billing-settings-content">
                 <?php if ($is_paid) {
-                    include_once __DIR__ . '/includes/billing-data.php';
+                    include_once __DIR__ . '/billing/invoice-history.php';
                 } else {
                     include_once __DIR__ . '/includes/signup.php';
                 } ?>
@@ -150,7 +150,7 @@
                     </div>
                     <div class="info">
                         <form method='POST' action='/account'>
-                            <table class="sortable">
+                            <table class="sortable responsive-vertical-table">
                                 <caption>
                                     <span class="sr-only">API Consumers table, column headers with buttons are sortable.</span>
                                 </caption>
@@ -186,19 +186,19 @@
                                 <tbody>
                                     <?php foreach ($wptApiKey as $row) : ?>
                                         <tr>
-                                            <td>
+                                            <td data-th="Select:">
                                                 <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $row['id'] ?>' />
                                             </td>
-                                            <td><?= $row['name'] ?></td>
-                                            <td class="hidden-content">
+                                            <td data-th="Name:"><?= $row['name'] ?></td>
+                                            <td data-th="API key:" class="hidden-content">
                                                 <button type="button" class="view-button">View</button>
                                                 <span class="hidden-area closed">
                                                     <span class="api-key"><?= $row['apiKey'] ?></span>
                                                     <button type="button" class="hide-button"><span class="sr-only">Close</span></button>
                                             </td>
                                             </span>
-                                            <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
-                                            <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Created:"><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Last updated:"><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
