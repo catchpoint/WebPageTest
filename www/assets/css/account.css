@@ -959,7 +959,7 @@ table.sortable tbody tr:hover {
 table.sortable td,
 table.sortable th {
   text-align: left;
-  font-size: 0.8125rem;
+  font-size: 1rem;
 }
 
 table.sortable th {
@@ -1026,6 +1026,12 @@ table.show-unsorted-icon th:not([aria-sort]) button span::after {
 
 table.sortable td.num {
   text-align: right;
+}
+
+/* Tables with selectable rows*/
+.selectable-table tr th:first-child,
+.selectable-table tr td:first-child {
+  width: 3%;
 }
 
 /* Focus and hover styling */
@@ -1869,6 +1875,8 @@ TEMP FIX FOR UPGRADE
   background-color: #3881e5;
   color: white;
   font-weight: 600;
+}
+
 .dot {
   background-color: #a6cc65;
   border-radius: 100px;
