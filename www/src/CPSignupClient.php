@@ -15,6 +15,7 @@ use GraphQL\Mutation;
 use GraphQL\Variable;
 use WebPageTest\Plan;
 use WebPageTest\Customer;
+use WebPageTest\CPGraphQlTypes\CPSignupInput;
 
 class CPSignupClient
 {
@@ -130,33 +131,57 @@ class CPSignupClient
         }
     }
 
+    public function signupWithChargify(CPSignupInput $wpt_account): array
+    {
+      $gql = (new Mutation('wptAccountCreate'))
+        ->setVariables([
+            new Variable('wptAccount', 'WptSignupInputType', true)
+        ])
+        ->setArguments([
+            'wptAccount' => '$wptAccount'
+        ])
+        ->setSelectionSet([
+            'firstName',
+            'lastName',
+            'company',
+            'email',
+            'loginVerificationId'
+        ]);
+
+        $variables_array = array('wptAccount' => $wpt_account->toArray());
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData()['wptAccountCreate'];
+        } catch (QueryError $e) {
+            throw new \WebPageTest\Exception\ClientException($e->getMessage());
+        }
+    }
+
     /**
-     * return Plan[]
+     * @return array WebPageTest\Plan[]
      */
     public function getWptPlans(): array
     {
-        $gql = (new Query('wptPlans'))
-          ->setSelectionSet([
-            'id',
+      $gql = (new Query('wptPlan'))
+        ->setSelectionSet([
             'name',
-            'price',
-            'billingFrequency',
-            'billingDayOfMonth',
-            'currencyIsoCode',
-            'numberOfBillingCycles',
-            'trialDuration',
-            'trialPeriod',
-            (new Query('discount'))
-              ->setSelectionSet([
-                'amount',
-                'numberOfBillingCycles'
-              ])
-          ]);
+            'priceInCents',
+            'description',
+            'interval'
+        ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
         return array_map(function ($data): Plan {
-            return new Plan($data);
-        }, $results->getData()['wptPlans']);
+          $options = [
+            'id' => $data['name'],
+            'name' => $data['description'],
+            'price' => $data['priceInCents']/100,
+            'billingFrequency' => $data['interval']
+          ];
+
+            return new Plan($options);
+        }, $results->getData()['wptPlan']);
     }
 
     private function makeRequest(string $method, string $url, array $headers, array $body): array

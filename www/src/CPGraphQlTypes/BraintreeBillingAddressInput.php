@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace WebPageTest;
+namespace WebPageTest\CPGraphQlTypes;
 
 use Exception;
 
-class BillingAddress
+class BraintreeBillingAddressInput
 {
     private string $city;
     private string $country;
@@ -18,9 +18,9 @@ class BillingAddress
     {
         if (
             !isset($options['city']) ||
-            !(isset($options['country']) || isset($options['isoCountry']))||
-            !(isset($options['state']) || isset($options['isoState']))||
-            !(isset($options['street_address']) || isset($options['streetAddress'])) ||
+            !isset($options['country']) ||
+            !isset($options['state']) ||
+            !isset($options['street_address']) ||
             !isset($options['zipcode'])
         ) {
             throw new Exception("City, country, State, Street Address, and Zip Code are all required");
@@ -63,11 +63,11 @@ class BillingAddress
     public function toArray(): array
     {
         return [
-        "city" => $this->getCity(),
-        "country" => $this->getCountry(),
-        "state" => $this->getState(),
-        "streetAddress" => $this->getStreetAddress(),
-        "zipcode" => $this->getZipCode()
+        "city" => $this->city,
+        "country" => $this->country,
+        "state" => $this->state,
+        "streetAddress" => $this->street_address,
+        "zipcode" => $this->zipcode
         ];
     }
 }
