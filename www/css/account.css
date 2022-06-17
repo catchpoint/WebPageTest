@@ -1784,11 +1784,6 @@ ul.bulleted-list {
     display: table-cell;
   }
 
-  .responsive-vertical-table th:first-child,
-  .responsive-vertical-table td:first-child {
-    padding-left: 0;
-  }
-
   .responsive-vertical-table th:last-child,
   .responsive-vertical-table td:last-child {
     padding-right: 0;
@@ -1959,7 +1954,7 @@ TEMP FIX FOR UPGRADE
   padding: 1em 0;
 }
 
-.box.api-consumers > h3,
+.box.api-consumers > h2,
 .box.api-consumers > .info,
 .box.api-consumers > .create-key-container > div {
   padding: 0 2em;
