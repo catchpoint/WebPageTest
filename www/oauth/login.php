@@ -6,8 +6,6 @@ chdir('..');
 require_once('common.inc');
 $user = null;
 
-set_include_path(get_include_path() . PATH_SEPARATOR . './lib/oauth');
-require_once 'Google/Client.php';
 $client_id = GetSetting('google_oauth_client_id');
 $client_secret = GetSetting('google_oauth_client_secret');
 $protocol = getUrlProtocol();
@@ -15,7 +13,7 @@ $host  = $_SERVER['HTTP_HOST'];
 $uri   = $_SERVER['PHP_SELF'];
 $redirect_uri = "$protocol://$host$uri";
 
-$client = new Google_Client();
+$client = new Google\Client();
 $client->setClientId($client_id);
 $client->setClientSecret($client_secret);
 $client->setRedirectUri($redirect_uri);
@@ -27,16 +25,16 @@ if (!isset($_GET['code'])) {
   header('Location: ' . filter_var($authUrl, FILTER_SANITIZE_URL));
   exit;
 } else {
-  $client->authenticate($_GET['code']);
-  $token_data = $client->verifyIdToken()->getAttributes();
+  $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
+  $token_data = $client->verifyIdToken();
 
   // Keep a mapping of user ID to email addresses (and allow for it to be overridden if needed)
   $lock = Lock('Auth', true, 10);
   if ($lock) {
     $users = json_decode(gz_file_get_contents('./dat/users.dat'), true);
-    $user['id'] = md5($token_data['payload']['sub']);
-    $user['oauth2id'] = $token_data['payload']['sub'];
-    $user['email'] = $token_data['payload']['email'];
+    $user['id'] = md5($token_data['sub']);
+    $user['oauth2id'] = $token_data['sub'];
+    $user['email'] = $token_data['email'];
     if (!isset($users) || !is_array($users))
       $users = array();
     if (isset($users[$user['email']]['id']))

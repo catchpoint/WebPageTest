@@ -9,7 +9,7 @@ require_once __DIR__ . '/google-tag-manager.inc';
 
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 
-<?php if( count($page_keywords) ): ?>
+<?php if( isset($page_keywords) && count($page_keywords) ): ?>
 <meta name="keywords" content="<?= implode(',', $page_keywords) ?>" />
 <?php endif; ?>
 <?php if( strlen($page_description) ): ?>

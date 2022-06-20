@@ -1,7 +1,7 @@
 name: Close inactive issues
 on:
   schedule:
-    - cron: "05 1,19 * * *"
+    - cron: "40 1,18 * * *"
 
 jobs:
   close-issues:
@@ -23,4 +23,6 @@ jobs:
           close-issue-message: " "
           days-before-pr-stale: -1
           days-before-pr-close: -1
+          ascending: true
+          operations-per-run: 2000
           repo-token: ${{ secrets.GITHUB_TOKEN }}

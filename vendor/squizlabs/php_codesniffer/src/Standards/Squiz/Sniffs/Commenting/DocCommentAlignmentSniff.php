@@ -64,6 +64,8 @@ class DocCommentAlignmentSniff implements Sniff
         $ignore    = [
             T_CLASS     => true,
             T_INTERFACE => true,
+            T_ENUM      => true,
+            T_ENUM_CASE => true,
             T_FUNCTION  => true,
             T_PUBLIC    => true,
             T_PRIVATE   => true,
@@ -74,6 +76,7 @@ class DocCommentAlignmentSniff implements Sniff
             T_OBJECT    => true,
             T_PROTOTYPE => true,
             T_VAR       => true,
+            T_READONLY  => true,
         ];
 
         if ($nextToken === false || isset($ignore[$tokens[$nextToken]['code']]) === false) {

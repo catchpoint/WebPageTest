@@ -377,7 +377,7 @@ function GetJob() {
       $testerInfo['isWinServer'] = $isWinServer;
       $testerInfo['isWin64'] = $isWin64;
       $testerInfo['test'] = '';
-      if (isset($browsers) && count(array_filter($browsers, 'strlen')))
+      if (isset($browsers) && is_array($browsers) && count(array_filter($browsers, 'strlen')))
         $testerInfo['browsers'] = $browsers;
       if (isset($testId))
         $testerInfo['test'] = $testId;
@@ -449,19 +449,6 @@ function GetReboot() {
     if (is_file($rebootFile)) {
       unlink($rebootFile);
       $reboot = true;
-    }
-  }
-  // If we have a 100% error rate for the current PC, send it a reboot
-  if (!$reboot) {
-    $testers = GetTesters($location);
-    foreach ($testers as $t) {
-      if ($t['id'] == $tester && !$rebooted) {
-        if ($t['errors'] >= 100) {
-          UpdateTester($location, $tester, null, null, null, true);
-          $reboot = true;
-        }
-        break;
-      }
     }
   }
 

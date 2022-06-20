@@ -696,6 +696,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '',
             'nullable_type'       => false,
             'property_visibility' => 'public',
+            'property_readonly'   => false,
         ];
         $expected[1] = [
             'name'                => '$y',
@@ -707,6 +708,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '',
             'nullable_type'       => false,
             'property_visibility' => 'protected',
+            'property_readonly'   => false,
         ];
         $expected[2] = [
             'name'                => '$z',
@@ -718,6 +720,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '',
             'nullable_type'       => false,
             'property_visibility' => 'private',
+            'property_readonly'   => false,
         ];
 
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
@@ -742,6 +745,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => 'float|int',
             'nullable_type'       => false,
             'property_visibility' => 'protected',
+            'property_readonly'   => false,
         ];
         $expected[1] = [
             'name'                => '$y',
@@ -753,6 +757,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '?string',
             'nullable_type'       => true,
             'property_visibility' => 'public',
+            'property_readonly'   => false,
         ];
         $expected[2] = [
             'name'                => '$z',
@@ -763,6 +768,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => 'mixed',
             'nullable_type'       => false,
             'property_visibility' => 'private',
+            'property_readonly'   => false,
         ];
 
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
@@ -787,6 +793,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => 'int',
             'nullable_type'       => false,
             'property_visibility' => 'public',
+            'property_readonly'   => false,
         ];
         $expected[1] = [
             'name'              => '$normalArg',
@@ -801,6 +808,42 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
 
     }//end testPHP8ConstructorPropertyPromotionAndNormalParam()
+
+
+    /**
+     * Verify recognition of PHP8 constructor with property promotion using PHP 8.1 readonly keyword.
+     *
+     * @return void
+     */
+    public function testPHP81ConstructorPropertyPromotionWithReadOnly()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'                => '$promotedProp',
+            'content'             => 'public readonly ?int $promotedProp',
+            'has_attributes'      => false,
+            'pass_by_reference'   => false,
+            'variable_length'     => false,
+            'type_hint'           => '?int',
+            'nullable_type'       => true,
+            'property_visibility' => 'public',
+            'property_readonly'   => true,
+        ];
+        $expected[1] = [
+            'name'                => '$promotedToo',
+            'content'             => 'readonly private string|bool &$promotedToo',
+            'has_attributes'      => false,
+            'pass_by_reference'   => true,
+            'variable_length'     => false,
+            'type_hint'           => 'string|bool',
+            'nullable_type'       => false,
+            'property_visibility' => 'private',
+            'property_readonly'   => true,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81ConstructorPropertyPromotionWithReadOnly()
 
 
     /**
@@ -946,6 +989,139 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
 
     }//end testParameterAttributesInFunctionDeclaration()
+
+
+    /**
+     * Verify recognition of PHP8.1 intersection type declaration.
+     *
+     * @return void
+     */
+    public function testPHP8IntersectionTypes()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$obj1',
+            'content'           => 'Foo&Bar $obj1',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => 'Foo&Bar',
+            'nullable_type'     => false,
+        ];
+        $expected[1] = [
+            'name'              => '$obj2',
+            'content'           => 'Boo&Bar $obj2',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => 'Boo&Bar',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP8IntersectionTypes()
+
+
+    /**
+     * Verify recognition of PHP8 intersection type declaration when the variable has either a spread operator or a reference.
+     *
+     * @return void
+     */
+    public function testPHP81IntersectionTypesWithSpreadOperatorAndReference()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$paramA',
+            'content'           => 'Boo&Bar &$paramA',
+            'has_attributes'    => false,
+            'pass_by_reference' => true,
+            'variable_length'   => false,
+            'type_hint'         => 'Boo&Bar',
+            'nullable_type'     => false,
+        ];
+        $expected[1] = [
+            'name'              => '$paramB',
+            'content'           => 'Foo&Bar ...$paramB',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => true,
+            'type_hint'         => 'Foo&Bar',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81IntersectionTypesWithSpreadOperatorAndReference()
+
+
+    /**
+     * Verify recognition of PHP8.1 intersection type declaration with more types.
+     *
+     * @return void
+     */
+    public function testPHP81MoreIntersectionTypes()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var',
+            'content'           => 'MyClassA&\Package\MyClassB&\Package\MyClassC $var',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => 'MyClassA&\Package\MyClassB&\Package\MyClassC',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81MoreIntersectionTypes()
+
+
+    /**
+     * Verify recognition of PHP8.1 intersection type declaration with illegal simple types.
+     *
+     * @return void
+     */
+    public function testPHP81IllegalIntersectionTypes()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$numeric_string',
+            'content'           => 'string&int $numeric_string',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => 'string&int',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81IllegalIntersectionTypes()
+
+
+    /**
+     * Verify recognition of PHP8.1 intersection type declaration with (illegal) nullability.
+     *
+     * @return void
+     */
+    public function testPHP81NullableIntersectionTypes()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$object',
+            'content'           => '?Foo&Bar $object',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '?Foo&Bar',
+            'nullable_type'     => true,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81NullableIntersectionTypes()
 
 
     /**
