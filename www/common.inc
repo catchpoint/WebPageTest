@@ -25,6 +25,14 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function ($e) {
+        // Developer envs just get a print out
+        if (Util::getSetting('environment') == 'dev') {
+            echo '<pre>';
+            var_dump($e);
+            echo '</pre>';
+            exit();
+        }
+
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
