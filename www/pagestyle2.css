@@ -7938,7 +7938,10 @@ div.request-dialog-radio {
     text-decoration: underline;
     font-size: 1em;
 }
-
+.request-details ul.hints{
+    list-style-type: disc;
+    margin-left: 2em;
+}
 .jqmWindow {
     display: none;
     position: fixed;

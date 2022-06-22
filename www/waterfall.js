@@ -167,6 +167,18 @@ function SelectRequest(step, request) {
                 blocking += '</ul><ul class="requestBlocking"><li><a href="#" data-spof="' + htmlEncode(r['host']) + '">Run a <abbr title="Single Point of Failure">SPOF</abbr> Test (Runs in a new tab)</a></li>';
             }
         }
+        if (r['early_hint_headers'] !== undefined && r['early_hint_headers'][0] == "HTTP/1.1 103") {
+            //let's create a nice clean list of hints
+            let hints = r['early_hint_headers'][1].substring(6);
+            hints = hints.split(",");
+            
+            details += '<b>Early Hints: </b>';
+            details += "<ul class='hints'>";
+            hints.forEach(hint => {
+                details += "<li>" + htmlEncode(hint) + "</li>";
+            });
+            details += "</ul><br>";
+        }
         details += '<h3>Timing</h3>';
         if (r['created'] !== undefined)
             details += '<b>Discovered: </b>' + (r['created'] / 1000.0).toFixed(3) + ' s<br>';
