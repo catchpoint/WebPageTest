@@ -104,7 +104,7 @@
             <tr>
                 <th scope="col">Runs Included</th>
                 <td>300</td>
-                <td>Unlimited per plan</td>
+                <td>As per plan</td>
 
                 <td rowspan="17" class="custom-plan">
                     <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>

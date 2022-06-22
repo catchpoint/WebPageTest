@@ -25,7 +25,7 @@
                     <tr>
                         <th scope="col">Runs Included</th>
                         <td>300</td>
-                        <td>Unlimited per plan</td>
+                        <td>As per plan</td>
                     </tr>
 
                     <tr>
