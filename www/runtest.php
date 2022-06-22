@@ -46,7 +46,6 @@ use WebPageTest\RateLimiter;
 
     require_once('./ec2/ec2.inc.php');
     require_once(__DIR__ . '/include/CrUX.php');
-    require_once __DIR__ . '/experiments/user_access.inc';
 
     $experimentURL = Util::getSetting('experimentURL', null);
     $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;

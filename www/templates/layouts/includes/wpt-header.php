@@ -78,10 +78,16 @@ if ($id) {
                             </ul>
                         </div>
                         <div class="wptheader_nav_menu_section">
+                            <?php
+                            if( !$experiments_paid ){
+                            ?>
                             <p class="wptheader_nav_cta">
                                 <span>Ready to go <strong>Pro?</strong></span>
                                 <a href="/signup">Compare Plans</a>
                             </p>
+                            <?php
+                            }
+                            ?>
                         </div>
                     </div>
                 </details>
@@ -129,7 +135,14 @@ if ($id) {
                         $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
                         ?>
                         <?php if ($is_logged_in) : ?>
-                        <li><a href='/account'>My Account</a></li>
+                            
+                        <li><a href='/account'>
+                        <?php
+                            if( $experiments_paid ){
+                                echo '<em class="pro-flag">Pro</em> ';
+                            }
+                            ?>
+                        My Account</a></li>
                         <li>
                           <form method='POST' action='/logout' class='logout-form'>
                             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />

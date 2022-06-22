@@ -487,3 +487,5 @@ if (is_file('./settings/custom_common.inc.php')) {
     include('./settings/custom_common.inc.php');
 }
 
+require_once __DIR__ . '/experiments/user_access.inc';
+
