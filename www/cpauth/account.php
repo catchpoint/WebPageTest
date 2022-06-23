@@ -38,6 +38,7 @@ $request_method = strtoupper($_SERVER['REQUEST_METHOD']);
 
 if ($request_method !== 'POST' && $request_method !== 'GET') {
     throw new ClientException("HTTP Method not supported for this endpoint", "/");
+    exit();
 }
 
 if ($request_method === 'POST') {
@@ -70,6 +71,17 @@ if ($request_method === 'POST') {
             error_log($e->getMessage());
             throw new ClientException($e->getMessage(), "/account");
         }
+    } elseif ($type == "upgrade-plan-1") {
+        $body = AccountHandler::validateUpgradeStepOne();
+        $redirect_uri = AccountHandler::postStepOne($request_context);
+
+        $host = Util::getSetting('host');
+        setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
+
+        header("Location: {$redirect_uri}");
+        exit();
+    } elseif ($type == "upgrade-plan-2") {
+        exit();
     } elseif ($type == "delete-api-key") {
         AccountHandler::deleteApiKey($request_context);
     } elseif ($type == "resend-verification-email") {
@@ -118,8 +130,8 @@ $contact_info = array(
 
 $billing_info = array();
 $client_token = "";
-$country_list = Util::getChargifyCountryList();
-$state_list = Util::getChargifyUSStateList();
+$country_list = Util::getCountryList();
+$state_list = Util::getStateList();
 
 if ($is_paid) {
     if ($is_wpt_enterprise) {
@@ -143,26 +155,30 @@ if ($is_paid) {
         $billing_info['billing_frequency'] = $billing_frequency;
         $client_token = $billing_info['braintreeClientToken'];
     }
-
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
 } else {
-    $plans = $request_context->getClient()->getWptPlans();
+    $info = $request_context->getClient()->getUnpaidAccountpageInfo();
+    $client_token = $info['braintreeClientToken'];
+    $plans = $info['wptPlans'];
     $annual_plans = array();
     $monthly_plans = array();
     usort($plans, function ($a, $b) {
-        if ($a->getPrice() == $b->getPrice()) {
+        if ($a['price'] == $b['price']) {
             return 0;
         }
-        return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
+        return ($a['price'] < $b['price']) ? -1 : 1;
     });
     foreach ($plans as $plan) {
-        if ($plan->getBillingFrequency() == "Monthly") {
+        if ($plan['billingFrequency'] == 1) {
+            $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+            $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
             $monthly_plans[] = $plan;
         } else {
+            $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
+            $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
             $annual_plans[] = $plan;
         }
     }
-
     $billing_info = array(
         'annual_plans' => $annual_plans,
         'monthly_plans' => $monthly_plans
@@ -173,6 +189,7 @@ $results = array_merge($contact_info, $billing_info);
 $results['csrf_token'] = $_SESSION['csrf_token'];
 $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
+$results['bt_client_token'] = $client_token;
 $results['country_list'] = $country_list;
 $results['state_list'] = $state_list;
 $results['remainingRuns'] = $remainingRuns;
@@ -181,8 +198,24 @@ if (!is_null($error_message)) {
     $results['error_message'] = $error_message;
     unset($_SESSION['client-error']);
 }
+$page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+$results['pagefoo'] = isset($page) ? $page : 'test';
 
 $tpl = new Template('account');
 $tpl->setLayout('account');
-echo $tpl->render('my-account', $results);
+switch ($page) {
+    case 'update_billing':
+        echo $tpl->render('billing/billing-cycle', $results);
+        break;
+    case 'upgrade_plan':
+        echo $tpl->render('plans/upgrade-plan', $results);
+        break;
+    case 'plan_summary':
+        echo $tpl->render('plans/plan-summary', $results);
+        break;
+    default:
+        echo $tpl->render('my-account', $results);
+        break;
+}
+
 exit();

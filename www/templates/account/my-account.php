@@ -1,4 +1,6 @@
 <div class="my-account-page page_content">
+    <h3><?= htmlspecialchars($pagefoo) ?></h3>
+    <!-- VERIFIED EMAIL NOTICE ---->
     <?php if (!$is_verified) : ?>
         <div class="resend-email-verification-container">
             <div class="resend-email-verification-hed">
@@ -80,37 +82,41 @@
         </div>
 
         <?php if (!$is_wpt_enterprise): ?>
-        <div class="box card-section">
-            <h3>Current Plan</h3>
-            <?php if ($is_paid) : ?>
-                <div class="card-section-subhed">
-                    <?= "{$braintreeCustomerDetails['wptPlanName']}"; ?>
-                    <?php if ($is_canceled) : ?>
-                        <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
-                    <?php else : ?>
-                        <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
-                    <?php endif; ?>
-                </div>
-                <ul>
-                    <li><strong>Runs per month:</strong> 50</li>
-                    <li><strong>Remaining runs:</strong> <?= $braintreeCustomerDetails['remainingRuns'] ?> </li>
-                    <li><strong>Run renewal:</strong> date here</li>
-                    <li><strong>Price:</strong> <?= $braintreeCustomerDetails['subscriptionPrice'] ?></li>
-                    <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-                    <li><strong>Plan Renewal:</strong> <?= $runs_renewa ?></li>
-                </ul>
-            <?php else : ?>
-                <div class="card-section-subhed">
-                    Starter
-                    <span class="status">Active</span>
-                </div>
-                <ul>
-                    <li><strong>Runs per month:</strong> 50</li>
-                    <li><strong>Remaining runs:</strong> 50</li>
-                    <li><strong>Run renewal:</strong> date here</li>
-                </ul>
-            <?php endif; ?>
-        </div>
+            <div class="box card-section">
+                <h3>Current Plan</h3>
+                <?php if ($is_paid) : ?>
+                    <div class="card-section-subhed">
+                        <?= "{$braintreeCustomerDetails['wptPlanName']}"; ?>
+                        <?php if ($is_canceled) : ?>
+                            <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                        <?php else : ?>
+                            <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                        <?php endif; ?>
+
+                        <a href="/account/upgrade_plan" class="button">Change Plan</a>
+                    </div>
+
+                    <ul>
+                        <li><strong>Runs per month:</strong> 50</li>
+                        <li><strong>Remaining runs:</strong> <?= $braintreeCustomerDetails['remainingRuns'] ?> </li>
+                        <li><strong>Run renewal:</strong> date here</li>
+                        <li><strong>Price:</strong> <?= $braintreeCustomerDetails['subscriptionPrice'] ?></li>
+                        <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
+                        <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
+                    </ul>
+                <?php else : ?>
+                    <div class="card-section-subhed">
+                        Starter
+                        <span class="status">Active</span>
+                        <a href="/account/upgrade_plan" class="button">Upgrade Plan</a>
+                    </div>
+                    <ul>
+                        <li><strong>Runs per month:</strong> 50</li>
+                        <li><strong>Remaining runs:</strong> 50</li>
+                        <li><strong>Run renewal:</strong> date here</li>
+                    </ul>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
     </div>
 
@@ -144,5 +150,10 @@
 <?php
 include_once __DIR__ . '/includes/modals/contact-info.php';
 include_once __DIR__ . '/includes/modals/password.php';
+
+if ($is_paid) {
+    include_once __DIR__ . '/includes/modals/cancel-subscription.php';
+    include_once __DIR__ . '/includes/modals/payment-info.php';
+}
 ?>
 <!-- /Modals -->
