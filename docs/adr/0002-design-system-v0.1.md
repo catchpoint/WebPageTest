@@ -20,7 +20,7 @@ Classes in the typography, buttons and layouts files should be preferred over no
 
 Use the existing design to create the normalized files. This requires decisions to be made around which of our many grays to use, or which button design to use. For now, trust your heart and ask for a design review on PRs where needed.
 
-Since this is an interative approach, when we modify a page while bug fixing or creating new features, scan the html and css files to normalize using the classes and variables defined in those files. 
+Since this is an iterative approach, when we modify a page while bug fixing or creating new features, scan the html and css files to normalize using the classes and variables defined in those files. 
 
 When we are in a place where we can get implement a more robust design system, this breakdown should make it easier to create new design system rules.
 
