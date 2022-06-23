@@ -1,5 +1,6 @@
 <div class="box">
     <h2>Payment &amp; Invoices</h2>
+    <a href="/account/update_billing" class="button">Upgrade Plan</a>
     <div class="card payment-info" data-modal="payment-info-modal">
         <div class="card-section user-info">
             <div class="cc-type image">

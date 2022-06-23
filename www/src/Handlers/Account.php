@@ -20,6 +20,26 @@ use GuzzleHttp\Exception\RequestException;
 class Account
 {
 
+    /** Upgrading plans from Account  */
+    public static function validateUpgradeStepOne(): object
+    {
+        if (isset($_POST['plan'])) {
+            $vars = (object)[];
+            $vars->plan =  htmlentities($_POST['plan']);
+            return $vars;
+        } else {
+            throw new ClientException("No plan selected", "/account", 400);
+        }
+    }
+
+    public static function postStepOne(RequestContext $request_context): string
+    {
+        $host = Util::getSetting('host');
+        $protocol = $request_context->getUrlProtocol();
+        $redirect_uri = "{$protocol}://{$host}/account/plan_summmary";
+        return $redirect_uri;
+    }
+
 
     public static function updatePlan(RequestContext $request_context, array $vars): string
     {
