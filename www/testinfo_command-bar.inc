@@ -34,6 +34,7 @@
                     if( !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
+                        && !isset($tests)
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
                         // load the secret key (if there is one)
