@@ -468,6 +468,15 @@ body.theme-b {
   content: "ed";
 }
 
+.wpt-plan.card {
+  align-items: flex-start;
+  background-color: rgb(255, 255, 255);
+  margin-bottom: 30px;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
+}
+
 /**
  * begin signup step 1
  */
@@ -1958,4 +1967,8 @@ TEMP FIX FOR UPGRADE
 .box.api-consumers > .info,
 .box.api-consumers > .create-key-container > div {
   padding: 0 2em;
+}
+
+.center-banner {
+  text-align: center;
 }

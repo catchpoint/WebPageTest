@@ -1,7 +1,20 @@
 <div class="my-account-page page_content">
+    <ul class="breadcrumbs">
+        <li><a href="/account">Account Settings</a></li>
+        <li> Update Plan</li>
+    </ul>
+    <!-- Page Subheader -->
+    <div class="subhed">
+        <h1>Update Plan</h1>
+        <?php if ($is_paid) : ?>
+            <div class="contact-support-button">
+                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+            </div>
+        <?php endif; ?>
+    </div>
     <form id="wpt-account-upgrade-choose" method="post" name="selectPlan" action="/account">
         <input type='hidden' name='type' value='upgrade-plan-1' />
-        <h3>Save 20% by paying annually!</h3>
+        <p class="h3 center-banner">Save 20% by paying annually!</p>
         <fieldset class="wpt-plans radiobutton-tab-container">
             <legend for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</legend>
             <input id="annual-plans" type="radio" name="plans" value="annual" checked />
@@ -48,8 +61,7 @@
             </div>
         </fieldset>
         <div class="card">
-            <div>Looking to run more than 20,000 tests in a month?</div>
-            <div><a href=" https://www.product.webpagetest.org/contact">Contact Us</a></div>
+            <div><a href=" https://www.product.webpagetest.org/contact">Need more runs? Let's Talk</a></div>
         </div>
 
         <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />
