@@ -4291,9 +4291,9 @@ span.test_preset_profile_tt:after {
     padding-left: 1.8em;
 }
 
-.test_runs-warn+input[disabled],
 .test_runs-warn+input[aria-disabled] {
     opacity: .7;
+    pointer-events: none;
 }
 
 #description:empty {
