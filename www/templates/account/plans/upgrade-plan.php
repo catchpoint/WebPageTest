@@ -24,7 +24,7 @@
                     <label class="wpt-plan card" for="annual-{$plan['id']}">
                       <h5>{$plan['name']}</h5>
                       <div><strong>\${$plan['annual_price']}</strong>/Year</div>
-                      <span aria-hidden="true" class="pill-button yellow">Select</span>
+                      <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>
                   </div>
                 HTML;
@@ -39,7 +39,7 @@
                     <label class="card wpt-plan" for="monthly-{$plan['id']}">
                         <h5>{$plan['name']}</h5>
                         <div><strong>\${$plan['price']}</strong>/Month</div>
-                        <span aria-hidden="true" class="pill-button yellow">Select</span>
+                        <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>
                 </div>
                 HTML;
@@ -51,6 +51,8 @@
             <div>Looking to run more than 20,000 tests in a month?</div>
             <div><a href=" https://www.product.webpagetest.org/contact">Contact Us</a></div>
         </div>
+
+        <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />
     </form>
     <div class="card subscribe">
         <div class="card-section">
