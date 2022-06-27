@@ -222,7 +222,7 @@ require_once __DIR__ . '/head.inc';
                     </ul>
                     <div class="simpleadvancedfields_contain">
                     <input type="radio" name="simpleadvanced"  value="simple" id="simple" <?php if(!$advancedFormDefault){ echo "checked"; } ?>>
-                    <label for="simple">Simple Configuration <em>(Choose from quick recommended test location and browser presets)</em></label>
+                    <label for="simple">Simple Configuration <em> 3 test runs from recommended location and browser presets</em></label>
                     <div class="simpleadvancedfields">
                         <ul class="input_fields home_responsive_test_top">
                             
@@ -273,7 +273,7 @@ require_once __DIR__ . '/head.inc';
 
                     <div class="simpleadvancedfields_contain">
                     <input type="radio" name="simpleadvanced" value="advanced" id="advanced"  <?php if($advancedFormDefault){ echo "checked"; } ?>>
-                    <label for="advanced">Advanced Configuration <em>(Choose from all browser, location, &amp; device options)</em></label>
+                    <label for="advanced">Advanced Configuration <em>Choose from all browser, location, &amp; device options</em></label>
                     <div class="simpleadvancedfields">
                     <ul class="input_fields home_responsive_test_top">
                         <li class="test_main_config">
