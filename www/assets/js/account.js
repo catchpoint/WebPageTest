@@ -555,17 +555,6 @@
         });
       });
 
-      document.querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]').forEach(el => {
-        el.addEventListener('change', e => {
-          const buttons = document.querySelectorAll('.pill-button span');
-          for (const button of buttons) {
-            button.innerHTML = '';
-            button.classList.add('dot-pulse');
-          }
-          document.selectPlan.submit();
-        })
-      });
-
       document.querySelectorAll('.fg-modal .cancel-subscription-button button').forEach(el => {
         el.addEventListener('click', (e) => {
           const modal = e.target.closest('.fg-modal');
@@ -665,7 +654,19 @@
           document.querySelector("#subscription-plan-modal-confirm").open();
         });
       });
-    var sortableTables = document.querySelectorAll("table.sortable");
+    });
+    document.querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]').forEach(el => {
+      el.addEventListener('change', e => {
+        const buttons = document.querySelectorAll('.pill-button span');
+        for (const button of buttons) {
+          button.innerHTML = '';
+          button.classList.add('dot-pulse');
+        }
+        document.selectPlan.submit();
+      })
+    });
+
+    var sortableTables = document.querySelectorAll('table.sortable');
     for (var i = 0; i < sortableTables.length; i++) {
       new SortableTable(sortableTables[i]);
     }
