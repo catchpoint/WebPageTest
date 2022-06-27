@@ -27,7 +27,7 @@ When we are in a place where we can get implement a more robust design system, t
 ## 🎬 Consequences
 - More css files to cache bust
 - Some upfront "extra" effort required to make css reusable across pages, which will decrease over time. 
-
+- Loading more css files, potentially increasing time before a paint can happen
 
 ## 📝 Changelog
 - 06/23/2021 Proposed
