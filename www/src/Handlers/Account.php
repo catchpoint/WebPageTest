@@ -21,82 +21,44 @@ class Account
 {
 
     /** Upgrading plans from Account  */
-    public static function validateUpgradeStepOne(): object
+    // Validate that a plan is selected
+    public static function validatePlanUpgrade(): object
     {
         if (isset($_POST['plan'])) {
             $vars = (object)[];
-            $vars->plan =  htmlentities($_POST['plan']);
+            $vars->plan =  filter_input(INPUT_POST, 'plan');
             return $vars;
         } else {
             throw new ClientException("No plan selected", "/account", 400);
         }
     }
-
-    public static function postStepOne(RequestContext $request_context): string
+    // Pass the plan id to the plan summary page
+    public static function postPlanUpgrade(RequestContext $request_context): string
     {
         $host = Util::getSetting('host');
         $protocol = $request_context->getUrlProtocol();
-        $redirect_uri = "{$protocol}://{$host}/account/plan_summmary";
+        $redirect_uri = "{$protocol}://{$host}/account/plan_summary";
         return $redirect_uri;
     }
 
+    // // before rendering the plan_
+    // public static function getPlanSummary(RequestContext $request_context, array $vars): string
 
-    public static function updatePlan(RequestContext $request_context, array $vars): string
-    {
-        $tpl = new Template('account/plans');
-        $tpl->setLayout('account');
+    // }
 
-        try {
-            // get all plans to show on update plan page
-            $wpt_plans = $request_context->getSignupClient()->getWptPlans();
-            $annual_plans = array();
-            $monthly_plans = array();
-            usort($wpt_plans, function ($a, $b) {
-                if ($a->getPrice() == $b->getPrice()) {
-                    return 0;
-                }
-                return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
-            });
-            foreach ($wpt_plans as $plan) {
-                if ($plan->getBillingFrequency() == "Monthly") {
-                    $monthly_plans[] = $plan;
-                } else {
-                    $annual_plans[] = $plan;
-                }
-            }
-            $vars['annual_plans'] = $annual_plans;
-            $vars['monthly_plans'] = $monthly_plans;
-        } catch (RequestException $e) {
-            if ($e->getCode() == 401) {
-                // get auth token again and retry!
-                unset($_SESSION['signup-auth-token']);
-                $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
-                $_SESSION['signup-auth-token'] = $auth_token;
-                $request_context->getSignupClient()->authenticate($auth_token);
-                unset($vars['auth_token']);
-                $vars['auth_token'] = $auth_token;
-                $vars['wpt_plans'] = $request_context->getSignupClient()->getWptPlans();
-            } else {
-                throw $e;
-            }
-        }
+    // // validate the last step to upgrading
+    // public static function validatePlanSummary(RequestContext $request_context): object
+    // {
+    //     subscribeToAccount($request_context)
+    // }
 
-        return $tpl->render('upgrade-plan', $vars);
-    }
+    // // Submit the plan upgrade
+    // public static function postUpdatePlanSummary(RequestContext $request_context): string
+    // {
+    // }
 
-    public static function viewPlanSummary(RequestContext $request_context, array $vars): string
-    {
-        $tpl = new Template('account/plans');
-        $tpl->setLayout('account');
-        return $tpl->render('plan-summary', $vars);
-    }
 
-    public static function updateBillingCycle(RequestContext $request_context, array $vars): string
-    {
-        $tpl = new Template('account/billing');
-        $tpl->setLayout('account');
-        return $tpl->render('billing-cycle', $vars);
-    }
+
 
 
     public static function changeContactInfo(RequestContext $request_context): void
