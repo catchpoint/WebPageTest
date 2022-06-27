@@ -268,7 +268,7 @@ if( !$experiments_paid && !$experiments_logged_in ){
 
                             <div class="test_presets_easy_submit">
                                 <small class="test_runs"><span>45 Runs Left</span> | <a href="/account">Upgrade</a></small>
-                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled>
+                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                             </div>
                         </div>
                             </li>
@@ -362,7 +362,7 @@ if( !$experiments_paid && !$experiments_logged_in ){
                         </div>
                         <div>
                             <small class="test_runs test_runs-warn"><span>15 Runs Left</span> | <a href="/account">Upgrade</a></small>
-                          <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                          <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="true">
                         </div>
                     </li>
                         
