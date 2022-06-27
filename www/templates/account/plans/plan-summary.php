@@ -1,14 +1,19 @@
 <div class="my-account-page page_content">
-
+    <ul class="breadcrumbs">
+        <li><a href="/account">Account Settings</a></li>
+        <li><a href="/account/update_plan">Update Plan</a></li>
+        <li>Plan summary</li>
+    </ul>
+    <!-- Page Subheader -->
     <div class="box card-section">
         <h2>Plan Summary</h2>
         <div class="card-section-subhed">
             Pro
         </div>
         <ul>
-            <li><strong>Runs per month:</strong> 50</li>
-            <li><strong>Billing Cycle:</strong></li>
-            <li><strong>Price:</strong> /li>
+            <li><strong>Runs per month:</strong> <?= $plan['name'] ?></li>
+            <li><strong>Billing Cycle:</strong> <?= $plan['name'] ?></li>
+            <li><strong>Price:</strong> <?= $plan['annual_price'] ?> /year</li>
             <li><strong>Plan Renewal:</strong> </li>
         </ul>
     </div>
@@ -18,7 +23,7 @@
         <div class="box card-section">
             <h2>Payment Method</h2>
             <?php if ($is_paid) : ?>
-                <fieldset class="radiobutton-tab-container">
+                <fieldset class="radiobutton-tab-ctontainer">
                     <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
                     <label for="existing-card">
                         <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
@@ -89,7 +94,7 @@
                     </div> <!-- /.billing-info-section -->
                 </div> <!-- /.billing-container -->
             </div> <!-- /.plan-billing-container -->
-            <input type="hidden" name="plan" value="<?= $plan; ?>" />
+            <input type="hidden" name="plan" value="<?= $plan ?>" />
             <input type="hidden" name="nonce" id="hidden-nonce-input" required />
             <input type="hidden" name="type" value="account-signup" required />
             <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
