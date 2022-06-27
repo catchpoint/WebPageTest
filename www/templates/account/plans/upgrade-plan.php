@@ -1,5 +1,5 @@
 <div class="my-account-page page_content">
-    <form id="wpt-account-upgrade-choose" method="post" action="/account">
+    <form id="wpt-account-upgrade-choose" method="post" name="selectPlan" action="/account">
         <input type='hidden' name='type' value='upgrade-plan-1' />
         <h3>Save 20% by paying annually!</h3>
         <fieldset class="wpt-plans radiobutton-tab-container">
@@ -15,7 +15,6 @@
                 </div>
             </div>
             <div class="wpt-plan-set annual-plans">
-                <?= $annual_plans ?>
                 <?php
                 foreach ($annual_plans as $key => $plan) :
                     $selected = ($key === 1) ? 'checked' : '';
@@ -38,9 +37,9 @@
                 <div class="form-wrapper-radio">
                     <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
                     <label class="card wpt-plan" for="monthly-{$plan['id']}">
-                    <h5>{$plan['name']}</h5>
-                    <div><strong>\${$plan['price']}</strong>/Month</div>
-                    <span aria-hidden="true" class="pill-button yellow">Select</span>
+                        <h5>{$plan['name']}</h5>
+                        <div><strong>\${$plan['price']}</strong>/Month</div>
+                        <span aria-hidden="true" class="pill-button yellow">Select</span>
                     </label>
                 </div>
                 HTML;
