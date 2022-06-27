@@ -24,8 +24,7 @@ if (!Util::getSetting('cp_auth')) {
 
 $access_token = $request_context->getUser()->getAccessToken();
 if (is_null($access_token)) {
-    $protocol = $request_context->getUrlProtocol();
-    $host = Util::getSetting('host');
+    $protocol = $request_context->getUrlProtocol(); $host = Util::getSetting('host');
     $route = '/login';
     $query = http_build_query(["redirect_uri" => "/account"]);
     $redirect_uri = "{$protocol}://{$host}{$route}?{$query}";
@@ -72,8 +71,8 @@ if ($request_method === 'POST') {
             throw new ClientException($e->getMessage(), "/account");
         }
     } elseif ($type == "upgrade-plan-1") {
-        $body = AccountHandler::validateUpgradeStepOne();
-        $redirect_uri = AccountHandler::postStepOne($request_context);
+        $body = AccountHandler::validatePlanUpgrade();
+        $redirect_uri = AccountHandler::postPlanUpgrade($request_context);
 
         $host = Util::getSetting('host');
         setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
@@ -81,7 +80,7 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "upgrade-plan-2") {
-        exit();
+        AccountHandler::subscribeToAccount($request_context);
     } elseif ($type == "delete-api-key") {
         AccountHandler::deleteApiKey($request_context);
     } elseif ($type == "resend-verification-email") {
@@ -155,37 +154,37 @@ if ($is_paid) {
         $billing_info['billing_frequency'] = $billing_frequency;
         $client_token = $billing_info['braintreeClientToken'];
     }
-    $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
-} else {
-    $info = $request_context->getClient()->getUnpaidAccountpageInfo();
-    $client_token = $info['braintreeClientToken'];
-    $plans = $info['wptPlans'];
-    $annual_plans = array();
-    $monthly_plans = array();
-    usort($plans, function ($a, $b) {
-        if ($a['price'] == $b['price']) {
-            return 0;
-        }
-        return ($a['price'] < $b['price']) ? -1 : 1;
-    });
-    foreach ($plans as $plan) {
-        if ($plan['billingFrequency'] == 1) {
-            $plan['price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
-            $monthly_plans[] = $plan;
-        } else {
-            $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
-            $annual_plans[] = $plan;
-        }
-    }
-    $billing_info = array(
-        'annual_plans' => $annual_plans,
-        'monthly_plans' => $monthly_plans
-    );
-}
 
-$results = array_merge($contact_info, $billing_info);
+    $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
+}
+$info = $request_context->getClient()->getUnpaidAccountpageInfo();
+$client_token = $info['braintreeClientToken'];
+$plans = $info['wptPlans'];
+$annual_plans = array();
+$monthly_plans = array();
+usort($plans, function ($a, $b) {
+    if ($a['price'] == $b['price']) {
+        return 0;
+    }
+    return ($a['price'] < $b['price']) ? -1 : 1;
+});
+foreach ($plans as $plan) {
+    if ($plan['billingFrequency'] == 1) {
+        $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+        $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
+        $monthly_plans[] = $plan;
+    } else {
+        $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
+        $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
+        $annual_plans[] = $plan;
+    }
+}
+$plansList = array(
+    'annual_plans' => $annual_plans,
+    'monthly_plans' => $monthly_plans
+);
+
+$results = array_merge($contact_info, $billing_info, $plansList);
 $results['csrf_token'] = $_SESSION['csrf_token'];
 $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
@@ -207,12 +206,19 @@ switch ($page) {
     case 'update_billing':
         echo $tpl->render('billing/billing-cycle', $results);
         break;
-    case 'upgrade_plan':
+    case 'update_plan':
         echo $tpl->render('plans/upgrade-plan', $results);
         break;
     case 'plan_summary':
-        echo $tpl->render('plans/plan-summary', $results);
-        break;
+        $planCookie = $_COOKIE['upgrade-plan'];
+        if (isset($planCookie) && $planCookie) {
+            $results['plan'] = $planCookie;
+            echo $tpl->render('plans/plan-summary', $results);
+            break;
+        } else {
+            throw new ClientException("No plan chosen", $request->getRequestUri());
+            break;
+        }
     default:
         echo $tpl->render('my-account', $results);
         break;
