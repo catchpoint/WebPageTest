@@ -553,6 +553,49 @@
             modal.close();
           });
         });
+      });
+
+      document.querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]').forEach(el => {
+        el.addEventListener('change', e => {
+          const buttons = document.querySelectorAll('.pill-button span');
+          for (const button of buttons) {
+            button.innerHTML = '';
+            button.classList.add('dot-pulse');
+          }
+          document.selectPlan.submit();
+        })
+      });
+
+      document.querySelectorAll('.fg-modal .cancel-subscription-button button').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const modal = e.target.closest('.fg-modal');
+          modal.close();
+          document.querySelector('#subscription-plan-modal-confirm').open();
+        });
+      });
+
+      var sortableTables = document.querySelectorAll('table.sortable');
+      for (var i = 0; i < sortableTables.length; i++) {
+        new SortableTable(sortableTables[i]);
+      }
+
+      var toggleableAreas = document.querySelectorAll('.toggleable');
+      for (var i = 0; i < toggleableAreas.length; i++) {
+        new Toggleable(toggleableAreas[i]);
+      }
+
+      var hiddenContentCells = document.querySelectorAll('td.hidden-content');
+      for (var i = 0; i < hiddenContentCells.length; i++) {
+        new HiddenContent(hiddenContentCells[i]);
+      }
+
+      var deleteApiKeyBoxes = document.querySelectorAll('[data-apikeybox=select-all]');
+      for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
+        new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
+      }
+
+      attachListenerToBillingFrequencySelector();
+      handleRunUpdate();
     });
 
     document
