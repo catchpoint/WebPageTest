@@ -559,8 +559,12 @@
       .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
       .forEach((s) => {
         s.addEventListener("change", (e) => {
-          document.selectPlan.submit();
-        });
+          const buttons = document.querySelectorAll('.pill-button span');
+          for (const button of buttons) {
+            button.innerHTML = '';
+            button.classList.add('dot-pulse');
+            document.selectPlan.submit();
+        }
       });
 
     document
