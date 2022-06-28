@@ -272,19 +272,24 @@ HTML;
                 </div>
                 <div class="info-container state">
                     <label for="state">State</label>
-                    <div>
-                        <input name="state" type="text" required />
-                    </div>
+                    <select name="state" required>
+                        <?php foreach ($state_list as $state) : ?>
+                            <input name="state" type="text" required />
+                            <option value="<?= $country["key"] ?>">
+                                <?= $country["text"]; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="info-container country">
                     <label for="country">Country</label>
-                    <div>
-                        <select name="country">
-                            <?php foreach ($country_list as $country) : ?>
-                                <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <select name="country">
+                        <?php foreach ($country_list as $country) : ?>
+                            <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
+                                <?= $country["text"]; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="info-container zipcode">
                     <label for="zipcode">Zip Code</label>

@@ -50,7 +50,7 @@ class Signup
             $vars['monthly_plans'] = $monthly_plans;
         } catch (RequestException $e) {
             if ($e->getCode() == 401) {
-              // get auth token again and retry!
+                // get auth token again and retry!
                 unset($_SESSION['signup-auth-token']);
                 $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
                 $_SESSION['signup-auth-token'] = $auth_token;
@@ -134,10 +134,10 @@ class Signup
         }
 
         $gateway = new BraintreeGateway([
-        'environment' => Util::getSetting('bt_environment'),
-        'merchantId' => Util::getSetting('bt_merchant_id'),
-        'publicKey' => Util::getSetting('bt_api_key_public'),
-        'privateKey' => Util::getSetting('bt_api_key_private')
+            'environment' => Util::getSetting('bt_environment'),
+            'merchantId' => Util::getSetting('bt_merchant_id'),
+            'publicKey' => Util::getSetting('bt_api_key_public'),
+            'privateKey' => Util::getSetting('bt_api_key_private')
         ]);
         $client_token = $gateway->clientToken()->generate();
         $vars['bt_client_token'] = $client_token;
@@ -153,6 +153,7 @@ class Signup
         $vars['email'] = htmlentities($_SESSION['signup-email']);
         $vars['password'] = htmlentities($_SESSION['signup-password']);
         $vars['country_list'] = Util::getCountryList();
+        $vars['state_list'] = Util::getStateList();
 
         return $tpl->render('step-3', $vars);
     }
@@ -167,11 +168,11 @@ class Signup
 
         try {
             $data = $request_context->getSignupClient()->signup(array(
-            'first_name' => $body->first_name,
-            'last_name' => $body->last_name,
-            'company' => $body->company_name,
-            'email' => $body->email,
-            'password' => $body->password
+                'first_name' => $body->first_name,
+                'last_name' => $body->last_name,
+                'company' => $body->company_name,
+                'email' => $body->email,
+                'password' => $body->password
             ));
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
@@ -205,7 +206,7 @@ class Signup
             $msg .= "letter and symbol. No <, >.";
 
             $message = $e->getMessages([
-            'regex' => $msg
+                'regex' => $msg
             ]);
             throw new ClientException(implode(', ', $message));
         }
@@ -228,7 +229,7 @@ class Signup
             }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
-            'regex' => 'input cannot contain <, >, or &#'
+                'regex' => 'input cannot contain <, >, or &#'
             ]);
             throw new ClientException(implode(', ', $message));
         }
@@ -282,7 +283,7 @@ class Signup
             $msg .= "letter and symbol. No <, >.";
 
             $message = $e->getMessages([
-            'regex' => $msg
+                'regex' => $msg
             ]);
             throw new ClientException(implode(', ', $message), '/signup/2');
         }
@@ -305,7 +306,7 @@ class Signup
             }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
-            'regex' => 'input cannot contain <, >, or &#'
+                'regex' => 'input cannot contain <, >, or &#'
             ]);
             throw new ClientException(implode(', ', $message), '/signup/2');
         }
@@ -337,27 +338,27 @@ class Signup
     {
         // build query items
         $billing_address_model = new BillingAddress([
-          'street_address' => $body->street_address,
-          'city' => $body->city,
-          'state' => $body->state,
-          'country' => $body->country,
-          'zipcode' => $body->zipcode
+            'street_address' => $body->street_address,
+            'city' => $body->city,
+            'state' => $body->state,
+            'country' => $body->country,
+            'zipcode' => $body->zipcode
         ]);
 
         $customer = new Customer([
-          'payment_method_nonce' => $body->nonce,
-          'billing_address_model' => $billing_address_model,
-          'subscription_plan_id' => $body->plan
+            'payment_method_nonce' => $body->nonce,
+            'billing_address_model' => $billing_address_model,
+            'subscription_plan_id' => $body->plan
         ]);
 
         // handle signup
         try {
             $data = $request_context->getSignupClient()->signup(array(
-            'first_name' => $body->first_name,
-            'last_name' => $body->last_name,
-            'company' => $body->company,
-            'email' => $body->email,
-            'password' => $body->password,
+                'first_name' => $body->first_name,
+                'last_name' => $body->last_name,
+                'company' => $body->company,
+                'email' => $body->email,
+                'password' => $body->password,
             ), $customer);
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);

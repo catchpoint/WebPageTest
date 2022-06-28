@@ -19,13 +19,22 @@
                 </div>
                 <div class="form-input state">
                     <label for="state">State</label>
-                    <input name="state" type="text" required />
+                    <select name="state" required>
+                        <?php foreach ($state_list as $state) : ?>
+                            <input name="state" type="text" required />
+                            <option value="<?= $country["key"] ?>">
+                                <?= $country["text"]; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-input country">
                     <label for="country">Country</label>
                     <select name="country">
                         <?php foreach ($country_list as $country) : ?>
-                            <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
+                            <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
+                                <?= $country["text"]; ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>

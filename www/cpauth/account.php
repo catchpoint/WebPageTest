@@ -114,6 +114,7 @@ if ($request_method === 'POST') {
     $billing_info = array();
     $client_token = "";
     $country_list = Util::getCountryList();
+    $state_list = Util::getStateList();
 
     if ($is_paid) {
         if ($is_wpt_enterprise) {
@@ -173,6 +174,7 @@ if ($request_method === 'POST') {
     $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
     $results['bt_client_token'] = $client_token;
     $results['country_list'] = $country_list;
+    $results['state_list'] = $state_list;
 
     if (!is_null($error_message)) {
         $results['error_message'] = $error_message;
