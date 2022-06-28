@@ -14,6 +14,8 @@ class User
     private bool $is_paid_and_in_good_standing;
     private bool $is_verified;
     private bool $is_wpt_enterprise_client;
+    private int $remaining_runs;
+    private int $monthly_runs;
 
     public function __construct()
     {
@@ -26,6 +28,8 @@ class User
         $this->is_verified = false;
         $this->user_priority = 9; //default to lowest possible priority
         $this->is_wpt_enterprise_client = false;
+        $this->remaining_runs = 0;
+        $this->monthly_runs = 300; // default to new, free account
     }
 
     public function getEmail(): ?string
@@ -142,5 +146,30 @@ class User
     public function getUserPriority(): ?int
     {
         return $this->user_priority;
+    }
+
+    public function getRemainingRuns(): int
+    {
+        return $this->remaining_runs;
+    }
+
+    public function setRemainingRuns(int $remaining_runs): void
+    {
+        $this->remaining_runs = $remaining_runs;
+    }
+
+    public function hasEnoughRemainingRuns(int $runs_attempting = 1): bool
+    {
+        return $this->remaining_runs > $runs_attempting;
+    }
+
+    public function getMonthlyRuns(): int
+    {
+        return $this->monthly_runs;
+    }
+
+    public function setMonthlyRuns(int $monthly_runs): void
+    {
+        $this->monthly_runs = $monthly_runs;
     }
 }

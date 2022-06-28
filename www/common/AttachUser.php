@@ -37,6 +37,8 @@ use WebPageTest\Exception\UnauthorizedException;
             $user->setVerified($data['activeContact']['isWptAccountVerified']);
             $user->setOwnerId($data['levelSummary']['levelId']);
             $user->setEnterpriseClient(!!$data['levelSummary']['isWptEnterpriseClient']);
+            $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
+            $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
             $owner = $user->getOwnerId();
         } catch (UnauthorizedException $e) {
             error_log($e->getMessage());

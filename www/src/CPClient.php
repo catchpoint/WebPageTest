@@ -178,6 +178,10 @@ class CPClient
                     'levelType',
                     'levelName',
                     'isWptEnterpriseClient'
+                  ]),
+                (new Query('braintreeCustomerDetails'))
+                  ->setSelectionSet([
+                    'remainingRuns'
                   ])
               ]);
 
