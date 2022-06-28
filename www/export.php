@@ -42,6 +42,7 @@ if (!strlen($filename))
     $filename = "pagetest";
 $filename .= ".$id.har";
 header('Content-type: application/json');
+header("Content-disposition: attachment; filename=$filename");
 
 // see if we need to wrap it in a JSONP callback
 if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
