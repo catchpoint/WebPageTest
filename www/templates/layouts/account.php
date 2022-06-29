@@ -21,7 +21,9 @@
     <link rel="stylesheet" href="/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
     <link rel="stylesheet" href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
     <script defer src="/js/account.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
+    <script defer src="/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
 </head>
+
 <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
     <div id="main">
@@ -30,4 +32,5 @@
     </div>
     <?php require_once __DIR__ . '/footer.inc'; ?>
 </body>
+
 </html>
