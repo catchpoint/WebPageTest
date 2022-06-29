@@ -63,6 +63,7 @@ use WebPageTest\RateLimiter;
     $apiKey = null;
     $is_mobile = false;
     $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+    $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasRunsAvailable();
     $includePaid = $isPaid || $admin;
     // load the secret key (if there is one)
     $server_secret = Util::getServerSecret();
@@ -781,7 +782,7 @@ use WebPageTest\RateLimiter;
         }
 
 
-        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) )
+        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) && $hasRunsAvailable)
         {
 
             if( !array_key_exists('id', $test) )
@@ -822,7 +823,7 @@ use WebPageTest\RateLimiter;
 
                   if( !$experiments_logged_in && !$experimentUrlException ){
                     $error = "Must be logged in to use experiments.";
-                  } else { 
+                  } else {
                     // the first non-redirect host is passed in from experiments
                     $hostToUse = isset( $req_initialHostNonRedirect ) ? $req_initialHostNonRedirect : '%HOST%';
                     $originToUse = $req_initialOriginNonRedirect ?? '%ORIGIN%';
@@ -3390,5 +3391,3 @@ HTML;
 
   return $ret;
 }
-
-?>

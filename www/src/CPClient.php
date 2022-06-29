@@ -33,8 +33,8 @@ class CPClient
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
         $graphql_client_options = array(
-          'timeout' => 30,
-          'connect_timeout' => 30
+            'timeout' => 30,
+            'connect_timeout' => 30
         );
 
         $this->client_id = $auth_client_options['client_id'] ?? null;
@@ -162,28 +162,36 @@ class CPClient
 
     public function getUserDetails(): array
     {
-        $gql = (new Query('userIdentity'))
-              ->setSelectionSet([
-                (new Query('activeContact'))
-                  ->setSelectionSet([
-                    'id',
-                    'name',
-                    'email',
-                    'isWptPaidUser',
-                    'isWptAccountVerified'
-                  ]),
-                (new Query('levelSummary'))
-                  ->setSelectionSet([
-                    'levelId',
-                    'levelType',
-                    'levelName',
-                    'isWptEnterpriseClient'
-                  ])
-              ]);
+        $gql = (new Query())
+            ->setSelectionSet([
+                (new Query('userIdentity'))
+                    ->setSelectionSet([
+                        (new Query('activeContact'))
+                            ->setSelectionSet([
+                                'id',
+                                'name',
+                                'email',
+                                'isWptPaidUser',
+                                'isWptAccountVerified'
+                            ]),
+                        (new Query('levelSummary'))
+                            ->setSelectionSet([
+                                'levelId',
+                                'levelType',
+                                'levelName',
+                                'isWptEnterpriseClient'
+                            ]),
+
+                    ]),
+                (new Query('braintreeCustomerDetails'))
+                    ->setSelectionSet([
+                        'remainingRuns'
+                    ])
+            ]);
 
         try {
             $account_details = $this->graphql_client->runQuery($gql, true);
-            return $account_details->getData()['userIdentity'];
+            return $account_details->getData();
         } catch (GuzzleException $e) {
             if ($e->getCode() == 401) {
                 throw new UnauthorizedException();
@@ -194,18 +202,19 @@ class CPClient
         }
     }
 
+
     public function getUserContactInfo(int $id): array
     {
         $gql = (new Query('contact'))
-        ->setVariables([
-        new Variable('id', 'ID', true)
-        ])
-        ->setArguments(['id' => '$id'])
-        ->setSelectionSet([
-        'companyName',
-        'firstName',
-        'lastName'
-        ]);
+            ->setVariables([
+                new Variable('id', 'ID', true)
+            ])
+            ->setArguments(['id' => '$id'])
+            ->setSelectionSet([
+                'companyName',
+                'firstName',
+                'lastName'
+            ]);
 
         $variables_array = array('id' => $id);
 
@@ -220,26 +229,26 @@ class CPClient
     public function getUnpaidAccountpageInfo(): array
     {
         $gql = (new Query())
-        ->setSelectionSet([
-        'braintreeClientToken',
-        (new Query('wptPlans'))
-          ->setSelectionSet([
-            'id',
-            'name',
-            'price',
-            'billingFrequency',
-            'billingDayOfMonth',
-            'currencyIsoCode',
-            'numberOfBillingCycles',
-            'trialDuration',
-            'trialPeriod',
-            (new Query('discount'))
-              ->setSelectionSet([
-                'amount',
-                'numberOfBillingCycles'
-              ])
-          ])
-        ]);
+            ->setSelectionSet([
+                'braintreeClientToken',
+                (new Query('wptPlans'))
+                    ->setSelectionSet([
+                        'id',
+                        'name',
+                        'price',
+                        'billingFrequency',
+                        'billingDayOfMonth',
+                        'currencyIsoCode',
+                        'numberOfBillingCycles',
+                        'trialDuration',
+                        'trialPeriod',
+                        (new Query('discount'))
+                            ->setSelectionSet([
+                                'amount',
+                                'numberOfBillingCycles'
+                            ])
+                    ])
+            ]);
         $page_info = $this->graphql_client->runQuery($gql, true);
         return $page_info->getData();
     }
@@ -247,50 +256,50 @@ class CPClient
     public function getPaidAccountPageInfo(): array
     {
         $gql = (new Query())
-        ->setSelectionSet([
-          'braintreeClientToken',
-          (new Query('wptApiKey'))
             ->setSelectionSet([
-              'id',
-              'name',
-              'apiKey',
-              'createDate',
-              'changeDate'
-            ]),
-          (new Query('braintreeCustomerDetails'))
-              ->setSelectionSet([
-                  'customerId',
-                  'wptPlanId',
-                  'subscriptionId',
-                  'ccLastFour',
-                  'daysPastDue',
-                  'subscriptionPrice',
-                  'maskedCreditCard',
-                  'nextBillingDate',
-                  'billingPeriodEndDate',
-                  'numberOfBillingCycles',
-                  'ccExpirationDate',
-                  'ccImageUrl',
-                  'status',
-                  (new Query('discount'))
+                'braintreeClientToken',
+                (new Query('wptApiKey'))
                     ->setSelectionSet([
-                      'amount',
-                      'numberOfBillingCycles'
+                        'id',
+                        'name',
+                        'apiKey',
+                        'createDate',
+                        'changeDate'
                     ]),
-                  'remainingRuns',
-                  'planRenewalDate',
-                  'billingFrequency',
-                  'wptPlanName'
-              ]),
-          (new Query('braintreeTransactionHistory'))
-              ->setSelectionSet([
-                  'amount',
-                  'cardType',
-                  'ccLastFour',
-                  'maskedCreditCard',
-                  'transactionDate'
-              ])
-        ]);
+                (new Query('braintreeCustomerDetails'))
+                    ->setSelectionSet([
+                        'customerId',
+                        'wptPlanId',
+                        'subscriptionId',
+                        'ccLastFour',
+                        'daysPastDue',
+                        'subscriptionPrice',
+                        'maskedCreditCard',
+                        'nextBillingDate',
+                        'billingPeriodEndDate',
+                        'numberOfBillingCycles',
+                        'ccExpirationDate',
+                        'ccImageUrl',
+                        'status',
+                        (new Query('discount'))
+                            ->setSelectionSet([
+                                'amount',
+                                'numberOfBillingCycles'
+                            ]),
+                        'remainingRuns',
+                        'planRenewalDate',
+                        'billingFrequency',
+                        'wptPlanName'
+                    ]),
+                (new Query('braintreeTransactionHistory'))
+                    ->setSelectionSet([
+                        'amount',
+                        'cardType',
+                        'ccLastFour',
+                        'maskedCreditCard',
+                        'transactionDate'
+                    ])
+            ]);
 
         try {
             $results = $this->graphql_client->runQuery($gql, true);
@@ -302,43 +311,43 @@ class CPClient
 
     public function getPaidEnterpriseAccountPageInfo(): array
     {
-          $gql = (new Query())
-          ->setSelectionSet([
-            'braintreeClientToken',
-            (new Query('wptApiKey'))
-              ->setSelectionSet([
-                'id',
-                'name',
-                'apiKey',
-                'createDate',
-                'changeDate'
-              ]),
-            (new Query('braintreeCustomerDetails'))
-                ->setSelectionSet([
-                    'customerId',
-                    'wptPlanId',
-                    'subscriptionId',
-                    'ccLastFour',
-                    'daysPastDue',
-                    'subscriptionPrice',
-                    'maskedCreditCard',
-                    'nextBillingDate',
-                    'billingPeriodEndDate',
-                    'numberOfBillingCycles',
-                    'ccExpirationDate',
-                    'ccImageUrl',
-                    'status',
-                    (new Query('discount'))
-                      ->setSelectionSet([
-                        'amount',
-                        'numberOfBillingCycles'
-                      ]),
-                    'remainingRuns',
-                    'planRenewalDate',
-                    'billingFrequency',
-                    'wptPlanName'
-                ])
-          ]);
+        $gql = (new Query())
+            ->setSelectionSet([
+                'braintreeClientToken',
+                (new Query('wptApiKey'))
+                    ->setSelectionSet([
+                        'id',
+                        'name',
+                        'apiKey',
+                        'createDate',
+                        'changeDate'
+                    ]),
+                (new Query('braintreeCustomerDetails'))
+                    ->setSelectionSet([
+                        'customerId',
+                        'wptPlanId',
+                        'subscriptionId',
+                        'ccLastFour',
+                        'daysPastDue',
+                        'subscriptionPrice',
+                        'maskedCreditCard',
+                        'nextBillingDate',
+                        'billingPeriodEndDate',
+                        'numberOfBillingCycles',
+                        'ccExpirationDate',
+                        'ccImageUrl',
+                        'status',
+                        (new Query('discount'))
+                            ->setSelectionSet([
+                                'amount',
+                                'numberOfBillingCycles'
+                            ]),
+                        'remainingRuns',
+                        'planRenewalDate',
+                        'billingFrequency',
+                        'wptPlanName'
+                    ])
+            ]);
         try {
             $results = $this->graphql_client->runQuery($gql, true);
             return $results->getData();
@@ -350,26 +359,26 @@ class CPClient
     public function updateUserContactInfo(string $id, array $options): array
     {
         $gql = (new Mutation('wptContactUpdate'))
-        ->setVariables([
-        new Variable('contact', 'ContactUpdateInputType', true)
-        ])
-        ->setArguments([
-        'contact' => '$contact'
-        ])
-        ->setSelectionSet([
-        'id',
-        'firstName',
-        'lastName',
-        'companyName',
-        'email'
-        ]);
+            ->setVariables([
+                new Variable('contact', 'ContactUpdateInputType', true)
+            ])
+            ->setArguments([
+                'contact' => '$contact'
+            ])
+            ->setSelectionSet([
+                'id',
+                'firstName',
+                'lastName',
+                'companyName',
+                'email'
+            ]);
 
         $variables_array = array('contact' => [
-        'id' => $id,
-        'email' => $options['email'],
-        'firstName' => $options['first_name'],
-        'lastName' => $options['last_name'],
-        'companyName' => $options['company_name']
+            'id' => $id,
+            'email' => $options['email'],
+            'firstName' => $options['first_name'],
+            'lastName' => $options['last_name'],
+            'companyName' => $options['company_name']
         ]);
 
         $results = $this->graphql_client->runQuery($gql, true, $variables_array);
@@ -379,16 +388,16 @@ class CPClient
     public function changePassword(string $new_pass, string $current_pass): array
     {
         $gql = (new Mutation('userPasswordChange'))
-        ->setVariables([
-        new Variable('passwordChangedInput', 'UserPasswordChangeInputType', true)
-        ])
-        ->setArguments([
-        'changePassword' => '$passwordChangedInput'
-        ])
-        ->setSelectionSet([
-          'id',
-          'lastPasswordChangedDate'
-        ]);
+            ->setVariables([
+                new Variable('passwordChangedInput', 'UserPasswordChangeInputType', true)
+            ])
+            ->setArguments([
+                'changePassword' => '$passwordChangedInput'
+            ])
+            ->setSelectionSet([
+                'id',
+                'lastPasswordChangedDate'
+            ]);
 
         $variables_array = array('passwordChangedInput' => [
             'newPassword' => $new_pass,
@@ -406,19 +415,19 @@ class CPClient
     public function createApiKey(string $name): array
     {
         $gql = (new Mutation('wptApiKeyCreate'))
-        ->setVariables([
-          new Variable('wptApiKey', 'WptApiKeyCreateInputType', true)
-        ])
-        ->setArguments([
-          'wptApiKey' => '$wptApiKey'
-        ])
-        ->setSelectionSet([
-          'id',
-          'name',
-          'apiKey',
-          'createDate',
-          'changeDate'
-        ]);
+            ->setVariables([
+                new Variable('wptApiKey', 'WptApiKeyCreateInputType', true)
+            ])
+            ->setArguments([
+                'wptApiKey' => '$wptApiKey'
+            ])
+            ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+            ]);
 
         $variables_array = array('wptApiKey' => [
             'name' => $name,
@@ -435,15 +444,15 @@ class CPClient
     public function deleteApiKey(array $ids): array
     {
         $gql = (new Mutation('wptApiKeyBulkDelete'))
-        ->setVariables([
-          new Variable('ids', '[Int!]', true)
-        ])
-        ->setArguments([
-          'ids' => '$ids'
-        ])
-        ->setSelectionSet([
-          'id'
-        ]);
+            ->setVariables([
+                new Variable('ids', '[Int!]', true)
+            ])
+            ->setArguments([
+                'ids' => '$ids'
+            ])
+            ->setSelectionSet([
+                'id'
+            ]);
 
         $variables_array = array('ids' => $ids);
 
@@ -458,19 +467,19 @@ class CPClient
     public function addWptSubscription(Customer $customer): array
     {
         $gql = (new Mutation('wptAddSubscription'))
-        ->setVariables([
-          new Variable('customer', 'CustomerInputType', true)
-        ])
-        ->setArguments([
-          'customer' => '$customer'
-        ])
-        ->setSelectionSet([
-          'company',
-          'firstName',
-          'lastName',
-          'email',
-          'loginVerificationId'
-        ]);
+            ->setVariables([
+                new Variable('customer', 'CustomerInputType', true)
+            ])
+            ->setArguments([
+                'customer' => '$customer'
+            ])
+            ->setSelectionSet([
+                'company',
+                'firstName',
+                'lastName',
+                'email',
+                'loginVerificationId'
+            ]);
 
         $variables_array = array('customer' => $customer->toArray());
 
@@ -485,17 +494,17 @@ class CPClient
     public function cancelWptSubscription(string $subscription_id, string $reason = "", string $suggestion = ""): array
     {
         $gql = (new Mutation('braintreeCancelSubscription'))
-        ->setVariables([
-          new Variable('wptApiSubscriptionCancellation', 'WptSubscriptionCancellationInputType', true)
-        ])
-        ->setArguments([
-          'wptApiSubscriptionCancellation' => '$wptApiSubscriptionCancellation'
-        ]);
+            ->setVariables([
+                new Variable('wptApiSubscriptionCancellation', 'WptSubscriptionCancellationInputType', true)
+            ])
+            ->setArguments([
+                'wptApiSubscriptionCancellation' => '$wptApiSubscriptionCancellation'
+            ]);
 
         $variables_array = array('wptApiSubscriptionCancellation' => [
-          "subscriptionId" => $subscription_id,
-          "cancellationReason" => $reason,
-          "suggestion" => $suggestion
+            "subscriptionId" => $subscription_id,
+            "cancellationReason" => $reason,
+            "suggestion" => $suggestion
         ]);
 
         try {
@@ -510,12 +519,12 @@ class CPClient
     {
 
         $gql = (new Mutation('braintreeUpdatePayment'))
-        ->setVariables([
-          new Variable('wptUpdatePaymentDetails', 'CustomerPaymentUpdateInputType', true)
-        ])
-        ->setArguments([
-          'braintreeCustomer' => '$wptUpdatePaymentDetails'
-        ]);
+            ->setVariables([
+                new Variable('wptUpdatePaymentDetails', 'CustomerPaymentUpdateInputType', true)
+            ])
+            ->setArguments([
+                'braintreeCustomer' => '$wptUpdatePaymentDetails'
+            ]);
 
         $variables_array = array('wptUpdatePaymentDetails' => $customer->toArray());
 
@@ -542,26 +551,26 @@ class CPClient
     {
         $view_hours = $days * 24;
         $gql = (new Query('wptTestHistory'))
-        ->setVariables([
-          new Variable('viewHours', 'Int', true)
-        ])
-        ->setArguments([
-          'viewHours' => '$viewHours'
-        ])
-        ->setSelectionSet([
-          'id',
-          'testId',
-          'url',
-          'location',
-          'label',
-          'testStartTime',
-          'user',
-          'apiKey',
-          'testRuns'
-        ]);
+            ->setVariables([
+                new Variable('viewHours', 'Int', true)
+            ])
+            ->setArguments([
+                'viewHours' => '$viewHours'
+            ])
+            ->setSelectionSet([
+                'id',
+                'testId',
+                'url',
+                'location',
+                'label',
+                'testStartTime',
+                'user',
+                'apiKey',
+                'testRuns'
+            ]);
 
         $variables = [
-        'viewHours' => $view_hours
+            'viewHours' => $view_hours
         ];
 
         $response = $this->graphql_client->runQuery($gql, true, $variables);
@@ -591,19 +600,19 @@ class CPClient
 
 
         $gql = (new Query('wptTestHistory'))
-        ->setVariables([
-          new Variable('viewHours', 'Int', true)
-        ])
-        ->setArguments([
-          'viewHours' => '$viewHours'
-        ])
-        ->setSelectionSet([
-          'url',
-          'testRuns'
-        ]);
+            ->setVariables([
+                new Variable('viewHours', 'Int', true)
+            ])
+            ->setArguments([
+                'viewHours' => '$viewHours'
+            ])
+            ->setSelectionSet([
+                'url',
+                'testRuns'
+            ]);
 
         $variables = [
-        'viewHours' => $view_hours
+            'viewHours' => $view_hours
         ];
 
         $response = $this->graphql_client->runQuery($gql, true, $variables);
