@@ -88,6 +88,12 @@ $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $
 $gaTemplate = 'Main';
 $useScreenshot = true;
 require_once __DIR__ . '/head.inc';
+
+if( !$experiments_paid && !$experiments_logged_in ){
+?>
+<link rel="preload" fetchpriority="high" src="/images/pro-intro.jpg" />
+<?php
+}
 ?>
     </head>
     <body class="home feature-pro">
