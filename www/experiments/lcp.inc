@@ -19,13 +19,23 @@
         if( $lcp['time'] > 2500 ){
         
             $isBG = false;
+            $isVideo = false;
 
             if (isset($lcp['element']['outerHTML'])) {
                 $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
             }
         
             if (isset($lcp['type']) && $lcp['type'] === "image") {
-                if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
+                if (isset($lcp['element']['nodeName']) && $lcp['element']['nodeName'] == 'VIDEO') {
+                    $isVideo = true;
+                    $lcpSource = isset($lcp['element']['poster']) ? $lcp['element']['poster'] : $lcp['element']['src'];
+                    $lcpFullSource = $lcpSource;
+                    // get actual source attribute if we can.
+                    $srcAttrVal = preg_match_all('/poster\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches );
+                    if( $srcmatches && $srcMatches[1][0] != ''){
+                        $lcpSource = $srcmatches[1][0];
+                    }
+                } else if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                     $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                     $lcpFullSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                     // get actual source attribute if we can.
@@ -57,7 +67,7 @@
 
                 
                 // priority Hints only help for foreground images
-                if( !$isBG ){
+                if( !$isBG && !$isVideo ){
                     $expsToAdd[] = (object) [
                         "id" => '011',
                         'title' => 'Add Priority Hint',
