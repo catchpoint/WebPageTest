@@ -1,7 +1,7 @@
-# Architecture Decision Record: Use ADRs
+# Use ADRs
 📆 **Updated**: June 15, 2022
 
-🙋🏽‍♀️ **Status** Proposed
+🙋🏽‍♀️ **Status** Accepted
 
 ## ℹ️ Context
 There are some specific goals that we have for WebPageTest to ensure that key decisions are made with care, and communicated transparently:
@@ -12,7 +12,7 @@ There are some specific goals that we have for WebPageTest to ensure that key de
 - We want to leave a trail of docoumentation for ourselves so that we can revisit our decisions to see why they were made and if they still make sense.
 
 ## 🤔 Decision
-We will document our architecure decisions for WebPageTest with an [Architecture Decision Record](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)—structured, relatively lightweight records of architectural decisions. 
+We will document our architecure decisions for WebPageTest with an [Architecture Decision Record](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)—structured, relatively lightweight records of architectural decisions.
 
 Our workflow for ADRs will be:
 
@@ -28,5 +28,6 @@ Our workflow for ADRs will be:
 - We will have a useful set of documentation by default, providing a persisitent record of why decisions were made.
 
 ## 📝 Changelog
-- 06/15/2021 Proposed
-- 06/15/2021 Added Changelog
+- 06/15/2022 Proposed
+- 06/15/2022 Added Changelog
+- 06/15/2022 Accepted
