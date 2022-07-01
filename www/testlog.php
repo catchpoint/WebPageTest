@@ -18,8 +18,8 @@ if ($admin || $privateInstall || $is_logged_in) {
 }
 
 if ($userIsBot || Util::getSetting('disableTestlog')) {
-  header('HTTP/1.0 403 Forbidden');
-  exit;
+    header('HTTP/1.0 403 Forbidden');
+    exit;
 }
 
 $test_history = [];
@@ -27,7 +27,7 @@ $default_days = 7;
 $days = (int)($_GET["days"] ?? $default_days);
 
 if ($is_logged_in) {
-  $test_history = $request_context->getClient()->getTestHistory($days);
+    $test_history = $request_context->getClient()->getTestHistory($days);
 }
 
 // Redirect logged-in saml users to the hosted test history if one is configured
@@ -36,13 +36,13 @@ if (!$is_logged_in && (isset($USER_EMAIL) && Util::getSetting('history_url') && 
     exit;
 }
 
-$page_keywords = array('Log','History','WebPageTest','Website Speed Test');
+$page_keywords = array('Log', 'History', 'WebPageTest', 'Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPageTest.";
 
 $supportsGrep = false;
 $out = exec('grep --version', $output, $result_code);
 if ($result_code == 0 && isset($output) && is_array($output) && count($output)) {
-  $supportsGrep = true;
+    $supportsGrep = true;
 }
 
 
@@ -57,15 +57,17 @@ $csv       = isset($_GET["f"]) && !strcasecmp($_GET["f"], 'csv');
 $priority  = (isset($_REQUEST['priority']) && is_numeric($_REQUEST['priority'])) ? intval($_REQUEST['priority']) : null;
 
 if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
-  header('HTTP/1.0 403 Forbidden');
-  exit;
+    header('HTTP/1.0 403 Forbidden');
+    exit;
 }
 
-if (isset($USER_EMAIL) && !isset($user))
-  $user = $USER_EMAIL;
+if (isset($USER_EMAIL) && !isset($user)) {
+    $user = $USER_EMAIL;
+}
 
-if (isset($filterstr) && $supportsGrep)
-  $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
+if (isset($filterstr) && $supportsGrep) {
+    $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
+}
 
 $includeip      = false;
 $includePrivate = false;
@@ -74,423 +76,450 @@ if ($admin) {
     $includePrivate = isset($_GET["private"]) && (int)$_GET["private"] == 1;
 }
 
-function check_it($val) {
+function check_it($val)
+{
     if ($val) {
         echo ' checked ';
     }
 }
 
-if( $csv )
-{
-    header ("Content-type: text/csv");
+if ($csv) {
+    header("Content-type: text/csv");
     echo '"Date/Time","Location","Test ID","URL","Label"' . "\r\n";
 } elseif ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']) && Util::getSetting('localHistory'))) {
 ?>
-<!DOCTYPE html>
-<html lang="en-us">
+    <!DOCTYPE html>
+    <html lang="en-us">
+
     <head>
         <title>WebPageTest - Test Log</title>
-        <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Test Log';
+        include('head.inc'); ?>
     </head>
-    <body class="history">
-            <?php
-            $tab = 'Test History';
-            include 'header.inc';
-            ?>
-            <div class="history_hed">
-            <h1>Test History</h1>
 
-            <form name="filterLog" method="get" action="/testlog.php">
-
-<?php if (!$is_logged_in): ?>
-            <div class="logged-out-history">
-                <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
-                <a href="<?= "{$protocol}://{$host}/signup" ?>" class="btn-primary">Get Free Access</a>
-                </div>
-<?php endif; ?>
-              <div class="history_filter">
-                <label for="filter">Filter test history:</label>
-                <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
-<?php if ($is_logged_in): ?>
-                <label for="days" class="a11y-hidden">Select how far back you want to see</label>
-                 <select name="days">
-                    <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
-                    <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
-                    <option value="30" <?php if ($days == 30) echo "selected"; ?>>30 Days</option>
-                    <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
-                    <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
-                  </select>
-<?php endif; ?>
-              </div>
-            </form>
-            </div>
-            <div class="box">
-                <form name="compare" method="get" action="/video/compare.php">
-                <div class="history-controls">
-                <input id="CompareBtn" type="submit" value="Compare Selected Tests">
-                </div>
-                <div class="scrollableTable">
-                <table id="history" class="history pretty" border="0" cellpadding="5px" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th class="pin"><span>Select to compare</span></th>
-                            <th class="url">URL</th>
-                            <th class="date">Run Date</th>
-                            <th class="location">Run From</th>
-                            <th class="label">Label</th>
-                        </tr>
-                    </thead>
-<?php if ($is_logged_in): ?>
-                    <tbody id="historyBody">
-  <?php foreach($test_history as $record): ?>
-                      <tr>
-                        <th><input type="checkbox" name="t[]" value="<?= $record->getTestId() ?>" /></th>
-                        <td class="url"><a href="/result/<?= $record->getTestId() ?>/"><?= $record->getUrl() ?></a></td>
-                        <td class="date"><?= date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') ?></td>
-                        <td class="location"><?= $record->getLocation() ?></td>
-                        <td class="label"><?= $record->getLabel() ?></td>
-                      </tr>
-  <?php endforeach; ?>
-                    </tbody>
-<?php endif; ?>
-                </table>
-                </div>
-                <?php
-                // Hidden form fields
-                if (isset($_REQUEST['local']) && $_REQUEST['local'])
-                    echo '<input type="hidden" name="local" value="1">';
-                if (isset($priority)) {
-                    echo '<input type="hidden" name="priority" value="' . $priority . '">';
-                }
-                ?>
-                </form>
-            </div>
-
-<script>
-<?php
-if ($is_logged_in):
-  include(__DIR__ . '/js/history-loggedin.js');
-else:
-  // if not logged in, build a local searchable test history from the data stored in indexeddb.
-  include(__DIR__ . '/js/history.js');
-endif;
-?>
-</script>
-        <?php include('footer.inc'); ?>
-    </body>
-</html>
-<?php
-exit;
-} else {
-?>
-<!DOCTYPE html>
-<html lang="en-us">
-    <head>
-        <title>WebPageTest - Test Log</title>
-        <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-    </head>
     <body class="history">
         <?php
         $tab = 'Test History';
         include 'header.inc';
         ?>
+        <div class="history_hed">
             <h1>Test History</h1>
-            <div class="box">
+
+            <form name="filterLog" method="get" action="/testlog.php">
+
+                <?php if (!$is_logged_in) : ?>
+                    <div class="logged-out-history">
+                        <p>Test history is available for up to 30 days as long as your storage isn’t cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
+                        <a href="<?= "{$protocol}://{$host}/signup" ?>" class="btn-primary">Get Free Access</a>
+                    </div>
+                <?php endif; ?>
+                <div class="history_filter">
+                    <label for="filter">Filter test history:</label>
+                    <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
+                    <?php if ($is_logged_in) : ?>
+                        <label for="days" class="a11y-hidden">Select how far back you want to see</label>
+                        <select name="days">
+                            <option value="1" <?php if ($days == 1) {
+                                                    echo "selected";
+                                                } ?>>1 Day</option>
+                            <option value="7" <?php if ($days == 7) {
+                                                    echo "selected";
+                                                } ?>>7 Days</option>
+                            <option value="30" <?php if ($days == 30) {
+                                                    echo "selected";
+                                                } ?>>30 Days</option>
+                            <option value="182" <?php if ($days == 182) {
+                                                    echo "selected";
+                                                } ?>>6 Months</option>
+                            <option value="365" <?php if ($days == 365) {
+                                                    echo "selected";
+                                                } ?>>1 Year</option>
+                        </select>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+        <div class="box">
+            <form name="compare" method="get" action="/video/compare.php">
+                <div class="history-controls">
+                    <input id="CompareBtn" type="submit" value="Compare Selected Tests">
+                </div>
+                <div class="scrollableTable">
+                    <table id="history" class="history pretty" border="0" cellpadding="5px" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th class="pin"><span>Select to compare</span></th>
+                                <th class="url">URL</th>
+                                <th class="date">Run Date</th>
+                                <th class="location">Run From</th>
+                                <th class="label">Label</th>
+                            </tr>
+                        </thead>
+                        <?php if ($is_logged_in) : ?>
+                            <tbody id="historyBody">
+                                <?php foreach ($test_history as $record) : ?>
+                                    <tr>
+                                        <th><input type="checkbox" name="t[]" value="<?= $record->getTestId() ?>" /></th>
+                                        <td class="url"><a href="/result/<?= $record->getTestId() ?>/"><?= $record->getUrl() ?></a></td>
+                                        <td class="date"><?= date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') ?></td>
+                                        <td class="location"><?= $record->getLocation() ?></td>
+                                        <td class="label"><?= $record->getLabel() ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        <?php endif; ?>
+                    </table>
+                </div>
+                <?php
+                // Hidden form fields
+                if (isset($_REQUEST['local']) && $_REQUEST['local']) {
+                    echo '<input type="hidden" name="local" value="1">';
+                }
+                if (isset($priority)) {
+                    echo '<input type="hidden" name="priority" value="' . $priority . '">';
+                }
+                ?>
+            </form>
+        </div>
+
+        <script>
+            <?php
+            if ($is_logged_in) :
+                include(__DIR__ . '/js/history-loggedin.js');
+            else :
+                // if not logged in, build a local searchable test history from the data stored in indexeddb.
+                include(__DIR__ . '/js/history.js');
+            endif;
+            ?>
+        </script>
+        <?php include('footer.inc'); ?>
+    </body>
+
+    </html>
+<?php
+    exit;
+} else {
+?>
+    <!DOCTYPE html>
+    <html lang="en-us">
+
+    <head>
+        <title>WebPageTest - Test Log</title>
+        <?php $gaTemplate = 'Test Log';
+        include('head.inc'); ?>
+    </head>
+
+    <body class="history">
+        <?php
+        $tab = 'Test History';
+        include 'header.inc';
+        ?>
+        <h1>Test History</h1>
+        <div class="box">
             <form name="filterLog" method="get" action="/testlog.php">
                 View <select name="days" size="1">
-                        <option value="1" <?php if ($days == 1) echo "selected"; ?>>1 Day</option>
-                        <option value="7" <?php if ($days == 7) echo "selected"; ?>>7 Days</option>
-                        <option value="30" <?php if ($days == 30) echo "selected"; ?>>30 Days</option>
-                        <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
-                        <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
-                        </select> test log for URLs containing
-                        <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
-                        <input id="SubmitBtn" type="submit" value="Update List"><br>
-                        <?php
-                        if( ($admin || !Util::getSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
-                            <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
-                            <?php
-                        }
-                    if (isset($_REQUEST['ip']) && $_REQUEST['ip'])
-                        echo '<input type="hidden" name="ip" value="1">';
-                    if (isset($_REQUEST['local']) && $_REQUEST['local'])
-                        echo '<input type="hidden" name="local" value="1">';
-                    ?>
-                    <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests which include video</label> &nbsp;&nbsp;
-                    <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat);?> onclick="this.form.submit();"> Show repeat view</label>
-                    <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>
+                    <option value="1" <?php if ($days == 1) {
+                                            echo "selected";
+                                        } ?>>1 Day</option>
+                    <option value="7" <?php if ($days == 7) {
+                                            echo "selected";
+                                        } ?>>7 Days</option>
+                    <option value="30" <?php if ($days == 30) {
+                                            echo "selected";
+                                        } ?>>30 Days</option>
+                    <option value="182" <?php if ($days == 182) {
+                                            echo "selected";
+                                        } ?>>6 Months</option>
+                    <option value="365" <?php if ($days == 365) {
+                                            echo "selected";
+                                        } ?>>1 Year</option>
+                </select> test log for URLs containing
+                <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
+                <input id="SubmitBtn" type="submit" value="Update List"><br>
+                <?php if (($admin || !Util::getSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner)))) : ?>
+                    <label><input id="all" type="checkbox" name="all" <?php check_it($all); ?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
+                <?php endif; ?>
+                <?php
+                if (isset($_REQUEST['ip']) && $_REQUEST['ip']) {
+                    echo '<input type="hidden" name="ip" value="1">';
+                }
+                if (isset($_REQUEST['local']) && $_REQUEST['local']) {
+                    echo '<input type="hidden" name="local" value="1">';
+                }
+                ?>
+                <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo); ?> onclick="this.form.submit();"> Only list tests which include video</label> &nbsp;&nbsp;
+                <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat); ?> onclick="this.form.submit();"> Show repeat view</label>
+                <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit); ?> onclick="this.form.submit();"> Do not limit the number of results (warning: WILL be slow)</label>
 
             </form>
-                    </div>
-            <div class="box">
+        </div>
+        <div class="box">
             <form name="compare" method="get" action="/video/compare.php">
-            <input id="CompareBtn" type="submit" value="Compare">
-            <table class="history pretty" >
-                <thead>
-                <tr>
-                    <th>Select to Compare</th>
-                    <th>Date/Time</th>
-                    <th>From</th>
-                    <?php
-                    if( $includeip )
-                        echo '<th>Requested By</th>';
-                    if( $admin ) {
-                        echo '<th>User</th>';
-                        echo '<th>Page Loads</th>';
-                    }
-                    ?>
-                    <th>Label</th>
-                    <th>URL</th>
-                </tr>
-                </thead>
-                <?php
-    }  // if( $csv )
-                    // loop through the number of days we are supposed to display
-                    $rowCount = 0;
-                    $done = false;
-                    $totalCount = 0;
-                    $targetDate = new DateTime($from, new DateTimeZone('GMT'));
-                    for($offset = 0; $offset <= $days && !$done; $offset++)
-                    {
-                        // figure out the name of the log file
-                        $fileName = realpath('./logs/' . $targetDate->format("Ymd") . '.log');
-                        if ($fileName !== false) {
-                          // load the log file into an array of lines
-                          if (isset($lines))
-                            unset($lines);
-                          if ($supportsGrep) {
-                            $ok = false;
-                            $patterns = array();
-                            if(isset($filterstr) && strlen($filterstr)) {
-                              $patterns[] = $filterstr;
-                            } elseif (!$all) {
-                              if (isset($user)) {
-                                $patterns[]= "\t$user\t";
-                              }
-                              if (isset($owner) && strlen($owner)) {
-                                $patterns[] = "\t$owner\t";
-                              }
+                <input id="CompareBtn" type="submit" value="Compare">
+                <table class="history pretty">
+                    <thead>
+                        <tr>
+                            <th>Select to Compare</th>
+                            <th>Date/Time</th>
+                            <th>From</th>
+                            <?php
+                            if ($includeip) {
+                                echo '<th>Requested By</th>';
                             }
-                            if (count($patterns)) {
-                              $command = "grep -a -i -F";
-                              foreach($patterns as $pattern) {
+                            if ($admin) {
+                                echo '<th>User</th>';
+                                echo '<th>Page Loads</th>';
+                            }
+                            ?>
+                            <th>Label</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                <?php
+            }  // if( $csv )
+            // loop through the number of days we are supposed to display
+            $rowCount = 0;
+            $done = false;
+            $totalCount = 0;
+            $targetDate = new DateTime($from, new DateTimeZone('GMT'));
+            for ($offset = 0; $offset <= $days && !$done; $offset++) {
+                // figure out the name of the log file
+                $fileName = realpath('./logs/' . $targetDate->format("Ymd") . '.log');
+                if ($fileName !== false) {
+                    // load the log file into an array of lines
+                    if (isset($lines))
+                        unset($lines);
+                    if ($supportsGrep) {
+                        $ok = false;
+                        $patterns = array();
+                        if (isset($filterstr) && strlen($filterstr)) {
+                            $patterns[] = $filterstr;
+                        } elseif (!$all) {
+                            if (isset($user)) {
+                                $patterns[] = "\t$user\t";
+                            }
+                            if (isset($owner) && strlen($owner)) {
+                                $patterns[] = "\t$owner\t";
+                            }
+                        }
+                        if (count($patterns)) {
+                            $command = "grep -a -i -F";
+                            foreach ($patterns as $pattern) {
                                 $pattern = str_replace('"', '\\"', $pattern);
                                 $command .= " -e " . escapeshellarg($pattern);
-                              }
-                              $command .= " '$fileName'";
-                              exec($command, $lines, $result_code);
-                              if ($result_code === 0 && is_array($lines) && count($lines))
+                            }
+                            $command .= " '$fileName'";
+                            exec($command, $lines, $result_code);
+                            if ($result_code === 0 && is_array($lines) && count($lines)) {
                                 $ok = true;
-                            } else {
-                              $lines = file($fileName);
-                              $ok = true;
                             }
-                          } else {
+                        } else {
+                            $lines = file($fileName);
                             $ok = true;
-                            $file = file_get_contents($fileName);
-                            if($filterstr) {
-                                $ok = false;
-                                if(stristr($file, $filterstr))
-                                    $ok=true;
-                            }
-                            $lines = explode("\n", $file);
-                            unset($file);
-                          }
-                          if(count($lines) && $ok)
-                          {
-                              // walk through them backwards
-                              $records = array_reverse($lines);
-                              unset($lines);
-                              foreach($records as $line)
-                              {
-                                  $ok = true;
-                                  if($filterstr && stristr($line, $filterstr) === false)
-                                      $ok = false;
-
-                                  if ($ok)
-                                  {
-                                      // tokenize the line
-                                      $line_data = tokenizeLogLine($line);
-
-                                      $date       = @$line_data['date'];
-                                      $ip         = @$line_data['ip'];
-                                      $guid       = @$line_data['guid'];
-                                      $url        = htmlentities(@$line_data['url']);
-                                      $location   = @$line_data['location'];
-                                      $private    = @$line_data['private'];
-                                      $testUID    = @$line_data['testUID'];
-                                      $testUser   = @$line_data['testUser'];
-                                      $video      = @$line_data['video'];
-                                      $label      = isset($line_data['label']) ? htmlentities($line_data['label']) : '';
-                                      $o          = isset($line_data['o']) ? $line_data['o'] : NULL;
-                                      $key        = isset($line_data['key']) ? $line_data['key'] : NULL;
-                                      $count      = @$line_data['count'];
-                                      $test_priority   = @$line_data['priority'];
-                                      $email      = @$line_data['email'];
-
-                                      if (!$location) {
-                                          $location = '';
-                                      }
-                                      if( isset($date) && isset($location) && isset($url) && isset($guid))
-                                      {
-                                          // Automatically make any URLs with credentials private
-                                          if (!$private) {
-                                            $atPos = strpos($url, '@');
-                                            if ($atPos !== false) {
-                                              $queryPos = strpos($url, '?');
-                                              if ($queryPos === false || $queryPos > $atPos) {
-                                                $private = 1;
-                                              }
-                                            }
-                                          }
-
-                                          // see if it is supposed to be filtered out
-                                          if ($private) {
-                                              $ok = false;
-                                              if ($includePrivate) {
-                                                  $ok = true;
-                                              } elseif ((isset($uid) && $uid == $testUID) ||
-                                                  (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
-                                                  $ok = true;
-                                              } elseif (isset($owner) && strlen($owner) && $owner == $o) {
-                                                  $ok = true;
-                                              }
-                                          }
-
-                                          if( $onlyVideo and !$video )
-                                              $ok = false;
-
-                                          if ($ok && isset($priority) && $priority != $test_priority)
-                                              $ok = false;
-  
-                                          if ($ok && !$all) {
-                                              $ok = false;
-                                              if ((isset($uid) && $uid == $testUID) ||
-                                                  (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
-                                                  $ok = true;
-                                              } elseif (isset($owner) && strlen($owner) && $owner == $o) {
-                                                  $ok = true;
-                                              }
-                                          }
-
-                                          if( $ok )
-                                          {
-                                              // See if we have to override the label
-                                              $new_label = getLabel($guid, $user);
-                                              if (!empty($new_label)) {
-                                                  $label = htmlentities($new_label);
-                                              }
-
-                                              $rowCount++;
-                                              $totalCount++;
-                                              $newDate = strftime('%x %X', $date + ($tz_offset * 60));
-
-                                              if( $csv )
-                                              {
-                                                  // only track local tests
-                                                  if( strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6) )
-                                                  {
-                                                      echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '","' . $label . '"' . "\r\n";
-                                                      // flush every 30 rows of data
-                                                      if( $rowCount % 30 == 0 )
-                                                      {
-                                                          flush();
-                                                          ob_flush();
-                                                      }
-                                                  }
-                                              }
-                                              else
-                                              {
-                                                  echo '<tr>';
-                                                  echo '<th>';
-                                                  if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) ) {
-                                                      echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
-                                                      if($repeat) {
-                                                          echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
-                                                      }
-                                                  }
-                                                  echo '</th>';
-                                                  echo '<td class="date">';
-                                                  if( $private )
-                                                      echo '<b>';
-                                                  echo $newDate;
-                                                  if( $private )
-                                                      echo '</b>';
-                                                  echo '</td>';
-                                                  echo '<td class="location">' . $location;
-                                                  if( $video )
-                                                      echo ' (video)';
-                                                  echo '</td>';
-                                                  if($includeip)
-                                                      echo '<td class="ip">' . $ip . '</td>';
-
-                                                  if( $admin )
-                                                  {
-                                                      if( isset($testUID) ) {
-                                                          echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
-                                                      } elseif( isset($email) ) {
-                                                        echo '<td class="uid">' . htmlspecialchars($email) . '</td>';
-                                                      } elseif( isset($key) ) {
-                                                        echo '<td class="uid">' . htmlspecialchars($key) . '</td>';
-                                                      } else {
-                                                          echo '<td class="uid"></td>';
-                                                      }
-                                                      echo "<td class=\"count\">$count</td>";
-                                                  }
-                                                  $link = "/results.php?test=$guid";
-                                                  if( FRIENDLY_URLS )
-                                                      $link = "/result/$guid/";
-                                                  if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
-                                                      $link = $guid;
-
-                                                  $labelTxt = $label;
-                                                  if( mb_strlen($labelTxt) > 30 ) {
-                                                      $labelTxt = mb_substr($labelTxt, 0, 27) . '...';
-                                                  }
-
-                                                  echo "<td title=\"$label\" class=\"label\">";
-                                                  echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
-
-                                                  // Only allow people to update labels if they are logged in
-                                                  if ($user && class_exists("SQLite3")) {
-                                                      echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
-                                                  }
-
-                                                  echo "</td>";
-
-                                                  echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
-
-                                                  // split the tables every 30 rows so the browser doesn't wait for ALL the results
-                                                  if( $rowCount % 30 == 0 )
-                                                  {
-                                                      echo '</table><table class="history" border="0" cellpadding="5px" cellspacing="0">';
-                                                      flush();
-                                                      ob_flush();
-                                                  }
-                                              }
-
-                                              if (!$nolimit && $totalCount > 100) {
-                                                  $done = true;
-                                                  break;
-                                              }
-                                          }
-                                      }
-                                  }
-                              }
-                          }
                         }
-
-                        // on to the previous day
-                        $targetDate->modify('-1 day');
+                    } else {
+                        $ok = true;
+                        $file = file_get_contents($fileName);
+                        if ($filterstr) {
+                            $ok = false;
+                            if (stristr($file, $filterstr)) {
+                                $ok = true;
+                            }
+                        }
+                        $lines = explode("\n", $file);
+                        unset($file);
                     }
-    if( !$csv )
-    {
-                    ?>
+                    if (count($lines) && $ok) {
+                        // walk through them backwards
+                        $records = array_reverse($lines);
+                        unset($lines);
+                        foreach ($records as $line) {
+                            $ok = true;
+                            if ($filterstr && stristr($line, $filterstr) === false) {
+                                $ok = false;
+                            }
+                            if ($ok) {
+                                // tokenize the line
+                                $line_data = tokenizeLogLine($line);
+
+                                $date       = @$line_data['date'];
+                                $ip         = @$line_data['ip'];
+                                $guid       = @$line_data['guid'];
+                                $url        = htmlentities(@$line_data['url']);
+                                $location   = @$line_data['location'];
+                                $private    = @$line_data['private'];
+                                $testUID    = @$line_data['testUID'];
+                                $testUser   = @$line_data['testUser'];
+                                $video      = @$line_data['video'];
+                                $label      = isset($line_data['label']) ? htmlentities($line_data['label']) : '';
+                                $o          = isset($line_data['o']) ? $line_data['o'] : NULL;
+                                $key        = isset($line_data['key']) ? $line_data['key'] : NULL;
+                                $count      = @$line_data['count'];
+                                $test_priority   = @$line_data['priority'];
+                                $email      = @$line_data['email'];
+
+                                if (!$location) {
+                                    $location = '';
+                                }
+                                if (isset($date) && isset($location) && isset($url) && isset($guid)) {
+                                    // Automatically make any URLs with credentials private
+                                    if (!$private) {
+                                        $atPos = strpos($url, '@');
+                                        if ($atPos !== false) {
+                                            $queryPos = strpos($url, '?');
+                                            if ($queryPos === false || $queryPos > $atPos) {
+                                                $private = 1;
+                                            }
+                                        }
+                                    }
+
+                                    // see if it is supposed to be filtered out
+                                    if ($private) {
+                                        $ok = false;
+                                        if ($includePrivate) {
+                                            $ok = true;
+                                        } elseif ((isset($uid) && $uid == $testUID) ||
+                                            (isset($user) && strlen($user) && !strcasecmp($user, $testUser))
+                                        ) {
+                                            $ok = true;
+                                        } elseif (isset($owner) && strlen($owner) && $owner == $o) {
+                                            $ok = true;
+                                        }
+                                    }
+
+                                    if ($onlyVideo and !$video) {
+                                        $ok = false;
+                                    }
+                                    if ($ok && isset($priority) && $priority != $test_priority) {
+                                        $ok = false;
+                                    }
+                                    if ($ok && !$all) {
+                                        $ok = false;
+                                        if ((isset($uid) && $uid == $testUID) ||
+                                            (isset($user) && strlen($user) && !strcasecmp($user, $testUser))
+                                        ) {
+                                            $ok = true;
+                                        } elseif (isset($owner) && strlen($owner) && $owner == $o) {
+                                            $ok = true;
+                                        }
+                                    }
+
+                                    if ($ok) {
+                                        // See if we have to override the label
+                                        $new_label = getLabel($guid, $user);
+                                        if (!empty($new_label)) {
+                                            $label = htmlentities($new_label);
+                                        }
+
+                                        $rowCount++;
+                                        $totalCount++;
+                                        $newDate = strftime('%x %X', $date + ($tz_offset * 60));
+
+                                        if ($csv) {
+                                            // only track local tests
+                                            if (strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6)) {
+                                                echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '","' . $label . '"' . "\r\n";
+                                                // flush every 30 rows of data
+                                                if ($rowCount % 30 == 0) {
+                                                    flush();
+                                                    ob_flush();
+                                                }
+                                            }
+                                        } else {
+                                            echo '<tr>';
+                                            echo '<th>';
+                                            if (isset($guid) && $video && !($url == "Bulk Test" || $url == "Multiple Locations test")) {
+                                                echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
+                                                if ($repeat) {
+                                                    echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
+                                                }
+                                            }
+                                            echo '</th>';
+                                            echo '<td class="date">';
+                                            if ($private) {
+                                                echo '<b>';
+                                            }
+                                            echo $newDate;
+                                            if ($private) {
+                                                echo '</b>';
+                                            }
+                                            echo '</td>';
+                                            echo '<td class="location">' . $location;
+                                            if ($video) {
+                                                echo ' (video)';
+                                            }
+                                            echo '</td>';
+                                            if ($includeip) {
+                                                echo '<td class="ip">' . $ip . '</td>';
+                                            }
+
+                                            if ($admin) {
+                                                if (isset($testUID)) {
+                                                    echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
+                                                } elseif (isset($email)) {
+                                                    echo '<td class="uid">' . htmlspecialchars($email) . '</td>';
+                                                } elseif (isset($key)) {
+                                                    echo '<td class="uid">' . htmlspecialchars($key) . '</td>';
+                                                } else {
+                                                    echo '<td class="uid"></td>';
+                                                }
+                                                echo "<td class=\"count\">$count</td>";
+                                            }
+                                            $link = "/results.php?test=$guid";
+                                            if (FRIENDLY_URLS)
+                                                $link = "/result/$guid/";
+                                            if (!strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6)) {
+                                                $link = $guid;
+                                            }
+
+                                            $labelTxt = $label;
+                                            if (mb_strlen($labelTxt) > 30) {
+                                                $labelTxt = mb_substr($labelTxt, 0, 27) . '...';
+                                            }
+
+                                            echo "<td title=\"$label\" class=\"label\">";
+                                            echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
+
+                                            // Only allow people to update labels if they are logged in
+                                            if ($user && class_exists("SQLite3")) {
+                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
+                                            }
+
+                                            echo "</td>";
+
+                                            echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url, 80) . '</a></td></tr>';
+
+                                            // split the tables every 30 rows so the browser doesn't wait for ALL the results
+                                            if ($rowCount % 30 == 0) {
+                                                echo '</table><table class="history" border="0" cellpadding="5px" cellspacing="0">';
+                                                flush();
+                                                ob_flush();
+                                            }
+                                        }
+
+                                        if (!$nolimit && $totalCount > 100) {
+                                            $done = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // on to the previous day
+                $targetDate->modify('-1 day');
+            }
+            if (!$csv) {
+                ?>
                 </table>
-                </form>
-    </div>
-            <?php include('footer.inc'); ?>
+            </form>
+        </div>
+        <?php include('footer.inc'); ?>
     </body>
-</html>
+
+    </html>
 <?php
-} // if( !$csv )
+            } // if( !$csv )
+?>
