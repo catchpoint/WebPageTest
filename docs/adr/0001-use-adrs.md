@@ -1,4 +1,4 @@
-# Architecture Decision Record: Use ADRs
+# Use ADRs
 📆 **Updated**: June 15, 2022
 
 🙋🏽‍♀️ **Status** Accepted
