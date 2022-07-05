@@ -781,7 +781,11 @@ else {
     }
 
 
-    if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error) && $hasRunsAvailable) {
+    if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
+
+        if (!$hasRunsAvailable) {
+            $error = "User is out of runs for the month.";
+        }
 
         if (!array_key_exists('id', $test)) {
             // see if we are doing a SPOF test (if so, we need to build the 2 tests and
