@@ -5,6 +5,7 @@
 //$REDIRECT_HTTPS = true;
 include 'common.inc';
 
+use WebPageTest\Util;
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -77,6 +78,7 @@ $loc = ParseLocations($locations);
 
 // Is the user a logged in and paid user?
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
 
 ?>
@@ -266,7 +268,9 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
                                                 </div>
 
                                                 <div class="test_presets_easy_submit">
-                                                    <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                    <?php if ($is_logged_in) : ?>
+                                                        <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                    <?php endif; ?>
                                                     <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
                                                 </div>
                                             </div>
@@ -358,7 +362,9 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
 
                                             </div>
                                             <div>
-                                                <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                <?php if ($is_logged_in) : ?>
+                                                    <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                <?php endif; ?>
                                                 <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
                                             </div>
                                         </li>
