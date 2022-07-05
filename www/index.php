@@ -265,8 +265,8 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
                                                 </div>
 
                                                 <div class="test_presets_easy_submit">
-                                                    <small class="test_runs"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
-                                                    <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                                                    <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                    <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
                                                 </div>
                                             </div>
                                         </li>
@@ -357,8 +357,8 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
 
                                             </div>
                                             <div>
-                                                <small class="test_runs test_runs-warn"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
-                                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="true">
+                                                <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
                                             </div>
                                         </li>
 
