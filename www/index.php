@@ -114,10 +114,11 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
 
             <?php
             if (!$headless) {
+
             ?>
 
 
-                <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+                <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
 
 
 
