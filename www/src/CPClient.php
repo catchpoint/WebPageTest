@@ -185,7 +185,8 @@ class CPClient
                     ]),
                 (new Query('braintreeCustomerDetails'))
                     ->setSelectionSet([
-                        'remainingRuns'
+                        'remainingRuns',
+                        'monthlyRuns'
                     ])
             ]);
 
@@ -287,6 +288,7 @@ class CPClient
                                 'numberOfBillingCycles'
                             ]),
                         'remainingRuns',
+                        'monthlyRuns',
                         'planRenewalDate',
                         'billingFrequency',
                         'wptPlanName'
@@ -343,6 +345,7 @@ class CPClient
                                 'numberOfBillingCycles'
                             ]),
                         'remainingRuns',
+                        'monthlyRuns',
                         'planRenewalDate',
                         'billingFrequency',
                         'wptPlanName'
