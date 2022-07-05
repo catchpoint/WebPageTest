@@ -32,6 +32,7 @@ use WebPageTest\Exception\UnauthorizedException;
         try {
             $data = $request->getClient()->getUserDetails();
             $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
+            $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
             $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
@@ -67,6 +68,7 @@ use WebPageTest\Exception\UnauthorizedException;
                     $data = $request->getClient()->getUserDetails();
                     $user->setUserId($data['userIdentity']['activeContact']['id']);
                     $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
+                    $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
                     $user->setEmail($data['userIdentity']['activeContact']['email']);
                     $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
                     $user->setVerified($data['userIdentity']['activeContact']['isWptAccountVerified']);

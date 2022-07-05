@@ -275,7 +275,8 @@ final class CPClientTest extends TestCase
         }
       },
       "braintreeCustomerDetails": {
-        "remainingRuns": "300"
+        "remainingRuns": "300",
+        "monthlyRuns": "3000"
       }
     }
     }');
