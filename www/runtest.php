@@ -41,6 +41,7 @@
     require_once('common.inc');
 
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 use WebPageTest\Template;
 use WebPageTest\RateLimiter;
 
@@ -3283,27 +3284,29 @@ function ReportAnalytics(&$test, $testId)
 }
 
 function loggedOutLoginForm(){
-  $ret = '<ul class="testerror_login"><li><a href="/saml/login.php">Login</a></li>';
-  $reg = GetSetting('saml_register');
-  if ($reg) {
-    $ret .= "<li><a class='pill' href='$reg' onclick=\"try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Signup']);}}catch(err){}\">Sign-up</a></li>";
-  }
-  $ret .= "</ul>";
+    $ret = <<<HTML
+<ul class="testerror_login">
+    <li><a href="/login">Login</a></li>
+    <li><a class='pill' href='/signup'>Sign-up</a></li>
+</ul>
+HTML;
+
   return $ret;
 }
 
 function loggedInPerks(){
-  $msg = '<ul class="testerror_loginperks">';
-  $msg .= '<li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>';
-  $msg .= '<li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>';
-  $msg .= '<li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>';
-  $msg .= '</ul>';
+    $msg = <<<HTML
+<ul class="testerror_loginperks">
+    <li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>
+    <li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>
+    <li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>
+</ul>
+HTML;
   return $msg;
 }
 
 function CheckRateLimit($test, &$error) {
   global $USER_EMAIL;
-  global $supportsSaml;
   global $supportsCPAuth;
   global $request_context;
 
@@ -3335,7 +3338,7 @@ function CheckRateLimit($test, &$error) {
   $passesMonthly = $cmrl->check($total_runs);
 
   if(!$passesMonthly) {
-    $error = '<p>You\'ve reached the limit for logged-out tests this month, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+    $error = "<p>You've reached the limit for logged-out tests this month, but don't worry! You can keep testing once you log in, which will give you access to other nice features like:</p>";
     $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3352,19 +3355,18 @@ HTML;
   }
 
   // Enforce per-IP rate limits for testing
-  $limit = GetSetting('rate_limit_anon', null);
+  $limit = Util::getSetting('rate_limit_anon', null);
   if (isset($limit) && $limit > 0) {
     $cache_key = 'rladdr_' . $test['ip'];
-    $count = CacheFetch($cache_key);
+    $count = Cache::fetch($cache_key);
     if (!isset($count)) {
       $count = 0;
     }
     if ($count < $limit) {
       $count += $total_runs;
-      CacheStore($cache_key, $count, 1800);
+      Cache::store($cache_key, $count, 1800);
     } else {
-      $register = GetSetting('saml_register');
-      $apiUrl = GetSetting('api_url');
+      $apiUrl = Util::getSetting('api_url');
       $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
       $error .= <<<HTML
 <script>
@@ -3378,7 +3380,7 @@ HTML;
 HTML;
 
       $error .= loggedInPerks();
-      if ($supportsSaml && $register && $apiUrl) {
+      if ($apiUrl) {
         $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
       }
       $error .= loggedOutLoginForm();
