@@ -80,7 +80,7 @@ $loc = ParseLocations($locations);
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
-
+$hasNoRunsLeft = (int)$remaining_runs <= 0;
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -269,9 +269,9 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
 
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
-                                                        <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                        <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
                                                     <?php endif; ?>
-                                                    <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
+                                                    <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" <?= $hasNoRunsLeft ? 'aria-disabled disabled' : ''; ?>>
                                                 </div>
                                             </div>
                                         </li>
@@ -363,9 +363,10 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
                                             </div>
                                             <div>
                                                 <?php if ($is_logged_in) : ?>
-                                                    <small class="test_runs <?= $remaining_runs === 0 ? 'runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                                    <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
                                                 <?php endif; ?>
-                                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" aria-disabled="<?= $remaining_runs == 0 ? true : false; ?>">
+                                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" <?= $hasNoRunsLeft ? 'aria-disabled disabled' : ''; ?>>
+
                                             </div>
                                         </li>
 
@@ -933,7 +934,6 @@ $remaining_runs =  (isset($request_context) && !is_null($request_context->getUse
                             </div>
                         </div>
                     </div>
-                    <!--/simpleadvancedfieldscontain-->
                 </form>
 
 

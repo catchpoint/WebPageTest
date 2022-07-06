@@ -63,7 +63,7 @@ $runcount = 0;
 $apiKey = null;
 $is_mobile = false;
 $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
-$hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns();
+
 $includePaid = $isPaid || $admin;
 // load the secret key (if there is one)
 $server_secret = Util::getServerSecret();
@@ -784,8 +784,11 @@ else {
 
     if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
 
+        $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
+        $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
+
         if (!$hasRunsAvailable) {
-            $error = "User is out of runs for the month.";
+            $error = "Not enough runs available";
         }
 
         if (!array_key_exists('id', $test)) {
@@ -1249,9 +1252,14 @@ else {
                 echo json_encode($ret);
             } else {
                 $tpl = new Template('errors');
-                echo $tpl->render('runtest', array(
-                    'error' => $error
-                ));
+                $tpl = new Template('errors');
+                if ($error == 'Not enough runs available') {
+                    echo $tpl->render('runlimit');
+                } else {
+                    echo $tpl->render('runtest', array(
+                        'error' => $error
+                    ));
+                }
             }
         }
     } else {
@@ -1274,9 +1282,13 @@ else {
             echo json_encode($ret);
         } elseif (strlen($error)) {
             $tpl = new Template('errors');
-            echo $tpl->render('runtest', array(
-                'error' => $error
-            ));
+            if ($error == 'Not enough runs available') {
+                echo $tpl->render('runlimit');
+            } else {
+                echo $tpl->render('runtest', array(
+                    'error' => $error
+                ));
+            }
         } else {
             include 'blocked.php';
         }
