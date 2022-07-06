@@ -80,7 +80,7 @@ $loc = ParseLocations($locations);
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
-$hasNoRunsLeft = (int)$remaining_runs <= 0;
+$hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
