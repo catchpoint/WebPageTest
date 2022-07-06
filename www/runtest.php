@@ -63,7 +63,6 @@ $runcount = 0;
 $apiKey = null;
 $is_mobile = false;
 $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
-
 $includePaid = $isPaid || $admin;
 // load the secret key (if there is one)
 $server_secret = Util::getServerSecret();
@@ -783,7 +782,6 @@ else {
 
 
     if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
-
         $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
         $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
 
@@ -1251,7 +1249,6 @@ else {
                 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
                 echo json_encode($ret);
             } else {
-                $tpl = new Template('errors');
                 $tpl = new Template('errors');
                 if ($error == 'Not enough runs available') {
                     echo $tpl->render('runlimit');
@@ -3274,7 +3271,8 @@ function ReportAnalytics(&$test, $testId)
     }
 }
 
-function loggedOutLoginForm(){
+function loggedOutLoginForm()
+{
     $ret = <<<HTML
 <ul class="testerror_login">
     <li><a href="/login">Login</a></li>
@@ -3282,10 +3280,11 @@ function loggedOutLoginForm(){
 </ul>
 HTML;
 
-  return $ret;
+    return $ret;
 }
 
-function loggedInPerks(){
+function loggedInPerks()
+{
     $msg = <<<HTML
 <ul class="testerror_loginperks">
     <li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>
@@ -3293,13 +3292,14 @@ function loggedInPerks(){
     <li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>
 </ul>
 HTML;
-  return $msg;
+    return $msg;
 }
 
-function CheckRateLimit($test, &$error) {
-  global $USER_EMAIL;
-  global $supportsCPAuth;
-  global $request_context;
+function CheckRateLimit($test, &$error)
+{
+    global $USER_EMAIL;
+    global $supportsCPAuth;
+    global $request_context;
 
     $ret = true;
 
@@ -3328,9 +3328,9 @@ function CheckRateLimit($test, &$error) {
     $cmrl = new RateLimiter($test['ip'], $monthly_limit);
     $passesMonthly = $cmrl->check($total_runs);
 
-  if(!$passesMonthly) {
-    $error = "<p>You've reached the limit for logged-out tests this month, but don't worry! You can keep testing once you log in, which will give you access to other nice features like:</p>";
-    $error .= <<<HTML
+    if (!$passesMonthly) {
+        $error = "<p>You've reached the limit for logged-out tests this month, but don't worry! You can keep testing once you log in, which will give you access to other nice features like:</p>";
+        $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
         if(window["_gaq"]) {
@@ -3340,26 +3340,26 @@ function CheckRateLimit($test, &$error) {
     }, 500);
 </script>
 HTML;
-    $error .= loggedInPerks();
-    $error .= loggedOutLoginForm();
-    return false;
-  }
-
-  // Enforce per-IP rate limits for testing
-  $limit = Util::getSetting('rate_limit_anon', null);
-  if (isset($limit) && $limit > 0) {
-    $cache_key = 'rladdr_' . $test['ip'];
-    $count = Cache::fetch($cache_key);
-    if (!isset($count)) {
-      $count = 0;
+        $error .= loggedInPerks();
+        $error .= loggedOutLoginForm();
+        return false;
     }
-    if ($count < $limit) {
-      $count += $total_runs;
-      Cache::store($cache_key, $count, 1800);
-    } else {
-      $apiUrl = Util::getSetting('api_url');
-      $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
-      $error .= <<<HTML
+
+    // Enforce per-IP rate limits for testing
+    $limit = Util::getSetting('rate_limit_anon', null);
+    if (isset($limit) && $limit > 0) {
+        $cache_key = 'rladdr_' . $test['ip'];
+        $count = Cache::fetch($cache_key);
+        if (!isset($count)) {
+            $count = 0;
+        }
+        if ($count < $limit) {
+            $count += $total_runs;
+            Cache::store($cache_key, $count, 1800);
+        } else {
+            $apiUrl = Util::getSetting('api_url');
+            $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+            $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
         if(window["_gaq"]) {
@@ -3370,12 +3370,13 @@ HTML;
 </script>
 HTML;
 
-      $error .= loggedInPerks();
-      if ($apiUrl) {
-        $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
-      }
-      $error .= loggedOutLoginForm();
-      $ret = false;
+            $error .= loggedInPerks();
+            if ($apiUrl) {
+                $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
+            }
+            $error .= loggedOutLoginForm();
+            $ret = false;
+        }
     }
 
     return $ret;
