@@ -94,6 +94,7 @@ if ($request_method === 'POST') {
     $is_verified = $request_context->getUser()->isVerified();
     $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
     $user_id = $request_context->getUser()->getUserId();
+    $remainingRuns = $request_context->getUser()->getRemainingRuns();
     $user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
     $user_email = $request_context->getUser()->getEmail();
     $first_name = $user_contact_info['firstName'] ?? "";
@@ -175,6 +176,7 @@ if ($request_method === 'POST') {
     $results['bt_client_token'] = $client_token;
     $results['country_list'] = $country_list;
     $results['state_list'] = $state_list;
+    $results['remainingRuns'] = $remainingRuns;
 
     if (!is_null($error_message)) {
         $results['error_message'] = $error_message;
