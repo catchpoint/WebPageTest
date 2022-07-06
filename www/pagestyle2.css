@@ -7541,6 +7541,10 @@ td.legend {
     background: gainsboro;
 }
 
+.test_results-content .google-visualization-table-sortind {
+    color: unset;
+}
+
 [name=simpleadvanced]+label+.simpleadvancedfields {
     display: none;
 }
