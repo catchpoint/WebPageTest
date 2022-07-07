@@ -33,8 +33,7 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createLegend() {
-    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
-           'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+    $out = '<table class="waterfall-legend">';
     $out .= "\n<tbody>\n<tr>\n";
     $out .= $this->_createLegendCell("#dfffdf", "Before Start Render");
     $out .= $this->_createLegendCell("#dfdfff", "Before On Load");
