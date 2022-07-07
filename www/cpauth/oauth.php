@@ -53,7 +53,14 @@ use WebPageTest\RequestContext;
     setcookie($cp_access_token_cookie_name, $auth_token->access_token, time() + $auth_token->expires_in, "/", $host);
     setcookie($cp_refresh_token_cookie_name, $auth_token->refresh_token, time() + 60 * 60 * 24 * 30, "/", $host);
 
-    header("Location: {$protocol}://{$host}");
+    $redirect_uri = "{$protocol}://{$host}";
+
+    if (isset($_COOKIE[Util::getCookieName('comeback_route')])) {
+        $redirect_uri .= htmlspecialchars($_COOKIE[Util::getCookieName('comeback_route')], ENT_QUOTES);
+        setcookie(Util::getCookieName('comeback_route'), "", time() - 3600, "/", $host);
+    }
+
+    header("Location: {$redirect_uri}");
 
     exit();
 })($request_context);
