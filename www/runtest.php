@@ -784,8 +784,9 @@ else {
     if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
         $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
         $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
+        $isAnon = !is_null($request_context->getUser()) && $request_context->getUser()->isAnon();
 
-        if (!$hasRunsAvailable) {
+        if (!$hasRunsAvailable && !$isAnon && !is_null($request_context->getUser())) {
             $error = "Not enough runs available";
         }
 
