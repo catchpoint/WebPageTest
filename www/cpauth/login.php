@@ -17,6 +17,17 @@ if (!Util::getSetting('cp_auth')) {
     exit();
 }
 
+if (isset($_GET['redirect_uri'])) {
+    $comeback_route = $_GET['redirect_uri'];
+    setcookie(
+        Util::getCookieName('comeback_route'),
+        htmlspecialchars($comeback_route, ENT_QUOTES),
+        time() + 3600,
+        "/",
+        $host
+    );
+}
+
 $auth_host = Util::getSetting('cp_auth_host');
 $redirect_uri = "{$auth_host}/auth/WptAccount/Login?ReturnUrl=https://{$host}/cpauth";
 
