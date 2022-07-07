@@ -4266,6 +4266,36 @@ span.test_preset_profile_tt:after {
     text-align: right;
 }
 
+
+/* test run remaining styles */
+
+.test_runs {
+    color: #fff;
+    display: block;
+    font-size: .9rem;
+    margin: 0 0 0.8em;
+    padding: 0 0.5em 0 0;
+    white-space: nowrap;
+}
+
+.test_runs span,
+.test_runs a {
+    color: inherit;
+    display: inline-block;
+}
+
+.test_runs-warn span {
+    background: url(/images/src/icon_grading_alert.svg) no-repeat;
+    background-size: contain;
+    background-position: left center;
+    padding-left: 1.8em;
+}
+
+.test_runs-warn+input[aria-disabled] {
+    opacity: .7;
+    pointer-events: none;
+}
+
 #description:empty {
     display: none;
 }
@@ -7942,10 +7972,12 @@ div.request-dialog-radio {
     text-decoration: underline;
     font-size: 1em;
 }
-.request-details ul.hints{
+
+.request-details ul.hints {
     list-style-type: disc;
     margin-left: 2em;
 }
+
 .jqmWindow {
     display: none;
     position: fixed;
