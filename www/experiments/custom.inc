@@ -148,7 +148,7 @@ $assessment[$category]["opportunities"][] = array(
             (object) [
             'id' => '032',
             'expvar' => 'addpreload',
-            'title' => 'Preload files',
+            'title' => 'Preload Files',
             "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
             
 "expfields" => array(
@@ -265,7 +265,7 @@ $assessment[$category]["opportunities"][] = array(
             (object) [
             'id' => '040',
             'expvar' => 'fontdisplayswap',
-            'title' => 'Add font-display: swap',
+            'title' => 'Add <code>font-display: swap</code>',
             "desc" => '<p>This experiment changes the way a custom font loads so that text can appear while fonts are loading</p>',
             'expval' => array(''),
             "hideassets" => true,
