@@ -26,7 +26,8 @@ if (is_null($access_token)) {
     $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
     $route = '/login';
-    $redirect_uri = "{$protocol}://{$host}{$route}?redirect_uri={$protocol}://{$host}/account";
+    $query = http_build_query(["redirect_uri" => "/account"]);
+    $redirect_uri = "{$protocol}://{$host}{$route}?{$query}";
 
     header("Location: {$redirect_uri}");
     exit();

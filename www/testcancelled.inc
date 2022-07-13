@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPagetest - Test cancelled</title>
+        <title>WebPageTest - Test cancelled</title>
         <?php
             $noanalytics = true;
-            $page_keywords = array('Cancelled','Webpagetest','Website Speed Test','Page Speed');
+            $page_keywords = array('Cancelled','WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Website speed test cancelled.";
             include ('head.inc');
         ?>

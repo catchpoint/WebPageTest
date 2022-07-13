@@ -955,7 +955,7 @@ h4.experiments_list_hed-recs {
 
 .experiment_description code {
     font-size: 1.2em;
-    word-break: break-all;
+    word-break: break-word;
     /* background: #eee; */
     padding: .2em .4em;
     /* color: #1e1e1e; */

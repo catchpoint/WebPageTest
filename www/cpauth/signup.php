@@ -114,6 +114,18 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     $vars['is_plan_free'] = $is_plan_free;
     $vars['step'] = $signup_step;
 
+    $host = Util::getSetting('host');
+    if (isset($_GET['redirect_uri'])) {
+        $comeback_route = $_GET['redirect_uri'];
+        setcookie(
+            Util::getCookieName('comeback_route'),
+            htmlspecialchars($comeback_route, ENT_QUOTES),
+            time() + 3600,
+            "/",
+            $host
+        );
+    }
+
     switch ($signup_step) {
         case 2:
             echo SignupHandler::getStepTwo($request_context, $vars);
