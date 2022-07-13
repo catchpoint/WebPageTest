@@ -1253,6 +1253,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   background: transparent;
   font-size: 1rem;
   color: #2b94ff;
+  cursor: pointer;
 }
 
 /*  ---------------------------------------------------------------
