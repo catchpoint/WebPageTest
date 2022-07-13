@@ -1,3 +1,5 @@
+@import 'colors.css';
+
 .pill-button {
   appearance: none;
   width: auto;
@@ -31,11 +33,11 @@
 update all the yellow buttons on the site
 **/
 .yellow {
-  background-color: #F9D856;
+  background-color: var(--brand-yellow);
 }
 
 .blue {
-  background-color: #3881E5;
+  background-color: var(--brand-blue);
   color: #fff;
 }
 
@@ -43,18 +45,106 @@ update all the yellow buttons on the site
 TODO update the NEW buttons on signup to this green
 **/
 .green {
-  background-color: #80BC06;
+  background-color: var(--brand-green);
 }
 
 .red {
-  background-color: #d02424;
+  background-color: var(--brand-red);
   color: #fff;
 }
 
 .purple {
-  background-color: #6b25cf
+  background-color: var(--brand-purple);
 }
 
 .grey-outline {
-  border: 1px solid rgb(204, 204, 204)
+  border: var(--grey-outline)
+}
+
+/**
+ * ==============================================
+ * Dot Pulse
+ * ==============================================
+ */
+.dot-pulse {
+  position: relative;
+  left: -9999px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #141E33;
+  color: #141E33;
+  box-shadow: 9999px 0 0 -5px #141E33;
+  animation: dotPulse 1.5s infinite linear;
+  animation-delay: .25s;
+}
+
+.dot-pulse::before,
+.dot-pulse::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #141E33;
+  color: #141E33;
+}
+
+.dot-pulse::before {
+  box-shadow: 9984px 0 0 -5px #141E33;
+  animation: dotPulseBefore 1.5s infinite linear;
+  animation-delay: 0s;
+}
+
+.dot-pulse::after {
+  box-shadow: 10014px 0 0 -5px #141E33;
+  animation: dotPulseAfter 1.5s infinite linear;
+  animation-delay: .5s;
+}
+
+@keyframes dotPulseBefore {
+  0% {
+    box-shadow: 9984px 0 0 -5px #141E33;
+  }
+
+  30% {
+    box-shadow: 9984px 0 0 2px #141E33;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9984px 0 0 -5px #141E33;
+  }
+}
+
+@keyframes dotPulse {
+  0% {
+    box-shadow: 9999px 0 0 -5px #141E33;
+  }
+
+  30% {
+    box-shadow: 9999px 0 0 2px #141E33;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9999px 0 0 -5px #141E33;
+  }
+}
+
+@keyframes dotPulseAfter {
+  0% {
+    box-shadow: 10014px 0 0 -5px #141E33;
+  }
+
+  30% {
+    box-shadow: 10014px 0 0 2px #141E33;
+  }
+
+  60%,
+  100% {
+    box-shadow: 10014px 0 0 -5px #141E33;
+  }
 }
