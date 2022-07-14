@@ -28,7 +28,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
     <body class="result">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Performance';
+            $subtab = 'Optimization';
             include 'header.inc';
 
             
