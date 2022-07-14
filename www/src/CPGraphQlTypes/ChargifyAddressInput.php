@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace WebPageTest\CPGraphQlTypes;
+
 use Exception;
 
 class ChargifyAddressInput
@@ -15,14 +16,14 @@ class ChargifyAddressInput
 
     public function __construct(array $options)
     {
-        if(
-          !(isset($options['street_address'])) ||
-          !(isset($options['city'])) ||
-          !(isset($options['state'])) ||
-          !(isset($options['country'])) ||
-          !(isset($options['zipcode']))
+        if (
+            !(isset($options['street_address'])) ||
+            !(isset($options['city'])) ||
+            !(isset($options['state'])) ||
+            !(isset($options['country'])) ||
+            !(isset($options['zipcode']))
         ) {
-          throw new Exception("Street address, city, state, country, and zip must all be set");
+            throw new Exception("Street address, city, state, country, and zip must all be set");
         }
 
         $this->street_address = $options['street_address'];
@@ -34,12 +35,12 @@ class ChargifyAddressInput
 
     public function toArray(): array
     {
-      return [
+        return [
         "streetAddress" => $this->street_address,
         "city" => $this->city,
         "isoState" => $this->state,
         "isoCountry" => $this->country,
         "zipcode" => $this->zipcode
-      ];
+        ];
     }
 }

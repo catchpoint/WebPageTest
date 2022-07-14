@@ -246,38 +246,38 @@ class CPClient
         }
     }
 
-    public function getUnpaidAccountpageInfo(): array
+    /**
+     * @return array WebPageTest\Plan[]
+     */
+    public function getWptPlans(): array
     {
-        $gql = (new Query())
-            ->setSelectionSet([
-                'braintreeClientToken',
-                (new Query('wptPlans'))
-                    ->setSelectionSet([
-                        'id',
-                        'name',
-                        'price',
-                        'billingFrequency',
-                        'billingDayOfMonth',
-                        'currencyIsoCode',
-                        'numberOfBillingCycles',
-                        'trialDuration',
-                        'trialPeriod',
-                        (new Query('discount'))
-                            ->setSelectionSet([
-                                'amount',
-                                'numberOfBillingCycles'
-                            ])
-                    ])
-            ]);
-        $page_info = $this->graphql_client->runQuery($gql, true);
-        return $page_info->getData();
+      $gql = (new Query('wptPlan'))
+        ->setSelectionSet([
+            'name',
+            'priceInCents',
+            'description',
+            'interval',
+            'monthlyTestRuns'
+        ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        return array_map(function ($data): Plan {
+          $options = [
+            'id' => $data['name'],
+            'name' => $data['description'],
+            'priceInCents' => $data['priceInCents'],
+            'billingFrequency' => $data['interval'],
+            'runs' => $data['monthlyTestRuns']
+          ];
+
+            return new Plan($options);
+        }, $results->getData()['wptPlan']);
     }
 
     public function getPaidAccountPageInfo(): array
     {
         $gql = (new Query())
             ->setSelectionSet([
-                'braintreeClientToken',
                 (new Query('wptApiKey'))
                     ->setSelectionSet([
                         'id',

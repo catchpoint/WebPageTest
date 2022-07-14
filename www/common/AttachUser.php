@@ -79,8 +79,7 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
-    $isPaid = $user->isPaid();
-    if ($isPaid) {
+    if ($user->isPaid()) {
         //calculate based on paid priority
         $user->setUserPriority((int)Util::getSetting('paid_priority', 0));
     } else {

@@ -11,6 +11,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
 
+
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
@@ -115,8 +116,8 @@ $contact_info = array(
 
 $billing_info = array();
 $client_token = "";
-$country_list = Util::getCountryList();
-$state_list = Util::getStateList();
+$country_list = Util::getChargifyCountryList();
+$state_list = Util::getChargifyUSStateList();
 
 if ($is_paid) {
     if ($is_wpt_enterprise) {
@@ -135,6 +136,7 @@ if ($is_paid) {
             $plan_renewal_date = new DateTime($customer_details['nextBillingDate']);
             $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
         }
+
         $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
         $billing_info['billing_frequency'] = $billing_frequency;
         $client_token = $billing_info['braintreeClientToken'];
@@ -142,28 +144,23 @@ if ($is_paid) {
 
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
 } else {
-    $info = $request_context->getClient()->getUnpaidAccountpageInfo();
-    $client_token = $info['braintreeClientToken'];
-    $plans = $info['wptPlans'];
+    $plans = $request_context->getClient()->getWptPlans();
     $annual_plans = array();
     $monthly_plans = array();
     usort($plans, function ($a, $b) {
-        if ($a['price'] == $b['price']) {
+        if ($a->getPrice() == $b->getPrice()) {
             return 0;
         }
-        return ($a['price'] < $b['price']) ? -1 : 1;
+        return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
     });
     foreach ($plans as $plan) {
-        if ($plan['billingFrequency'] == 1) {
-            $plan['price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
+        if ($plan->getBillingFrequency() == "Monthly") {
             $monthly_plans[] = $plan;
         } else {
-            $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
             $annual_plans[] = $plan;
         }
     }
+
     $billing_info = array(
         'annual_plans' => $annual_plans,
         'monthly_plans' => $monthly_plans
@@ -174,7 +171,6 @@ $results = array_merge($contact_info, $billing_info);
 $results['csrf_token'] = $_SESSION['csrf_token'];
 $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
-$results['bt_client_token'] = $client_token;
 $results['country_list'] = $country_list;
 $results['state_list'] = $state_list;
 $results['remainingRuns'] = $remainingRuns;

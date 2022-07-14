@@ -57,7 +57,16 @@
         </div>
     </div>
 
-    <?php if (!$is_paid) : ?>
+    <?php if ($is_paid) : ?>
+        <?php
+            if (!$is_wpt_enterprise) {
+                include_once __DIR__ . '/includes/billing-data.php';
+                include_once __DIR__ . '/includes/modals/subscription-plan.php';
+                include_once __DIR__ . '/includes/modals/payment-info.php';
+            }
+            include_once __DIR__ . '/includes/api-keys.php';
+        ?>
+    <?php else : ?>
         <div class="card ">
             <div class="card-section">
                 <h3>Subscription Plan</h3>
@@ -70,20 +79,9 @@
                 </div>
             </div>
         </div>
-    <?php endif; ?>
 
-    <?php
-    if ($is_paid) {
-        if (!$is_wpt_enterprise) {
-            include_once __DIR__ . '/includes/billing-data.php';
-            include_once __DIR__ . '/includes/modals/subscription-plan.php';
-            include_once __DIR__ . '/includes/modals/payment-info.php';
-        }
-        include_once __DIR__ . '/includes/api-keys.php';
-    } else {
-        include_once __DIR__ . '/includes/signup.php';
-    }
-    ?>
+        <?php include_once __DIR__ . '/includes/signup.php'; ?>
+    <?php endif; ?>
 </div>
 
 
