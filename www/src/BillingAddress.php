@@ -18,8 +18,8 @@ class BillingAddress
     {
         if (
             !isset($options['city']) ||
-            !(isset($options['country']) || isset($options['isoCountry']))||
-            !(isset($options['state']) || isset($options['isoState']))||
+            !(isset($options['country']) || isset($options['isoCountry'])) ||
+            !(isset($options['state']) || isset($options['isoState'])) ||
             !(isset($options['street_address']) || isset($options['streetAddress'])) ||
             !isset($options['zipcode'])
         ) {

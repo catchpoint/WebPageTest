@@ -2,7 +2,7 @@
     <div class="content">
         <h1>Payment Details</h1>
         <form method="POST" action="/signup" id="wpt-signup-paid-account">
-<?php if ($use_chargify): ?>
+<?php if ($use_chargify) : ?>
 <h4>Payment</h4>
 <div>
     <div>
@@ -55,7 +55,7 @@
         </div>
     </div>
 </div>
-<?php else: ?>
+<?php else : ?>
             <div class="braintree-card-container">
                 <div id="braintree-container"></div>
             </div> <!-- /.braintree-card-container -->
@@ -104,10 +104,10 @@
 <?php endif; ?>
             <input type="hidden" id="hidden-nonce-input" name="nonce" />
 
-<?php if($use_chargify): ?>
+<?php if ($use_chargify) : ?>
             <input type="hidden" name="first-name" data-chargify="firstName" value="<?= $first_name ?>" />
             <input type="hidden" name="last-name" data-chargify="lastName" value="<?= $last_name ?>" />
-<?php else: ?>
+<?php else : ?>
             <input type="hidden" name="first-name" value="<?= $first_name ?>" />
             <input type="hidden" name="last-name" value="<?= $last_name ?>" />
 <?php endif; ?>
@@ -178,7 +178,7 @@
     </div> <!-- /.plan-benefits -->
 </aside>
 
-<?php if ($use_chargify): ?>
+<?php if ($use_chargify) : ?>
 <script src="https://js.chargify.com/latest/chargify.js"></script>
 <script>
         var chargify = new Chargify();
@@ -269,7 +269,7 @@ chargify.load({
           );
         });
 </script>
-<?php else: ?>
+<?php else : ?>
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
 

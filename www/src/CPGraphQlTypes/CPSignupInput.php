@@ -6,7 +6,6 @@ namespace WebPageTest\CPGraphQlTypes;
 
 use WebPageTest\CPGraphQlTypes\CustomerInput;
 use WebPageTest\CPGraphQlTypes\ChargifySubscription;
-
 use Exception;
 
 class CPSignupInput
@@ -25,13 +24,13 @@ class CPSignupInput
      */
     public function __construct(array $options, CustomerInput $customer_input, ChargifySubscription $chargify_subscription)
     {
-        if(
-          !isset($options['first_name']) ||
-          !isset($options['last_name']) ||
-          !isset($options['email']) ||
-          !isset($options['password'])
+        if (
+            !isset($options['first_name']) ||
+            !isset($options['last_name']) ||
+            !isset($options['email']) ||
+            !isset($options['password'])
         ) {
-          throw new Exception("First name, last name, email, and password must be set");
+            throw new Exception("First name, last name, email, and password must be set");
         }
 
         $this->first_name = $options['first_name'];
@@ -45,19 +44,19 @@ class CPSignupInput
 
     public function toArray(): array
     {
-      $val = [
+        $val = [
         "firstName" => $this->first_name,
         "lastName" => $this->last_name,
         "email" => $this->email,
         "password" => $this->password,
         "customer" => $this->customer->toArray(),
         "subscription" => $this->subscription->toArray()
-      ];
+        ];
 
-      if (isset($this->company)) {
-        $val['company'] = $this->company;
-      }
+        if (isset($this->company)) {
+            $val['company'] = $this->company;
+        }
 
-      return $val;
+        return $val;
     }
 }

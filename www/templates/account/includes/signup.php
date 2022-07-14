@@ -223,10 +223,10 @@
                 $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required  {$selected}/>
-                    <label class="wpt-plan card" for="annual-{$plan['id']}">
-                      <h5>{$plan['name']}</h5>
-                      <div><strong>\${$plan['annual_price']}</strong>/Year</div>
+                    <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}" required  {$selected}/>
+                    <label class="wpt-plan card" for="annual-{$plan->getId()}">
+                      <h5>{$plan->getName()}</h5>
+                      <div><strong>\${$plan->getAnnualPrice()}</strong>/Year</div>
                       <span aria-hidden="true" class="pill-button yellow">Select</span>
                     </label>
                   </div>

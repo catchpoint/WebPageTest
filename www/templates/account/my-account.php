@@ -57,7 +57,13 @@
         </div>
     </div>
 
-    <?php if (!$is_paid) : ?>
+    <?php if ($is_paid) : ?>
+        <?php
+            include_once __DIR__ . '/includes/billing-data.php';
+            include_once __DIR__ . '/includes/modals/subscription-plan.php';
+            include_once __DIR__ . '/includes/modals/payment-info.php';
+        ?>
+    <?php else : ?>
         <div class="card ">
             <div class="card-section">
                 <h3>Subscription Plan</h3>
@@ -70,15 +76,8 @@
                 </div>
             </div>
         </div>
-    <?php endif; ?>
-
-    <?php if ($is_paid) {
-        include_once __DIR__ . '/includes/billing-data.php';
-        include_once __DIR__ . '/includes/modals/subscription-plan.php';
-        include_once __DIR__ . '/includes/modals/payment-info.php';
-    } else {
-        include_once __DIR__ . '/includes/signup.php';
-    } ?>
+        <?php include_once __DIR__ . '/includes/signup.php'; ?>
+    <?php endif; // $is_paid ?>
 </div>
 
 

@@ -10,13 +10,11 @@ use WebPageTest\Template;
 use WebPageTest\ValidatorPatterns;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
-
 use WebPageTest\CPGraphQlTypes\BraintreeBillingAddressInput as BillingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\CPGraphQlTypes\ChargifySubscription;
 use WebPageTest\CPGraphQlTypes\CPSignupInput;
 use WebPageTest\CPGraphQlTypes\CustomerInput;
-
 use Exception;
 use GuzzleHttp\Exception\RequestException;
 use WebPageTest\Exception\ClientException;

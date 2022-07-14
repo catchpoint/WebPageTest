@@ -11,6 +11,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
 
+
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
@@ -88,107 +89,101 @@ if ($request_method === 'POST') {
         throw new ClientException("Incorrect post type", "/account");
         exit();
     }
-} elseif ($request_method == 'GET') {
-    $error_message = $_SESSION['client-error'] ?? null;
-
-    $is_paid = $request_context->getUser()->isPaid();
-    $is_verified = $request_context->getUser()->isVerified();
-    $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
-    $user_id = $request_context->getUser()->getUserId();
-    $remainingRuns = $request_context->getUser()->getRemainingRuns();
-    $user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
-    $user_email = $request_context->getUser()->getEmail();
-    $first_name = $user_contact_info['firstName'] ?? "";
-    $last_name = $user_contact_info['lastName'] ?? "";
-    $company_name = $user_contact_info['companyName'] ?? "";
-
-    $contact_info = array(
-        'layout_theme' => 'b',
-        'is_paid' => $is_paid,
-        'is_verified' => $is_verified,
-        'first_name' => htmlspecialchars($first_name),
-        'last_name' => htmlspecialchars($last_name),
-        'email' => $user_email,
-        'company_name' => htmlspecialchars($company_name),
-        'id' => $user_id
-    );
-
-    $billing_info = array();
-    $client_token = "";
-    $country_list = Util::getCountryList();
-    $state_list = Util::getStateList();
-
-    if ($is_paid) {
-        if ($is_wpt_enterprise) {
-            $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
-        } else {
-            $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
-        }
-        $customer_details = $billing_info['braintreeCustomerDetails'];
-        $billing_frequency = $customer_details['billingFrequency'] == 12 ? "Annually" : "Monthly";
-
-        if (isset($customer_details['planRenewalDate']) && $billing_frequency == "Annually") {
-            $runs_renewal_date = new DateTime($customer_details['planRenewalDate']);
-            $billing_info['runs_renewal'] = $runs_renewal_date->format('m/d/Y');
-        }
-
-        if (isset($customer_details['nextBillingDate'])) {
-            $plan_renewal_date = new DateTime($customer_details['nextBillingDate']);
-            $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
-        }
-
-        $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
-        $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
-        $billing_info['billing_frequency'] = $billing_frequency;
-        $client_token = $billing_info['braintreeClientToken'];
-    } else {
-        $info = $request_context->getClient()->getUnpaidAccountpageInfo();
-        $client_token = $info['braintreeClientToken'];
-        $plans = $info['wptPlans'];
-        $annual_plans = array();
-        $monthly_plans = array();
-        usort($plans, function ($a, $b) {
-            if ($a['price'] == $b['price']) {
-                return 0;
-            }
-            return ($a['price'] < $b['price']) ? -1 : 1;
-        });
-        foreach ($plans as $plan) {
-            if ($plan['billingFrequency'] == 1) {
-                $plan['price'] = number_format(($plan['price']), 2, ".", ",");
-                $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
-                $monthly_plans[] = $plan;
-            } else {
-                $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
-                $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
-                $annual_plans[] = $plan;
-            }
-        }
-        $billing_info = array(
-            'annual_plans' => $annual_plans,
-            'monthly_plans' => $monthly_plans
-        );
-    }
-
-    $results = array_merge($contact_info, $billing_info);
-    $results['csrf_token'] = $_SESSION['csrf_token'];
-    $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
-    $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
-    $results['bt_client_token'] = $client_token;
-    $results['country_list'] = $country_list;
-    $results['state_list'] = $state_list;
-    $results['remainingRuns'] = $remainingRuns;
-
-    if (!is_null($error_message)) {
-        $results['error_message'] = $error_message;
-        unset($_SESSION['client-error']);
-    }
-
-    $tpl = new Template('account');
-    $tpl->setLayout('account');
-    echo $tpl->render('my-account', $results);
-    exit();
-} else {
-    throw new ClientException("HTTP Method not supported for this endpoint", "/");
     exit();
 }
+
+$error_message = $_SESSION['client-error'] ?? null;
+
+$is_paid = $request_context->getUser()->isPaid();
+$is_verified = $request_context->getUser()->isVerified();
+$is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
+$user_id = $request_context->getUser()->getUserId();
+$remainingRuns = $request_context->getUser()->getRemainingRuns();
+$user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
+$user_email = $request_context->getUser()->getEmail();
+$first_name = $user_contact_info['firstName'] ?? "";
+$last_name = $user_contact_info['lastName'] ?? "";
+$company_name = $user_contact_info['companyName'] ?? "";
+
+
+$contact_info = array(
+    'layout_theme' => 'b',
+    'is_paid' => $is_paid,
+    'is_verified' => $is_verified,
+    'first_name' => htmlspecialchars($first_name),
+    'last_name' => htmlspecialchars($last_name),
+    'email' => $user_email,
+    'company_name' => htmlspecialchars($company_name),
+    'id' => $user_id
+);
+
+$billing_info = array();
+$client_token = "";
+$country_list = Util::getChargifyCountryList();
+$state_list = Util::getChargifyUSStateList();
+
+if ($is_paid) {
+    if ($is_wpt_enterprise) {
+        $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
+    } else {
+        $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
+    }
+    $customer_details = $billing_info['braintreeCustomerDetails'];
+    $billing_frequency = $customer_details['billingFrequency'] == 12 ? "Annually" : "Monthly";
+
+    if (isset($customer_details['planRenewalDate']) && $billing_frequency == "Annually") {
+        $runs_renewal_date = new DateTime($customer_details['planRenewalDate']);
+        $billing_info['runs_renewal'] = $runs_renewal_date->format('m/d/Y');
+    }
+
+    if (isset($customer_details['nextBillingDate'])) {
+        $plan_renewal_date = new DateTime($customer_details['nextBillingDate']);
+        $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
+    }
+
+    $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
+    $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
+    $billing_info['billing_frequency'] = $billing_frequency;
+    $client_token = $billing_info['braintreeClientToken'];
+} else {
+
+
+    $plans = $request_context->getClient()->getWptPlans();
+    $annual_plans = array();
+    $monthly_plans = array();
+    usort($plans, function ($a, $b) {
+        if ($a->getPrice() == $b->getPrice()) {
+            return 0;
+        }
+        return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
+    });
+    foreach ($plans as $plan) {
+        if ($plan->getBillingFrequency() == "Monthly") {
+            $monthly_plans[] = $plan;
+        } else {
+            $annual_plans[] = $plan;
+        }
+    }
+    $billing_info = array(
+        'annual_plans' => $annual_plans,
+        'monthly_plans' => $monthly_plans
+    );
+}
+
+$results = array_merge($contact_info, $billing_info);
+$results['csrf_token'] = $_SESSION['csrf_token'];
+$results['validation_pattern'] = ValidatorPatterns::getContactInfo();
+$results['validation_pattern_password'] = ValidatorPatterns::getPassword();
+$results['country_list'] = $country_list;
+$results['state_list'] = $state_list;
+$results['remainingRuns'] = $remainingRuns;
+
+if (!is_null($error_message)) {
+    $results['error_message'] = $error_message;
+    unset($_SESSION['client-error']);
+}
+
+$tpl = new Template('account');
+$tpl->setLayout('account');
+echo $tpl->render('my-account', $results);
+exit();
