@@ -133,7 +133,7 @@ class CPSignupClient
 
     public function signupWithChargify(CPSignupInput $wpt_account): array
     {
-      $gql = (new Mutation('wptAccountCreate'))
+        $gql = (new Mutation('wptAccountCreate'))
         ->setVariables([
             new Variable('wptAccount', 'WptSignupInputType', true)
         ])
@@ -163,22 +163,24 @@ class CPSignupClient
      */
     public function getWptPlans(): array
     {
-      $gql = (new Query('wptPlan'))
+        $gql = (new Query('wptPlan'))
         ->setSelectionSet([
             'name',
             'priceInCents',
             'description',
-            'interval'
+            'interval',
+            'monthlyTestRuns'
         ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
         return array_map(function ($data): Plan {
-          $options = [
+            $options = [
             'id' => $data['name'],
             'name' => $data['description'],
-            'price' => $data['priceInCents']/100,
-            'billingFrequency' => $data['interval']
-          ];
+            'priceInCents' => $data['priceInCents'],
+            'billingFrequency' => $data['interval'],
+            'runs' => $data['monthlyTestRuns']
+            ];
 
             return new Plan($options);
         }, $results->getData()['wptPlan']);
