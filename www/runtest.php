@@ -925,6 +925,27 @@ else {
                             $recipeScript .= ";";
                         }
                     }
+                    
+                    // Handle HTTP Basic Auth
+                    // TODO centralize this logic as it's borrowed from above temporarily
+                    if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {
+                        $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
+                        if (!isset($script) || !strlen($script))
+                            $script = "navigate\t$url";
+                        $script = "addHeader\t$header\r\n" . $script;
+                    }
+                    // Add custom headers
+                    if (isset($test['customHeaders']) && strlen($test['customHeaders'])) {
+                        if (!isset($script) || !strlen($script))
+                            $script = "navigate\t$url";
+                        $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
+                        $headerCommands = "";
+                        foreach ($headers as $header) {
+                            $headerCommands = $headerCommands . "addHeader\t" . $header . "\r\n";
+                        }
+                        $script = $headerCommands . $script;
+                    }
+                    // END TODO centralize this logic as it's borrowed from above temporarily
 
 
 
