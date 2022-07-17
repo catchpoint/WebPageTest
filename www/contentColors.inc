@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -6,8 +7,13 @@
 /**
 * Determine the colors to use for each request
 */
-function GetRequestColors($content_type, $thumbnail, $is_mime,
-                          $is_state = false, $url = null) {
+function GetRequestColors(
+    $content_type,
+    $thumbnail,
+    $is_mime,
+    $is_state = false,
+    $url = null
+) {
     if (GetSetting('new_colors')) {
         // new color scheme (proposed by Steve Souders)
         $colors = array(
@@ -63,7 +69,8 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
 /**
 * Return an array of the defined colors for various mime types
 */
-function GetMimeColor($mime, $url = null) {
+function GetMimeColor($mime, $url = null)
+{
     $mime_colors = MimeColors();
     $type = ContentType($mime, $url);
     if (!array_key_exists($type, $mime_colors)) {
@@ -75,7 +82,8 @@ function GetMimeColor($mime, $url = null) {
 /**
 * Return an array of the defined colors for various mime types
 */
-function MimeColors() {
+function MimeColors()
+{
     $colors = array(
         'html'  => array(130,181,252),
         'js'    => array(254,197,132),
@@ -93,14 +101,18 @@ function MimeColors() {
 /**
 * Bucket the content types into our known categories
 */
-function ContentType($mime, $url = null) {
+function ContentType($mime, $url = null)
+{
     $pos = strpos($mime, ';');
-    if ($pos !== false)
-      $mime = substr($mime, 0, $pos);
+    if ($pos !== false) {
+        $mime = substr($mime, 0, $pos);
+    }
     $content_type = 'other';
-    if (stripos($mime, 'javascript') !== false ||
+    if (
+        stripos($mime, 'javascript') !== false ||
         stripos($mime, 'ecmascript') !== false ||
-        !strncasecmp($mime, 'text/js', 7)) {
+        !strncasecmp($mime, 'text/js', 7)
+    ) {
         // Collapse the various javascript content types together.
         $content_type = 'js';
     } elseif (!strncasecmp($mime, 'text/css', 8)) {
@@ -118,29 +130,33 @@ function ContentType($mime, $url = null) {
     } elseif (stripos($mime, 'font') !== false) {
         $content_type = 'font';
     } elseif (isset($url)) {
-      $url = parse_url($url, PHP_URL_PATH);
-      if (preg_match('/(?P<ext>\.[a-zA-Z0-9]+)$/', $url, $matches)) {
-        $ext = strtolower($matches['ext']);
-        if ($ext == '.js')
-          $content_type = 'js';
-        elseif ($ext == '.js')
-          $content_type = 'css';
-        elseif ($ext == '.htm' || $ext == '.html')
-          $content_type = 'html';
-        elseif ($ext == '.png' || $ext == '.gif' || $ext == '.jpg' || $ext == '.avif' || $ext == '.jxl')
-          $content_type = 'image';
-        elseif ($ext == '.swf')
-          $content_type = 'flash';
-        elseif ($ext == '.eot' || $ext == '.ttf' ||
+        $url = parse_url($url, PHP_URL_PATH);
+        if (preg_match('/(?P<ext>\.[a-zA-Z0-9]+)$/', $url, $matches)) {
+            $ext = strtolower($matches['ext']);
+            if ($ext == '.js') {
+                $content_type = 'js';
+            } elseif ($ext == '.js') {
+                $content_type = 'css';
+            } elseif ($ext == '.htm' || $ext == '.html') {
+                $content_type = 'html';
+            } elseif ($ext == '.png' || $ext == '.gif' || $ext == '.jpg' || $ext == '.avif' || $ext == '.jxl') {
+                $content_type = 'image';
+            } elseif ($ext == '.swf') {
+                $content_type = 'flash';
+            } elseif (
+                $ext == '.eot' || $ext == '.ttf' ||
                 $ext == '.woff' || $ext == '.woff2' ||
-                $ext == '.otf')
-          $content_type = 'font';
-	else if ($ext == '.mp4' ||  
-		 $ext == '.f4v' || $ext == '.flv')
-	  $content_type = 'video';
-      }
+                $ext == '.otf'
+            ) {
+                $content_type = 'font';
+            } elseif (
+                $ext == '.mp4' ||
+                $ext == '.f4v' || $ext == '.flv'
+            ) {
+                $content_type = 'video';
+            }
+        }
     }
     
     return $content_type;
 }
-?>

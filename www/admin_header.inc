@@ -1,9 +1,11 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-function header_link($url, $title) {
+function header_link($url, $title)
+{
     $url_parts = explode('?', $url);
     $class = ($url_parts[0] == $_SERVER['SCRIPT_NAME'] ? 'active' : 'inactive');
 
@@ -23,9 +25,9 @@ function header_link($url, $title) {
                 <meta http-equiv="refresh" content="<?php echo $refresh; ?>" />
             </noscript>
             <script>
-                setTimeout("window.location.reload(true)", <?php echo $refresh*1000; ?>);
+                setTimeout("window.location.reload(true)", <?php echo $refresh * 1000; ?>);
             </script>
-        <?php
+            <?php
         } ?>
 
     </head>
