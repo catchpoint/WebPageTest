@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -22,11 +23,10 @@ $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(
 $screenShotUrl = null;
 if ($fileHandler->fileExists($localPaths->screenShotPngFile())) {
     $screenShotUrl = $urlPaths->screenShotPngFile();
-} else if ($fileHandler->fileExists($localPaths->screenShotFile())) {
+} elseif ($fileHandler->fileExists($localPaths->screenShotFile())) {
     $screenShotUrl = $urlPaths->screenShotFile();
 }
 
 if ($screenShotUrl) {
-    echo '<img class="center result_screenshot" alt="Screenshot" src="/' . $screenShotUrl .'">';
+    echo '<img class="center result_screenshot" alt="Screenshot" src="/' . $screenShotUrl . '">';
 }
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -6,10 +7,12 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 
 // see if we are loading the test settings from a profile
 $profile_file = __DIR__ . '/settings/profiles.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles.ini'))
+if (file_exists(__DIR__ . '/settings/common/profiles.ini')) {
     $profile_file = __DIR__ . '/settings/common/profiles.ini';
-if (file_exists(__DIR__ . '/settings/server/profiles.ini'))
+}
+if (file_exists(__DIR__ . '/settings/server/profiles.ini')) {
     $profile_file = __DIR__ . '/settings/server/profiles.ini';
+}
 // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile, or if it's not there at all.
 if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQUEST['simpleadvanced'] === 'simple') && is_file($profile_file)) {
     $profiles = parse_ini_file($profile_file, true);
@@ -23,10 +26,12 @@ if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQ
     }
 }
 $wvprofile_file = __DIR__ . '/settings/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini'))
+if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini')) {
     $wvprofile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini'))
+}
+if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
     $wvprofile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+}
 if (isset($_REQUEST['webvital_profile']) && is_file($wvprofile_file)) {
     $profiles = parse_ini_file($wvprofile_file, true);
     if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['webvital_profile']])) {
@@ -54,7 +59,7 @@ $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser
 set_time_limit(300);
 
 $redirect_cache = array();
-$error = NULL;
+$error = null;
 $xml = false;
 $usingAPI = false;
 $usingApi2 = false;
@@ -69,18 +74,22 @@ $server_secret = Util::getServerSecret();
 $api_keys = null;
 if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
     $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+    if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
         $keys_file = __DIR__ . '/settings/common/keys.ini';
-    if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+    }
+    if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
         $keys_file = __DIR__ . '/settings/server/keys.ini';
+    }
     $api_keys = parse_ini_file($keys_file, true);
 }
 
-if (isset($req_f) && !strcasecmp($req_f, 'xml'))
+if (isset($req_f) && !strcasecmp($req_f, 'xml')) {
     $xml = true;
+}
 $json = false;
-if (isset($req_f) && !strcasecmp($req_f, 'json'))
+if (isset($req_f) && !strcasecmp($req_f, 'json')) {
     $json = true;
+}
 $headless = false;
 if (Util::getSetting('headless')) {
     $headless = true;
@@ -96,7 +105,7 @@ if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey(
             unset($locations[$name]);
         }
     }
-} else if (!$includePaid) {
+} elseif (!$includePaid) {
     //no key, so we need to look at user status for paid
     foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['premium'])) {
@@ -126,12 +135,13 @@ foreach ($locations as $loc_name => $loc) {
 }
 
 // See if we are running a relay test
-if (@strlen($req_rkey))
+if (@strlen($req_rkey)) {
     RelayTest();
-else {
+} else {
     // See if we're re-running an existing test
-    if (isset($test))
+    if (isset($test)) {
         unset($test);
+    }
     if (array_key_exists('resubmit', $_POST)) {
         $test = GetTestInfo(trim($_POST['resubmit']));
         if ($test) {
@@ -167,27 +177,35 @@ else {
         $test = array();
         $test['url'] = trim($req_url);
         $test['steps'] = 1;
-        if (isset($req_domelement))
+        if (isset($req_domelement)) {
             $test['domElement'] = trim($req_domelement);
-        if (isset($req_login))
+        }
+        if (isset($req_login)) {
             $test['login'] = trim($req_login);
-        if (isset($req_password))
+        }
+        if (isset($req_password)) {
             $test['password'] = trim($req_password);
-        if (isset($req_customHeaders))
+        }
+        if (isset($req_customHeaders)) {
             $test['customHeaders'] = trim($req_customHeaders);
-        if (isset($_REQUEST['injectScript']) && strlen($_REQUEST['injectScript']))
+        }
+        if (isset($_REQUEST['injectScript']) && strlen($_REQUEST['injectScript'])) {
             $test['injectScript'] = $_REQUEST['injectScript'];
+        }
         $test['runs'] = isset($req_runs) ? (int)$req_runs : 0;
         $test['fvonly'] = isset($req_fvonly) ? (int)$req_fvonly : 0;
-        if (isset($_REQUEST['rv']))
+        if (isset($_REQUEST['rv'])) {
             $test['fvonly'] = $_REQUEST['rv'] ? 0 : 1;
+        }
         $test['timeout'] = isset($req_timeout) ? (int)$req_timeout : 0;
         $maxTime = GetSetting('maxtime');
-        if ($maxTime && $test['timeout'] > $maxTime)
+        if ($maxTime && $test['timeout'] > $maxTime) {
             $test['timeout'] = (int)$maxTime;
+        }
         $run_time_limit = GetSetting('run_time_limit');
-        if ($run_time_limit)
+        if ($run_time_limit) {
             $test['run_time_limit'] = (int)$run_time_limit;
+        }
         $test['connections'] = isset($req_connections) ? (int)$req_connections : 0;
 
         /**
@@ -197,82 +215,106 @@ else {
         $is_private = ($isPaid && ($_POST['private'] == 'on')) ? 1 : 0;
         $test['private'] = $is_private;
 
-        if (isset($req_web10))
+        if (isset($req_web10)) {
             $test['web10'] = $req_web10;
-        if (isset($req_ignoreSSL))
+        }
+        if (isset($req_ignoreSSL)) {
             $test['ignoreSSL'] = $req_ignoreSSL;
-        if (isset($req_script))
+        }
+        if (isset($req_script)) {
             $test['script'] = trim($req_script);
-        if (isset($req_block))
+        }
+        if (isset($req_block)) {
             $test['block'] = $req_block;
+        }
         $test['blockDomains'] = isset($req_blockDomains) ? $req_blockDomains : "";
         $blockDomains = GetSetting('blockDomains');
         if ($blockDomains && strlen($blockDomains)) {
-            if (strlen($test['blockDomains']))
+            if (strlen($test['blockDomains'])) {
                 $test['blockDomains'] .= ' ';
+            }
             $test['blockDomains'] .= $blockDomains;
         }
-        if (isset($req_notify))
+        if (isset($req_notify)) {
             $test['notify'] = trim($req_notify);
+        }
         $test['video'] = 1;
-        if (isset($req_video))
+        if (isset($req_video)) {
             $test['video'] = $req_video;
+        }
         if (isset($_REQUEST['disable_video']) && $_REQUEST['disable_video']) {
             $test['disable_video'] = 1;
         } elseif (GetSetting('strict_video')) {
-            if (!isset($test['video']) || !$test['video'])
+            if (!isset($test['video']) || !$test['video']) {
                 $test['disable_video'] = 1;
+            }
         }
         $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
         $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
         $test['renderVideo'] = isset($req_renderVideo) && $req_renderVideo ? 1 : 0;
-        if (isset($req_label))
+        if (isset($req_label)) {
             $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
+        }
         $test['median_video'] = isset($req_mv) ? (int)$req_mv : 0;
-        if (isset($req_addr))
+        if (isset($req_addr)) {
             $test['ip'] = $req_addr;
+        }
         $test['priority'] = isset($req_priority) ? (int)$req_priority : $ui_priority;
-        if (isset($req_bwIn) && !isset($req_bwDown))
+        if (isset($req_bwIn) && !isset($req_bwDown)) {
             $test['bwIn'] = (int)$req_bwIn;
-        else
+        } else {
             $test['bwIn'] = (int)$req_bwDown;
-        if (isset($req_bwOut) && !isset($req_bwUp))
+        }
+        if (isset($req_bwOut) && !isset($req_bwUp)) {
             $test['bwOut'] = (int)$req_bwOut;
-        else
+        } else {
             $test['bwOut'] = isset($req_bwUp) ? (int)$req_bwUp : 0;
+        }
         $test['latency'] = isset($req_latency) ? (int)$req_latency : 0;
         $test['testLatency'] = isset($req_latency) ? (int)$req_latency : 0;
         $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
         $test['shaperLimit'] = isset($req_shaperLimit) ? (int)$req_shaperLimit : 0;
-        if (isset($req_pingback))
+        if (isset($req_pingback)) {
             $test['callback'] = $req_pingback;
-        if (!$json && !isset($req_pingback) && isset($req_callback))
+        }
+        if (!$json && !isset($req_pingback) && isset($req_callback)) {
             $test['callback'] = $req_callback;
-        if (!isset($test['callback']) && GetSetting('ping_back_url'))
+        }
+        if (!isset($test['callback']) && GetSetting('ping_back_url')) {
             $test['callback'] = GetSetting('ping_back_url');
-        if (isset($req_agent))
+        }
+        if (isset($req_agent)) {
             $test['agent'] = $req_agent;
-        if (isset($req_tcpdump))
+        }
+        if (isset($req_tcpdump)) {
             $test['tcpdump'] = $req_tcpdump;
-        if (isset($req_lighthouse))
+        }
+        if (isset($req_lighthouse)) {
             $test['lighthouse'] = $req_lighthouse;
+        }
         $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
         $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
         $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
-        if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig']))
+        if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig'])) {
             $test['lighthouseConfig'] = $_REQUEST['lighthouseConfig'];
+        }
         $test['timeline'] = 1;
-        if (isset($req_timeline))
+        if (isset($req_timeline)) {
             $test['timeline'] = $req_timeline;
-        if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])
+        }
+        if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps']) {
             $test['timeline_fps'] = 1;
-        if (isset($_REQUEST['profiler']) && $_REQUEST['profiler'])
+        }
+        if (isset($_REQUEST['profiler']) && $_REQUEST['profiler']) {
             $test['profiler'] = 1;
-        if (isset($_REQUEST['discard_timeline']) && $_REQUEST['discard_timeline'])
+        }
+        if (isset($_REQUEST['discard_timeline']) && $_REQUEST['discard_timeline']) {
             $test['discard_timeline'] = 1;
+        }
         $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
-        if (isset($req_swrender))
+        if (isset($req_swrender)) {
             $test['swrender'] = $req_swrender;
+        }
         $test['v8rcs'] = isset($_REQUEST['v8rcs']) && $_REQUEST['v8rcs'] ? 1 : 0;
         $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
         if (
@@ -283,55 +325,74 @@ else {
         ) {
             $test['traceCategories'] = $_REQUEST['traceCategories'];
         }
-        if (isset($req_standards))
+        if (isset($req_standards)) {
             $test['standards'] = $req_standards;
-        if (isset($req_netlog))
+        }
+        if (isset($req_netlog)) {
             $test['netlog'] = $req_netlog;
-        if (isset($_REQUEST['coverage']))
+        }
+        if (isset($_REQUEST['coverage'])) {
             $test['coverage'] = $_REQUEST['coverage'];
-        if (isset($req_spdy3))
+        }
+        if (isset($req_spdy3)) {
             $test['spdy3'] = $req_spdy3;
-        if (isset($req_noscript))
+        }
+        if (isset($req_noscript)) {
             $test['noscript'] = $req_noscript;
-        if (isset($req_fullsizevideo))
+        }
+        if (isset($req_fullsizevideo)) {
             $test['fullsizevideo'] = $req_fullsizevideo;
+        }
         $test['thumbsize'] = isset($_REQUEST['thumbsize']) ? min(max(intval($_REQUEST['thumbsize']), 100), 2000) : GetSetting('thumbsize', null);
-        if (isset($req_blockads))
+        if (isset($req_blockads)) {
             $test['blockads'] = $req_blockads;
-        if (isset($req_sensitive))
+        }
+        if (isset($req_sensitive)) {
             $test['sensitive'] = $req_sensitive;
-        if (isset($req_type))
+        }
+        if (isset($req_type)) {
             $test['type'] = trim($req_type);
-        if (isset($req_noopt))
+        }
+        if (isset($req_noopt)) {
             $test['noopt'] = trim($req_noopt);
-        if (isset($req_noimages))
+        }
+        if (isset($req_noimages)) {
             $test['noimages'] = trim($req_noimages);
-        if (isset($req_noheaders))
+        }
+        if (isset($req_noheaders)) {
             $test['noheaders'] = trim($req_noheaders);
-        if (isset($req_view))
+        }
+        if (isset($req_view)) {
             $test['view'] = trim($req_view);
-        if (isset($req_discard))
+        }
+        if (isset($req_discard)) {
             $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
+        }
         $test['queue_limit'] = 0;
         $test['pngss'] = isset($req_pngss) ? (int)$req_pngss : 0;
         $test['fps'] = isset($req_fps) ? (int)$req_fps : null;
         $test['iq'] = isset($req_iq) ? (int)$req_iq : 0;
         $test['bodies'] = array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies'] ? 1 : 0;
-        if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies'))
+        if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies')) {
             $test['bodies'] = 1;
-        if (isset($req_htmlbody))
+        }
+        if (isset($req_htmlbody)) {
             $test['htmlbody'] = $req_htmlbody;
+        }
         $test['time'] = isset($req_time) ? (int)$req_time : 0;
         $test['keepua'] = 0;
         $test['max_retries'] = isset($req_retry) ? min((int)$req_retry, 10) : 0;
-        if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
+        if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']) {
             $test['keepua'] = 1;
+        }
         $test['axe'] = 1;
-        if (isset($req_pss_advanced))
+        if (isset($req_pss_advanced)) {
             $test['pss_advanced'] = $req_pss_advanced;
+        }
         $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
-        if (isset($_REQUEST['mobileDevice']))
+        if (isset($_REQUEST['mobileDevice'])) {
             $test['mobileDevice'] = $_REQUEST['mobileDevice'];
+        }
         $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
         $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
         $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
@@ -350,14 +411,18 @@ else {
         if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
             $test['warmup'] = min(intval($_REQUEST['warmup']), 3);
         }
-        if (isset($_REQUEST['medianMetric']))
+        if (isset($_REQUEST['medianMetric'])) {
             $test['medianMetric'] = $_REQUEST['medianMetric'];
-        if (isset($_REQUEST['throttle_cpu']))
+        }
+        if (isset($_REQUEST['throttle_cpu'])) {
             $test['throttle_cpu'] = $_REQUEST['throttle_cpu'];
-        if (isset($_REQUEST['bypass_cpu_normalization']))
+        }
+        if (isset($_REQUEST['bypass_cpu_normalization'])) {
             $test['bypass_cpu_normalization'] = $_REQUEST['bypass_cpu_normalization'] ? 1 : 0;
-        if (GetSetting('securityInsights') || (isset($_REQUEST['securityInsights']) && $_REQUEST['securityInsights']))
+        }
+        if (GetSetting('securityInsights') || (isset($_REQUEST['securityInsights']) && $_REQUEST['securityInsights'])) {
             $test['securityInsights'] = 1;
+        }
 
         if (array_key_exists('tsview_id', $_REQUEST)) {
             $test['tsview_id'] = $_REQUEST['tsview_id'];
@@ -366,14 +431,17 @@ else {
             $test['tsview_results_host'] = "{$protocol}://{$_SERVER['HTTP_HOST']}";
 
             // tsview_configs format: KEY>VALUE,KEY>VALUE,......
-            if (array_key_exists('tsview_configs', $_REQUEST))
+            if (array_key_exists('tsview_configs', $_REQUEST)) {
                 $test['tsview_configs'] = $_REQUEST['tsview_configs'];
+            }
         }
 
-        if (array_key_exists('affinity', $_REQUEST))
+        if (array_key_exists('affinity', $_REQUEST)) {
             $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
-        if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
+        }
+        if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester'])) {
             $test['affinity'] = 'Tester' . $_REQUEST['tester'];
+        }
 
         // custom options
         $test['cmdLine'] = '';
@@ -382,18 +450,21 @@ else {
             $test['addCmdLine'] = $req_cmdline;
         }
         if (isset($req_disableThreadedParser) && $req_disableThreadedParser) {
-            if (strlen($test['addCmdLine']))
+            if (strlen($test['addCmdLine'])) {
                 $test['addCmdLine'] .= ' ';
+            }
             $test['addCmdLine'] .= '--disable-threaded-html-parser';
         }
         if (isset($req_spdyNoSSL) && $req_spdyNoSSL) {
-            if (strlen($test['addCmdLine']))
+            if (strlen($test['addCmdLine'])) {
                 $test['addCmdLine'] .= ' ';
+            }
             $test['addCmdLine'] .= '--use-spdy=no-ssl';
         }
         if (isset($req_dataReduction) && $req_dataReduction) {
-            if (strlen($test['addCmdLine']))
+            if (strlen($test['addCmdLine'])) {
                 $test['addCmdLine'] .= ' ';
+            }
             $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
         }
         if (isset($req_uastring) && strlen($req_uastring)) {
@@ -425,23 +496,26 @@ else {
         if (isset($req_wprDesktop) && $req_wprDesktop) {
             $wprDesktop = GetSetting('wprDesktop');
             if ($wprDesktop) {
-                if (strlen($test['addCmdLine']))
+                if (strlen($test['addCmdLine'])) {
                     $test['addCmdLine'] .= ' ';
+                }
                 $test['addCmdLine'] .= "--host-resolver-rules=\"MAP * $wprDesktop,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
                 $test['ignoreSSL'] = 1;
             }
         } elseif (isset($req_wprMobile) && $req_wprMobile) {
             $wprMobile = GetSetting('wprMobile');
             if ($wprMobile) {
-                if (strlen($test['addCmdLine']))
+                if (strlen($test['addCmdLine'])) {
                     $test['addCmdLine'] .= ' ';
+                }
                 $test['addCmdLine'] .= "--host-resolver-rules=\"MAP * $wprMobile,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
                 $test['ignoreSSL'] = 1;
             }
         }
         if (isset($req_hostResolverRules) && preg_match('/^[a-zA-Z0-9 \.\:\*,]+$/i', $req_hostResolverRules)) {
-            if (strlen($test['addCmdLine']))
+            if (strlen($test['addCmdLine'])) {
                 $test['addCmdLine'] .= ' ';
+            }
             $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
         }
 
@@ -459,8 +533,9 @@ else {
         if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
             if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {
                 $template = $api_keys[$req_k]['template'];
-                if (is_file("./settings/common/templates/$template.php"))
+                if (is_file("./settings/common/templates/$template.php")) {
                     include("./settings/common/templates/$template.php");
+                }
             }
         }
 
@@ -489,21 +564,25 @@ else {
         } else {
             $test['location'] = trim($req_location);
         }
-        if (isset($locations[$test['location']]['ami']))
+        if (isset($locations[$test['location']]['ami'])) {
             $test['ami'] = $locations[$test['location']]['ami'];
-        if (isset($locations[$test['location']]['shardID']))
+        }
+        if (isset($locations[$test['location']]['shardID'])) {
             $test['locationShard'] = $locations[$test['location']]['shardID'];
+        }
 
         // set the browser to the default if one wasn't specified
-        if ((!array_key_exists('browser', $test) ||
+        if (
+            (!array_key_exists('browser', $test) ||
                 !strlen($test['browser'])) &&
             array_key_exists($test['location'], $locations) &&
             array_key_exists('browser', $locations[$test['location']]) &&
             strlen($locations[$test['location']]['browser'])
         ) {
             $browsers = explode(',', $locations[$test['location']]['browser']);
-            if (isset($browsers) && is_array($browsers) && count($browsers))
+            if (isset($browsers) && is_array($browsers) && count($browsers)) {
                 $test['browser'] = trim($browsers[0]);
+            }
         }
 
         if (isset($test['browser'])) {
@@ -530,14 +609,16 @@ else {
             $headers = explode("\n", $req_addheaders);
             foreach ($headers as $header) {
                 $header = trim($header);
-                if (strpos($header, ':'))
+                if (strpos($header, ':')) {
                     $test['script'] = "addHeader\t$header\r\n" . $test['script'];
+                }
             }
         }
 
         // see if it is a batch test
         $test['batch'] = 0;
-        if ((isset($req_bulkurls) && strlen($req_bulkurls)) ||
+        if (
+            (isset($req_bulkurls) && strlen($req_bulkurls)) ||
             (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']))
         ) {
             $test['batch'] = 1;
@@ -582,8 +663,9 @@ else {
         }
 
         // take the ad-blocking request and create a custom block from it
-        if (isset($req_ads) && $req_ads == 'blocked')
+        if (isset($req_ads) && $req_ads == 'blocked') {
             $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
+        }
 
         // see if there are any custom metrics to extract
         if (is_dir('./settings/custom_metrics')) {
@@ -600,8 +682,9 @@ else {
         if (is_dir('./settings/common/custom_metrics')) {
             $files = glob('./settings/common/custom_metrics/*.js');
             if ($files !== false && is_array($files) && count($files)) {
-                if (!isset($test['customMetrics']))
+                if (!isset($test['customMetrics'])) {
                     $test['customMetrics'] = array();
+                }
                 foreach ($files as $file) {
                     $name = basename($file, '.js');
                     $code = file_get_contents($file);
@@ -618,8 +701,9 @@ else {
                 if (strlen($line)) {
                     if (preg_match('/^\[(?P<metric>[^\[\]]+)\]$/', $line, $matches)) {
                         if (isset($metric) && strlen($metric) && strlen($code)) {
-                            if (!array_key_exists('customMetrics', $test))
+                            if (!array_key_exists('customMetrics', $test)) {
                                 $test['customMetrics'] = array();
+                            }
                             $test['customMetrics'][$metric] = $code;
                         }
                         $code = '';
@@ -630,8 +714,9 @@ else {
                 }
             }
             if (isset($metric) && strlen($metric) && strlen($code)) {
-                if (!array_key_exists('customMetrics', $test))
+                if (!array_key_exists('customMetrics', $test)) {
                     $test['customMetrics'] = array();
+                }
                 $test['customMetrics'][$metric] = $code;
             }
         }
@@ -648,32 +733,45 @@ else {
         unset($test['ip']);
         unset($test['uid']);
         unset($test['user']);
-        if (array_key_exists('last_updated', $test))
+        if (array_key_exists('last_updated', $test)) {
             unset($test['last_updated']);
-        if (array_key_exists('started', $test))
+        }
+        if (array_key_exists('started', $test)) {
             unset($test['started']);
-        if (array_key_exists('completed', $test))
+        }
+        if (array_key_exists('completed', $test)) {
             unset($test['completed']);
-        if (array_key_exists('medianRun', $test))
+        }
+        if (array_key_exists('medianRun', $test)) {
             unset($test['medianRun']);
-        if (array_key_exists('retries', $test))
+        }
+        if (array_key_exists('retries', $test)) {
             unset($test['retries']);
-        if (array_key_exists('job_file', $test))
+        }
+        if (array_key_exists('job_file', $test)) {
             unset($test['job_file']);
-        if (array_key_exists('job', $test))
+        }
+        if (array_key_exists('job', $test)) {
             unset($test['job']);
-        if (array_key_exists('test_error', $test))
+        }
+        if (array_key_exists('test_error', $test)) {
             unset($test['test_error']);
-        if (array_key_exists('errors', $test))
+        }
+        if (array_key_exists('errors', $test)) {
             unset($test['errors']);
-        if (array_key_exists('test_runs', $test))
+        }
+        if (array_key_exists('test_runs', $test)) {
             unset($test['test_runs']);
-        if (array_key_exists('shards_finished', $test))
+        }
+        if (array_key_exists('shards_finished', $test)) {
             unset($test['shards_finished']);
-        if (array_key_exists('path', $test))
+        }
+        if (array_key_exists('path', $test)) {
             unset($test['path']);
-        if (array_key_exists('spam', $test))
+        }
+        if (array_key_exists('spam', $test)) {
             unset($test['spam']);
+        }
         $test['priority'] = $ui_priority;
     }
 
@@ -689,16 +787,21 @@ else {
                 $test['mobileDevice'] = key($devices);
             }
             $test['mobileDeviceLabel'] = isset($devices[$test['mobileDevice']]['label']) ? $devices[$test['mobileDevice']]['label'] : $test['mobileDevice'];
-            if (!$test['width'] && isset($devices[$test['mobileDevice']]['width']))
+            if (!$test['width'] && isset($devices[$test['mobileDevice']]['width'])) {
                 $test['width'] = $devices[$test['mobileDevice']]['width'];
-            if (!$test['height'] && isset($devices[$test['mobileDevice']]['height']))
+            }
+            if (!$test['height'] && isset($devices[$test['mobileDevice']]['height'])) {
                 $test['height'] = $devices[$test['mobileDevice']]['height'];
-            if (!$test['dpr'] && isset($devices[$test['mobileDevice']]['dpr']))
+            }
+            if (!$test['dpr'] && isset($devices[$test['mobileDevice']]['dpr'])) {
                 $test['dpr'] = $devices[$test['mobileDevice']]['dpr'];
-            if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
+            }
+            if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua'])) {
                 $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
-            if (!isset($test['throttle_cpu']) && isset($devices[$test['mobileDevice']]['throttle_cpu']))
+            }
+            if (!isset($test['throttle_cpu']) && isset($devices[$test['mobileDevice']]['throttle_cpu'])) {
                 $test['throttle_cpu'] = $devices[$test['mobileDevice']]['throttle_cpu'];
+            }
         }
     }
 
@@ -711,20 +814,25 @@ else {
         $test['vd'] = '';
         $test['vh'] = '';
     }
-    if (isset($req_vo))
+    if (isset($req_vo)) {
         $test['owner'] = $req_vo;
-    if (isset($req_k))
+    }
+    if (isset($req_k)) {
         $test['key'] = $req_k;
+    }
 
-    if (isset($user) && !array_key_exists('user', $test))
+    if (isset($user) && !array_key_exists('user', $test)) {
         $test['user'] = $user;
+    }
 
-    if (isset($uid) && !array_key_exists('uid', $test))
+    if (isset($uid) && !array_key_exists('uid', $test)) {
         $test['uid'] = $uid;
+    }
 
     // create an owner string (for API calls, this should already be set as a cookie for normal visitors)
-    if (!isset($test['owner']) || !strlen($test['owner']) || !preg_match("/^[\w @\.]+$/", $test['owner']))
+    if (!isset($test['owner']) || !strlen($test['owner']) || !preg_match("/^[\w @\.]+$/", $test['owner'])) {
         $test['owner'] = sha1(uniqid(uniqid('', true), true));
+    }
 
     // special case locations
     $use_closest = false;
@@ -817,8 +925,7 @@ else {
                         }
                     }
                 }
-            } else if (isset($req_recipes) && count($req_recipes) > 0) {
-
+            } elseif (isset($req_recipes) && count($req_recipes) > 0) {
                 global $experiments_paid;
                 global $experiments_logged_in;
                 // we allow experiment runs on the metric times without paid permissions
@@ -850,7 +957,6 @@ else {
                     $experimentBlock = "";
                     $allowedFreeExperimentIds = array('001');
                     foreach ($req_recipes as $key => $value) {
-
                         // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
                         // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
                         $recipeSansId = $value;
@@ -874,7 +980,6 @@ else {
                         ) {
                             $error = "Attempt to use unauthorized experiments feature.";
                         } else {
-
                             $recipeScript .= $recipeSansId;
                             $experimentSpof = array();
                             $experimentBlock = array();
@@ -930,14 +1035,16 @@ else {
                     // TODO centralize this logic as it's borrowed from above temporarily
                     if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {
                         $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
-                        if (!isset($script) || !strlen($script))
+                        if (!isset($script) || !strlen($script)) {
                             $script = "navigate\t$url";
+                        }
                         $script = "addHeader\t$header\r\n" . $script;
                     }
                     // Add custom headers
                     if (isset($test['customHeaders']) && strlen($test['customHeaders'])) {
-                        if (!isset($script) || !strlen($script))
+                        if (!isset($script) || !strlen($script)) {
                             $script = "navigate\t$url";
+                        }
                         $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
                         $headerCommands = "";
                         foreach ($headers as $header) {
@@ -962,7 +1069,6 @@ else {
                         $id = CreateTest($test, $test['url']);
 
                         if (isset($id)) {
-
                             $recipeTests[] = $id;
                             $experimentMetadata["experiment"]["control_id"] = $id;
                             $experimentMetadata["experiment"]["control"] = false;
@@ -1009,7 +1115,7 @@ else {
                         }
                     }
                 } // if logged in or exception url
-            } else if (isset($test['batch_locations']) && $test['batch_locations'] && count($test['multiple_locations'])) {
+            } elseif (isset($test['batch_locations']) && $test['batch_locations'] && count($test['multiple_locations'])) {
                 $test['id'] = CreateTest($test, $test['url'], 0, 1);
                 $test['batch_id'] = $test['id'];
 
@@ -1018,12 +1124,14 @@ else {
                     $testData = $test;
                     // Create a test with the given location and applicable connectivity.
                     UpdateLocation($testData, $locations, $location_string, $error);
-                    if (strlen($error))
+                    if (strlen($error)) {
                         break;
+                    }
 
                     $id = CreateTest($testData, $testData['url']);
-                    if (isset($id))
+                    if (isset($id)) {
                         $test['tests'][] = array('url' => $test['url'], 'id' => $id);
+                    }
                 }
 
                 // write out the list of URLs and the test ID for each
@@ -1043,10 +1151,12 @@ else {
                     $bulk['urls'] = array();
                     $bulk['variations'] = array();
                     $bulkUrls = '';
-                    if (isset($req_bulkurls) && strlen($req_bulkurls))
+                    if (isset($req_bulkurls) && strlen($req_bulkurls)) {
                         $bulkUrls = $req_bulkurls . "\n";
-                    if (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']))
+                    }
+                    if (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) {
                         $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
+                    }
 
                     $current_mode = 'urls';
                     if (strlen($bulkUrls)) {
@@ -1075,8 +1185,9 @@ else {
                                     if ($split > 0) {
                                         $key = substr($line, 0, $split);
                                         $value = substr($line, $split + 1);
-                                        if ($key == 'label')
+                                        if ($key == 'label') {
                                             $entry['l'] = $value;
+                                        }
                                     }
                                 } elseif ($current_mode == 'test_script') {
                                     $script[] = $line;
@@ -1084,28 +1195,32 @@ else {
                                     if (substr($line, 0, 1) == '[') {
                                         if (isset($script) && count($script)) {
                                             $entry = ParseBulkScript($script);
-                                            if ($entry)
+                                            if ($entry) {
                                                 $bulk['urls'][] = $entry;
+                                            }
                                             unset($script);
                                         }
 
-                                        if (!strcasecmp($line, '[urls]'))
+                                        if (!strcasecmp($line, '[urls]')) {
                                             $current_mode = 'urls';
-                                        elseif (!strcasecmp($line, '[variations]'))
+                                        } elseif (!strcasecmp($line, '[variations]')) {
                                             $current_mode = 'variations';
-                                        elseif (!strcasecmp($line, '[script]')) {
+                                        } elseif (!strcasecmp($line, '[script]')) {
                                             $script = array();
                                             $current_mode = 'script';
-                                        } else
+                                        } else {
                                             $current_mode = '';
+                                        }
                                     } elseif ($current_mode == 'urls') {
                                         $entry = ParseBulkUrl($line);
-                                        if ($entry)
+                                        if ($entry) {
                                             $bulk['urls'][] = $entry;
+                                        }
                                     } elseif ($current_mode == 'variations') {
                                         $entry = ParseBulkVariation($line);
-                                        if ($entry)
+                                        if ($entry) {
                                             $bulk['variations'][] = $entry;
+                                        }
                                     } elseif ($current_mode == 'script') {
                                         $script[] = $line;
                                     }
@@ -1115,8 +1230,9 @@ else {
 
                         if (count($script)) {
                             $entry = ParseBulkScript($script);
-                            if ($entry)
+                            if ($entry) {
                                 $bulk['urls'][] = $entry;
+                            }
                             unset($script);
                         }
                     }
@@ -1138,16 +1254,18 @@ else {
                                     $testData['discard'] = 0;
                                 }
                             }
-                            if ($entry['s'])
+                            if ($entry['s']) {
                                 $testData['script'] = $entry['s'];
+                            }
 
                             ValidateParameters($testData, $locations, $error, $entry['u']);
                             $entry['id'] = CreateTest($testData, $entry['u']);
                             if ($entry['id']) {
                                 $entry['v'] = array();
                                 foreach ($bulk['variations'] as $variation_index => &$variation) {
-                                    if (strlen($test['label']) && strlen($variation['l']))
+                                    if (strlen($test['label']) && strlen($variation['l'])) {
                                         $test['label'] .= ' - ' . $variation['l'];
+                                    }
                                     $url = CreateUrlVariation($entry['u'], $variation['q']);
                                     if ($url) {
                                         ValidateParameters($testData, $locations, $error, $url);
@@ -1173,8 +1291,9 @@ else {
                 }
             } else {
                 $test['id'] = CreateTest($test, $test['url']);
-                if (!$test['id'] && !strlen($error))
+                if (!$test['id'] && !strlen($error)) {
                     $error = 'Error submitting URL for testing';
+                }
             }
         }
 
@@ -1193,8 +1312,9 @@ else {
                 echo "<response>\n";
                 echo "<statusCode>200</statusCode>\n";
                 echo "<statusText>Ok</statusText>\n";
-                if (strlen($req_r))
+                if (strlen($req_r)) {
                     echo "<requestId>{$req_r}</requestId>\n";
+                }
                 echo "<data>\n";
                 echo "<testId>{$test['id']}</testId>\n";
                 if (FRIENDLY_URLS) {
@@ -1234,7 +1354,7 @@ else {
             } else {
                 if (isset($spofTests) && count($spofTests) > 1) {
                     header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
-                } else if (isset($recipeTests) && count($recipeTests) > 1) {
+                } elseif (isset($recipeTests) && count($recipeTests) > 1) {
                     header("Location: $protocol://$host$uri/video/compare.php?tests=" . $recipeTests[1] . ',' . $recipeTests[0]);
                 } else {
                     // redirect regardless if it is a bulk test or not
@@ -1242,10 +1362,11 @@ else {
                     if (isset($_REQUEST['webvital_profile'])) {
                         $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
                     }
-                    if (FRIENDLY_URLS)
+                    if (FRIENDLY_URLS) {
                         header("Location: $protocol://$host$uri/result/{$test['id']}/$view");
-                    else
+                    } else {
                         header("Location: $protocol://$host$uri/results.php?test={$test['id']}$view");
+                    }
                 }
             }
         } else {
@@ -1257,15 +1378,17 @@ else {
                 echo "<response>\n";
                 echo "<statusCode>400</statusCode>\n";
                 echo "<statusText>" . $error . "</statusText>\n";
-                if (strlen($req_r))
+                if (strlen($req_r)) {
                     echo "<requestId>" . $req_r . "</requestId>\n";
+                }
                 echo "</response>\n";
             } elseif ($json) {
                 $ret = array();
                 $ret['statusCode'] = 400;
                 $ret['statusText'] = $error;
-                if (strlen($req_r))
+                if (strlen($req_r)) {
                     $ret['requestId'] = $req_r;
+                }
                 header("Content-type: application/json");
                 header("Cache-Control: no-cache, must-revalidate", true);
                 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -1283,8 +1406,9 @@ else {
         }
     } else {
         if ($xml) {
-            if (!strlen($error))
+            if (!strlen($error)) {
                 $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
+            }
             header('Content-type: text/xml');
             echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
             echo "<response>\n";
@@ -1292,8 +1416,9 @@ else {
             echo "<statusText>$error</statusText>\n";
             echo "</response>\n";
         } elseif ($json) {
-            if (!strlen($error))
+            if (!strlen($error)) {
                 $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
+            }
             $ret = array();
             $ret['statusCode'] = 400;
             $ret['statusText'] = $error;
@@ -1329,8 +1454,9 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
     $test['location'] = $new_location;
 
     // see if we need to override the browser
-    if (isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
+    if (isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe'])) {
         $test['browserExe'] = $locations[$test['location']]['browserExe'];
+    }
 
     // figure out what the location working directory and friendly name are
     $test['locationText'] = $locations[$test['location']]['label'];
@@ -1338,8 +1464,9 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
     $test['workdir'] = $locations[$test['location']]['localDir'];
     $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
     $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
-    if (!strlen($test['workdir']) && !strlen($test['remoteUrl']))
+    if (!strlen($test['workdir']) && !strlen($test['remoteUrl'])) {
         $error = "Invalid Location, please try submitting your test request again.";
+    }
 
     // see if we need to pick the default connectivity
     if (
@@ -1356,19 +1483,24 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
         }
     }
 
-    if (isset($test['browser']) && strlen($test['browser']))
+    if (isset($test['browser']) && strlen($test['browser'])) {
         $test['locationText'] .= " - <b>{$test['browser']}</b>";
-    if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+    }
+    if (isset($test['mobileDeviceLabel']) && $test['mobile']) {
         $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
+    }
     if (isset($test['connectivity'])) {
         $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
         $connectivity_file = './settings/connectivity.ini.sample';
-        if (file_exists('./settings/connectivity.ini'))
+        if (file_exists('./settings/connectivity.ini')) {
             $connectivity_file = './settings/connectivity.ini';
-        if (file_exists('./settings/common/connectivity.ini'))
+        }
+        if (file_exists('./settings/common/connectivity.ini')) {
             $connectivity_file = './settings/common/connectivity.ini';
-        if (file_exists('./settings/server/connectivity.ini'))
+        }
+        if (file_exists('./settings/server/connectivity.ini')) {
             $connectivity_file = './settings/server/connectivity.ini';
+        }
         $connectivity = parse_ini_file($connectivity_file, true);
         if (isset($connectivity[$test['connectivity']])) {
             $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
@@ -1376,12 +1508,15 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
             $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
             $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
             $test['plr'] = $connectivity[$test['connectivity']]['plr'];
-            if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout']))
+            if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout'])) {
                 $test['timeout'] = $connectivity[$test['connectivity']]['timeout'];
+            }
 
-            if (isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'])
+            if (isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff']) {
                 $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
-        } elseif ((!isset($test['bwIn']) || !$test['bwIn']) &&
+            }
+        } elseif (
+            (!isset($test['bwIn']) || !$test['bwIn']) &&
             (!isset($test['bwOut']) || !$test['bwOut']) &&
             (!isset($test['latency']) || !$test['latency'])
         ) {
@@ -1390,8 +1525,9 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
     }
 
     // adjust the latency for any last-mile latency at the location
-    if (isset($test['latency']) && $locations[$test['location']]['latency'])
+    if (isset($test['latency']) && $locations[$test['location']]['latency']) {
         $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency']);
+    }
 }
 
 
@@ -1435,8 +1571,9 @@ function ValidateKey(&$test, &$error, $key = null)
                 $error = 'Your test request could not be validated (this can happen if you leave the browser window open for over a day before submitting a test).  Please try submitting it again.';
             }
         } elseif (isset($key) || (isset($test['key']) && strlen($test['key']))) {
-            if (isset($test['key']) && strlen($test['key']) && !isset($key))
+            if (isset($test['key']) && strlen($test['key']) && !isset($key)) {
                 $key = $test['key'];
+            }
             $apiKey = $key;
 
             if ($key == GetServerKey()) {
@@ -1444,10 +1581,12 @@ function ValidateKey(&$test, &$error, $key = null)
             }
 
             $keys_file = __DIR__ . '/settings/keys.ini';
-            if (file_exists(__DIR__ . '/settings/common/keys.ini'))
+            if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
                 $keys_file = __DIR__ . '/settings/common/keys.ini';
-            if (file_exists(__DIR__ . '/settings/server/keys.ini'))
+            }
+            if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
                 $keys_file = __DIR__ . '/settings/server/keys.ini';
+            }
             $keys = parse_ini_file($keys_file, true);
 
             $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
@@ -1465,33 +1604,41 @@ function ValidateKey(&$test, &$error, $key = null)
                 }
                 $api_priority = intval(GetSetting('api_priority', 5));
                 $test['priority'] = $api_priority;
-                if (isset($keys[$key]['priority']))
+                if (isset($keys[$key]['priority'])) {
                     $test['priority'] = intval($keys[$key]['priority']);
-                if (isset($keys[$key]['max-priority']))
+                }
+                if (isset($keys[$key]['max-priority'])) {
                     $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
-                if (isset($keys[$key]['forceValidate']))
+                }
+                if (isset($keys[$key]['forceValidate'])) {
                     $forceValidate = true;
-                if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
+                }
+                if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location']) {
                     $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
+                }
                 if (!strlen($error) && isset($keys[$key]['limit'])) {
                     $limit = (int)$keys[$key]['limit'];
 
                     // update the number of tests they have submitted today
-                    if (!is_dir('./dat'))
+                    if (!is_dir('./dat')) {
                         mkdir('./dat', 0777, true);
+                    }
 
                     $lock = Lock("API Keys");
                     if (isset($lock)) {
                         $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
                         $usage = null;
-                        if (is_file($keyfile))
+                        if (is_file($keyfile)) {
                             $usage = json_decode(file_get_contents($keyfile), true);
-                        if (!isset($usage))
+                        }
+                        if (!isset($usage)) {
                             $usage = array();
-                        if (isset($usage[$key]))
+                        }
+                        if (isset($usage[$key])) {
                             $used = (int)$usage[$key];
-                        else
+                        } else {
                             $used = 0;
+                        }
 
                         if ($limit > 0) {
                             if ($used + $runcount <= $limit) {
@@ -1504,8 +1651,9 @@ function ValidateKey(&$test, &$error, $key = null)
                             $used += $runcount;
                             $usage[$key] = $used;
                         }
-                        if (!strlen($error))
+                        if (!strlen($error)) {
                             file_put_contents($keyfile, json_encode($usage));
+                        }
                         Unlock($lock);
                     }
                 }
@@ -1535,7 +1683,7 @@ function ValidateKey(&$test, &$error, $key = null)
                             if (time() <= $account['expiration'] + 172800) {
                                 // Check the balance
                                 $response = $redis->get("C_{$account['accountId']}");
-                                if (isset($response) && $response !== FALSE && is_string($response) && strlen($response) && is_numeric($response)) {
+                                if (isset($response) && $response !== false && is_string($response) && strlen($response) && is_numeric($response)) {
                                     if ($runcount <= intval($response)) {
                                         global $usingApi2;
                                         $usingApi2 = true;
@@ -1597,8 +1745,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
     if (isset($test['script']) && strlen($test['script'])) {
         $url = ValidateScript($test['script'], $error);
-        if (isset($url))
+        if (isset($url)) {
             $test['url'] = $url;
+        }
     }
 
     if (strlen($test['url']) || $test['batch']) {
@@ -1609,37 +1758,43 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $error = "Experiments are only available for WebPageTest Pro subscribers.";
         } else {
             $maxruns = (int)GetSetting('maxruns', 0);
-            if (isset($_COOKIE['maxruns']) && $_COOKIE['maxruns'])
+            if (isset($_COOKIE['maxruns']) && $_COOKIE['maxruns']) {
                 $maxruns = (int)$_COOKIE['maxruns'];
-            elseif (isset($_REQUEST['maxruns']) && $_REQUEST['maxruns'])
+            } elseif (isset($_REQUEST['maxruns']) && $_REQUEST['maxruns']) {
                 $maxruns = (int)$_REQUEST['maxruns'];
-            if (!$maxruns)
+            }
+            if (!$maxruns) {
                 $maxruns = 10;
+            }
 
             if (!GetSetting('fullSizeVideoOn')) {
                 //overwrite the Full Size Video flag with 0 if feature disabled in the settings
                 $test['fullsizevideo'] = 0;
             }
 
-            if (!isset($test['batch']) || !$test['batch'])
+            if (!isset($test['batch']) || !$test['batch']) {
                 ValidateURL($test['url'], $error);
+            }
 
             if (!$error) {
                 if ($use_closest) {
-                    if (!isset($destination_url))
+                    if (!isset($destination_url)) {
                         $destination_url = $test['url'];
+                    }
                     $test['location'] = GetClosestLocation($destination_url, $test['browser']);
                 }
 
                 // make sure the test runs are between 1 and the max
-                if ($test['runs'] > $maxruns)
+                if ($test['runs'] > $maxruns) {
                     $test['runs'] = $maxruns;
-                elseif ($test['runs'] < 1)
+                } elseif ($test['runs'] < 1) {
                     $test['runs'] = 1;
+                }
 
                 // if fvonly is set, make sure it is to an explicit value of 1
-                if ($test['fvonly'] > 0)
+                if ($test['fvonly'] > 0) {
                     $test['fvonly'] = 1;
+                }
 
                 // make sure on/off options are explicitly 1 or 0
                 $values = array(
@@ -1649,32 +1804,37 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     'noheaders'
                 );
                 foreach ($values as $value) {
-                    if (isset($test[$value]) && $test[$value])
+                    if (isset($test[$value]) && $test[$value]) {
                         $test[$value] = 1;
-                    else
+                    } else {
                         $test[$value] = 0;
+                    }
                 }
                 $test['aft'] = 0;
 
                 // use the default location if one wasn't specified
                 if (!strlen($test['location'])) {
                     $def = $locations['locations']['default'];
-                    if (!$def)
+                    if (!$def) {
                         $def = $locations['locations']['1'];
+                    }
                     // $loc = $locations[$def]['default'];
                     $loc = $locations[$locations[$def]['default']]['location'];
-                    if (!$loc)
+                    if (!$loc) {
                         $loc = $locations[$locations[$def]['1']]['location'];
+                    }
                     //    $loc = $locations[$def]['1'];
                     $test['location'] = $loc;
                 }
 
                 // Pull the lat and lng from the location if available
                 $test_loc = $locations[$test['location']];
-                if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0)
+                if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0) {
                     $test['lat'] = floatval($_REQUEST['lat']);
-                if (isset($_REQUEST['lng']) && floatval($_REQUEST['lng']) != 0)
+                }
+                if (isset($_REQUEST['lng']) && floatval($_REQUEST['lng']) != 0) {
                     $test['lng'] = floatval($_REQUEST['lng']);
+                }
                 if (
                     !isset($test['lat']) && !isset($test['lng']) &&
                     isset($test_loc['lat']) && isset($test_loc['lng'])
@@ -1686,8 +1846,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 // Use the default browser if one wasn't specified
                 if ((!isset($test['browser']) || !strlen($test['browser'])) && isset($locations[$test['location']]['browser'])) {
                     $browsers = explode(',', $locations[$test['location']]['browser']);
-                    if (isset($browsers) && is_array($browsers) && count($browsers))
+                    if (isset($browsers) && is_array($browsers) && count($browsers)) {
                         $test['browser'] = $browsers[0];
+                    }
                 }
 
                 // see if we are blocking API access at the given location
@@ -1701,30 +1862,38 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
 
                 // see if we need to override the browser
-                if (isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
+                if (isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe'])) {
                     $test['browserExe'] = $locations[$test['location']]['browserExe'];
+                }
 
                 // See if we need to force mobile emulation
-                if (!$test['mobile'] && isset($locations[$test['location']]['force_mobile']) && $locations[$test['location']]['force_mobile'])
+                if (!$test['mobile'] && isset($locations[$test['location']]['force_mobile']) && $locations[$test['location']]['force_mobile']) {
                     $test['mobile'] = 1;
+                }
 
                 // See if the location carries a timeout override
-                if (!isset($test['timeout']) && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0)
+                if (!isset($test['timeout']) && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0) {
                     $test['timeout'] = intval($locations[$test['location']]['timeout']);
+                }
 
                 // figure out what the location working directory and friendly name are
                 $test['locationText'] = $locations[$test['location']]['label'];
 
-                if (isset($locations[$test['location']]['label']))
+                if (isset($locations[$test['location']]['label'])) {
                     $test['locationLabel'] = $locations[$test['location']]['label'];
-                if (isset($locations[$test['location']]['localDir']))
+                }
+                if (isset($locations[$test['location']]['localDir'])) {
                     $test['workdir'] = $locations[$test['location']]['localDir'];
-                if (isset($locations[$test['location']]['remoteUrl']))
+                }
+                if (isset($locations[$test['location']]['remoteUrl'])) {
                     $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
-                if (isset($locations[$test['location']]['remoteLocation']))
+                }
+                if (isset($locations[$test['location']]['remoteLocation'])) {
                     $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
-                if (!isset($test['workdir']) && !isset($test['remoteUrl']))
+                }
+                if (!isset($test['workdir']) && !isset($test['remoteUrl'])) {
                     $error = "Invalid Location, please try submitting your test request again.";
+                }
 
                 if (isset($test['type']) && strlen($test['type']) && $test['type'] === 'traceroute') {
                     // make sure we're just passing a host name
@@ -1740,19 +1909,24 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                         }
                     }
 
-                    if (isset($test['browser']) && strlen($test['browser']))
+                    if (isset($test['browser']) && strlen($test['browser'])) {
                         $test['locationText'] .= " - <b>{$test['browser']}</b>";
-                    if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+                    }
+                    if (isset($test['mobileDeviceLabel']) && $test['mobile']) {
                         $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
+                    }
                     if (isset($test['connectivity'])) {
                         $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
                         $connectivity_file = './settings/connectivity.ini.sample';
-                        if (file_exists('./settings/connectivity.ini'))
+                        if (file_exists('./settings/connectivity.ini')) {
                             $connectivity_file = './settings/connectivity.ini';
-                        if (file_exists('./settings/common/connectivity.ini'))
+                        }
+                        if (file_exists('./settings/common/connectivity.ini')) {
                             $connectivity_file = './settings/common/connectivity.ini';
-                        if (file_exists('./settings/server/connectivity.ini'))
+                        }
+                        if (file_exists('./settings/server/connectivity.ini')) {
                             $connectivity_file = './settings/server/connectivity.ini';
+                        }
                         $connectivity = parse_ini_file($connectivity_file, true);
                         if (isset($connectivity[$test['connectivity']])) {
                             $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
@@ -1760,9 +1934,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                             $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
                             $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
                             $test['plr'] = $connectivity[$test['connectivity']]['plr'];
-                            if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout']))
+                            if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout'])) {
                                 $test['timeout'] = $connectivity[$test['connectivity']]['timeout'];
-                        } elseif ((!isset($test['bwIn']) || !$test['bwIn']) &&
+                            }
+                        } elseif (
+                            (!isset($test['bwIn']) || !$test['bwIn']) &&
                             (!isset($test['bwOut']) || !$test['bwOut']) &&
                             (!isset($test['latency']) || !$test['latency'])
                         ) {
@@ -1771,8 +1947,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     }
 
                     // adjust the latency for any last-mile latency at the location
-                    if (isset($test['latency']) && isset($locations[$test['location']]['latency']) && $locations[$test['location']]['latency'])
+                    if (isset($test['latency']) && isset($locations[$test['location']]['latency']) && $locations[$test['location']]['latency']) {
                         $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency']);
+                    }
                 }
             }
         }
@@ -1871,13 +2048,15 @@ function ValidateScript(&$script, &$error)
             $maxNavigateCount = 20;
         }
 
-        if (!$ok)
+        if (!$ok) {
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
-        else if ($navigateCount > $maxNavigateCount)
+        } elseif ($navigateCount > $maxNavigateCount) {
             $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
+        }
 
-        if (strlen($error))
+        if (strlen($error)) {
             unset($url);
+        }
     }
 
     return $url;
@@ -1897,24 +2076,26 @@ function FixScript(&$test, &$script)
         foreach ($lines as $line) {
             $line = trim($line);
             if (strlen($line)) {
-                if (strpos($line, "\t") !== false)
+                if (strpos($line, "\t") !== false) {
                     $newScript .= "$line\r\n";
-                else {
+                } else {
                     $command = strtok(trim($line), " \t\r\n");
                     if ($command !== false) {
                         $newScript .= $command;
                         $expected = ScriptParameterCount($command);
                         if ($expected == 2) {
                             $target = strtok("\r\n");
-                            if ($target !== false)
+                            if ($target !== false) {
                                 $newScript .= "\t$target";
+                            }
                         } elseif ($expected = 3) {
                             $target = strtok(" \t\r\n");
                             if ($target !== false) {
                                 $newScript .= "\t$target";
                                 $value = strtok("\r\n");
-                                if ($value !== false)
+                                if ($value !== false) {
                                     $newScript .= "\t$value";
+                                }
                             }
                         }
                         $newScript .= "\r\n";
@@ -1982,27 +2163,29 @@ function ValidateURL(&$url, &$error)
     $ret = false;
 
     // make sure the url starts with http://
-    if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+    if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6)) {
         $url = 'https://' . $url;
+    }
 
     $parts = parse_url($url);
     $host = $parts['host'];
 
-    if (strpos($url, ' ') !== FALSE || strpos($url, '>') !== FALSE || strpos($url, '<') !== FALSE)
+    if (strpos($url, ' ') !== false || strpos($url, '>') !== false || strpos($url, '<') !== false) {
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
-    elseif (strpos($host, '.') === FALSE && !GetSetting('allowNonFQDN'))
+    } elseif (strpos($host, '.') === false && !GetSetting('allowNonFQDN')) {
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
-    elseif (
+    } elseif (
         preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && !GetSetting('allowPrivate') &&
         (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "169.254.", 8) || !strncmp($host, "10.", 3))
-    )
+    ) {
         $error = "You can not test <b>" . htmlspecialchars($host) . "</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
-    elseif (!strcmp($host, "169.254.169.254"))
+    } elseif (!strcmp($host, "169.254.169.254")) {
         $error = "Sorry, " . htmlspecialchars($host) . " is blocked from testing";
-    elseif (!strcasecmp(substr($url, -4), '.pdf'))
+    } elseif (!strcasecmp(substr($url, -4), '.pdf')) {
         $error = "You can not test PDF files with WebPagetest";
-    else
+    } else {
         $ret = true;
+    }
 
     return $ret;
 }
@@ -2023,13 +2206,15 @@ function SubmitUrl($testId, $job, &$test, $url)
     $job['Test ID'] = $testId;
     $job['url'] = $url;
     $script = ProcessTestScript($url, $test);
-    if (isset($script) && strlen($script))
+    if (isset($script) && strlen($script)) {
         $job['script'] = $script;
+    }
 
     $location = $test['location'];
     $ret = WriteJob($location, $test, json_encode($job), $testId);
-    if (isset($test['ami']))
+    if (isset($test['ami'])) {
         EC2_StartInstanceIfNeeded($test['ami']);
+    }
 
     return $ret;
 }
@@ -2111,8 +2296,9 @@ function SendToRelay(&$test, &$out)
             if ($result['statusCode'] == 200) {
                 $test['relayId'] = $result['id'];
                 $ret = true;
-            } else
+            } else {
                 $error = $result['statusText'];
+            }
         }
     }
 
@@ -2130,8 +2316,9 @@ function GetRedirect($url, &$rhost, &$rurl)
     $rurl = '';
 
     if (strlen($url)) {
-        if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+        if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6)) {
             $url = 'https://' . $url;
+        }
         if (array_key_exists($url, $redirect_cache)) {
             $rhost = $redirect_cache[$url]['host'];
             $rurl = $redirect_cache[$url]['url'];
@@ -2177,8 +2364,9 @@ function GetRedirect($url, &$rhost, &$rurl)
                 }
             }
 
-            if (strlen($host) && $original !== $host)
+            if (strlen($host) && $original !== $host) {
                 $rhost = $host;
+            }
 
             // Cache the redirct info
             $redirect_info = array('host' => $rhost, 'url' => $rurl);
@@ -2186,8 +2374,9 @@ function GetRedirect($url, &$rhost, &$rurl)
             CacheStore($cache_key, $redirect_info, 3600);
         }
     }
-    if (strlen($rhost))
+    if (strlen($rhost)) {
         $redirected = true;
+    }
     return $redirected;
 }
 
@@ -2211,20 +2400,24 @@ function LogTest(&$test, $testId, $url)
     }
     $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
 
-    if (!is_dir('./logs'))
+    if (!is_dir('./logs')) {
         mkdir('./logs', 0777, true);
+    }
 
     // open the log file
     $filename = "./logs/" . gmdate("Ymd") . ".log";
     $video = 0;
-    if (isset($test['video']) && strlen($test['video']))
+    if (isset($test['video']) && strlen($test['video'])) {
         $video = 1;
+    }
     $ip = $_SERVER['REMOTE_ADDR'];
-    if (array_key_exists('ip', $test) && strlen($test['ip']))
+    if (array_key_exists('ip', $test) && strlen($test['ip'])) {
         $ip = $test['ip'];
+    }
     $pageLoads = $test['runs'];
-    if (!$test['fvonly'])
+    if (!$test['fvonly']) {
         $pageLoads *= 2;
+    }
     //if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
     //    $pageLoads *= $test['navigateCount'];
 
@@ -2423,8 +2616,9 @@ function CheckUrl($url)
     global $admin;
     global $is_bulk_test;
     $date = gmdate("Ymd");
-    if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+    if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6)) {
         $url = 'https://' . $url;
+    }
     if ($forceValidate || (!$usingAPI && !$admin)) {
         if (file_exists('./settings/server/blockurl.txt')) {
             $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -2447,8 +2641,9 @@ function CheckUrl($url)
             // Follow redirects to see if they are obscuring the site being tested
             $rhost = '';
             $rurl = '';
-            if (GetSetting('check_redirects') && !$is_bulk_test)
+            if (GetSetting('check_redirects') && !$is_bulk_test) {
                 GetRedirect($url, $rhost, $rurl);
+            }
             foreach ($blockUrls as $block) {
                 $block = trim($block);
                 if (strlen($block) && preg_match("/$block/i", $url)) {
@@ -2503,8 +2698,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     global $is_mobile;
 
     $testId = null;
-    if (is_file('./settings/block.txt'))
+    if (is_file('./settings/block.txt')) {
         $forceBlock = trim(file_get_contents('./settings/block.txt'));
+    }
 
     if (CheckUrl($url) && WptHookValidateTest($test)) {
         $locationShard = isset($test['locationShard']) ? $test['locationShard'] : null;
@@ -2527,8 +2723,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $test['path'] = './' . GetTestPath($testId);
 
         // create the folder for the test results
-        if (!is_dir($test['path']))
+        if (!is_dir($test['path'])) {
             mkdir($test['path'], 0777, true);
+        }
 
         // Fetch the CrUX data for the URL
         $crux_data = GetCruxDataForURL($url, $is_mobile);
@@ -2558,23 +2755,31 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         AddIniLine($testInfo, "batch_locations", $batch_locations);
         AddIniLine($testInfo, "sensitive", $test['sensitive']);
         AddIniLine($testInfo, "private", $test['private']);
-        if (isset($test['login']) && strlen($test['login']))
+        if (isset($test['login']) && strlen($test['login'])) {
             AddIniLine($testInfo, "authenticated", "1");
+        }
         AddIniLine($testInfo, "connections", $test['connections']);
-        if (isset($test['script']) && strlen($test['script']))
+        if (isset($test['script']) && strlen($test['script'])) {
             AddIniLine($testInfo, "script", "1");
-        if (isset($test['notify']) && strlen($test['notify']))
+        }
+        if (isset($test['notify']) && strlen($test['notify'])) {
             AddIniLine($testInfo, "notify", $test['notify']);
-        if (isset($test['video']) && strlen($test['video']))
+        }
+        if (isset($test['video']) && strlen($test['video'])) {
             AddIniLine($testInfo, "video", "1");
-        if (isset($test['disable_video']))
+        }
+        if (isset($test['disable_video'])) {
             AddIniLine($testInfo, "disable_video", $test['disable_video']);
-        if (isset($test['uid']) && strlen($test['uid']))
+        }
+        if (isset($test['uid']) && strlen($test['uid'])) {
             AddIniLine($testInfo, "uid", $test['uid']);
-        if (isset($test['owner']) && strlen($test['owner']))
+        }
+        if (isset($test['owner']) && strlen($test['owner'])) {
             AddIniLine($testInfo, "owner", $test['owner']);
-        if (isset($test['type']) && strlen($test['type']))
+        }
+        if (isset($test['type']) && strlen($test['type'])) {
             AddIniLine($testInfo, "type", $test['type']);
+        }
 
         if (isset($test['connectivity'])) {
             AddIniLine($testInfo, "connectivity", $test['connectivity']);
@@ -2585,81 +2790,107 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
 
         $testInfo .= "\r\n[runs]\r\n";
-        if (isset($test['median_video']) && $test['median_video'])
+        if (isset($test['median_video']) && $test['median_video']) {
             AddIniLine($testInfo, "median_video", "1");
+        }
 
-        file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
+        file_put_contents("{$test['path']}/testinfo.ini", $testInfo);
 
         // for "batch" tests (the master) we don't need to submit an actual test request
         if (!$batch && !$batch_locations) {
             // build up the json test job
             $job = array();
             // build up the actual test commands
-            if (isset($test['priority']))
+            if (isset($test['priority'])) {
                 $job["priority"] = $test['priority'];
+            }
             if (isset($test['fvonly']) && $test['fvonly']) {
                 $job['fvonly'] = 1;
             } else {
                 $job['fvonly'] = 0;
             }
-            if ($timeout)
+            if ($timeout) {
                 $job['timeout'] = intval($timeout);
-            if (isset($test['run_time_limit']))
+            }
+            if (isset($test['run_time_limit'])) {
                 $job["run_time_limit"] = $test['run_time_limit'];
-            if (isset($test['web10']) && $test['web10'])
+            }
+            if (isset($test['web10']) && $test['web10']) {
                 $job['web10'] = 1;
-            if (isset($test['ignoreSSL']) && $test['ignoreSSL'])
+            }
+            if (isset($test['ignoreSSL']) && $test['ignoreSSL']) {
                 $job['ignoreSSL'] = 1;
-            if (isset($test['tcpdump']) && $test['tcpdump'])
+            }
+            if (isset($test['tcpdump']) && $test['tcpdump']) {
                 $job['tcpdump'] = 1;
-            if (isset($test['standards']) && $test['standards'])
+            }
+            if (isset($test['standards']) && $test['standards']) {
                 $job['standards'] = 1;
+            }
             if (isset($test['timeline']) && $test['timeline']) {
                 $job['timeline'] = 1;
-                if (isset($test['discard_timeline']) && $test['discard_timeline'])
+                if (isset($test['discard_timeline']) && $test['discard_timeline']) {
                     $job['discard_timeline'] = 1;
-                if (isset($test['profiler']) && $test['profiler'])
+                }
+                if (isset($test['profiler']) && $test['profiler']) {
                     $job['profiler'] = 1;
-                if (isset($test['timeline_fps']))
+                }
+                if (isset($test['timeline_fps'])) {
                     $job['timeline_fps'] = intval($test['timeline_fps']);
-                if (isset($test['timelineStackDepth']))
+                }
+                if (isset($test['timelineStackDepth'])) {
                     $job['timelineStackDepth'] = intval($test['timelineStackDepth']);
+                }
             }
-            if (isset($test['trace']) && $test['trace'])
+            if (isset($test['trace']) && $test['trace']) {
                 $job['trace'] = 1;
-            if (isset($test['traceCategories']))
+            }
+            if (isset($test['traceCategories'])) {
                 $job['traceCategories'] = $test['traceCategories'];
-            if (isset($test['swrender']) && $test['swrender'])
+            }
+            if (isset($test['swrender']) && $test['swrender']) {
                 $job['swRender'] = 1;
-            if (isset($test['netlog']) && $test['netlog'])
+            }
+            if (isset($test['netlog']) && $test['netlog']) {
                 $job['netlog'] = 1;
-            if (isset($test['spdy3']) && $test['spdy3'])
+            }
+            if (isset($test['spdy3']) && $test['spdy3']) {
                 $job['spdy3'] = 1;
-            if (isset($test['noscript']) && $test['noscript'])
+            }
+            if (isset($test['noscript']) && $test['noscript']) {
                 $job['noscript'] = 1;
-            if (isset($test['fullsizevideo']) && $test['fullsizevideo'])
+            }
+            if (isset($test['fullsizevideo']) && $test['fullsizevideo']) {
                 $job['fullSizeVideo'] = 1;
-            if (isset($test['thumbsize']))
+            }
+            if (isset($test['thumbsize'])) {
                 $job['thumbsize'] = $test['thumbsize'];
-            if (isset($test['blockads']) && $test['blockads'])
+            }
+            if (isset($test['blockads']) && $test['blockads']) {
                 $job['blockads'] = 1;
+            }
             if (isset($test['video']) && $test['video']) {
                 $job['Capture Video'] = 1;
             } else {
                 $job['Capture Video'] = 0;
             }
-            if (isset($test['disable_video']) && $test['disable_video'])
+            if (isset($test['disable_video']) && $test['disable_video']) {
                 $job["disable_video"] = 1;
-            if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
+            }
+            if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo'])) {
                 $job['keepvideo'] = 1;
-            if (isset($test['renderVideo']) && $test['renderVideo'])
+            }
+            if (isset($test['renderVideo']) && $test['renderVideo']) {
                 $job['renderVideo'] = 1;
-            if (isset($test['type']) && strlen($test['type']))
+            }
+            if (isset($test['type']) && strlen($test['type'])) {
                 $job['type'] = $test['type'];
+            }
             if (isset($test['block']) && $test['block']) {
                 $block = $test['block'];
-                if (isset($forceBlock))
+                if (isset($forceBlock)) {
                     $block .= " $forceBlock";
+                }
                 $job['block'] = $block;
             } elseif (isset($forceBlock)) {
                 $job['block'] = $forceBlock;
@@ -2667,18 +2898,24 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (isset($test['blockDomains']) && strlen($test['blockDomains'])) {
                 $job['blockDomains'] = $test['blockDomains'];
             }
-            if (isset($test['injectScript']))
+            if (isset($test['injectScript'])) {
                 $job['injectScript'] = $test['injectScript'];
-            if (isset($test['noopt']) && $test['noopt'])
+            }
+            if (isset($test['noopt']) && $test['noopt']) {
                 $job['noopt'] = 1;
-            if (isset($test['noimages']) && $test['noimages'])
+            }
+            if (isset($test['noimages']) && $test['noimages']) {
                 $job['noimages'] = 1;
-            if (isset($test['sensitive']) && $test['sensitive'])
+            }
+            if (isset($test['sensitive']) && $test['sensitive']) {
                 $job['noheaders'] = 1;
-            if (isset($test['noheaders']) && $test['noheaders'])
+            }
+            if (isset($test['noheaders']) && $test['noheaders']) {
                 $job['noheaders'] = 1;
-            if (isset($test['discard']) && $test['discard'])
+            }
+            if (isset($test['discard']) && $test['discard']) {
                 $job['discard'] = intval($test['discard']);
+            }
             $job['runs'] = intval($test['runs']);
 
             if (isset($test['connectivity'])) {
@@ -2689,123 +2926,175 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $job['shaperLimit'] = intval($test['shaperLimit']);
             }
 
-            if (isset($test['browserExe']) && strlen($test['browserExe']))
+            if (isset($test['browserExe']) && strlen($test['browserExe'])) {
                 $job['browserExe'] = $test['browserExe'];
-            if (isset($test['browser']) && strlen($test['browser']))
+            }
+            if (isset($test['browser']) && strlen($test['browser'])) {
                 $job['browser'] = $test['browser'];
-            if ((isset($test['pngss']) && $test['pngss']) || GetSetting('pngss'))
+            }
+            if ((isset($test['pngss']) && $test['pngss']) || GetSetting('pngss')) {
                 $job['pngScreenShot'] = 1;
-            if (isset($test['fps']) && $test['fps'] > 0)
+            }
+            if (isset($test['fps']) && $test['fps'] > 0) {
                 $job['fps'] = intval($test['fps']);
+            }
             $iq = GetSetting('iq');
-            if (isset($test['iq']) && $test['iq'])
+            if (isset($test['iq']) && $test['iq']) {
                 $job['imageQuality'] = intval($test['iq']);
-            elseif ($iq)
+            } elseif ($iq) {
                 $job['imageQuality'] = intval($iq);
-            if (isset($test['bodies']) && $test['bodies'])
+            }
+            if (isset($test['bodies']) && $test['bodies']) {
                 $job['bodies'] = 1;
-            if (isset($test['htmlbody']) && $test['htmlbody'])
+            }
+            if (isset($test['htmlbody']) && $test['htmlbody']) {
                 $job['htmlbody'] = 1;
-            if (isset($test['time']) && $test['time'])
+            }
+            if (isset($test['time']) && $test['time']) {
                 $job['time'] = intval($test['time']);
-            if (isset($test['clear_rv']) && $test['clear_rv'])
+            }
+            if (isset($test['clear_rv']) && $test['clear_rv']) {
                 $job['clearRV'] = 1;
-            if (isset($test['keepua']) && $test['keepua'])
+            }
+            if (isset($test['keepua']) && $test['keepua']) {
                 $job['keepua'] = 1;
-            if (isset($test['axe']) && $test['axe'])
+            }
+            if (isset($test['axe']) && $test['axe']) {
                 $job['axe'] = 1;
-            if (isset($test['mobile']) && $test['mobile'])
+            }
+            if (isset($test['mobile']) && $test['mobile']) {
                 $job['mobile'] = 1;
-            if (isset($test['lighthouse']) && $test['lighthouse'])
+            }
+            if (isset($test['lighthouse']) && $test['lighthouse']) {
                 $job['lighthouse'] = 1;
-            if (isset($test['lighthouseTrace']) && $test['lighthouseTrace'])
+            }
+            if (isset($test['lighthouseTrace']) && $test['lighthouseTrace']) {
                 $job['lighthouseTrace'] = 1;
-            if (isset($test['lighthouseScreenshots']) && $test['lighthouseScreenshots'])
+            }
+            if (isset($test['lighthouseScreenshots']) && $test['lighthouseScreenshots']) {
                 $job['lighthouseScreenshots'] = 1;
-            if (isset($test['v8rcs']) && $test['v8rcs'])
+            }
+            if (isset($test['v8rcs']) && $test['v8rcs']) {
                 $job['v8rcs'] = 1;
-            if (isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'])
+            }
+            if (isset($test['lighthouseThrottle']) && $test['lighthouseThrottle']) {
                 $job['lighthouseThrottle'] = 1;
-            if (isset($test['lighthouseConfig']))
+            }
+            if (isset($test['lighthouseConfig'])) {
                 $job['lighthouseConfig'] = $test['lighthouseConfig'];
-            if (isset($test['coverage']) && $test['coverage'])
+            }
+            if (isset($test['coverage']) && $test['coverage']) {
                 $job['coverage'] = 1;
-            if (isset($test['debug']) && $test['debug'])
+            }
+            if (isset($test['debug']) && $test['debug']) {
                 $job['debug'] = 1;
-            if (isset($test['warmup']) && $test['warmup'])
+            }
+            if (isset($test['warmup']) && $test['warmup']) {
                 $job['warmup'] = intval($test['warmup']);
-            if (isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0)
+            }
+            if (isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0) {
                 $job['throttle_cpu'] = floatval($test['throttle_cpu']);
-            if (isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization'])
+            }
+            if (isset($test['bypass_cpu_normalization']) && $test['bypass_cpu_normalization']) {
                 $job['bypass_cpu_normalization'] = 1;
-            if (isset($test['securityInsights']) && $test['securityInsights'])
+            }
+            if (isset($test['securityInsights']) && $test['securityInsights']) {
                 $job['securityInsights'] = 1;
-            if (isset($test['dpr']) && $test['dpr'] > 0)
+            }
+            if (isset($test['dpr']) && $test['dpr'] > 0) {
                 $job['dpr'] = floatval($test['dpr']);
-            if (isset($test['width']) && $test['width'] > 0)
+            }
+            if (isset($test['width']) && $test['width'] > 0) {
                 $job['width'] = intval($test['width']);
-            if (isset($test['height']) && $test['height'] > 0)
+            }
+            if (isset($test['height']) && $test['height'] > 0) {
                 $job['height'] = intval($test['height']);
-            if (isset($test['browser_width']) && $test['browser_width'] > 0)
+            }
+            if (isset($test['browser_width']) && $test['browser_width'] > 0) {
                 $job['browser_width'] = intval($test['browser_width']);
-            if (isset($test['browser_height']) && $test['browser_height'] > 0)
+            }
+            if (isset($test['browser_height']) && $test['browser_height'] > 0) {
                 $job['browser_height'] = intval($test['browser_height']);
-            if (isset($test['clearcerts']) && $test['clearcerts'])
+            }
+            if (isset($test['clearcerts']) && $test['clearcerts']) {
                 $job['clearcerts'] = 1;
-            if (isset($test['orientation']) && $test['orientation'])
+            }
+            if (isset($test['orientation']) && $test['orientation']) {
                 $job['orientation'] = $test['orientation'];
-            if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
+            }
+            if (array_key_exists('continuousVideo', $test) && $test['continuousVideo']) {
                 $job['continuousVideo'] = 1;
-            if (array_key_exists('responsive', $test) && $test['responsive'])
+            }
+            if (array_key_exists('responsive', $test) && $test['responsive']) {
                 $job['responsive'] = 1;
-            if (array_key_exists('minimalResults', $test) && $test['minimalResults'])
+            }
+            if (array_key_exists('minimalResults', $test) && $test['minimalResults']) {
                 $job['minimalResults'] = 1;
-            if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
+            }
+            if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine'])) {
                 $job['cmdLine'] = $test['cmdLine'];
-            if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
+            }
+            if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine'])) {
                 $job['addCmdLine'] = $test['addCmdLine'];
-            if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl']))
+            }
+            if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl'])) {
                 $job['customBrowserUrl'] = $test['customBrowserUrl'];
-            if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
+            }
+            if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5'])) {
                 $job['customBrowserMD5'] = $test['customBrowserMD5'];
+            }
             if (
                 array_key_exists('customBrowserSettings', $test) &&
                 is_array($test['customBrowserSettings']) &&
                 count($test['customBrowserSettings'])
             ) {
-                foreach ($test['customBrowserSettings'] as $setting => $value)
+                foreach ($test['customBrowserSettings'] as $setting => $value) {
                     $job["customBrowser_$setting"] = $value;
+                }
             }
-            if (isset($test['uastring']))
+            if (isset($test['uastring'])) {
                 $job['uastring'] = $test['uastring'];
-            if (isset($test['UAModifier']) && strlen($test['UAModifier']))
+            }
+            if (isset($test['UAModifier']) && strlen($test['UAModifier'])) {
                 $job['UAModifier'] = $test['UAModifier'];
-            if (isset($test['appendua']))
+            }
+            if (isset($test['appendua'])) {
                 $job['AppendUA'] = $test['appendua'];
-            if (isset($test['key']) && strlen($test['key']))
+            }
+            if (isset($test['key']) && strlen($test['key'])) {
                 $job['APIKey'] = $test['key'];
-            if (isset($test['ip']) && strlen($test['ip']))
+            }
+            if (isset($test['ip']) && strlen($test['ip'])) {
                 $job['IPAddr'] = $test['ip'];
-            if (isset($test['lat']) && strlen($test['lat']))
+            }
+            if (isset($test['lat']) && strlen($test['lat'])) {
                 $job['lat'] = $test['lat'];
-            if (isset($test['lng']) && strlen($test['lng']))
+            }
+            if (isset($test['lng']) && strlen($test['lng'])) {
                 $job['lng'] = $test['lng'];
-            if (isset($test['disableAVIF']) && $test['disableAVIF'])
+            }
+            if (isset($test['disableAVIF']) && $test['disableAVIF']) {
                 $job['disableAVIF'] = 1;
-            if (isset($test['disableWEBP']) && $test['disableWEBP'])
+            }
+            if (isset($test['disableWEBP']) && $test['disableWEBP']) {
                 $job['disableWEBP'] = 1;
-            if (isset($test['disableJXL']) && $test['disableJXL'])
+            }
+            if (isset($test['disableJXL']) && $test['disableJXL']) {
                 $job['disableJXL'] = 1;
-            if (isset($test['dtShaper']) && $test['dtShaper'])
+            }
+            if (isset($test['dtShaper']) && $test['dtShaper']) {
                 $job['dtShaper'] = 1;
-            if (isset($test['axe']) && $test['axe'])
+            }
+            if (isset($test['axe']) && $test['axe']) {
                 $job['axe'] = 1;
+            }
             // Pass the WPT server hostname to the agent
             $hostname = GetSetting('host');
-            if (isset($hostname) && is_string($hostname) && strlen($hostname))
+            if (isset($hostname) && is_string($hostname) && strlen($hostname)) {
                 $job['wpthost'] = $hostname;
-            elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
+            } elseif (isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST'])) {
                 $job['wpthost'] = $_SERVER['HTTP_HOST'];
+            }
             if (isset($server_secret) && strlen($server_secret)) {
                 $job['signature'] = sha1("$testId$server_secret");
             }
@@ -2835,8 +3124,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             // Generate the job file name
             $ext = 'url';
-            if ($test['priority'])
+            if ($test['priority']) {
                 $ext = "p{$test['priority']}";
+            }
             $test['job'] = "$testId.$ext";
 
             // Write out the json before submitting the test to the queue
@@ -2846,8 +3136,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             SaveTestInfo($testId, $test);
             $test['url'] = $oldUrl;
 
-            if (!SubmitUrl($testId, $job, $test, $url))
+            if (!SubmitUrl($testId, $job, $test, $url)) {
                 $testId = null;
+            }
         } elseif (isset($testId)) {
             $oldUrl = @$test['url'];
             $test['url'] = $url;
@@ -2860,12 +3151,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if (isset($testId)) {
             logTestMsg($testId, "Test Created");
 
-            if ($batch_locations)
+            if ($batch_locations) {
                 LogTest($test, $testId, 'Multiple Locations test');
-            else if ($batch)
+            } elseif ($batch) {
                 LogTest($test, $testId, 'Bulk Test');
-            else
+            } else {
                 LogTest($test, $testId, $url);
+            }
         } else {
             // delete the test if we didn't really submit it
             delTree("{$test['path']}/");
@@ -2903,9 +3195,9 @@ function ParseBulkUrl($line)
     $slash = strpos($line, '/');
     $label = null;
     $url = null;
-    if ($equals === false || ($query !== false && $query < $equals) || ($slash !== false && $slash < $equals))
+    if ($equals === false || ($query !== false && $query < $equals) || ($slash !== false && $slash < $equals)) {
         $url = $line;
-    else {
+    } else {
         $label = trim(substr($line, 0, $equals));
         $url = trim(substr($line, $equals + 1));
     }
@@ -2913,8 +3205,9 @@ function ParseBulkUrl($line)
     if ($url && ValidateURL($url, $err)) {
         $entry = array();
         $entry['u'] = $url;
-        if ($label)
+        if ($label) {
             $entry['l'] = $label;
+        }
         $entry['ns'] = $noscript;
     }
 
@@ -2936,8 +3229,9 @@ function ParseBulkVariation($line)
     if ($equals !== false) {
         $label = trim(substr($line, 0, $equals));
         $query = trim(substr($line, $equals + 1));
-        if (strlen($label) && strlen($query))
+        if (strlen($label) && strlen($query)) {
             $entry = array('l' => $label, 'q' => $query);
+        }
     }
 
     return $entry;
@@ -2955,23 +3249,24 @@ function ParseBulkScript(&$script, $current_entry = null)
 
     if (count($script)) {
         $s = '';
-        if (isset($current_entry))
+        if (isset($current_entry)) {
             $entry = $current_entry;
-        else
+        } else {
             $entry = array();
+        }
         foreach ($script as $line) {
-            if (!strncasecmp($line, 'label=', 6))
+            if (!strncasecmp($line, 'label=', 6)) {
                 $entry['l'] = trim(substr($line, 6));
-            else {
+            } else {
                 $s .= $line;
                 $s .= "\r\n";
             }
         }
 
         $entry['u'] = ValidateScript($s, $error);
-        if (strlen($entry['u']))
+        if (strlen($entry['u'])) {
             $entry['s'] = $s;
-        else {
+        } else {
             unset($entry);
         }
     }
@@ -3050,8 +3345,9 @@ function GetClosestLocation($url, $browser)
     }
     if (count($locations)) {
         // figure out the IP address of the server
-        if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+        if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6)) {
             $url = 'https://' . $url;
+        }
         $parts = parse_url($url);
         $host = $parts['host'];
         if (strlen($host)) {
@@ -3125,8 +3421,9 @@ function ProcessTestScript($url, &$test)
     if (isset($test['script']) && strlen($test['script'])) {
         $script = trim($test['script']);
         if (strlen($url)) {
-            if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+            if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6)) {
                 $url = 'https://' . $url;
+            }
             $script = str_ireplace('%URL%', $url, $script);
             $parts = parse_url($url);
             $host = $parts['host'];
@@ -3148,11 +3445,13 @@ function ProcessTestScript($url, &$test)
                             if (stripos($line, '%HOSTR%') !== false) {
                                 $script .= str_ireplace('%HOSTR%', $host, $line) . "\r\n";
                                 $script .= str_ireplace('%HOSTR%', $rhost, $line) . "\r\n";
-                            } else
+                            } else {
                                 $script .= $line . "\r\n";
+                            }
                         }
-                    } else
+                    } else {
                         $script = str_ireplace('%HOSTR%', $host, $script);
+                    }
                 }
             }
         }
@@ -3161,14 +3460,16 @@ function ProcessTestScript($url, &$test)
     // Handle HTTP Basic Auth
     if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {
         $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
-        if (!isset($script) || !strlen($script))
+        if (!isset($script) || !strlen($script)) {
             $script = "navigate\t$url";
+        }
         $script = "addHeader\t$header\r\n" . $script;
     }
     // Add custom headers
     if (isset($test['customHeaders']) && strlen($test['customHeaders'])) {
-        if (!isset($script) || !strlen($script))
+        if (!isset($script) || !strlen($script)) {
             $script = "navigate\t$url";
+        }
         $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
         $headerCommands = "";
         foreach ($headers as $header) {
@@ -3226,10 +3527,10 @@ function ReportAnalytics(&$test, $testId)
         $ga && function_exists('curl_init') &&
         isset($test['location']) && strlen($test['location'])
     ) {
-
         $ip = $_SERVER['REMOTE_ADDR'];
-        if (array_key_exists('ip', $test) && strlen($test['ip']))
+        if (array_key_exists('ip', $test) && strlen($test['ip'])) {
             $ip = $test['ip'];
+        }
 
         $eventName = $usingAPI ? 'API' : 'Manual';
         if ($usingApi2) {

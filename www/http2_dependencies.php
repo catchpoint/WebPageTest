@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -25,125 +26,133 @@ $row_data = array();
 // Pre-scan the requests to see if a given connection has multiple hosts coalesced
 $connection_hosts = array();
 foreach ($requests as $request) {
-  if (isset($request['socket']) &&
-      isset($request['http2_stream_id']) &&
-      isset($request['host']) &&
-      isset($request['url'])) {
-    $connection = strval($request['socket']);
-    if (!isset($connection_hosts[$connection])) {
-      $connection_hosts[$connection] = array($request['host']);
-    } elseif (!in_array($request['host'], $connection_hosts[$connection])) {
-      $connection_hosts[$connection][] = $request['host'];
+    if (
+        isset($request['socket']) &&
+        isset($request['http2_stream_id']) &&
+        isset($request['host']) &&
+        isset($request['url'])
+    ) {
+        $connection = strval($request['socket']);
+        if (!isset($connection_hosts[$connection])) {
+            $connection_hosts[$connection] = array($request['host']);
+        } elseif (!in_array($request['host'], $connection_hosts[$connection])) {
+            $connection_hosts[$connection][] = $request['host'];
+        }
     }
-  }
 }
 
 foreach ($requests as $request) {
-  if (isset($request['socket']) &&
-      isset($request['http2_stream_id']) &&
-      isset($request['host']) &&
-      isset($request['url'])) {
-    $connection = strval($request['socket']);
+    if (
+        isset($request['socket']) &&
+        isset($request['http2_stream_id']) &&
+        isset($request['host']) &&
+        isset($request['url'])
+    ) {
+        $connection = strval($request['socket']);
 
-    if (!isset($connections[$connection])) {
-      // Create the root entry for this connection
-      if (isset($connection_hosts[$connection])){
-        $connections[$connection] = implode(",", $connection_hosts[$connection]);
-      } else {
-        $connections[$connection] = $request['host'];
-      }
-      $label = $connections[$connection];
-      if (isset($request['ip_addr']))
-        $label .= "<br>({$request['ip_addr']})";
-      $tooltip = $connections[$connection];
-      $data = array("v" => $connection, "f" => $label);
-      $row = array($data, "", $tooltip);
-      $row_data[] = $row;
-    }
+        if (!isset($connections[$connection])) {
+          // Create the root entry for this connection
+            if (isset($connection_hosts[$connection])) {
+                $connections[$connection] = implode(",", $connection_hosts[$connection]);
+            } else {
+                $connections[$connection] = $request['host'];
+            }
+            $label = $connections[$connection];
+            if (isset($request['ip_addr'])) {
+                $label .= "<br>({$request['ip_addr']})";
+            }
+            $tooltip = $connections[$connection];
+            $data = array("v" => $connection, "f" => $label);
+            $row = array($data, "", $tooltip);
+            $row_data[] = $row;
+        }
 
-    // Create the row entry for the request
-    $parent = $connection;
-    if (isset($request['http2_stream_dependency']) && $request['http2_stream_dependency'] != 0) {
-      $parent = "$connection:{$request['http2_stream_dependency']}";
-      $parents[$parent] = $connection;
-    }
-    $stream = strval($request['http2_stream_id']);
-    $id = "$connection:$stream";
-    $label = isset($request['number']) ? "{$request['number']}: " : "";
-    $label .= get_short_path($request['url']);
-    $label .= "<br>stream: $stream";
-    if (isset($request['http2_stream_weight'])) {
-      $label .= ", weight: {$request['http2_stream_weight']}";
-      if (isset($request['http2_stream_exclusive']) && $request['http2_stream_exclusive'])
-        $label .= 'x';
-    }
-    $tooltip = isset($request['full_url']) ? $request['full_url'] : 'https://' . $request['host'] . $request['url'];
-    $data = array("v" => $id, "f" => $label);
-    $row = array($data, $parent, $tooltip);
-    $row_data[] = $row;
-    $streams[$id] = $id;
+      // Create the row entry for the request
+        $parent = $connection;
+        if (isset($request['http2_stream_dependency']) && $request['http2_stream_dependency'] != 0) {
+            $parent = "$connection:{$request['http2_stream_dependency']}";
+            $parents[$parent] = $connection;
+        }
+        $stream = strval($request['http2_stream_id']);
+        $id = "$connection:$stream";
+        $label = isset($request['number']) ? "{$request['number']}: " : "";
+        $label .= get_short_path($request['url']);
+        $label .= "<br>stream: $stream";
+        if (isset($request['http2_stream_weight'])) {
+            $label .= ", weight: {$request['http2_stream_weight']}";
+            if (isset($request['http2_stream_exclusive']) && $request['http2_stream_exclusive']) {
+                $label .= 'x';
+            }
+        }
+        $tooltip = isset($request['full_url']) ? $request['full_url'] : 'https://' . $request['host'] . $request['url'];
+        $data = array("v" => $id, "f" => $label);
+        $row = array($data, $parent, $tooltip);
+        $row_data[] = $row;
+        $streams[$id] = $id;
 
-    // Set the coloring for the cell
-    $row_num = strval(count($row_data) - 1);
-    $style = "";
-    $color = NULL;
-    if (isset($request['contentType'])) {
-      $color = GetMimeColor($request['contentType'], $request['url']);
-      $light_color = ScaleRgb($color, 0.65);
-      $border_color = sprintf("#%02x%02x%02x", $color[0], $color[1], $color[2]);
-      $css_color = sprintf("#%02x%02x%02x", $light_color[0], $light_color[1], $light_color[2]);
-      $style = "border-color: $border_color; background-color: $css_color;";
+      // Set the coloring for the cell
+        $row_num = strval(count($row_data) - 1);
+        $style = "";
+        $color = null;
+        if (isset($request['contentType'])) {
+            $color = GetMimeColor($request['contentType'], $request['url']);
+            $light_color = ScaleRgb($color, 0.65);
+            $border_color = sprintf("#%02x%02x%02x", $color[0], $color[1], $color[2]);
+            $css_color = sprintf("#%02x%02x%02x", $light_color[0], $light_color[1], $light_color[2]);
+            $style = "border-color: $border_color; background-color: $css_color;";
+        }
+        if (strlen($style)) {
+            $styles[$row_num] = $style;
+        }
     }
-    if (strlen($style)) {
-      $styles[$row_num] = $style;
-    }
-  }
 }
 
 // Go through all parents and ensure nodes exist for each.
 foreach ($parents as $id => $connection) {
-  if (!isset($streams[$id])) {
-    // special-case the Firefox ghost streams
-    if ($id == "$connection:3") {
-      $row_data[] = array(array("v" => $id, "f" => "leader<br>weight: 200"), $connection, "leader");
-    } elseif ($id == "$connection:5") {
-      $row_data[] = array(array("v" => $id, "f" => "other<br>weight: 100"), $connection, "other");
-    } elseif ($id == "$connection:7") {
-      $row_data[] = array(array("v" => $id, "f" => "background"), $connection, "background");
-    } elseif ($id == "$connection:9") {
-      $row_data[] = array(array("v" => $id, "f" => "speculative"), "$connection:7", "speculative");
-      if (!isset($streams["$connection:7"])) {
-        $row_data[] = array(array("v" => "$connection:7", "f" => "background"), $connection, "background");
-        $streams["$connection:7"] = "$connection:7";
-      }
-    } elseif ($id == "$connection:11") {
-      $row_data[] = array(array("v" => $id, "f" => "follower"), "$connection:3", "follower");
-      if (!isset($streams["$connection:3"])) {
-        $row_data[] = array(array("v" => "$connection:3", "f" => "leader"), $connection, "leader");
-        $streams["$connection:3"] = "$connection:3";
-      }
-    } elseif ($id == "$connection:13") {
-      $row_data[] = array(array("v" => $id, "f" => "urgentStart<br>weight: 240"), $connection, "urgentStart");
-    } else {
-      // Create an empty stream on the connection
-      $row_data[] = array(array("v" => $id, "f" => "group"), $connection, "group");
+    if (!isset($streams[$id])) {
+      // special-case the Firefox ghost streams
+        if ($id == "$connection:3") {
+            $row_data[] = array(array("v" => $id, "f" => "leader<br>weight: 200"), $connection, "leader");
+        } elseif ($id == "$connection:5") {
+            $row_data[] = array(array("v" => $id, "f" => "other<br>weight: 100"), $connection, "other");
+        } elseif ($id == "$connection:7") {
+            $row_data[] = array(array("v" => $id, "f" => "background"), $connection, "background");
+        } elseif ($id == "$connection:9") {
+            $row_data[] = array(array("v" => $id, "f" => "speculative"), "$connection:7", "speculative");
+            if (!isset($streams["$connection:7"])) {
+                $row_data[] = array(array("v" => "$connection:7", "f" => "background"), $connection, "background");
+                $streams["$connection:7"] = "$connection:7";
+            }
+        } elseif ($id == "$connection:11") {
+            $row_data[] = array(array("v" => $id, "f" => "follower"), "$connection:3", "follower");
+            if (!isset($streams["$connection:3"])) {
+                $row_data[] = array(array("v" => "$connection:3", "f" => "leader"), $connection, "leader");
+                $streams["$connection:3"] = "$connection:3";
+            }
+        } elseif ($id == "$connection:13") {
+            $row_data[] = array(array("v" => $id, "f" => "urgentStart<br>weight: 240"), $connection, "urgentStart");
+        } else {
+          // Create an empty stream on the connection
+            $row_data[] = array(array("v" => $id, "f" => "group"), $connection, "group");
+        }
     }
-  }
-  $streams[$id] = $id;
+    $streams[$id] = $id;
 }
 
-function get_short_path($path) {
-  $separator = strpos($path, '?');
-  if ($separator) {
-    $path = substr($path, 0, $separator);
-  }
-  $base = basename($path);
-  if (strlen($base) > 0)
-    $path = $base;
-  if (strlen($path) > 30) {
-    $path = '...' . substr($path, -27);
-  }
-  return $path;
+function get_short_path($path)
+{
+    $separator = strpos($path, '?');
+    if ($separator) {
+        $path = substr($path, 0, $separator);
+    }
+    $base = basename($path);
+    if (strlen($base) > 0) {
+        $path = $base;
+    }
+    if (strlen($path) > 30) {
+        $path = '...' . substr($path, -27);
+    }
+    return $path;
 }
 
 ?>
@@ -167,8 +176,8 @@ function get_short_path($path) {
         echo 'data.addRows(' . json_encode($row_data) . ");\n";
 
         // Add the node-specific styles
-        foreach($styles as $row_num => $style) {
-          echo "data.setRowProperty($row_num, 'style', '$style');\n";
+        foreach ($styles as $row_num => $style) {
+            echo "data.setRowProperty($row_num, 'style', '$style');\n";
         }
         ?>
 

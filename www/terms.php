@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2021 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -21,16 +22,17 @@ $page_description = "WebPageTest Terms of Service.";
         <style>
         #logo {float:right;}
         </style>
-        <?php $gaTemplate = 'Terms'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Terms';
+        include('head.inc'); ?>
     </head>
     <body class="common">
             <?php
             include 'header.inc';
-            if( is_file('settings/server/terms.inc') ) {
+            if (is_file('settings/server/terms.inc')) {
                 include('settings/server/terms.inc');
-            } elseif( is_file('settings/common/terms.inc') ) {
+            } elseif (is_file('settings/common/terms.inc')) {
                 include('settings/common/terms.inc');
-            } elseif( is_file('settings/terms.inc') ) {
+            } elseif (is_file('settings/terms.inc')) {
                 include('settings/terms.inc');
             }
             include('footer.inc');

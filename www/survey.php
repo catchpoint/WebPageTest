@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -20,7 +21,8 @@ $page_description = "More information about WebPageTest website speed testing an
         <style>
         #logo {float:right;}
         </style>
-        <?php $gaTemplate = 'About'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'About';
+        include('head.inc'); ?>
     </head>
     <body>
         <div class="page">

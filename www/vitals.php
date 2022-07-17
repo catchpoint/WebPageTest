@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -36,7 +37,8 @@ $page_description = "Web Vitals details$testLabel";
         <title><?php echo "$page_title - Web Vitals Details"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Vitals'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Vitals';
+        include('head.inc'); ?>
     </head>
     <body class="result">
             <?php
@@ -68,7 +70,7 @@ $page_description = "Web Vitals details$testLabel";
 
             <?php
             if (isset($testRunResults)) {
-              require_once(__DIR__ . '/include/CrUX.php');
+                require_once(__DIR__ . '/include/CrUX.php');
             }
             ?>
             <?php
@@ -129,13 +131,12 @@ $page_description = "Web Vitals details$testLabel";
 
         <?php
         include "waterfall.js";
-        if ($lcp_request != ''){
-
-        ?>
+        if ($lcp_request != '') {
+            ?>
         var stepLabel = "step1";
 $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
 
-        <?php
+            <?php
         }
         ?>
         </script>
@@ -144,14 +145,16 @@ $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass(
 
 <?php
 $lcp_request = '';
-function InsertWebVitalsHTML($stepResult) {
+function InsertWebVitalsHTML($stepResult)
+{
     InsertWebVitalsHTML_Summary($stepResult);
     InsertWebVitalsHTML_LCP($stepResult);
     InsertWebVitalsHTML_CLS($stepResult);
     InsertWebVitalsHTML_TBT($stepResult);
 }
 
-function InsertWebVitalsHTML_Summary($stepResult) {
+function InsertWebVitalsHTML_Summary($stepResult)
+{
     global $testRunResults;
     echo '<div class="summary-container">';
     // LCP
@@ -159,9 +162,9 @@ function InsertWebVitalsHTML_Summary($stepResult) {
     $lcp = null;
     if (isset($events) && is_array($events)) {
         // Find the actual LCP event
-        foreach($events as $event) {
-            if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
-                if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
+        foreach ($events as $event) {
+            if (isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
+                if (!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
                     $lcp = $event;
                 }
             }
@@ -171,9 +174,9 @@ function InsertWebVitalsHTML_Summary($stepResult) {
     if (isset($lcp)) {
         $scoreClass = 'good';
         if ($lcp['time'] >= 4000) {
-          $scoreClass = 'poor';
+            $scoreClass = 'poor';
         } elseif ($lcp['time'] >= 2500) {
-          $scoreClass = 'ok';
+            $scoreClass = 'ok';
         }
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<h4>Largest Contentful Paint</h4>";
@@ -204,7 +207,7 @@ function InsertWebVitalsHTML_Summary($stepResult) {
     }
     if (isset($cls) && is_numeric($cls)) {
         // reverse-sort, biggest cls first
-        usort($windows, function($a, $b) {
+        usort($windows, function ($a, $b) {
             if ($a['cls'] == $b['cls']) {
                 return 0;
             }
@@ -213,9 +216,9 @@ function InsertWebVitalsHTML_Summary($stepResult) {
         $cls = round($cls, 3);
         $scoreClass = 'good';
         if ($cls >= 0.25) {
-          $scoreClass = 'poor';
+            $scoreClass = 'poor';
         } elseif ($cls >= 0.1) {
-          $scoreClass = 'ok';
+            $scoreClass = 'ok';
         }
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
         echo "<h4>Cumulative Layout Shift</h4>";
@@ -228,9 +231,9 @@ function InsertWebVitalsHTML_Summary($stepResult) {
     if (isset($tbt)) {
         $scoreClass = 'good';
         if ($tbt >= 600) {
-          $scoreClass = 'poor';
+            $scoreClass = 'poor';
         } elseif ($tbt >= 300) {
-          $scoreClass = 'ok';
+            $scoreClass = 'ok';
         }
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<h4>Total Blocking Time</h4>";
@@ -242,10 +245,11 @@ function InsertWebVitalsHTML_Summary($stepResult) {
     echo '</div>'; // summary-container
 }
 
-function pretty_print($array) {
+function pretty_print($array)
+{
     if (is_array($array)) {
         echo '<ul>';
-        foreach($array as $key => $value) {
+        foreach ($array as $key => $value) {
             echo "<li><strong>" . htmlspecialchars($key) . "</strong>: ";
             if (is_array($value)) {
                 pretty_print($value);
@@ -257,17 +261,19 @@ function pretty_print($array) {
         echo '</ul>';
     }
 }
-function prettyHTML($markup) {
+function prettyHTML($markup)
+{
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = true;
     $dom->formatOutput = true;
-    $dom->loadHTML($markup,LIBXML_HTML_NOIMPLIED);
+    $dom->loadHTML($markup, LIBXML_HTML_NOIMPLIED);
 
 
     return $dom->saveXML($dom->documentElement);
 }
 
-function InsertWebVitalsHTML_LCP($stepResult) {
+function InsertWebVitalsHTML_LCP($stepResult)
+{
     global $testInfo;
     global $lcp_request;
     global $testRunResults;
@@ -277,9 +283,9 @@ function InsertWebVitalsHTML_LCP($stepResult) {
         $lcp = null;
         if (isset($events) && is_array($events)) {
             // Find the actual LCP event
-            foreach($events as $event) {
-                if(isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
-                    if(!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
+            foreach ($events as $event) {
+                if (isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
+                    if (!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
                         $lcp = $event;
                     }
                 }
@@ -303,7 +309,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             if (isset($video_frames) && is_array($video_frames) && isset($video_frames['frames'])) {
                 $lcp_frame = null;
                 // Find the first frame after LCP
-                foreach($video_frames['frames'] as $ms => $frame) {
+                foreach ($video_frames['frames'] as $ms => $frame) {
                     $frame['time']  = $ms;
                     if ($ms >= $lcp['time']) {
                         if (!isset($lcp_frame)) {
@@ -315,7 +321,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 }
                 // Fall back to the last frame before LCP
                 if (!isset($lcp_frame)) {
-                    foreach($video_frames['frames'] as $ms => $frame) {
+                    foreach ($video_frames['frames'] as $ms => $frame) {
                         $frame['time']  = $ms;
                         if (!isset($lcp_frame)) {
                             $lcp_frame = $frame;
@@ -327,7 +333,7 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 if (isset($lcp_frame)) {
                     $previous = $lcp_frame;
                     $next = $lcp_frame;
-                    foreach($video_frames['frames'] as $ms => $frame) {
+                    foreach ($video_frames['frames'] as $ms => $frame) {
                         if ($ms < $lcp_frame['time'] && ($previous['time'] == $lcp_frame['time'] || $ms > $previous['time'])) {
                             $previous = $frame;
                             $previous['time'] = $ms;
@@ -394,10 +400,10 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             if (isset($lcp['element']['nodeName'])) {
                 echo "<tr><th align='left'>Element Type</th><td>{$lcp['element']['nodeName']}</td></tr>";
             }
-            if ( $lcp['element']['nodeName'] == 'VIDEO') {
+            if ($lcp['element']['nodeName'] == 'VIDEO') {
                 $lcpSource = isset($lcp['element']['poster']) ? $lcp['element']['poster'] : "No Poster Image";
                 echo "<tr><th align='left'>Src</th><td>{$lcpSource}</td></tr>";
-            } else if (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
+            } elseif (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                 $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                 echo "<tr><th align='left'>Src</th><td>{$lcpSource}</td></tr>";
             }
@@ -407,7 +413,6 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 if ($matches) {
                      $lcpSource = $matches[3][0];
                 }
-
             }
             echo "<tr><th align='left'>Outer HTML</th><td>";
             echo "<code class='language-html'>";
@@ -448,7 +453,8 @@ function InsertWebVitalsHTML_LCP($stepResult) {
                 $stepResult->isCachedRun(),
                 $stepResult->getRawResults(),
                 $options,
-                $stepResult->getStepNumber());
+                $stepResult->getStepNumber()
+            );
             $waterfallLegend = new WaterfallViewHtmlSnippet($testInfo, $stepResult);
             
             echo "<div class='vitals-waterfall'>";
@@ -458,9 +464,9 @@ function InsertWebVitalsHTML_LCP($stepResult) {
             echo "</div>";
 
                 //image
-                if ($lcpSource) {
-                    echo "<div class='lcp-image'><h4>LCP Image</h4><img src='" . $lcpSource . "' /></div>";
-                }    
+            if ($lcpSource) {
+                echo "<div class='lcp-image'><h4>LCP Image</h4><img src='" . $lcpSource . "' /></div>";
+            }
 
             // Insert the raw debug details
             echo "<div class='values'>";
@@ -475,7 +481,8 @@ function InsertWebVitalsHTML_LCP($stepResult) {
     }
 }
 
-function InsertWebVitalsHTML_CLS($stepResult) {
+function InsertWebVitalsHTML_CLS($stepResult)
+{
     global $testRunResults;
     $cls = null;
     $windows = array();
@@ -500,7 +507,7 @@ function InsertWebVitalsHTML_CLS($stepResult) {
     if (isset($cls) && is_numeric($cls)) {
         $video_frames = $stepResult->getVisualProgress();
         // reverse-sort, biggest cls first
-        usort($windows, function($a, $b) {
+        usort($windows, function ($a, $b) {
             if ($a['cls'] == $b['cls']) {
                 return 0;
             }
@@ -525,10 +532,11 @@ function InsertWebVitalsHTML_CLS($stepResult) {
     }
 }
 
-function GenerateOverlayRects($shift, $viewport, $before) {
+function GenerateOverlayRects($shift, $viewport, $before)
+{
     $rects = '';
     if (isset($shift['sources']) && isset($viewport) && is_array($shift['sources'])) {
-        foreach($shift['sources'] as $source) {
+        foreach ($shift['sources'] as $source) {
             $r = null;
             if ($before && isset($source['previousRect'])) {
                 $r = $source['previousRect'];
@@ -549,7 +557,7 @@ function GenerateOverlayRects($shift, $viewport, $before) {
             }
         }
     } elseif (!$before && isset($shift['rects']) && isset($viewport)) {
-        foreach($shift['rects'] as $rect) {
+        foreach ($shift['rects'] as $rect) {
             if (is_array($rect) && count($rect) == 4) {
                 $x = (int)(($rect[0] * 1000) / $viewport['width']);
                 $y = (int)(($rect[1] * 1000) / $viewport['height']);
@@ -567,7 +575,8 @@ function GenerateOverlayRects($shift, $viewport, $before) {
     return $rects;
 }
 
-function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
+function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames)
+{
     global $testInfo;
     $thumbSize = 500;
 
@@ -578,13 +587,13 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
     echo "<ul>";
     $even = true;
     $shifts = $window['shifts'];
-    usort($shifts, function($a, $b) {
+    usort($shifts, function ($a, $b) {
         if ($a['score'] == $b['score']) {
             return 0;
         }
         return ($a['score'] > $b['score']) ? -1 : 1;
     });
-    foreach($shifts as $shift) {
+    foreach ($shifts as $shift) {
         $even = !$even;
         if ($even) {
             echo "<li class='even'>";
@@ -596,7 +605,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
         if (isset($video_frames) && is_array($video_frames) && isset($video_frames['frames'])) {
             $cls_frame = null;
             // Find the first frame after the layout shift
-            foreach($video_frames['frames'] as $ms => $frame) {
+            foreach ($video_frames['frames'] as $ms => $frame) {
                 $frame['time']  = $ms;
                 if ($ms >= $shift['time']) {
                     if (!isset($cls_frame)) {
@@ -608,7 +617,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
             }
             // Fall back to the last frame before the layout shift
             if (!isset($cls_frame)) {
-                foreach($video_frames['frames'] as $ms => $frame) {
+                foreach ($video_frames['frames'] as $ms => $frame) {
                     $frame['time']  = $ms;
                     if (!isset($cls_frame)) {
                         $cls_frame = $frame;
@@ -620,7 +629,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
             if (isset($cls_frame)) {
                 $previous = $cls_frame;
                 $next = $cls_frame;
-                foreach($video_frames['frames'] as $ms => $frame) {
+                foreach ($video_frames['frames'] as $ms => $frame) {
                     if ($ms < $cls_frame['time'] && ($previous['time'] == $cls_frame['time'] || $ms > $previous['time'])) {
                         $previous = $frame;
                         $previous['time'] = $ms;
@@ -680,17 +689,20 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames) {
 }
 
 // Merge a start/end window into an existing array of times
-function MergeBlockingTime(&$times, $start, $end) {
+function MergeBlockingTime(&$times, $start, $end)
+{
     $merged = false;
 
     // See if it overlaps with an existing window
-    for($i = 0; $i < count($times) && !$merged; $i++) {
+    for ($i = 0; $i < count($times) && !$merged; $i++) {
         $s = $times[0];
         $e = $times[1];
-        if (($start >= $s && $start <= $e) ||
+        if (
+            ($start >= $s && $start <= $e) ||
                 ($end >= $s && $end <= $e) ||
                 ($s >= $start && $s <= $end) ||
-                ($e >= $start && $e <= $end)) {
+                ($e >= $start && $e <= $end)
+        ) {
             $times[0] = min($start, $s);
             $times[1] = max($end, $e);
             $merged = true;
@@ -702,7 +714,8 @@ function MergeBlockingTime(&$times, $start, $end) {
     }
 }
 
-function InsertWebVitalsHTML_TBT($stepResult) {
+function InsertWebVitalsHTML_TBT($stepResult)
+{
     global $testRunResults;
     global $testInfo;
     if ($stepResult) {
@@ -717,27 +730,29 @@ function InsertWebVitalsHTML_TBT($stepResult) {
             $timingsFile = $stepResult->createTestPaths()->devtoolsScriptTimingFile();
             if (isset($timingsFile) && strlen($timingsFile) && gz_is_file($timingsFile)) {
                 $timings = json_decode(gz_file_get_contents($timingsFile), true);
-                if (isset($timings) &&
+                if (
+                    isset($timings) &&
                     is_array($timings) &&
                     isset($timings['main_thread']) &&
                     isset($timings[$timings['main_thread']]) &&
-                    is_array($timings[$timings['main_thread']])) {
-                  foreach($timings[$timings['main_thread']] as $url => $events) {
-                      foreach($events as $timings) {
-                          foreach($timings as $task) {
-                              if (isset($task) && is_array($task) && count($task) >= 2) {
-                                $start = $task[0];
-                                $end = $task[1];
-                                if ($end - $start > 50) {
-                                    if (!isset($long_tasks[$url])) {
-                                        $long_tasks[$url] = array();
+                    is_array($timings[$timings['main_thread']])
+                ) {
+                    foreach ($timings[$timings['main_thread']] as $url => $events) {
+                        foreach ($events as $timings) {
+                            foreach ($timings as $task) {
+                                if (isset($task) && is_array($task) && count($task) >= 2) {
+                                    $start = $task[0];
+                                    $end = $task[1];
+                                    if ($end - $start > 50) {
+                                        if (!isset($long_tasks[$url])) {
+                                            $long_tasks[$url] = array();
+                                        }
+                                        MergeBlockingTime($long_tasks[$url], $start, $end);
                                     }
-                                    MergeBlockingTime($long_tasks[$url], $start, $end);
                                 }
-                              }
-                          }
-                      }
-                  }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -756,7 +771,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
                             } else {
                                 $requests_list = "{$request['number']}";
                             }
-                            foreach($long_tasks[$request['full_url']] as $times) {
+                            foreach ($long_tasks[$request['full_url']] as $times) {
                                 if ($times[1] > $maxTime) {
                                     $maxTime = $times[1];
                                 }
@@ -780,7 +795,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
                     $id = $testInfo->getId();
                     $run = $stepResult->getRunNumber();
                     $cached = $stepResult->isCachedRun();
-                    $step = $stepResult->getStepNumber(); 
+                    $step = $stepResult->getStepNumber();
                     echo "<div class='vitals-waterfall'>";
                     echo '<div class="waterfall-container">';
                     if (isset($timeline)) {
@@ -800,7 +815,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
 
                 // Break down the long tasks by domain
                 $domain_tasks = array();
-                foreach($long_tasks as $url => $times) {
+                foreach ($long_tasks as $url => $times) {
                     $domain = parse_url($url, PHP_URL_HOST);
                     if (!isset($domain_tasks[$domain])) {
                         $domain_tasks[$domain] = array();
@@ -812,9 +827,9 @@ function InsertWebVitalsHTML_TBT($stepResult) {
 
                 // Calculate the blocking time per domain
                 $domains = array();
-                foreach($domain_tasks as $domain => $times) {
+                foreach ($domain_tasks as $domain => $times) {
                     $blocking_time = 0;
-                    foreach($times as $time) {
+                    foreach ($times as $time) {
                         $blocking_time += $time[1] - $time[0] - 50;
                     }
                     $domains[$domain] = intval(round($blocking_time));
@@ -833,7 +848,7 @@ function InsertWebVitalsHTML_TBT($stepResult) {
                         </thead>
                     <?php
                     echo "<tbody>";
-                    foreach($domains as $domain => $blocking) {
+                    foreach ($domains as $domain => $blocking) {
                         echo "<tr>";
                         echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
                         echo "<td class='blocking'>$blocking</td>";

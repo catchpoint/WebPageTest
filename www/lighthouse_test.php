@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -10,27 +11,29 @@ if (GetSetting('headless')) {
 }
 // load the secret key (if there is one)
 $secret = GetServerSecret();
-if (!isset($secret))
+if (!isset($secret)) {
     $secret = '';
+}
 
 $url = '';
-    if (isset($req_url)) {
-      $url = htmlspecialchars($req_url);
-    }
+if (isset($req_url)) {
+    $url = htmlspecialchars($req_url);
+}
     $placeholder = 'Enter a website URL...';
 if (file_exists('./settings/server/lighthouse.ini')) {
-  $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);  
+    $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);
 } elseif (file_exists('./settings/common/lighthouse.ini')) {
-  $lighthouse = parse_ini_file('./settings/common/lighthouse.ini', true);  
+    $lighthouse = parse_ini_file('./settings/common/lighthouse.ini', true);
 } else {
-  $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
+    $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
 }
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
         <title>WebPageTest - Lighthouse Test</title>
-        <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Main';
+        include('head.inc'); ?>
         <style>
         #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>
@@ -39,31 +42,31 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             <?php
             include 'header.inc';
             if (!$headless) {
-            ?>
+                ?>
 
 
-        <?php include("home_header.php"); ?>
+                <?php include("home_header.php"); ?>
 
 <div class="home_content_contain">
              <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
-            <?php
-            echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-            if( strlen($secret) ){
-              $hashStr = $secret;
-              $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-              $hashStr .= $owner;
+                <?php
+                echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+                if (strlen($secret)) {
+                    $hashStr = $secret;
+                    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                    $hashStr .= $owner;
               
-              $now = gmdate('c');
-              echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-              $hashStr .= $now;
+                    $now = gmdate('c');
+                    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                    $hashStr .= $now;
               
-              $hmac = sha1($hashStr);
-              echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-            }
-            ?>
+                    $hmac = sha1($hashStr);
+                    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                }
+                ?>
             <input type="hidden" name="runs" value="1">
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="mobile" value="1">
@@ -74,7 +77,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 
 
             <div id="test_box-container" class="home_responsive_test">
-                <?php 
+                <?php
                 $currNav = "Lighthouse";
                 include("testTypesNav.php");
                 ?>
@@ -94,17 +97,19 @@ if (file_exists('./settings/server/lighthouse.ini')) {
                                 <label for="location">Test Location:</label>
                                   <select name="location" id="location" onchange="profileChanged()">
                                       <?php
-                                      if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['locations']) && count($lighthouse['locations'])) {
-                                        foreach($lighthouse['locations'] as $id => $label) {
-                                          $selected = '';
-                                          if ($id === $_COOKIE['lhloc'])
-                                            $selected = 'selected';
-                                          echo "<option value=\"$id\" $selected>{$label}</option>";
+                                        if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['locations']) && count($lighthouse['locations'])) {
+                                            foreach ($lighthouse['locations'] as $id => $label) {
+                                                $selected = '';
+                                                if ($id === $_COOKIE['lhloc']) {
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$id\" $selected>{$label}</option>";
+                                            }
+                                            if (isset($lastGroup)) {
+                                                echo "</optgroup>";
+                                            }
                                         }
-                                        if (isset($lastGroup))
-                                            echo "</optgroup>";
-                                      }
-                                      ?>
+                                        ?>
                                   </select>
                               </div>
                             </div>
@@ -121,7 +126,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             
             </form>
             
-            <?php
+                <?php
             } // $headless
             ?>
 

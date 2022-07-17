@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -18,19 +19,19 @@ $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
 $isMultistep = $firstViewResults->countSteps() > 1;
 $repeatViewResults = null;
 if (!$testInfo->isFirstViewOnly()) {
-  $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
+    $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
 }
 
 if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
-  $domains = array(
+    $domains = array(
     'firstView' => $firstViewResults->getStepResult(1)->getJSFriendlyDomainBreakdown(true)
-  );
-  if ($repeatViewResults) {
-    $domains['repeatView'] = $repeatViewResults->getStepResult(1)->getJSFriendlyDomainBreakdown(true);
-  }
-  $output = array('domains' => $domains);
-  json_response($output);
-  exit;
+    );
+    if ($repeatViewResults) {
+        $domains['repeatView'] = $repeatViewResults->getStepResult(1)->getJSFriendlyDomainBreakdown(true);
+    }
+    $output = array('domains' => $domains);
+    json_response($output);
+    exit;
 }
 
 ?>
@@ -42,7 +43,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <title><?php echo $page_title; ?> - WebPageTest Domain Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Domain Breakdown'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Domain Breakdown';
+        include('head.inc'); ?>
     </head>
     <body class="result">
             <?php
@@ -69,47 +71,47 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
            
             <?php
             if ($isMultistep) {
-              echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
-              echo "<table id='quicklinks_table'>\n";
-              $rvSteps = $repeatViewResults ? $repeatViewResults->countSteps() : 0;
-              $maxSteps = max($firstViewResults->countSteps(), $rvSteps);
-              for ($i = 1; $i <= $maxSteps; $i++) {
-                $stepResult = $firstViewResults->getStepResult($i);
-                $stepSuffix = "step" . $i;
-                $class = $i % 2 == 0 ? " class='even'" : "";
-                echo "<tr$class>\n";
-                echo "<th>" . $stepResult->readableIdentifier() . "</th>";
-                echo "<td><a href='#breakdown_fv_$stepSuffix'>First View Breakdown</a></td>";
-                if ($repeatViewResults) {
-                  echo "<td><a href='#breakdown_rv_$stepSuffix'>Repeat View Breakdown</a></td>";
+                echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+                echo "<table id='quicklinks_table'>\n";
+                $rvSteps = $repeatViewResults ? $repeatViewResults->countSteps() : 0;
+                $maxSteps = max($firstViewResults->countSteps(), $rvSteps);
+                for ($i = 1; $i <= $maxSteps; $i++) {
+                    $stepResult = $firstViewResults->getStepResult($i);
+                    $stepSuffix = "step" . $i;
+                    $class = $i % 2 == 0 ? " class='even'" : "";
+                    echo "<tr$class>\n";
+                    echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                    echo "<td><a href='#breakdown_fv_$stepSuffix'>First View Breakdown</a></td>";
+                    if ($repeatViewResults) {
+                        echo "<td><a href='#breakdown_rv_$stepSuffix'>Repeat View Breakdown</a></td>";
+                    }
+                    echo "</tr>";
                 }
-                echo "</tr>";
-              }
-              echo "</table>\n<br>\n";
+                echo "</table>\n<br>\n";
             }
             ?>
             <h3 class="hed_sub">Content breakdown by domain</h3>
             <h4>First View:</h4>
             <?php
-              if ($isMultistep) {
+            if ($isMultistep) {
                 $accordionHelper = new AccordionHtmlHelper($firstViewResults);
                 echo $accordionHelper->createAccordion("breakdown_fv", "domainBreakdown", "drawTable");
-              } else {
+            } else {
                 $snippetFv = new DomainBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
                 echo $snippetFv->create();
-              }
+            }
 
-              if ($repeatViewResults) {
+            if ($repeatViewResults) {
                 echo '<h4>Repeat View</h4>';
 
                 if ($isMultistep) {
-                  $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
-                  echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
+                    $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
+                    echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
                 } else {
-                  $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
-                  echo $snippetRv->create();
+                    $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                    echo $snippetRv->create();
                 }
-              }
+            }
             ?>
             </div>
 
@@ -125,13 +127,13 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <script src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
-          echo '<script src="/js/jk-navigation.js"></script>';
-          echo '<script src="/js/accordion.js"></script>';
-          $testId = $testInfo->getId();
-          $testRun = $firstViewResults->getRunNumber();
-          echo '<script>';
-          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
-          echo '</script>';
+            echo '<script src="/js/jk-navigation.js"></script>';
+            echo '<script src="/js/accordion.js"></script>';
+            $testId = $testInfo->getId();
+            $testRun = $firstViewResults->getRunNumber();
+            echo '<script>';
+            echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+            echo '</script>';
         }
         ?>
         <script>
@@ -151,9 +153,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
           }
           <?php } else { ?>
             drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
-            <?php if ($repeatViewResults) { ?>
+              <?php if ($repeatViewResults) { ?>
             drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
-            <?php } ?>
+              <?php } ?>
           <?php } ?>
         }
 
