@@ -1,27 +1,27 @@
 <?php
+
 $category = "Quick";
 $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
 $imgsThatShouldNotBeLazy = array();
-if(isset($imgsInViewport) ){
-    foreach($imgsInViewport as $img) {
-        if( $img["loading"] === "lazy" && strpos($img["src"], 'data:') !== 0 ){
+if (isset($imgsInViewport)) {
+    foreach ($imgsInViewport as $img) {
+        if ($img["loading"] === "lazy" && strpos($img["src"], 'data:') !== 0) {
             array_push($imgsThatShouldNotBeLazy, $img);
         }
-
     }
-}  
+}
 
-if( count($imgsThatShouldNotBeLazy) ){
+if (count($imgsThatShouldNotBeLazy)) {
     $shouldNotBeLazySrcs = array();
-    foreach($imgsThatShouldNotBeLazy as $img){
+    foreach ($imgsThatShouldNotBeLazy as $img) {
         array_push($shouldNotBeLazySrcs, $img["src"]);
     }
 
     $assessment[$category]["opportunities"][] = array(
-		"title" =>  "Images within the initial viewport are being lazy-loaded.",
-		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-		"examples" => array_unique($shouldNotBeLazySrcs),
-		"experiments" => array(
+        "title" =>  "Images within the initial viewport are being lazy-loaded.",
+        "desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
+        "examples" => array_unique($shouldNotBeLazySrcs),
+        "experiments" => array(
             (object) [
                 "id" => '013',
                 'title' => 'Remove loading="lazy" from in-viewport images',
@@ -30,18 +30,14 @@ if( count($imgsThatShouldNotBeLazy) ){
                 "expval" => array_unique($shouldNotBeLazySrcs)
             ]
         ),
-		"good" => false
-	);
-}
-else {
+        "good" => false
+    );
+} else {
     $assessment[$category]["opportunities"][] = array(
-		"title" => "Zero render-critical images are lazy-loaded.",
-		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-		"examples" => array(),
-		"experiments" => array(),
-		"good" => true
-	);
-    
+        "title" => "Zero render-critical images are lazy-loaded.",
+        "desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
+        "examples" => array(),
+        "experiments" => array(),
+        "good" => true
+    );
 }
-    
-?>
