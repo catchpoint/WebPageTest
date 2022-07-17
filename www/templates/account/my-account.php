@@ -1,5 +1,7 @@
 <div class="my-account-page">
-    <?php if (!$is_verified) : ?>
+    <?php
+
+    if (!$is_verified) : ?>
         <div class="resend-email-verification-container">
             <div class="resend-email-verification-hed">
                 <h3>A verification link was sent to your email</h3>

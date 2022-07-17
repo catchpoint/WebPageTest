@@ -21,9 +21,11 @@
                     <label for="state">State</label>
                     <div id="regionalArea">
                         <select name="state" required>
-                            <?php foreach ($state_list as $stateAbbr => $stateText) : ?>
+                            <?php
+
+                            foreach ($state_list as $stateAbbr => $stateText) : ?>
                                 <option value="<?= $stateAbbr ?>">
-                                    <?= $stateText; ?>
+                                                                <?= $stateText; ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

@@ -30,7 +30,9 @@
                 <input type="password" name="confirm-password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
             </div>
             <div class="form-input">
-                <?php $btntxt =  $is_plan_free ? "Sign Up" : "Continue"; ?>
+                <?php
+
+                $btntxt =  $is_plan_free ? "Sign Up" : "Continue"; ?>
                 <button type="submit"><?= $btntxt ?></button>
             </div>
 
