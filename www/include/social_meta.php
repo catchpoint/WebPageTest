@@ -1,11 +1,12 @@
 <?php
+
     require_once __DIR__ . '/../common_lib.inc';
     require_once __DIR__ . '/../common.inc';
 
-    $pageURI = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+    $pageURI = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     // NOTE: if you'd like a page to include a screenshot for social sharing, specify $useScreenshot = true above the head include.
     // Also, for page-specific screenshot css tweaks, add a screenshot class to that page's body class
-    $screenshotURI = CreateUrlVariation($pageURI, "screenshot=1" );
+    $screenshotURI = CreateUrlVariation($pageURI, "screenshot=1");
 
     $d = new DateTime();
     $socialImage = isset($useScreenshot) ? "https://wpt-screenshot.netlify.app/" . urlencode($screenshotURI) . "/opengraph/" . $d->format('Ymdd') : "/images/social-logo.jpg";

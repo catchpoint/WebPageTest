@@ -1,5 +1,6 @@
 
 <?php
+
 $quotes = array(
     array('quote' => '<a href="https://product.webpagetest.org/experiments">Experiments</a> are a game changer for quantifying the speed impact of performance optimizations. What took days of technical work is now just a few clicks. Not only will this save tons of time, it will let us test and iterate ideas to find the right mix of recommendations efficiently.<br><b>I’m blown away this exists, it feels like magic.</b>',
           'author' => 'Todd Parker <span>Partner, Filament Group</span>'),
@@ -75,8 +76,9 @@ if (is_file('tmp/feeds.dat')) {
                 $count = 0;
                 foreach ($items as $item) {
                     $count++;
-                    if ($count > 5)
+                    if ($count > 5) {
                         break;
+                    }
                     if (isset($item['title']) && isset($item['link'])) {
                         echo '<li>';
                         echo "<a href=\"{$item['link']}\" title=\"{$item['source']}\" rel=\"nofollow\">";
