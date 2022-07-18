@@ -14,6 +14,9 @@ class ChargifyAddressInput
     private string $country;
     private string $zipcode;
 
+    /**
+     * @param array $options The list of values that must be passed. This includes `street_address`, `city`, `state` (which is ISO 3166-2 compliant), `country` (ISO 3166-1), and `zipcode`
+     */
     public function __construct(array $options)
     {
         if (

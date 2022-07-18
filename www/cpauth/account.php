@@ -49,6 +49,8 @@ if ($request_method === 'POST') {
         AccountHandler::changePassword($request_context);
     } elseif ($type == "account-signup") {
         AccountHandler::subscribeToAccount($request_context);
+    } elseif ($type == "account-signup-preview") {
+        AccountHandler::previewCost($request_context);
     } elseif ($type == "cancel-subscription") {
         AccountHandler::cancelSubscription($request_context);
     } elseif ($type == "update-payment-method") {
