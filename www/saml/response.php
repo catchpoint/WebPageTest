@@ -1,9 +1,11 @@
 <?php
+
 chdir('..');
 include 'common.inc';
 
 // Recursively crawl the attributes
-function CrawlSAMLAttribytes($xpath, $node, &$attributes) {
+function CrawlSAMLAttribytes($xpath, $node, &$attributes)
+{
     try {
         if ($node !== false) {
             try {
@@ -13,22 +15,27 @@ function CrawlSAMLAttribytes($xpath, $node, &$attributes) {
                         $attributes[$name] = $value->textContent;
                     }
                 }
-            } catch(Exception $e) {}
+            } catch (Exception $e) {
+            }
             try {
                 foreach ($xpath->query('saml:Attribute', $node) as $attr) {
                     CrawlSAMLAttribytes($xpath, $attr, $attributes);
                 }
-            } catch(Exception $e) {}
+            } catch (Exception $e) {
+            }
             try {
                 foreach ($xpath->query('saml:AttributeStatement', $node) as $attr) {
                     CrawlSAMLAttribytes($xpath, $attr, $attributes);
                 }
-            } catch(Exception $e) {}
+            } catch (Exception $e) {
+            }
         }
-    } catch(Exception $e) {}
+    } catch (Exception $e) {
+    }
 }
 
-function ParseSAMLResponse($saml_response, $expected_cert_serial=null) {
+function ParseSAMLResponse($saml_response, $expected_cert_serial = null)
+{
     $xmlDoc = new DOMDocument();
     $xmlDoc->loadXML($saml_response);
 
@@ -67,7 +74,7 @@ function ParseSAMLResponse($saml_response, $expected_cert_serial=null) {
         $ok = openssl_verify($signedInfoNodeCanonicalized, $signature, $publicKey, OPENSSL_ALGO_SHA256);
         if ($ok) {
             $attributes = array();
-            foreach($xpath->query('/samlp:Response/saml:Assertion/saml:AttributeStatement', $xmlDoc) as $attr) {
+            foreach ($xpath->query('/samlp:Response/saml:Assertion/saml:AttributeStatement', $xmlDoc) as $attr) {
                 CrawlSAMLAttribytes($xpath, $attr, $attributes);
             }
             if (count($attributes)) {
@@ -94,8 +101,9 @@ if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddre
     $info = base64_encode("{$attributes['accountId']}\t{$attributes['emailAddress']}\t$firstName\t$lastName\t{$attributes['contactId']}");
     $signature = SignString($info);
     $domain = '';
-    if (strstr(GetSetting('host'), 'webpagetest.org'))
+    if (strstr(GetSetting('host'), 'webpagetest.org')) {
         $domain = ' Domain=webpagetest.org;';
+    }
     $saml_cookie = GetSetting('saml_cookie', 'samlu');
     header("Set-Cookie: $saml_cookie=$info.$signature; Path=/;$domain Max-Age=31556952; HttpOnly; SameSite=Lax");
     $ok = true;
@@ -105,7 +113,7 @@ if (isset($attributes) && is_array($attributes) && isset($attributes['emailAddre
 $protocol = getUrlProtocol();
 $url = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . '/';
 if (isset($_COOKIE["samlsrc"])) {
-    $url=base64_decode($_COOKIE["samlsrc"]);
+    $url = base64_decode($_COOKIE["samlsrc"]);
 }
 if ($ok && isset($_REQUEST['returnUrl']) && parse_url($_REQUEST['returnUrl'])) {
     $url = $_REQUEST['returnUrl'];

@@ -1,29 +1,34 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 chdir('..');
 include 'common.inc';
 $loc = GetDefaultLocation();
-$tid= array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
-$run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
+$tid = array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
+$run = array_key_exists('run', $_GET) ? $_GET['run'] : 0;
 $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
 $profile_file = __DIR__ . '/../settings/profiles.ini';
-if (file_exists(__DIR__ . '/../settings/common/profiles.ini'))
-  $profile_file = __DIR__ . '/../settings/common/profiles.ini';
-if (file_exists(__DIR__ . '/../settings/server/profiles.ini'))
-  $profile_file = __DIR__ . '/../settings/server/profiles.ini';
-if (is_file($profile_file))
-  $profiles = parse_ini_file($profile_file, true);
+if (file_exists(__DIR__ . '/../settings/common/profiles.ini')) {
+    $profile_file = __DIR__ . '/../settings/common/profiles.ini';
+}
+if (file_exists(__DIR__ . '/../settings/server/profiles.ini')) {
+    $profile_file = __DIR__ . '/../settings/server/profiles.ini';
+}
+if (is_file($profile_file)) {
+    $profiles = parse_ini_file($profile_file, true);
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
-        <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Visual Test';
+        include('head.inc'); ?>
     </head>
     <body class="home">
             <?php
@@ -41,7 +46,7 @@ if (is_file($profile_file))
 
 
             <div id="test_box-container" class="home_responsive_test">
-                <?php 
+                <?php
                 $currNav = "Visual Comparison";
                 include("testTypesNav.php");
                 ?>  
@@ -54,15 +59,13 @@ if (is_file($profile_file))
                       <input type="hidden" id="nextid" value="3">
                         <div id="urls">
                             <?php
-                            if( $tid )
-                            {
+                            if ($tid) {
                                 $testPath = './' . GetTestPath($tid);
                                 $pageData = loadAllPageData($testPath);
                                 $url = trim($pageData[1][0]['URL']);
                                 $testInfo = GetTestInfo($tid);
                                 $label = trim($testInfo['label']);
-                                if( strlen($url) )
-                                {
+                                if (strlen($url)) {
                                     echo '<div id="urldiv0" class="urldiv">';
                                     echo "<input type=\"hidden\" id=\"tid\" name=\"tid\" value=\"$tid\">";
                                     echo "<input type=\"hidden\" id=\"run\" name=\"run\" value=\"$run\">";
@@ -89,21 +92,23 @@ if (is_file($profile_file))
                         <ul class="input_fields">
                         <?php
                         if (isset($profiles) && is_array($profiles) && count($profiles)) {
-                          echo '<li>';
-                          echo '<label for="profile">Test Configuration:</label>';
-                          echo '<select name="profile" id="profile" onchange="profileChanged()">';
-                          foreach($profiles as $name => $profile) {
-                            $selected = '';
-                            if ($name == $_COOKIE['testProfile'])
-                              $selected = 'selected';
-                            echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
-                          }
-                          if (isset($lastGroup))
-                              echo "</optgroup>";
-                          echo '</select>';
-                          echo '</li>';
-                          echo '<li id="description"></li>';
-                          echo '</ul>';
+                            echo '<li>';
+                            echo '<label for="profile">Test Configuration:</label>';
+                            echo '<select name="profile" id="profile" onchange="profileChanged()">';
+                            foreach ($profiles as $name => $profile) {
+                                $selected = '';
+                                if ($name == $_COOKIE['testProfile']) {
+                                    $selected = 'selected';
+                                }
+                                echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                            }
+                            if (isset($lastGroup)) {
+                                echo "</optgroup>";
+                            }
+                            echo '</select>';
+                            echo '</li>';
+                            echo '<li id="description"></li>';
+                            echo '</ul>';
                         }
                         ?>
                         

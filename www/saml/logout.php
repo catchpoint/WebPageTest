@@ -1,4 +1,5 @@
 <?php
+
 chdir('..');
 include 'common.inc';
 
@@ -11,6 +12,6 @@ $url = getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . '/';
 //}
 // Set the cookie into the past
 $saml_cookie = GetSetting('saml_cookie', 'samlu');
-setcookie($saml_cookie, "", time() - 3600, '/'); 
+setcookie($saml_cookie, "", time() - 3600, '/');
 header('Clear-Site-Data: "cache", "cookies", "storage", "executionContexts"');
 header("Location: $url");
