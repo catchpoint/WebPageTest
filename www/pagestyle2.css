@@ -24,10 +24,9 @@ body {
   font: 100%/1.4em "Open Sans", sans-serif;
   background-color: #f4f4f4;
   grid-column-gap: 1.25em;
-  grid-template-columns: [gutter-start] calc(50vw - 45em) repeat(
-      10,
-      minmax(0, 1fr)
-    ) calc(50vw - 45em) [gutter-end];
+  grid-template-columns:
+    [gutter-start] calc(50vw - 45em) repeat(10, minmax(0, 1fr))
+    calc(50vw - 45em) [gutter-end];
   width: 100%;
   scrollbar-gutter: stable;
 }

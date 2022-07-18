@@ -1,2 +1,2 @@
-//this is just a test script 
+//this is just a test script
 console.log("script 1");
