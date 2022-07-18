@@ -627,7 +627,6 @@
           document.querySelector("#subscription-plan-modal-confirm").open();
         });
       });
-
     document
       .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
       .forEach((el) => {

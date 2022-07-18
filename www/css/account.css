@@ -1869,7 +1869,7 @@ ul.bulleted-list {
   padding: 1em 0;
 }
 
-.box.api-consumers > h3,
+.box.api-consumers > h2,
 .box.api-consumers > .info,
 .box.api-consumers > .create-key-container > div {
   padding: 0 2em;
