@@ -16,6 +16,8 @@ use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse;
 use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
@@ -232,7 +234,7 @@ class CPClient
      */
     public function getWptPlans(): array
     {
-      $gql = (new Query('wptPlan'))
+        $gql = (new Query('wptPlan'))
         ->setSelectionSet([
             'name',
             'priceInCents',
@@ -243,13 +245,13 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true);
         return array_map(function ($data): Plan {
-          $options = [
+            $options = [
             'id' => $data['name'],
             'name' => $data['description'],
             'priceInCents' => $data['priceInCents'],
             'billingFrequency' => $data['interval'],
             'runs' => $data['monthlyTestRuns']
-          ];
+            ];
 
             return new Plan($options);
         }, $results->getData()['wptPlan']);
@@ -635,5 +637,37 @@ class CPClient
         }, 0);
 
         return $sum;
+    }
+
+    public function getChargifySubscriptionPreview(string $plan, ChargifyAddressInput $chargify_address_input): ChargifySubscriptionPreviewResponse
+    {
+        $gql = (new Query('wptSubscriptionPreview'))
+            ->setVariables([
+                new Variable('wptPlanHandle', 'String', true),
+                new Variable('shippingAddress', 'ChargifyAddressInputType', true)
+            ])
+            ->setArguments([
+                'wptPlanHandle' => '$wptPlanHandle',
+                'shippingAddress' => '$shippingAddress'
+            ])
+            ->setSelectionSet([
+                'totalInCents',
+                'subTotalInCents',
+                'taxInCents'
+            ]);
+
+        $variables = [
+            'wptPlanHandle' => $plan,
+            'shippingAddress' => $chargify_address_input->toArray()
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptSubscriptionPreview'];
+
+        return new ChargifySubscriptionPreviewResponse([
+          "total_in_cents" => $data['totalInCents'],
+          "sub_total_in_cents" => $data['subTotalInCents'],
+          "tax_in_cents" => $data['taxInCents']
+        ]);
     }
 }

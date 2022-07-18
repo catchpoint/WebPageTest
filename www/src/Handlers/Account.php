@@ -12,6 +12,7 @@ use WebPageTest\Util;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\BillingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\Customer;
 use WebPageTest\CustomerPaymentUpdateInput;
 
@@ -244,6 +245,30 @@ class Account
         } catch (\Exception $e) {
             error_log($e->getMessage());
             throw new ClientException("There was an error", "/account");
+        }
+    }
+
+    /**
+     * responds in JSON
+     */
+    public static function previewCost(RequestContext $request_context)
+    {
+        try {
+            $plan = $_POST['plan'];
+            $address = new ChargifyAddressInput([
+              "street_address" => $_POST['street_address'],
+              "city" => $_POST['city'],
+              "state" => $_POST['state'],
+              "country" => $_POST['country'],
+              "zipcode" => $_POST['zipcode']
+            ]);
+
+            $preview_totals = $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
+            header('Content-type: application/json');
+            echo json_encode($preview_totals);
+            exit();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
         }
     }
 }
