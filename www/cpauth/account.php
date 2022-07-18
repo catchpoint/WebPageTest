@@ -49,6 +49,8 @@ if ($request_method === 'POST') {
         AccountHandler::changePassword($request_context);
     } elseif ($type == "account-signup") {
         AccountHandler::subscribeToAccount($request_context);
+    } elseif ($type == "account-signup-preview") {
+        AccountHandler::previewCost($request_context);
     } elseif ($type == "cancel-subscription") {
         AccountHandler::cancelSubscription($request_context);
     } elseif ($type == "update-payment-method") {
@@ -146,8 +148,6 @@ if ($is_paid) {
     $billing_info['billing_frequency'] = $billing_frequency;
     $client_token = $billing_info['braintreeClientToken'];
 } else {
-
-
     $plans = $request_context->getClient()->getWptPlans();
     $annual_plans = array();
     $monthly_plans = array();
