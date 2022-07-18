@@ -1,7 +1,7 @@
 .pill-button {
   appearance: none;
   width: auto;
-  background-color: #F4F4F4;
+  background-color: #f4f4f4;
   border: 0;
   border-radius: 2rem;
   cursor: pointer;
@@ -26,16 +26,15 @@
   border: 0;
 }
 
-
 /** TODO
 update all the yellow buttons on the site
 **/
 .yellow {
-  background-color: #F9D856;
+  background-color: #f9d856;
 }
 
 .blue {
-  background-color: #3881E5;
+  background-color: #3881e5;
   color: #fff;
 }
 
@@ -43,7 +42,7 @@ update all the yellow buttons on the site
 TODO update the NEW buttons on signup to this green
 **/
 .green {
-  background-color: #80BC06;
+  background-color: #80bc06;
 }
 
 .red {
@@ -52,9 +51,9 @@ TODO update the NEW buttons on signup to this green
 }
 
 .purple {
-  background-color: #6b25cf
+  background-color: #6b25cf;
 }
 
 .grey-outline {
-  border: 1px solid rgb(204, 204, 204)
+  border: 1px solid rgb(204, 204, 204);
 }
