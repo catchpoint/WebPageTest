@@ -31,6 +31,21 @@ class ChargifySubscriptionPreviewResponse implements JsonSerializable
         $this->tax_in_cents = $options['tax_in_cents'];
     }
 
+    public function getTotalInCents(): int
+    {
+        return $this->total_in_cents;
+    }
+
+    public function getSubTotalInCents(): int
+    {
+        return $this->sub_total_in_cents;
+    }
+
+    public function getTaxInCents(): int
+    {
+        return $this->tax_in_cents;
+    }
+
     public function jsonSerialize(): array
     {
         return [

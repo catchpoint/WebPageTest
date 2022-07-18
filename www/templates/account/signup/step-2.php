@@ -22,13 +22,54 @@
                 <label for="password">Password</label>
                 <input type="password" name="password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
                 <p class="description">Must have at least 8 characters, including a number, lowercase letter, uppercase
-                    letter
-                    and symbol. No &lt;, &gt;.</p>
+letter and symbol. No &lt;, &gt;.</p>
             </div>
             <div class="form-input">
                 <label for="confirm-password">Confirm Password</label>
                 <input type="password" name="confirm-password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
             </div>
+            <?php if (!$is_plan_free) : ?>
+<div>
+    <div class="form-input address">
+        <label for="street-address">Billing Address</label>
+        <div>
+            <input name="street-address" type="text" value="<?= $street_address ?>" required />
+        </div>
+    </div>
+    <div class="form-input city">
+        <label for="city">City</label>
+        <input name="city" type="text" value="<?= $city ?>" required />
+    </div>
+    <div class="form-input state">
+        <label for="state">State</label>
+        <div id="regionalArea">
+            <select name="state" required>
+                <?php foreach ($state_list as $state) : ?>
+                    <option value="<?= $state['code'] ?>">
+                        <?= $state['name']; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
+    <div class="form-input country">
+        <label for="country">Country</label>
+        <select name="country" required>
+                <?php foreach ($country_list as $country) : ?>
+                <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
+                    <?= $country["name"]; ?>
+                </option>
+                <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="form-input zip">
+        <label for="zipcode">Postal Code</label>
+        <div>
+            <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
+        </div>
+    </div>
+</div>
+            <?php endif; ?>
             <div class="form-input">
                 <?php
 
@@ -50,14 +91,17 @@
     <div class="plan-details">
         <table>
             <thead>
-                <?php if (!$is_plan_free) : ?>
-                    <th>Runs per month</th>
-                <?php endif; ?>
+                <th>Runs per month</th>
                 <th>Price</th>
+                <?php if (!$is_plan_free) : ?>
+                <th>Estimated Taxes</th>
+                <th>Total including tax</th>
+                <?php endif; ?>
             </thead>
             <tbody>
                 <tr>
                     <?php if ($is_plan_free) : ?>
+                        <td>300</td>
                         <td>Free</td>
                     <?php else : ?>
                         <td><?= $runs ?></td>
@@ -66,6 +110,8 @@
                         <?php else : ?>
                             <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}" ?></td>
                         <?php endif; ?>
+                        <td>--</td>
+                        <td>--</td>
                     <?php endif; ?>
                 </tr>
             </tbody>
