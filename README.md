@@ -37,3 +37,28 @@ Before you send a pull request please make sure to run: `composer format`.
 Alternatively you can run
 `composer format:php` if you only touched PHP code
 `composer format:prettier` if you only touched CSS or JavaScript code
+
+### VSCode integration
+
+If you use VSCode you might find it helpful to install Prettier and PHP Intelephence plugins and use these in your "settings.json":
+
+```
+{
+  "[php]": {
+    "editor.tabSize": 4
+  },
+
+  // uncomment to reformat on every file save
+  //"editor.formatOnSave": true,
+
+  "phpcs.standard": "PSR12",
+
+  "files.trimTrailingWhitespace": true,
+
+  "files.eol": "\n",
+
+  "files.associations": {
+    "*.inc": "php"
+  }
+}
+```
