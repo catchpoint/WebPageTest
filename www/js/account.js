@@ -15,10 +15,10 @@
       if (typeof window.CustomEvent === "function") {
         return new CustomEvent(evtName, {
           bubbles: true,
-          cancelable: false
+          cancelable: false,
         });
       } else {
-        var evt = document.createEvent('CustomEvent');
+        var evt = document.createEvent("CustomEvent");
         evt.initCustomEvent(evtName, true, true, {});
         return evt;
       }
@@ -34,14 +34,16 @@
       this.closeEvent = this.makeEvent("close");
       this.beforeCloseEvent = this.makeEvent("beforeclose");
       this.activeElem = document.activeElement;
-      this.closeBtn = this.querySelector("." + this.closeclass) || this.appendCloseBtn();
+      this.closeBtn =
+        this.querySelector("." + this.closeclass) || this.appendCloseBtn();
       this.titleElem = this.querySelector(".modal_title");
       this.enhanceMarkup();
       this.bindEvents();
       this.dispatchEvent(this.initEvent);
     }
     closest(el, s) {
-      var whichMatches = Element.prototype.matches || Element.prototype.msMatchesSelector;
+      var whichMatches =
+        Element.prototype.matches || Element.prototype.msMatchesSelector;
       do {
         if (whichMatches.call(el, s)) return el;
         el = el.parentElement || el.parentNode;
@@ -58,9 +60,10 @@
 
     enhanceMarkup() {
       this.setAttribute("role", "dialog");
-      this.id = this.id || ("modal_" + new Date().getTime());
+      this.id = this.id || "modal_" + new Date().getTime();
       if (this.titleElem) {
-        this.titleElem.id = this.titleElem.id || ("modal_title_" + new Date().getTime());
+        this.titleElem.id =
+          this.titleElem.id || "modal_title_" + new Date().getTime();
         this.setAttribute("aria-labelledby", this.titleElem.id);
       }
       this.classList.add("modal");
@@ -86,7 +89,6 @@
             inertSiblings(node.parentNode);
           }
         }
-
       }
       inertSiblings(this);
     }
@@ -109,8 +111,6 @@
       this.addInert();
       this.dispatchEvent(this.openEvent);
     }
-
-
 
     close(programmedClose) {
       var self = this;
@@ -136,15 +136,14 @@
       }
     }
 
-
     bindEvents() {
       var self = this;
 
       // close btn click
-      this.closeBtn.addEventListener('click', event => self.close());
+      this.closeBtn.addEventListener("click", (event) => self.close());
 
       // open dialog if click is on link to dialog
-      window.addEventListener('click', function (e) {
+      window.addEventListener("click", function (e) {
         var assocLink = self.closest(e.target, self.modalLinks);
         if (assocLink) {
           e.preventDefault();
@@ -152,7 +151,7 @@
         }
       });
 
-      window.addEventListener('keydown', function (e) {
+      window.addEventListener("keydown", function (e) {
         var assocLink = self.closest(e.target, self.modalLinks);
         if (assocLink && e.keyCode === 32) {
           e.preventDefault();
@@ -160,37 +159,35 @@
         }
       });
 
-      window.addEventListener('focusin', function (e) {
+      window.addEventListener("focusin", function (e) {
         self.activeElem = e.target;
       });
 
       // click on the screen itself closes it
-      this.overlay.addEventListener('mouseup', function (e) {
+      this.overlay.addEventListener("mouseup", function (e) {
         if (!self.closed) {
           self.close();
         }
       });
 
       // click on anything outside dialog closes it too (if screen is not shown maybe?)
-      window.addEventListener('mouseup', function (e) {
+      window.addEventListener("mouseup", function (e) {
         if (!self.closed && !self.closest(e.target, "#" + self.id)) {
           e.preventDefault();
           self.close();
         }
       });
 
-
       // close on escape
-      window.addEventListener('keydown', function (e) {
+      window.addEventListener("keydown", function (e) {
         if (e.keyCode === 27 && !self.closed) {
           e.preventDefault();
           self.close();
         }
-
       });
 
       // close on other dialog open
-      window.addEventListener('beforeopen', function (e) {
+      window.addEventListener("beforeopen", function (e) {
         if (!self.closed && e.target !== this) {
           self.close(true);
         }
@@ -204,12 +201,11 @@
     }
   }
 
-  if ('customElements' in window) {
-    customElements.define('fg-modal', Modal);
+  if ("customElements" in window) {
+    customElements.define("fg-modal", Modal);
   }
 
   window.Modal = Modal;
-
 })(window);
 
 (function () {
@@ -222,23 +218,23 @@
    *   Desc:   Adds sorting to a HTML data table that implements ARIA Authoring Practices
    */
 
-  'use strict';
+  "use strict";
 
   class SortableTable {
     constructor(tableNode) {
       this.tableNode = tableNode;
 
-      this.columnHeaders = tableNode.querySelectorAll('thead th');
+      this.columnHeaders = tableNode.querySelectorAll("thead th");
 
       this.sortColumns = [];
 
       for (var i = 0; i < this.columnHeaders.length; i++) {
         var ch = this.columnHeaders[i];
-        var buttonNode = ch.querySelector('button');
+        var buttonNode = ch.querySelector("button");
         if (buttonNode) {
           this.sortColumns.push(i);
-          buttonNode.setAttribute('data-column-index', i);
-          buttonNode.addEventListener('click', this.handleClick.bind(this));
+          buttonNode.setAttribute("data-column-index", i);
+          buttonNode.addEventListener("click", this.handleClick.bind(this));
         }
       }
 
@@ -248,43 +244,43 @@
 
       if (this.optionCheckbox) {
         this.optionCheckbox.addEventListener(
-          'change',
+          "change",
           this.handleOptionChange.bind(this)
         );
         if (this.optionCheckbox.checked) {
-          this.tableNode.classList.add('show-unsorted-icon');
+          this.tableNode.classList.add("show-unsorted-icon");
         }
       }
     }
 
     setColumnHeaderSort(columnIndex) {
-      if (typeof columnIndex === 'string') {
+      if (typeof columnIndex === "string") {
         columnIndex = parseInt(columnIndex);
       }
 
       for (var i = 0; i < this.columnHeaders.length; i++) {
         var ch = this.columnHeaders[i];
-        var buttonNode = ch.querySelector('button');
+        var buttonNode = ch.querySelector("button");
         if (i === columnIndex) {
-          var value = ch.getAttribute('aria-sort');
-          if (value === 'descending') {
-            ch.setAttribute('aria-sort', 'ascending');
+          var value = ch.getAttribute("aria-sort");
+          if (value === "descending") {
+            ch.setAttribute("aria-sort", "ascending");
             this.sortColumn(
               columnIndex,
-              'ascending',
-              ch.classList.contains('num')
+              "ascending",
+              ch.classList.contains("num")
             );
           } else {
-            ch.setAttribute('aria-sort', 'descending');
+            ch.setAttribute("aria-sort", "descending");
             this.sortColumn(
               columnIndex,
-              'descending',
-              ch.classList.contains('num')
+              "descending",
+              ch.classList.contains("num")
             );
           }
         } else {
-          if (ch.hasAttribute('aria-sort') && buttonNode) {
-            ch.removeAttribute('aria-sort');
+          if (ch.hasAttribute("aria-sort") && buttonNode) {
+            ch.removeAttribute("aria-sort");
           }
         }
       }
@@ -292,7 +288,7 @@
 
     sortColumn(columnIndex, sortValue, isNumber) {
       function compareValues(a, b) {
-        if (sortValue === 'ascending') {
+        if (sortValue === "ascending") {
           if (a.value === b.value) {
             return 0;
           } else {
@@ -315,11 +311,11 @@
         }
       }
 
-      if (typeof isNumber !== 'boolean') {
+      if (typeof isNumber !== "boolean") {
         isNumber = false;
       }
 
-      var tbodyNode = this.tableNode.querySelector('tbody');
+      var tbodyNode = this.tableNode.querySelector("tbody");
       var rowNodes = [];
       var dataCells = [];
 
@@ -328,7 +324,7 @@
       var index = 0;
       while (rowNode) {
         rowNodes.push(rowNode);
-        var rowCells = rowNode.querySelectorAll('th, td');
+        var rowCells = rowNode.querySelectorAll("th, td");
         var dataCell = rowCells[columnIndex];
 
         var data = {};
@@ -359,23 +355,22 @@
 
     handleClick(event) {
       var tgt = event.currentTarget;
-      this.setColumnHeaderSort(tgt.getAttribute('data-column-index'));
+      this.setColumnHeaderSort(tgt.getAttribute("data-column-index"));
     }
 
     handleOptionChange(event) {
       var tgt = event.currentTarget;
 
       if (tgt.checked) {
-        this.tableNode.classList.add('show-unsorted-icon');
+        this.tableNode.classList.add("show-unsorted-icon");
       } else {
-        this.tableNode.classList.remove('show-unsorted-icon');
+        this.tableNode.classList.remove("show-unsorted-icon");
       }
     }
   }
 
   window.SortableTable = SortableTable;
-
-}(window));
+})(window);
 
 /**
  * Toggle
@@ -384,13 +379,18 @@
   class Toggleable {
     constructor(togglearea) {
       const id = togglearea.id;
-      const buttonElements = document.querySelectorAll("[data-targetid=" + id + "]");
-      togglearea.classList.add('toggle-close');
+      const buttonElements = document.querySelectorAll(
+        "[data-targetid=" + id + "]"
+      );
+      togglearea.classList.add("toggle-close");
       this.open = false;
       this.togglearea = togglearea;
 
       for (let i = 0; i < buttonElements.length; i++) {
-        buttonElements[i].addEventListener('click', this.handleClick.bind(this));
+        buttonElements[i].addEventListener(
+          "click",
+          this.handleClick.bind(this)
+        );
       }
     }
 
@@ -398,18 +398,18 @@
       const command = e.target.dataset.toggle;
       if (command == "open") {
         this.open = true;
-        this.togglearea.classList.add('toggle-open');
-        this.togglearea.classList.remove('toggle-close');
+        this.togglearea.classList.add("toggle-open");
+        this.togglearea.classList.remove("toggle-close");
       } else {
         this.open = false;
-        this.togglearea.classList.remove('toggle-open');
-        this.togglearea.classList.add('toggle-close');
+        this.togglearea.classList.remove("toggle-open");
+        this.togglearea.classList.add("toggle-close");
       }
     }
   }
 
   window.Toggleable = Toggleable;
-}(window));
+})(window);
 
 /**
  * HiddenContent
@@ -417,12 +417,12 @@
 (function (window) {
   class HiddenContent {
     constructor(hiddenContentCell) {
-      const viewButton = hiddenContentCell.querySelector('.view-button');
-      const hideButton = hiddenContentCell.querySelector('.hide-button');
-      const hiddenArea = hiddenContentCell.querySelector('.hidden-area');
+      const viewButton = hiddenContentCell.querySelector(".view-button");
+      const hideButton = hiddenContentCell.querySelector(".hide-button");
+      const hiddenArea = hiddenContentCell.querySelector(".hidden-area");
 
-      viewButton.addEventListener('click', this.showContent.bind(this));
-      hideButton.addEventListener('click', this.hideContent.bind(this));
+      viewButton.addEventListener("click", this.showContent.bind(this));
+      hideButton.addEventListener("click", this.hideContent.bind(this));
 
       this.viewButton = viewButton;
       this.hideButton = hideButton;
@@ -431,18 +431,18 @@
     }
 
     hideContent() {
-      this.hiddenArea.classList.add('closed');
-      this.viewButton.classList.remove('closed');
+      this.hiddenArea.classList.add("closed");
+      this.viewButton.classList.remove("closed");
     }
 
     showContent() {
-      this.viewButton.classList.add('closed');
-      this.hiddenArea.classList.remove('closed');
+      this.viewButton.classList.add("closed");
+      this.hiddenArea.classList.remove("closed");
     }
   }
 
   window.HiddenContent = HiddenContent;
-}(window));
+})(window);
 
 /**
  * DeleteApiKeyBoxSet
@@ -451,18 +451,28 @@
   class DeleteApiKeyBoxSet {
     constructor(mainCheckbox) {
       this.selectAllBox = mainCheckbox;
-      const form = this.selectAllBox.closest('form');
-      const individualBoxes = form.querySelectorAll('[data-apikeybox=individual]');
-      const deleteButtonLabel = document.querySelector('[data-apikeybox=delete-button]');
-      const deleteButton = form.querySelector('input[type=submit]');
+      const form = this.selectAllBox.closest("form");
+      const individualBoxes = form.querySelectorAll(
+        "[data-apikeybox=individual]"
+      );
+      const deleteButtonLabel = document.querySelector(
+        "[data-apikeybox=delete-button]"
+      );
+      const deleteButton = form.querySelector("input[type=submit]");
 
       this.individualBoxes = individualBoxes;
       this.deleteButton = deleteButton;
       this.deleteButtonLabel = deleteButtonLabel;
 
-      this.selectAllBox.addEventListener('change', this.handleMainBoxChange.bind(this));
+      this.selectAllBox.addEventListener(
+        "change",
+        this.handleMainBoxChange.bind(this)
+      );
       this.individualBoxes.forEach((box) => {
-        box.addEventListener('change', this.handleIndividualBoxChange.bind(this));
+        box.addEventListener(
+          "change",
+          this.handleIndividualBoxChange.bind(this)
+        );
       });
     }
 
@@ -470,7 +480,7 @@
       if (e.target.checked) {
         this.deleteButton.removeAttribute("disabled");
         this.deleteButton.disabled = false;
-        this.deleteButtonLabel.classList.remove('disabled');
+        this.deleteButtonLabel.classList.remove("disabled");
 
         this.individualBoxes.forEach((box) => {
           box.setAttribute("checked", "true");
@@ -479,7 +489,7 @@
       } else {
         this.deleteButton.setAttribute("disabled", "disabled");
         this.deleteButton.disabled = true;
-        this.deleteButtonLabel.classList.add('disabled');
+        this.deleteButtonLabel.classList.add("disabled");
 
         this.individualBoxes.forEach((box) => {
           box.removeAttribute("checked");
@@ -492,9 +502,11 @@
       if (e.target.checked) {
         this.deleteButton.removeAttribute("disabled");
         this.deleteButton.disabled = false;
-        this.deleteButtonLabel.classList.remove('disabled');
+        this.deleteButtonLabel.classList.remove("disabled");
 
-        const allChecked = Array.from(this.individualBoxes).every((box) => box.checked);
+        const allChecked = Array.from(this.individualBoxes).every(
+          (box) => box.checked
+        );
         if (allChecked) {
           this.selectAllBox.setAttribute("checked", "true");
           this.selectAllBox.checked = true;
@@ -512,58 +524,64 @@
         if (allUnchecked) {
           this.deleteButton.setAttribute("disabled", "disabled");
           this.deleteButton.disabled = true;
-          this.deleteButtonLabel.classList.add('disabled');
+          this.deleteButtonLabel.classList.add("disabled");
         }
       }
     }
   }
 
   window.DeleteApiKeyBoxSet = DeleteApiKeyBoxSet;
-}(window));
+})(window);
 
 /**
  * Attach all the listeners
  */
 (() => {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.edit-button button').forEach(el => {
-        el.addEventListener('click', (e) => {
-          const card = e.target.closest('[data-modal]');
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".edit-button button").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          const card = e.target.closest("[data-modal]");
           const modal = card.dataset.modal;
           document.querySelector(`#${modal}`).open();
         });
       });
-      document.querySelectorAll('.fg-modal .cancel-button button').forEach(el => {
-        el.addEventListener('click', (e) => {
-          const modal = e.target.closest('.fg-modal');
-          modal.close();
+      document
+        .querySelectorAll(".fg-modal .cancel-button button")
+        .forEach((el) => {
+          el.addEventListener("click", (e) => {
+            const modal = e.target.closest(".fg-modal");
+            modal.close();
+          });
         });
-      });
-      document.querySelectorAll('.fg-modal .cancel-subscription-button button').forEach(el => {
-        el.addEventListener('click', (e) => {
-          const modal = e.target.closest('.fg-modal');
-          modal.close();
-          document.querySelector('#subscription-plan-modal-confirm').open();
+      document
+        .querySelectorAll(".fg-modal .cancel-subscription-button button")
+        .forEach((el) => {
+          el.addEventListener("click", (e) => {
+            const modal = e.target.closest(".fg-modal");
+            modal.close();
+            document.querySelector("#subscription-plan-modal-confirm").open();
+          });
         });
-      });
 
-      var sortableTables = document.querySelectorAll('table.sortable');
+      var sortableTables = document.querySelectorAll("table.sortable");
       for (var i = 0; i < sortableTables.length; i++) {
         new SortableTable(sortableTables[i]);
       }
 
-      var toggleableAreas = document.querySelectorAll('.toggleable');
+      var toggleableAreas = document.querySelectorAll(".toggleable");
       for (var i = 0; i < toggleableAreas.length; i++) {
         new Toggleable(toggleableAreas[i]);
       }
 
-      var hiddenContentCells = document.querySelectorAll('td.hidden-content');
+      var hiddenContentCells = document.querySelectorAll("td.hidden-content");
       for (var i = 0; i < hiddenContentCells.length; i++) {
         new HiddenContent(hiddenContentCells[i]);
       }
 
-      var deleteApiKeyBoxes = document.querySelectorAll('[data-apikeybox=select-all]');
+      var deleteApiKeyBoxes = document.querySelectorAll(
+        "[data-apikeybox=select-all]"
+      );
       for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
         new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
       }
@@ -572,42 +590,48 @@
       handleRunUpdate();
     });
   } else {
-    document.querySelectorAll('.edit-button button').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const card = e.target.closest('[data-modal]');
+    document.querySelectorAll(".edit-button button").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        const card = e.target.closest("[data-modal]");
         const modal = card.dataset.modal;
         document.querySelector(`#${modal}`).open();
       });
     });
-    document.querySelectorAll('.fg-modal .cancel-button button').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const modal = e.target.closest('.fg-modal');
-        modal.close();
+    document
+      .querySelectorAll(".fg-modal .cancel-button button")
+      .forEach((el) => {
+        el.addEventListener("click", (e) => {
+          const modal = e.target.closest(".fg-modal");
+          modal.close();
+        });
       });
-    });
-    document.querySelectorAll('.fg-modal .cancel-subscription-button button').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const modal = e.target.closest('.fg-modal');
-        modal.close();
-        document.querySelector('#subscription-plan-modal-confirm').open();
+    document
+      .querySelectorAll(".fg-modal .cancel-subscription-button button")
+      .forEach((el) => {
+        el.addEventListener("click", (e) => {
+          const modal = e.target.closest(".fg-modal");
+          modal.close();
+          document.querySelector("#subscription-plan-modal-confirm").open();
+        });
       });
-    });
-    var sortableTables = document.querySelectorAll('table.sortable');
+    var sortableTables = document.querySelectorAll("table.sortable");
     for (var i = 0; i < sortableTables.length; i++) {
       new SortableTable(sortableTables[i]);
     }
 
-    var toggleableAreas = document.querySelectorAll('.toggleable');
+    var toggleableAreas = document.querySelectorAll(".toggleable");
     for (var i = 0; i < toggleableAreas.length; i++) {
       new Toggleable(toggleableAreas[i]);
     }
 
-    var hiddenContentCells = document.querySelectorAll('td.hidden-content');
+    var hiddenContentCells = document.querySelectorAll("td.hidden-content");
     for (var i = 0; i < hiddenContentCells.length; i++) {
       new HiddenContent(hiddenContentCells[i]);
     }
 
-    var deleteApiKeyBoxes = document.querySelectorAll('[data-apikeybox=select-all]');
+    var deleteApiKeyBoxes = document.querySelectorAll(
+      "[data-apikeybox=select-all]"
+    );
     for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
       new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
     }
@@ -617,31 +641,33 @@
   }
 
   function attachListenerToBillingFrequencySelector() {
-    var selectors = document.querySelectorAll('#paid-plan-selector input[type=radio]');
-    selectors.forEach(s => {
-      s.addEventListener('change', e => {
-        var monthlyCard = document.querySelector('.card .monthly');
-        var annualCard = document.querySelector('.card .annual');
-        if (e.target.value == 'monthly') {
-          monthlyCard.classList.add('selected');
-          annualCard.classList.remove('selected');
+    var selectors = document.querySelectorAll(
+      "#paid-plan-selector input[type=radio]"
+    );
+    selectors.forEach((s) => {
+      s.addEventListener("change", (e) => {
+        var monthlyCard = document.querySelector(".card .monthly");
+        var annualCard = document.querySelector(".card .annual");
+        if (e.target.value == "monthly") {
+          monthlyCard.classList.add("selected");
+          annualCard.classList.remove("selected");
         } else {
-          monthlyCard.classList.remove('selected');
-          annualCard.classList.add('selected');
+          monthlyCard.classList.remove("selected");
+          annualCard.classList.add("selected");
         }
-      })
-    })
+      });
+    });
   }
 
   function handleRunUpdate() {
-    var selects = document.querySelectorAll('select[name=plan]');
-    selects.forEach(s => {
-      var priceDisplay = s.closest('form').querySelector('.price span');
-      s.addEventListener('change', e => {
+    var selects = document.querySelectorAll("select[name=plan]");
+    selects.forEach((s) => {
+      var priceDisplay = s.closest("form").querySelector(".price span");
+      s.addEventListener("change", (e) => {
         var selected = e.target.options[e.target.selectedIndex];
-        var price = selected.dataset['price'];
+        var price = selected.dataset["price"];
         priceDisplay.innerText = price;
-      })
+      });
     });
   }
 })();
