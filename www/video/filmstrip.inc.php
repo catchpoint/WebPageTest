@@ -261,7 +261,7 @@ function LoadTestData()
         if (!empty($new_label)) {
             $test['name'] = $new_label;
         }
-    
+
       // Override everything with the query-string label
         if (isset($test['label_override'])) {
             $test['name'] = $test['label_override'];

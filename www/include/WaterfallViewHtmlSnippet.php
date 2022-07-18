@@ -8,7 +8,6 @@ require_once __DIR__ . '/../waterfall.inc';
 
 class WaterfallViewHtmlSnippet
 {
-
     private $testInfo;
     private $stepResult;
     private $requests;
@@ -62,7 +61,7 @@ class WaterfallViewHtmlSnippet
     }
     private function _legendImageTableCell($image, $label, $width)
     {
-    
+
         return "<td><img src=\"" . $image . "\" />" . $label . "</td>\n";
     }
 

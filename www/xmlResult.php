@@ -140,7 +140,7 @@ function BatchResult($id, $testPath)
             $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
         }
     }
-        
+
     if (count($tests['urls'])) {
         echo "<statusCode>200</statusCode>";
         echo "<statusText>Ok</statusText>";

@@ -34,7 +34,7 @@ if ($block_list && strlen($block_list) && strlen($pc)) {
         header("HTTP/1.1 403 Unauthorized");
     }
 }
-    
+
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST)) {
     $dnsServers = str_replace('-', ',', $_REQUEST['dns']);

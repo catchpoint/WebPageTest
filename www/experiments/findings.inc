@@ -73,9 +73,9 @@ if ($experiment) {
                     $controlMetric = floatval(removeLeadingZero(round($controlMetric, 3)));
 
                     $change = '<span class="metric_change"><em>' . ( $thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1] ) . '</em></span>';
-                        
 
-                        
+
+
                     if (abs($thisDiff) > 0) {
                         if ($metric[2] === "s") {
                             $thisDiff = round($thisDiff / 1000, 2);

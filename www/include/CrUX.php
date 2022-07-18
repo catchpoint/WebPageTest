@@ -125,7 +125,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             echo '</span>';
         }
         echo '</div>';
-        
+
 
         // The individual metrics
         echo '<div class="cruxbars">';

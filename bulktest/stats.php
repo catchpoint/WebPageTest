@@ -7,7 +7,7 @@ $prefix = array('');
 if (!$fvonly) {
     $prefix[] = 'rv_';
 }
-  
+
 // Load the existing results
 if (LoadResults($results)) {
     // split them up by URL and location
@@ -313,7 +313,7 @@ function CalculateStats(&$data, &$avg, &$stddev, &$ratio)
     $avg = 0;
     $stddev = 0;
     $ratio = 0;
-    
+
     // pass 1 - average
     $total = 0;
     $count = 0;
@@ -323,7 +323,7 @@ function CalculateStats(&$data, &$avg, &$stddev, &$ratio)
     }
     if ($count) {
         $avg = $total / $count;
-        
+
         // pass 2 - stddev
         $total = 0;
         foreach ($data as $value) {

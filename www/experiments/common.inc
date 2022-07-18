@@ -155,7 +155,7 @@ foreach ($assessment as $key => $cat) {
     $assessment[$key]["num_good"] = $numGood;
     $assessment[$key]["num_bad"] = $numChecks - $numGood;
 
-    
+
 
     if ($key === "Quick") {
         // build sentiment
@@ -216,7 +216,7 @@ foreach ($assessment as $key => $cat) {
             }
             $summary .= " to become interactive. ";
         }
-        
+
         if (isset($axe) && count($axe['violations'])) {
             $summary .= " It had $num_violations accessibility issues, ";
             if ($num_critical > 0) {
@@ -231,7 +231,7 @@ foreach ($assessment as $key => $cat) {
         if (isset($genContentSize) && isset($genContentPercent)) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
-        
+
             if ($genContentSize > .5 || $genContentPercent > 1) {
                 $summary .= " " . $genContentPercent . "% of HTML was generated client-side, delaying usability.";
             } else {
@@ -261,7 +261,7 @@ foreach ($assessment as $key => $cat) {
             } elseif ($num_low > 0) {
                 $summary .= ", $num_low low-priority";
             }
-            
+
             $summary .= ".";
         } else {
             $summary .= " It had no security issues detected.";
@@ -269,7 +269,7 @@ foreach ($assessment as $key => $cat) {
         if (isset($genContentSize) && isset($genContentPercent)) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
-        
+
             if ($genContentSize > .5 || $genContentPercent > 1) {
                 $summary .= " Dependence on client-generated HTML risks fragility.";
             } else {

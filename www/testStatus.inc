@@ -292,7 +292,7 @@ function GetTestStatus($id, $includePosition = true)
                                     } else {
                                         $ret['statusCode'] = 401;
                                         $ret['statusText'] = 'Test request not found';
-  
+
                           // Force the test to end - something went Very Wrong (tm)
                                         $lock = LockTest($id);
                                         if ($lock) {
@@ -301,7 +301,7 @@ function GetTestStatus($id, $includePosition = true)
                                                 $testInfoJson['completed'] = $now;
                                                 $test = file_get_contents("$testPath/testinfo.ini");
                                                 $date = gmdate("m/d/y G:i:s", $now);
-  
+
                                 // Update the completion time if it isn't already set
                                                 if (!strpos($test, 'completeTime')) {
                                                     $complete = "[test]\r\ncompleteTime=$date";
@@ -523,7 +523,7 @@ function array2xml($array, $xml = false)
     if ($xml === false) {
         $xml = new SimpleXMLElement('<response/>');
     }
-   
+
 
     foreach ($array as $key => $value) {
         if (is_array($value)) {

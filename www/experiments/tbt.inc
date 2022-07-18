@@ -26,7 +26,7 @@ if (isset($tbtMetric)) {
                             if (isset($task) && is_array($task) && count($task) >= 2) {
                                 $start = $task[0];
                                 $end = $task[1];
-                                
+
                                 if (!isset($task_times[$url])) {
                                     $task_times[$url] = 0;
                                 }
@@ -46,7 +46,7 @@ if (isset($tbtMetric)) {
             }
             return $oneLevel;
         }
-       
+
         $highBlockingTimeUrls = array();
         foreach ($task_times as $url => $time) {
             if ($time > 50) {

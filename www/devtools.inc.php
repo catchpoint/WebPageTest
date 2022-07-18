@@ -108,7 +108,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData)
                     $pageData['loadEventStart'] = $pageData['loadTime'];
                     $pageData['loadEventEnd'] = $pageData['loadTime'];
                 }
-              
+
                 // go through and pull out the requests, calculating the page stats as we go
                 $connections = array();
                 $dnsTimes = array();
@@ -219,7 +219,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData)
                                 ) {
                                     $request['ttfb_ms'] = round(($rawRequest['response']['timing']['receiveHeadersEnd'] - $rawRequest['response']['timing']['sendStart']));
                                 }
-                      
+
                                 // add the socket timing
                                 if (
                                     $request['socket'] !== -1 &&
@@ -343,7 +343,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData)
                             $request['cache_time'] = null;
                             $request['cdn_provider'] = null;
                             $request['server_count'] = null;
-                    
+
                     // make SURE it is a valid request
                             $valid = true;
                             if (
@@ -353,7 +353,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData)
                             ) {
                                 $valid = false;
                             }
-                    
+
                             if ($valid) {
                               // page-level stats
                                 if (!isset($pageData['URL']) && strlen($request['full_url'])) {
@@ -401,7 +401,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData)
                                 } else {
                                     $pageData['responses_other']++;
                                 }
-                      
+
                                 if ($request['load_start'] > 0) {
                                     $requests[] = $request;
                                 }
@@ -1077,7 +1077,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
             }
         }
     }
-    
+
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
         if (array_key_exists('startTime', $request)) {
@@ -1207,7 +1207,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     $startOffset = null;
     $previousTime = null;
     $clockOffset = null;
-  
+
   // First go and match up the first net event with the matching timeline event
   // to sync the clocks (recent Chrome builds use different clocks)
     if ($hasNet && $hasTimeline) {
@@ -1249,7 +1249,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
             $firstEvent = min($firstEvent, $firstNetEventTime + $clockOffset);
         }
     }
-  
+
     if (!$firstEvent && $hasTimeline) {
         if (isset($messages) && is_array($messages) && count($messages)) {
             foreach ($messages as $message) {
@@ -1288,7 +1288,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
                         $message['params']['timestamp'] += $clockOffset;
                     }
                 }
-        
+
                 // see if we are waiting for the first net message after a WPT Start
                 if ($recordPending && array_key_exists('method', $message)) {
                     $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
@@ -1325,7 +1325,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
                         }
                     }
                 }
-                      
+
                 // see if we got a start message (do this after capture so we don't include it)
                 if (!$recording && !$recordPending && $hasTrim) {
                     $encoded = json_encode($message);
@@ -1379,7 +1379,7 @@ function DevToolsIsValidNetRequest(&$event)
     ) {
         $isValid = true;
     }
-    
+
     return $isValid;
 }
 
@@ -1514,7 +1514,7 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime)
             foreach ($events as &$event) {
                 if (is_array($event) && array_key_exists('method', $event)) {
                     $method_class = substr($event['method'], 0, strpos($event['method'], '.'));
-          
+
                   // calculate the start time stuff
                     if ($method_class === 'Timeline') {
                         $encoded = json_encode($event);
@@ -1546,15 +1546,15 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime)
             }
         }
     }
-  
+
     if ($startTime && $lastPaint && $lastPaint < $startTime) {
         $offset = round($startTime - $lastPaint);
     }
-  
+
     if ($startTime && $lastEvent && $lastEvent > $startTime) {
         $endTime = ceil($lastEvent - $startTime);
     }
-    
+
     return $offset;
 }
 
@@ -1577,7 +1577,7 @@ function DevToolsGetCPUSlicesForStep($localPaths)
     if (isset($slices) && !is_array($slices)) {
         $slices = null;
     }
-    
+
     return $slices;
 }
 

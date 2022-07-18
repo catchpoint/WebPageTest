@@ -74,7 +74,7 @@
                             echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
 
-                        
+
                         if ($showTTFBWarn) {
                             echo <<<EOT
                             <div class="highttfb_warn">

@@ -161,7 +161,7 @@ $page_description = "Website performance test result$testLabel.";
                         $secret = '';
                     }
 
-                    
+
 
                     echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'><div class=\"form_clip\">";
                     echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
@@ -178,15 +178,15 @@ $page_description = "Website performance test result$testLabel.";
                         $hmac = sha1($hashStr);
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
-                    
+
                     // this is to capture the first host that is a successful response and not a redirect. that'll be the one we want to override in an experiment
                     echo '<input type="hidden" name="initialHostNonRedirect" value="' . $initialHost . '">';
                     echo '<input type="hidden" name="initialOriginNonRedirect" value="' . $initialOrigin . '">';
 
                     // used for tracking exp access
                     $expCounter = 0;
-                    
-                    
+
+
 
                     function observationHTML($parts)
                     {
@@ -196,7 +196,7 @@ $page_description = "Website performance test result$testLabel.";
                         global $experiments_logged_in;
 
                         $bottleneckTitle = $parts["title"];
-                        
+
                         $bottleneckDesc = $parts["desc"];
                         $bottleneckExamples = $parts["examples"];
                         $relevantExperiments = $parts["experiments"];
@@ -205,7 +205,7 @@ $page_description = "Website performance test result$testLabel.";
                         $hideassets = $parts["hideassets"];
 
                         $out = '';
-                        
+
                         // todo move this summary heading broader for all recs
                         $goodbadClass = "experiments_details-good";
                         if ($good === null) {
@@ -213,16 +213,16 @@ $page_description = "Website performance test result$testLabel.";
                         } elseif ($good !== true) {
                             $goodbadClass = "experiments_details-bad";
                         }
-                        
+
                         $out .= "<li class=\"$goodbadClass\"><details open><summary>$bottleneckTitle</summary>";
                         $out .= "<div class=\"experiments_details_body\">";
-                        
+
                         if (count($bottleneckExamples) > 10) {
                             $out .= "<div class=\"experiments_details_desc util_overflow_more\">";
                         } else {
                             $out .= "<div class=\"experiments_details_desc\">";
                         }
-                        
+
                         $out .= "<p>$bottleneckDesc</p>";
                         if (count($bottleneckExamples) > 0) {
                             $out .= "<ul>";
@@ -234,29 +234,29 @@ $page_description = "Website performance test result$testLabel.";
                             $out .= "</ul>";
                         }
                         $out .= "</div>";
-                    
+
                         if (count($relevantExperiments) > 0) {
                             if ($relevantExperiments[0]->expvar) {
                                 $out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
                             } else {
                                 $out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Tips</h4>";
                             }
-                    
+
                             $out .= "<ul class=\"experiments_list\">";
-                    
+
                             foreach ($relevantExperiments as $exp) {
                                 $expNum = $exp->id;
                                 if ($exp->expvar) {
                                     $expCounter++;
                                 }
-                                
+
                                 // experiments are enabled for the following criteria
                                 $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
                                 // exception allowed for tests on the metric times
                                 if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes') && $experiments_logged_in) {
                                     $experimentEnabled = true;
                                 }
-                                
+
                                 $out .= <<<EOT
                                     <li class="experiment_description">
                                     <div class="experiment_description_text">
@@ -280,23 +280,23 @@ $page_description = "Website performance test result$testLabel.";
                                     </div>
                                     EOT;
                                 }
-                    
-                    
+
+
                                 if ($exp->expvar && $exp->expval) {
                                     if (count($exp->expval)) {
                                         $out .= '<details class="experiment_assets ' . (($hideassets === true || $exp->hideassets === true) ? "experiment_assets-hide" : "" )  . '"><summary>Assets included in experiment:</summary>';
                                         $out .= '<ol>';
-                                        
+
                                         foreach ($exp->expval as $in => $val) {
                                             $label = $val;
-                                            
+
                                             if (isset($exp->explabel)) {
                                                 $label = $exp->explabel[$in];
                                             }
                                             if (isset($label)) {
                                                 $label = htmlentities($label);
                                             }
-                                            
+
                                             if (count($exp->expval) > 1) {
                                                 $out .= <<<EOT
                                                 <li><label><input type="checkbox" name="{$expNum}-{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
@@ -375,17 +375,17 @@ $page_description = "Website performance test result$testLabel.";
                                 } else {
                                     $out .= '</div>';
                                 }
-                    
+
                                 $out .= '</li>';
                             }
                         }
-                    
+
                         $out .= '<ul></div></details></li>';
                         return $out;
                     }
 
 
-                    
+
 
 
 
@@ -426,7 +426,7 @@ $page_description = "Website performance test result$testLabel.";
                             <ol>
 
                         EOT;
-                       
+
 
                             foreach ($cat["opportunities"] as $opportunity) {
                                   echo observationHTML($opportunity);
@@ -443,7 +443,7 @@ $page_description = "Website performance test result$testLabel.";
                     <div><p><span class="exps-active"></span> </p>
                     <p class="exps-runcount"><label>Experiment Runs: <input type="hidden" name="fvonly" value="' . $fvonly . '" required=""><input type="number" min="1" max="9" class="text short" name="runs" value="' . $numRuns . '" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small></label></p>
                     </div>';
-                    
+
                     echo '<input type="hidden" name="assessment" value="' . urlencode(json_encode($assessment, JSON_UNESCAPED_SLASHES)) . '">';
 
                     echo '<input type="submit" value="Re-Run Test with Experiments">';

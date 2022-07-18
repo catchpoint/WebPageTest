@@ -19,7 +19,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
         }
     }
 
-    
+
 
     $protocol = getUrlProtocol();
     $host  = $_SERVER['HTTP_HOST'];
@@ -44,11 +44,11 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
     include 'video/filmstrip.inc.php';  // include the common php shared across the filmstrip code
     require_once('object_detail.inc');
     require_once('waterfall.inc');
-    
+
     //
 
 
-    
+
     $testPath = GetTestPath($tests[0]['id']);
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
@@ -113,15 +113,15 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
         }
     }
 
-    
+
     if ($sameIDs || $experiment) {
         $test['test'] = $testTest;
         $test['testinfo'] =  $testTestInfo;
     }
 
 
-    
-    
+
+
 
 
 
@@ -135,7 +135,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
     if (strlen($labels)) {
         $title .= ' - ' . $labels;
     }
-        
+
 
     ?>
 
@@ -495,7 +495,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                     //         <h3 class="hed_sub">Resolved Opportunities</h3>
                                     //         <p>This experiment resolved '. $numAssessmentChanged .' bottleneck' . $assessEnding .':</p>
                                     //             <ol>';
-                                                
+
                                     //     foreach($assessmentChanges as $change){
                                     //         echo '<li class="good">' . $change . '</li>';
                                     //     }
@@ -520,14 +520,14 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
                                     echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment vs. Control)</em></h3>';
                             }
-                                
+
                             ?>
                             
                     <?php
 
 
 
-   
+
                     ?>
                         </div>
             
@@ -543,14 +543,14 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
                     echo '<div class=""><div class="test_results-content">';
                     echo '<div class="test_results_header">';
-                    
+
 
                     echo '<div class="compare_settings">';
                     include 'video/filmstrip_settings.php';
 
-                    
+
                     echo '</div>';
-                        
+
                     echo '<div class="compare_key">
                     <h3>Filmstrip key:</h3>
                     <ul class="key">';
@@ -569,8 +569,8 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
 
                     <?php
-                    
-                    
+
+
                     ScreenShotTable();
                     echo '<div class="compare_contain_wrap">';
                     DisplayGraphs();
@@ -657,7 +657,7 @@ function ScreenShotTable()
     global $bgcolor;
     global $supports60fps;
     global $location;
-    
+
     $has_layout_shifts = false;
 
     $show_shifts = false;
@@ -669,7 +669,7 @@ function ScreenShotTable()
     if (isset($_REQUEST['highlightLCP']) && $_REQUEST['highlightLCP']) {
         $show_lcp = true;
     }
-    
+
     $filmstrip_end_time = 0;
     if (count($tests)) {
         // figure out how many columns there are and the maximum thumbnail size
@@ -708,7 +708,7 @@ function ScreenShotTable()
             echo "<tr class=\"video_runlabel\"><th colspan=\"$frameCount\"><span class=\"video_runlabel_text\">";
             // Print the index outside of the link tag
             echo $test['index'] . ': ';
-            
+
             if (!defined('EMBED')) {
                 echo " <span id=\"label_{$test['id']}\">" . WrapableString(htmlspecialchars($test['name'])) . "</span>";
             } else {
@@ -808,7 +808,7 @@ function ScreenShotTable()
                 }
             }
             $maxThumbWidth = max($maxThumbWidth, $width);
-            
+
             echo "<tr>";
 
             $testEnd = ceil($test['video']['end'] / $interval) * $interval;
@@ -903,7 +903,7 @@ function ScreenShotTable()
                                         $shift['score'] > 0
                                 ) {
                                     $has_layout_shifts = true;
-                                    
+
                                     // Figure out the x,y,width,height as a fraction of the viewport (3 decimal places as an integer)
                                     foreach ($shift['rects'] as $rect) {
                                         if (is_array($rect) && count($rect) == 4) {
@@ -1095,7 +1095,7 @@ function DisplayStatus()
         echo '<div class="experiment_meta"><div class="experiment_meta_included"><p>Experiments running:</p>';
         echo '<ul>';
         include __DIR__ . '/../experiments/list_applied.inc';
-    
+
         echo '</ul></div></div>';
     }
 
@@ -1227,7 +1227,7 @@ function DisplayGraphs()
         ) {
             $has_cls = true;
         }
-        
+
         $test['breakdown'] = $hasStepResult ? $test['stepResult']->getMimeTypeBreakdown() : array();
         if (
             array_key_exists('progress', $test['video'])

@@ -8,7 +8,6 @@ require_once __DIR__ . '/../common_lib.inc';
 
 class UserTimingHtmlTable
 {
-
     const NO_METRIC_STRING = "-";
 
   /* @var TestRunResults */

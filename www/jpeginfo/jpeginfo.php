@@ -104,7 +104,7 @@ function AnalyzeFile($path)
                     $optData = file_get_contents($optFile);
                 }
             }
-          
+
             $jpeg = "$path.85";
             if (!is_file($jpeg)) {
                 $im = imagecreatefromjpeg($path);
@@ -130,7 +130,7 @@ function AnalyzeFile($path)
                 echo base64_encode(file_get_contents($path));
                 echo '"><br><br>';
             }
-        
+
             if (isset($optData)) {
                 echo "<h2>Optimized Image - Lossless (" . number_format($optsize) . " bytes)</h2>";
                 echo '<img src="data:image/jpeg;base64,';
@@ -144,7 +144,7 @@ function AnalyzeFile($path)
                 echo base64_encode($jpegData);
                 echo '"><br><br>';
             }
-                
+
             $exifFile = "$path.exif";
             if (is_file($exifFile)) {
                 $exif = json_decode(file_get_contents($exifFile), true);

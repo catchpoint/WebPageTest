@@ -29,7 +29,7 @@ class RunResultHtmlTable
     const COL_DOC_COMPLETE = 'DocComplete';
     const COL_DOC_REQUESTS = 'RequestsDoc';
     const COL_DOC_BYTES = 'BytesInDoc';
-  
+
 
   /* @var TestInfo */
     private $testInfo;
@@ -69,7 +69,7 @@ class RunResultHtmlTable
             $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
         }
-    
+
       // If strict_video = 1, only show if metric is present, otherwise alway show
         if (GetSetting('strict_video')) {
             array_push($this->leftOptionalColumns, self::COL_START_RENDER);
@@ -128,7 +128,7 @@ class RunResultHtmlTable
         if (!$repeatMetricLabels) {
             $out .= "</table></div>\n";
         }
-    
+
         return $out;
     }
 
@@ -194,7 +194,7 @@ class RunResultHtmlTable
             $cached = $this->runResults->isCachedRun() ? '1' : '0';
             $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
         }
-    
+
         if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
             $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title='Largest Contentful Paint'>LCP</abbr></a>", $vitalsBorder);
             $vitalsBorder = null;
@@ -227,12 +227,12 @@ class RunResultHtmlTable
             }
             $out .= $this->_headCell("Total Bytes");
         }
-    
+
 
         if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
             $out .= $this->_headCell("Certificates");
         }
-    
+
         if ($this->isColumnEnabled(self::COL_COST)) {
             $out .= $this->_headCell("Cost");
         }
@@ -306,10 +306,10 @@ class RunResultHtmlTable
             $out .= $this->_createHead();
         }
 
-    
-    
+
+
         $out .= "<tr>\n";
-    
+
         $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
         if ($this->isColumnEnabled(self::COL_START_RENDER)) {
             $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
@@ -395,7 +395,7 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
             $out .= $this->_bodyCell($idPrefix . "CertificateBytes" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "certificate_bytes"), $class);
         }
-    
+
         if ($this->isColumnEnabled(self::COL_COST)) {
             if ($cachedRun) {
                 $out .= "<td>&nbsp;</td>";

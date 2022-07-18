@@ -33,7 +33,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             $subtab = 'Optimization';
             include 'header.inc';
 
-            
+
             echo '<div class="results_main_contain">
             <div class="results_main">';
 
@@ -50,7 +50,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 </div>
 
             <?php
-            
+
             if ($isMultistep) {
                 $firstStep = $testRunResults->getStepResult(1);
                 $gradesFirstStep = getOptimizationGradesForStep($testInfo, $firstStep);
@@ -116,7 +116,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 // singlestep
                 echo '<h3 class="hed_sub">Optimization Summary</h3><p>Quickly jump to the sections below:</p>
                 ';
-                
+
                 include("grades.inc");
 
                 $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));

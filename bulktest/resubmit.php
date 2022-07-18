@@ -45,7 +45,7 @@ if (LoadResults($res)) {
 
             // store the results
             StoreResults($res);
-            
+
             // now run the normal submit code
             include './submit.php';
         } else {

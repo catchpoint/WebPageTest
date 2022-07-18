@@ -8,7 +8,6 @@ require_once __DIR__ . '/../common_lib.inc'; // TODO: remove if we don't use Get
 
 class TestInfo
 {
-
     private $id;
     private $rootDirectory;
     private $rawData;
@@ -125,7 +124,7 @@ class TestInfo
         return $this->rawData;
     }
 
-  
+
   /**
    * @return bool True if the test is complete, false otherwise
    */

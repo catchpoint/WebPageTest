@@ -29,14 +29,14 @@ function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
             if (@strlen($testInfo['label'])) {
                 $data['label'] = $testInfo['label'];
             }
-            
+
             $data['first'] = $pageData[$fvMedian][0];
 
             $rvMedian = GetMedianRun($pageData, 1, $medianMetric);
             if ($rvMedian) {
                 $data['repeat'] = $pageData[$rvMedian][1];
             }
-                
+
             // send the actual http POST
             $postData = json_encode($data);
             $data_len = strlen($postData);

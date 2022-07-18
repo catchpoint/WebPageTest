@@ -2,7 +2,7 @@
 
     require_once(__DIR__ . '/common.inc');
 
-    
+
     $controlAssessment = $metaInfo['experiment']['assessment'];
     $assessmentChanges = array();
 

@@ -58,11 +58,11 @@ if (file_exists('./settings/server/lighthouse.ini')) {
                     $hashStr = $secret;
                     $hashStr .= $_SERVER['HTTP_USER_AGENT'];
                     $hashStr .= $owner;
-              
+
                     $now = gmdate('c');
                     echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
                     $hashStr .= $now;
-              
+
                     $hmac = sha1($hashStr);
                     echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                 }

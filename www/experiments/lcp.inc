@@ -14,7 +14,7 @@ if (isset($events) && is_array($events)) {
         }
     }
 }
-    
+
 if (isset($lcp)) {
     if ($lcp['time'] > 2500) {
         $isBG = false;
@@ -23,7 +23,7 @@ if (isset($lcp)) {
         if (isset($lcp['element']['outerHTML'])) {
             $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
         }
-        
+
         if (isset($lcp['type']) && $lcp['type'] === "image") {
             if (isset($lcp['element']['nodeName']) && $lcp['element']['nodeName'] == 'VIDEO') {
                 $isVideo = true;
@@ -73,7 +73,7 @@ if (isset($lcp)) {
                     "explabel" => array($lcpSource)
                 ];
             }
-            
+
 
             $assessment[$category]["opportunities"][] = array(
                 "title" =>  "Largest Contentful Paint is high (over 2.5s).",

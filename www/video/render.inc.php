@@ -483,7 +483,7 @@ function PrepareImage($tests, &$renderInfo)
 
     return $im;
 }
-  
+
 /**
  * Figure out the dimensions of the resulting video
 *
@@ -605,7 +605,7 @@ function CalculateVideoDimensions(&$tests, &$renderInfo)
         }
     }
 }
-  
+
 /**
  * Render the actual video frames
 *
@@ -641,7 +641,7 @@ function RenderFrames(&$tests, $renderInfo, $videoFile, $im)
         proc_close($ffmpeg);
     }
 }
-  
+
 /**
  * Render an individual frame
 *
@@ -675,7 +675,7 @@ function RenderFrame(&$tests, $renderInfo, $frame, $im, $encodeFormat)
     }
     return $image_bytes;
 }
-  
+
 /**
  * Draw the labels for all of the tests
 *
@@ -715,7 +715,7 @@ function DrawLabels($tests, $renderInfo, $im)
         }
     }
 }
-  
+
 function GetLabelFontSize($tests, $renderInfo)
 {
     $font_size = null;
@@ -729,7 +729,7 @@ function GetLabelFontSize($tests, $renderInfo)
     }
     return $font_size;
 }
-  
+
 /**
  * Draw the appropriate thumbnail for the given frame
 *
@@ -799,7 +799,7 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
 
     return $updated;
 }
-  
+
 /**
  * Draw the time ticker below the video.  We need to draw the
 * time, period and fraction separately so we can keep the period
@@ -887,7 +887,7 @@ function DrawFrameTime(&$test, $renderInfo, $frameTime, $im, $rect)
 
     return $updated;
 }
-  
+
 function GetFontSize($renderInfo, $width, $height, $text, $font)
 {
     if ($renderInfo["forceFontSize"]) {
@@ -913,7 +913,7 @@ function GetFontSize($renderInfo, $width, $height, $text, $font)
 
     return $size;
 }
-  
+
 function CenterText($renderInfo, $im, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $align)
 {
     $ret = null;

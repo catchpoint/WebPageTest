@@ -41,7 +41,7 @@ echo ' <details class="box details_panel">
             <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Adjust Filmstrip Settings</span></span></summary>
              
             <div class="details_panel_content">';
-            
+
 
         // START TIMELINE OPTIONS
 if (!defined('EMBED')) {
@@ -74,7 +74,7 @@ if (!defined('EMBED')) {
             $checked = ' checked=checked';
         }
         echo "<label for=\"sticky\"><input type=\"checkbox\" id=\"sticky\" name=\"filmstripScrollWithPage\" value=\"1\"$checked onclick=\"this.form.submit();\"> Scroll filmstrips with Page</label>";
-                
+
         ?>
                 </fieldset>
             <?php
@@ -228,8 +228,8 @@ if (!defined('EMBED')) {
         </div>
 
 <?php } //embed
-        
 
-        
+
+
     echo '</div></details>'; ?>
                     

@@ -68,7 +68,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
             $tab = 'Test Result';
             $subtab = 'Details';
             include 'header.inc';
-            
+
             ?>
 
 <div class="results_main_contain">
@@ -90,30 +90,30 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
                   <?php
                     echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ( $cached ? ', Repeat View' : '' ) . ')</em></h3>';
-             
+
                     $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
                     if ($testResults->countRuns() > 1 || $hasRepeats) {
                         $runs = $testResults->countRuns() + 1;
-                      
+
                         $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
                         $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
                         echo '<p>View run details: ';
                         for ($i = 1; $i < $runs; $i++) {
                             $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false);
-                        
+
                             $link = $menuUrlGenerator->resultPage("details", $endParams);
                             if ($hasRepeats) {
                                 $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true);
                                 $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);
                             }
-                        
+
                             echo "<a href=\"$link\"" . ( $run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
                             if ($linkCACHED) {
                                 echo " <a href=\"$linkCACHED\"" . ( $run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
                                 ;
                             }
-                        
+
                             if ($i + 1 < $runs) {
                                 echo ", ";
                             }
@@ -143,7 +143,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
 
             // Full custom metrics (formerly in custommetrics.php)
-            
+
                 if (
                     isset($pageData) &&
                     is_array($pageData) &&
@@ -169,7 +169,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     }
                     echo '</table></details>';
                 }
-            
+
 
 
 

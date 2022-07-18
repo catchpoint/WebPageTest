@@ -14,7 +14,6 @@ require_once __DIR__ . '/../include/Browser.php';
  */
 class HttpArchiveGenerator
 {
-
     private $resultData;
     private $testInfo;
     private $options;
@@ -165,7 +164,7 @@ class HttpArchiveGenerator
         if (isset($console_log)) {
             $pd['_consoleLog'] = $console_log;
         }
-  
+
         // add the page-level ldata to the result
         $this->harData['log']['pages'][] = $pd;
         return $pd;

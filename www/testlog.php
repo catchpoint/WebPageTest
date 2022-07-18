@@ -394,7 +394,7 @@ for ($offset = 0; $offset <= $days && !$done; $offset++) {
                         if ($ok && isset($priority) && $priority != $test_priority) {
                             $ok = false;
                         }
-  
+
                         if ($ok && !$all) {
                             $ok = false;
                             if (

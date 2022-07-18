@@ -24,7 +24,7 @@ foreach ($files as $file) {
         $testers = GetTesters($loc, false, false);
         if (isset($testers['elapsed'])) {
             $minutes = $testers['elapsed'];
-      
+
             if (
                 $minutes < 4320 &&
                 isset($locations[$loc]) &&
@@ -44,7 +44,7 @@ foreach ($files as $file) {
                         $collected .= "$loc - $missing agents offline";
                     }
                 }
-        
+
                 if (isset($alert)) {
                       $count++;
 
@@ -59,7 +59,7 @@ foreach ($files as $file) {
                         $collected .= " : notified $to";
                     }
                       $collected .= "\r\n";
-          
+
                     if (strlen($to)) {
                         $subject = "$loc WebPagetest ALERT";
                         $body = "The $loc location $alert";
@@ -84,7 +84,7 @@ if ($notify) {
     if ($count && strlen($collected)) {
         SendMessage($to, "$count locations with issues - WebPagetest ALERT", $collected);
     }
-  
+
   // send the slow logs from the last hour
     if (strlen($to) && is_file('./tmp/slow_tests.log')) {
         $slow = file_get_contents('./tmp/slow_tests.log');

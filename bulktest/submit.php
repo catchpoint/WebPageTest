@@ -52,14 +52,14 @@ if (/*!$pending &&*/ count($results)) {
             $testCount++;
         }
     }
-    
+
     if ($testCount) {
         echo "$testCount tests to submit (combination of URL and Location...\r\n";
         SubmitTests($results, $testCount);
-        
+
         // store the results
         StoreResults($results);
-        
+
         echo "Done submitting tests.  The test ID's are stored in results.json\r\n";
     } else {
         echo "No tests to submit, all tests have completed successfully are are still running\r\n";
@@ -109,7 +109,7 @@ function SubmitTests(&$results, $testCount)
             ) {
                 $count++;
                 echo "\rSubmitting test $count of $testCount...                  ";
-            
+
                 $location = $permutations[$result['label']]['location'];
                 $request = $server . "runtest.php?f=json&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
                 if ($testerAffinity) {
@@ -162,7 +162,7 @@ function SubmitTests(&$results, $testCount)
             }
         }
     }
-    
+
     // clear the progress text
     echo "\r                                                     \r";
 }

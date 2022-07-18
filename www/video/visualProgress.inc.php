@@ -186,7 +186,7 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
 function GetImageHistogram($image_file, $histograms)
 {
     $histogram = null;
-  
+
     $ext = strripos($image_file, '.jpg');
     if ($ext !== false) {
         $histogram_file = substr($image_file, 0, $ext) . '.hist';
@@ -196,7 +196,7 @@ function GetImageHistogram($image_file, $histograms)
             $histogram_file = substr($image_file, 0, $ext) . '.hist';
         }
     }
-  
+
     if (isset($histograms)) {
       // figure out the timestamp for the video frame in ms
         $ms = null;
@@ -212,7 +212,7 @@ function GetImageHistogram($image_file, $histograms)
             }
         }
     }
-  
+
   // See if we have the old-style histograms (separate files)
     if (!isset($histogram) && isset($histogram_file) && is_file($histogram_file)) {
         $histogram = json_decode(file_get_contents($histogram_file), true);
@@ -301,7 +301,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
             $total = 0;
             $matched = 0;
             $buckets = count($histogram[$channel]);
-      
+
           // First build an array of the actual changes in the current histogram.
             $available = array();
             for ($i = 0; $i < $buckets; $i++) {

@@ -37,7 +37,7 @@ if ($block_list && strlen($block_list) && strlen($pc)) {
         header("HTTP/1.1 403 Unauthorized");
     }
 }
-  
+
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST)) {
     $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
@@ -290,7 +290,7 @@ function GetJob()
         }
         $key_valid = true;
         GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
-    
+
         if (!$offline) {
             if (!isset($testerIndex)) {
                 $testerIndex = 0;
@@ -303,7 +303,7 @@ function GetJob()
                 $is_done = true;
                 $testJson = null;
                 $testId = null;
-        
+
                 header("Content-type: application/json");
                 header("Cache-Control: no-cache, must-revalidate");
                 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -358,7 +358,7 @@ function GetJob()
                 if (isset($fileName)) {
                     @unlink("$workDir/$fileName");
                 }
-        
+
                 if (!isset($testJson)) {
                     $testJson = TestToJSON($testInfo);
                 }
@@ -415,7 +415,7 @@ function GetJob()
             UpdateTester($location, $tester, $testerInfo);
         }
     }
-  
+
     return $is_done;
 }
 
@@ -435,9 +435,9 @@ function GetUpdate()
         if (isset($_GET['software']) && strlen($_GET['software'])) {
             $fileBase = trim($_GET['software']);
         }
-    
+
         $update = CacheFetch("update-$fileBase");
-    
+
         $updateDir = './work/update';
         if (is_dir("$updateDir/$location")) {
             $updateDir = "$updateDir/$location";
@@ -450,7 +450,7 @@ function GetUpdate()
             }
             CacheStore("update-$fileBase", $update, 60);
         }
-    
+
         if (isset($update)) {
           // Check for inequality allows both upgrade and quick downgrade
             if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
@@ -463,7 +463,7 @@ function GetUpdate()
             }
         }
     }
-  
+
     return $ret;
 }
 

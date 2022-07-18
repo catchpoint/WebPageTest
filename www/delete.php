@@ -15,14 +15,14 @@ if (
 ) {
     // delete the test directory
     delTree($testPath);
-    
+
     // delete empty directories above this one
     while (strpos($testPath, 'relay')) {
         $testPath = rtrim($testPath, "/\\");
         $testPath = dirname($testPath);
         rmdir($testPath);
     }
-    
+
     $ok = true;
 }
 
