@@ -95,6 +95,11 @@ class Signup
             $vars['annual_price'] = $plan->getAnnualPrice();
             $vars['other_annual'] = $plan->getOtherAnnual();
             $vars['billing_frequency'] = $plan->getBillingFrequency();
+
+            if (!$vars['is_plan_free']) {
+                $vars['state_list'] = Util::getChargifyUSStateList();
+                $vars['country_list'] = Util::getChargifyCountryList();
+            }
         }
         $vars['contact_info_pattern'] = ValidatorPatterns::getContactInfo();
         $vars['password_pattern'] = ValidatorPatterns::getPassword();
@@ -138,16 +143,23 @@ class Signup
         $vars['ch_client_token'] = Util::getSetting('ch_key_public');
         $vars['ch_site'] = Util::getSetting('ch_site');
 
-        $vars['use_chargify'] = !!Util::getSetting('use_chargify');
-        $vars['street_address'] = $_SESSION['signup-street-address'];
-        $vars['city'] = $_SESSION['signup-city'];
-        $vars['state'] = $_SESSION['signup-state'];
-        $vars['zipcode'] = $_SESSION['signup-zipcode'];
         $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";
         $vars['last_name'] = isset($_SESSION['signup-last-name']) ? htmlentities($_SESSION['signup-last-name']) : "";
         $vars['company_name'] = htmlentities($_SESSION['signup-company-name']);
         $vars['email'] = htmlentities($_SESSION['signup-email']);
         $vars['password'] = htmlentities($_SESSION['signup-password']);
+
+        $vars['street_address'] = htmlentities($_SESSION['signup-street-address']);
+        $vars['city'] = htmlentities($_SESSION['signup-city']);
+        $vars['state_code'] = htmlentities($_SESSION['signup-state-code']);
+        $vars['country_code'] = htmlentities($_SESSION['signup-country-code']);
+        $vars['zipcode'] = htmlentities($_SESSION['signup-zipcode']);
+
+        $signup_total_in_cents = $_SESSION['signup-total-in-cents'];
+        $estimated_tax_in_cents = $_SESSION['signup-tax-in-cents'];
+
+        $vars['total_including_tax'] = number_format(($signup_total_in_cents / 100), 2, ".", ",");
+        $vars['estimated_tax'] = number_format(($estimated_tax_in_cents / 100), 2, ".", ",");
 
         $vars['country_list'] = Util::getChargifyCountryList();
         $vars['state_list'] = Util::getChargifyUSStateList();
@@ -216,6 +228,11 @@ class Signup
         $first_name = $_POST["first-name"];
         $last_name = $_POST["last-name"];
         $company_name = $_POST["company-name"] ?? null;
+        $street_address = $_POST["street-address"] ?? null;
+        $city = $_POST["city"] ?? null;
+        $state_code = $_POST["state"] ?? null;
+        $country_code = $_POST["country"] ?? null;
+        $zipcode = $_POST["zipcode"] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
@@ -236,6 +253,12 @@ class Signup
         $vars->first_name = $first_name;
         $vars->last_name = $last_name;
         $vars->company_name = $company_name;
+        $vars->street_address = $street_address;
+        $vars->city = $city;
+        $vars->state_code = $state_code;
+        $vars->country_code = $country_code;
+        $vars->zipcode = $zipcode;
+
         $vars->plan = $plan;
 
         return $vars;
@@ -249,6 +272,58 @@ class Signup
         $_SESSION['signup-company-name'] = $body->company_name;
         $_SESSION['signup-email'] = $body->email;
         $_SESSION['signup-password'] = $body->password;
+
+
+        if (isset($body->street_address)) {
+            $chargify_address = new ChargifyAddressInput([
+              "street_address" => $body->street_address,
+              "city" => $body->city,
+              "state" => $body->state_code,
+              "country" => $body->country_code,
+              "zipcode" => $body->zipcode
+            ]);
+
+            $plan = $body->plan;
+
+            try {
+                $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
+
+                $_SESSION['signup-street-address'] = $body->street_address;
+                $_SESSION['signup-city'] = $body->city;
+                $_SESSION['signup-state-code'] = $body->state_code;
+                $_SESSION['signup-country-code'] = $body->country_code;
+                $_SESSION['signup-zipcode'] = $body->zipcode;
+
+                $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
+                $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
+                $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
+            } catch (\Exception $e) {
+                if ($e->getCode() == 401) {
+                    try {
+                        $auth_token = $request_context->getSignupClient()->getAuthToken();
+                        $request_context->getSignupClient()->authenticate($auth_token->access_token);
+
+                        $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
+
+                        $_SESSION['signup-street-address'] = $body->street_address;
+                        $_SESSION['signup-city'] = $body->city;
+                        $_SESSION['signup-state-code'] = $body->state_code;
+                        $_SESSION['signup-country-code'] = $body->country_code;
+                        $_SESSION['signup-zipcode'] = $body->zipcode;
+
+                        $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
+                        $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
+                        $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
+                    } catch (\Exception $e) {
+                        throw new ClientException($e->getMessage(), '/signup/2');
+                        exit();
+                    }
+                } else {
+                    throw new ClientException($e->getMessage(), '/signup/2');
+                    exit();
+                }
+            }
+        }
 
         $host = Util::getSetting('host');
         setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
