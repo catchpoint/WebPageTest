@@ -9,7 +9,7 @@ if (isset($axe)) {
         $num_serious = 0;
         $num_moderate = 0;
         $num_minor = 0;
-    
+
         foreach ($violations as $v) {
             if ($v['impact'] === "critical") {
                 $num_critical++;
@@ -45,12 +45,12 @@ if (isset($axe)) {
                 }
                 $thisRec .=  '</ul>';
             }
-     
+
             array_push($recs, $thisRec);
         }
 
 
-    
+
 
         $assessment[$category]["opportunities"][] = array(
         "title" => "Accessibility Issues were Detected",

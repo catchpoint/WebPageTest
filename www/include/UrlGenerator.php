@@ -9,7 +9,6 @@
  */
 abstract class UrlGenerator
 {
-
     protected $run;
     protected $cached;
     protected $step;
@@ -145,7 +144,7 @@ abstract class UrlGenerator
         $tests .= $end ? "-e:$end" : "";
         return $this->baseUrl . "/video/compare.php?tests=" . $tests;
     }
-  
+
 
    /**
    * @param string $end Optional. A specific "end" to use for filmstrip view
@@ -208,7 +207,6 @@ abstract class UrlGenerator
 
 class FriendlyUrlGenerator extends UrlGenerator
 {
-
     public function resultPage($page, $extraParams = null)
     {
         $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
@@ -275,7 +273,6 @@ class FriendlyUrlGenerator extends UrlGenerator
 
 class StandardUrlGenerator extends UrlGenerator
 {
-
     public function resultPage($page, $extraParams = null)
     {
         $extraParams = $extraParams ? ("&" . $extraParams) : "";

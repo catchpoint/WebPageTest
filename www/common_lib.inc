@@ -715,7 +715,7 @@ function BuildLocations(&$locations)
                                             } elseif (substr($browser, 0, 4) == 'iPad') {
                                                 $cfg['browser_group'] = 'Tablet';
                                             }
-                            
+
                                             $locations[$label] = $cfg;
                                         }
                                     } else {
@@ -1178,7 +1178,7 @@ function GetTestInfoHtml($includeScript = true)
     if (array_key_exists('run', $_REQUEST)) {
         $run = intval($_REQUEST['run']);
     }
-    
+
     if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester'])) {
         $html .= '<li>Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '</li>';
     } elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester'])) {
@@ -1202,7 +1202,7 @@ function GetTestInfoHtml($includeScript = true)
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine'])) {
         $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
     }
-    
+
     if (isset($test['testinfo']['connectivity']) && strcasecmp($test['testinfo']['connectivity'], 'custom') != 0) {
         $html .= "<li>Connectivity: {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if ($test['testinfo']['plr']) {
@@ -1239,7 +1239,7 @@ function GetTestInfoHtml($includeScript = true)
          $html .= '<li><a href="/custom_metrics.php?' . "test=" . $test['testinfo']['id'] . "&run=1&cached=0" . '">Custom Metrics</a></li>';
     }
     $html .= '</ul>';
-    
+
     return $html;
 }
 
@@ -3879,7 +3879,7 @@ function CheckCron()
         }
         Unlock($cron_lock);
     }
-  
+
   // send the cron requests
     if ($should_run) {
         SendAsyncRequest('/cron/5min.php');

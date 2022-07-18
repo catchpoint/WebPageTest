@@ -335,7 +335,7 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
 function DrawNotSecure($im, $x, $y, $width, $height)
 {
     global $nsIcon;
-    
+
     // give it some margins
     $width -= 4;
     $height -= 4;

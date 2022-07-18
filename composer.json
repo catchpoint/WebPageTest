@@ -9,7 +9,7 @@
     "scripts": {
       "test": "phpunit --configuration tests/phpunit.xml",
       "lint": "phpcs --standard=PSR12 www/src www/cpauth www/common",
-      "format": "phpcbf --standard=PSR12 www/src www/cpauth www/common",
+      "format": "phpcbf --extensions=php,inc --standard=PSR12 --ignore=www/lib/,www/ec2/ www/ tests/ bulktest/",
       "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
     },
     "require": {

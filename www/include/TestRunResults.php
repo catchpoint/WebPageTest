@@ -8,7 +8,6 @@ require_once __DIR__ . '/TestStepResult.php';
 
 class TestRunResults
 {
-
   /**
    * @var TestInfo
    */

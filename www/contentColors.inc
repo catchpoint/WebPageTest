@@ -157,6 +157,6 @@ function ContentType($mime, $url = null)
             }
         }
     }
-    
+
     return $content_type;
 }

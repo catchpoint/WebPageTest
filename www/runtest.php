@@ -1030,7 +1030,7 @@ if (@strlen($req_rkey)) {
                             $recipeScript .= ";";
                         }
                     }
-                    
+
                     // Handle HTTP Basic Auth
                     // TODO centralize this logic as it's borrowed from above temporarily
                     if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {

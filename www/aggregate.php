@@ -55,7 +55,7 @@ elseif (isset($test['test']) && $test['test']['batch']) {
 if (isset($tests)) {
     header("Content-disposition: attachment; filename={$id}_aggregate.csv");
     header("Content-type: text/csv");
-    
+
         // list of metrics that will be produced
         // for each of these, the median, average and std dev. will be calculated
         $metrics = array(   'docTime' => 'Document Complete',
@@ -126,7 +126,7 @@ if (isset($tests)) {
             }
         }
         echo "Test ID\r\n";
-        
+
         // and now the actual data
         foreach ($tests['urls'] as &$test) {
             RestoreTest($test['id']);
@@ -135,7 +135,7 @@ if (isset($tests)) {
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
             $pageData = loadAllPageData($testPath);
-        
+
             if ($incStatus) {
                 $status = GetTestStatus($test['id'], 1);
             // In ver 2 onwards, always echo the status info

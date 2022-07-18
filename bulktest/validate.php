@@ -46,7 +46,7 @@ foreach ($urls as &$url) {
                 }
             }
         }
-    
+
       // update the similarity values for the raw results
         foreach ($url as $url_result) {
             if (isset($url_result['id']) && isset($url_result['sim'])) {
@@ -84,7 +84,7 @@ function AllTestsComplete(&$url)
 function MetricsSimilar(&$url)
 {
     $similar = true;
-  
+
   // make sure the result codes are the same
     $baseline = null;
     foreach ($url as $result) {
@@ -97,7 +97,7 @@ function MetricsSimilar(&$url)
             $baseline = $result['result'];
         }
     }
-  
+
   // make sure the TTFB is within 200ms
     if ($similar) {
         $baseline = null;
@@ -136,7 +136,7 @@ function ImagesSimilar(&$url)
     global $video;
     global $server;
     $similar = true;
-  
+
     if ($video) {
       // ask the server to visually compare the last frames (if we don't already have similarity numbers)
         $needSimilarity = false;
@@ -146,7 +146,7 @@ function ImagesSimilar(&$url)
                 break;
             }
         }
-    
+
         if ($needSimilarity) {
           // build up the similarity request
             $api = "{$server}video/compareFrames.php?tests=";

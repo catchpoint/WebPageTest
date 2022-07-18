@@ -6,7 +6,6 @@
 
 abstract class BreakdownHtmlSnippet
 {
-
     protected $breakdownId;
 
   /**

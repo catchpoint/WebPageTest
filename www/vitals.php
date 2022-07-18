@@ -353,7 +353,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
                         $height = min($frame_height, $thumbSize);
                         $width = intval((floatval($height) / floatval($frame_height)) * floatval($frame_width));
                     }
-      
+
                     echo '<div class="frames">';
                     $urlGenerator = $stepResult->createUrlGenerator("", false);
                     $imgUrl = $urlGenerator->videoFrameThumbnail(basename($previous['path']), $thumbSize);
@@ -456,7 +456,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
                 $stepResult->getStepNumber()
             );
             $waterfallLegend = new WaterfallViewHtmlSnippet($testInfo, $stepResult);
-            
+
             echo "<div class='vitals-waterfall'>";
             echo "<p class='waterfall-label waterfall-label-lcp'>LCP: {$lcp['time']} ms</p>";
             echo $waterfallLegend->create(true);
@@ -650,7 +650,7 @@ function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames)
                     $height = min($frame_height, $size);
                     $width = intval((floatval($height) / floatval($frame_height)) * floatval($frame_width));
                 }
-  
+
                 echo '<div class="frames">';
                 $urlGenerator = $stepResult->createUrlGenerator("", false);
                 $viewport = $stepResult->getMetric('viewport');
@@ -864,7 +864,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
                     <?php
                 }
             }
-        
+
             echo "</div>"; // metric
         }
     }

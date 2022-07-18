@@ -134,7 +134,7 @@ class RequestDetailsHtmlSnippet
 
         $cpuTime = empty($request["cpuTime"]) ? "-" : ($request["cpuTime"] . " ms");
         $out .= $this->_createDataCell($cpuTime, "cpuTime", $highlight);
-    
+
         $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
         $out .= $this->_createDataCell(@$request["ip_addr"], "reqIP", $highlight);
 

@@ -6,7 +6,7 @@ if ($experiment) {
 
     foreach ($recips as $recipe) {
         $recipeID = key($recipe);
-        
+
         foreach ($appliedAssessment as $cat) {
             foreach ($cat["opportunities"] as $opp) {
                 foreach ($opp["experiments"] as $exp) {
@@ -18,7 +18,7 @@ if ($experiment) {
         }
 
         echo "<li><details><summary>" . $experimentInfo["title"] . "</summary>";
-        
+
         foreach ($recipe as $ings) {
             if (is_string($ings)) {
                 $ings = array($ings);

@@ -25,12 +25,12 @@ if (LoadResults($results)) {
             $testCount++;
         }
     }
-            
+
     if ($testCount) {
         echo "Updating the status for $testCount tests...\r\n";
         UpdateResults($results, $testCount);
     }
-        
+
     // go through and provide a summary of the results
     $testCount = count($results);
     $failedSubmit = 0;
@@ -83,7 +83,7 @@ if (LoadResults($results)) {
             $failedSubmit++;
         }
     }
-    
+
     if ($failed) {
         echo "\r\n\r\nErrors by URL:\r\n";
         foreach ($urlErrors as $url => $count) {
@@ -231,7 +231,7 @@ function GetTestResult(&$data, &$result)
                 $result[$metric] = $data['median']['firstView']['breakdown']['font']['requests'];
             }
         }
-        
+
         if (array_key_exists('repeatView', $data['median'])) {
             $result['rv_result'] = (int)$data['median']['repeatView']['result'];
             if (array_key_exists('run', $data['median']['repeatView'])) {

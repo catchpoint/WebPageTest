@@ -35,7 +35,7 @@ if (isset($ref) && isset($cmp) && is_file($ref) && is_file($cmp)) {
                 $black = GetColor($im, 0, 0, 0);
                 $white = GetColor($im, 255, 255, 255);
                 imagefilledrectangle($im, 0, 0, $width, $height, $black);
-                
+
                 // loop through every pixel in the images and compare them
                 for ($x = 0; $x < $width; $x++) {
                     for ($y = 0; $y < $height; $y++) {
@@ -60,7 +60,7 @@ if (isset($ref) && isset($cmp) && is_file($ref) && is_file($cmp)) {
                         }
                     }
                 }
-                
+
                 $ok = true;
                 imagedestroy($refImg);
                 imagedestroy($cmpImg);

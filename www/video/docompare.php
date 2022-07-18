@@ -125,7 +125,7 @@ function SubmitTest($url, $label, $key)
     if (isset($_COOKIE[$saml_cookie])) {
         $testUrl .= '&samlu=' . urlencode($_COOKIE[$saml_cookie]);
     }
-      
+
     // submit the request
     $result = simplexml_load_file($testUrl, 'SimpleXMLElement', LIBXML_NOERROR);
     if ($result && $result->data) {

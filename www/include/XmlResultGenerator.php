@@ -12,7 +12,6 @@ require_once __DIR__ . '/../common_lib.inc';
 
 class XmlResultGenerator
 {
-
     const INFO_REQUESTS = 1;
     const INFO_MEDIAN_REQUESTS = 2;
     const INFO_DOMAIN_BREAKDOWN = 3;

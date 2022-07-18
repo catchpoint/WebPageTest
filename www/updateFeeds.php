@@ -32,7 +32,7 @@ function UpdateFeeds()
           // loop through and update each one
             foreach ($feeds as $category => &$feedList) {
                 $feedData[$category] = array();
-        
+
                 foreach ($feedList as $feedSource => $feedUrl) {
                     $feedUrl = trim($feedUrl);
                     echo "Updating feed $feedSource: $feedUrl\n";
@@ -60,7 +60,7 @@ function UpdateFeeds()
                             }
 
                             $feed_image = $feed->get_image_url();
-              
+
                             foreach ($feed->get_items() as $item) {
                                 $dateStr = $item->get_date(DATE_RSS);
                                 echo "  Checking [$dateStr]: " . $item->get_title() . "\n";
@@ -129,13 +129,13 @@ function UpdateFeeds()
 
                                 $item->__destruct();
                             }
-              
+
                             $feed->__destruct();
                             unset($feed);
                         }
                     }
                 }
-        
+
                 if (count($feedData[$category])) {
                     krsort($feedData[$category]);
                 }

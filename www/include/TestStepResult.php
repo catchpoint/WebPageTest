@@ -12,7 +12,6 @@ require_once __DIR__ . '/../video/visualProgress.inc.php';
 
 class TestStepResult
 {
-
   /**
    * @var TestInfo
    */

@@ -13,7 +13,7 @@ if ($jsLibsVulns) {
     $num_high = 0;
     $num_medium = 0;
     $num_low = 0;
-    
+
     foreach ($jsLibsVulns as $v) {
         if ($v['severity'] === "high") {
             $num_high++;
@@ -46,7 +46,7 @@ if ($jsLibsVulns) {
         array_push($secRecs, $thisRec);
     }
 
-    
+
 
     $assessment[$category]["opportunities"][] = array(
         "title" =>  "Several security vulnerabilies were detected by Snyk",

@@ -16,7 +16,7 @@ if (isset($cls)) {
     // if cls is present, note whether images need width/height attrs
     if ($cls > 0) {
         $cls = round($cls, 3);
-            
+
         if (count($imgsNoAspect) > 0) {
 
             function applyValueFormatting($n)

@@ -12,7 +12,6 @@ require_once __DIR__ . '/Browser.php';
 
 class TestResults
 {
-
   /**
    * @var TestInfo Information about the test
    */

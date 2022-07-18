@@ -42,11 +42,11 @@
         } else {
             $data_class = ' class="header_data_full"';
         }
-        
 
 
 
-         
+
+
 /**
 * Calculate the grades for the given test
 * @param TestInfo $testInfo Information about the test
@@ -84,7 +84,7 @@
                         }
                     }
                 }
-        
+
                 require_once('security_checks.php');
                 $securityGrade = getSecurityGrade($testInfo, $testRunResults, $securityScoreIncludesVulnerabilities);
                 if (isset($securityGrade)) {

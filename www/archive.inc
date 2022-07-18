@@ -435,7 +435,7 @@ function VerifyArchive($id)
             $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
         }
     }
-    
+
     if ($isSaaSTest) {
         //saas tests are safely archived on log server so just kill
         $valid = true;

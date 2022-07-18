@@ -9,7 +9,6 @@
  */
 class FileHandler
 {
-
   /**
    * @param string $path The path to check
    * @return bool True if the file exists, false otherwise

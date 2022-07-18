@@ -110,7 +110,7 @@ function loadPageStepData($localPaths, $testInfo = null)
         }
         return $ret;
     }
-  
+
     if (!isset($ret) || !is_array($ret)) {
         $ret = loadPageData($localPaths->pageDataFile());
         if (!isset($ret) || !is_array($ret) || !count($ret)) {
@@ -607,7 +607,7 @@ function loadPageStepData($localPaths, $testInfo = null)
             }
         }
     }
-  
+
   // set top level FCP in case page data was already cached
     if (!isset($ret['firstContentfulPaint'])) {
         TopLevelFCP($ret);
@@ -1141,7 +1141,7 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data)
                 $start_time = $event['startTime'];
             }
         }
-    
+
       // Make a pass looking for explicitly tagged main frames
         $main_frames = array();
         foreach ($events as $event) {
@@ -1407,7 +1407,7 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
             $last_interactive = max($window[0], $startTime);
         }
     }
-  
+
   // Start by filtering the interactive windows to only include 5 second windows that don't
   // end before the start time.
     $end = 0;
@@ -1524,7 +1524,7 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
             $first_interactive = $DCL;
         }
     }
-  
+
     return $TTI;
 }
 

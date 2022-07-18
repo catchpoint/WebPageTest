@@ -150,7 +150,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'addpreload',
             'title' => 'Preload Files',
             "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="' . $lcpSource . '"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'Url and config: <em>(<code>path/to/file.jpg|as_image</code>)</em>',
@@ -165,7 +165,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'removepreload',
             'title' => 'Remove Preloads',
             "desc" => '<p>This experiment removes specified unused preloads from the page, allowing other critical resources to be requested earlier.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
@@ -180,7 +180,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'addpreconnect',
             'title' => 'Preconnect Domains',
             "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'Domain',
@@ -195,7 +195,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'addloadinglazy',
             'title' => 'Lazy Load Images',
             "desc" => '<p>This experiment adds <code>loading="lazy"</code> attributes to specified images.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
@@ -210,7 +210,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'removeloadinglazy',
             'title' => 'Remove Lazy Loading',
             "desc" => '<p>This experiment removes <code>loading="lazy"</code> attributes from specified images.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
@@ -229,7 +229,7 @@ $assessment[$category]["opportunities"][] = array(
             'expval' => array(''),
             "hideassets" => true,
             'instruction' => false,
-            
+
         'hint' => 'no value necessary'
             ],
             (object) [
@@ -237,7 +237,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'addpriorityhint',
             'title' => 'Add Priority Hint',
             "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'Src/Href and config: <em>(<code>foo.jpg|i_high</code> or <code>foo.jpg|i_low</code>)</em>',
@@ -252,7 +252,7 @@ $assessment[$category]["opportunities"][] = array(
             'expvar' => 'removepriorityhint',
             'title' => 'Remove Priority Hint',
             "desc" => '<p><em>(Chrome-only)</em> This experiment removes an existing <code>fetchpriority</code> attribute to specified images, causing them to request at their default priority.</p>',
-            
+
         "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
@@ -269,7 +269,7 @@ $assessment[$category]["opportunities"][] = array(
             "desc" => '<p>This experiment changes the way a custom font loads so that text can appear while fonts are loading</p>',
             'expval' => array(''),
             "hideassets" => true,
-           
+
         'hint' => 'foo.jpg'
             ],
             (object) [

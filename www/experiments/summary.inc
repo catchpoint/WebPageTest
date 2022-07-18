@@ -23,7 +23,7 @@ foreach ($assessment as $key => $cat) {
         $oppsEnd = $oppsBadCount === 1 ? "y" : "ies";
         $expsEnd = $experimentsCount === 1 ? "" : "s";
 
-        
+
         echo  <<<EOT
         <a class="grade_anchor" href="${expPage}#${key}">
             <div>

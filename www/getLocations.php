@@ -57,7 +57,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     } else {
         $ret['data'] = $locations;
     }
-  
+
     json_response($ret);
 } elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html') {
     $refresh = 240;
@@ -117,7 +117,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             outputXMLRow($location);
         }
     }
-  
+
 
     echo "</data>\n";
     echo "</response>\n";

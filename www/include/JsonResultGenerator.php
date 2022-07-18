@@ -6,7 +6,6 @@
 
 class JsonResultGenerator
 {
-
     const BASIC_INFO_ONLY = 1;
     const WITHOUT_AVERAGE = 2;
     const WITHOUT_STDDEV = 3;

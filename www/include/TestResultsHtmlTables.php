@@ -8,7 +8,6 @@ require_once __DIR__ . '/../common_lib.inc';
 
 class TestResultsHtmlTables
 {
-
   /** @var TestInfo */
     private $testInfo;
   /** @var TestResults */

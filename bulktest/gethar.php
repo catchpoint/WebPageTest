@@ -18,10 +18,10 @@ if (LoadResults($results)) {
             $testCount++;
         }
     }
-            
+
     if ($testCount) {
         echo "Retrieving HAR files for $testCount tests...\r\n";
-        
+
         if (!is_dir('./har')) {
             mkdir('./har');
         }
@@ -70,6 +70,6 @@ function BuildFileName($url)
     $file = str_ireplace('/', '_', $file);
     $file = str_ireplace('\\', '_', $file);
     $file = str_ireplace('%', '_', $file);
-    
+
     return $file;
 }

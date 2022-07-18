@@ -423,7 +423,7 @@ function InsertChart($metric, $label)
 
   // Write HTML for chart
     $div = "{$metric}Chart";
-  
+
     echo "<h4 id=\"$metric\">" . htmlspecialchars($label) . "</h4>";
     if (!$testsInfo) {
         return;
