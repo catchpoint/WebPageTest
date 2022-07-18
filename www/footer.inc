@@ -1,14 +1,14 @@
 
             <?php
+
             //If we're looking at a test result, include the inner test-result div
-            if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) )
-            {
+            if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)) {
                 echo '</div></div>';
             }
             ?>
 
 
-    
+
 
 
     <footer>
@@ -21,6 +21,7 @@
             <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/images/youtube.svg" alt="Youtube"></a>
             <a href="https://www.linkedin.com/company/webpagetest/"><img src="/images/linkedin.svg" alt="LinkedIn"></a>
         </li>
+        <li><a href="https://www.product.webpagetest.org/contact">Contact Us</a></li>
         <?php
         if (is_file('settings/common/terms.inc') || is_file('settings/server/terms.inc') || is_file('settings/terms.inc')) {
             echo '<li><a href="/terms.php">Terms of Service</a></li>';
@@ -38,16 +39,22 @@
         echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
-    if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
-        is_file('./js/experiment.js')) {
+    if (
+        !array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
+        is_file('./js/experiment.js')
+    ) {
         $headers = $_SERVER;
-        preg_match_all('%(?P<browser>Camino|Kindle(\ Fire\ Build)?|Firefox|Safari|MSIE|Chrome|IEMobile|Opera|Silk|Lynx|Version|Wget|curl|NintendoBrowser|PLAYSTATION|AppleWebKit\ \d+)(?:;?)(?:(?:[/ ])(?P<version>[0-9]+)|/(?:[A-Z]*))%x',
-                        $_SERVER['HTTP_USER_AGENT'], $result, PREG_PATTERN_ORDER);
+        preg_match_all(
+            '%(?P<browser>Camino|Kindle(\ Fire\ Build)?|Firefox|Safari|MSIE|Chrome|IEMobile|Opera|Silk|Lynx|Version|Wget|curl|NintendoBrowser|PLAYSTATION|AppleWebKit\ \d+)(?:;?)(?:(?:[/ ])(?P<version>[0-9]+)|/(?:[A-Z]*))%x',
+            $_SERVER['HTTP_USER_AGENT'],
+            $result,
+            PREG_PATTERN_ORDER
+        );
         $browser = "{$result['browser'][0]} {$result['version'][0]}";
         echo "<script>\n";
         echo "wptJSVer = '" . VER_JS . "';\n";
         echo "wptBrowser = '$browser';\n";
-        include ('./js/experiment.js');
+        include('./js/experiment.js');
         echo "</script>\n";
         //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }

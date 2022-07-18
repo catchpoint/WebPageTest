@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -11,14 +12,12 @@ $localPaths = new TestPaths($testPath, $run, $cached, $step);
 $dir = $localPaths->videoDir();
 $ok = false;
 
-if( is_dir($dir) )
-{
+if (is_dir($dir)) {
     $file = "$dir/video.zip";
     BuildVideoScript($testPath, $dir);
     ZipVideo($dir);
 
-    if( is_file($file) )
-    {
+    if (is_file($file)) {
         header('Content-disposition: attachment; filename=video.zip');
         header('Content-type: application/zip');
         readfile_chunked($file);
@@ -27,15 +26,15 @@ if( is_dir($dir) )
     }
 }
 
-if( !$ok )
-{
-?>
+if (!$ok) {
+    ?>
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
-        <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Video Download Error';
+        include('head.inc'); ?>
         <style>
             div.content
             {
@@ -68,7 +67,7 @@ if( !$ok )
         </div>
     </body>
 </html>
-<?php
+    <?php
 }
 
 ?>

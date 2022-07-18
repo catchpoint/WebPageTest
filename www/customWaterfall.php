@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -23,7 +24,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
 <html lang="en-us">
     <head>
         <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
-        <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Custom Waterfall';
+        include('head.inc'); ?>
     </head>
     <body id="custom-waterfall">
             <?php
@@ -69,16 +71,17 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 
             <?php
 
-$waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+            $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
                         echo $waterfallSnippet->create(true, '&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1');
 
                 $extension = 'php';
-                if( FRIENDLY_URLS )
-                    $extension = 'png';
+            if (FRIENDLY_URLS) {
+                $extension = 'png';
+            }
                 echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\"></div>";
                 echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
 
-?>
+            ?>
             </div>
             <?php include('footer.inc'); ?>
         

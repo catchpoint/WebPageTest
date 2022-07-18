@@ -1,4 +1,5 @@
 <?php
+
 // Make wpt's homepage into an embed that will run a test on a remote site
 // Notes:
 // - This page includes the homepage, without modification, and adds CSS and Script modifications to it so that the page can appear as a single submit button when loaded in an iframe

@@ -14,8 +14,8 @@ require_once __DIR__ . '/../../include/TestInfo.php';
 require_once __DIR__ . '/../../include/TestResults.php';
 require_once __DIR__ . '/../../include/TestRunResults.php';
 
-if(!isset($noanalytics)) {
-  require_once __DIR__ . '/google-tag-manager-noscript.inc';
+if (!isset($noanalytics)) {
+    require_once __DIR__ . '/google-tag-manager-noscript.inc';
 }
 
 if (isset($testPath)) {
@@ -59,7 +59,7 @@ $tab ??= "";
 
 if (defined('EMBED')) {
   // You don't need a header
-  return;
+    return;
 }
 ?>
 
@@ -69,13 +69,11 @@ $alert = Util::getSetting('alert');
 $alert_expiration = Util::getSetting('alert_expiration');
 if (isset($client_error)) {
     echo '<div class="error-banner">' . $client_error . '</div>';
-}
-elseif ($alert && $alert_expiration && new DateTime() < new DateTime($alert_expiration)) {
+} elseif ($alert && $alert_expiration && new DateTime() < new DateTime($alert_expiration)) {
     echo '<div class="alert-banner">' . $alert . '</div>';
-}
-elseif ($alert && empty($alert_expiration)) {
+} elseif ($alert && empty($alert_expiration)) {
     echo '<div class="alert-banner">' . $alert . '</div>';
 }
 
-require_once __DIR__ . '/includes/wpt-header.php'
-?>
+require_once __DIR__ . '/includes/wpt-header.php';
+

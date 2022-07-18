@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -7,16 +8,17 @@
  * Takes the responsibilty for creating file names and paths for test-related files.
  * This way, the logic of file names and the file names itself get encapsulated and can get tested.
  */
-class TestPaths {
-  const UNDERSCORE_FILE_PATTERN = "/^(?P<run>[0-9]+)_(?P<cached>Cached_)?((?P<step>[0-9]+)_)?(?P<name>[\S]+)$/";
+class TestPaths
+{
+    const UNDERSCORE_FILE_PATTERN = "/^(?P<run>[0-9]+)_(?P<cached>Cached_)?((?P<step>[0-9]+)_)?(?P<name>[\S]+)$/";
 
-  protected $testRoot;
+    protected $testRoot;
 
-  protected $run;
-  protected $cached;
-  protected $step;
+    protected $run;
+    protected $cached;
+    protected $step;
 
-  protected $parsedBaseName;
+    protected $parsedBaseName;
 
   /**
    * TestPaths constructor.
@@ -25,454 +27,516 @@ class TestPaths {
    * @param bool $cached If this is a cached run or not
    * @param int $step The number of the step (>= 1)
    */
-  public function __construct($testRoot = ".", $run = 1, $cached = false, $step = 1) {
-    $this->testRoot = $this->formatTestRoot($testRoot);
-    $this->run = intval($run);
-    $this->cached = $cached ? true : false;
-    $this->step = intval($step);
-  }
+    public function __construct($testRoot = ".", $run = 1, $cached = false, $step = 1)
+    {
+        $this->testRoot = $this->formatTestRoot($testRoot);
+        $this->run = intval($run);
+        $this->cached = $cached ? true : false;
+        $this->step = intval($step);
+    }
 
   /**
    * Makes sure testRoot is either empty or stops with a slash "/"
    * @param $raw string The input testRoot
    * @return string The formatted testRoot
    */
-  private function formatTestRoot($raw) {
-    $testRoot = strval($raw);
-    $length = strlen($testRoot);
-    if ($length && $testRoot[$length - 1] != "/") {
-      $testRoot .= "/";
+    private function formatTestRoot($raw)
+    {
+        $testRoot = strval($raw);
+        $length = strlen($testRoot);
+        if ($length && $testRoot[$length - 1] != "/") {
+            $testRoot .= "/";
+        }
+        return $testRoot;
     }
-    return $testRoot;
-  }
 
   /**
    * @param string $testRoot The path where all data of the test is stored in
    * @param $fileName string File name to instantiate the object from
    * @return TestPaths A new instance or NULL
    */
-  public static function fromUnderscoreFileName($testRoot, $fileName) {
-    if (!preg_match(self::UNDERSCORE_FILE_PATTERN, $fileName, $matches)) {
-      return NULL;
+    public static function fromUnderscoreFileName($testRoot, $fileName)
+    {
+        if (!preg_match(self::UNDERSCORE_FILE_PATTERN, $fileName, $matches)) {
+            return null;
+        }
+        $step = empty($matches["step"]) ? 1 : intval($matches["step"]);
+        $instance = new self($testRoot, $matches["run"], !empty($matches["cached"]), $step);
+        $instance->parsedBaseName = $matches["name"];
+        return $instance;
     }
-    $step = empty($matches["step"]) ? 1 : intval($matches["step"]);
-    $instance = new self($testRoot, $matches["run"], !empty($matches["cached"]), $step);
-    $instance->parsedBaseName = $matches["name"];
-    return $instance;
-  }
 
   /**
    * Returns if the paths are for a cached run (repeat view), or not (first view). Try to avoid direct access
    * and use the other public methods if possible.
    * @return bool True if the paths are for a cached run, false otherwise
    */
-  public function isCachedResult() {
-    return $this->cached;
-  }
+    public function isCachedResult()
+    {
+        return $this->cached;
+    }
 
   /**
    * Returns the run number which the paths are used for. Try to avoid direct access
    * and use the other public methods if possible.
    * @return int The run number
    */
-  public function getRunNumber() {
-    return $this->run;
-  }
+    public function getRunNumber()
+    {
+        return $this->run;
+    }
 
   /**
    * Returns the step number which the paths are used for. Try to avoid direct access
    * and use the other public methods if possible.
    * @return int The run number
    */
-  public function getStepNumber() {
-    return $this->step;
-  }
+    public function getStepNumber()
+    {
+        return $this->step;
+    }
 
   /**
    * @return string The base name of the file (without run information), e.g. when instantiated by from*Name methods
    */
-  public function getParsedBaseName() {
-    return $this->parsedBaseName;
-  }
+    public function getParsedBaseName()
+    {
+        return $this->parsedBaseName;
+    }
 
   /**
    * @return string Directory name to store video data in
    */
-  public function videoDir() {
-    return $this->testRoot . "video_" . strtolower($this->underscoreIdentifier());
-  }
+    public function videoDir()
+    {
+        return $this->testRoot . "video_" . strtolower($this->underscoreIdentifier());
+    }
 
   /**
    * @return string Path for headers file
    */
-  public function headersFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_report.txt";
-  }
+    public function headersFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_report.txt";
+    }
 
   /**
    * @return string Path for bodies file
    */
-  public function bodiesFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_bodies.zip";
-  }
+    public function bodiesFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_bodies.zip";
+    }
 
   /**
    * @return string Path for page data file
    */
-  public function pageDataFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_IEWPG.txt";
-  }
+    public function pageDataFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_IEWPG.txt";
+    }
 
   /**
    * @return string Path for page data JSON file
    */
-  public function pageDataJsonFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_page_data.json";
-  }
+    public function pageDataJsonFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_page_data.json";
+    }
 
   /**
    * @return string Path for request data file
    */
-  public function requestDataFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_IEWTR.txt";
-  }
+    public function requestDataFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_IEWTR.txt";
+    }
 
   /**
    * @return string Path for request data file
    */
-  public function requestDataJsonFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_requests.json";
-  }
+    public function requestDataJsonFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_requests.json";
+    }
 
   /**
    * @return string Path for utilization file
    */
-  public function utilizationFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_progress.csv";
-  }
+    public function utilizationFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_progress.csv";
+    }
 
   /**
    * @return string Path for pcap-based utilization file
    */
-  public function pcapUtilizationFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_pcap_slices.json";
-  }
+    public function pcapUtilizationFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_pcap_slices.json";
+    }
 
   /**
    * @return string Path for JPG screenshot file
    */
-  public function screenShotFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_screen.jpg";
-  }
+    public function screenShotFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_screen.jpg";
+    }
 
   /**
    * @return string Path for PNG screenshot file
    */
-  public function screenShotPngFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_screen.png";
-  }
+    public function screenShotPngFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_screen.png";
+    }
 
   /**
    * @return string Path for the rendered video file
    */
-  public function renderedVideoFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_rendered_video.mp4";
-  }
+    public function renderedVideoFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_rendered_video.mp4";
+    }
 
   /**
    * @param string $type One of 'render', 'dom', 'doc', 'responsive'
    * @return string Path for the additional screenshot file
    */
-  public function additionalScreenShotFile($type) {
-    return $this->testRoot . $this->underscoreIdentifier() . "_screen_". $type . ".jpg";
-  }
+    public function additionalScreenShotFile($type)
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_screen_" . $type . ".jpg";
+    }
 
-  public function aftDiagnosticImageFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_aft.png";
-  }
+    public function aftDiagnosticImageFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_aft.png";
+    }
 
   /**
    * @return string Path for status file
    */
-  public function statusFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_status.txt";
-  }
+    public function statusFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_status.txt";
+    }
 
   /**
    * @return string Path for custom metrics file
    */
-  public function customMetricsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_metrics.json";
-  }
+    public function customMetricsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_metrics.json";
+    }
 
   /**
    * @return string Path for user timed events
    */
-  public function userTimedEventsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_timed_events.json";
-  }
+    public function userTimedEventsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_timed_events.json";
+    }
 
   /**
    * @return string Path for blink feature usage
    */
-  public function featureUsageFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_feature_usage.json";
-  }
+    public function featureUsageFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_feature_usage.json";
+    }
 
   /**
    * @return string Path for HTTP/2 priority streams
    */
-  public function priorityStreamsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_priority_streams.json";
-  }
+    public function priorityStreamsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_priority_streams.json";
+    }
 
   /**
    * @return string Path for main-thread interactive-time periods
    */
-  public function interactiveFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_interactive.json";
-  }
+    public function interactiveFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_interactive.json";
+    }
 
   /**
    * @return string Path for main-thread interactive-time periods
    */
-  public function longTasksFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_long_tasks.json";
-  }
+    public function longTasksFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_long_tasks.json";
+    }
 
   /**
    * @return string Path for diagnostic test timing
    */
-  public function testTimingFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_test_timing.log";
-  }
+    public function testTimingFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_test_timing.log";
+    }
 
   /**
    * @return string Path for Chrome trace user timing
    */
-  public function chromeUserTimingFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
-  }
+    public function chromeUserTimingFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
+    }
 
   /**
    * @return string Path for devtools results
    */
-  public function devtoolsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_devtools.json";
-  }
+    public function devtoolsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_devtools.json";
+    }
 
   /**
    * @return string Path for devtools timeline
    */
-  public function devtoolsTimelineFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_timeline.json";
-  }
+    public function devtoolsTimelineFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_timeline.json";
+    }
 
   /**
    * @return string Path for devtools-CPU timeline
    */
-  public function devtoolsCPUTimelineFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_timeline_cpu.json";
-  }
+    public function devtoolsCPUTimelineFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_timeline_cpu.json";
+    }
 
   /**
    * @return string Path for devtools script-execution-times timeline
    */
-  public function devtoolsScriptTimingFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_script_timing.json";
-  }
+    public function devtoolsScriptTimingFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_script_timing.json";
+    }
 
   /**
    * @return string Path for devtools trace file
    */
-  public function devtoolsTraceFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
-  }
+    public function devtoolsTraceFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
+    }
 
   /**
    * @return string Path for capture file
    */
-  public function captureFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . ".cap";
-  }
+    public function captureFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . ".cap";
+    }
 
   /**
    * @return string Path for debug log file
    */
-  public function debugLogFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_debug.log";
-  }
+    public function debugLogFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_debug.log";
+    }
 
   /**
    * @return string Path for keylog file
    */
-  public function keylogFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_keylog.log";
-  }
+    public function keylogFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_keylog.log";
+    }
 
   /**
    * @return string Path for netlog file
    */
-  public function netlogFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_netlog.txt";
-  }
+    public function netlogFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_netlog.txt";
+    }
 
   /**
    * @return string Path for dynatrace file
    */
-  public function dynatraceFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_dynaTrace.dtas";
-  }
+    public function dynatraceFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_dynaTrace.dtas";
+    }
 
   /**
    * @return string Path for lighthouse JSON file
    */
-  public function cruxJsonFile() {
-    return $this->testRoot . "crux.json";
-  }
+    public function cruxJsonFile()
+    {
+        return $this->testRoot . "crux.json";
+    }
 
   /**
    * @return string Path for lighthouse JSON file
    */
-  public function lighthouseJsonFile() {
-    return $this->testRoot . "lighthouse.json";
-  }
+    public function lighthouseJsonFile()
+    {
+        return $this->testRoot . "lighthouse.json";
+    }
 
-  public function lighthouseAuditsFile() {
-    return $this->testRoot . "lighthouse_audits.json";
-  }
+    public function lighthouseAuditsFile()
+    {
+        return $this->testRoot . "lighthouse_audits.json";
+    }
 
   /**
    * @return string Path for lighthouse HTML file
    */
-  public function lighthouseHtmlFile() {
-    return $this->testRoot . "lighthouse.html";
-  }
+    public function lighthouseHtmlFile()
+    {
+        return $this->testRoot . "lighthouse.html";
+    }
 
   /**
    * @return string Path for lighthouse JSON file
    */
-  public function lighthouseLogFile() {
-    return $this->testRoot . "lighthouse.log";
-  }
+    public function lighthouseLogFile()
+    {
+        return $this->testRoot . "lighthouse.log";
+    }
 
   /**
    * @return string Path for the console log
    */
-  public function consoleLogFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_console_log.json";
-  }
+    public function consoleLogFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_console_log.json";
+    }
 
   /**
    * @return string Path for the optimization check results
    */
-  public function optimizationChecksFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_optimization.json";
-  }
+    public function optimizationChecksFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_optimization.json";
+    }
 
   /**
    * @return string Path for the netlog-parsed requests
    */
-  public function netlogRequestsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_netlog_requests.json";
-  }
+    public function netlogRequestsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_netlog_requests.json";
+    }
 
   /**
    * @return string Path to the raw video
    */
-  public function rawDeviceVideo() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_video.mp4";
-  }
+    public function rawDeviceVideo()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_video.mp4";
+    }
 
   /**
    * @return string Path to the visual data cache file
    */
-  public function visualDataCacheFile() {
-    return $this->testRoot . $this->dotIdentifier() . ".visual.dat";
-  }
+    public function visualDataCacheFile()
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".visual.dat";
+    }
 
   /**
    * @return string Path to the visual data file
    */
-  public function visualDataFile() {
-    return $this->testRoot . "llab_" . $this->dotIdentifier() . ".visual.dat";
-  }
+    public function visualDataFile()
+    {
+        return $this->testRoot . "llab_" . $this->dotIdentifier() . ".visual.dat";
+    }
 
   /**
    * @return string Path to histograms file
    */
-  public function histogramsFile() {
-    return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
-  }
+    public function histogramsFile()
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
+    }
 
   /**
    * @return string Path to the visual progress file
    */
-  public function visualProgressFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_visual_progress.json";
-  }
+    public function visualProgressFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_visual_progress.json";
+    }
 
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for devtools CPU times
    */
-  public function devtoolsCPUTimeCacheFile($version) {
-    return $this->testRoot . $this->dotIdentifier() . ".devToolsCPUTime." . $version;
-  }
+    public function devtoolsCPUTimeCacheFile($version)
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".devToolsCPUTime." . $version;
+    }
 
   /**
    * @return string Path to the file for processed devtools requests
    */
-  public function devtoolsProcessedRequestsFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_devtools_requests.json";
-  }
+    public function devtoolsProcessedRequestsFile()
+    {
+        return $this->testRoot . $this->underscoreIdentifier() . "_devtools_requests.json";
+    }
 
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for devtools requests
    */
-  public function devtoolsRequestsCacheFile($version) {
-    return $this->testRoot . $this->dotIdentifier() . ".devToolsRequests." . $version;
-  }
+    public function devtoolsRequestsCacheFile($version)
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".devToolsRequests." . $version;
+    }
 
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for breakdown requests
    */
-  public function breakdownCacheFile($version) {
-    return $this->testRoot . "breakdown" . $version . ".json";
-  }
+    public function breakdownCacheFile($version)
+    {
+        return $this->testRoot . "breakdown" . $version . ".json";
+    }
 
-  public function requestsAnalysisFile() {
-    return $this->testRoot . $this->dotIdentifier() . ".analysis.json";
-  }
+    public function requestsAnalysisFile()
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".analysis.json";
+    }
 
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for page data
    */
-  public function pageDataCacheFile($version) {
-    return $this->testRoot . $this->dotIdentifier() . ".pageData." . $version;
-  }
+    public function pageDataCacheFile($version)
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".pageData." . $version;
+    }
 
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for request data
    */
-  public function requestsCacheFile($version) {
-    return $this->testRoot . $this->dotIdentifier() . ".requests." . $version;
-  }
+    public function requestsCacheFile($version)
+    {
+        return $this->testRoot . $this->dotIdentifier() . ".requests." . $version;
+    }
 
-  public function cacheKey() {
-    return "run" . $this->run . ".cached" . ($this->cached ? 1 : 0) . ".step" . $this->step;
-  }
+    public function cacheKey()
+    {
+        return "run" . $this->run . ".cached" . ($this->cached ? 1 : 0) . ".step" . $this->step;
+    }
 
-  protected function underscoreIdentifier() {
-    return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
-  }
+    protected function underscoreIdentifier()
+    {
+        return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
+    }
 
-  protected function dotIdentifier() {
-    return $this->run . "." . ($this->cached ? "1" : "0") . ($this->step > 1 ? ("." . $this->step) : "");
-  }
-
+    protected function dotIdentifier()
+    {
+        return $this->run . "." . ($this->cached ? "1" : "0") . ($this->step > 1 ? ("." . $this->step) : "");
+    }
 }

@@ -6,11 +6,12 @@
         <meta http-equiv="refresh" content="30" />
         </noscript>
         <?php
+
             $autoRefresh = true;
             $noanalytics = true;
             $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Running website performance test.";
-            include ('head.inc');
+            include('head.inc');
         ?>
     </head>
     <body class="common">
@@ -18,8 +19,7 @@
             require_once('testStatus.inc');
             $tab = 'Test Result';
             include 'header.inc';
-            if( !isset($test) )
-            {
+            if (!isset($test)) {
                 if (TestArchiveExpired($id)) {
                     echo "<h3>Test Result Expired</h3>\n";
                     $retain_months = GetSetting('archive_retention_months', null);
@@ -33,16 +33,13 @@
                     echo "<h3>Test Not Found</h3>\n";
                     echo "<p>Sorry, the test you requested could not be found.</p>";
                 }
-            }
-            else
-            {
-            ?>
+            } else {
+                ?>
             <h1>Testing...</h1>
             <div id="runningHeader" class="box">
                 <?php
                 $status = GetTestStatus($id, true);
-                if ( !array_key_exists('startTime', $status) || !$status['startTime'] )
-                {
+                if (!array_key_exists('startTime', $status) || !$status['startTime']) {
                     ?>
                     <form action="/cancelTest.php" method="get">
                     <input type="hidden" name="test" value="<?php echo $id;?>">
@@ -53,11 +50,11 @@
                 ?>
                 <p class="runningDetails">
                 <?php
-                    if (GetSetting('nolinks')) {
-                        echo "URL: $url<br>\n";
-                    } else {
-                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
-                    }
+                if (GetSetting('nolinks')) {
+                    echo "URL: $url<br>\n";
+                } else {
+                    echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml(false);
                 ?>
@@ -67,12 +64,17 @@
                 <?php
                 $statusText = $status['statusText'];
                 $statusStep = "waiting";
-                if( array_key_exists('statusCode', $status) && $status['statusCode'] == 100 )
-                    $statusStep = "testing"
+                if (array_key_exists('statusCode', $status) && $status['statusCode'] == 100) {
+                    $statusStep = "testing";
+                }
                 ?>
                 <ul class="runningStatusIndicator">
-                    <li id="waiting" <?php if ($statusStep == "waiting") { ?>class="is-active"<?php } ?>>Waiting...</li>
-                    <li id="testing" <?php if ($statusStep == "testing") { ?>class="is-active"<?php } ?>>Testing...</li>
+                    <li id="waiting" <?php if ($statusStep == "waiting") {
+                        ?>class="is-active"<?php
+                                     } ?>>Waiting...</li>
+                    <li id="testing" <?php if ($statusStep == "testing") {
+                        ?>class="is-active"<?php
+                                     } ?>>Testing...</li>
                     <li id="done" >Done</li>
                 </ul>
                 <?php
@@ -89,8 +91,7 @@
             <?php } ?>
             <?php
             $tip = GetTip();
-            if( strlen($tip) )
-            {
+            if (strlen($tip)) {
                 echo '<div class="tip box"><div class="tipHead"><h2>Did you know?</h2><span class="tip_note">(all links open in a new window/tab)</span></div>';
                 echo $tip;
                 echo "</div>\n";
@@ -193,21 +194,19 @@ function GetTip()
 {
     $tip = '';
 
-    $files = glob('./tips_data/*.html',GLOB_NOSORT);
+    $files = glob('./tips_data/*.html', GLOB_NOSORT);
     $tips = array();
     $active_tips = GetSetting("active_tips");
     if ($active_tips) {
         $active_tips = explode(" ", $active_tips);
     }
-    foreach( $files as $file )
-    {
+    foreach ($files as $file) {
         if (!$active_tips || in_array(basename($file), $active_tips)) {
             $tips[] = $file;
         }
     }
     $count = count($tips);
-    if( $count > 0 )
-    {
+    if ($count > 0) {
         $pick = rand(0, $count - 1);
         $file = $tips[$pick];
         $tip = file_get_contents($file);

@@ -49,7 +49,9 @@
                                 <label class="visually-hidden" for="annual-plan">Select Number of Runs per
                                     month</label>
                                 <select name="plan" id="annual-plan" class="plan-select" onchange="changePrice('annual')">
-                                    <?php foreach ($annual_plans as $plan) : ?>
+                                    <?php
+
+                                    foreach ($annual_plans as $plan) : ?>
                                         <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>" data-price-monthly="<?= $plan->getMonthlyPrice() ?>">
                                             <?= $plan->getRuns() ?> Runs/mo
                                             ($<?= $plan->getAnnualPrice() ?>/<?= $plan->getBillingFrequency() ?>)</option>

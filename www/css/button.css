@@ -3,7 +3,7 @@
 .pill-button {
   appearance: none;
   width: auto;
-  background-color: #F4F4F4;
+  background-color: #f4f4f4;
   border: 0;
   border-radius: 2rem;
   cursor: pointer;
@@ -28,11 +28,11 @@
   border: 0;
 }
 
-
 /** TODO
 update all the yellow buttons on the site
 **/
 .yellow {
+
   background-color: var(--brand-yellow);
 }
 
@@ -54,6 +54,7 @@ TODO update the NEW buttons on signup to this green
 }
 
 .purple {
+
   background-color: var(--brand-purple);
 }
 

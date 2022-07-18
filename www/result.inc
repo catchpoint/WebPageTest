@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -16,7 +17,7 @@ require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 $breakdown = array();
 $testComplete = true;
 $status = GetTestStatus($id, false);
-if( $status['statusCode'] < 200 ) {
+if ($status['statusCode'] < 200) {
     $testComplete = false;
 }
 $headless = false;
@@ -34,9 +35,9 @@ $requests = $testStepResult->getRequests();
 $blockingReqs = array();
 
 foreach ($requests as $request) {
-  if( $request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript" ){
-    array_push($blockingReqs, $request['host'] . $request['url'] );
-  }
+    if ($request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript") {
+        array_push($blockingReqs, $request['host'] . $request['url']);
+    }
 }
 
 
@@ -58,9 +59,9 @@ $page_description = "Website performance test result$testLabel.";
                 height: 2em;
             }
         </style>
-        <?php if( !$testComplete ) {
+        <?php if (!$testComplete) {
                 $autoRefresh = true;
-        ?>
+            ?>
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
@@ -69,10 +70,13 @@ $page_description = "Website performance test result$testLabel.";
          $socialTitle = "WebPageTest Performance Test Results";
          $socialDesc = "Check out these web performance test results on WebPageTest.org: ";
         ?>
-        <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Test Result';
+        include('head.inc'); ?>
 
     </head>
-    <body class="result result-summary <?php if($req_screenshot){ echo ' screenshot'; } ?>">
+    <body class="result result-summary <?php if ($req_screenshot) {
+        echo ' screenshot';
+                                       } ?>">
             <?php
             $tab = 'Test Result';
             $subtab = 'Performance Summary';
@@ -84,19 +88,18 @@ $page_description = "Website performance test result$testLabel.";
         <div class="results_main">
 
         <?php
-            if( !$testComplete )
-            {
-                ?>
+        if (!$testComplete) {
+            ?>
                 <p class="left">
-                <?php
-                    if (GetSetting('nolinks')) {
-                        echo "URL: $url<br>\n";
-                    } else {
-                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
-                    }
-                    echo "From: {$test['test']['location']}<br>\n";
-                    echo GetTestInfoHtml();
-                ?>
+            <?php
+            if (GetSetting('nolinks')) {
+                echo "URL: $url<br>\n";
+            } else {
+                echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+            }
+                echo "From: {$test['test']['location']}<br>\n";
+                echo GetTestInfoHtml();
+            ?>
                 </p>
                 <?php
                 $expected = $test['test']['runs'];
@@ -105,9 +108,7 @@ $page_description = "Website performance test result$testLabel.";
                 echo "<script>\n";
                 echo "var availableTests=$available;\n";
                 echo "</script>\n";
-            }
-            else
-            {
+        } else {
             ?>
 
 
@@ -122,17 +123,17 @@ $page_description = "Website performance test result$testLabel.";
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
                 <p>Opportunities &amp; Experiments <em class="flag">New</em>
-                <?php
-                  if( $tabs && $tabs['Opportunities & Experiments'] ){
-                    echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
-                  }
-                ?>
+            <?php
+            if ($tabs && $tabs['Opportunities & Experiments']) {
+                echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
+            }
+            ?>
 
                 </p>
 
                 <?php
-                    include __DIR__ . '/experiments/common.inc';
-                    include __DIR__ . '/experiments/summary.inc';
+                include __DIR__ . '/experiments/common.inc';
+                include __DIR__ . '/experiments/summary.inc';
 
                 ?>
                 </div>
@@ -158,28 +159,26 @@ $page_description = "Website performance test result$testLabel.";
                 $fvRunResults = $testResults->getRunResult($fvMedian, false);
                 $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
 
-                if ($fvMedian)
-                {
-
+                if ($fvMedian) {
                       echo '<h3 class="hed_sub">Observed Metrics ';
                       $medianMetrics = array(
-                        "chromeUserTiming.CumulativeLayoutShift"=> "Cumulative Layout Shift",
-                        "firstContentfulPaint"=> "First Contentful Paint",
-                        "chromeUserTiming.LargestContentfulPaint"=> "Largest Contentful Paint",
+                        "chromeUserTiming.CumulativeLayoutShift" => "Cumulative Layout Shift",
+                        "firstContentfulPaint" => "First Contentful Paint",
+                        "chromeUserTiming.LargestContentfulPaint" => "Largest Contentful Paint",
                         "fullyLoaded" => "Load Time",
-                        "SpeedIndex"=>"Speed Index",
-                        "render"=>"Start Render",
-                        "TTFB"=>"Time to First Byte",
+                        "SpeedIndex" => "Speed Index",
+                        "render" => "Start Render",
+                        "TTFB" => "Time to First Byte",
                         "TotalBlockingTime" => "Total Blocking Time"
                       );
                       if ($medianMetrics[$median_metric]) {
-                        $friendlyMedianMetric = $medianMetrics[$median_metric];
-                      } else{
-                        $friendlyMedianMetric = htmlspecialchars($median_metric);
+                          $friendlyMedianMetric = $medianMetrics[$median_metric];
+                      } else {
+                          $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
-                        if ($testResults->countRuns() > 1){
-                        echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em>';
-                        }
+                      if ($testResults->countRuns() > 1) {
+                          echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em>';
+                      }
                         echo '</h3>';
 
                         echo '<details class="metrics_shown">
@@ -192,31 +191,30 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<ul>";
 
                         $url = strtok($_SERVER["REQUEST_URI"], '?');
-                        foreach ($medianMetrics as $key => $value) {
+                      foreach ($medianMetrics as $key => $value) {
                           if ($pageData[$run][$cached][$key]) {
-                            echo "<li><a href='" . $url . "?medianMetric=". $key . "'>". $value . "</a></li>";
+                              echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
                           }
-                        }
+                      }
                         echo "</ul></div>";
-                    $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
-                    $resultTable->useLabelLinks(true);
-                    $resultTable->disableColumns(array(
+                      $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
+                      $resultTable->useLabelLinks(true);
+                      $resultTable->disableColumns(array(
                       RunResultHtmlTable::COL_VISUAL_COMPLETE,
                       RunResultHtmlTable::COL_COST,
                       RunResultHtmlTable::COL_FULLYLOADED,
                       RunResultHtmlTable::COL_REQUESTS,
                       RunResultHtmlTable::COL_RESULT
-                    ));
+                      ));
                     if (GetSetting('show_cost')) {
                         //$resultTable->enableColumns(array(RunResultHtmlTable::COL_COST));
                     }
                     echo $resultTable->create(true);
 
                     if ($testResults->countRuns() > 1) {
-
-                      $link = '/video/compare.php?tests=';
-                      $repeatlink = '/video/compare.php?tests=';
-                      $cnt = 1;
+                        $link = '/video/compare.php?tests=';
+                        $repeatlink = '/video/compare.php?tests=';
+                        $cnt = 1;
                         do {
                             $link .= $id . '-r:' . $cnt;
                             $repeatlink .= $id . '-r:' . $cnt . '-c:1';
@@ -228,14 +226,14 @@ $page_description = "Website performance test result$testLabel.";
                             $repeatlink .= ',';
                             $cnt++;
                         } while ($cnt <= $testResults->countRuns());
-                        echo "<a href=\"". substr($link,0,-1)."\" class=\"result_plot\">Compare First Views</a>";
-                        if( $rvRunResults){
-                          echo "<a href=\"". substr($repeatlink,0,-1)."\" class=\"result_plot\">Compare Repeat Views</a>";
+                        echo "<a href=\"" . substr($link, 0, -1) . "\" class=\"result_plot\">Compare First Views</a>";
+                        if ($rvRunResults) {
+                            echo "<a href=\"" . substr($repeatlink, 0, -1) . "\" class=\"result_plot\">Compare Repeat Views</a>";
                         }
                         echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
                     }
                     ?>
-                <?php
+                    <?php
                 } // fvMedian
                 if (!$fvMedian || $is_test_error) {
                     $error = 'The test completed but there were no successful results.';
@@ -243,11 +241,13 @@ $page_description = "Website performance test result$testLabel.";
                     if ($is_test_error) {
                         $error = 'The test failed to run.';
                         $detail = $test['testinfo']['test_error'];
-                    } elseif(array_key_exists('testinfo', $test) &&
-                             array_key_exists('errors', $test['testinfo'])) {
+                    } elseif (
+                        array_key_exists('testinfo', $test) &&
+                             array_key_exists('errors', $test['testinfo'])
+                    ) {
                         // just grab the first error we find from an individual run
-                        foreach($test['testinfo']['errors'] as &$error_run) {
-                            foreach($error_run as &$error_str) {
+                        foreach ($test['testinfo']['errors'] as &$error_run) {
+                            foreach ($error_run as &$error_str) {
                                 if (strlen($error_str)) {
                                     $error = 'The testing completed but failed.';
                                     $detail = $error_str;
@@ -256,8 +256,9 @@ $page_description = "Website performance test result$testLabel.";
                             }
                         }
                     }
-                    if (!$fvMedian)
-                      echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                    if (!$fvMedian) {
+                        echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                    }
                     if (isset($detail)) {
                         echo '<h4>' . htmlspecialchars($detail) . '</h4>';
                     }
@@ -269,13 +270,13 @@ $page_description = "Website performance test result$testLabel.";
 
             <?php
             if (isset($fvRunResults)) {
-              echo '<div class="cruxembed">';
-              require_once(__DIR__ . '/include/CrUX.php');
-              InsertCruxHTML($fvRunResults, $rvRunResults, '');
-              echo '</div>';
+                echo '<div class="cruxembed">';
+                require_once(__DIR__ . '/include/CrUX.php');
+                InsertCruxHTML($fvRunResults, $rvRunResults, '');
+                echo '</div>';
             }
             ?>
-            <?php } ?>
+        <?php } ?>
 
 
 
@@ -291,7 +292,7 @@ $page_description = "Website performance test result$testLabel.";
             ?>
             </div>
             </div>
-  <?php include ( __DIR__ . '/cta-banner.inc'); ?>
+  <?php include(__DIR__ . '/cta-banner.inc'); ?>
               </div>
 
             <?php include('footer.inc'); ?>
@@ -303,12 +304,12 @@ $page_description = "Website performance test result$testLabel.";
         <?php
         $breakdown = $resultTables->getBreakdown();
         if ($breakdown) {
-        ?>
+            ?>
           <script src="//www.google.com/jsapi"></script>
           <script>
-          <?php
-          echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
-          ?>
+            <?php
+            echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
+            ?>
 
           google.load("visualization", "1", {packages:["corechart"]});
           google.setOnLoadCallback(drawCharts);
@@ -358,13 +359,13 @@ $page_description = "Website performance test result$testLabel.";
             }
           }
           </script>
-        <?php
+            <?php
         } // $breakdown
 
-        if( !$testComplete ) {
+        if (!$testComplete) {
             echo "<script>\n";
             echo "var testId = '$id';\n";
-        ?>
+            ?>
             // polyfill performance.now
             if ("performance" in window == false) {
                 window.performance = {};
@@ -426,7 +427,7 @@ $page_description = "Website performance test result$testLabel.";
             }
             setTimeout('UpdateStatus()', 15000);
           </script>
-        <?php
+            <?php
         }
         ?>
     </body>

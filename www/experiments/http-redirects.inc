@@ -1,14 +1,15 @@
 <?php
+
 $category = "Quick";
 $requests = $testStepResult->getRequests();
 $redirectedRequests = array();
 
 
 foreach ($requests as $request) {
-    if( isset($request['responseCode']) &&  is300s($request)){
+    if (isset($request['responseCode']) &&  is300s($request)) {
         $loc = "";
-        foreach($request["headers"]["response"] as $header){
-            if( strpos( $header, "Location:" ) !== null ){
+        foreach ($request["headers"]["response"] as $header) {
+            if (strpos($header, "Location:") !== null) {
                 $loc = substr($header, strlen("Location:"));
             }
         }
@@ -16,20 +17,20 @@ foreach ($requests as $request) {
     }
 }
 
-function joinValues($arr){
+function joinValues($arr)
+{
     $oneLevel = array();
-    foreach($arr as $item){
-        array_push($oneLevel, 'FROM: ' . implode(" TO: ",$item));
+    foreach ($arr as $item) {
+        array_push($oneLevel, 'FROM: ' . implode(" TO: ", $item));
     }
     return $oneLevel;
 }
 
 
 
-if( count($redirectedRequests) > 0 ){
-
+if (count($redirectedRequests) > 0) {
     $expsToAdd = null;
-    if( isset($requests[0]['responseCode']) && is300s($requests[0])){
+    if (isset($requests[0]['responseCode']) && is300s($requests[0])) {
         $to = $requests[1]['full_url'];
         $expsToAdd = array();
         $expsToAdd[] = (object) [
@@ -41,24 +42,20 @@ if( count($redirectedRequests) > 0 ){
             "expval" => array( $to ),
             "hideassets" => true
         ];
-        
     }
 
-    $assessment[$category]["opportunities"][] = array( 
-        "title" =>  count($redirectedRequests) . " request" .(count($redirectedRequests) > 1 ? "s are" : " is") ." resulting in an HTTP redirect.",
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  count($redirectedRequests) . " request" . (count($redirectedRequests) > 1 ? "s are" : " is") . " resulting in an HTTP redirect.",
         "desc" =>  "HTTP redirects can result in additional DNS resolution, TCP connection and HTTPS negotiation times, making them very costly for performance, particularly on high latency networks.",
         "examples" =>  joinValues($redirectedRequests),
         "good" =>  false,
         "experiments" => $expsToAdd,
     );
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  'Zero requests were found that resulted in an HTTP redirect.',
         "desc" =>  "HTTP redirects can result in additional DNS resolution, TCP connection and HTTPS negotiation times, making them very costly for performance, particularly on high latency networks.",
         "examples" =>  array(),
         "good" =>  true
     );
 }
-
-?>

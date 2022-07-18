@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -6,16 +7,20 @@ include 'common.inc';
 
 // load the secret key (if there is one)
 $secret = GetServerSecret();
-if (!isset($secret))
+if (!isset($secret)) {
     $secret = '';
+}
 
 $connectivity_file = './settings/connectivity.ini.sample';
-if (file_exists('./settings/connectivity.ini'))
+if (file_exists('./settings/connectivity.ini')) {
     $connectivity_file = './settings/connectivity.ini';
-if (file_exists('./settings/common/connectivity.ini'))
+}
+if (file_exists('./settings/common/connectivity.ini')) {
     $connectivity_file = './settings/common/connectivity.ini';
-if (file_exists('./settings/server/connectivity.ini'))
+}
+if (file_exists('./settings/server/connectivity.ini')) {
     $connectivity_file = './settings/server/connectivity.ini';
+}
 $connectivity = parse_ini_file($connectivity_file, true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
@@ -26,7 +31,8 @@ $page_description = "Test network path from multiple locations around the world 
 <html lang="en-us">
     <head>
         <title>WebPageTest - Traceroute diagnostic</title>
-        <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Traceroute';
+        include('head.inc'); ?>
     </head>
     <body class="home">
             <?php
@@ -45,23 +51,23 @@ $page_description = "Test network path from multiple locations around the world 
             <input type="hidden" name="type" value="traceroute">
             <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
-            if( strlen($secret) ){
-              $hashStr = $secret;
-              $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-              $hashStr .= $owner;
+            if (strlen($secret)) {
+                $hashStr = $secret;
+                $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                $hashStr .= $owner;
 
-              $now = gmdate('c');
-              echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-              $hashStr .= $now;
+                $now = gmdate('c');
+                echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                $hashStr .= $now;
 
-              $hmac = sha1($hashStr);
-              echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                $hmac = sha1($hashStr);
+                echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
             ?>
 
 
             <div id="test_box-container" class="home_responsive_test">
-                <?php 
+                <?php
                 $currNav = "Traceroute";
                 include("testTypesNav.php");
                 ?>
@@ -83,17 +89,17 @@ $page_description = "Test network path from multiple locations around the world 
                                     <label for="location">Test Location</label>
                                     <select name="where" id="location">
                                         <?php
-                                        foreach($loc['locations'] as &$location)
-                                        {
+                                        foreach ($loc['locations'] as &$location) {
                                             $selected = '';
-                                            if( $location['checked'] )
+                                            if ($location['checked']) {
                                                 $selected = 'selected';
+                                            }
 
                                             echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                                         }
                                         ?>
                                     </select>
-                                    <?php if( GetSetting('map') ) { ?>
+                                    <?php if (GetSetting('map')) { ?>
                                     <button id="change-location-btn" type=button onclick="SelectLocation();" title="Select from Map">Select from Map</button>
                                     <?php } ?>
                                     <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
@@ -103,11 +109,11 @@ $page_description = "Test network path from multiple locations around the world 
                                     <label for="browser">Browser</label>
                                     <select name="browser" id="browser">
                                         <?php
-                                        foreach( $loc['browsers'] as $key => &$browser )
-                                        {
+                                        foreach ($loc['browsers'] as $key => &$browser) {
                                             $selected = '';
-                                            if( $browser['selected'] )
+                                            if ($browser['selected']) {
                                                 $selected = 'selected';
+                                            }
                                             echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
                                         }
                                         ?>
@@ -116,11 +122,11 @@ $page_description = "Test network path from multiple locations around the world 
                                 <div class="hidden">
                                     <select name="location" id="connection">
                                         <?php
-                                        foreach( $loc['connections'] as $key => &$connection )
-                                        {
+                                        foreach ($loc['connections'] as $key => &$connection) {
                                             $selected = '';
-                                            if( $connection['selected'] )
+                                            if ($connection['selected']) {
                                                 $selected = 'selected';
+                                            }
                                             echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
                                         }
                                         ?>
@@ -154,11 +160,11 @@ $page_description = "Test network path from multiple locations around the world 
                 <p>
                     <select id="location2">
                         <?php
-                        foreach($loc['locations'] as &$location)
-                        {
+                        foreach ($loc['locations'] as &$location) {
                             $selected = '';
-                            if( $location['checked'] )
+                            if ($location['checked']) {
                                 $selected = 'SELECTED';
+                            }
 
                             echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                         }
@@ -184,9 +190,9 @@ $page_description = "Test network path from multiple locations around the world 
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
             $maps_api_key = GetSetting('maps_api_key');
-            if ($maps_api_key) {
-                echo "var mapsApiKey = '$maps_api_key';";
-            }
+        if ($maps_api_key) {
+            echo "var mapsApiKey = '$maps_api_key';";
+        }
         ?>
         </script>
         <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
@@ -206,15 +212,16 @@ function LoadLocations()
     $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
     $includePaid = $isPaid || $admin;
     $locations = LoadLocationsIni();
-    FilterLocations( $locations, $includePaid );
+    FilterLocations($locations, $includePaid);
 
     // strip out any sensitive information
-    foreach( $locations as $index => &$loc )
-    {
-        if( isset($loc['key']) )
-            unset( $loc['key'] );
-        if( isset($loc['remoteDir']) )
-            unset( $loc['remoteDir'] );
+    foreach ($locations as $index => &$loc) {
+        if (isset($loc['key'])) {
+            unset($loc['key']);
+        }
+        if (isset($loc['remoteDir'])) {
+            unset($loc['remoteDir']);
+        }
     }
 
     return $locations;

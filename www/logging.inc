@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -11,12 +12,14 @@
 function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
-    if ((array_key_exists('debug', $_REQUEST) && $_REQUEST['debug']) || $debug || $force)
-      error_log(gmdate('Y/m/d H:i:s - ') . $msg . "\n", 3, $logFile);
+    if ((array_key_exists('debug', $_REQUEST) && $_REQUEST['debug']) || $debug || $force) {
+        error_log(gmdate('Y/m/d H:i:s - ') . $msg . "\n", 3, $logFile);
+    }
 }
 
-function logAlways($msg, $logFile = './log.txt') {
-  logMsg($msg, $logFile, true);  // true -> force logging.
+function logAlways($msg, $logFile = './log.txt')
+{
+    logMsg($msg, $logFile, true);  // true -> force logging.
 }
 
 /**
@@ -25,10 +28,10 @@ function logAlways($msg, $logFile = './log.txt') {
  */
 function logWithLocation($msg, $backtraceFrameIndex = 0)
 {
-  $backtrace = debug_backtrace();
-  $file = $backtrace[$backtraceFrameIndex]["file"];
-  $line = $backtrace[$backtraceFrameIndex]["line"];
-  logMsg("$file:$line: $msg");
+    $backtrace = debug_backtrace();
+    $file = $backtrace[$backtraceFrameIndex]["file"];
+    $line = $backtrace[$backtraceFrameIndex]["line"];
+    logMsg("$file:$line: $msg");
 }
 
 /**
@@ -39,8 +42,10 @@ function logWithLocation($msg, $backtraceFrameIndex = 0)
  */
 function logMalformedInput($msg)
 {
-  logWithLocation("Unexpected input: " . $msg,
-                  1);  // 1 -> Log the caller of this method, not this line.
+    logWithLocation(
+        "Unexpected input: " . $msg,
+        1
+    );  // 1 -> Log the caller of this method, not this line.
 }
 
 /**
@@ -48,25 +53,27 @@ function logMalformedInput($msg)
 *
 * @param mixed $msg
 */
-function logError($msg) {
-  $dir = __DIR__ . '/log';
-  if (!is_dir($dir))
-    mkdir($dir, 0744, true);
-  if (is_dir($dir)) {
-    // Delete any error logs more than a week old
-    $files = glob("$dir/error.log.*");
-    $UTC = new DateTimeZone('UTC');
-    $now = time();
-    foreach ($files as $file) {
-      if (preg_match('/error\.log\.([0-9]{8})$/', $file, $matches)) {
-        $date = DateTime::createFromFormat('Ymd', $matches[1], $UTC);
-        $time = $date->getTimestamp();
-        if ($time < $now && $now - $time > 604800)
-          unlink($file);
-      }
+function logError($msg)
+{
+    $dir = __DIR__ . '/log';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0744, true);
     }
-    $date = gmdate('Ymd');
-    error_log(gmdate('H:i:s - ') . $msg . "\n", 3, "$dir/error.log.$date");
-  }
+    if (is_dir($dir)) {
+      // Delete any error logs more than a week old
+        $files = glob("$dir/error.log.*");
+        $UTC = new DateTimeZone('UTC');
+        $now = time();
+        foreach ($files as $file) {
+            if (preg_match('/error\.log\.([0-9]{8})$/', $file, $matches)) {
+                $date = DateTime::createFromFormat('Ymd', $matches[1], $UTC);
+                $time = $date->getTimestamp();
+                if ($time < $now && $now - $time > 604800) {
+                    unlink($file);
+                }
+            }
+        }
+        $date = gmdate('Ymd');
+        error_log(gmdate('H:i:s - ') . $msg . "\n", 3, "$dir/error.log.$date");
+    }
 }
-?>

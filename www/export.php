@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -13,8 +14,8 @@
 include 'common.inc';
 
 if ($userIsBot) {
-  header('HTTP/1.0 403 Forbidden');
-  exit;
+    header('HTTP/1.0 403 Forbidden');
+    exit;
 }
 
 require_once __DIR__ . '/lib/json.php';
@@ -22,15 +23,19 @@ require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/har/HttpArchiveGenerator.php';
 
 $options = array();
-if (isset($_REQUEST['bodies']))
-  $options['bodies'] = $_REQUEST['bodies'];
+if (isset($_REQUEST['bodies'])) {
+    $options['bodies'] = $_REQUEST['bodies'];
+}
 $options['cached'] = $cached;
-if (isset($_REQUEST['php']))
-  $options['php'] = $_REQUEST['php'];
-if (isset($_REQUEST['pretty']))
-  $options['pretty'] = $_REQUEST['pretty'];
-if (isset($_REQUEST['run']))
-  $options['run'] = $_REQUEST['run'];
+if (isset($_REQUEST['php'])) {
+    $options['php'] = $_REQUEST['php'];
+}
+if (isset($_REQUEST['pretty'])) {
+    $options['pretty'] = $_REQUEST['pretty'];
+}
+if (isset($_REQUEST['run'])) {
+    $options['run'] = $_REQUEST['run'];
+}
 $options['lighthouse'] = isset($_REQUEST['lighthouse']) ? $_REQUEST['lighthouse'] : 1;
 
 $filename = '';
@@ -38,28 +43,28 @@ if (@strlen($url)) {
     $parts = parse_url($url);
     $filename = $parts['host'];
 }
-if (!strlen($filename))
+if (!strlen($filename)) {
     $filename = "pagetest";
+}
 $filename .= ".$id.har";
 header('Content-type: application/json');
 header("Content-disposition: attachment; filename=$filename");
 
 // see if we need to wrap it in a JSONP callback
-if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
+if (isset($_REQUEST['callback']) && strlen($_REQUEST['callback'])) {
     echo "{$_REQUEST['callback']}(";
+}
 
 $json = '{}';
 
 if (isset($testPath)) {
-
     $testInfo = TestInfo::fromValues($id, $testPath, $test);
     $archiveGenerator = new HttpArchiveGenerator($testInfo, $options);
     $json = $archiveGenerator->generate();
-
 }
 
 echo $json;
 
-if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
-  echo ");";
-?>
+if (isset($_REQUEST['callback']) && strlen($_REQUEST['callback'])) {
+    echo ");";
+}

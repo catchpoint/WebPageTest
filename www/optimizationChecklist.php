@@ -1,8 +1,9 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-header ("Content-type: image/png");
+header("Content-type: image/png");
 include __DIR__ . '/common.inc';
 require_once __DIR__ . '/optimizationChecklist.inc';
 require_once __DIR__ . '/include/TestInfo.php';
@@ -20,4 +21,3 @@ $im = drawChecklist($testStepResult->readableIdentifier($url), $requests, $testS
 // spit the image out to the browser
 imagepng($im);
 imagedestroy($im);
-?>

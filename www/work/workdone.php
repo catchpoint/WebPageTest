@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -18,64 +19,59 @@ require_once __DIR__ . '/../include/ResultProcessing.php';
 require_once __DIR__ . '/../include/JsonResultGenerator.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
-
 $key  = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
 $location = isset($_REQUEST['location']) ? $_REQUEST['location'] : null;
 if (!ValidateLocation($location, $key)) {
-  header("HTTP/1.1 403 Unauthorized");
-  exit;
+    header("HTTP/1.1 403 Unauthorized");
+    exit;
 }
 
 if (!isset($included)) {
-  error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-  header('Content-type: text/plain');
-  header("Cache-Control: no-cache, must-revalidate");
-  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 set_time_limit(3600);
 ignore_user_abort(true);
-
 $id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
 // if (strpos($id, 'SaaS')) {
 //   $id = null;
 // }
 $uploaded = false;
 if (!isset($id)) {
-  // Generate a test ID if this is an upload
-  $id = GenerateTestID();
-  $uploaded = true;
-  $testPath = './' . GetTestPath($id);
-
-  if( !is_dir($testPath) ) {
-      mkdir($testPath, 0777, true);
-  }
+// Generate a test ID if this is an upload
+    $id = GenerateTestID();
+    $uploaded = true;
+    $testPath = './' . GetTestPath($id);
+    if (!is_dir($testPath)) {
+        mkdir($testPath, 0777, true);
+    }
 } elseif (isset($id) && strpos($id, 'SaaS')) {
-  $uploaded = true;
-  $testPath = './' . GetTestPath($id);
-
-  if( !is_dir($testPath) ) {
-    mkdir($testPath, 0777, true);
-  }
+    $uploaded = true;
+    $testPath = './' . GetTestPath($id);
+    if (!is_dir($testPath)) {
+        mkdir($testPath, 0777, true);
+    }
 }
 // Send back the generated test ID
 echo $id;
 ob_flush();
 flush();
-
 $workdone_start = microtime(true);
-
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $cpu = arrayLookupWithDefault('cpu', $_REQUEST, 0);
 $pc = array_key_exists('pc', $_REQUEST) ? $_REQUEST['pc'] : '';
 $ec2 = array_key_exists('ec2', $_REQUEST) ? $_REQUEST['ec2'] : '';
 $tester = null;
-if (strlen($ec2))
-  $tester = $ec2;
-elseif (strlen($pc))
-  $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
-else
-  $tester = trim($_SERVER['REMOTE_ADDR']);
+if (strlen($ec2)) {
+    $tester = $ec2;
+} elseif (strlen($pc)) {
+    $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
+} else {
+    $tester = trim($_SERVER['REMOTE_ADDR']);
+}
 
 // Sometimes we need to make changes to the way the client and server
 // communicate, without updating both at the same time.  The following
@@ -87,242 +83,246 @@ else
 // re-image all agents, we need to support the old behavior for a while.
 $flattenUploadedZippedHar =
     arrayLookupWithDefault('flattenZippedHar', $_REQUEST, false);
-
 // The following params are set by the android agents (blaze and WebpageTest).
 // TODO(skerner): POST params are not saved to disk directly, so it is hard to
 // see what the agent uploaded after the fact.  Consider writing them to a
 // file that gets uploaded.
 
-$runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, null);
-$runNumber     = arrayLookupWithDefault('run',            $_REQUEST, $runNumber);
-$runIndex      = arrayLookupWithDefault('index',          $_REQUEST, null);
-$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, null);
-$cacheWarmed   = arrayLookupWithDefault('cached',         $_REQUEST, $cacheWarmed);
-$docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, null);
+$runNumber     = arrayLookupWithDefault('_runNumber', $_REQUEST, null);
+$runNumber     = arrayLookupWithDefault('run', $_REQUEST, $runNumber);
+$runIndex      = arrayLookupWithDefault('index', $_REQUEST, null);
+$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed', $_REQUEST, null);
+$cacheWarmed   = arrayLookupWithDefault('cached', $_REQUEST, $cacheWarmed);
+$docComplete   = arrayLookupWithDefault('_docComplete', $_REQUEST, null);
 $onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, null);
-$onRender      = arrayLookupWithDefault('_onRender',      $_REQUEST, null);
-$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
-
+$onRender      = arrayLookupWithDefault('_onRender', $_REQUEST, null);
+$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest', $_REQUEST, null);
 $testInfo_dirty = false;
-
 if (ValidateTestId($id)) {
-
-  $testPath = './' . GetTestPath($id);
-  if (!is_dir($testPath)) {
-    mkdir($testPath, 0777, true);
-  }
-  // Extract the uploaded data
-  if (is_dir($testPath)) {
-    if (isset($_FILES['file']['tmp_name'])) {
-      ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
-      CompressTextFiles($testPath);
+    $testPath = './' . GetTestPath($id);
+    if (!is_dir($testPath)) {
+        mkdir($testPath, 0777, true);
     }
-  }
+  // Extract the uploaded data
+    if (is_dir($testPath)) {
+        if (isset($_FILES['file']['tmp_name'])) {
+            ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
+            CompressTextFiles($testPath);
+        }
+    }
 
-  $testErrorStr = '';
-  $errorStr = '';
-  if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
-    $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
-  if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
-    $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
-  $testLock = LockTest($id);
-  logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
-  if (!isset($testLock))
-    logTestMsg($id, "Failed to lock test");
-  $testInfo = GetTestInfo($id);
-
-  // Figure out the path to the results.
-  $ini = parse_ini_file("$testPath/testinfo.ini");
-  $time = time();
-  $testInfo['last_updated'] = $time;
-  // Allow for the test agents to indicate that they are including a
+    $testErrorStr = '';
+    $errorStr = '';
+    if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
+        $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
+    }
+    if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])) {
+        $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
+    }
+    $testLock = LockTest($id);
+    logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
+    if (!isset($testLock)) {
+        logTestMsg($id, "Failed to lock test");
+    }
+    $testInfo = GetTestInfo($id);
+// Figure out the path to the results.
+    $ini = parse_ini_file("$testPath/testinfo.ini");
+    $time = time();
+    $testInfo['last_updated'] = $time;
+// Allow for the test agents to indicate that they are including a
   // trace-based timeline (mostly for the mobile agents that always include it)
-  if (isset($_REQUEST['timeline']) && $_REQUEST['timeline'])
-    $testInfo['timeline'] = 1;
-  $testInfo_dirty = true;
+    if (isset($_REQUEST['timeline']) && $_REQUEST['timeline']) {
+        $testInfo['timeline'] = 1;
+    }
+    $testInfo_dirty = true;
+    if (!strlen($tester) && array_key_exists('tester', $testInfo) && strlen($testInfo['tester'])) {
+        $tester = $testInfo['tester'];
+    }
 
-  if (!strlen($tester) && array_key_exists('tester', $testInfo) && strlen($testInfo['tester']))
-    $tester = $testInfo['tester'];
-
-  $medianMetric = GetSetting('medianMetric', 'loadTime');
-  if (isset($testInfo['medianMetric']))
-    $medianMetric = $testInfo['medianMetric'];
+    $medianMetric = GetSetting('medianMetric', 'loadTime');
+    if (isset($testInfo['medianMetric'])) {
+        $medianMetric = $testInfo['medianMetric'];
+    }
 
   // keep track of any overall or run-specific errors reported by the agent
-  if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
-    $testInfo['test_error'] = $_REQUEST['testerror'];
-    $testInfo_dirty = true;
-  }
-  if (isset($runNumber) &&
-      isset($cacheWarmed) &&
-      array_key_exists('error', $_REQUEST) &&
-      strlen($_REQUEST['error'])) {
-    if (!array_key_exists('errors', $testInfo))
-      $testInfo['errors'] = array();
-    if (!array_key_exists($runNumber, $testInfo['errors']))
-      $testInfo['errors'][$runNumber] = array();
-    $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
-    $testInfo_dirty = true;
-  }
+    if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
+        $testInfo['test_error'] = $_REQUEST['testerror'];
+        $testInfo_dirty = true;
+    }
+    if (
+        isset($runNumber) &&
+        isset($cacheWarmed) &&
+        array_key_exists('error', $_REQUEST) &&
+        strlen($_REQUEST['error'])
+    ) {
+        if (!array_key_exists('errors', $testInfo)) {
+            $testInfo['errors'] = array();
+        }
+        if (!array_key_exists($runNumber, $testInfo['errors'])) {
+            $testInfo['errors'][$runNumber] = array();
+        }
+        $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
+        $testInfo_dirty = true;
+    }
 
   // Do any post-processing on this individual run
-  ProcessRun();
-
-  if (strlen($location) && strlen($tester)) {
-    $testerInfo = array();
-    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-    if (!isset($testerError))
-      $testerError = false;
-    if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
-      $testerError = $_REQUEST['testerror'];
-    elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
-      $testerError = $_REQUEST['error'];
-    // clear the rebooted flag on the first successful test
-    $rebooted = null;
-    if ($testerError === false)
-      $rebooted = false;
-    UpdateTester($location, $tester, $testerInfo, $cpu, $testerError, $rebooted);
-  }
+    ProcessRun();
+    if (strlen($location) && strlen($tester)) {
+        $testerInfo = array();
+        $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+        if (!isset($testerError)) {
+            $testerError = false;
+        }
+        if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
+            $testerError = $_REQUEST['testerror'];
+        } elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])) {
+            $testerError = $_REQUEST['error'];
+        }
+      // clear the rebooted flag on the first successful test
+        $rebooted = null;
+        if ($testerError === false) {
+            $rebooted = false;
+        }
+        UpdateTester($location, $tester, $testerInfo, $cpu, $testerError, $rebooted);
+    }
 
   // see if the test is complete
-  $all_done = false;
-  if ($done) {
-    $all_done = true;
-    if (isset($runNumber)) {
-      $all_done = false;
-      $runnum = intval($runNumber);
-      if ($runnum) {
-        touch("$testPath/run.complete.$runnum");
-        $files = glob("$testPath/run.complete.*");
-        if (isset($files) && is_array($files)) {
-          $done_count = count($files);
-          logTestMsg($id, "$done_count of {$testInfo['runs']} tests complete");
-          if ($done_count >= $testInfo['runs']) {
-            logTestMsg($id, 'All done');
-            $all_done = true;
-          }
+    $all_done = false;
+    if ($done) {
+        $all_done = true;
+        if (isset($runNumber)) {
+            $all_done = false;
+            $runnum = intval($runNumber);
+            if ($runnum) {
+                touch("$testPath/run.complete.$runnum");
+                $files = glob("$testPath/run.complete.*");
+                if (isset($files) && is_array($files)) {
+                    $done_count = count($files);
+                    logTestMsg($id, "$done_count of {$testInfo['runs']} tests complete");
+                    if ($done_count >= $testInfo['runs']) {
+                        logTestMsg($id, 'All done');
+                        $all_done = true;
+                    }
+                }
+            }
         }
-      }
+        if ($all_done) {
+    // Mark the test as done and save it out so that we can load the page data
+            $testInfo['completed'] = $time;
+            SaveTestInfo($id, $testInfo);
+            $testInfo_dirty = false;
+    // delete any .test files
+            $files = scandir($testPath);
+            $files = $files ?: [];
+            foreach ($files as $file) {
+                if (preg_match('/.*\.test$/', $file)) {
+                    unlink("$testPath/$file");
+                }
+            }
+            if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file'])) {
+                unlink($testInfo['job_file']);
+            }
+
+            $perTestTime = 0;
+            $testCount = 0;
+    // do pre-complete post-processing
+            MoveVideoFiles($testPath);
+            WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
+            if (!isset($pageData)) {
+                $pageData = loadAllPageData($testPath);
+            }
+            $medianRun = GetMedianRun($pageData, 0, $medianMetric);
+            $testInfo['medianRun'] = $medianRun;
+            $testInfo_dirty = true;
+    // delete all of the videos except for the median run?
+            if (array_key_exists('median_video', $ini) && $ini['median_video']) {
+                KeepVideoForRun($testPath, $medianRun);
+            }
+
+            $test = file_get_contents("$testPath/testinfo.ini");
+            $now = gmdate("m/d/y G:i:s", $time);
+    // update the completion time if it isn't already set
+            if (!strpos($test, 'completeTime')) {
+                $complete = "[test]\r\ncompleteTime=$now";
+                if ($medianRun) {
+                    $complete .= "\r\nmedianRun=$medianRun";
+                }
+                $out = str_replace('[test]', $complete, $test);
+                file_put_contents("$testPath/testinfo.ini", $out);
+            }
+        }
     }
-    if ($all_done) {
-      // Mark the test as done and save it out so that we can load the page data
-      $testInfo['completed'] = $time;
-      SaveTestInfo($id, $testInfo);
-      $testInfo_dirty = false;
 
-      // delete any .test files
-      $files = scandir($testPath);
-      $files = $files ?: [];
-      foreach ($files as $file)
-        if (preg_match('/.*\.test$/', $file))
-          unlink("$testPath/$file");
-      if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file']))
-        unlink($testInfo['job_file']);
-
-      $perTestTime = 0;
-      $testCount = 0;
-
-      // do pre-complete post-processing
-      MoveVideoFiles($testPath);
-      WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
-
-      if (!isset($pageData))
-        $pageData = loadAllPageData($testPath);
-      $medianRun = GetMedianRun($pageData, 0, $medianMetric);
-      $testInfo['medianRun'] = $medianRun;
-      $testInfo_dirty = true;
-
-      // delete all of the videos except for the median run?
-      if( array_key_exists('median_video', $ini) && $ini['median_video'])
-        KeepVideoForRun($testPath, $medianRun);
-
-      $test = file_get_contents("$testPath/testinfo.ini");
-      $now = gmdate("m/d/y G:i:s", $time);
-
-      // update the completion time if it isn't already set
-      if (!strpos($test, 'completeTime')) {
-        $complete = "[test]\r\ncompleteTime=$now";
-        if($medianRun)
-          $complete .= "\r\nmedianRun=$medianRun";
-        $out = str_replace('[test]', $complete, $test);
-        file_put_contents("$testPath/testinfo.ini", $out);
-      }
+    if ($testInfo_dirty) {
+        SaveTestInfo($id, $testInfo);
     }
-  }
 
-  if ($testInfo_dirty)
-    SaveTestInfo($id, $testInfo);
-
-  SecureDir($testPath);
-  if ($uploaded){
-    ProcessUploadedTest($id);
-    $testInfo = GetTestInfo($id);
-  }
-  logTestMsg($id, "Done Processing. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
-  UnlockTest($testLock);
-  /*************************************************************************
+    SecureDir($testPath);
+    if ($uploaded) {
+        ProcessUploadedTest($id);
+        $testInfo = GetTestInfo($id);
+    }
+    logTestMsg($id, "Done Processing. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
+    UnlockTest($testLock);
+/*************************************************************************
   * Do No modify TestInfo after this point
   **************************************************************************/
 
   // do any post-processing when the full test is complete that doesn't rely on testinfo
-  if ($all_done) {
-    logTestMsg($id, "Test Complete");
-
-    touch("$testPath/test.complete");
-    @unlink("$testPath/test.running");
-    @unlink("$testPath/test.requeued");
-    @unlink("$testPath/test.waiting");
-    @unlink("$testPath/test.scheduled");
-
-    // Cleanup the files marking each run
-    $files = glob("$testPath/run.complete.*");
-    if (isset($files) && is_array($files)) {
-      foreach ($files as $file) {
-        if (file_exists($file)) {
-          unlink($file);
+    if ($all_done) {
+        logTestMsg($id, "Test Complete");
+        touch("$testPath/test.complete");
+        @unlink("$testPath/test.running");
+        @unlink("$testPath/test.requeued");
+        @unlink("$testPath/test.waiting");
+        @unlink("$testPath/test.scheduled");
+// Cleanup the files marking each run
+        $files = glob("$testPath/run.complete.*");
+        if (isset($files) && is_array($files)) {
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
-      }
-    }
-    if (isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id'])) {
-      $ret = array('data' => GetTestStatus($id));
-      $ret['statusCode'] = $ret['data']['statusCode'];
-      $ret['statusText'] = $ret['data']['statusText'];
-      $ret['saas_test_id'] = $testInfo['saas_test_id'];
-      $ret['saas_node_id'] = $testInfo['saas_node_id'];
-      
-      if ($ret['statusCode'] == 200) {
-        if (defined("VER_WEBPAGETEST")) {
-          $ret["webPagetestVersion"] = VER_WEBPAGETEST;
+        if (isset($testInfo) && is_array($testInfo) && isset($testInfo['saas_test_id'])) {
+            $ret = array('data' => GetTestStatus($id));
+            $ret['statusCode'] = $ret['data']['statusCode'];
+            $ret['statusText'] = $ret['data']['statusText'];
+            $ret['saas_test_id'] = $testInfo['saas_test_id'];
+            $ret['saas_node_id'] = $testInfo['saas_node_id'];
+            if ($ret['statusCode'] == 200) {
+                if (defined("VER_WEBPAGETEST")) {
+                    $ret["webPagetestVersion"] = VER_WEBPAGETEST;
+                }
+
+                $saasTestInfo = TestInfo::fromFiles($testPath);
+                $saasTestResults = TestResults::fromFiles($saasTestInfo);
+                $infoFlags = array(JsonResultGenerator::WITHOUT_AVERAGE, JsonResultGenerator::WITHOUT_STDDEV, JsonResultGenerator::WITHOUT_MEDIAN, JsonResultGenerator::WITHOUT_REPEAT_VIEW);
+                $jsonResultGenerator = new JsonResultGenerator($saasTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
+                $ret['data'] = $jsonResultGenerator->resultDataArray($saasTestResults, $median_metric);
+                if (isset($ret) && is_array($ret)) {
+                    $txt = json_encode($ret);
+                    ReportSaaSTest($txt, $ret['saas_node_id'], $ret['data']['id']);
+                }
+            }
         }
 
-        $saasTestInfo = TestInfo::fromFiles($testPath);
-
-        $saasTestResults = TestResults::fromFiles($saasTestInfo);
-
-        $infoFlags = array(JsonResultGenerator::WITHOUT_AVERAGE, JsonResultGenerator::WITHOUT_STDDEV, JsonResultGenerator::WITHOUT_MEDIAN, JsonResultGenerator::WITHOUT_REPEAT_VIEW);
-        $jsonResultGenerator = new JsonResultGenerator($saasTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
-        $ret['data'] = $jsonResultGenerator->resultDataArray($saasTestResults, $median_metric);
-
-        if (isset($ret) && is_array($ret)) {
-            $txt = json_encode($ret);
-            ReportSaaSTest($txt, $ret['saas_node_id'], $ret['data']['id']);
-        }      
-      }
+      // send an async request to the post-processing code so we don't block
+        SendAsyncRequest("/work/postprocess.php?test=$id");
     }
-
-    // send an async request to the post-processing code so we don't block
-    SendAsyncRequest("/work/postprocess.php?test=$id");
-  }
 }
 
 $workdone_end = microtime(true);
 
-function ProcessRun() {
-  global $runNumber, $cacheWarmed, $testPath, $id, $testerError;
-  if (isset($runNumber) && isset($cacheWarmed)) {
-    $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
-    $testerError = $resultProcessing->postProcessRun();
-  }
+function ProcessRun()
+{
+
+    global $runNumber, $cacheWarmed, $testPath, $id, $testerError;
+    if (isset($runNumber) && isset($cacheWarmed)) {
+        $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
+        $testerError = $resultProcessing->postProcessRun();
+    }
 }
 
 /**
@@ -332,124 +332,145 @@ function ProcessRun() {
 */
 function KeepVideoForRun($testPath, $run)
 {
-  if ($run && !GetSetting('keep_all_video')) {
-    $dir = opendir($testPath);
-    if ($dir) {
-      while($file = readdir($dir)) {
-        $path = $testPath  . "/$file/";
-        if( is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run" )
-          delTree("$path/");
-        elseif (is_file("$testPath/$file")) {
-          if (preg_match('/^([0-9]+(_Cached)?)[_\.]/', $file, $matches) && count($matches) > 1) {
-            $match_run = $matches[1];
-            if (strcmp("$run", $match_run) &&
-                (strpos($file, '_bodies.zip') ||
-                 strpos($file, '.cap') ||
-                 strpos($file, '_trace.json') ||
-                 strpos($file, '_netlog.txt') ||
-                 strpos($file, '_doc.') ||
-                 strpos($file, '_render.'))) {
-              unlink("$testPath/$file");
+    if ($run && !GetSetting('keep_all_video')) {
+        $dir = opendir($testPath);
+        if ($dir) {
+            while ($file = readdir($dir)) {
+                $path = $testPath  . "/$file/";
+                if (is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run") {
+                    delTree("$path/");
+                } elseif (is_file("$testPath/$file")) {
+                    if (preg_match('/^([0-9]+(_Cached)?)[_\.]/', $file, $matches) && count($matches) > 1) {
+                        $match_run = $matches[1];
+                        if (
+                                strcmp("$run", $match_run) &&
+                                (strpos($file, '_bodies.zip') ||
+                                strpos($file, '.cap') ||
+                                strpos($file, '_trace.json') ||
+                                strpos($file, '_netlog.txt') ||
+                                strpos($file, '_doc.') ||
+                                strpos($file, '_render.'))
+                        ) {
+                            unlink("$testPath/$file");
+                        }
+                    }
+                }
             }
-          }
-        }
-      }
 
-      closedir($dir);
+            closedir($dir);
+        }
     }
-  }
 }
 
 /**
  * Remove sensitive data fields from HTTP headers (cookies and HTTP Auth)
  *
  */
-function RemoveSensitiveHeaders($file) {
+function RemoveSensitiveHeaders($file)
+{
+
     $patterns = array('/(cookie:[ ]*)([^\r\n]*)/i','/(authenticate:[ ]*)([^\r\n]*)/i');
     $data = gz_file_get_contents($file);
     $data = preg_replace($patterns, '\1XXXXXX', $data);
     gz_file_put_contents($file, $data);
 }
 
-function CompressTextFiles($testPath) {
-  global $ini;
-  $f = scandir($testPath);
-  $f = $f ?: [];
-  foreach( $f as $textFile ) {
-    if ($textFile != 'test.log') {
-      logMsg("Checking $textFile\n");
-      if( is_file("$testPath/$textFile") ) {
-        $parts = pathinfo($textFile);
-        $ext = $parts['extension'];
-        if( !strcasecmp( $ext, 'txt') ||
-            !strcasecmp( $ext, 'json') ||
-            !strcasecmp( $ext, 'log') ||
-            !strcasecmp( $ext, 'csv') ) {
-          if (strpos($textFile, '_optimization'))
-            unlink("$testPath/$textFile");
-          elseif (gz_compress("$testPath/$textFile"))
-            unlink("$testPath/$textFile");
+function CompressTextFiles($testPath)
+{
+
+    global $ini;
+    $f = scandir($testPath);
+    $f = $f ?: [];
+    foreach ($f as $textFile) {
+        if ($textFile != 'test.log') {
+            logMsg("Checking $textFile\n");
+            if (is_file("$testPath/$textFile")) {
+                $parts = pathinfo($textFile);
+                $ext = $parts['extension'];
+                if (
+                        !strcasecmp($ext, 'txt') ||
+                        !strcasecmp($ext, 'json') ||
+                        !strcasecmp($ext, 'log') ||
+                        !strcasecmp($ext, 'csv')
+                ) {
+                    if (strpos($textFile, '_optimization')) {
+                        unlink("$testPath/$textFile");
+                    } elseif (gz_compress("$testPath/$textFile")) {
+                        unlink("$testPath/$textFile");
+                    }
+                }
+                if (isset($ini) && is_array($ini) && isset($ini['sensitive']) && $ini['sensitive'] && strpos($textFile, '_report')) {
+                    RemoveSensitiveHeaders($testPath . '/' . basename($textFile, '.gz'));
+                }
+            }
         }
-        if (isset($ini) && is_array($ini) && isset($ini['sensitive']) && $ini['sensitive'] && strpos($textFile, '_report'))
-          RemoveSensitiveHeaders($testPath . '/' . basename($textFile, '.gz'));
-      }
     }
-  }
 }
 
-function ExtractZipFile($file, $testPath) {
-  global $id;
-  $zipsize = filesize($file);
-  logTestMsg($id, "Extracting $zipsize byte uploaded file '$file' to '$testPath'");
-  $zip = new ZipArchive();
-  if ($zip->open($file) === TRUE) {
-    $valid = true;
-    // Make sure all of the uploaded files are appropriate
-    for ($i=0; $i < $zip->numFiles; $i++) {
-      $entry = $zip->getNameIndex($i);
-      if (substr($entry, -1) == '/') continue; // skip directories
-      $fileName = basename($entry);
-      if (!validateUploadFileName($fileName))
-        $valid = false;
+function ExtractZipFile($file, $testPath)
+{
+
+    global $id;
+    $zipsize = filesize($file);
+    logTestMsg($id, "Extracting $zipsize byte uploaded file '$file' to '$testPath'");
+    $zip = new ZipArchive();
+    if ($zip->open($file) === true) {
+        $valid = true;
+          // Make sure all of the uploaded files are appropriate
+        for (
+            $i = 0; $i < $zip->numFiles;
+            $i++
+        ) {
+            $entry = $zip->getNameIndex($i);
+            if (substr($entry, -1) == '/') {
+                continue;
+            } // skip directories
+            $fileName = basename($entry);
+            if (!validateUploadFileName($fileName)) {
+                $valid = false;
+            }
+        }
+        if ($valid) {
+            $extractPath = realpath($testPath);
+            if ($extractPath !== false) {
+                if (!$zip->extractTo($extractPath)) {
+                    logTestMsg($id, "Error extracting uploaded ZIP file '$file' to '$testPath'");
+                }
+                $zip->close();
+            }
+        }
+    } else {
+        logTestMsg($id, "Error opening uploaded ZIP file '$file'");
     }
-    if ($valid) {
-      $extractPath = realpath($testPath);
-      if ($extractPath !== false) {
-        if (!$zip->extractTo($extractPath))
-          logTestMsg($id, "Error extracting uploaded ZIP file '$file' to '$testPath'");
-        $zip->close();
-      }
-    }
-  } else {
-    logTestMsg($id, "Error opening uploaded ZIP file '$file'");
-  }
 }
 
-function ValidateLocation($location, $key) {
-  $ok = false;
-  if (isset($location)) {
-    $rate_key = 'rlwork-' . $_SERVER['REMOTE_ADDR'];
-    $count = CacheFetch($rate_key);
-    if (!isset($count)) {
-      $count = 0;
-    }
-    // Only allow 3 invalid guesses every 10 minutes
-    if ($count < 3) {
-      $locKey = GetLocationKey($location);
-      if (!strlen($locKey)) {
-        // Location doesn't have a key specified
-        $ok = true;
-      } elseif ($key == $locKey) {
-        // Key matches
-        $ok = true;
-      }
-    }
+function ValidateLocation($location, $key)
+{
 
-    if (!$ok) {
-      // rate-limit invalid guesses (remember for 10 minutes cooldown)
-      $count++;
-      CacheStore($rate_key, $count, 600);
+    $ok = false;
+    if (isset($location)) {
+        $rate_key = 'rlwork-' . $_SERVER['REMOTE_ADDR'];
+        $count = CacheFetch($rate_key);
+        if (!isset($count)) {
+            $count = 0;
+        }
+      // Only allow 3 invalid guesses every 10 minutes
+        if ($count < 3) {
+            $locKey = GetLocationKey($location);
+            if (!strlen($locKey)) {
+            // Location doesn't have a key specified
+                  $ok = true;
+            } elseif ($key == $locKey) {
+            // Key matches
+                  $ok = true;
+            }
+        }
+
+        if (!$ok) {
+    // rate-limit invalid guesses (remember for 10 minutes cooldown)
+            $count++;
+            CacheStore($rate_key, $count, 600);
+        }
     }
-  }
-  return $ok;
+    return $ok;
 }

@@ -1,33 +1,33 @@
 <?php
+
 $category = "Quick";
 $imgsOutViewport = $testStepResult->getMetric('imgs-out-viewport');
 $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');
 $imgsInViewportSrcs = array();
-foreach($imgsInViewport as $img){
+foreach ($imgsInViewport as $img) {
     array_push($imgsInViewportSrcs, $img["src"]);
 }
 
 $imgsThatShouldBeLazy = array();
-if(isset($imgsOutViewport) ){
-    foreach($imgsOutViewport as $img) {
-        if( $img["loading"] !== "lazy" && !in_array($img["src"], $imgsInViewportSrcs) && strpos($img["src"], 'data:') !== 0 ){
+if (isset($imgsOutViewport)) {
+    foreach ($imgsOutViewport as $img) {
+        if ($img["loading"] !== "lazy" && !in_array($img["src"], $imgsInViewportSrcs) && strpos($img["src"], 'data:') !== 0) {
             array_push($imgsThatShouldBeLazy, $img);
         }
-
     }
-}  
+}
 
-if( count($imgsThatShouldBeLazy) ){
+if (count($imgsThatShouldBeLazy)) {
     $shouldBeLazySrcs = array();
-    foreach($imgsThatShouldBeLazy as $img){
+    foreach ($imgsThatShouldBeLazy as $img) {
         array_push($shouldBeLazySrcs, $img["src"]);
     }
 
     $assessment[$category]["opportunities"][] = array(
-		"title" => "Images outside the critical viewport can be lazy-loaded.",
-		"desc" => "When images are lazy-loaded using loading=\"lazy\", when they scroll into the viewport, freeing up early load for other tasks.",
-		"examples" => array_unique($shouldBeLazySrcs),
-		"experiments" => array(
+        "title" => "Images outside the critical viewport can be lazy-loaded.",
+        "desc" => "When images are lazy-loaded using loading=\"lazy\", when they scroll into the viewport, freeing up early load for other tasks.",
+        "examples" => array_unique($shouldBeLazySrcs),
+        "experiments" => array(
             (object) [
                 "id" => '014',
                 'title' => 'Add loading="lazy" to images',
@@ -35,18 +35,14 @@ if( count($imgsThatShouldBeLazy) ){
                 "expvar" => 'addloadinglazy',
                 "expval" => array_unique($shouldBeLazySrcs)            ]
         ),
-		"good" => false
-	);
-}
-else {
-   
+        "good" => false
+    );
+} else {
     $assessment[$category]["opportunities"][] = array(
-		"title" => "Zero images outside the critical viewport need to be lazy-loaded.",
-		"desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
-		"examples" => array(),
-		"experiments" => array(),
-		"good" => true
-	);
+        "title" => "Zero images outside the critical viewport need to be lazy-loaded.",
+        "desc" => "When images are lazy-loaded using loading=\"lazy\", they will be requested after the layout is established, which is too late for images in the critical window.",
+        "examples" => array(),
+        "experiments" => array(),
+        "good" => true
+    );
 }
-    
-?>

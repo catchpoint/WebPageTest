@@ -218,6 +218,7 @@
         </div>
         <div class="wpt-plan-set annual-plans">
             <?php
+
             foreach ($annual_plans as $key => $plan) :
                 $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
@@ -235,7 +236,6 @@
         </div>
         <div class="wpt-plan-set monthly-plans">
             <?php foreach ($monthly_plans as $key => $plan) :
-
                 $plan_block = <<<HTML
       <div class="form-wrapper-radio">
         <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />

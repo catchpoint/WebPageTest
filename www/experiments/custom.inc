@@ -85,51 +85,51 @@ $assessment[$category]["opportunities"][] = array(
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'site.js'
+    'hint' => 'site.js'
             ],
             (object) [
             'id' => '028',
             'expvar' => 'asyncjs',
             'title' => 'Async Blocking Scripts',
             "desc" => '<p>This experiment adds a <code>async</code> attribute to render-blocking scripts, causing the browser to fetch them in parallel while showing the page. Async scripts are not guaranteed to execute in the order they are defined in source.</p>',
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'site.js'
+    'hint' => 'site.js'
             ],
             (object) [
             'id' => '029',
             'expvar' => 'asynccss',
             'title' => 'Load CSS Async',
             "desc" => '<p>This experiment loads specified stylesheets in a way that allows the page to begin rendering while they are still loading. Note that this may cause a flash of unstyled content.</p>',
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'site.css'
+    'hint' => 'site.css'
             ],
             (object) [
             'id' => '030',
             'expvar' => 'imageaspectratio',
             'title' => 'Add Image Aspect Ratio',
             "desc" => '<p>This experiment adds <code>width="..."</code> and <code>height="..."</code> attributes to specified images, matching their natural width and height, to provide an aspect ratio.</p>',
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'Src value & config: <em>(<code>foo.jpg|w500|h600</code>)</em>',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'foo.jpg|w500|h600'
+    'hint' => 'foo.jpg|w500|h600'
             ],
             (object) [
             'id' => '031',
@@ -141,24 +141,24 @@ $assessment[$category]["opportunities"][] = array(
                     'label' => 'Src or Href',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'site.css'
+    'hint' => 'site.css'
             ],
             (object) [
             'id' => '032',
             'expvar' => 'addpreload',
             'title' => 'Preload Files',
-            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="'. $lcpSource .'"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
+            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="' . $lcpSource . '"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'Url and config: <em>(<code>path/to/file.jpg|as_image</code>)</em>',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'path/to/foo.jpg'
+    'hint' => 'path/to/foo.jpg'
             ],
             (object) [
             'id' => '033',
@@ -166,14 +166,14 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Remove Preloads',
             "desc" => '<p>This experiment removes specified unused preloads from the page, allowing other critical resources to be requested earlier.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'site.js'
+    'hint' => 'site.js'
             ],
             (object) [
             'id' => '034',
@@ -181,14 +181,14 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Preconnect Domains',
             "desc" => '<p>This experiment will add a <code>link</code> with <code>rel="preconnect"</code> for specified hosts, which saves time for those steps when the resource is later requested.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'Domain',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'https://www.webpagetest.org'
+    'hint' => 'https://www.webpagetest.org'
             ],
             (object) [
             'id' => '035',
@@ -196,14 +196,14 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Lazy Load Images',
             "desc" => '<p>This experiment adds <code>loading="lazy"</code> attributes to specified images.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'myimage.jpg'
+    'hint' => 'myimage.jpg'
             ],
             (object) [
             'id' => '036',
@@ -211,14 +211,14 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Remove Lazy Loading',
             "desc" => '<p>This experiment removes <code>loading="lazy"</code> attributes from specified images.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'myimage.jpg'
+    'hint' => 'myimage.jpg'
             ],
             (object) [
             'id' => '037',
@@ -230,7 +230,7 @@ $assessment[$category]["opportunities"][] = array(
             "hideassets" => true,
             'instruction' => false,
             
-'hint' => 'no value necessary'
+        'hint' => 'no value necessary'
             ],
             (object) [
             'id' => '038',
@@ -238,14 +238,14 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Add Priority Hint',
             "desc" => '<p><em>(Chromium-only)</em> This experiment adds an <code>fetchpriority="high"</code> attribute to specified  images, causing them to request earlier at a higher priority.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'Src/Href and config: <em>(<code>foo.jpg|i_high</code> or <code>foo.jpg|i_low</code>)</em>',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
-'hint' => 'foo.jpg|i_high'
+    'hint' => 'foo.jpg|i_high'
             ],
             (object) [
             'id' => '039',
@@ -253,12 +253,12 @@ $assessment[$category]["opportunities"][] = array(
             'title' => 'Remove Priority Hint',
             "desc" => '<p><em>(Chrome-only)</em> This experiment removes an existing <code>fetchpriority</code> attribute to specified images, causing them to request at their default priority.</p>',
             
-"expfields" => array(
+        "expfields" => array(
                 (object) [
                     'label' => 'File/URL',
                     'type' => 'text'
                 ]
-),
+    ),
             'addmore' => true,
             'hint' => 'foo.jpg'
             ],
@@ -270,7 +270,7 @@ $assessment[$category]["opportunities"][] = array(
             'expval' => array(''),
             "hideassets" => true,
            
-'hint' => 'foo.jpg'
+        'hint' => 'foo.jpg'
             ],
             (object) [
                 "id" => '049',
@@ -318,7 +318,3 @@ $assessment[$category]["opportunities"][] = array(
     "good" =>  null,
     "inputttext" => true
 );
-
-
-
-?>
