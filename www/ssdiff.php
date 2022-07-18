@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -15,12 +16,10 @@ $cmpPath = GetTestPath($_REQUEST['cmp']);
 $cmpData = loadAllPageData($cmpPath);
 $refRun = GetMedianRun($refData, 0, $median_metric);
 $cmpRun = GetMedianRun($cmpData, 0, $median_metric);
-if( $refRun && $cmpRun )
-{
+if ($refRun && $cmpRun) {
     $refFile = "$refPath/{$refRun}_screen.png";
     $cmpFile = "$cmpPath/{$cmpRun}_screen.png";
-    if( is_file($refFile) && is_file($cmpFile) )
-    {
+    if (is_file($refFile) && is_file($cmpFile)) {
         $refImg = urlencode("{$_REQUEST['ref']}/{$refRun}_screen.png");
         $cmpImg = urlencode("{$_REQUEST['cmp']}/{$cmpRun}_screen.png");
     }
@@ -30,7 +29,7 @@ if( $refRun && $cmpRun )
 <html lang="en-us">
     <head>
         <title>WebPageTest - Screenshot Diff</title>
-        <?php include ('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body>
         <div class="page">
@@ -40,8 +39,7 @@ if( $refRun && $cmpRun )
             $filmstrip = $_REQUEST['tests'];
             include 'header.inc';
 
-            if( isset($refImg) && isset($cmpImg) )
-            {
+            if (isset($refImg) && isset($cmpImg)) {
                 echo '<table style="text-align:center;">';
                 echo '<tr><th>Reference Image</th><th>Comparison Image</th></tr>';
                 echo '<tr><td>';
@@ -55,9 +53,9 @@ if( $refRun && $cmpRun )
                 echo "<a href=\"$cmpImgFile\"><img style=\"max-width:930px; -ms-interpolation-mode: bicubic;\" src=\"$cmpImgFile\"></a>";
                 echo '</td></tr>';
                 echo '</table>';
-            }
-            else
+            } else {
                 echo 'Sorry, the screenshots were not available for comparison';
+            }
 
             include('footer.inc');
             ?>

@@ -2,6 +2,7 @@
 <html>
   <head>
 <?php
+
 require_once __DIR__ . '/../../common.inc';
 
 global $USER_EMAIL;

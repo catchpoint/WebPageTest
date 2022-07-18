@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -9,8 +10,20 @@ $nsIcon = imagecreatefrompng(__DIR__ . '/images/not-secure-icon.png');
 /**
 * Draw label next to a request like "10 ms (404)".
 */
-function DrawRequestTimeLabelBackground($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
-                              $font, $font_width, $font_color, $bg_color) {
+function DrawRequestTimeLabelBackground(
+    $im,
+    $request,
+    $x1,
+    $y1,
+    $x2,
+    $y2,
+    $min_x,
+    $max_x,
+    $font,
+    $font_width,
+    $font_color,
+    $bg_color
+) {
     $label = $request['all_ms'] . ' ms';
     $code = $request['responseCode'];
     if ($code >= 300 || $code < 0) {
@@ -27,13 +40,30 @@ function DrawRequestTimeLabelBackground($im, $request, $x1, $y1, $x2, $y2, $min_
     if ($label_x >= $min_x) {
         // Draw text background to erase any grid/event lines.
         imagefilledrectangle(
-            $im, $label_x, $y1, $label_x + $label_width, $y2,
-            $bg_color);
+            $im,
+            $label_x,
+            $y1,
+            $label_x + $label_width,
+            $y2,
+            $bg_color
+        );
     }
 }
 
-function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
-                              $font, $font_width, $font_color, $bg_color) {
+function DrawRequestTimeLabel(
+    $im,
+    $request,
+    $x1,
+    $y1,
+    $x2,
+    $y2,
+    $min_x,
+    $max_x,
+    $font,
+    $font_width,
+    $font_color,
+    $bg_color
+) {
     $label = $request['all_ms'] . ' ms';
     $code = $request['responseCode'];
     if ($code >= 300 || $code < 0) {
@@ -63,18 +93,25 @@ function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
 * @param mixed $y2
 * @param array $color   RGB color
 */
-function DrawBar(&$im, $x1, $y1, $x2, $y2, $color, $shaded) {
-  if ($shaded) {
-    $bar_colors = GetBarColors($color, $y2 - $y1 + 1);
-    for ($i = 0; $i < count($bar_colors); $i++) {
-      list($r, $g, $b) = $bar_colors[$i];
-      imageline($im, $x1, $y1 + $i, $x2, $y1 + $i,
-                GetColor($im, $r, $g, $b));
+function DrawBar(&$im, $x1, $y1, $x2, $y2, $color, $shaded)
+{
+    if ($shaded) {
+        $bar_colors = GetBarColors($color, $y2 - $y1 + 1);
+        for ($i = 0; $i < count($bar_colors); $i++) {
+            list($r, $g, $b) = $bar_colors[$i];
+            imageline(
+                $im,
+                $x1,
+                $y1 + $i,
+                $x2,
+                $y1 + $i,
+                GetColor($im, $r, $g, $b)
+            );
+        }
+    } else {
+        list($r, $g, $b) = $color;
+        imagefilledrectangle($im, $x1, $y1, $x2, $y2, GetColor($im, $r, $g, $b));
     }
-  } else {
-    list($r, $g, $b) = $color;
-    imagefilledrectangle($im, $x1, $y1, $x2, $y2, GetColor($im, $r, $g, $b));
-  }
 }
 
 /**
@@ -88,7 +125,8 @@ function DrawBar(&$im, $x1, $y1, $x2, $y2, $color, $shaded) {
 *         array( 0, 204,  0)
 *         );
 */
-function GetBarColors($rgb, $num) {
+function GetBarColors($rgb, $num)
+{
     if ($num > 4) {
         $hi_rgb = ScaleRgb($rgb, 0.3);
         $lo_rgb = ScaleRgb($rgb, -0.2);
@@ -106,7 +144,8 @@ function GetBarColors($rgb, $num) {
 /**
 * Return array of $num interpolated colors from $rgb1 to $rgb2, inclusive.
 */
-function InterpolateColors($rgb1, $rgb2, $num) {
+function InterpolateColors($rgb1, $rgb2, $num)
+{
     $colors = array();
     if ($num >= 1) {
         $colors[] = $rgb1;
@@ -134,7 +173,8 @@ function InterpolateColors($rgb1, $rgb2, $num) {
 * @param array rgb color (e.g. array(255, 127, 0))
 * @param float $factor -1, 0, 1 give black, no change, and white, respectively.
 */
-function ScaleRgb($rgb, $factor) {
+function ScaleRgb($rgb, $factor)
+{
     $scale_rgb = array();
     $factor = (double)max(-1, min(1, $factor));
 
@@ -170,7 +210,8 @@ function GetColor(&$im, $r, $g, $b)
 /**
 * Load the performance data (CPU, Memory and Bandwidth)
 */
-function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw = 0) {
+function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw = 0)
+{
     $perfs = array(
         'cpu' => array('data' => array()),
         'bw' => array('data' => array()),
@@ -230,7 +271,7 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
             $last_time = 0;
             $last_value = 0;
             krsort($perfs['bw']['data'], SORT_NUMERIC);
-            foreach($perfs['bw']['data'] as $time => $value) {
+            foreach ($perfs['bw']['data'] as $time => $value) {
                 if ($last_time > $time) {
                     $elapsed = $last_time - $time;
                     if ($last_value > $max_bw) {
@@ -262,12 +303,13 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
     }
     if ($use_bw) {
         $count = count($perfs['bw']['data']);
-        if ($max_bw)
-          $perfs['bw']['max'] = $max_bw;
-        elseif ($count)
-          $perfs['bw']['max'] = max($perfs['bw']['data']);
-        else
-          $perfs['bw']['max'] = 0;
+        if ($max_bw) {
+            $perfs['bw']['max'] = $max_bw;
+        } elseif ($count) {
+            $perfs['bw']['max'] = max($perfs['bw']['data']);
+        } else {
+            $perfs['bw']['max'] = 0;
+        }
         $perfs['bw']['count'] = $count;
     } else {
         unset($perfs['bw']);
@@ -299,7 +341,6 @@ function DrawNotSecure($im, $x, $y, $width, $height)
     $height -= 4;
 
     imagecopyresampled($im, $nsIcon, $x, $y, 0, 0, $width, $height, 17, 17);
-    
 }
 /**
 * Draw a render blocking icon
@@ -317,15 +358,21 @@ function DrawBlocking($im, $x, $y, $width, $height)
 
     $rbIcon = imagecreatefrompng('./images/render-block-icon.png');
     imagecopyresampled($im, $rbIcon, $x, $y, 0, 0, $width, $height, 17, 17);
-    
-
 }
 /**
 * Fake some lines to make it look like text in a thumbnail
 *
 */
-function ThumbnailText(&$im, $x1, $y1, $width, $height,
-                       $label, $font_width, $color) {
+function ThumbnailText(
+    &$im,
+    $x1,
+    $y1,
+    $width,
+    $height,
+    $label,
+    $font_width,
+    $color
+) {
     $x2 = $x1 + min($width, $font_width * strlen($label));
     $y2 = $y1 + $height;
     for ($y = $y1 + 1; $y < $y2; $y++) {
@@ -336,5 +383,3 @@ function ThumbnailText(&$im, $x1, $y1, $width, $height,
         }
     }
 }
-
-?>

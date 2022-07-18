@@ -1,8 +1,9 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-header ("Content-type: image/png");
+header("Content-type: image/png");
 include 'common.inc';
 require_once __DIR__ . '/object_detail.inc';
 require_once __DIR__ . '/page_data.inc';
@@ -29,24 +30,24 @@ $rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 $requests = $testStepResult->getRequests();
 
 if ($include_js) {
-  $localPaths = new TestPaths($testInfo->getRootDirectory(), $run, $cached, $step);
-  AddRequestScriptTimings($requests, $localPaths->devtoolsScriptTimingFile());
+    $localPaths = new TestPaths($testInfo->getRootDirectory(), $run, $cached, $step);
+    AddRequestScriptTimings($requests, $localPaths->devtoolsScriptTimingFile());
 }
 
 if (@$_REQUEST['type'] == 'connection') {
-  $is_state = true;
-  $include_js = false;
-  $include_wait = false;
-  $rows = GetConnectionRows($requests, $show_labels);
+    $is_state = true;
+    $include_js = false;
+    $include_wait = false;
+    $rows = GetConnectionRows($requests, $show_labels);
 } else {
-  $rows = GetRequestRows($requests, $use_dots, $show_labels);
+    $rows = GetRequestRows($requests, $use_dots, $show_labels);
 }
 $page_events = GetPageEvents($testStepResult->getRawResults());
-$bwIn=0;
+$bwIn = 0;
 if (isset($test) && is_array($test) && isset($test['testinfo']['bwIn'])) {
-  $bwIn = $test['testinfo']['bwIn'];
-} else if(isset($test) && is_array($test) && isset($test['test']['bwIn'])) {
-  $bwIn = $test['test']['bwIn'];
+    $bwIn = $test['testinfo']['bwIn'];
+} elseif (isset($test) && is_array($test) && isset($test['test']['bwIn'])) {
+    $bwIn = $test['test']['bwIn'];
 }
 
 $options = array(
@@ -75,8 +76,7 @@ $im = GetWaterfallImage($rows, $url, $page_events, $options, $pageData);
 
 // Spit the image out to the browser.
 header('Last-Modified: ' . gmdate('r'));
-header('Expires: '.gmdate('r', time() + 31536000));
+header('Expires: ' . gmdate('r', time() + 31536000));
 header('Cache-Control: public, max-age=31536000', true);
 imagepng($im);
 imagedestroy($im);
-?>

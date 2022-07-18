@@ -1,8 +1,9 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-chdir ('..');
+chdir('..');
 include 'common.inc';
 
 if (!$privateInstall && !$admin) {
@@ -74,7 +75,8 @@ if (!$privateInstall && !$admin) {
 <?php
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function ShowCheck($label, $pass, $required = true, $value = null) {
+function ShowCheck($label, $pass, $required = true, $value = null)
+{
     if ($pass) {
         $str = 'pass';
     } elseif ($required) {
@@ -98,7 +100,8 @@ function ShowCheck($label, $pass, $required = true, $value = null) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function CheckPHP() {
+function CheckPHP()
+{
     ShowCheck('PHP version at least 5.3', phpversion() >= 5.3, true, phpversion());
     ShowCheck('GD module installed', extension_loaded('gd'));
     ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
@@ -114,18 +117,21 @@ function CheckPHP() {
     ShowCheck('php.ini memory_limit > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));
 }
 
-function CheckUtils() {
-  ShowCheck('ffmpeg installed with --enable-libx264 (required for video)', CheckFfmpeg());
-  ShowCheck('jpegtran installed (required for JPEG analysis)', CheckJpegTran(), false);
-  ShowCheck('exiftool installed (required for JPEG analysis)', CheckExifTool(), false);
-  $beanstalk = GetSetting('beanstalkd');
-  if ($beanstalk)
-      ShowCheck("beanstalkd responding on $beanstalk (configured in settings.ini)", CheckBeanstalkd());
+function CheckUtils()
+{
+    ShowCheck('ffmpeg installed with --enable-libx264 (required for video)', CheckFfmpeg());
+    ShowCheck('jpegtran installed (required for JPEG analysis)', CheckJpegTran(), false);
+    ShowCheck('exiftool installed (required for JPEG analysis)', CheckExifTool(), false);
+    $beanstalk = GetSetting('beanstalkd');
+    if ($beanstalk) {
+        ShowCheck("beanstalkd responding on $beanstalk (configured in settings.ini)", CheckBeanstalkd());
+    }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function CheckFilesystem() {
+function CheckFilesystem()
+{
     ShowCheck('{docroot}/tmp writable', IsWritable('tmp'));
     ShowCheck('{docroot}/dat writable', IsWritable('dat'));
     ShowCheck('{docroot}/results writable', IsWritable('results'));
@@ -138,11 +144,12 @@ function CheckFilesystem() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function IsWPTTmpOnTmpfs() {
+function IsWPTTmpOnTmpfs()
+{
     $marker = getcwd() . "/tmp";
     exec('mount -l -t tmpfs', $lines);
     foreach ($lines as $line) {
-	if (0 === strpos($line, "tmpfs on $marker")) {
+        if (0 === strpos($line, "tmpfs on $marker")) {
             return true;
         }
     }
@@ -152,16 +159,17 @@ function IsWPTTmpOnTmpfs() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function CheckLocations() {
+function CheckLocations()
+{
     $locations = LoadLocationsIni();
     $out = '';
-    foreach($locations['locations'] as $id => $location) {
+    foreach ($locations['locations'] as $id => $location) {
         if (is_numeric($id)) {
             $info = GetInstallLocationInfo($locations, $location);
             $out .= "<li class=\"{$info['state']}\">{$info['label']}";
             if (count($info['locations'])) {
                 $out .= "<ul>";
-                foreach($info['locations'] as $loc_name => $loc) {
+                foreach ($info['locations'] as $loc_name => $loc) {
                     $out .= "<li class=\"{$loc['state']}\">{$loc['label']}";
                     $out .= '</li>';
                 }
@@ -175,7 +183,8 @@ function CheckLocations() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function GetInstallLocationInfo(&$locations, $location) {
+function GetInstallLocationInfo(&$locations, $location)
+{
     $info = array('state' => 'pass', 'label' => "$location : ", 'locations' => array());
     if (array_key_exists($location, $locations)) {
         if (array_key_exists('label', $locations[$location])) {
@@ -185,7 +194,7 @@ function GetInstallLocationInfo(&$locations, $location) {
             $info['locations'][$loc_name]['state'] = 'fail';
             $info['state'] = 'fail';
         }
-        foreach($locations[$location] as $id => $loc_name) {
+        foreach ($locations[$location] as $id => $loc_name) {
             if (is_numeric($id)) {
                 $info['locations'][$loc_name] = array('state' => 'pass', 'label' => "$loc_name : ");
                 if (array_key_exists($loc_name, $locations)) {
@@ -200,10 +209,12 @@ function GetInstallLocationInfo(&$locations, $location) {
                     $testerCount = 0;
                     $elapsedCheck = -1;
                     $testers = GetTesters($loc_name);
-                    if (isset($testers['elapsed']))
-                      $elapsedCheck = $testers['elapsed'];
-                    if (isset($testers) && is_array($testers) && isset($testers['testers']))
-                      $testerCount = count($testers['testers']);
+                    if (isset($testers['elapsed'])) {
+                        $elapsedCheck = $testers['elapsed'];
+                    }
+                    if (isset($testers) && is_array($testers) && isset($testers['testers'])) {
+                        $testerCount = count($testers['testers']);
+                    }
                     if ($testerCount && $elapsedCheck >= 0) {
                         if ($elapsedCheck < 60) {
                             $info['locations'][$loc_name]['label'] .= "<span class=\"pass\">$testerCount agents connected</span>";
@@ -233,7 +244,8 @@ function GetInstallLocationInfo(&$locations, $location) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function IsWritable($dir) {
+function IsWritable($dir)
+{
     $ok = false;
     $dir = './' . $dir;
     if (!is_dir($dir)) {
@@ -253,25 +265,39 @@ function IsWritable($dir) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function return_bytes($val) {
+function return_bytes($val)
+{
     if (!isset($val)) {
         $val = '0';
     }
     $val = trim($val);
-    switch (strtolower(substr($val, -1)))
-    {
-        case 'm': $val = (int)substr($val, 0, -1) * 1048576; break;
-        case 'k': $val = (int)substr($val, 0, -1) * 1024; break;
-        case 'g': $val = (int)substr($val, 0, -1) * 1073741824; break;
+    switch (strtolower(substr($val, -1))) {
+        case 'm':
+            $val = (int)substr($val, 0, -1) * 1048576;
+            break;
+        case 'k':
+            $val = (int)substr($val, 0, -1) * 1024;
+            break;
+        case 'g':
+            $val = (int)substr($val, 0, -1) * 1073741824;
+            break;
         case 'b':
-            switch (strtolower(substr($val, -2, 1)))
-            {
-                case 'm': $val = (int)substr($val, 0, -2) * 1048576; break;
-                case 'k': $val = (int)substr($val, 0, -2) * 1024; break;
-                case 'g': $val = (int)substr($val, 0, -2) * 1073741824; break;
-                default : break;
-            } break;
-        default: break;
+            switch (strtolower(substr($val, -2, 1))) {
+                case 'm':
+                    $val = (int)substr($val, 0, -2) * 1048576;
+                    break;
+                case 'k':
+                    $val = (int)substr($val, 0, -2) * 1024;
+                    break;
+                case 'g':
+                    $val = (int)substr($val, 0, -2) * 1073741824;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
     }
 
     return $val;
@@ -281,7 +307,8 @@ function return_bytes($val) {
 * See if we can talk to beanstalkd
 *
 */
-function CheckBeanstalkd() {
+function CheckBeanstalkd()
+{
     $ret = false;
     require_once('./lib/beanstalkd/pheanstalk_init.php');
     $pheanstalk = new Pheanstalk_Pheanstalk(GetSetting('beanstalkd'));
@@ -290,8 +317,9 @@ function CheckBeanstalkd() {
         $jobStats = $pheanstalk->statsJob($id);
         $tubeStats = $pheanstalk->statsTube('wpt.installtest');
         $job = $pheanstalk->reserveFromTube('wpt.installtest', 0);
-        if ($job !== false && $job->getData() == 'test')
+        if ($job !== false && $job->getData() == 'test') {
             $ret = true;
+        }
         $pheanstalk->delete($job);
     }
     return $ret;
@@ -301,48 +329,57 @@ function CheckBeanstalkd() {
 * Check to make sure ffmpeg is installed and working
 *
 */
-function CheckFfmpeg() {
+function CheckFfmpeg()
+{
     $ret = false;
     $x264 = false;
     $command = "ffmpeg -version";
     $retStr = exec($command, $output, $result);
     if (count($output)) {
-        foreach($output as $line) {
-            if (stripos($line, 'ffmpeg ') !== false)
+        foreach ($output as $line) {
+            if (stripos($line, 'ffmpeg ') !== false) {
                 $ret = true;
-            if (stripos($line, '--enable-libx264') !== false)
+            }
+            if (stripos($line, '--enable-libx264') !== false) {
                 $x264 = true;
+            }
         }
     }
 
     return $ret && $x264;
 }
 
-function CheckJpegTran() {
+function CheckJpegTran()
+{
     $ret = false;
     $command = "jpegtran -h";
     $retStr = exec($command, $output, $result);
-    if ($result == 1)
-      $ret = true;
+    if ($result == 1) {
+        $ret = true;
+    }
     return $ret;
 }
 
-function CheckExifTool() {
+function CheckExifTool()
+{
     $ret = false;
     $command = "exiftool -ver";
     $retStr = exec($command, $output, $result);
-    if ($result == 0)
-      $ret = true;
+    if ($result == 0) {
+        $ret = true;
+    }
     return $ret;
 }
 
-function CheckFreeType() {
-  $ret = false;
-  if (extension_loaded('gd')) {
-    $gdinfo = gd_info();
-    if(isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support'])
-      $ret = true;
-  }
-  return $ret;
+function CheckFreeType()
+{
+    $ret = false;
+    if (extension_loaded('gd')) {
+        $gdinfo = gd_info();
+        if (isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support']) {
+            $ret = true;
+        }
+    }
+    return $ret;
 }
 ?>

@@ -1,4 +1,5 @@
 <?php
+
 chdir('..');
 require_once('common.inc');
 
@@ -12,8 +13,9 @@ if (isset($_REQUEST['id']) && isset($_REQUEST['sig']) && isset($_REQUEST['locati
     if (ValidateTestId($testId)) {
         $signature_matches = true;
         $secret = GetServerSecret();
-        if (!isset($secret))
+        if (!isset($secret)) {
             $secret = '';
+        }
         if (strlen($secret)) {
             $signature_matches = false;
             $sig = sha1("$testId$secret");
@@ -49,7 +51,8 @@ if (isset($_REQUEST['id']) && isset($_REQUEST['sig']) && isset($_REQUEST['locati
     }
 }
 
-function RequeueJob($testId, $job) {
+function RequeueJob($testId, $job)
+{
     $ret = false;
 
     // logic mostly matches AddTestJob from common_lib.inc except it is not submitting multiple runs
@@ -79,7 +82,7 @@ function RequeueJob($testId, $job) {
                     $pheanstalk->putInTube($tube, $message, 1);
                     $ret = true;
                 }
-            } catch(Exception $e) {
+            } catch (Exception $e) {
             }
         }
     } else {
@@ -89,8 +92,9 @@ function RequeueJob($testId, $job) {
             $locationLock = LockLocation($location);
             if (isset($locationLock)) {
                 $ret = true;
-                if( !is_dir($test['workdir']) )
+                if (!is_dir($test['workdir'])) {
                     mkdir($test['workdir'], 0777, true);
+                }
                 $workDir = $test['workdir'];
                 $fileName = pathinfo($test['job'])['filename'] . '.url';
                 $testNum = GetDailyTestNum();

@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest - Traceroute test result<?php echo $testLabel; ?></title>
+        <title>WebPageTest - Traceroute test result<?php
+
+        echo $testLabel; ?></title>
                 <script>document.documentElement.classList.add('has-js');</script>
 
         <?php
             $gaTemplate = 'Traceroute Result';
             $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Traceroute result.";
-            include ('head.inc');
+            include('head.inc');
             require_once('testStatus.inc');
         ?>
     </head>
@@ -38,11 +40,10 @@
                 <h3 class="hed_sub">Individual Runs</h3>
                 
                 <?php
-                for( $run = 1; $run <= $test['test']['runs']; $run++ )
-                {
+                for ($run = 1; $run <= $test['test']['runs']; $run++) {
                     echo "<h4>Run $run</h4>";
                     echo '<div class="scrollableTable">';
-                    DisplayTraceroute( $testPath, $run );
+                    DisplayTraceroute($testPath, $run);
                     echo '</div>';
                 }
                 ?>
@@ -65,16 +66,16 @@
 * @param mixed $testPath
 * @param mixed $run
 */
-function DisplayTraceroute( &$testPath, $run )
+function DisplayTraceroute(&$testPath, $run)
 {
-?>
+    ?>
 <table class="pretty details" >
-<?php
+    <?php
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
-    if( count($rows) > 2 ) {
+    if (count($rows) > 2) {
         $hops = array();
         $addr = '';
-        foreach($rows as &$row) {
+        foreach ($rows as &$row) {
             $parseLine = str_replace(",", ", ", $row);
             $fields = explode(",", $parseLine);
             $data = array('hop' => trim($fields[0]),
@@ -82,28 +83,35 @@ function DisplayTraceroute( &$testPath, $run )
                             'time' => trim($fields[2]),
                             'name' => trim($fields[3]));
             if (array_key_exists('hop', $data) && is_numeric($data['hop'])) {
-              $data['hop'] = intval($data['hop']);
-              if (array_key_exists('addr', $data) && strlen($data['addr']))
-                  $addr = $data['addr'];
-              if (!array_key_exists('addr', $data) || !strlen($data['addr']))
-                $data['addr'] = '-';
-              if (!array_key_exists('time', $data) || !strlen($data['time']))
-                $data['time'] = '-';
-              if (!array_key_exists('name', $data) || !strlen($data['name']))
-                $data['name'] = '-';
-              $hops[$data['hop']] = $data;
+                $data['hop'] = intval($data['hop']);
+                if (array_key_exists('addr', $data) && strlen($data['addr'])) {
+                    $addr = $data['addr'];
+                }
+                if (!array_key_exists('addr', $data) || !strlen($data['addr'])) {
+                    $data['addr'] = '-';
+                }
+                if (!array_key_exists('time', $data) || !strlen($data['time'])) {
+                    $data['time'] = '-';
+                }
+                if (!array_key_exists('name', $data) || !strlen($data['name'])) {
+                    $data['name'] = '-';
+                }
+                $hops[$data['hop']] = $data;
             }
         }
-        if (array_key_exists(-1, $hops) &&
+        if (
+            array_key_exists(-1, $hops) &&
             array_key_exists('addr', $hops[-1]) &&
-            strlen($hops[-1]['addr']))
+            strlen($hops[-1]['addr'])
+        ) {
             $addr = $hops[-1]['addr'];
+        }
 
         $index = 0;
-        foreach($hops as $hop => $data) {
-            if( $hop > 0 ) {
+        foreach ($hops as $hop => $data) {
+            if ($hop > 0) {
                 $index++;
-                if( $index == 1 ) {
+                if ($index == 1) {
                     echo "<caption>Traceroute #$run to $addr</caption>\n";
                     ?>
                     <thead>
@@ -127,9 +135,9 @@ function DisplayTraceroute( &$testPath, $run )
         }
         echo "</tbody>\n";
     }
-?>
+    ?>
 </table>
-<?php
+    <?php
 }
 
 ?>

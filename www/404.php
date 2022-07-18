@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -12,7 +13,8 @@ $page_description = "Page Not Found.";
         <title>WebPageTest - Page Not Found</title>
         <meta http-equiv="charset" content="iso-8859-1">
 
-        <?php $gaTemplate = '404'; include ('head.inc'); ?>
+        <?php $gaTemplate = '404';
+        include('head.inc'); ?>
     </head>
     <body>
             <?php

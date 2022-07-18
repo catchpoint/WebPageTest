@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -12,7 +13,8 @@ define('BREAKDOWN_CACHE_VERSION', 4);
 *
 * @param mixed $requests
 */
-function getBreakdown($id, $testPath, $run, $cached, &$requests) {
+function getBreakdown($id, $testPath, $run, $cached, &$requests)
+{
     $rootUrlGenerator = UrlGenerator::create(true, "", $id, $run, $cached);
     $localPaths = new TestPaths($testPath, $run, $cached);
     return getBreakdownForStep($localPaths, $rootUrlGenerator, $requests);
@@ -24,15 +26,16 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests) {
  * @param array $requests
  * @return array
  */
-function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
+function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests)
+{
     $cache = array();
     $cache_file = $localPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION);
     $cacheKey = $localPaths->cacheKey();
     if (gz_is_file($cache_file)) {
-      $cache = json_decode(gz_file_get_contents($cache_file), true);
+        $cache = json_decode(gz_file_get_contents($cache_file), true);
     }
     if (!empty($cache[$cacheKey])) {
-      $breakdown = $cache[$cacheKey];
+        $breakdown = $cache[$cacheKey];
     }
     if (!isset($breakdown)) {
         // get all of the requests
@@ -52,17 +55,18 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
             $breakdown["$contentType"] = $entry;
         }
 
-        foreach($requests as $request) {
-          if (isset($request['contentType']) && isset($request['url'])) {
-            $contentType = ContentType($request['contentType'], $request['url']);
-            $object = strtolower($request['url']);
-            if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
-              $breakdown[$contentType]['bytes'] += $request['bytesIn'];
-              $breakdown[$contentType]['requests']++;
-              if (isset($request['objectSizeUncompressed']) && $request['objectSizeUncompressed'] > 0)
-                $breakdown[$contentType]['bytesUncompressed'] += $request['objectSizeUncompressed'];
+        foreach ($requests as $request) {
+            if (isset($request['contentType']) && isset($request['url'])) {
+                $contentType = ContentType($request['contentType'], $request['url']);
+                $object = strtolower($request['url']);
+                if (strlen($contentType) && (stripos($object, 'favicon.ico') === false)) {
+                    $breakdown[$contentType]['bytes'] += $request['bytesIn'];
+                    $breakdown[$contentType]['requests']++;
+                    if (isset($request['objectSizeUncompressed']) && $request['objectSizeUncompressed'] > 0) {
+                        $breakdown[$contentType]['bytesUncompressed'] += $request['objectSizeUncompressed'];
+                    }
+                }
             }
-          }
         }
         $cache[$cacheKey] = $breakdown;
         gz_file_put_contents($cache_file, json_encode($cache));
@@ -80,31 +84,32 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
 * @param mixed $localPaths
 * @param mixed $requests
 */
-function analyzeRequests($localPaths, &$requests) {
-  $analysis_file = $localPaths->requestsAnalysisFile();
-  if (!gz_is_file($analysis_file)) {
-    $analysis = array('smallImageCount' => 0,
+function analyzeRequests($localPaths, &$requests)
+{
+    $analysis_file = $localPaths->requestsAnalysisFile();
+    if (!gz_is_file($analysis_file)) {
+        $analysis = array('smallImageCount' => 0,
                       'bigImageCount' => 0,
                       'maybeCaptcha' => 0);
-    foreach($requests as $request) {
-      if (isset($request['contentType']) && isset($request['objectSize']) && isset($request['url'])) {
-        $contentType = ContentType($request['contentType'], $request['url']);
-        if ($contentType == 'image') {
-          if ($request['objectSize'] > 100000) {
-            $analysis['bigImageCount']++;
-          } elseif ($request['objectSize'] > 100 && $request['objectSize'] < 10000) {
-            $analysis['smallImageCount']++;
-          }
+        foreach ($requests as $request) {
+            if (isset($request['contentType']) && isset($request['objectSize']) && isset($request['url'])) {
+                $contentType = ContentType($request['contentType'], $request['url']);
+                if ($contentType == 'image') {
+                    if ($request['objectSize'] > 100000) {
+                        $analysis['bigImageCount']++;
+                    } elseif ($request['objectSize'] > 100 && $request['objectSize'] < 10000) {
+                        $analysis['smallImageCount']++;
+                    }
+                }
+            }
+            if (isset($request['url'])) {
+                if (strpos($request['url'], 'recaptcha/api.js') !== false) {
+                    $analysis['maybeCaptcha'] = 1;
+                }
+            }
         }
-      }
-      if (isset($request['url'])) {
-        if (strpos($request['url'], 'recaptcha/api.js') !== false) {
-          $analysis['maybeCaptcha'] = 1;
-        }
-      }
+        gz_file_put_contents($analysis_file, json_encode($analysis));
     }
-    gz_file_put_contents($analysis_file, json_encode($analysis));
-  }
 }
 
 /**
@@ -121,12 +126,10 @@ function getBreakdownCombined($id, $testPath, $run)
     $rv = getBreakdown($id, $testPath, $run, 1, $rRv);
 
     // combine the two data sets
-    foreach( $combined as $type => $data )
-    {
+    foreach ($combined as $type => $data) {
         unset($rvData);
         $rvData = $rv[$type];
-        if( !count($rvData) )
-        {
+        if (!count($rvData)) {
             $rvData['bytes'] = 0;
             $rvData['bytesUncompressed'] = 0;
             $rvData['requests'] = 0;
@@ -137,12 +140,10 @@ function getBreakdownCombined($id, $testPath, $run)
     }
 
     // grab any that had data in the repeat view but not first view
-    foreach( $rv as $type => $data )
-    {
+    foreach ($rv as $type => $data) {
         unset($fv);
         $fv = $combined[$type];
-        if( !count($fv) )
-        {
+        if (!count($fv)) {
             $fv = array();
             $fv['bytes'] = 0;
             $fv['bytesUncompressed'] = 0;
@@ -156,4 +157,3 @@ function getBreakdownCombined($id, $testPath, $run)
 
     return $combined;
 }
-?>

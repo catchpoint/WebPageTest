@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -11,25 +12,29 @@ if (GetSetting('headless')) {
 }
 // load the secret key (if there is one)
 $secret = GetServerSecret();
-if (!isset($secret))
+if (!isset($secret)) {
     $secret = '';
+}
 $url = '';
 if (isset($req_url)) {
-  $url = htmlspecialchars($req_url);
+    $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a Website URL';
 $profile_file = __DIR__ . '/settings/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini'))
-  $profile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini'))
-  $profile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini')) {
+    $profile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
+}
+if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
+    $profile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+}
 $profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
-        <?php $gaTemplate = 'Main'; include ('head.inc');?>
+        <?php $gaTemplate = 'Main';
+        include('head.inc');?>
         <style>
         
 
@@ -40,33 +45,33 @@ $profiles = parse_ini_file($profile_file, true);
             $tab = 'Home';
             include 'header.inc';
             if (!$headless) {
-            ?>
-            <?php include("home_header.php"); ?>
+                ?>
+                <?php include("home_header.php"); ?>
 
         <div class="home_content_contain">
         <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
-            <?php
-            echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-            if( strlen($secret) ){
-              $hashStr = $secret;
-              $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-              $hashStr .= $owner;
+                <?php
+                echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+                if (strlen($secret)) {
+                    $hashStr = $secret;
+                    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                    $hashStr .= $owner;
 
-              $now = gmdate('c');
-              echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-              $hashStr .= $now;
+                    $now = gmdate('c');
+                    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                    $hashStr .= $now;
 
-              $hmac = sha1($hashStr);
-              echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-            }
-            ?>
+                    $hmac = sha1($hashStr);
+                    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                }
+                ?>
 
 
             <div id="test_box-container" class="home_responsive_test">
-                <?php 
+                <?php
                 $currNav = "Core Web Vitals";
                 include("testTypesNav.php");
                 ?>              
@@ -76,11 +81,11 @@ $profiles = parse_ini_file($profile_file, true);
                         <li>
                         <label for="url" class="vis-hidden">Enter URL to test</label>
                         <?php
-                            if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
-                                echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
-                            } else {
-                                echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
-                            }
+                        if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                            echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                        } else {
+                            echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                        }
                         ?>
                         </li>
                         <li class="test_main_config">
@@ -90,17 +95,19 @@ $profiles = parse_ini_file($profile_file, true);
                                   <label for="webvital_profile">Test Configuration:</label>
                                   <select name="webvital_profile" id="webvital_profile" onchange="profileChanged()">
                                       <?php
-                                      if (isset($profiles) && count($profiles)) {
-                                        foreach($profiles as $name => $profile) {
-                                          $selected = '';
-                                          if ($name == $_COOKIE['wvProfile'])
-                                            $selected = 'selected';
-                                          echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                                        if (isset($profiles) && count($profiles)) {
+                                            foreach ($profiles as $name => $profile) {
+                                                $selected = '';
+                                                if ($name == $_COOKIE['wvProfile']) {
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                                            }
+                                            if (isset($lastGroup)) {
+                                                echo "</optgroup>";
+                                            }
                                         }
-                                        if (isset($lastGroup))
-                                            echo "</optgroup>";
-                                      }
-                                      ?>
+                                        ?>
                                   </select>
                               </div>
                               <div class="fieldrow" id="description"></div>
@@ -119,7 +126,7 @@ $profiles = parse_ini_file($profile_file, true);
 
 
         
-            <?php
+                <?php
             } // $headless
             ?>
 
@@ -134,15 +141,15 @@ $profiles = parse_ini_file($profile_file, true);
         <div class="home_content">
           
         <?php
-          include('footer.inc'); 
-          ?>
+          include('footer.inc');
+        ?>
           </div><!--home_content_contain-->
         </div><!--home_content-->
         </div>
         <?php
         if (!isset($site_js_loaded) || !$site_js_loaded) {
-          echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
-          $hasJquery = true;
+            echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+            $hasJquery = true;
         }
         ?>
 

@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -20,7 +21,7 @@ $testInfo = TestInfo::fromFiles($testPath);
 $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
 $isMultistep = $firstViewResults->countSteps() > 1;
 $repeatViewResults = null;
-if(!$testInfo->isFirstViewOnly()) {
+if (!$testInfo->isFirstViewOnly()) {
     $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
 }
 ?>
@@ -30,7 +31,8 @@ if(!$testInfo->isFirstViewOnly()) {
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
  
-        <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Content Breakdown';
+        include('head.inc'); ?>
     </head>
     <body class="result">
             <?php
@@ -78,27 +80,26 @@ if(!$testInfo->isFirstViewOnly()) {
             <h3 class="hed_sub">Breakdown by MIME type</h3>
             <h4>First View:</h4>
             <?php
-                if ($isMultistep) {
-                    $accordionHelper = new AccordionHtmlHelper($firstViewResults);
-                    echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
-                } else {
-                    $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
-                    echo $snippetFv->create();
-                    // defines the global JS object wptBreakdownData which contains the breakdown data at key
-                    // $snippetFv->getBreakdownId(), so it can be globally found from JS
-                }
+            if ($isMultistep) {
+                $accordionHelper = new AccordionHtmlHelper($firstViewResults);
+                echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
+            } else {
+                $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                echo $snippetFv->create();
+                // defines the global JS object wptBreakdownData which contains the breakdown data at key
+                // $snippetFv->getBreakdownId(), so it can be globally found from JS
+            }
             ?>
             <?php if ($repeatViewResults) { ?>
-
             <h4>Repeat View:</h4>
                 <?php
-                    if ($isMultistep) {
-                        $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
-                        echo $accordionHelper->createAccordion("breakdown_rv", "mimetypeBreakdown", "drawTable");
-                    } else {
-                        $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
-                        echo $snippetRv->create();
-                    }
+                if ($isMultistep) {
+                    $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
+                    echo $accordionHelper->createAccordion("breakdown_rv", "mimetypeBreakdown", "drawTable");
+                } else {
+                    $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                    echo $snippetRv->create();
+                }
                 ?>
             <?php } ?>
                 </div>

@@ -6,15 +6,15 @@ require_once __DIR__ . '/common.inc';
 
 use WebPageTest\RequestContext;
 
-(function(RequestContext $request_context) {
-  global $admin;
+(function (RequestContext $request_context) {
+    global $admin;
 
-  $allowed = $admin || $request_context->getUser()->isAdmin();
+    $allowed = $admin || $request_context->getUser()->isAdmin();
 
-  if (!$allowed) {
-    header('HTTP/1.1 404 Not Found');
-    exit();
-  }
+    if (!$allowed) {
+        header('HTTP/1.1 404 Not Found');
+        exit();
+    }
 
   /**
   $cache_info = apcu_cache_info();
@@ -26,12 +26,10 @@ use WebPageTest\RequestContext;
   echo var_dump($filtered);
    */
 
-  echo '<pre>';
-  foreach (new APCUIterator('/rladdr_per_month/') as $val) {
-    echo "$val[key]: " . var_dump($val['value']) . "\n";
-  }
-  echo '</pre>';
-  exit();
-
-
+    echo '<pre>';
+    foreach (new APCUIterator('/rladdr_per_month/') as $val) {
+        echo "$val[key]: " . var_dump($val['value']) . "\n";
+    }
+    echo '</pre>';
+    exit();
 })($request_context);

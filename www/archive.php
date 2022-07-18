@@ -1,7 +1,8 @@
 <?php
+
 include 'common.inc';
 require_once('archive.inc');
-header ("Content-type: text/plain");
+header("Content-type: text/plain");
 
 $testId = $_REQUEST['test'];
 if (ValidateTestId($testId)) {

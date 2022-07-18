@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="signup-flow-step-1-layout">
 <?php
+
 global $USER_EMAIL;
 global $supportsAuth;
 global $supportsSaml;

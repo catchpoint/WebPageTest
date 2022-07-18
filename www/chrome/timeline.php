@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -7,8 +8,9 @@
 */
 chdir('..');
 include 'common.inc';
-if ($_REQUEST['run'] == 'lighthouse')
-  $run = 'lighthouse';
+if ($_REQUEST['run'] == 'lighthouse') {
+    $run = 'lighthouse';
+}
 $timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached,s:$step";
 $newTimeline = gz_is_file("$testPath/{$run}{$cachedText}_trace.json");
 $protocol = getUrlProtocol();
@@ -18,9 +20,9 @@ $cdn = GetSetting('cdn');
 $url = $cdn ? $cdn : "$protocol://$host";
 $url .= $uri;
 if ($newTimeline) {
-  $url .= "/inspector-20210119/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
+    $url .= "/inspector-20210119/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
 } else {
-  $url = '/chrome/inspector-20140603/devtools.html';
+    $url = '/chrome/inspector-20140603/devtools.html';
 }
 ?>
 <!DOCTYPE html>
@@ -36,17 +38,17 @@ if ($newTimeline) {
     }
     function DevToolsLoaded() {
       <?php
-      if (!$newTimeline) {
-        echo "var devTools = document.getElementById(\"devtools\").contentWindow;\n";
-        echo "devTools.InspectorFrontendAPI._runOnceLoaded(function(){(devTools.WebInspector.inspectorView.showPanel(\"timeline\")).loadFromURL(\"$timelineUrlParam\");});\n";
-      }
-      ?>
+        if (!$newTimeline) {
+            echo "var devTools = document.getElementById(\"devtools\").contentWindow;\n";
+            echo "devTools.InspectorFrontendAPI._runOnceLoaded(function(){(devTools.WebInspector.inspectorView.showPanel(\"timeline\")).loadFromURL(\"$timelineUrlParam\");});\n";
+        }
+        ?>
     }
   </script>
 </head>
 <body style="margin:0px;padding:0px;overflow:hidden">
   <?php
-  echo '<iframe id="devtools" src="' . $url . '" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%" onload="DevToolsLoaded();"></iframe>';
-  ?>
+    echo '<iframe id="devtools" src="' . $url . '" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%" onload="DevToolsLoaded();"></iframe>';
+    ?>
 </body>
 </html>
