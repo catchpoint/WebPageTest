@@ -17,17 +17,19 @@
   global $noanalytics;
 
   $page_title = $page_title ? $page_title : 'WebPageTest';
+  $body_class = $body_class ? ' class="' . $body_class . '"' : '';
+
     ?>
   <title><?php echo $page_title; ?></title>
   <?php require_once __DIR__ . '/head.inc'; ?>
 </head>
 
-<body>
+<body<?php echo $body_class; ?>>
   <?php require_once __DIR__ . '/header.inc'; ?>
   <div id="main">
     <?php require_once __DIR__ . '/main_hed.inc'; ?>
     <?php echo $template_output; ?>
     <?php require_once __DIR__ . '/footer.inc'; ?>
-</body>
+    </body>
 
 </html>
