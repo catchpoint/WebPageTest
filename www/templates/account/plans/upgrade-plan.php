@@ -14,27 +14,24 @@
     </div>
     <form id="wpt-account-upgrade-choose" method="post" name="selectPlan" action="/account">
         <input type='hidden' name='type' value='upgrade-plan-1' />
-        <p class="h3 center-banner">Save 20% by paying annually!</p>
-        <fieldset class="wpt-plans radiobutton-tab-container">
-            <legend for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</legend>
-            <input id="annual-plans" type="radio" name="plans" value="annual" checked />
-            <input id="monthly-plans" type="radio" name="plans" value="monthly" />
-            <div class="radiobutton-group subscription-type-selector" id="pro-plan-selector">
-                <div class="radio-button">
-                    <label for="annual-plans">Annual</label>
-                </div>
-                <div class="radio-button">
-                    <label for="monthly-plans">Monthly</label>
-                </div>
+        <fieldset class="wpt-plans select-tab-container">
+           <div class="select-tabs">
+            <h2> Web Page Test <em class="new-banner">PRO</em> </h2>
+            <label for="pro-plan-selector"> Plan:</label>
+            <select name="plans" id="pro-plan-selector" data-chosen="annual" onchange="this.dataset.chosen = this.value;">
+              <option value="annual">Annual</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <p>Save 20% with Annual Plans</p>
             </div>
             <div class="wpt-plan-set annual-plans">
                 <?php
                 foreach ($annual_plans as $key => $plan) :
-                    $selected = ($key === 1) ? 'checked' : '';
+                    $reccomended = ($key === 1) ? 'wpt-plan__reccomended' : '';
                     $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required  {$selected}/>
-                    <label class="wpt-plan card" for="annual-{$plan['id']}">
+                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required />
+                    <label class="wpt-plan card {$reccomended}" for="annual-{$plan['id']}">
                       <h5>{$plan['name']}</h5>
                       <div><strong>\${$plan['annual_price']}</strong>/Year</div>
                       <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>

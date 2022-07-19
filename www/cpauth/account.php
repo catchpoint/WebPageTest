@@ -11,6 +11,15 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
 
+function getPlan($id, $plans)
+{
+    foreach ($plans as $plan) {
+        if ($plan['id'] == $id) {
+            return $plan;
+            exit();
+        }
+    }
+}
 
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
@@ -131,6 +140,7 @@ $billing_info = array();
 $client_token = "";
 $country_list = Util::getCountryList();
 $state_list = Util::getStateList();
+$results = [];
 
 if ($is_paid) {
     if ($is_wpt_enterprise) {
@@ -156,35 +166,38 @@ if ($is_paid) {
     }
 
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
-}
-$info = $request_context->getClient()->getUnpaidAccountpageInfo();
-$client_token = $info['braintreeClientToken'];
-$plans = $info['wptPlans'];
-$annual_plans = array();
-$monthly_plans = array();
-usort($plans, function ($a, $b) {
-    if ($a['price'] == $b['price']) {
-        return 0;
+    $results = array_merge($contact_info, $billing_info);
+} else {
+    $info = $request_context->getClient()->getUnpaidAccountpageInfo();
+    $client_token = $info['braintreeClientToken'];
+    $plans = $info['wptPlans'];
+    $annual_plans = array();
+    $monthly_plans = array();
+    usort($plans, function ($a, $b) {
+        if ($a['price'] == $b['price']) {
+            return 0;
+        }
+        return ($a['price'] < $b['price']) ? -1 : 1;
+    });
+    foreach ($plans as $plan) {
+        if ($plan['billingFrequency'] == 1) {
+            $plan['price'] = number_format(($plan['price']), 2, ".", ",");
+            $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
+            $monthly_plans[] = $plan;
+        } else {
+            $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
+            $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
+            $annual_plans[] = $plan;
+        }
     }
-    return ($a['price'] < $b['price']) ? -1 : 1;
-});
-foreach ($plans as $plan) {
-    if ($plan['billingFrequency'] == 1) {
-        $plan['price'] = number_format(($plan['price']), 2, ".", ",");
-        $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
-        $monthly_plans[] = $plan;
-    } else {
-        $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
-        $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
-        $annual_plans[] = $plan;
-    }
-}
-$plansList = array(
-    'annual_plans' => $annual_plans,
-    'monthly_plans' => $monthly_plans
-);
+    $plansList = array(
+        'annual_plans' => $annual_plans,
+        'monthly_plans' => $monthly_plans
+    );
 
-$results = array_merge($contact_info, $billing_info, $plansList);
+    $results = array_merge($contact_info, $billing_info, $plansList);
+}
+
 $results['csrf_token'] = $_SESSION['csrf_token'];
 $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
@@ -212,7 +225,7 @@ switch ($page) {
     case 'plan_summary':
         $planCookie = $_COOKIE['upgrade-plan'];
         if (isset($planCookie) && $planCookie) {
-            $results['plan'] = $planCookie;
+            $results['plan'] = getPlan($planCookie, $plans);
             echo $tpl->render('plans/plan-summary', $results);
             break;
         } else {

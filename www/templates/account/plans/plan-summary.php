@@ -4,16 +4,24 @@
         <li><a href="/account/update_plan">Update Plan</a></li>
         <li>Plan summary</li>
     </ul>
+    <div class="subhed">
+        <h1>Plan Summary</h1>
+        <?php if ($is_paid) : ?>
+            <div class="contact-support-button">
+                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+            </div>
+        <?php endif; ?>
+    </div>
     <!-- Page Subheader -->
     <div class="box card-section">
-        <h2>Plan Summary</h2>
+        <h2>Selected Plan</h2>
         <div class="card-section-subhed">
             Pro
         </div>
-        <ul>
+        <ul class="plan-summary-list">
             <li><strong>Runs per month:</strong> <?= $plan['name'] ?></li>
-            <li><strong>Billing Cycle:</strong> <?= $plan['name'] ?></li>
-            <li><strong>Price:</strong> <?= $plan['annual_price'] ?> /year</li>
+            <li><strong>Billing Cycle:</strong> <?= $plan['billingFrequency'] == 1 ?'Monthly':'Yearly'; ?></li>
+            <li><strong>Price:</strong> $<?= $plan['price'] ?></li>
             <li><strong>Plan Renewal:</strong> </li>
         </ul>
     </div>
@@ -23,7 +31,8 @@
         <div class="box card-section">
             <h2>Payment Method</h2>
             <?php if ($is_paid) : ?>
-                <fieldset class="radiobutton-tab-ctontainer">
+              <-- assume there is a CC on file if it's a paid account -->
+              <fieldset class="radiobutton-tab-ctontainer no-border">
                     <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
                     <label for="existing-card">
                         <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
@@ -34,8 +43,6 @@
                         New payment method
                     </label>
                 </fieldset>
-
-
                 <div class="card payment-info tab-content" data-modal="payment-info-modal">
                     <div class="card-section user-info">
                         <div class="cc-type image">
@@ -98,10 +105,9 @@
             <input type="hidden" name="nonce" id="hidden-nonce-input" required />
             <input type="hidden" name="type" value="account-signup" required />
             <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
-
-            <div class="add-subscription-button-wrapper">
-                <button type="submit" class="pill-button blue">Upgrade Plan</button>
-            </div>
+        </div>
+        <div class="add-subscription-button-wrapper">
+          <button type="submit" class="pill-button yellow">Upgrade Plan</button>
         </div>
     </form>
 </div>
