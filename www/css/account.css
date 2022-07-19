@@ -475,6 +475,7 @@ body.theme-b {
   padding: 1.5rem;
   border-radius: 10px;
   box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
+  border: 1px solid rgb(204, 204, 204);
 }
 
 /**
@@ -1971,4 +1972,24 @@ TEMP FIX FOR UPGRADE
 
 .center-banner {
   text-align: center;
+}
+
+.no-border {
+  border: none;
+}
+.plan-summary-list li {
+  line-height: 2rem;
+}
+
+/** SELECT TABS **/
+#pro-plan-selector[data-chosen="annual"] ~ .annual-plans,
+#pro-plan-selector[data-chosen="monthly"] ~ .monthly-plans {
+  display: block;
+}
+.select-tabs {
+  background-color: #141e33;
+  color: white;
+}
+div.select-tabs > * {
+  display: grid;
 }
