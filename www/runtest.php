@@ -1238,50 +1238,58 @@ if (@strlen($req_rkey)) {
                     }
 
                     if (count($bulk['urls'])) {
-                        $test['id'] = CreateTest($test, $test['url'], 1);
-                        $test['batch_id'] = $test['id'];
 
-                        $testCount = 0;
-                        foreach ($bulk['urls'] as &$entry) {
-                            $testData = $test;
-                            if (isset($entry['l']) && strlen($entry['l'])) {
-                                $testData['label'] = $entry['l'];
-                            }
-                            if ($entry['ns']) {
-                                unset($testData['script']);
-                                if ($testData['discard']) {
-                                    $testData['runs'] = max(1, $testData['runs'] - $testData['discard']);
-                                    $testData['discard'] = 0;
-                                }
-                            }
-                            if ($entry['s']) {
-                                $testData['script'] = $entry['s'];
-                            }
-
-                            ValidateParameters($testData, $locations, $error, $entry['u']);
-                            $entry['id'] = CreateTest($testData, $entry['u']);
-                            if ($entry['id']) {
-                                $entry['v'] = array();
-                                foreach ($bulk['variations'] as $variation_index => &$variation) {
-                                    if (strlen($test['label']) && strlen($variation['l'])) {
-                                        $test['label'] .= ' - ' . $variation['l'];
-                                    }
-                                    $url = CreateUrlVariation($entry['u'], $variation['q']);
-                                    if ($url) {
-                                        ValidateParameters($testData, $locations, $error, $url);
-                                        $entry['v'][$variation_index] = CreateTest($testData, $url);
-                                    }
-                                }
-                                $testCount++;
-                            }
-                        }
-
-                        // write out the list of URLs and the test ID for each
-                        if ($testCount) {
-                            $path = GetTestPath($test['id']);
-                            gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
+                        //recheck test balance to make sure they have enough remaining runs for the bulk test
+                        $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs * count($bulk['urls']));
+                        if (!$hasRunsAvailable) {
+                            $error = "Not enough runs available";
                         } else {
-                            $error = 'URLs could not be submitted for testing';
+                            //enough runs, let's continue by submitting the tests
+                            $test['id'] = CreateTest($test, $test['url'], 1);
+                            $test['batch_id'] = $test['id'];
+
+                            $testCount = 0;
+                            foreach ($bulk['urls'] as &$entry) {
+                                $testData = $test;
+                                if (isset($entry['l']) && strlen($entry['l'])) {
+                                    $testData['label'] = $entry['l'];
+                                }
+                                if ($entry['ns']) {
+                                    unset($testData['script']);
+                                    if ($testData['discard']) {
+                                        $testData['runs'] = max(1, $testData['runs'] - $testData['discard']);
+                                        $testData['discard'] = 0;
+                                    }
+                                }
+                                if ($entry['s']) {
+                                    $testData['script'] = $entry['s'];
+                                }
+
+                                ValidateParameters($testData, $locations, $error, $entry['u']);
+                                $entry['id'] = CreateTest($testData, $entry['u']);
+                                if ($entry['id']) {
+                                    $entry['v'] = array();
+                                    foreach ($bulk['variations'] as $variation_index => &$variation) {
+                                        if (strlen($test['label']) && strlen($variation['l'])) {
+                                            $test['label'] .= ' - ' . $variation['l'];
+                                        }
+                                        $url = CreateUrlVariation($entry['u'], $variation['q']);
+                                        if ($url) {
+                                            ValidateParameters($testData, $locations, $error, $url);
+                                            $entry['v'][$variation_index] = CreateTest($testData, $url);
+                                        }
+                                    }
+                                    $testCount++;
+                                }
+                            }
+
+                            // write out the list of URLs and the test ID for each
+                            if ($testCount) {
+                                $path = GetTestPath($test['id']);
+                                gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
+                            } else {
+                                $error = 'URLs could not be submitted for testing';
+                            }
                         }
                     } else {
                         $error = "No valid URLs submitted for bulk testing";
