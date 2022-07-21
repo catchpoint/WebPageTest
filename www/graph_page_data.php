@@ -147,13 +147,13 @@ $common_label = implode(" ", $common_labels);
             <div id="result" class="results_body">
                 <?php
                 if (count($testsId) != 1) {
-                ?>
+                    ?>
                     <div id="test_results-container">
                         <div class="test_results">
                             <div class="test_results-content">
                             <?php
-                        }
-                            ?>
+                }
+                ?>
                             <div>
                                 <form class="simple_form" name="cached" method="get" action="graph_page_data.php">
                                     <?php
@@ -164,32 +164,32 @@ $common_label = implode(" ", $common_labels);
                                         <legend>View:</legend>
                                         <input type="checkbox" name="fv" id="fv" value="1" <?php if ($fv == '1') {
                                                                                                 echo "checked";
-                                                                                            } ?>><label for="fv">First</label>
+                                                                                           } ?>><label for="fv">First</label>
                                         <input type="checkbox" name="rv" id="rv" value="1" <?php if ($rv == '1') {
                                                                                                 echo "checked";
-                                                                                            } ?>><label for="rv">Repeat</label>
+                                                                                           } ?>><label for="rv">Repeat</label>
                                     </fieldset>
                                     <fieldset>
                                         <legend>Median:</legend>
                                         <input type="checkbox" id="median_value" name="median_value" value="1" <?php if ($median_value == '1') {
                                                                                                                     echo "checked";
-                                                                                                                } ?>><label for="median_value">Of plotted metric</label>
+                                                                                                               } ?>><label for="median_value">Of plotted metric</label>
                                         <input type="checkbox" name="median_run" id="median_run" value="1" <?php if ($median_run == '1') {
                                                                                                                 echo "checked";
-                                                                                                            } ?>><label for="median_run">Run with median
+                                                                                                           } ?>><label for="median_run">Run with median
                                             <?php echo $median_metric; ?></label>
                                     </fieldset>
                                     <fieldset>
                                         <legend>Chart customization</legend>
                                         <input type="checkbox" name="zero_start" value="true" <?php if ($zero_start == 'true') {
                                                                                                     echo "checked";
-                                                                                                } ?>>
+                                                                                              } ?>>
                                         <label for="zero_start">Force Vertical Axis of Charts to Start at Zero</label>
                                     </fieldset>
                                     <label for="control">Statistical Comparison Against</label> <select id="control" name="control" size="1" onchange="this.form.submit();">
                                         <option value="NOSTAT" <?php if ($statControl === "NOSTAT") {
                                                                     echo " selected";
-                                                                } ?>>None</option>
+                                                               } ?>>None</option>
                                         <?php
                                         foreach ($pagesData as $key => $pageData) {
                                             $selectedString = ((string)$key === $statControl) ? " selected" : "";
@@ -350,12 +350,12 @@ $common_label = implode(" ", $common_labels);
                             // this is not great, admittedly. Right now some divs are opened in header and closed in footer
                             // if a single test is being viewed. We'll need to pull that out at some point to clean this up.
                             if (count($testsId) != 1) {
-                            ?>
+                                ?>
                         </div>
                     </div>
-                <?php
+                                <?php
                             }
-                ?>
+                            ?>
                 <?php include('footer.inc'); ?>
             </div>
         </div>
