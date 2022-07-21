@@ -120,6 +120,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
             <?php
             if (!$headless) {
                 ?>
+
+
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="0">
@@ -622,6 +624,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
+                                                    </li>
                                                 <?php } ?>
                                                     <li>
                                                         <label for="time">
@@ -950,6 +953,9 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                         </div>
                     </div>
                 </form>
+
+
+
                 <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
