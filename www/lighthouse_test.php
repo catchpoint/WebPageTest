@@ -47,7 +47,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
     <?php
     include 'header.inc';
     if (!$headless) {
-    ?>
+        ?>
 
 
         <?php include("home_header.php"); ?>
@@ -132,8 +132,8 @@ if (file_exists('./settings/server/lighthouse.ini')) {
                 </form>
 
             <?php
-        } // $headless
-            ?>
+    } // $headless
+    ?>
 
             <?php include('footer.inc'); ?>
             </div>
