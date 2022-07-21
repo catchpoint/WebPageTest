@@ -274,8 +274,8 @@
                 </div>
                 <div class="info-container state">
                     <label for="state">State</label>
-                    <div id="regionalArea">
-                        <select name="state" required>
+                    <div>
+                        <select name="state" data-country-selector="state-selector" required>
                             <?php foreach ($state_list as $stateAbbr => $stateText) : ?>
                                 <option value="<?= $stateAbbr ?>">
                                     <?= $stateText; ?>
@@ -286,7 +286,7 @@
                 </div>
                 <div class="info-container country">
                     <label for="country">Country</label>
-                    <select name="country">
+                    <select name="country" data-country-selector="selector" required>
                         <?php foreach ($country_list as $country) : ?>
                             <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
                                 <?= $country["text"]; ?>
