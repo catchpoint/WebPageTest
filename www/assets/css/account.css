@@ -1810,10 +1810,11 @@ ul.bulleted-list {
   overflow: hidden;
 }
 
-<<<<<<< HEAD
 .responsive-vertical-table tr {
   border-color: #46637f;
 }
+
+/* END Vertical responsive table for showing billing data */
 
 /*------------
 TEMP FIX FOR UPGRADE
@@ -1880,8 +1881,8 @@ TEMP FIX FOR UPGRADE
   background-color: #3881e5;
   color: white;
   font-weight: 600;
-=======
->>>>>>> fe669439c (clean up responsive table css)
+}
+
 .dot {
   background-color: #a6cc65;
   border-radius: 100px;
