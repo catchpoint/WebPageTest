@@ -99,6 +99,7 @@ class Signup
             if (!$vars['is_plan_free']) {
                 $vars['state_list'] = Util::getChargifyUSStateList();
                 $vars['country_list'] = Util::getChargifyCountryList();
+                $vars['country_list_json_blob'] = Util::getCountryJsonBlob();
             }
         }
         $vars['contact_info_pattern'] = ValidatorPatterns::getContactInfo();

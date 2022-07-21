@@ -754,4 +754,14 @@ class Util
     {
         return 'webpagetest.org';
     }
+
+    /**
+     * This grabs a big json file full of ISO 3166 compliant countries and their subdivisions
+     */
+    public static function getCountryJsonBlob(): string
+    {
+        $file = file_get_contents(__DIR__ . '/../js/country-list/country-list.json');
+
+        return $file;
+    }
 }
