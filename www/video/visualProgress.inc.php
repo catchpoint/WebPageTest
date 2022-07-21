@@ -7,11 +7,11 @@
 require_once(__DIR__ . '/../devtools.inc.php');
 
 /**
-* Calculate the progress for all of the images in a given directory
-*/
+ * Calculate the progress for all of the images in a given directory
+ */
 function GetVisualProgress($testPath, $run, $cached, $startOffset = null)
 {
-  // TODO: in the long run this function might get redundant as the version below is more flexible
+    // TODO: in the long run this function might get redundant as the version below is more flexible
     $frames = null;
     $testPath = $testPath[0] == '.' || $testPath[0] == "/" ? $testPath : "./$testPath";
     $localPaths = new TestPaths($testPath, $run, $cached);
@@ -38,7 +38,7 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
     $visual_progress_file = $localPaths->visualProgressFile();
     if (gz_is_file($visual_data_file)) {
         $visual_data = json_decode(gz_file_get_contents($visual_data_file), true);
-      // see if we are processing an externally-uploaded visual data file
+        // see if we are processing an externally-uploaded visual data file
         if (isset($visual_data['timespans']['page_load']['startOffset'])) {
             $startOffset += $visual_data['timespans']['page_load']['startOffset'];
         }
@@ -88,15 +88,19 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
                         $time = (((int)$parts[1]) * 100) - $startOffset;
                         if ($time >= 0) {
                             if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
-                                  $frames['frames'][0] = array('path' => "$base_path/$previous_file",
-                                             'file' => $previous_file);
-                                  $first_file = $previous_file;
+                                $frames['frames'][0] = array(
+                                    'path' => "$base_path/$previous_file",
+                                    'file' => $previous_file
+                                );
+                                $first_file = $previous_file;
                             } elseif (!isset($first_file)) {
                                 $first_file = $file;
                             }
                             $last_file = $file;
-                            $frames['frames'][$time] = array('path' => "$base_path/$file",
-                                               'file' => $file);
+                            $frames['frames'][$time] = array(
+                                'path' => "$base_path/$file",
+                                'file' => $file
+                            );
                         }
                         $previous_file = $file;
                     }
@@ -106,15 +110,19 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
                         $time = intval($parts[1]) - $startOffset;
                         if ($time >= 0) {
                             if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
-                                $frames['frames'][0] = array('path' => "$base_path/$previous_file",
-                                     'file' => $previous_file);
+                                $frames['frames'][0] = array(
+                                    'path' => "$base_path/$previous_file",
+                                    'file' => $previous_file
+                                );
                                 $first_file = $previous_file;
                             } elseif (!isset($first_file)) {
                                 $first_file = $file;
                             }
-                              $last_file = $file;
-                              $frames['frames'][$time] = array('path' => "$base_path/$file",
-                                               'file' => $file);
+                            $last_file = $file;
+                            $frames['frames'][$time] = array(
+                                'path' => "$base_path/$file",
+                                'file' => $file
+                            );
                         }
                         $previous_file = $file;
                     }
@@ -171,7 +179,7 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
             if (!$frames['visualComplete'] && $frame['progress'] == 100) {
                 $frames['visualComplete'] = $time;
             }
-          // fix up the frame paths in case we have a cached version referencing a relay path
+            // fix up the frame paths in case we have a cached version referencing a relay path
             if (isset($frame['path'])) {
                 $frame['path'] = $base_path . '/' . basename($frame['path']);
             }
@@ -181,8 +189,8 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
 }
 
 /**
-* Calculate histograms for each color channel for the given image
-*/
+ * Calculate histograms for each color channel for the given image
+ */
 function GetImageHistogram($image_file, $histograms)
 {
     $histogram = null;
@@ -198,7 +206,7 @@ function GetImageHistogram($image_file, $histograms)
     }
 
     if (isset($histograms)) {
-      // figure out the timestamp for the video frame in ms
+        // figure out the timestamp for the video frame in ms
         $ms = null;
         if (preg_match('/ms_(?P<ms>[0-9]+)\.(png|jpg)/i', $image_file, $matches)) {
             $ms = intval($matches['ms']);
@@ -213,7 +221,7 @@ function GetImageHistogram($image_file, $histograms)
         }
     }
 
-  // See if we have the old-style histograms (separate files)
+    // See if we have the old-style histograms (separate files)
     if (!isset($histogram) && isset($histogram_file) && is_file($histogram_file)) {
         $histogram = json_decode(file_get_contents($histogram_file), true);
         if (
@@ -229,7 +237,7 @@ function GetImageHistogram($image_file, $histograms)
         }
     }
 
-  // generate a histogram from the image itself
+    // generate a histogram from the image itself
     if (!isset($histogram) && !GetSetting('disable_image_processing')) {
         $im = imagecreatefromjpeg($image_file);
         if ($im !== false) {
@@ -289,8 +297,8 @@ function GetImageHistogram($image_file, $histograms)
 }
 
 /**
-* Calculate how close a given histogram is to the final
-*/
+ * Calculate how close a given histogram is to the final
+ */
 function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $slop)
 {
     $progress = 0;
@@ -302,14 +310,14 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
             $matched = 0;
             $buckets = count($histogram[$channel]);
 
-          // First build an array of the actual changes in the current histogram.
+            // First build an array of the actual changes in the current histogram.
             $available = array();
             for ($i = 0; $i < $buckets; $i++) {
                 $available[$i] = abs($histogram[$channel][$i] - $start_histogram[$channel][$i]);
             }
 
-          // Go through the target differences and subtract any matches from the array as we go,
-          // counting how many matches we made.
+            // Go through the target differences and subtract any matches from the array as we go,
+            // counting how many matches we made.
             for ($i = 0; $i < $buckets; $i++) {
                 $target = abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
                 if ($target) {
@@ -333,8 +341,8 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
 }
 
 /**
-* Boil the frame loading progress down to a single number
-*/
+ * Boil the frame loading progress down to a single number
+ */
 function CalculateSpeedIndex(&$frames)
 {
     $index = null;
@@ -355,13 +363,13 @@ function CalculateSpeedIndex(&$frames)
 }
 
 /**
-* Convert RGB values (0-255) into HSV values (and force it into a 0-255 range)
-* Return the values in-place (R = H, G = S, B = V)
-*
-* @param mixed $R
-* @param mixed $G
-* @param mixed $B
-*/
+ * Convert RGB values (0-255) into HSV values (and force it into a 0-255 range)
+ * Return the values in-place (R = H, G = S, B = V)
+ *
+ * @param mixed $R
+ * @param mixed $G
+ * @param mixed $B
+ */
 function RGB_TO_HSV(&$R, &$G, &$B)
 {
     $HSL = array();
@@ -382,16 +390,16 @@ function RGB_TO_HSV(&$R, &$G, &$B)
     } else {
         $S = $del_Max / $var_Max;
 
-        $del_R = ( ( ( $var_Max - $var_R ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
-        $del_G = ( ( ( $var_Max - $var_G ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
-        $del_B = ( ( ( $var_Max - $var_B ) / 6 ) + ( $del_Max / 2 ) ) / $del_Max;
+        $del_R = ((($var_Max - $var_R) / 6) + ($del_Max / 2)) / $del_Max;
+        $del_G = ((($var_Max - $var_G) / 6) + ($del_Max / 2)) / $del_Max;
+        $del_B = ((($var_Max - $var_B) / 6) + ($del_Max / 2)) / $del_Max;
 
         if ($var_R == $var_Max) {
             $H = $del_B - $del_G;
         } elseif ($var_G == $var_Max) {
-            $H = ( 1 / 3 ) + $del_R - $del_B;
+            $H = (1 / 3) + $del_R - $del_B;
         } elseif ($var_B == $var_Max) {
-            $H = ( 2 / 3 ) + $del_G - $del_R;
+            $H = (2 / 3) + $del_G - $del_R;
         }
 
         if ($H < 0) {
@@ -408,12 +416,12 @@ function RGB_TO_HSV(&$R, &$G, &$B)
 }
 
 /**
-* Convert RGB in-place to YUV
-*/
+ * Convert RGB in-place to YUV
+ */
 function RGB_TO_YUV(&$r, &$g, &$b)
 {
     $Y = (0.257 * $r) + (0.504 * $g) + (0.098 * $b) + 16;
-    $U = -(0.148 * $r) - (0.291 * $g) + (0.439 * $b) + 128;
+    $U = - (0.148 * $r) - (0.291 * $g) + (0.439 * $b) + 128;
     $V = (0.439 * $r) - (0.368 * $g) - (0.071 * $b) + 128;
     $r = min(max((int)$Y, 0), 255);
     $g = min(max((int)$U, 0), 255);

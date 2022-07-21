@@ -19,7 +19,6 @@ use GuzzleHttp\Exception\RequestException;
 
 class Account
 {
-
     /** Upgrading plans from Account  */
     // Validate that a plan is selected
     public static function validatePlanUpgrade(): object

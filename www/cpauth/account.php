@@ -11,13 +11,14 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
 
-function getPlan($id, $plans){
-  foreach ($plans as $plan) {
-    if ($plan['id'] == $id) {
-      return $plan; 
-      exit();
+function getPlan($id, $plans)
+{
+    foreach ($plans as $plan) {
+        if ($plan['id'] == $id) {
+            return $plan;
+            exit();
+        }
     }
- }
 }
 
 if (!Util::getSetting('cp_auth')) {

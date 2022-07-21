@@ -123,7 +123,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
             <?php
             if (!$headless) {
-                ?>
+            ?>
 
 
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
@@ -260,7 +260,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                             <div class="simpleadvancedfields_contain">
                                 <input type="radio" name="simpleadvanced" value="simple" id="simple" <?php if (!$advancedFormDefault) {
                                                                                                             echo "checked";
-                                                                                                     } ?>>
+                                                                                                        } ?>>
                                 <label for="simple">Simple Configuration <em> 3 test runs from recommended location and browser presets</em></label>
                                 <div class="simpleadvancedfields">
                                     <ul class="input_fields home_responsive_test_top">
@@ -317,7 +317,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                             <div class="simpleadvancedfields_contain">
                                 <input type="radio" name="simpleadvanced" value="advanced" id="advanced" <?php if ($advancedFormDefault) {
                                                                                                                 echo "checked";
-                                                                                                         } ?>>
+                                                                                                            } ?>>
                                 <label for="advanced">Advanced Configuration <em>Choose from all browser, location, &amp; device options</em></label>
                                 <div class="simpleadvancedfields">
                                     <ul class="input_fields home_responsive_test_top">
@@ -552,10 +552,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         }
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
-                                                            echo 'checked=checked';
-                                                                                                                              } ?> value="0">First View and Repeat View</label>
+                                                                                                                                    echo 'checked=checked';
+                                                                                                                                } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
-                                                            echo 'checked=checked';
+                                                                                                                                    echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
                                                     </fieldset>
                                                 </li>
@@ -655,11 +655,12 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <li>
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
-                                                                echo 'checked=checked';
-                                                                                                                                              } ?> style="float: left;width: auto;">
+                                                                                                                                                    echo 'checked=checked';
+                                                                                                                                                } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
+                                                    </li>
                                                 <?php } ?>
                                                 <li>
                                                     <label for="time">
@@ -790,7 +791,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </li>
                                                 <?php
                                                 if ($admin && GetSetting('wprDesktop')) {
-                                                    ?>
+                                                ?>
                                                     <li>
 
                                                         <label for="wprDesktop" class="auto_width">
@@ -799,10 +800,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 if ($admin && GetSetting('wprMobile')) {
-                                                    ?>
+                                                ?>
                                                     <li>
                                                         <label for="wprMobile" class="auto_width">
                                                             <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox">
@@ -810,7 +811,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 ?>
                                                 <li>
@@ -922,10 +923,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </label>
                                             </p>
                                             <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
-                                            if (array_key_exists('spof', $_REQUEST)) {
-                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                            }
-                                            ?></textarea>
+                                                                                                    if (array_key_exists('spof', $_REQUEST)) {
+                                                                                                        echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                                                                                    }
+                                                                                                    ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
@@ -1002,7 +1003,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 
 
-                <?php
+            <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
                 }
