@@ -90,7 +90,11 @@ body.theme-b {
   align-items: flex-start;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD ======= .card-section-subhed {
+=======
+.card-section-subhed {
+>>>>>>> 5a31cb8f5 (Format all css and js)
   border-bottom: 1px solid #c8c8c8;
   margin-bottom: 10px;
   font-size: 1.25rem;
