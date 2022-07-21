@@ -288,7 +288,7 @@ class CPClient
                         'createDate',
                         'changeDate'
                     ]),
-                (new Query('braintreeCustomerDetails'))
+                (new Query('wptCustomer'))
                     ->setSelectionSet([
                         'customerId',
                         'wptPlanId',
