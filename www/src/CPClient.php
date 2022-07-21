@@ -16,8 +16,8 @@ use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
-use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
@@ -632,7 +632,7 @@ class CPClient
         return $sum;
     }
 
-    public function getChargifySubscriptionPreview(string $plan, ChargifyAddressInput $chargify_address_input): ChargifySubscriptionPreviewResponse
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
     {
         $gql = (new Query('wptSubscriptionPreview'))
             ->setVariables([
@@ -651,13 +651,13 @@ class CPClient
 
         $variables = [
             'wptPlanHandle' => $plan,
-            'shippingAddress' => $chargify_address_input->toArray()
+            'shippingAddress' => $shipping_address->toArray()
         ];
 
         $response = $this->graphql_client->runQuery($gql, true, $variables);
         $data = $response->getData()['wptSubscriptionPreview'];
 
-        return new ChargifySubscriptionPreviewResponse([
+        return new SubscriptionPreview([
           "total_in_cents" => $data['totalInCents'],
           "sub_total_in_cents" => $data['subTotalInCents'],
           "tax_in_cents" => $data['taxInCents']

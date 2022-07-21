@@ -14,7 +14,8 @@ class ChargifySubscriptionPreviewResponse implements JsonSerializable
     private int $tax_in_cents;
 
     /**
-     * @param array $options This is a list consisting of three integers: `total_in_cents`, `sub_total_in_cents`, and `tax_in_cents`. All are required
+     * @param array $options This is a list consisting of three integers: `total_in_cents`, `sub_total_in_cents`,
+     * and `tax_in_cents`. All are required.
      */
     public function __construct(array $options)
     {

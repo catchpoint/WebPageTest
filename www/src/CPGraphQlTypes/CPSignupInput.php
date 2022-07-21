@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace WebPageTest\CPGraphQlTypes;
 
-use WebPageTest\CPGraphQlTypes\CustomerInput;
-use WebPageTest\CPGraphQlTypes\ChargifySubscription;
+use WebPageTest\CPGraphQlTypes\CustomerInput as Customer;
+use WebPageTest\CPGraphQlTypes\ChargifySubscription as Subscription;
 use Exception;
 
 class CPSignupInput
@@ -15,14 +15,15 @@ class CPSignupInput
     private ?string $company;
     private string $email;
     private string $password;
-    private CustomerInput $customer;
-    private ChargifySubscription $subscription;
+    private Customer $customer;
+    private Subscription $subscription;
 
     /**
-     * @param array $options An array consisting of user data: `first_name`, `last_name`, `email`, `password`, and `company`. All but `company` are required
+     * @param array $options An array consisting of user data: `first_name`, `last_name`, `email`, `password`,
+     * and `company`. All but `company` are required
      *
      */
-    public function __construct(array $options, CustomerInput $customer_input, ChargifySubscription $chargify_subscription)
+    public function __construct(array $options, Customer $customer, Subscription $subscription)
     {
         if (
             !isset($options['first_name']) ||
@@ -38,8 +39,8 @@ class CPSignupInput
         $this->company = $options['company'] ?? null;
         $this->email = $options['email'];
         $this->password = $options['password'];
-        $this->customer = $customer_input;
-        $this->subscription = $chargify_subscription;
+        $this->customer = $customer;
+        $this->subscription = $subscription;
     }
 
     public function toArray(): array

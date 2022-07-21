@@ -248,6 +248,18 @@ class Signup
             throw new ClientException(implode(', ', $message));
         }
 
+        if ($plan != "free") {
+            if (
+                is_null($street_address) ||
+                is_null($city) ||
+                is_null($state_code) ||
+                is_null($country_code) ||
+                is_null($zipcode)
+            ) {
+                throw new ClientException("All billing address fields must be filled for a paid plan", "/signup/2");
+            }
+        }
+
         $vars->email = $email;
         $vars->password = $password;
         $vars->first_name = $first_name;
@@ -273,19 +285,42 @@ class Signup
         $_SESSION['signup-email'] = $body->email;
         $_SESSION['signup-password'] = $body->password;
 
+        $chargify_address = new ChargifyAddressInput([
+          "street_address" => $body->street_address,
+          "city" => $body->city,
+          "state" => $body->state_code,
+          "country" => $body->country_code,
+          "zipcode" => $body->zipcode
+        ]);
 
-        if (isset($body->street_address)) {
-            $chargify_address = new ChargifyAddressInput([
-              "street_address" => $body->street_address,
-              "city" => $body->city,
-              "state" => $body->state_code,
-              "country" => $body->country_code,
-              "zipcode" => $body->zipcode
-            ]);
+        $plan = $body->plan;
 
-            $plan = $body->plan;
+        try {
+            $auth_token = $request_context->getSignupClient()->getAuthToken();
+            $request_context->getSignupClient()->authenticate($auth_token->access_token);
 
+            $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
+
+            $_SESSION['signup-street-address'] = $body->street_address;
+            $_SESSION['signup-city'] = $body->city;
+            $_SESSION['signup-state-code'] = $body->state_code;
+            $_SESSION['signup-country-code'] = $body->country_code;
+            $_SESSION['signup-zipcode'] = $body->zipcode;
+
+            $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
+            $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
+            $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
+        } catch (\Exception $e) {
+            if ($e->getCode() != 401) {
+                throw new ClientException($e->getMessage(), '/signup/2');
+                exit();
+            }
+
+            // Auth issue, retry
             try {
+                $auth_token = $request_context->getSignupClient()->getAuthToken();
+                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+
                 $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
 
                 $_SESSION['signup-street-address'] = $body->street_address;
@@ -298,30 +333,8 @@ class Signup
                 $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
                 $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
             } catch (\Exception $e) {
-                if ($e->getCode() == 401) {
-                    try {
-                        $auth_token = $request_context->getSignupClient()->getAuthToken();
-                        $request_context->getSignupClient()->authenticate($auth_token->access_token);
-
-                        $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
-
-                        $_SESSION['signup-street-address'] = $body->street_address;
-                        $_SESSION['signup-city'] = $body->city;
-                        $_SESSION['signup-state-code'] = $body->state_code;
-                        $_SESSION['signup-country-code'] = $body->country_code;
-                        $_SESSION['signup-zipcode'] = $body->zipcode;
-
-                        $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
-                        $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
-                        $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
-                    } catch (\Exception $e) {
-                        throw new ClientException($e->getMessage(), '/signup/2');
-                        exit();
-                    }
-                } else {
-                    throw new ClientException($e->getMessage(), '/signup/2');
-                    exit();
-                }
+                throw new ClientException($e->getMessage(), '/signup/2');
+                exit();
             }
         }
 

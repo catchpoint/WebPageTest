@@ -16,8 +16,8 @@ use GraphQL\Variable;
 use WebPageTest\Plan;
 use WebPageTest\Customer;
 use WebPageTest\CPGraphQlTypes\CPSignupInput;
-use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 
 class CPSignupClient
 {
@@ -188,7 +188,7 @@ class CPSignupClient
         }, $results->getData()['wptPlan']);
     }
 
-    public function getChargifySubscriptionPreview(string $plan, ChargifyAddressInput $chargify_address_input): ChargifySubscriptionPreviewResponse
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
     {
         $gql = (new Query('wptSubscriptionPreview'))
             ->setVariables([
@@ -207,13 +207,13 @@ class CPSignupClient
 
         $variables = [
             'wptPlanHandle' => $plan,
-            'shippingAddress' => $chargify_address_input->toArray()
+            'shippingAddress' => $shipping_address->toArray()
         ];
 
         $response = $this->graphql_client->runQuery($gql, true, $variables);
         $data = $response->getData()['wptSubscriptionPreview'];
 
-        return new ChargifySubscriptionPreviewResponse([
+        return new SubscriptionPreview([
           "total_in_cents" => $data['totalInCents'],
           "sub_total_in_cents" => $data['subTotalInCents'],
           "tax_in_cents" => $data['taxInCents']
