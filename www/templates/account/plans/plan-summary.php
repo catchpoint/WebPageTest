@@ -20,7 +20,7 @@
         </div>
         <ul class="plan-summary-list">
             <li><strong>Runs per month:</strong> <?= $plan['name'] ?></li>
-            <li><strong>Billing Cycle:</strong> <?= $plan['billingFrequency'] == 1 ?'Monthly':'Yearly'; ?></li>
+            <li><strong>Billing Cycle:</strong> <?= $plan['billingFrequency'] == 1 ? 'Monthly' : 'Yearly'; ?></li>
             <li><strong>Price:</strong> $<?= $plan['price'] ?></li>
             <li><strong>Plan Renewal:</strong> </li>
         </ul>

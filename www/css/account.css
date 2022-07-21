@@ -90,11 +90,7 @@ body.theme-b {
   align-items: flex-start;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD ======= .card-section-subhed {
-=======
 .card-section-subhed {
->>>>>>> 5a31cb8f5 (Format all css and js)
   border-bottom: 1px solid #c8c8c8;
   margin-bottom: 10px;
   font-size: 1.25rem;
@@ -109,7 +105,7 @@ body.theme-b {
   padding: 0 10px;
 }
 
->>>>>>>e4598af68 (add tabs) .contact-support-button a {
+.contact-support-button a {
   display: flex;
   align-items: center;
   flex-direction: row;
