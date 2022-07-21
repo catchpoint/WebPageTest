@@ -81,7 +81,7 @@
             </div>
         </div>
 
-        <?php if (!$is_wpt_enterprise): ?>
+        <?php if (!$is_wpt_enterprise) : ?>
             <div class="box card-section">
                 <h3>Current Plan</h3>
                 <?php if ($is_paid) : ?>

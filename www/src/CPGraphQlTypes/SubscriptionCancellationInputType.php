@@ -19,10 +19,10 @@ class SubscriptionCancellationInputType
 
     public function toArray(): array
     {
-      return [
+        return [
         'subscriptionId' => $this->subscription_id,
         'cancellationReason' => $this->cancellation_reason,
         'suggestion' => $this->suggestion
-      ];
+        ];
     }
 }

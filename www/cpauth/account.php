@@ -33,7 +33,8 @@ if (!Util::getSetting('cp_auth')) {
 
 $access_token = $request_context->getUser()->getAccessToken();
 if (is_null($access_token)) {
-    $protocol = $request_context->getUrlProtocol(); $host = Util::getSetting('host');
+    $protocol = $request_context->getUrlProtocol();
+    $host = Util::getSetting('host');
     $route = '/login';
     $query = http_build_query(["redirect_uri" => "/account"]);
     $redirect_uri = "{$protocol}://{$host}{$route}?{$query}";
