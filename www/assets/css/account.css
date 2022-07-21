@@ -100,6 +100,23 @@ body.theme-b {
   padding-bottom: 10px;
 }
 
+#billing-settings-content .card-section-subhed {
+  border-bottom: none;
+}
+
+.card-section-subhed__grid {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  width: 100%;
+}
+.card-section-subhed__grid .plan-name {
+  justify-self: start;
+}
+.card-section-subhed__grid .account-cta {
+  justify-self: end;
+}
+
 .status {
   background-color: #c7edbc;
   padding: 0 10px;
@@ -162,6 +179,10 @@ body.theme-b {
 
 .billing-history {
   display: block;
+  padding-top: 2em;
+}
+.billing-history table {
+  border: 0;
 }
 
 .modal,
@@ -279,6 +300,7 @@ body.theme-b {
   align-content: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
+  margin-bottom: 15px;
 }
 
 .plan-billing-container * {
@@ -363,11 +385,15 @@ body.theme-b {
 }
 
 .wpt-plan-set {
-  display: none;
   flex-wrap: wrap;
   align-content: center;
   justify-content: space-between;
   text-align: center;
+  display: flex;
+}
+
+.wpt-plan-set.hidden {
+  display: none;
 }
 
 .wpt-plan-set .pill-button {
@@ -423,6 +449,13 @@ body.theme-b {
   user-select: none;
   margin-top: 2em;
 }
+.wpt-plan-set
+  .form-wrapper-radio
+  input[type="radio"]:disabled
+  + .wpt-plan
+  .pill-button {
+  background-color: rgb(204, 204, 204);
+}
 
 .wpt-plan-set
   .form-wrapper-radio
@@ -473,7 +506,7 @@ body.theme-b {
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   margin-bottom: 30px;
-  padding: 1.5rem;
+  padding: 2.5rem;
   border-radius: 10px;
   box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
   border: 1px solid rgb(204, 204, 204);
@@ -733,14 +766,7 @@ body.theme-b {
 
 a.button {
   text-decoration: none;
-  display: block;
-  color: #111;
-}
-
-a.button {
-  text-decoration: none;
   display: inline-block;
-  color: #111;
 }
 
 .signup-flow-layout .form-input .description,
@@ -1284,7 +1310,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
  ----------------------------------------------------------------*/
 
 /* Comparison table */
-
 .comparison-table {
   border-spacing: 0;
   font-size: 1.15rem;
@@ -1296,6 +1321,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1.7rem;
   text-align: left;
 }
+
 .comparison-table thead th {
   vertical-align: bottom;
 }
@@ -1346,6 +1372,27 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 .comparison-table tr th {
   padding: 0.8em;
   width: 25%;
+}
+
+.account-upgrade-comparison-table {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.account-upgrade-comparison-table tr:last-child td:last-child,
+.account-upgrade-comparison-table tr td:last-child,
+.account-upgrade-comparison-table tbody td {
+  border: none;
+  border-radius: 0;
+}
+.account-upgrade-comparison-table tr td:not(:first-child):not(:last-child) {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+}
+
+.account-upgrade-comparison-table thead th:first-child {
+  text-align: left;
 }
 
 @media (max-width: 1500px) {
@@ -1755,7 +1802,6 @@ ul.bulleted-list {
 /* Vertical responsive table for showing billing data */
 
 .responsive-vertical-table tr {
-  border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
 }
 
@@ -1988,6 +2034,7 @@ TEMP FIX FOR UPGRADE
 
 .center-banner {
   text-align: center;
+  width: 100%;
 }
 
 .no-border {
@@ -1996,16 +2043,75 @@ TEMP FIX FOR UPGRADE
 .plan-summary-list li {
   line-height: 2rem;
 }
+.plan-summary-list__total {
+  border-top: 1px solid #c8c8c8;
+}
 
 /** SELECT TABS **/
-#pro-plan-selector[data-chosen="annual"] ~ .annual-plans,
-#pro-plan-selector[data-chosen="monthly"] ~ .monthly-plans {
-  display: block;
-}
 .select-tabs {
   background-color: #141e33;
   color: white;
+  display: flex;
+  flex-direction: row;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 50px;
+  align-items: center;
 }
-div.select-tabs > * {
-  display: grid;
+.select-tabs .wpt-pro-logo {
+  background-size: 70%;
+  background-position: left;
+  margin: 0;
+}
+.select-tabs h2 {
+  max-width: 30%;
+}
+.select-tabs select {
+  height: 40px;
+  width: 150px;
+}
+.select-tabs p {
+  padding: 0 2rem;
+  margin: 0;
+}
+.select-tabs label {
+  margin-left: auto;
+  padding: 0 1rem;
+}
+
+.wpt-plan__reccomended:before {
+  content: "Most Popular";
+  background-color: purple;
+  color: #fff;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: -17px;
+  border-radius: 5px 5px 0 0;
+  padding: 2px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  border: none;
+}
+.wpt-plan__active:before {
+  content: "Current Plan";
+  background-color: rgb(204, 204, 204);
+  color: #111;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: -17px;
+  border-radius: 5px 5px 0 0;
+  padding: 2px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  border: none;
+}
+
+/* Radio button tabs used on plan summary*/
+input#existing-card:not(:checked)
+  ~ .radiobutton-tabs__tab-content[data-tab="existing-card"],
+input#existing-card:checked
+  ~ .radiobutton-tabs__tab-content[data-tab="new-card"] {
+  display: none;
 }
