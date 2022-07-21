@@ -1,12 +1,12 @@
 "use strict";
 
 class CountrySelector {
-  constructor (countrySelector, subdivisionSelector, isoCompliantJsonBlob) {
+  constructor(countrySelector, subdivisionSelector, isoCompliantJsonBlob) {
     this.countryList = isoCompliantJsonBlob;
     this.countries = Object.keys(this.countryList).map((code) => {
       return {
         code,
-        name: this.countryList[code].name
+        name: this.countryList[code].name,
       };
     });
     this.countrySelector = countrySelector;
@@ -26,7 +26,7 @@ class CountrySelector {
     // Attach listener
   }
 
-  getSubdivisions (countryCode) {
+  getSubdivisions(countryCode) {
     const country = this.countryList[countryCode];
     if (!country) {
       return {};
@@ -35,7 +35,7 @@ class CountrySelector {
     return country.divisions;
   }
 
-  getCountries () {
+  getCountries() {
     return this.countries;
   }
 }
