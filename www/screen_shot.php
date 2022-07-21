@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -24,7 +25,8 @@ $userImages = true;
 <html lang="en-us">
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Screenshots</title>
-        <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Screenshot';
+        include('head.inc'); ?>
         <style>
         img.center {
             display:block;
@@ -106,7 +108,7 @@ $userImages = true;
             }
             ?>
         </div>
-	</body>
+    </body>
 </html>
 
 <?php
@@ -116,7 +118,8 @@ $userImages = true;
  * @param TestInfo $testInfo Information about the test
  * @param TestRunResults $testRunResults The run results to be printed
  */
-function printContent($fileHandler, $testInfo, $testRunResults) {
+function printContent($fileHandler, $testInfo, $testRunResults)
+{
     $numSteps = $testRunResults->countSteps();
     $useQuicklinks = $numSteps > 1;
     if ($useQuicklinks) {
@@ -130,7 +133,8 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
 /**
  * @param TestRunResults $testRunResults The run results to generate quicklinks for
  */
-function printQuicklinks($testRunResults) {
+function printQuicklinks($testRunResults)
+{
     echo '<a name="quicklinks"><h1>Quicklinks</h1></a>';
     echo '<div style="text-align: center;"><table class="pretty" id="quicklinks_table">';
     echo '<tbody>';
@@ -151,7 +155,8 @@ function printQuicklinks($testRunResults) {
  * @param TestStepResult $testStepResult Results of the specific test
  * @param bool $useQuicklinks True if quicklinks are used, false otherwise
  */
-function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
+function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks)
+{
     $pageRunData = $testStepResult->getRawResults();
 
     $localPaths = $testStepResult->createTestPaths();
@@ -176,13 +181,13 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $screenShotUrl = null;
     if ($fileHandler->fileExists($localPaths->screenShotPngFile())) {
         $screenShotUrl = $urlPaths->screenShotPngFile();
-    } else if ($fileHandler->fileExists($localPaths->screenShotFile())) {
+    } elseif ($fileHandler->fileExists($localPaths->screenShotFile())) {
         $screenShotUrl = $urlPaths->screenShotFile();
     }
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center result_screenshot" alt="Screenshot" src="' . $screenShotUrl .'">';
+        echo '<img class="center result_screenshot" alt="Screenshot" src="' . $screenShotUrl . '">';
         echo '</a>';
     }
 
@@ -190,37 +195,42 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $messages = $testStepResult->getStatusMessages();
     if (count($messages)) {
         $lastMessage = end($messages);
-        if (strlen($lastMessage['message']))
+        if (strlen($lastMessage['message'])) {
             echo "\n<br>Last Status Message: \"{$lastMessage['message']}\"\n";
+        }
     }
 
     $stepNumber = $testStepResult->getStepNumber();
     $linkSuffix = $stepNumber > 1 ? ("_" . $stepNumber) : "";
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("render"))) {
         echo '<br><br><a name="start_render' . $linkSuffix . '"><h2>Start Render';
-        if (isset($pageRunData) && isset($pageRunData['render']))
+        if (isset($pageRunData) && isset($pageRunData['render'])) {
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
+        }
         echo '</h2></a>';
         echo '<img class="center result_screenshot" alt="Start Render Screenshot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
         echo '<br><br><a name="dom_element' . $linkSuffix . '"><h2>DOM Element';
-        if (isset($pageRunData) && isset($pageRunData['domTime']))
+        if (isset($pageRunData) && isset($pageRunData['domTime'])) {
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
+        }
         echo '</h2></a>';
         echo '<img class="center result_screenshot" alt="DOM Element Screenshot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
         echo '<br><br><a name="doc_complete' . $linkSuffix . '"><h2>Document Complete';
-        if (isset($pageRunData) && isset($pageRunData['docTime']))
+        if (isset($pageRunData) && isset($pageRunData['docTime'])) {
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
+        }
         echo '</h2></a>';
         echo '<img class="center result_screenshot" alt="Document Complete Screenshot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
         echo '<br><br><a name="aft' . $linkSuffix . '"><h2>AFT Details';
-        if (isset($pageRunData) && isset($pageRunData['aft']))
+        if (isset($pageRunData) && isset($pageRunData['aft'])) {
             echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
+        }
         echo '</h2></a>';
         echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
         echo '<img class="center result_screenshot" alt="AFT Diagnostic image" src="' . $urlPaths->aftDiagnosticImageFile() . '">';
@@ -251,8 +261,9 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
         foreach ($console_log as &$log_entry) {
             $row++;
             $rowClass = '';
-            if ($row % 2 == 0)
+            if ($row % 2 == 0) {
                 $rowClass = ' class="even"';
+            }
             echo "<tr$rowClass><td class=\"source\">" . htmlspecialchars($log_entry['source']) .
               "</td><td class=\"level\">" . htmlspecialchars($log_entry['level']) .
               "</td><td class=\"message\"><div>" . htmlspecialchars($log_entry['text']) .

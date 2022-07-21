@@ -1,11 +1,12 @@
 <?php
+
 $category = "Quick";
 $requests = $testStepResult->getRequests();
 $unusedPreloads = array();
 
 foreach ($requests as $request) {
-    if( initiatedByRoot($request) && isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true" ){
-        array_push($unusedPreloads, documentRelativePath($request['url'], $requests[0]['url']) );
+    if (initiatedByRoot($request) && isset($request['preloadUnused']) &&  $request['preloadUnused'] == "true") {
+        array_push($unusedPreloads, documentRelativePath($request['url'], $requests[0]['url']));
     }
 }
 
@@ -13,9 +14,9 @@ foreach ($requests as $request) {
 //Today this opp only works in Chrome or Edge so to avoid showing it as
 //ok when it might not be, we'll just not do it in other browsers
 if ($browser == 'Chrome' || $browser == 'Edge') {
-    if( count($unusedPreloads) > 0 ){
-        $assessment[$category]["opportunities"][] = array( 
-            "title" =>  count($unusedPreloads) . " resource" .(count($unusedPreloads) > 1 ? "s are" : " is") ." being preloaded, but is not used during page load.",
+    if (count($unusedPreloads) > 0) {
+        $assessment[$category]["opportunities"][] = array(
+            "title" =>  count($unusedPreloads) . " resource" . (count($unusedPreloads) > 1 ? "s are" : " is") . " being preloaded, but is not used during page load.",
             "desc" =>  "Preloaded resources are fetched at a high priority, delaying the arrival of other resources in the page. In the case where a preloaded resource is never actually used by the page, that means potentially critical requests will be delayed, slowing down the initial loading of your site.",
             "examples" =>  array_unique($unusedPreloads),
             "experiments" =>  array(
@@ -29,9 +30,8 @@ if ($browser == 'Chrome' || $browser == 'Edge') {
             ),
             "good" =>  false
         );
-    }
-    else {
-        $assessment[$category]["opportunities"][] = array( 
+    } else {
+        $assessment[$category]["opportunities"][] = array(
             "title" =>  'Zero unused preloads were found.',
             "desc" =>  'Preloaded resources are fetched at a high priority, delaying the arrival of other resources in the page. In the case where a preloaded resource is never actually used by the page, that means potentially critical requests will be delayed, slowing down the initial loading of your site.',
             "examples" =>  array(),
@@ -40,5 +40,3 @@ if ($browser == 'Chrome' || $browser == 'Edge') {
         );
     }
 }
-
-?>

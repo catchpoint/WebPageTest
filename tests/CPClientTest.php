@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use WebPageTest\CPClient;
 use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
-
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;

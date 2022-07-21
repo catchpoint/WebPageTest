@@ -1,10 +1,10 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
 declare(strict_types=1);
-
 
 require_once __DIR__ . '/common.inc';
 
@@ -19,8 +19,8 @@ require_once __DIR__ . '/include/RunResultHtmlTable.php';
 require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 
 // if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
-if($experiment && isset($experimentOriginalExperimentsHref) ){
-    header('Location: '. $experimentOriginalExperimentsHref );
+if ($experiment && isset($experimentOriginalExperimentsHref)) {
+    header('Location: ' . $experimentOriginalExperimentsHref);
 }
 
 $breakdown = array();
@@ -70,7 +70,9 @@ $page_description = "Website performance test result$testLabel.";
 
         require_once 'head.inc'; ?>
     </head>
-    <body class="result result-opportunities <?php if($req_screenshot){ echo ' screenshot'; } ?>">
+    <body class="result result-opportunities <?php if ($req_screenshot) {
+        echo ' screenshot';
+                                             } ?>">
             <?php
             $tab = 'Test Result';
             $subtab = 'Opportunities & Experiments';
@@ -120,29 +122,29 @@ $page_description = "Website performance test result$testLabel.";
 
 
 
-            <?php
+                <?php
                     $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
                     $requests = $testStepResult->getRequests();
                     // initial host is used by a few opps, so we'll calculate it here
                     $initialHost = null;
-                    $rootURL = null; 
+                    $rootURL = null;
                     $initialOrigin = null;
-                    foreach ($requests as $request) {
-                        if ($request['is_base_page'] == "true") {
-                            $initialHost = $request['host'];
-                            $rootURL = trim($request['full_url']);
-                            $initialOrigin = "http" . (strpos( $rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
-                            break;
-                        }
+                foreach ($requests as $request) {
+                    if ($request['is_base_page'] == "true") {
+                        $initialHost = $request['host'];
+                        $rootURL = trim($request['full_url']);
+                        $initialOrigin = "http" . (strpos($rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
+                        break;
                     }
+                }
 
                     include __DIR__ . '/experiments/common.inc';
 
                     include __DIR__ . '/experiments/summary.inc';
-                    if( $experiment ){
-                        $moreExperimentsLink = false;
-                        include __DIR__ . '/experiments/meta.inc';
-                    }
+                if ($experiment) {
+                    $moreExperimentsLink = false;
+                    include __DIR__ . '/experiments/meta.inc';
+                }
                 ?>
 
 
@@ -159,7 +161,7 @@ $page_description = "Website performance test result$testLabel.";
                         $secret = '';
                     }
 
-                    
+
 
                     echo "<form class='experiments_grades results_body' name='urlEntry' id='urlEntry' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'><div class=\"form_clip\">";
                     echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
@@ -176,24 +178,25 @@ $page_description = "Website performance test result$testLabel.";
                         $hmac = sha1($hashStr);
                         echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                     }
-                    
+
                     // this is to capture the first host that is a successful response and not a redirect. that'll be the one we want to override in an experiment
-                    echo '<input type="hidden" name="initialHostNonRedirect" value="'. $initialHost .'">';
-                    echo '<input type="hidden" name="initialOriginNonRedirect" value="'. $initialOrigin .'">';
+                    echo '<input type="hidden" name="initialHostNonRedirect" value="' . $initialHost . '">';
+                    echo '<input type="hidden" name="initialOriginNonRedirect" value="' . $initialOrigin . '">';
 
                     // used for tracking exp access
                     $expCounter = 0;
-                    
-                    
 
-                    function observationHTML( $parts ){
+
+
+                    function observationHTML($parts)
+                    {
                         global $expCounter;
                         global $test;
                         global $experiments_paid;
                         global $experiments_logged_in;
 
                         $bottleneckTitle = $parts["title"];
-                        
+
                         $bottleneckDesc = $parts["desc"];
                         $bottleneckExamples = $parts["examples"];
                         $relevantExperiments = $parts["experiments"];
@@ -202,60 +205,58 @@ $page_description = "Website performance test result$testLabel.";
                         $hideassets = $parts["hideassets"];
 
                         $out = '';
-                        
+
                         // todo move this summary heading broader for all recs
                         $goodbadClass = "experiments_details-good";
-                        if( $good === null ){
+                        if ($good === null) {
                             $goodbadClass = "experiments_details-neutral";
-                        } else if( $good !== true ){
+                        } elseif ($good !== true) {
                             $goodbadClass = "experiments_details-bad";
                         }
-                        
+
                         $out .= "<li class=\"$goodbadClass\"><details open><summary>$bottleneckTitle</summary>";
                         $out .= "<div class=\"experiments_details_body\">";
-                        
-                        if( count($bottleneckExamples) > 10 ){
+
+                        if (count($bottleneckExamples) > 10) {
                             $out .= "<div class=\"experiments_details_desc util_overflow_more\">";
                         } else {
                             $out .= "<div class=\"experiments_details_desc\">";
                         }
-                        
+
                         $out .= "<p>$bottleneckDesc</p>";
-                        if( count($bottleneckExamples) > 0 ){
+                        if (count($bottleneckExamples) > 0) {
                             $out .= "<ul>";
-                            foreach( $bottleneckExamples as $ex ) {
-                                if (!is_null($ex)){
-                                    $out .= "<li>". htmlentities($ex) ."</li>";
+                            foreach ($bottleneckExamples as $ex) {
+                                if (!is_null($ex)) {
+                                    $out .= "<li>" . htmlentities($ex) . "</li>";
                                 }
-                                
                             }
                             $out .= "</ul>";
                         }
                         $out .= "</div>";
-                    
-                        if( count($relevantExperiments) > 0 ){
-                            if( $relevantExperiments[0]->expvar ){
+
+                        if (count($relevantExperiments) > 0) {
+                            if ($relevantExperiments[0]->expvar) {
                                 $out .= "<h4 class=\"experiments_list_hed\">Relevant Experiments</h4>";
-                            }
-                            else {
+                            } else {
                                 $out .= "<h4 class=\"experiments_list_hed experiments_list_hed-recs\">Relevant Tips</h4>";
                             }
-                    
+
                             $out .= "<ul class=\"experiments_list\">";
-                    
-                            foreach( $relevantExperiments as $exp ) {
+
+                            foreach ($relevantExperiments as $exp) {
                                 $expNum = $exp->id;
-                                if($exp->expvar){
+                                if ($exp->expvar) {
                                     $expCounter++;
                                 }
-                                
+
                                 // experiments are enabled for the following criteria
                                 $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
                                 // exception allowed for tests on the metric times
-                                if( strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes' ) && $experiments_logged_in ){
+                                if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes') && $experiments_logged_in) {
                                     $experimentEnabled = true;
                                 }
-                                
+
                                 $out .= <<<EOT
                                     <li class="experiment_description">
                                     <div class="experiment_description_text">
@@ -263,7 +264,7 @@ $page_description = "Website performance test result$testLabel.";
                                     {$exp->desc}
                                 EOT;
 
-                                if( $experiments_logged_in === false && $experiments_paid === false ){
+                                if ($experiments_logged_in === false && $experiments_paid === false) {
                                     $upgradeLink = <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
@@ -271,37 +272,36 @@ $page_description = "Website performance test result$testLabel.";
                                     </div>
                                     EOT;
                                 }
-                                if( $experiments_logged_in === true && $experiments_paid === false ){
+                                if ($experiments_logged_in === true && $experiments_paid === false) {
                                     $upgradeLink = <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
                                     <a href="/signup"><span>Get <img class="pro_upgrade" src="/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
                                     </div>
                                     EOT;
-                                } 
-                    
-                    
-                                if( $exp->expvar && $exp->expval ){
-                                    if( count($exp->expval) ){
-                                        $out .= '<details class="experiment_assets '. (($hideassets === true || $exp->hideassets ===true) ? "experiment_assets-hide" : "" )  .'"><summary>Assets included in experiment:</summary>';
+                                }
+
+
+                                if ($exp->expvar && $exp->expval) {
+                                    if (count($exp->expval)) {
+                                        $out .= '<details class="experiment_assets ' . (($hideassets === true || $exp->hideassets === true) ? "experiment_assets-hide" : "" )  . '"><summary>Assets included in experiment:</summary>';
                                         $out .= '<ol>';
-                                        
-                                        foreach($exp->expval as $in => $val){
+
+                                        foreach ($exp->expval as $in => $val) {
                                             $label = $val;
-                                            
-                                            if( isset($exp->explabel) ){
+
+                                            if (isset($exp->explabel)) {
                                                 $label = $exp->explabel[$in];
                                             }
                                             if (isset($label)) {
                                                 $label = htmlentities($label);
                                             }
-                                            
-                                            if( count($exp->expval) > 1 ){
-                                            $out .= <<<EOT
+
+                                            if (count($exp->expval) > 1) {
+                                                $out .= <<<EOT
                                                 <li><label><input type="checkbox" name="{$expNum}-{$exp->expvar}[]" value="{$val}" checked>{$label}</label></li>
                                                 EOT;
-                                            }
-                                            else {
+                                            } else {
                                                 $out .= <<<EOT
                                                 <li><input type="hidden" name="{$expNum}-{$exp->expvar}[]" value="{$val}">{$label}</li>
                                                 EOT;
@@ -310,8 +310,8 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= '</ol>';
                                         $out .= '</details>';
                                     }
-                                    if( $exp->expvar ){
-                                        if( $experimentEnabled ){
+                                    if ($exp->expvar) {
+                                        if ($experimentEnabled) {
                                             $out .= <<<EOT
                                             </div>
                                             <div class="experiment_description_go">
@@ -322,9 +322,8 @@ $page_description = "Website performance test result$testLabel.";
                                             $out .= $upgradeLink;
                                         }
                                     }
-                                }
-                                else if( $exp->expvar && !$exp->expval && $exp->expfields ) {
-                                    if( $experimentEnabled ){
+                                } elseif ($exp->expvar && !$exp->expval && $exp->expfields) {
+                                    if ($experimentEnabled) {
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
@@ -332,9 +331,9 @@ $page_description = "Website performance test result$testLabel.";
                                         EOT;
                                         $addmore = $exp->addmore ? ' experiment_pair_value-add' : '';
 
-                                        foreach($exp->expfields as $field){
-                                            if( $field->type === "text" ){
-                                            $out .= <<<EOT
+                                        foreach ($exp->expfields as $field) {
+                                            if ($field->type === "text") {
+                                                $out .= <<<EOT
                                                 <label class="experiment_pair_value-visible {$addmore}"><span>{$field->label}: </span><input type="{$field->type}" name="{$expNum}-{$exp->expvar}[]"></label>
                                                 EOT;
                                             } else {
@@ -349,9 +348,8 @@ $page_description = "Website performance test result$testLabel.";
                                     } else {
                                         $out .= $upgradeLink;
                                     }
-                                }
-                                else if( $exp->expvar && !$exp->expval && $textinput ) {
-                                    if( $experimentEnabled ){
+                                } elseif ($exp->expvar && !$exp->expval && $textinput) {
+                                    if ($experimentEnabled) {
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go">
@@ -363,9 +361,8 @@ $page_description = "Website performance test result$testLabel.";
                                     } else {
                                         $out .= $upgradeLink;
                                     }
-                                }
-                                else if( $exp->expvar && !$exp->expval ) {
-                                    if( $experimentEnabled ){
+                                } elseif ($exp->expvar && !$exp->expval) {
+                                    if ($experimentEnabled) {
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go">
@@ -375,35 +372,34 @@ $page_description = "Website performance test result$testLabel.";
                                     } else {
                                         $out .= $upgradeLink;
                                     }
-                                }
-                                else {
+                                } else {
                                     $out .= '</div>';
                                 }
-                    
+
                                 $out .= '</li>';
                             }
                         }
-                    
+
                         $out .= '<ul></div></details></li>';
                         return $out;
                     }
 
 
-                    
+
 
 
 
 
                     // write out the observations HTML
-                    foreach($assessment as $key => $cat ){
-                       $grade = $cat["grade"];
-                       $summary = $cat["summary"];
-                       $sentiment = $cat["sentiment"];
-                       $opps = count($cat["opportunities"]);
-                       $oppsEnd = $opps === 1 ? "y" : "ies";
-                       $bad = $cat["num_recommended"];
-                       $good = $opps - $bad;
-                       if( $key === "Custom") {
+                    foreach ($assessment as $key => $cat) {
+                        $grade = $cat["grade"];
+                        $summary = $cat["summary"];
+                        $sentiment = $cat["sentiment"];
+                        $opps = count($cat["opportunities"]);
+                        $oppsEnd = $opps === 1 ? "y" : "ies";
+                        $bad = $cat["num_recommended"];
+                        $good = $opps - $bad;
+                        if ($key === "Custom") {
                             echo <<<EOT
                             <details class="experiments_create">
                             <summary class="grade_header" id="${key}">
@@ -414,13 +410,12 @@ $page_description = "Website performance test result$testLabel.";
                                 <ol>
 
                             EOT;
-                            foreach( $cat["opportunities"] as $opportunity ){
+                            foreach ($cat["opportunities"] as $opportunity) {
                                 echo observationHTML($opportunity);
                             }
                             echo '</ol></div></details>';
-                       }
-                       else {
-                        echo <<<EOT
+                        } else {
+                            echo <<<EOT
 
                         <div class="grade_header" id="${key}">
                             <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
@@ -431,12 +426,12 @@ $page_description = "Website performance test result$testLabel.";
                             <ol>
 
                         EOT;
-                       
 
-                        foreach( $cat["opportunities"] as $opportunity ){
-                            echo observationHTML($opportunity);
-                        }
-                        echo '</ol></div>';
+
+                            foreach ($cat["opportunities"] as $opportunity) {
+                                  echo observationHTML($opportunity);
+                            }
+                            echo '</ol></div>';
                         }
                     }
 
@@ -446,10 +441,10 @@ $page_description = "Website performance test result$testLabel.";
 
                     echo '<div class="experiments_foot">
                     <div><p><span class="exps-active"></span> </p>
-                    <p class="exps-runcount"><label>Experiment Runs: <input type="hidden" name="fvonly" value="'. $fvonly .'" required=""><input type="number" min="1" max="9" class="text short" name="runs" value="'. $numRuns .'" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small></label></p>
+                    <p class="exps-runcount"><label>Experiment Runs: <input type="hidden" name="fvonly" value="' . $fvonly . '" required=""><input type="number" min="1" max="9" class="text short" name="runs" value="' . $numRuns . '" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small></label></p>
                     </div>';
-                    
-                    echo '<input type="hidden" name="assessment" value="'. urlencode(json_encode( $assessment, JSON_UNESCAPED_SLASHES)) .'">';
+
+                    echo '<input type="hidden" name="assessment" value="' . urlencode(json_encode($assessment, JSON_UNESCAPED_SLASHES)) . '">';
 
                     echo '<input type="submit" value="Re-Run Test with Experiments">';
                     echo "\n</div></div></form>\n";
@@ -556,7 +551,9 @@ $page_description = "Website performance test result$testLabel.";
     // refresh the form state from saved localstorage values
     function refreshExperimentFormState(){
         var priorState = localStorage.getItem("experimentForm");
-        var currentTestID = '<?php if(isset($id)){echo "$id"; } ?>';
+        var currentTestID = '<?php if (isset($id)) {
+            echo "$id";
+                             } ?>';
         if(priorState && currentTestID && priorState.indexOf("resubmit="+ currentTestID) > -1 ){
             var form = $("form.experiments_grades");
             form[0].reset();

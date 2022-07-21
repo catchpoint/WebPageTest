@@ -12,28 +12,28 @@ foreach ($requests as $request) {
     if (isset($request['renderBlocking'])) {
         $blockingIndicator = true;
     }
-    if( initiatedByRoot($request) && $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")  ){
-        array_push($blocking3pReqs, $request['full_url'] );
-        array_push($blocking3pHosts, $request['host'] );
-    } else if( initiatedByRoot($request) && $initialHost !== $request['host']
+    if (initiatedByRoot($request) && $initialHost !== $request['host'] && ($request['renderBlocking'] === "blocking" || $request['renderBlocking'] === "in_body_parser_blocking")) {
+        array_push($blocking3pReqs, $request['full_url']);
+        array_push($blocking3pHosts, $request['host']);
+    } elseif (
+        initiatedByRoot($request) && $initialHost !== $request['host']
                 && ($request['contentType'] === "text/css" || $request['requestType'] === "script" || $request['request_type'] === "Script")
                 && $request['all_end'] < $startRender
-    ){
-        array_push($potentiallyBlocking3pReqs, $request['full_url'] );
-        array_push($potentiallyBlocking3pHosts, $request['host'] );
+    ) {
+        array_push($potentiallyBlocking3pReqs, $request['full_url']);
+        array_push($potentiallyBlocking3pHosts, $request['host']);
     }
-
 }
 
-if (!$blockingIndicator){
+if (!$blockingIndicator) {
     //browser doesn't support the render blocking indicator so we'll use our other array
-    $blocking3pReqs = $potentiallyBlocking3pReqs; 
-    $blocking3pHosts = $potentiallyBlocking3pHosts; 
+    $blocking3pReqs = $potentiallyBlocking3pReqs;
+    $blocking3pHosts = $potentiallyBlocking3pHosts;
 }
 
-if( count($blocking3pReqs) > 0 ){
-    $assessment[$category]["opportunities"][] = array( 
-        "title" =>  "Potential <abbr title=\"Single Point of Failure\">SPOF</abbr>: ". count($blocking3pReqs) ." 3rd-party request". (count($blocking3pReqs) > 1 ? "s are" : " is") ." blocking page rendering.",
+if (count($blocking3pReqs) > 0) {
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  "Potential <abbr title=\"Single Point of Failure\">SPOF</abbr>: " . count($blocking3pReqs) . " 3rd-party request" . (count($blocking3pReqs) > 1 ? "s are" : " is") . " blocking page rendering.",
         "desc" =>  "By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page's access relies on their response time and availability.'",
         "examples" =>  array_unique($blocking3pReqs),
         "experiments" =>  array(
@@ -75,9 +75,8 @@ if( count($blocking3pReqs) > 0 ){
         ),
         "good" =>  false
     );
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  'Zero render-blocking third-party requests found.',
         "desc" =>  'By default, references to external JavaScript and CSS files will block the page from rendering. Third-party blocking requests are particularly risky, as your page\'s access relies on their response time and availability.',
         "examples" =>  array(),
@@ -85,5 +84,3 @@ else {
         "good" =>  true
     );
 }
-
-?>

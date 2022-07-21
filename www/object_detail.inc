@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -8,13 +9,21 @@ require_once __DIR__ . '/include/UrlGenerator.php';
 /**
 * Load the object data file.
 */
-function getRequests($id, $test_path, $run, $is_cached,
-                     &$has_secure_requests, $use_raw_headers = false, $step = 1) {
-  if (!isset($test_path) || !strlen($test_path))
-    $test_path = './' . GetTestPath($id);
-  $localPaths = new TestPaths($test_path, $run, $is_cached, $step);
-  $urlGenerator = UrlGenerator::create(false, "", $id, $run, $is_cached);
-  return getRequestsForStep($localPaths, $urlGenerator, $has_secure_requests, $use_raw_headers);
+function getRequests(
+    $id,
+    $test_path,
+    $run,
+    $is_cached,
+    &$has_secure_requests,
+    $use_raw_headers = false,
+    $step = 1
+) {
+    if (!isset($test_path) || !strlen($test_path)) {
+        $test_path = './' . GetTestPath($id);
+    }
+    $localPaths = new TestPaths($test_path, $run, $is_cached, $step);
+    $urlGenerator = UrlGenerator::create(false, "", $id, $run, $is_cached);
+    return getRequestsForStep($localPaths, $urlGenerator, $has_secure_requests, $use_raw_headers);
 }
 
 /**
@@ -26,7 +35,8 @@ function getRequests($id, $test_path, $run, $is_cached,
  * @param bool $use_raw_headers If true, raw headers are added. False by default
  * @return array The loaded requests
  */
-function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, $use_raw_headers = false) {
+function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, $use_raw_headers = false)
+{
     $request_file_name =  $localPaths->requestDataFile();
     $request_json_file_name =  $localPaths->requestDataJsonFile();
     $headers_file_name = $localPaths->headersFile();
@@ -38,56 +48,60 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $requests = null;
     $cached = true;
     if (gz_is_file($cache_file) && !isset($_REQUEST['recalculate'])) {
-      $requests = json_decode(gz_file_get_contents($cache_file), true);
+        $requests = json_decode(gz_file_get_contents($cache_file), true);
     } elseif (gz_is_file($devtools_request)) {
-      GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
-      if (isset($requests)) {
-        FixUpRequestTimes($requests);
-        AddResponseBodyFlags($requests, $bodies_file_name);
-        AddScriptTimings($requests, $script_timing_file_name);
-      }
+        GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+        if (isset($requests)) {
+            FixUpRequestTimes($requests);
+            AddResponseBodyFlags($requests, $bodies_file_name);
+            AddScriptTimings($requests, $script_timing_file_name);
+        }
     }
     if (!isset($requests) || !is_array($requests)) {
-      $cached = false;
-      $needHeaders = false;
-      $requests = LoadRequests($request_file_name);
-      if (isset($requests) && is_array($requests) && count($requests)) {
-        if ($use_raw_headers)
-          $needHeaders = true;
-      } else {
-        if (gz_is_file($request_json_file_name))
-          $requests = json_decode(gz_file_get_contents($request_json_file_name), true);
-        else
-          GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
-      }
-      AddResponseBodyFlags($requests, $bodies_file_name);
-      FixUpRequestTimes($requests);
-      if ($needHeaders)
-          AddHeaders($requests, $headers_file_name);
-      AddScriptTimings($requests, $script_timing_file_name);
+        $cached = false;
+        $needHeaders = false;
+        $requests = LoadRequests($request_file_name);
+        if (isset($requests) && is_array($requests) && count($requests)) {
+            if ($use_raw_headers) {
+                $needHeaders = true;
+            }
+        } else {
+            if (gz_is_file($request_json_file_name)) {
+                $requests = json_decode(gz_file_get_contents($request_json_file_name), true);
+            } else {
+                GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+            }
+        }
+        AddResponseBodyFlags($requests, $bodies_file_name);
+        FixUpRequestTimes($requests);
+        if ($needHeaders) {
+            AddHeaders($requests, $headers_file_name);
+        }
+        AddScriptTimings($requests, $script_timing_file_name);
       // make sure everything is utf-8 encoded
-      $requests = MakeUTF8($requests);
+        $requests = MakeUTF8($requests);
     }
 
     if (isset($requests) && is_array($requests)) {
-      $has_secure_requests = false;
-      foreach ($requests as $index => &$request) {
-          $request['index'] = $index;
-          $request['number'] = $index + 1;
-          if ($rootUrlGenerator) {
-            if (isset($request['body_id']) && strlen($request['body_id'])) {
-              $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
-            } elseif (isset($request['body']) && @$request['body']) {
-              $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+        $has_secure_requests = false;
+        foreach ($requests as $index => &$request) {
+            $request['index'] = $index;
+            $request['number'] = $index + 1;
+            if ($rootUrlGenerator) {
+                if (isset($request['body_id']) && strlen($request['body_id'])) {
+                    $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
+                } elseif (isset($request['body']) && @$request['body']) {
+                    $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+                }
             }
-          }
-          if (!$has_secure_requests && isset($request['is_secure']) && $request['is_secure'])
-              $has_secure_requests = true;
-      }
+            if (!$has_secure_requests && isset($request['is_secure']) && $request['is_secure']) {
+                $has_secure_requests = true;
+            }
+        }
 
-      if (!$cached && $use_raw_headers) {
-        gz_file_put_contents($cache_file, json_encode($requests));
-      }
+        if (!$cached && $use_raw_headers) {
+            gz_file_put_contents($cache_file, json_encode($requests));
+        }
     }
 
     return $requests;
@@ -98,7 +112,8 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
 *
 * @param mixed $requests
 */
-function CalculateComponentTimes(&$pageData, &$requests) {
+function CalculateComponentTimes(&$pageData, &$requests)
+{
     // Figure out the appropriate end time.
     $end = $pageData['load_ms'];
     $times = array(
@@ -118,16 +133,17 @@ function CalculateComponentTimes(&$pageData, &$requests) {
         foreach ($requests as $req) {
             if ($i >= $req['all_start'] && $i <= $req['all_end']) {
                 // Figure out what the request was doing.
-                if ($req['download_start'] && $i >= $req['download_start'])
+                if ($req['download_start'] && $i >= $req['download_start']) {
                     $download++;
-                elseif ($req['load_start'] && $i >= $req['load_start'])
+                } elseif ($req['load_start'] && $i >= $req['load_start']) {
                     $request++;
-                elseif ($req['ssl_start'] && $i >= $req['ssl_start'])
+                } elseif ($req['ssl_start'] && $i >= $req['ssl_start']) {
                     $load++;
-                elseif ($req['connect_start'] && $i >= $req['connect_start'])
+                } elseif ($req['connect_start'] && $i >= $req['connect_start']) {
                     $connect++;
-                elseif($i >= $req['dns_start'])
+                } elseif ($i >= $req['dns_start']) {
                     $dns++;
+                }
                 $total++;
             }
         }
@@ -152,7 +168,8 @@ function CalculateComponentTimes(&$pageData, &$requests) {
 /**
 * Load the gzipped request file (tab-delimited).
 */
-function LoadRequests($request_file_name) {
+function LoadRequests($request_file_name)
+{
     $requests = array();
     $needed_columns = array(
         // tsv_column => request_key
@@ -222,44 +239,49 @@ function LoadRequests($request_file_name) {
         87 => 'objectSizeUncompressed'
         );
     $request_lines = gz_file($request_file_name);
-    if( isset($request_lines) && is_array($request_lines)) {
-        foreach($request_lines as &$line) {
-          if (strncmp($line, "Date\t", 4)) {
-            $columns = explode("\t", str_replace("\t", "\t ", $line));
-            if (count($columns)) {
-                $request = array();
-                foreach ($columns as $i => $value) {
-                    $trimmed_value = trim($value);
-                    if (isset($needed_columns[$i + 1]) && strlen($trimmed_value)) {
-                        if (is_numeric($trimmed_value)) {
-                            $request[$needed_columns[$i + 1]] = $trimmed_value + 0;
-                        } else {
-                            $request[$needed_columns[$i + 1]] = $trimmed_value;
+    if (isset($request_lines) && is_array($request_lines)) {
+        foreach ($request_lines as &$line) {
+            if (strncmp($line, "Date\t", 4)) {
+                $columns = explode("\t", str_replace("\t", "\t ", $line));
+                if (count($columns)) {
+                    $request = array();
+                    foreach ($columns as $i => $value) {
+                        $trimmed_value = trim($value);
+                        if (isset($needed_columns[$i + 1]) && strlen($trimmed_value)) {
+                            if (is_numeric($trimmed_value)) {
+                                $request[$needed_columns[$i + 1]] = $trimmed_value + 0;
+                            } else {
+                                $request[$needed_columns[$i + 1]] = $trimmed_value;
+                            }
                         }
                     }
+                    if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
+                        $url = 'http://';
+                        if (array_key_exists('is_secure', $request) && $request['is_secure']) {
+                            $url = 'https://';
+                        }
+                        $url .= $request['host'] . $request['url'];
+                        $request['full_url'] = $url;
+                    }
+                    if (array_key_exists('jpeg_scan_count', $request)) {
+                        if ($request['jpeg_scan_count'] > 1) {
+                            $request['score_progressive_jpeg'] = 100;
+                        } elseif ($request['jpeg_scan_count'] == 1) {
+                            if (
+                                array_key_exists('image_total', $request) &&
+                                $request['image_total'] <= 10240
+                            ) {
+                                $request['score_progressive_jpeg'] = 50;
+                            } else {
+                                $request['score_progressive_jpeg'] = 0;
+                            }
+                        } else {
+                            $request['score_progressive_jpeg'] = -1;
+                        }
+                    }
+                    $requests[] = $request;
                 }
-                if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
-                    $url = 'http://';
-                    if (array_key_exists('is_secure', $request) && $request['is_secure'])
-                        $url = 'https://';
-                    $url .= $request['host'] . $request['url'];
-                    $request['full_url'] = $url;
-                }
-                if (array_key_exists('jpeg_scan_count', $request)) {
-                  if ($request['jpeg_scan_count'] > 1)
-                    $request['score_progressive_jpeg'] = 100;
-                  elseif ($request['jpeg_scan_count'] == 1) {
-                    if (array_key_exists('image_total', $request) &&
-                        $request['image_total'] <= 10240)
-                      $request['score_progressive_jpeg'] = 50;
-                    else
-                      $request['score_progressive_jpeg'] = 0;
-                  } else
-                    $request['score_progressive_jpeg'] = -1;
-                }
-                $requests[] = $request;
             }
-          }
         }
     }
     return $requests;
@@ -268,35 +290,36 @@ function LoadRequests($request_file_name) {
 /**
 * Convert old format for DNS/connection data.
 */
-function MergeDnsAndConnectionTimes($requests) {
-  $merged_requests = array();
-  if (isset($requests) && is_array($requests)) {
-    $dns_ms = null;
-    $connect_ms = null;
-    foreach($requests as $i => &$request) {
-      if (isset($request['type'])) {
-        $request_type = (int)$request['type'];
-        if ($request_type == 1) {
-            $dns_ms = $request['load_ms'];
-        } elseif ($request_type == 2) {
-            $connect_ms = $request['load_ms'];
-        } elseif ($request_type == 3) {
-            if (isset($connect_ms) && !$request['socket_ms']) {
-                $request['connect_ms'] = $connect_ms;
+function MergeDnsAndConnectionTimes($requests)
+{
+    $merged_requests = array();
+    if (isset($requests) && is_array($requests)) {
+        $dns_ms = null;
+        $connect_ms = null;
+        foreach ($requests as $i => &$request) {
+            if (isset($request['type'])) {
+                $request_type = (int)$request['type'];
+                if ($request_type == 1) {
+                    $dns_ms = $request['load_ms'];
+                } elseif ($request_type == 2) {
+                    $connect_ms = $request['load_ms'];
+                } elseif ($request_type == 3) {
+                    if (isset($connect_ms) && !$request['socket_ms']) {
+                        $request['connect_ms'] = $connect_ms;
+                    }
+                    if (isset($dns_ms) && !$request['dns_ms']) {
+                        $request['dns_ms'] = $dns_ms;
+                    }
+                    unset($dns_ms);
+                    unset($connect_ms);
+                    $merged_requests[] = $request;
+                }
+            } else {
+                $merged_requests[] = $request;
             }
-            if (isset($dns_ms) && !$request['dns_ms']) {
-                $request['dns_ms'] = $dns_ms;
-            }
-            unset($dns_ms);
-            unset($connect_ms);
-            $merged_requests[] = $request;
         }
-      } else {
-        $merged_requests[] = $request;
-      }
     }
-  }
-  return $merged_requests;
+    return $merged_requests;
 }
 
 /**
@@ -318,9 +341,10 @@ function MergeDnsAndConnectionTimes($requests) {
  *   _ms    - (_end - _start)
  *
  */
-function FixUpRequestTimes(&$requests) {
+function FixUpRequestTimes(&$requests)
+{
     $requests = MergeDnsAndConnectionTimes($requests);
-    foreach($requests as &$req) {
+    foreach ($requests as &$req) {
         $all_start = isset($req['load_start']) ? $req['load_start'] : 0;
         $all_ms = isset($req['load_ms']) ? $req['load_ms'] : 0;
 
@@ -329,14 +353,18 @@ function FixUpRequestTimes(&$requests) {
             // Create local variables for start, end, and duration of this
             // request.  These values will be copied back into $req at the
             // end of the foreach loop.
-            if (array_key_exists($key . '_start', $req))
-              $start = $req[$key . '_start'];
-            if (array_key_exists($key . '_end', $req))
-              $end = $req[$key . '_end'];
-            if (array_key_exists($key . '_ms', $req))
-              $ms = $req[$key . '_ms'];
-            if ($end > 0 && $start > 0 && $end >= $start)
+            if (array_key_exists($key . '_start', $req)) {
+                $start = $req[$key . '_start'];
+            }
+            if (array_key_exists($key . '_end', $req)) {
+                $end = $req[$key . '_end'];
+            }
+            if (array_key_exists($key . '_ms', $req)) {
+                $ms = $req[$key . '_ms'];
+            }
+            if ($end > 0 && $start > 0 && $end >= $start) {
                 $ms = max(0, $end - $start);
+            }
             if ($ms > 0) {
                 if ($start == 0) {
                     // Compute start for old-style timing.
@@ -377,7 +405,8 @@ function FixUpRequestTimes(&$requests) {
 /**
 * Helper for AddHeaders to initialize variables.
 */
-function _AddHeadersInit(&$id, &$index, &$headers, &$headers_key) {
+function _AddHeadersInit(&$id, &$index, &$headers, &$headers_key)
+{
     $index = null;
     $id = null;
     $headers = array('request' => array(), 'response' => array());
@@ -387,28 +416,32 @@ function _AddHeadersInit(&$id, &$index, &$headers, &$headers_key) {
 /**
 * Helper for AddHeaders to save headers.
 */
-function _AddHeadersSave(&$requests, $index, $id, $headers) {
-  if (isset($id) && $id > 0) {
-    // use the request ID to find the real index of the request
-    foreach ($requests as $i => $request) {
-      if (isset($request['request_id']) && $request['request_id'] == $id) {
-        $index = $i;
-        break;
-      }
+function _AddHeadersSave(&$requests, $index, $id, $headers)
+{
+    if (isset($id) && $id > 0) {
+      // use the request ID to find the real index of the request
+        foreach ($requests as $i => $request) {
+            if (isset($request['request_id']) && $request['request_id'] == $id) {
+                $index = $i;
+                break;
+            }
+        }
     }
-  }
-  if (isset($index)) {
-    if ((count($headers['request']) || count($headers['response'])) &&
-      array_key_exists($index, $requests)) {
-      $requests[$index]['headers'] = $headers;
+    if (isset($index)) {
+        if (
+            (count($headers['request']) || count($headers['response'])) &&
+            array_key_exists($index, $requests)
+        ) {
+            $requests[$index]['headers'] = $headers;
+        }
     }
-  }
 }
 
 /**
 * Load the raw headers if we have them.
 */
-function AddHeaders(&$requests, $headers_file_name) {
+function AddHeaders(&$requests, $headers_file_name)
+{
     $header_lines = gz_file($headers_file_name);
     if ($header_lines) {
         $is_started = false;
@@ -425,16 +458,18 @@ function AddHeaders(&$requests, $headers_file_name) {
                 } elseif (!strncmp($line, 'RID:', 4)) {
                     $line_parts = explode(' ', $line);
                     $request_id = intval($line_parts[1]);
-                    if ($request_id > 0)
+                    if ($request_id > 0) {
                         $id = $request_id;
+                    }
                 } elseif (!strncmp($line, 'Request ', 8)) {
                     _AddHeadersSave($requests, $index, $id, $headers);
                     _AddHeadersInit($index, $id, $headers, $headers_key);
 
                     $line_parts = explode(' ', $line);
                     $request_num = intval($line_parts[1]);
-                    if ($request_num > 0)
+                    if ($request_num > 0) {
                         $index = $request_num - 1;
+                    }
                 } elseif (strlen($trimmed) && isset($headers_key)) {
                     $headers[$headers_key][] = $trimmed;
                 }
@@ -447,87 +482,93 @@ function AddHeaders(&$requests, $headers_file_name) {
 /*
 *  Flag the requests that have a response body available.
 */
-function AddResponseBodyFlags(&$requests, $bodies_file_name) {
-  if (is_file($bodies_file_name)) {
-    // build a list of all of the file names in the bodies zip
-    $ids = array();
+function AddResponseBodyFlags(&$requests, $bodies_file_name)
+{
+    if (is_file($bodies_file_name)) {
+      // build a list of all of the file names in the bodies zip
+        $ids = array();
 
-    $zip = new ZipArchive;
-    if ($zip->open($bodies_file_name) === TRUE) {
-      for ($i = 0; $i < $zip->numFiles; $i++) {
-        $name = $zip->getNameIndex($i);
-        $first = strpos($name, '-');
-        $found = false;
-        if ($first > 0) {
-          $last = strrpos($name, '-body.txt');
-          if ($last > $first) {
-            $id = substr($name, $first + 1, $last - $first - 1);
-            if (strlen($id)) {
-              $ids[$id] = $id;
-              $found = true;
+        $zip = new ZipArchive();
+        if ($zip->open($bodies_file_name) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $name = $zip->getNameIndex($i);
+                $first = strpos($name, '-');
+                $found = false;
+                if ($first > 0) {
+                    $last = strrpos($name, '-body.txt');
+                    if ($last > $first) {
+                        $id = substr($name, $first + 1, $last - $first - 1);
+                        if (strlen($id)) {
+                            $ids[$id] = $id;
+                            $found = true;
+                        }
+                    }
+                }
+                if (!$found) {
+                  // old-style where the files are numbered in order of request
+                    $index = intval($name, 10);
+                    if ($index && array_key_exists($index - 1, $requests)) {
+                        $requests[$index - 1]['body'] = true;
+                    }
+                }
             }
-          }
+            $zip->close();
         }
-        if (!$found) {
-          // old-style where the files are numbered in order of request
-          $index = intval($name, 10);
-          if ($index && array_key_exists($index - 1, $requests)) {
-            $requests[$index - 1]['body'] = true;
-          }
-        }
-      }
-      $zip->close();
-    }
 
-    // match the bodies with the requests
-    if (count($ids)) {
-      foreach ($requests as &$request) {
-        if ( isset($request['raw_id']) && isset($ids[trim($request['raw_id'])]) ) {
-          $request['body_id'] = $ids[trim($request['raw_id'])];
-        } elseif (isset($request['request_id']) && isset($ids[trim($request['request_id'])])) {
-          $request['body_id'] = $ids[trim($request['request_id'])];
+      // match the bodies with the requests
+        if (count($ids)) {
+            foreach ($requests as &$request) {
+                if (isset($request['raw_id']) && isset($ids[trim($request['raw_id'])])) {
+                    $request['body_id'] = $ids[trim($request['raw_id'])];
+                } elseif (isset($request['request_id']) && isset($ids[trim($request['request_id'])])) {
+                    $request['body_id'] = $ids[trim($request['request_id'])];
+                }
+            }
         }
-      }
     }
-  }
 }
 
-function AddScriptTimings(&$requests, $script_timing_file_name) {
-  if (gz_is_file($script_timing_file_name)) {
-    $timings = json_decode(gz_file_get_contents($script_timing_file_name), true);
-    if (isset($timings) &&
-        is_array($timings) &&
-        isset($timings['main_thread']) &&
-        isset($timings[$timings['main_thread']])) {
-      $js_timing = $timings[$timings['main_thread']];
-      // Only allocate the JS timings to the first occurence of a given URL
-      $used = array();
-      foreach ($requests as &$request) {
-        if (isset($request['full_url']) && isset($js_timing[$request['full_url']]) && !isset($used[$request['full_url']])) {
-          $used[$request['full_url']] = true;
-          $all_total = 0.0;
-          foreach ($js_timing[$request['full_url']] as $cpu_event => $times) {
-            $total = 0.0;
-            foreach ($times as $pair) {
-              $elapsed = $pair[1] - $pair[0];
-              if ($elapsed > 0)
-                $total += $elapsed;
+function AddScriptTimings(&$requests, $script_timing_file_name)
+{
+    if (gz_is_file($script_timing_file_name)) {
+        $timings = json_decode(gz_file_get_contents($script_timing_file_name), true);
+        if (
+            isset($timings) &&
+            is_array($timings) &&
+            isset($timings['main_thread']) &&
+            isset($timings[$timings['main_thread']])
+        ) {
+            $js_timing = $timings[$timings['main_thread']];
+          // Only allocate the JS timings to the first occurence of a given URL
+            $used = array();
+            foreach ($requests as &$request) {
+                if (isset($request['full_url']) && isset($js_timing[$request['full_url']]) && !isset($used[$request['full_url']])) {
+                    $used[$request['full_url']] = true;
+                    $all_total = 0.0;
+                    foreach ($js_timing[$request['full_url']] as $cpu_event => $times) {
+                        $total = 0.0;
+                        foreach ($times as $pair) {
+                                $elapsed = $pair[1] - $pair[0];
+                            if ($elapsed > 0) {
+                                $total += $elapsed;
+                            }
+                        }
+                        if ($total > 0) {
+                            $all_total += $total;
+                            $total = intval(round($total));
+                            if (!isset($request['cpuTimes'])) {
+                                $request['cpuTimes'] = array();
+                            }
+                            $request['cpuTimes'][$cpu_event] = $total;
+                            $request["cpu.$cpu_event"] = $total;
+                        }
+                    }
+                    $all_total = intval(round($all_total));
+                    $request['cpuTime'] = $all_total;
+                }
             }
-            if ($total > 0) {
-              $all_total += $total;
-              $total = intval(round($total));
-              if (!isset($request['cpuTimes']))
-                $request['cpuTimes'] = array();
-              $request['cpuTimes'][$cpu_event] = $total;
-              $request["cpu.$cpu_event"] = $total;
-            }
-          }
-          $all_total = intval(round($all_total));
-          $request['cpuTime'] = $all_total;
         }
-      }
     }
-  }
 }
 
 /**
@@ -535,9 +576,10 @@ function AddScriptTimings(&$requests, $script_timing_file_name) {
 *
 * @param mixed $requests
 */
-function GetBasePage(&$requests) {
+function GetBasePage(&$requests)
+{
     $basePage = null;
-    foreach($requests as &$request) {
+    foreach ($requests as &$request) {
         if ($request['responseCode'] != 401 && ($request['responseCode'] < 300 || $request['responseCode'] >= 400)) {
             $basePage = $request;
             break;
@@ -551,8 +593,9 @@ function GetBasePage(&$requests) {
 *
 * @param mixed $requests
 */
-function BuildRequestDependencies(&$requests) {
-    foreach($requests as &$request) {
+function BuildRequestDependencies(&$requests)
+{
+    foreach ($requests as &$request) {
         $request['loads'] = array();
         RequestLoads($request['number'], $requests, $request['loads']);
         $request['loaded_by'] = array();
@@ -570,7 +613,8 @@ function BuildRequestDependencies(&$requests) {
 * @param mixed $map
 * @param mixed $entry
 */
-function RequestLoads($request_number, &$requests, &$entry) {
+function RequestLoads($request_number, &$requests, &$entry)
+{
     $request = &$requests[$request_number - 1];
     if (array_key_exists('full_url', $request)) {
         $url = $request['full_url'];
@@ -578,9 +622,10 @@ function RequestLoads($request_number, &$requests, &$entry) {
             if (array_key_exists('initiator', $req) && $req['initiator'] == $url) {
                 $loads_request = $req['number'];
                 $entry_exists = false;
-                foreach($entry as $entry_request) {
-                    if ($entry_request == $loads_request)
+                foreach ($entry as $entry_request) {
+                    if ($entry_request == $loads_request) {
                         $entry_exists = true;
+                    }
                 }
                 if (!$entry_exists) {
                     $entry[] = $loads_request;
@@ -599,7 +644,8 @@ function RequestLoads($request_number, &$requests, &$entry) {
 * @param mixed $map
 * @param mixed $entry
 */
-function RequestLoadedBy($request_number, &$requests, &$entry) {
+function RequestLoadedBy($request_number, &$requests, &$entry)
+{
     $request = &$requests[$request_number - 1];
     if (array_key_exists('initiator', $request)) {
         $initiator = $request['initiator'];
@@ -607,9 +653,10 @@ function RequestLoadedBy($request_number, &$requests, &$entry) {
             if (array_key_exists('full_url', $req) && $req['full_url'] == $initiator) {
                 $loaded_by = $req['number'];
                 $entry_exists = false;
-                foreach($entry as $entry_request) {
-                    if ($entry_request == $loaded_by)
+                foreach ($entry as $entry_request) {
+                    if ($entry_request == $loaded_by) {
                         $entry_exists = true;
+                    }
                 }
                 if (!$entry_exists) {
                     $entry[] = $loaded_by;
@@ -619,5 +666,3 @@ function RequestLoadedBy($request_number, &$requests, &$entry) {
         }
     }
 }
-
-?>

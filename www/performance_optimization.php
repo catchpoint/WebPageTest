@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -23,7 +24,8 @@ $isMultistep = $testRunResults->countSteps() > 1;
         <title><?php echo "$page_title - WebPageTest Optimization Check Results"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Optimization Check';
+        include('head.inc'); ?>
     </head>
     <body class="result">
             <?php
@@ -31,7 +33,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             $subtab = 'Optimization';
             include 'header.inc';
 
-            
+
             echo '<div class="results_main_contain">
             <div class="results_main">';
 
@@ -48,7 +50,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 </div>
 
             <?php
-            
+
             if ($isMultistep) {
                 $firstStep = $testRunResults->getStepResult(1);
                 $gradesFirstStep = getOptimizationGradesForStep($testInfo, $firstStep);
@@ -56,7 +58,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 if (array_key_exists('progressive_jpeg', $gradesFirstStep)) {
                     array_splice($gradeKeys, 4, 0, array('progressive_jpeg'));
                 }
-            ?>
+                ?>
 
 
 
@@ -105,17 +107,16 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 </table>
             </div>
             
-            <?php
+                <?php
                 // still multistep
                 $accordionHelper = new AccordionHtmlHelper($testRunResults);
                 echo $accordionHelper->createAccordion("review", "performanceOptimization");
             } else {
-
                 echo '<div id="result" class="results_body">';
                 // singlestep
                 echo '<h3 class="hed_sub">Optimization Summary</h3><p>Quickly jump to the sections below:</p>
                 ';
-                
+
                 include("grades.inc");
 
                 $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
@@ -143,7 +144,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             echo '<script src="/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $testRunResults->getRunNumber();
-        ?>
+            ?>
         <script>
         var accordionHandler = new AccordionHandler('<?php echo $testId ?>', <?php echo $testRun ?>);
         $(document).ready(initJS);

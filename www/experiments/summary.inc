@@ -10,8 +10,8 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
     // write out the observations summary HTML
     echo  '<div class="opportunities_summary">';
     echo '<p>Jump to Opportunities by&nbsp;Category:</p>';
-    foreach($assessment as $key => $cat ){
-        if( $key !== "Custom" ){
+foreach ($assessment as $key => $cat) {
+    if ($key !== "Custom") {
         $grade = $cat["grade"];
         $summary = $cat["summary"];
         $sentiment = $cat["sentiment"];
@@ -23,7 +23,7 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
         $oppsEnd = $oppsBadCount === 1 ? "y" : "ies";
         $expsEnd = $experimentsCount === 1 ? "" : "s";
 
-        
+
         echo  <<<EOT
         <a class="grade_anchor" href="${expPage}#${key}">
             <div>
@@ -37,8 +37,6 @@ $expPage = $menuUrlGenerator->resultPage("experiments");
             </ul>
         </a>
         EOT;
-        }
     }
+}
     echo  '</div>';
-
-?>

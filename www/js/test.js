@@ -1,34 +1,37 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-if (window['wptForgetSettings'])
-  var wptStorage = {};
-else
-  var wptStorage = window.localStorage || {};
+if (window["wptForgetSettings"]) var wptStorage = {};
+else var wptStorage = window.localStorage || {};
 
 function htmlEntities(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function ValidateInput(form, remainingRuns) {
-  if ((form.url.value == "" || form.url.value == "Enter a Website URL") &&
+  if (
+    (form.url.value == "" || form.url.value == "Enter a Website URL") &&
     form.script.value == "" &&
-    (form['bulkurls'] == undefined || form.bulkurls.value == "") &&
-    (form['bulkfile'] == undefined || form.bulkfile.value == "")) {
+    (form["bulkurls"] == undefined || form.bulkurls.value == "") &&
+    (form["bulkfile"] == undefined || form.bulkfile.value == "")
+  ) {
     alert("Please enter an URL to test.");
     form.url.focus();
-    return false
+    return false;
   }
 
-  if (form.url.value == "Enter a Website URL")
-    form.url.value = "";
+  if (form.url.value == "Enter a Website URL") form.url.value = "";
 
-  if (form['runs']) {
+  if (form["runs"]) {
     var runs = form.runs.value;
     if (runs < 1 || runs > maxRuns) {
       alert("Please select a number of runs between 1 and " + maxRuns + ".");
       form.runs.focus();
-      return false
+      return false;
     }
     if (remainingRuns && runs > remainingRuns) {
       alert("You don't have enough remaining runs. Please Upgrade.");
@@ -43,29 +46,26 @@ function ValidateInput(form, remainingRuns) {
   }
 
   var date = new Date();
-  date.setTime(date.getTime() + (730 * 24 * 60 * 60 * 1000));
+  date.setTime(date.getTime() + 730 * 24 * 60 * 60 * 1000);
   var expires = "; expires=" + date.toGMTString();
   var options = 0;
-  if (form['private']) {
-    if (form.private.checked)
-      options = 1;
+  if (form["private"]) {
+    if (form.private.checked) options = 1;
   }
-  if (form['viewFirst'] && form.viewFirst.checked)
-    options = options | 2;
-  document.cookie = 'testOptions=' + options + expires + '; path=/';
-  if (form['runs']) {
-    document.cookie = 'runs=' + runs + expires + '; path=/';
+  if (form["viewFirst"] && form.viewFirst.checked) options = options | 2;
+  document.cookie = "testOptions=" + options + expires + "; path=/";
+  if (form["runs"]) {
+    document.cookie = "runs=" + runs + expires + "; path=/";
   }
 
   // save out the selected location and connection information
   try {
-    document.cookie = 'cfg=' + $('#connection').val() + expires + '; path=/';
-    document.cookie = 'u=' + $('#bwUp').val() + expires + '; path=/';
-    document.cookie = 'd=' + $('#bwDown').val() + expires + '; path=/';
-    document.cookie = 'l=' + $('#latency').val() + expires + '; path=/';
-    document.cookie = 'p=' + $('#plr').val() + expires + '; path=/';
-  } catch (error) {
-  }
+    document.cookie = "cfg=" + $("#connection").val() + expires + "; path=/";
+    document.cookie = "u=" + $("#bwUp").val() + expires + "; path=/";
+    document.cookie = "d=" + $("#bwDown").val() + expires + "; path=/";
+    document.cookie = "l=" + $("#latency").val() + expires + "; path=/";
+    document.cookie = "p=" + $("#plr").val() + expires + "; path=/";
+  } catch (error) {}
 
   SaveSettings();
 
@@ -86,7 +86,9 @@ function ValidateInput(form, remainingRuns) {
       start = this.selectionStart;
       end = this.selectionEnd;
       $this = $(this);
-      $this.val($this.val().substring(0, start) + "\t" + $this.val().substring(end));
+      $this.val(
+        $this.val().substring(0, start) + "\t" + $this.val().substring(end)
+      );
       this.selectionStart = this.selectionEnd = start + 1;
       return false;
     }
@@ -111,26 +113,25 @@ function ValidateInput(form, remainingRuns) {
   if (window.locations) {
     RestoreSettings();
   }
-
 })(jQuery);
 
 function RestoreSettings() {
-  if (!window['wptForgetSettings']) {
-    if (wptStorage['testVideo'] != undefined)
-      $('#videoCheck').prop('checked', wptStorage['testVideo']);
-    if (wptStorage['testTimeline'] != undefined)
-      $('#timeline').prop('checked', wptStorage['testTimeline']);
-    if (wptStorage['testLoc'] != undefined)
-      $('#location').val(wptStorage['testLoc']);
+  if (!window["wptForgetSettings"]) {
+    if (wptStorage["testVideo"] != undefined)
+      $("#videoCheck").prop("checked", wptStorage["testVideo"]);
+    if (wptStorage["testTimeline"] != undefined)
+      $("#timeline").prop("checked", wptStorage["testTimeline"]);
+    if (wptStorage["testLoc"] != undefined)
+      $("#location").val(wptStorage["testLoc"]);
 
     LocationChanged();
   }
 }
 
 function SaveSettings() {
-  if (!window['wptForgetSettings']) {
-    wptStorage['testVideo'] = $('#videoCheck').is(':checked');
-    wptStorage['testTimeline'] = $('#timeline').is(':checked');
+  if (!window["wptForgetSettings"]) {
+    wptStorage["testVideo"] = $("#videoCheck").is(":checked");
+    wptStorage["testTimeline"] = $("#timeline").is(":checked");
   }
 }
 
@@ -138,26 +139,25 @@ function SaveSettings() {
     Populate the different browser options for a given location
 */
 function LocationChanged() {
-  $("#current-location").text($('#location option:selected').text());
-  let loc = $('#location').val();
-  $('#location2').val(loc);
-  wptStorage['testLoc'] = loc;
+  $("#current-location").text($("#location option:selected").text());
+  let loc = $("#location").val();
+  $("#location2").val(loc);
+  wptStorage["testLoc"] = loc;
 
-  let marker = locations[loc]['marker'];
+  let marker = locations[loc]["marker"];
   try {
-    marker.setIcon('/images/map_green.png');
-  } catch (err) { }
+    marker.setIcon("/images/map_green.png");
+  } catch (err) {}
   try {
-    selectedMarker.setIcon('/images/map_red.png');
-  } catch (err) { }
+    selectedMarker.setIcon("/images/map_red.png");
+  } catch (err) {}
   selectedMarker = marker;
 
-  let defaultConfig = locations[loc]['default'];
-  if (defaultConfig == undefined)
-    defaultConfig = locations[loc]['1'];
-  let defaultBrowser = locations[defaultConfig]['browser'];
+  let defaultConfig = locations[loc]["default"];
+  if (defaultConfig == undefined) defaultConfig = locations[loc]["1"];
+  let defaultBrowser = locations[defaultConfig]["browser"];
 
-  let groups = ['Desktop', 'Mobile', 'Tablet'];
+  let groups = ["Desktop", "Mobile", "Tablet"];
   let browsers = {};
   let has_chrome = false;
   // build the list of browsers for this location
@@ -165,13 +165,13 @@ function LocationChanged() {
     // only care about the integer indexes
     if (!isNaN(key)) {
       let config = locations[loc][key];
-      let browser = locations[config]['browser'];
-      let group = 'Desktop';
-      if (locations[config]['browser_group']) {
-        group = locations[config]['browser_group'];
+      let browser = locations[config]["browser"];
+      let group = "Desktop";
+      if (locations[config]["browser_group"]) {
+        group = locations[config]["browser_group"];
       }
       if (browser != undefined) {
-        if (browser == 'Chrome') {
+        if (browser == "Chrome") {
           has_chrome = true;
         }
         // see if we already know about this browser
@@ -186,11 +186,11 @@ function LocationChanged() {
 
   // Add the emulated Chrome devices
   if (has_chrome && mobileDevices) {
-    group = 'Chrome Device Emulation';
+    group = "Chrome Device Emulation";
     groups.push(group);
     for (let deviceId in mobileDevices) {
-      let browser = mobileDevices[deviceId]['label'];
-      let browserKey = 'Chrome;' + deviceId.replace(" ", "");
+      let browser = mobileDevices[deviceId]["label"];
+      let browserKey = "Chrome;" + deviceId.replace(" ", "");
       if (!browsers[group]) {
         browsers[group] = {};
       }
@@ -199,25 +199,31 @@ function LocationChanged() {
   }
 
   // fill in the browser list, selecting the default one
-  browserHtml = '';
+  browserHtml = "";
   for (let group of groups) {
     if (browsers[group]) {
       browserHtml += '<optgroup label="' + htmlEntities(group) + '">';
       for (let key in browsers[group]) {
         let browser = browsers[group][key];
-        let selected = '';
-        if (browser == defaultBrowser)
-          selected = ' selected';
+        let selected = "";
+        if (browser == defaultBrowser) selected = " selected";
         let display = browser;
-        browserHtml += '<option value="' + htmlEntities(key) + '"' + selected + '>' + htmlEntities(display) + '</option>';
+        browserHtml +=
+          '<option value="' +
+          htmlEntities(key) +
+          '"' +
+          selected +
+          ">" +
+          htmlEntities(display) +
+          "</option>";
       }
-      browserHtml += '</optgroup>';
+      browserHtml += "</optgroup>";
     }
   }
-  $('#browser').html(browserHtml);
+  $("#browser").html(browserHtml);
 
-  if (wptStorage['testBrowser'] != undefined)
-    $('#browser').val(wptStorage['testBrowser']);
+  if (wptStorage["testBrowser"] != undefined)
+    $("#browser").val(wptStorage["testBrowser"]);
 
   BrowserChanged();
 }
@@ -226,13 +232,13 @@ function LocationChanged() {
     Populate the various connection types that are available
 */
 function BrowserChanged() {
-  let loc = $('#location').val();
-  let selectedBrowser = $('#browser').val();
-  let defaultConfig = locations[loc]['default'];
+  let loc = $("#location").val();
+  let selectedBrowser = $("#browser").val();
+  let defaultConfig = locations[loc]["default"];
   let selectedConfig;
-  wptStorage['testBrowser'] = selectedBrowser;
+  wptStorage["testBrowser"] = selectedBrowser;
   let deviceID = null;
-  let parts = selectedBrowser.split(';');
+  let parts = selectedBrowser.split(";");
   if (parts.length > 1) {
     selectedBrowser = parts[0];
     deviceID = parts[1];
@@ -247,26 +253,31 @@ function BrowserChanged() {
       let base_config = locations[loc][key];
       let config = base_config;
       if (deviceID) {
-        config += ';' + deviceID;
+        config += ";" + deviceID;
       }
-      let browser = locations[base_config]['browser'].replace(" ", "");;
+      let browser = locations[base_config]["browser"].replace(" ", "");
       if (browser == selectedBrowser) {
-        if (locations[base_config]['connectivity'] != undefined) {
-          connections[config] = { 'label': locations[base_config]['connectivity'] };
-          if (base_config == defaultConfig)
-            selectedConfig = config;
+        if (locations[base_config]["connectivity"] != undefined) {
+          connections[config] = {
+            label: locations[base_config]["connectivity"],
+          };
+          if (base_config == defaultConfig) selectedConfig = config;
         } else {
           for (let conn in connectivity) {
-            if (connectivity[conn]['hidden'] == undefined || !connectivity[conn]['hidden']) {
+            if (
+              connectivity[conn]["hidden"] == undefined ||
+              !connectivity[conn]["hidden"]
+            ) {
               if (selectedConfig == undefined)
-                selectedConfig = config + '.' + conn;
-              connections[config + '.' + conn] = { 'label': connectivity[conn]['label'] };
+                selectedConfig = config + "." + conn;
+              connections[config + "." + conn] = {
+                label: connectivity[conn]["label"],
+              };
             }
           }
 
-          connections[config + '.custom'] = { 'label': 'Custom' };
-          if (selectedConfig == undefined)
-            selectedConfig = config + '.custom';
+          connections[config + ".custom"] = { label: "Custom" };
+          if (selectedConfig == undefined) selectedConfig = config + ".custom";
         }
       }
     }
@@ -281,35 +292,44 @@ function BrowserChanged() {
   }
 
   // build the actual list
-  connectionHtml = '';
+  connectionHtml = "";
   let lastGroup = undefined;
   for (let config in connections) {
-    let selected = '';
-    if (config == selectedConfig)
-      selected = ' selected';
-    if (connections[config]['group'] != undefined && connections[config]['group'] != lastGroup) {
-      if (lastGroup != undefined)
-        connectionHtml += "</optgroup>";
-      if (connections[config]['group'].length) {
-        lastGroup = connections[config]['group'];
-        connectionHtml += '<optgroup label="' + htmlEntities(connections[config]['group']) + '">';
-      } else
-        lastGroup = undefined;
+    let selected = "";
+    if (config == selectedConfig) selected = " selected";
+    if (
+      connections[config]["group"] != undefined &&
+      connections[config]["group"] != lastGroup
+    ) {
+      if (lastGroup != undefined) connectionHtml += "</optgroup>";
+      if (connections[config]["group"].length) {
+        lastGroup = connections[config]["group"];
+        connectionHtml +=
+          '<optgroup label="' +
+          htmlEntities(connections[config]["group"]) +
+          '">';
+      } else lastGroup = undefined;
     }
-    connectionHtml += '<option value="' + htmlEntities(config) + '"' + selected + '>' + htmlEntities(connections[config]['label']) + '</option>';
+    connectionHtml +=
+      '<option value="' +
+      htmlEntities(config) +
+      '"' +
+      selected +
+      ">" +
+      htmlEntities(connections[config]["label"]) +
+      "</option>";
   }
-  $('#connection').html(connectionHtml);
+  $("#connection").html(connectionHtml);
 
-  if (wptStorage['testConnection'] != undefined) {
-    let connection = wptStorage['testConnection'];
+  if (wptStorage["testConnection"] != undefined) {
+    let connection = wptStorage["testConnection"];
     try {
-      $('#connection option:contains(' + connection + ')').each(function () {
+      $("#connection option:contains(" + connection + ")").each(function () {
         if ($(this).text() == connection) {
-          $(this).attr('selected', 'selected');
+          $(this).attr("selected", "selected");
         }
       });
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   ConnectionChanged();
@@ -319,52 +339,56 @@ function BrowserChanged() {
     Populate the specifics of the connection information
 */
 function ConnectionChanged() {
-  var conn = $('#connection').val();
-  wptStorage['testConnection'] = $('#connection option:selected').text();
+  var conn = $("#connection").val();
+  wptStorage["testConnection"] = $("#connection option:selected").text();
   if (conn != undefined && conn.length) {
-    var parts = conn.split('.');
-    var config = parts[0].split(';')[0];
+    var parts = conn.split(".");
+    var config = parts[0].split(";")[0];
     var connection = parts[1];
     var setSpeed = true;
 
-    var backlog = locations[config]['backlog'] || 0;
+    var backlog = locations[config]["backlog"] || 0;
 
-    var up = locations[config]['up'] / 1000;
-    var down = locations[config]['down'] / 1000;
-    var latency = locations[config]['latency'];
+    var up = locations[config]["up"] / 1000;
+    var down = locations[config]["down"] / 1000;
+    var latency = locations[config]["latency"];
     var plr = 0;
     if (connection != undefined && connection.length) {
       if (connectivity[connection] != undefined) {
-        up = connectivity[connection]['bwOut'] / 1000;
-        down = connectivity[connection]['bwIn'] / 1000;
-        latency = connectivity[connection]['latency'];
-        if (connectivity[connection]['plr'] != undefined)
-          plr = connectivity[connection]['plr'];
+        up = connectivity[connection]["bwOut"] / 1000;
+        down = connectivity[connection]["bwIn"] / 1000;
+        latency = connectivity[connection]["latency"];
+        if (connectivity[connection]["plr"] != undefined)
+          plr = connectivity[connection]["plr"];
       } else {
         setSpeed = false;
       }
     }
 
     if (setSpeed) {
-      $('#bwDown').val(down);
-      $('#bwUp').val(up);
-      $('#latency').val(latency);
-      $('#plr').val(plr);
+      $("#bwDown").val(down);
+      $("#bwUp").val(up);
+      $("#latency").val(latency);
+      $("#plr").val(plr);
     }
 
     // enable/disable the fields as necessary
-    if (connection == 'custom')
-      $('#bwTable').show();
-    else
-      $('#bwTable').hide();
+    if (connection == "custom") $("#bwTable").show();
+    else $("#bwTable").hide();
 
-    $('#backlog').text(backlog);
+    $("#backlog").text(backlog);
     if (backlog < 5)
-      $('#pending_tests').removeClass('backlogWarn , backlogHigh').addClass('hidden');
+      $("#pending_tests")
+        .removeClass("backlogWarn , backlogHigh")
+        .addClass("hidden");
     else if (backlog < 20)
-      $('#pending_tests').removeClass('backlogHigh , hidden').addClass("backlogWarn");
+      $("#pending_tests")
+        .removeClass("backlogHigh , hidden")
+        .addClass("backlogWarn");
     else
-      $('#pending_tests').removeClass('backlogWarn , hidden').addClass("backlogHigh");
+      $("#pending_tests")
+        .removeClass("backlogWarn , hidden")
+        .addClass("backlogHigh");
 
     UpdateSettingsSummary();
   }
@@ -374,38 +398,34 @@ function ConnectionChanged() {
     Update the summary text with the current test settings
 */
 function UpdateSettingsSummary() {
-  var summary = '';
+  var summary = "";
 
-  var runs = $('#number_of_tests').val();
+  var runs = $("#number_of_tests").val();
   summary += runs;
-  if (runs == 1)
-    summary += " run";
-  else
-    summary += " runs";
+  if (runs == 1) summary += " run";
+  else summary += " runs";
 
-  if ($('#viewFirst').attr('checked'))
-    summary += ", First View only";
+  if ($("#viewFirst").attr("checked")) summary += ", First View only";
 
-  var conn = $('#connection option:selected').text();
+  var conn = $("#connection option:selected").text();
   if (conn != undefined)
-    summary += ", " + conn.replace(/\((.)*\)/, '') + " connection";
+    summary += ", " + conn.replace(/\((.)*\)/, "") + " connection";
 
-
-  $('#settings_summary').text(summary);
+  $("#settings_summary").text(summary);
 }
 
 /*
     Show the multiple-location selection dialog
 */
 function OpenMultipleLocations() {
-  document.getElementById('multiple-location-dialog').style.display = 'block';
+  document.getElementById("multiple-location-dialog").style.display = "block";
 }
 
 /*
     Close the multiple-location selection dialog.
 */
 function CloseMultipleLocations() {
-  document.getElementById('multiple-location-dialog').style.display = 'none';
+  document.getElementById("multiple-location-dialog").style.display = "none";
 }
 
 /*
@@ -415,10 +435,11 @@ var map;
 var selectedMarker;
 function SelectLocation() {
   $("#location-dialog").modal({ opacity: 80 });
-  $('#location2').val($('#location').val());
+  $("#location2").val($("#location").val());
 
   var script = document.createElement("script");
-  var src = "https://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
+  var src =
+    "https://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
   if (window.mapsApiKey !== undefined) {
     src += "&key=" + window.mapsApiKey;
   }
@@ -435,16 +456,21 @@ function InitializeMap() {
     center: myLatlng,
     mapTypeControl: false,
     navigationControl: true,
-    navigationControlOptions: { style: google.maps.NavigationControlStyle.SMALL },
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  }
+    navigationControlOptions: {
+      style: google.maps.NavigationControlStyle.SMALL,
+    },
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+  };
   var map = new google.maps.Map(document.getElementById("map"), myOptions);
 
-  var currentLoc = $('#location').val();
+  var currentLoc = $("#location").val();
 
   var locList = [];
   for (var loc in locations) {
-    if (locations[loc]['lat'] != undefined && locations[loc]['lng'] != undefined) {
+    if (
+      locations[loc]["lat"] != undefined &&
+      locations[loc]["lng"] != undefined
+    ) {
       locList.push(loc);
     }
   }
@@ -452,29 +478,31 @@ function InitializeMap() {
 
   for (var index in locList) {
     var loc = locList[index];
-    var pos = new google.maps.LatLng(locations[loc]['lat'], locations[loc]['lng']);
+    var pos = new google.maps.LatLng(
+      locations[loc]["lat"],
+      locations[loc]["lng"]
+    );
     var marker = new google.maps.Marker({
       position: pos,
-      title: locations[loc]['label'],
-      icon: '/images/map_red.png',
-      map: map
+      title: locations[loc]["label"],
+      icon: "/images/map_red.png",
+      map: map,
     });
 
     if (loc == currentLoc) {
-      marker.setIcon('/images/map_green.png');
+      marker.setIcon("/images/map_green.png");
       selectedMarker = marker;
     }
 
-    locations[loc]['marker'] = marker;
+    locations[loc]["marker"] = marker;
 
     AttachClickEvent(marker, loc);
   }
-
 }
 
 function AttachClickEvent(marker, loc) {
-  google.maps.event.addListener(marker, 'click', function () {
-    $('#location').val(loc);
+  google.maps.event.addListener(marker, "click", function () {
+    $("#location").val(loc);
     LocationChanged();
   });
 }

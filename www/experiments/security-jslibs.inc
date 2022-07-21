@@ -1,5 +1,4 @@
-<?php 
-
+<?php
 
 $category = "Resilient";
 
@@ -9,49 +8,47 @@ if ($testStepResult) {
 
 
 
-if( $jsLibsVulns  ){
-
+if ($jsLibsVulns) {
     $numVulns = count($jsLibsVulns);
     $num_high = 0;
     $num_medium = 0;
     $num_low = 0;
-    
-    foreach($jsLibsVulns as $v){
-        if( $v['severity'] === "high" ){
+
+    foreach ($jsLibsVulns as $v) {
+        if ($v['severity'] === "high") {
             $num_high++;
         }
-        if( $v['severity'] === "medium" ){
+        if ($v['severity'] === "medium") {
             $num_medium++;
         }
-        if( $v['severity'] === "low" ){
+        if ($v['severity'] === "low") {
             $num_low++;
         }
     }
 
     $warningsArr = array();
-    foreach($jsLibsVulns as $v){
+    foreach ($jsLibsVulns as $v) {
         array_push($warningsArr, $v['severity'] . ": ");
     }
 
     $secRecs = array();
     $thisRec = "";
-    if( count($jsLibsVulns)){
-        if( count($jsLibsVulns) > 6){
+    if (count($jsLibsVulns)) {
+        if (count($jsLibsVulns) > 6) {
             $thisRec .= '<ul class="util_overflow_more">';
-        } else{
+        } else {
             $thisRec .=  '<ul>';
         }
-        foreach($jsLibsVulns as $v){
-            $thisRec .=  '<li class="recommendation_level-'. $v['severity'] .'"><span>'. $v['severity'] .'</span> ' . ' ' . $v["name"] . ' ' . $v["version"] . ' <a href="'. $v["url"] .'" class="external">View recommendation on Snyk</a></li>';
-            
+        foreach ($jsLibsVulns as $v) {
+            $thisRec .=  '<li class="recommendation_level-' . $v['severity'] . '"><span>' . $v['severity'] . '</span> ' . ' ' . $v["name"] . ' ' . $v["version"] . ' <a href="' . $v["url"] . '" class="external">View recommendation on Snyk</a></li>';
         }
         $thisRec .=  '</ul>';
         array_push($secRecs, $thisRec);
     }
 
-    
 
-    $assessment[$category]["opportunities"][] = array( 
+
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  "Several security vulnerabilies were detected by Snyk",
         "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") .
         ($num_high > 0 ? "$num_high high, " : '') .
@@ -66,10 +63,8 @@ if( $jsLibsVulns  ){
             ),
         "good" =>  false
     );
-
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  "Zero security vulnerabilies were detected by Snyk",
         "desc" =>  "Snyk has found 0 security vulnerabilities with included packages.",
         "examples" =>  array(),
@@ -77,6 +72,3 @@ else {
         "good" =>  true
     );
 }
-
-
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -31,24 +32,25 @@ $isMultistep = $testRunResults->countSteps() > 1;
 $page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
 
-function createForm($formName, $btnText, $id, $owner, $secret) {
-  echo "<form name='$formName' id='$formName' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
-  echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
-  echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-  if( strlen($secret) ){
-    $hashStr = $secret;
-    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-    $hashStr .= $owner;
+function createForm($formName, $btnText, $id, $owner, $secret)
+{
+    echo "<form name='$formName' id='$formName' action='/runtest.php?test=$id' method='POST' enctype='multipart/form-data'>";
+    echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
+    echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+    if (strlen($secret)) {
+        $hashStr = $secret;
+        $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+        $hashStr .= $owner;
 
-    $now = gmdate('c');
-    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-    $hashStr .= $now;
+        $now = gmdate('c');
+        echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+        $hashStr .= $now;
 
-    $hmac = sha1($hashStr);
-    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-  }
-  echo "<input type=\"submit\" value=\"$btnText\">";
-  echo "\n</form>\n";
+        $hmac = sha1($hashStr);
+        echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+    }
+    echo "<input type=\"submit\" value=\"$btnText\">";
+    echo "\n</form>\n";
 }
 
 ?>
@@ -58,14 +60,15 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
         <title><?php echo "$page_title - WebPageTest Details"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
+        <?php $gaTemplate = 'Details';
+        include('head.inc'); ?>
     </head>
     <body class="result result-details">
             <?php
             $tab = 'Test Result';
             $subtab = 'Details';
             include 'header.inc';
-            
+
             ?>
 
 <div class="results_main_contain">
@@ -85,42 +88,43 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
 
             <div id="result" class="results_body">
 
-                  <?php 
-                  echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ( $cached ? ', Repeat View' : '' ) . ')</em></h3>';
-             
-                    $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
-                    if( $testResults->countRuns() > 1 || $hasRepeats  ){
-                      $runs = $testResults->countRuns() + 1;
-                      
-                      $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
-                      $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
+                  <?php
+                    echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ( $cached ? ', Repeat View' : '' ) . ')</em></h3>';
 
-                      echo '<p>View run details: ';
-                      for ($i = 1; $i < $runs; $i++) {
-                        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false );
-                        
-                        $link = $menuUrlGenerator->resultPage("details", $endParams);
-                        if( $hasRepeats ){
-                          $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true );
-                          $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);
+                    $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
+                    if ($testResults->countRuns() > 1 || $hasRepeats) {
+                        $runs = $testResults->countRuns() + 1;
+
+                        $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
+                        $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
+
+                        echo '<p>View run details: ';
+                        for ($i = 1; $i < $runs; $i++) {
+                            $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false);
+
+                            $link = $menuUrlGenerator->resultPage("details", $endParams);
+                            if ($hasRepeats) {
+                                $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true);
+                                $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);
+                            }
+
+                            echo "<a href=\"$link\"" . ( $run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
+                            if ($linkCACHED) {
+                                echo " <a href=\"$linkCACHED\"" . ( $run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
+                                ;
+                            }
+
+                            if ($i + 1 < $runs) {
+                                echo ", ";
+                            }
                         }
-                        
-                        echo "<a href=\"$link\"". ( $run === $i && !$cached ? ' aria-current="page"': '') .">Run $i</a>";
-                        if( $linkCACHED ){
-                          echo " <a href=\"$linkCACHED\"". ( $run === $i && $cached ? ' aria-current="page"': '') .">(Repeat View)</a>";;
-                        }
-                        
-                        if( $i + 1 < $runs ){
-                          echo ", ";
-                        }
-                      }
-                      echo '</p>';
+                        echo '</p>';
                     }
-                  ?>
+                    ?>
 
                
                 <?php
-               $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
+                $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
                 $htmlTable->disableColumns(array(
                   RunResultHtmlTable::COL_RESULT
                 ));
@@ -132,50 +136,52 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                     RunResultHtmlTable::COL_REQUESTS
                   ));
                   echo $htmlTable->create(true);
-                ?>
+                    ?>
                 <?php
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create(true);
 
 
             // Full custom metrics (formerly in custommetrics.php)
-            
-            if (isset($pageData) &&
-                is_array($pageData) &&
-                array_key_exists($run, $pageData) &&
-                is_array($pageData[$run]) &&
-                array_key_exists($cached, $pageData[$run]) &&
-                array_key_exists('custom', $pageData[$run][$cached]) &&
-                is_array($pageData[$run][$cached]['custom']) &&
-                count($pageData[$run][$cached]['custom'])) {
-              echo '<details class="details_custommetrics"><summary>Custom Metrics Data</summary>';
-              echo '<div class="scrollableTable"><table class="pretty details">';
-              foreach ($pageData[$run][$cached]['custom'] as $metric) {
-                if (array_key_exists($metric, $pageData[$run][$cached])) {
-                  echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
-                  $val = $pageData[$run][$cached][$metric];
-                  if (!is_string($val) && !is_numeric($val)) {
-                    $val = json_encode($val);
-                  }
-                  echo htmlspecialchars($val);
-                  echo '</td></tr>';
+
+                if (
+                    isset($pageData) &&
+                    is_array($pageData) &&
+                    array_key_exists($run, $pageData) &&
+                    is_array($pageData[$run]) &&
+                    array_key_exists($cached, $pageData[$run]) &&
+                    array_key_exists('custom', $pageData[$run][$cached]) &&
+                    is_array($pageData[$run][$cached]['custom']) &&
+                    count($pageData[$run][$cached]['custom'])
+                ) {
+                    echo '<details class="details_custommetrics"><summary>Custom Metrics Data</summary>';
+                    echo '<div class="scrollableTable"><table class="pretty details">';
+                    foreach ($pageData[$run][$cached]['custom'] as $metric) {
+                        if (array_key_exists($metric, $pageData[$run][$cached])) {
+                            echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
+                            $val = $pageData[$run][$cached][$metric];
+                            if (!is_string($val) && !is_numeric($val)) {
+                                $val = json_encode($val);
+                            }
+                            echo htmlspecialchars($val);
+                            echo '</td></tr>';
+                        }
+                    }
+                    echo '</table></details>';
                 }
-              }
-              echo '</table></details>';
-            } 
-            
+
 
 
 
                 if (isset($testRunResults)) {
-                  echo '<div class="cruxembed">';
-                  require_once(__DIR__ . '/include/CrUX.php');
-                  if ($cached) {
-                    InsertCruxHTML(null, $testRunResults);
-                  } else {
-                    InsertCruxHTML($testRunResults, null);
-                  }
-                  echo '</div>';
+                    echo '<div class="cruxembed">';
+                    require_once(__DIR__ . '/include/CrUX.php');
+                    if ($cached) {
+                        InsertCruxHTML(null, $testRunResults);
+                    } else {
+                        InsertCruxHTML($testRunResults, null);
+                    }
+                    echo '</div>';
                 }
                 ?>
 
@@ -207,12 +213,12 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
                 <div>
                 <h3 class="hed_sub" name="waterfall_view">Waterfall View</h3>
                 <?php
-                    if ($isMultistep) {
-                        echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
-                    } else {
-                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-                        echo $waterfallSnippet->create();
-                    }
+                if ($isMultistep) {
+                    echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
+                } else {
+                    $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                    echo $waterfallSnippet->create();
+                }
                 ?>
                
                 <h3 class="hed_sub" name="connection_view">Connection View</h3>
@@ -228,34 +234,35 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
 
                 <h3 class="hed_sub" name="request_details_view">Request Details</h3>
                 <?php
-                    if ($isMultistep) {
-                        echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
-                    } else {
-                        $useLinks = !GetSetting('nolinks');
-                        $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
-                        echo $requestDetailsSnippet->create();
-                    }
+                if ($isMultistep) {
+                    echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
+                } else {
+                    $useLinks = !GetSetting('nolinks');
+                    $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
+                    echo $requestDetailsSnippet->create();
+                }
                 ?>
 
             
                 <?php
                     echo '';
-                    if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS']))
-                        echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
+                if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS'])) {
+                    echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
+                }
 
-                    if ($isMultistep) {
-                        echo "<h3 class=\"hed_sub\" name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
-                        echo $accordionHelper->createAccordion("request_headers", "requestHeaders", "initHeaderRequestExpander");
-                    } else {
-                        $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
-                        $snippet = $requestHeadersSnippet->create();
-                        if ($snippet) {
-                            echo '<div id="headers">';
-                            echo '<h3 class="hed_sub">Request Headers</h3>';
-                            echo $snippet;
-                            echo '</div>';
-                        }
+                if ($isMultistep) {
+                    echo "<h3 class=\"hed_sub\" name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
+                    echo $accordionHelper->createAccordion("request_headers", "requestHeaders", "initHeaderRequestExpander");
+                } else {
+                    $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
+                    $snippet = $requestHeadersSnippet->create();
+                    if ($snippet) {
+                        echo '<div id="headers">';
+                        echo '<h3 class="hed_sub">Request Headers</h3>';
+                        echo $snippet;
+                        echo '</div>';
                     }
+                }
                 ?>
             </div>
                 </div>
@@ -268,28 +275,30 @@ function createForm($formName, $btnText, $id, $owner, $secret) {
 
         <div id="requestBlockingSettings" class="inactive">
               <?php
-                    if( !$headless && gz_is_file("$testPath/testinfo.json")
+                if (
+                    !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
-                        && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
-                    {
-                        // load the secret key (if there is one)
-                        $secret = GetServerSecret();
-                        if (!isset($secret))
-                            $secret = '';
-                            createForm('requestBlockingForm', 'Run with Blocked', $id, $owner, $secret);
-                          }
-                    ?>
+                        && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
+                ) {
+                    // load the secret key (if there is one)
+                    $secret = GetServerSecret();
+                    if (!isset($secret)) {
+                        $secret = '';
+                    }
+                        createForm('requestBlockingForm', 'Run with Blocked', $id, $owner, $secret);
+                }
+                ?>
               </div>
         <?php
         if ($isMultistep) {
-          echo '<script src="/js/jk-navigation.js"></script>';
-          echo '<script src="/js/accordion.js"></script>';
-          $testId = $testInfo->getId();
-          $testRun = $testRunResults->getRunNumber();
-          echo '<script>';
-          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
-          echo '</script>';
+            echo '<script src="/js/jk-navigation.js"></script>';
+            echo '<script src="/js/accordion.js"></script>';
+            $testId = $testInfo->getId();
+            $testRun = $testRunResults->getRunNumber();
+            echo '<script>';
+            echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+            echo '</script>';
         }
         ?>
         <script>

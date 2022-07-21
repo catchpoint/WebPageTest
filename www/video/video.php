@@ -1,4 +1,5 @@
 <?php
+
 // Generate the first frame of a video as a poster image
 chdir(__DIR__ . '/..');
 require_once __DIR__ . '/../common.inc';
@@ -13,8 +14,9 @@ if (isset($tests) && is_array($tests) && count($tests)) {
     if (isset($server_id) && is_string($server_id) && strlen($server_id)) {
         $videoId = $server_id . '-' . $videoId;
     }
-    if (!is_dir(__DIR__ . '/../work/video/'))
+    if (!is_dir(__DIR__ . '/../work/video/')) {
         mkdir(__DIR__ . '/../work/video/', 0777, true);
+    }
     $lock = Lock("video-$videoId", false, 600);
     if ($lock) {
         $videoFile = realpath(__DIR__ . '/../work/video/');
@@ -38,7 +40,7 @@ if (isset($tests) && is_array($tests) && count($tests)) {
                     if (file_exists($gif)) {
                         header("Content-Type: image/gif");
                         header('Last-Modified: ' . gmdate('r'));
-                        header('Expires: '.gmdate('r', time() + 31536000));
+                        header('Expires: ' . gmdate('r', time() + 31536000));
                         header('Cache-Control: public, max-age=31536000', true);
                         readfile($gif);
                         $ok = true;

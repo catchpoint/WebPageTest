@@ -1,13 +1,13 @@
 <?php
+
 // OPPORTUNITY: Slow TTFB
 // if TTFB is extra slow (all runs had a ttfb greater than thresold below), then perhaps a site/cdn is purposefully slowing responsse times for bots.
 // Show a message that offers an option to re-run the tests with a default UA
 $category = "Quick";
 $slowttfbThreshold = 1000;
-$firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false );
+$firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false);
 
-if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold ) { 
-    
+if (count($firstByteTimes) > 0 && min($firstByteTimes) > $slowttfbThreshold) {
     $assessment[$category]["opportunities"][] = array(
         "title" =>  'This test had a slow first-byte time.',
         "desc" =>  "First byte timing relates to DNS, network latency, and the time it takes a server to connect and return a response.",
@@ -24,9 +24,8 @@ if ( count( $firstByteTimes ) > 0 && min( $firstByteTimes ) > $slowttfbThreshold
         ),
         "good" =>  false
     );
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  'This test had a reasonably quick first-byte time.',
         "desc" =>  "A fast time to first byte is essential for delivering assets quickly. ",
         "examples" =>  array(),
@@ -34,4 +33,3 @@ else {
         "good" =>  true
     );
 }
-?>

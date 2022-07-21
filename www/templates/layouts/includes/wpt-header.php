@@ -15,15 +15,15 @@ function addTab($tabName, $tabUrl, $addClass = '')
         $opens = '';
         $tabindex = '';
         $classes = array();
-        if(strlen($addClass) ) {
+        if (strlen($addClass)) {
             $classes[] = $addClass;
         }
-        if(!strcasecmp($tabName, $tab) ) {
+        if (!strcasecmp($tabName, $tab)) {
             $classes[] = 'wptheader-current';
             $tabindex = ' tabindex="-1"';
         }
 
-        if(count($classes) > 0) {
+        if (count($classes) > 0) {
             $class = ' class="' . implode(' ', $classes) . '"' . $tabindex;
         }
 
@@ -60,8 +60,8 @@ if ($id) {
                 <ul class="wptheader_nav">
 <?= addTab('Start Test', '/'); ?>
 
-<?php if (!Util::getSetting('disableTestlog')): ?>
-<?= addTab('Test History', FRIENDLY_URLS ? '/testlog/7/' : '/testlog.php?days=7'); ?>
+<?php if (!Util::getSetting('disableTestlog')) : ?>
+    <?= addTab('Test History', FRIENDLY_URLS ? '/testlog/7/' : '/testlog.php?days=7'); ?>
 <?php endif; //if (!Util::getSetting('disableTestlog')): ?>
 
         <li class="wptheader_nav_menu">
@@ -79,13 +79,13 @@ if ($id) {
                         </div>
                         <div class="wptheader_nav_menu_section">
                             <?php
-                            if( !$experiments_paid ){
-                            ?>
+                            if (!$experiments_paid) {
+                                ?>
                             <p class="wptheader_nav_cta">
                                 <span>Ready to go <strong>Pro?</strong></span>
                                 <a href="/signup">Compare Plans</a>
                             </p>
-                            <?php
+                                <?php
                             }
                             ?>
                         </div>
@@ -107,7 +107,7 @@ if ($id) {
                                 <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
                                 <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
                                 <li class="wptheader_nav_menu_link"><a href="https://www.webpagetest.org/events/wpt-upcoming-events-2022">Events</a></li>
-<?php if (Util::getSetting('forums_url')): ?>
+<?php if (Util::getSetting('forums_url')) : ?>
                                 <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
 <?php endif; //(Util::getSetting('forums_url')): ?>
                             </ul>
@@ -135,10 +135,9 @@ if ($id) {
                         $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
                         ?>
                         <?php if ($is_logged_in) : ?>
-                            
                         <li><a href='/account'>
-                        <?php
-                            if( $experiments_paid ){
+                            <?php
+                            if ($experiments_paid) {
                                 echo '<em class="pro-flag">Pro</em> ';
                             }
                             ?>
@@ -149,19 +148,19 @@ if ($id) {
                             <button type='submit'>Logout</button>
                           </form>
                         </li>
-                      <?php else: ?>
+                        <?php else : ?>
                         <li><a href="/login">Login</a></li>
                         <li><a href='/signup'>Sign-up</a></li>
-                      <?php endif; //$is_logged_in ?>
-                    <?php
-                    } elseif(isset($user) ) {
+                        <?php endif; //$is_logged_in ?>
+                        <?php
+                    } elseif (isset($user)) {
                         $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
                         echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
-                    } else if(isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+                    } elseif (isset($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
                         $logoutUrl = 'javascript:wptLogout();';
                         $google_email = htmlspecialchars($_COOKIE['google_email']);
                         echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
-                    } else if (Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret')) {
+                    } elseif (Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret')) {
                         echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
                     }
                 }

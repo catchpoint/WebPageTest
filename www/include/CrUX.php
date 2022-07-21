@@ -1,7 +1,9 @@
 <?php
+
 $cruxStyles = false;
 // Helper to get the CrUX data for a given URL
-function GetCruxDataForURL($url, $mobile=FALSE) {
+function GetCruxDataForURL($url, $mobile = false)
+{
     $crux_data = null;
     $api_key = GetSetting('crux_api_key', null);
     if (isset($api_key) && strlen($api_key) && strlen($url)) {
@@ -10,22 +12,25 @@ function GetCruxDataForURL($url, $mobile=FALSE) {
         }
 
         $cache_key = sha1($url);
-        if ($mobile)
+        if ($mobile) {
             $cache_key .= '.mobile';
+        }
         $crux_data = GetCachedCruxData($cache_key);
 
         if (!isset($crux_data)) {
             $options = array(
-                'url'=> $url,
+                'url' => $url,
                 'formFactor' => $mobile ? 'PHONE' : 'DESKTOP'
             );
             $result = http_post_raw(
                 "https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=$api_key",
                 json_encode($options),
                 'application/json',
-                true);
-            if (isset($result) && is_string($result))
+                true
+            );
+            if (isset($result) && is_string($result)) {
                 $crux_data = $result;
+            }
 
             CacheCruxData($cache_key, $crux_data);
         }
@@ -33,17 +38,20 @@ function GetCruxDataForURL($url, $mobile=FALSE) {
     return $crux_data;
 }
 
-function GetCachedCruxData($cache_key) {
+function GetCachedCruxData($cache_key)
+{
     $crux_data = null;
     $today = gmdate('Ymd');
     $cache_path = __DIR__ . "/../results/crux_cache/$today/" . substr($cache_key, 0, 2) . "/$cache_key.json";
-    if (file_exists($cache_path))
+    if (file_exists($cache_path)) {
         $crux_data = file_get_contents($cache_path);
+    }
 
     return $crux_data;
 }
 
-function CacheCruxData($cache_key, $crux_data) {
+function CacheCruxData($cache_key, $crux_data)
+{
     if (isset($crux_data) && strlen($crux_data)) {
         $today = gmdate('Ymd');
         $cache_path = __DIR__ . "/../results/crux_cache/$today/" . substr($cache_key, 0, 2);
@@ -54,12 +62,13 @@ function CacheCruxData($cache_key, $crux_data) {
 }
 
 // Delete any cache directories that don't match the current date
-function PruneCruxCache() {
+function PruneCruxCache()
+{
     $cache_path = __DIR__ . '/../results/crux_cache';
     if (is_dir($cache_path)) {
         $today = gmdate('Ymd');
         $files = scandir($cache_path);
-        foreach($files as $file) {
+        foreach ($files as $file) {
             if ($file !== '.' && $file != '..' && $file != $today) {
                 delTree("$cache_path/$file");
             }
@@ -67,7 +76,8 @@ function PruneCruxCache() {
     }
 }
 
-function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels=true, $includeMetricName=true) {
+function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels = true, $includeMetricName = true)
+{
     $pageData = null;
     $rvPageData = null;
     global $cruxStyles;
@@ -86,16 +96,16 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             }
         }
     }
-    if (isset($pageData) &&
+    if (
+        isset($pageData) &&
         is_array($pageData) &&
         isset($pageData['CrUX']) &&
         is_array($pageData['CrUX']) &&
-        isset($pageData['CrUX']['metrics']))
-    {
+        isset($pageData['CrUX']['metrics'])
+    ) {
         if (!$cruxStyles) {?>
-        
-        <?php
-        $cruxStyles = true;
+            <?php
+            $cruxStyles = true;
         }
         echo '<div class="crux">';
         echo '<h3 class="hed_sub">Real User Measurements <em>(Collected anonymously by Chrome browser via Chrome User Experience Report.)</em></h3>';
@@ -115,11 +125,11 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             echo '</span>';
         }
         echo '</div>';
-        
+
 
         // The individual metrics
         echo '<div class="cruxbars">';
-        if ($metric == ''){
+        if ($metric == '') {
             //show all
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
@@ -127,17 +137,17 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
             InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
-        } else if  ($metric == 'fcp') {
+        } elseif ($metric == 'fcp') {
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
-        } else if  ($metric == 'lcp') {
+        } elseif ($metric == 'lcp') {
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
-        } else if  ($metric == 'cls') {
+        } elseif ($metric == 'cls') {
             InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
-        } else if  ($metric == 'fid') {
+        } elseif ($metric == 'fid') {
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
-        } else if  ($metric == 'ttfb') {
+        } elseif ($metric == 'ttfb') {
             InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
-        } else if  ($metric == 'inp') {
+        } elseif ($metric == 'inp') {
             InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
         }
 
@@ -147,7 +157,8 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
     }
 }
 
-function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $label, $short, $includeLabels=true) {
+function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $label, $short, $includeLabels = true)
+{
     $fvValue = null;
     $rvValue = null;
     $histogram = null;
@@ -169,13 +180,16 @@ function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $
     }
 }
 
-function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels=true) {
+function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels = true)
+{
     // Figure out offsets and adjustments to the svg
     $width = 200;
-    if (is_float($p75))
+    if (is_float($p75)) {
         $p75 = round($p75, 3);
-    if (is_float($fvValue))
+    }
+    if (is_float($fvValue)) {
         $fvValue = round($fvValue, 3);
+    }
     $goodPct = intval(round($histogram[0]['density'] * 100));
     $fairPct = intval(round($histogram[1]['density'] * 100));
     $poorStart = $goodPct + $fairPct;
@@ -222,8 +236,8 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
         $end = $pos + 5;
         $rvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#737373'/></svg>";
     }
-$image_width = $width + 20;
-$svg = <<<EOD
+    $image_width = $width + 20;
+    $svg = <<<EOD
 <svg viewBox="0 0 $image_width 80" version='1.1' xmlns='http://www.w3.org/2000/svg'>
 <svg x='10' width='$width' y='30' height='25'>
     <rect x='0' width='100%' height='100%' fill='#009316' />
@@ -238,13 +252,15 @@ $rvArrow
 $fvArrow
 $p75text
 EOD;
-if ($includeLabels)
-    $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Open Sans, sans-serif'>$label ($short)</text>";
-$svg .= '</svg>';
+    if ($includeLabels) {
+        $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Open Sans, sans-serif'>$label ($short)</text>";
+    }
+    $svg .= '</svg>';
     echo $svg;
 }
 
-function GetCruxValuePosition($value, $maxVal, $histogram, $width, &$color) {
+function GetCruxValuePosition($value, $maxVal, $histogram, $width, &$color)
+{
     $pos = null;
     $goodWidth = $histogram[0]['density'] * floatval($width);
     $fairWidth = $histogram[1]['density'] * floatval($width);

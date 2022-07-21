@@ -8,22 +8,22 @@ $FontsLoadedByExt = array();
 $FilesLoadingFonts = array();
 
 foreach ($requests as $request) {
-    if( $initialHost !== $request['host'] && preg_match("/woff|ttf|eot/", $request['contentType'])  ){
-        array_push($Font3pReqs, $request['full_url'] );
-        array_push($Font3pHosts, $request['host'] );
+    if ($initialHost !== $request['host'] && preg_match("/woff|ttf|eot/", $request['contentType'])) {
+        array_push($Font3pReqs, $request['full_url']);
+        array_push($Font3pHosts, $request['host']);
     }
     // find fonts loaded from files that aren't the first doc
-    if( preg_match("/woff|ttf|eot/", $request['contentType']) && isset($request['initiator']) &&  $request['initiator'] !== $rootURL  ){
-        array_push($FontsLoadedByExt, $request['full_url'] );
-        array_push($FilesLoadingFonts, $request['initiator'] );
+    if (preg_match("/woff|ttf|eot/", $request['contentType']) && isset($request['initiator']) &&  $request['initiator'] !== $rootURL) {
+        array_push($FontsLoadedByExt, $request['full_url']);
+        array_push($FilesLoadingFonts, $request['initiator']);
     }
 }
 
 
 
-if( count($Font3pReqs) > 0 ){
-    $assessment[$category]["opportunities"][] = array( 
-        "title" =>  count($Font3pReqs) ." font". (count($Font3pReqs) === 1 ? " is " : "s are") ." hosted on 3rd-party hosts",
+if (count($Font3pReqs) > 0) {
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  count($Font3pReqs) . " font" . (count($Font3pReqs) === 1 ? " is " : "s are") . " hosted on 3rd-party hosts",
         "desc" =>  "Fonts on 3rd party domains may take longer to load due to DNS and connection steps that are not necessary when fonts are hosted on the same domain.",
         "examples" =>  array_unique($Font3pReqs),
         "experiments" =>  array(
@@ -58,9 +58,8 @@ if( count($Font3pReqs) > 0 ){
         ),
         "good" =>  false
     );
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  'Zero third-party fonts found.',
         "desc" =>  "Fonts on 3rd party domains may take longer to load due to DNS and connection steps that are not necessary when fonts are hosted on the same domain.",
         "examples" =>  array(),
@@ -71,9 +70,9 @@ else {
 
 
 
-if( count($FontsLoadedByExt) > 0 ){
-    $assessment[$category]["opportunities"][] = array( 
-        "title" =>  count($FontsLoadedByExt) ." font". (count($Font3pReqs) === 1 ? " is " : "s are") ." loaded from externally-requested CSS",
+if (count($FontsLoadedByExt) > 0) {
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  count($FontsLoadedByExt) . " font" . (count($Font3pReqs) === 1 ? " is " : "s are") . " loaded from externally-requested CSS",
         "desc" =>  "When font-face definitions are in external CSS files, there are two steps involved in loading them: fetching the css, then fetching the fonts. Moving font-face rules into HTML can help fonts be discovered and downloaded faster.",
         "examples" =>  array_unique($FontsLoadedByExt),
         "experiments" =>  array(
@@ -87,9 +86,8 @@ if( count($FontsLoadedByExt) > 0 ){
         ),
         "good" =>  false
     );
-}
-else {
-    $assessment[$category]["opportunities"][] = array( 
+} else {
+    $assessment[$category]["opportunities"][] = array(
         "title" =>  'Zero are loaded from externally-requested CSS.',
         "desc" =>  "When font-face definitions are in external CSS files, there are two steps involved in loading them: fetching the css, then fetching the fonts. Moving font-face rules into HTML can help fonts be discovered and downloaded faster.",
         "examples" =>  array(),
@@ -97,5 +95,3 @@ else {
         "good" =>  true
     );
 }
-
-?>

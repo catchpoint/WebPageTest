@@ -1,4 +1,5 @@
 <?php
+
 require_once('./settings.inc');
 
 $res = array();
@@ -12,15 +13,19 @@ if (LoadResults($res)) {
         $count = 0;
         foreach ($res as &$result) {
             $stddev = 0;
-            if (array_key_exists('docTime', $result) &&
+            if (
+                array_key_exists('docTime', $result) &&
                 array_key_exists('docTime.stddev', $result) &&
-                $result['docTime'] > 0)
+                $result['docTime'] > 0
+            ) {
                 $stddev = ($result['docTime.stddev'] / $result['docTime']) * 100;
-            if (!array_key_exists('id', $result) ||
-                !strlen($result['id']) || 
+            }
+            if (
+                !array_key_exists('id', $result) ||
+                !strlen($result['id']) ||
                 !array_key_exists('result', $result) ||
-                !strlen($result['result']) || 
-                ($result['result'] != 0 && 
+                !strlen($result['result']) ||
+                ($result['result'] != 0 &&
                  $result['result'] != 99999) ||
                  !$result['bytesInDoc'] ||
                  !$result['docTime'] ||
@@ -28,7 +33,8 @@ if (LoadResults($res)) {
                  $result['TTFB'] > $result['docTime'] ||
                  $stddev > $maxVariancePct || // > 10% variation in results
                  (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
-                 ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
+                 ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))
+            ) {
                 $result['resubmit'] = true;
                 $count++;
             }
@@ -39,7 +45,7 @@ if (LoadResults($res)) {
 
             // store the results
             StoreResults($res);
-            
+
             // now run the normal submit code
             include './submit.php';
         } else {

@@ -1,16 +1,20 @@
 <?php
+
 $testTypes = array();
 // TODO comprehensive check
-if (file_exists(__DIR__ . '/settings/profiles.ini') ||
+if (
+    file_exists(__DIR__ . '/settings/profiles.ini') ||
     file_exists(__DIR__ . '/settings/common/profiles.ini') ||
-    file_exists(__DIR__ . '/settings/server/profiles.ini')) {
+    file_exists(__DIR__ . '/settings/server/profiles.ini')
+) {
     $testTypes['Site Performance'] = '/';
 }
-if (file_exists(__DIR__ . '/settings/profiles_webvitals.ini') ||
+if (
+    file_exists(__DIR__ . '/settings/profiles_webvitals.ini') ||
         file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini') ||
-        file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
+        file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')
+) {
             $testTypes['Core Web Vitals'] = '/webvitals';
-
 }
 
 $testTypes['Lighthouse'] = '/lighthouse';
@@ -27,9 +31,9 @@ unset($testTypes[$currNav]);
         <span class="visually-hidden"> or...</span>
         <ul>
             <?php
-                foreach( $testTypes as $key => $url ){
-                    echo "<li><a href=\"$url\">$key</a></li>";
-                }
+            foreach ($testTypes as $key => $url) {
+                echo "<li><a href=\"$url\">$key</a></li>";
+            }
             ?>
         </ul>
     </span> 
