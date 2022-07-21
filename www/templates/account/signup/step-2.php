@@ -42,8 +42,8 @@ letter and symbol. No &lt;, &gt;.</p>
     </div>
     <div class="form-input state">
         <label for="state">State</label>
-        <div id="regionalArea">
-            <select name="state" required>
+        <div>
+            <select name="state" data-country-selector="state-selector" required>
                 <?php foreach ($state_list as $state) : ?>
                     <option value="<?= $state['code'] ?>">
                         <?= $state['name']; ?>
@@ -54,7 +54,7 @@ letter and symbol. No &lt;, &gt;.</p>
     </div>
     <div class="form-input country">
         <label for="country">Country</label>
-        <select name="country" required>
+        <select name="country" data-country-selector="selector" required>
                 <?php foreach ($country_list as $country) : ?>
                 <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
                     <?= $country["name"]; ?>
@@ -149,3 +149,25 @@ letter and symbol. No &lt;, &gt;.</p>
         <?php endif; ?>
     </div> <!-- /.plan-benefits -->
 </aside>
+
+<?php if (!$is_plan_free) : ?>
+<script src="/js/country-list/country-list.js"></script>
+<script>
+(() => {
+    const countryList = <?= $country_list_json_blob ?>;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+        const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+        new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+      });
+    } else {
+        const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+        const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+        new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+    }
+})();
+</script>
+<?php endif; ?>
