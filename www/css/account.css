@@ -485,7 +485,7 @@ body.theme-b {
 }
 
 .signup-step-1-content {
-  margin: 0 auto;
+  margin: -150px auto 0;
   max-width: 1400px;
   padding: 0 3rem;
 }
@@ -511,8 +511,8 @@ body.theme-b {
 .signup-step-1-content h2 {
   text-align: center;
   font-size: 1.1em;
-  margin: 0 0 1em;
   display: block;
+  margin: 2rem 0;
 }
 
 .signup-feature {
@@ -1253,7 +1253,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   background: transparent;
   font-size: 1rem;
   color: #2b94ff;
-  cursor: pointer;
 }
 
 /*  ---------------------------------------------------------------
@@ -1263,11 +1262,22 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 /* Comparison table */
 
 .comparison-table {
-  border-collapse: collapse;
+  border-spacing: 0;
   font-size: 1.15rem;
   width: 100%;
   border-radius: 10px;
   margin-bottom: 15px;
+}
+.comparison-table .h2 {
+  font-size: 1.7rem;
+  text-align: left;
+}
+.comparison-table thead th {
+  vertical-align: bottom;
+}
+
+.comparison-table thead th {
+  vertical-align: bottom;
 }
 
 .comparison-table tbody tr:nth-child(odd) {
@@ -1279,13 +1289,9 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   vertical-align: top;
   padding-top: 0;
 }
-
+.comparison-table thead th:first-child,
 .comparison-table tbody th {
-  text-align: left;
-}
-
-.comparison-table thead th:not(.custom-plan) {
-  vertical-align: top;
+  text-align: right;
 }
 
 .comparison-table th.custom-plan {
@@ -1295,6 +1301,16 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   line-height: 1.2;
   margin: 0;
   vertical-align: bottom;
+}
+
+.comparison-table tr td:last-child {
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-top: none;
+}
+.comparison-table tr:last-child td:last-child {
+  border-radius: 0 0 10px 10px;
+  border-bottom: 1px solid #ddd;
 }
 
 .comparison-table thead th.section:not(:first-child),
@@ -1315,16 +1331,30 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     justify-content: space-around;
   }
 
+  .signup-step-1-content {
+    margin: -39px auto 0;
+    padding: 0;
+  }
+
   .comparison-table tbody td,
   .comparison-table thead th {
     display: block;
     width: 50%;
     font-size: 1rem;
     box-sizing: border-box;
+    position: relative;
+  }
+  .comparison-table tbody th {
+    text-align: left;
+  }
+  thead th > span {
+    position: absolute;
+    bottom: 10px;
+    left: 22%;
   }
 
-  .comparison-table thead th {
-    padding: 0.8em 0.3em;
+  .comparison-table thead th:first-child {
+    display: none;
   }
 
   .comparison-table tbody tr th:first-child {
@@ -1399,11 +1429,12 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 .new-banner {
   background: #00a850;
   border-radius: 4px;
-  font-size: 0.875rem;
-  padding: 0.3rem 0.5rem;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.2rem;
   color: white;
   font-style: normal;
   float: right;
+  margin-left: 10px;
 }
 
 .plan-selector .plan-name {
@@ -1459,97 +1490,38 @@ tr.custom-plan-mobile {
   display: none;
 }
 
-/* end of comparison table content */
-
-/* Plan subscription type labels */
-
-.subscription-type-selector {
-  margin-bottom: 30px;
+.pro-plans form > *:not(.hidden) {
+  display: inline-block;
+  width: auto;
+}
+.pro-plans .pro-plans-header {
+  color: #fff;
+  background-color: #111a2a;
+  border-radius: 10px;
+  border: 1px solid #fff;
+  padding: 1em;
+}
+.pro-plans-header .heading > * {
+  float: none;
+}
+span.upsell {
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
-.radiobutton-group label:hover {
-  background: #eee;
+th.pro-plans {
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(255, 255, 255, 0.3);
 }
-
-/* the dumbest tabs */
-
-.plan {
-  display: none;
+.pro-plans select {
+  border: 1px solid #ddd;
 }
-
-@keyframes highlight {
-  0% {
-    background: #6b25cf;
-  }
-
-  100% {
-    background: #3881e5;
-  }
+.pro-plans form {
+  font-size: 1rem;
+  padding-top: 2%;
 }
-
-.radiobutton-tab-container {
-  position: relative;
-}
-
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(1):focus
-  ~ .radiobutton-group
-  .radio-button:nth-of-type(1)
-  label,
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(2):focus
-  ~ .radiobutton-group
-  .radio-button:nth-of-type(2)
-  label {
-  animation: highlight 1s;
-}
-
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(1):checked
-  ~ .radiobutton-group
-  .radio-button:nth-of-type(1)
-  label,
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(2):checked
-  ~ .radiobutton-group
-  .radio-button:nth-of-type(2)
-  label {
-  background-color: #3881e5;
-  color: white;
-  font-weight: 600;
-}
-
-/* sign up step 1 */
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(1):checked
-  ~ .comparison-table
-  .plan-selector
-  .plan.annual,
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(2):checked
-  ~ .comparison-table
-  .plan-selector
-  .plan.monthly {
-  display: block;
-}
-
-/* account page sign up */
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(1):checked
-  ~ .annual-plans,
-.radiobutton-tab-container
-  input[type="radio"]:nth-of-type(2):checked
-  ~ .monthly-plans {
-  display: flex;
-}
-
-.radiobutton-tab-container input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  top: 0;
-  left: 0;
-}
-
 /* FAQ section */
 
 dl.faq button {
@@ -1681,14 +1653,6 @@ ul.bulleted-list {
     font-size: 1.15rem;
   }
 
-  .signup-step-1-content {
-    padding: 0 1rem;
-  }
-
-  .signup-step-1-content h2 {
-    margin: 2rem 0;
-  }
-
   .plan-callout::before {
     top: 8px;
     left: -9px;
@@ -1702,7 +1666,7 @@ ul.bulleted-list {
   }
 
   .comparison-table .signup-button {
-    padding: 0.7em 0.7em;
+    padding: 0.7em 1em;
   }
 }
 
