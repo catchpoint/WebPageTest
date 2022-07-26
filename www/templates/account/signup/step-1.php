@@ -4,7 +4,7 @@
         <p>All the WebPageTest features you already love,
             <strong>plus API Access &amp; No-Code Experiments!</strong>
         </p>
-        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15/mo</span></p>
+        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15<span class="unit">/mo</span></span></p>
     </div> <!-- ./signup-hed -->
 </div>
 
@@ -31,20 +31,20 @@
                         <div>
                             <label for="runs-per-month"> Runs/mo:</label>
                             <div data-id="monthly-plan-select-wrapper" class="hidden">
-                                <select id="runs-per-month" name="plan" disabled>
+                                <select id="runs-per-month" name="plan" disabled data-cycle="/month">
                                     <?php
                                     foreach ($monthly_plans as $plan) : ?>
-                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>/month">
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>">
                                             <?= $plan->getRuns() ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div data-id="annual-plan-select-wrapper">
-                                <select id="runs-per-month" name="plan">
+                                <select id="runs-per-month" name="plan" data-cycle="/year">
                                     <?php
                                     foreach ($annual_plans as $plan) : ?>
-                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>/year">
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>">
                                             <?= $plan->getRuns() ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -80,7 +80,7 @@
                 </td>
                 <td>
                     <span class="visually-hidden">Sign up for a Pro Plan</span>
-                    <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= $annual_plans[0]->getAnnualPrice() ?>/year</span></button>
+                    <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= $annual_plans[0]->getAnnualPrice() ?></span><span class="unit" data-id="plan-cycle">/year</span></button>
                 </td>
             </tr>
             <tr>

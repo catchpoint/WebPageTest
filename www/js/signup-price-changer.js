@@ -27,12 +27,15 @@
         "[data-id=plan-price]"
       );
 
+      this.submitButtonCycle = this.submitButton.querySelector(
+        "[data-id=plan-cycle]"
+      );
       /** add change handler for the runs/plans select to change the price on the submit button */
       this.form.querySelectorAll("select[name=plan]").forEach((el) => {
         el.addEventListener("change", (e) => {
           var price = e.target.options[e.target.selectedIndex].dataset.price;
-
-          this.updatePrice(price);
+          var cycle = e.target.dataset.cycle;
+          this.updatePrice(price, cycle);
         });
       });
 
@@ -47,18 +50,22 @@
             var price =
               this.annualSelect.options[this.annualSelect.selectedIndex].dataset
                 .price;
+            var cycle = "/year";
           } else {
             var price =
               this.monthlySelect.options[this.monthlySelect.selectedIndex]
                 .dataset.price;
+            var cycle = "/month";
           }
-          this.updatePrice(price);
+
+          this.updatePrice(price, cycle);
         });
       });
     }
 
-    updatePrice(price) {
+    updatePrice(price, cycle) {
       this.submitButtonPrice.innerText = price;
+      this.submitButtonCycle.innerText = cycle;
     }
 
     toggleSelect(billingCycle) {

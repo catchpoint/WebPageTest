@@ -1464,6 +1464,11 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1.15rem;
   font-weight: 700;
 }
+.comparison-table .signup-button .unit,
+span.unit {
+  font-weight: 400;
+  font-size: smaller;
+}
 
 .plan-selector .price {
   font-family: "Open Sans";
