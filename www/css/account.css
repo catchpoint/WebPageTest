@@ -1410,10 +1410,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .icon.x-in-circle-temp {
-  -webkit-filter: grayscale(100%);
-  /* Safari 6.0 - 9.0 */
-  filter: grayscale(100%);
-  background: #6ca71a url(/images/render-block-icon.png) left 50% no-repeat;
+  background: #efefef url(/images/circle-x.svg) left 50% no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
