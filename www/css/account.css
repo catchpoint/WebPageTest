@@ -538,6 +538,12 @@ body.theme-b {
     background-position: bottom -60px left 50%, bottom 0 left 50%;
   }
 }
+@media screen and (max-width: 400px) {
+  .signnup-hed-contain {
+    background-position: bottom -15px left 100%, bottom 0 left 100%;
+    background-size: 250%, cover;
+  }
+}
 
 .signnup-hed .price {
   color: #f9d856;
@@ -1489,7 +1495,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 tr.custom-plan-mobile {
   display: none;
 }
-
+.pro-plans form div > *:not(.hidden) {
+  display: inline-block;
+  width: auto;
+}
 .pro-plans form > *:not(.hidden) {
   display: inline-block;
   width: auto;
@@ -1522,6 +1531,18 @@ th.pro-plans {
   font-size: 1rem;
   padding-top: 2%;
 }
+
+@media (max-width: 860px) {
+  .pro-plans form > div {
+    width: 47% !important; /*a crime*/
+  }
+  .pro-plans form div > *:not(.hidden) {
+    display: block;
+    width: auto;
+    text-align: left;
+  }
+}
+
 /* FAQ section */
 
 dl.faq button {

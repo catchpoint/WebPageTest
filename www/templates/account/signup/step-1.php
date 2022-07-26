@@ -28,32 +28,36 @@
                         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
                         <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
                         <input type="hidden" name="step" value="1" />
-                        <label for="runs-per-month"> Runs/mo:</label>
-                        <div data-id="monthly-plan-select-wrapper" class="hidden">
-                            <select id="runs-per-month" name="plan" disabled>
-                                <?php
-                                foreach ($monthly_plans as $plan) : ?>
-                                    <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>/month">
-                                        <?= $plan->getRuns() ?>
-                                    </option>
-                                <?php endforeach; ?>
+                        <div>
+                            <label for="runs-per-month"> Runs/mo:</label>
+                            <div data-id="monthly-plan-select-wrapper" class="hidden">
+                                <select id="runs-per-month" name="plan" disabled>
+                                    <?php
+                                    foreach ($monthly_plans as $plan) : ?>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>/month">
+                                            <?= $plan->getRuns() ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div data-id="annual-plan-select-wrapper">
+                                <select id="runs-per-month" name="plan">
+                                    <?php
+                                    foreach ($annual_plans as $plan) : ?>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>/year">
+                                            <?= $plan->getRuns() ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="billing-cycle"> Plan:</label>
+                            <select id="billing-cycle" name="billing-cycle">
+                                <option value="annual" selected>Annual</option>
+                                <option value="monthly">Monthly</option>
                             </select>
                         </div>
-                        <div data-id="annual-plan-select-wrapper">
-                            <select id="runs-per-month" name="plan">
-                                <?php
-                                foreach ($annual_plans as $plan) : ?>
-                                    <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>/year">
-                                        <?= $plan->getRuns() ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <label for="billing-cycle"> Plan:</label>
-                        <select id="billing-cycle" name="billing-cycle">
-                            <option value="annual" selected>Annual</option>
-                            <option value="monthly">Monthly</option>
-                        </select>
                     </form>
                 </th>
 
