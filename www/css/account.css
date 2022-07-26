@@ -1372,11 +1372,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     background-color: white;
   }
 
-  .comparison-table thead th.section:not(:first-child),
-  .comparison-table tbody td {
-    border: 1px solid #d0d0d0;
-  }
-
   .comparison-table tbody td.custom-plan,
   .comparison-table thead th.custom-plan,
   .comparison-table thead td {
