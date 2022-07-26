@@ -20,7 +20,9 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
 </head>
 
 <body>
-    <?php require_once __DIR__ . '/header.inc'; ?>
+    <?php
+    $GLOBALS['tab'] = "Pricing";
+    require_once __DIR__ . '/header.inc'; ?>
     <main>
         <?php echo $template_output; ?>
     </main>
