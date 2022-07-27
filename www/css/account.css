@@ -1530,10 +1530,13 @@ th.pro-plans {
   padding-top: 2%;
 }
 
-@media (max-width: 860px) {
-  .pro-plans form > div {
-    width: 47% !important; /*a crime*/
+@media (max-width: 1176px) {
+  .pro-plans form > div:not(.hidden) {
+    width: 47%;
   }
+}
+
+@media (max-width: 860px) {
   .pro-plans form div > *:not(.hidden) {
     display: block;
     width: auto;
