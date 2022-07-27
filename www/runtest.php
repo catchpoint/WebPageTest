@@ -1238,7 +1238,6 @@ if (@strlen($req_rkey)) {
                     }
 
                     if (count($bulk['urls'])) {
-
                         //recheck test balance to make sure they have enough remaining runs for the bulk test
                         $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs * count($bulk['urls']));
                         if (!$hasRunsAvailable) {
