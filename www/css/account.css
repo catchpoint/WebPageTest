@@ -1331,6 +1331,13 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   width: 25%;
 }
 
+@media (max-width: 1500px) {
+  .signup-step-1-content {
+    margin: -130px auto 0;
+    padding: 0;
+  }
+}
+
 @media screen and (max-width: 768px) {
   .comparison-table tr {
     display: flex;
@@ -1692,6 +1699,7 @@ ul.bulleted-list {
   }
   .comparison-table tr:last-child td:last-child .button {
     display: block;
+    margin-top: 1rem;
   }
   sup,
   .FAQ {
