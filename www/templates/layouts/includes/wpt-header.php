@@ -59,74 +59,76 @@ if ($id) {
             <nav>
                 <ul class="wptheader_nav">
 
-<?= addTab('Start Test', '/'); ?>
+                    <?= addTab('Start Test', '/'); ?>
 
-<?php if (!Util::getSetting('disableTestlog')) : ?>
-    <?= addTab('Test History', FRIENDLY_URLS ? '/testlog/7/' : '/testlog.php?days=7'); ?>
-<?php endif; //if (!Util::getSetting('disableTestlog')): ?>
+                    <?php if (!Util::getSetting('disableTestlog')) : ?>
+                        <?= addTab('Test History', FRIENDLY_URLS ? '/testlog/7/' : '/testlog.php?days=7'); ?>
+                    <?php endif; //if (!Util::getSetting('disableTestlog')): 
+                    ?>
 
-        <li class="wptheader_nav_menu">
-                <details>
-                    <summary><span>Products</span></summary>
-                    <div class="wptheader_nav_menu_content">
-                        <div class="wptheader_nav_menu_section">
-                            <img src="/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
-                        </div>
-                        <div class="wptheader_nav_menu_section">
-                            <ul>
-                                <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
-                                <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/api">API</a></li>
-                            </ul>
-                        </div>
-                        <div class="wptheader_nav_menu_section">
-                            <?php
-                            if (!$experiments_paid) {
-                                ?>
-                            <p class="wptheader_nav_cta">
-                                <span>Ready to go <strong>Pro?</strong></span>
-                                <a href="/signup">Compare Plans</a>
-                            </p>
-                                <?php
-                            }
-                            ?>
-                        </div>
-                    </div>
-                </details>
-            </li>
-
-
-
-            <?= addTab('Pricing', '/signup'); ?>
+                    <li class="wptheader_nav_menu">
+                        <details>
+                            <summary><span>Products</span></summary>
+                            <div class="wptheader_nav_menu_content">
+                                <div class="wptheader_nav_menu_section">
+                                    <img src="/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
+                                </div>
+                                <div class="wptheader_nav_menu_section">
+                                    <ul>
+                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/api">API</a></li>
+                                    </ul>
+                                </div>
+                                <div class="wptheader_nav_menu_section">
+                                    <?php
+                                    if (!$experiments_paid) {
+                                    ?>
+                                        <p class="wptheader_nav_cta">
+                                            <span>Ready to go <strong>Pro?</strong></span>
+                                            <a href="/signup">Compare Plans</a>
+                                        </p>
+                                    <?php
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </details>
+                    </li>
 
 
-            <li class="wptheader_nav_menu">
-                <details>
-                    <summary><span>Resources</span></summary>
-                    <div class="wptheader_nav_menu_content">
-                        <div class="wptheader_nav_menu_section">
-                            <ul>
-                                <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
-                                <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
-                                <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/events/">Events</a></li>
-<?php if (Util::getSetting('forums_url')) : ?>
-                                <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
-<?php endif; //(Util::getSetting('forums_url')): ?>
-                            </ul>
-                        </div>
-                        <div class="wptheader_nav_menu_section">
-                            <p class="wptheader_nav_cta">Find us on...</p>
-                            <ul class="wptheader_nav_menu_linkgrid">
-                                <li class="wptheader_nav_menu_link"><img src="/images/twitter.svg" alt=""><a href="https://twitter.com/RealWebPageTest">Twitter</a></li>
-                                <li class="wptheader_nav_menu_link"><img src="/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
-                                <li class="wptheader_nav_menu_link"><img src="/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
-                                <li class="wptheader_nav_menu_link"><img src="/images/github.svg" alt=""><a href="https://github.com/WPO-Foundation/webpagetest/">Github</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </details>
-            </li>
-          <?= addTab('About', '/about'); ?>
-            </ul>
+
+                    <?= addTab('Pricing', '/signup'); ?>
+
+
+                    <li class="wptheader_nav_menu">
+                        <details>
+                            <summary><span>Resources</span></summary>
+                            <div class="wptheader_nav_menu_content">
+                                <div class="wptheader_nav_menu_section">
+                                    <ul>
+                                        <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/events/">Events</a></li>
+                                        <?php if (Util::getSetting('forums_url')) : ?>
+                                            <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
+                                        <?php endif; //(Util::getSetting('forums_url')): 
+                                        ?>
+                                    </ul>
+                                </div>
+                                <div class="wptheader_nav_menu_section">
+                                    <p class="wptheader_nav_cta">Find us on...</p>
+                                    <ul class="wptheader_nav_menu_linkgrid">
+                                        <li class="wptheader_nav_menu_link"><img src="/images/twitter.svg" alt=""><a href="https://twitter.com/RealWebPageTest">Twitter</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/images/github.svg" alt=""><a href="https://github.com/WPO-Foundation/webpagetest/">Github</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </details>
+                    </li>
+                    <?= addTab('About', '/about'); ?>
+                </ul>
 
                 <ul class="wptheader_acct">
 
@@ -153,7 +155,7 @@ if ($id) {
                             <?php else : ?>
                                 <li><a href="/login">Login</a></li>
                                 <li><a href='/signup'>Sign-up</a></li>
-                            <?php endif; //$is_logged_in 
+                            <?php endif; //$is_logged_in
                             ?>
                     <?php
                         } elseif (isset($user)) {
