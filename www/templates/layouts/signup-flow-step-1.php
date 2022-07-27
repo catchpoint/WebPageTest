@@ -16,7 +16,7 @@ $page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
 <?php require_once __DIR__ . '/head.inc'; ?>
 <link href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
 <script defer src="/js/accessible-faq.js"></script>
-<script defer src="/js/signup-price-changer.js"></script>
+<script defer src="/js/signup-price-changer.js?v=<?= constant('VER_ACCOUNT_JS') ?>"></script>
 </head>
 
 <body>
