@@ -60,9 +60,9 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
 
         <section class="headline">
             <h1>Pageload Delays Triple when Developers Forget to Check WebPageTest</h1>
-            <p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
 
             <img src="dog.jpg" loading="lazy">
+            <p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
             
         </section>
 

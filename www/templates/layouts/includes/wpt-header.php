@@ -52,12 +52,13 @@ if ($id) {
 <wpt-header>
     <header>
         <a class="wptheader_logo" href="/">
-            <img src="/images/wpt-logo.svg"  alt="WebPageTest, by Catchpoint" />
+            <img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
         </a>
         <details class="wptheader_menu">
             <summary class="wptheader_menubtn">Menu:</summary>
             <nav>
                 <ul class="wptheader_nav">
+
 <?= addTab('Start Test', '/'); ?>
 
 <?php if (!Util::getSetting('disableTestlog')) : ?>
@@ -95,7 +96,7 @@ if ($id) {
 
 
 
-            <li><a href="/signup"><span>Pricing</span></a></li>
+            <?= addTab('Pricing', '/signup'); ?>
 
 
             <li class="wptheader_nav_menu">
@@ -126,45 +127,47 @@ if ($id) {
             </li>
           <?= addTab('About', '/about'); ?>
             </ul>
+
                 <ul class="wptheader_acct">
 
-                <?php
+                    <?php
 
-                if ($supportsAuth && !defined('EMBED')) {
-                    if ($supportsCPAuth) {
-                        $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
-                        ?>
-                        <?php if ($is_logged_in) : ?>
-                        <li><a href='/account'>
-                            <?php
-                            if ($experiments_paid) {
-                                echo '<em class="pro-flag">Pro</em> ';
-                            }
+                    if ($supportsAuth && !defined('EMBED')) {
+                        if ($supportsCPAuth) {
+                            $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
+                    ?>
+                            <?php if ($is_logged_in) : ?>
+                                <li><a href='/account'>
+                                        <?php
+                                        if ($experiments_paid) {
+                                            echo '<em class="pro-flag">Pro</em> ';
+                                        }
+                                        ?>
+                                        My Account</a></li>
+                                <li>
+                                    <form method='POST' action='/logout' class='logout-form'>
+                                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />
+                                        <button type='submit'>Logout</button>
+                                    </form>
+                                </li>
+                            <?php else : ?>
+                                <li><a href="/login">Login</a></li>
+                                <li><a href='/signup'>Sign-up</a></li>
+                            <?php endif; //$is_logged_in 
                             ?>
-                        My Account</a></li>
-                        <li>
-                          <form method='POST' action='/logout' class='logout-form'>
-                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />
-                            <button type='submit'>Logout</button>
-                          </form>
-                        </li>
-                        <?php else : ?>
-                        <li><a href="/login">Login</a></li>
-                        <li><a href='/signup'>Sign-up</a></li>
-                        <?php endif; //$is_logged_in ?>
-                        <?php
-                    } elseif (isset($user)) {
-                        $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
-                        echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
-                    } elseif (isset($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
-                        $logoutUrl = 'javascript:wptLogout();';
-                        $google_email = htmlspecialchars($_COOKIE['google_email']);
-                        echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
-                    } elseif (Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret')) {
-                        echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
+                    <?php
+                        } elseif (isset($user)) {
+                            $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
+                            echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
+                        } elseif (isset($_COOKIE['google_email']) && isset($_COOKIE['google_id'])) {
+                            $logoutUrl = 'javascript:wptLogout();';
+                            $google_email = htmlspecialchars($_COOKIE['google_email']);
+                            echo "<li>Welcome, $google_email </li><li><a href=\"$logoutUrl\">Logout</a></li>";
+                        } elseif (Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret')) {
+                            echo '<li><a href="/oauth/login.php">Login with Google</a></li>';
+                        }
                     }
-                }
-                ?>
+                    ?>
 
                 </ul>
             </nav>

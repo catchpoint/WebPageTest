@@ -1238,7 +1238,6 @@ if (@strlen($req_rkey)) {
                     }
 
                     if (count($bulk['urls'])) {
-
                         //recheck test balance to make sure they have enough remaining runs for the bulk test
                         $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs * count($bulk['urls']));
                         if (!$hasRunsAvailable) {
@@ -3294,7 +3293,8 @@ function RelayTest()
     $ret = array();
     $ret['statusCode'] = 200;
 
-    $rkey = $_POST['rkey'];
+    $rkey = filter_var($_POST['rkey'], FILTER_SANITIZE_ENCODED);
+
     $test = json_decode($_POST['testinfo'], true);
     $test['vd'] = '';
     $test['vh'] = '';
