@@ -20,7 +20,7 @@
                 </th>
                 <th scope="col" class="pro-plans">
                     <div class="pro-plans-header">
-                        <div class="heading"> WebPageTest <em class="new-banner">Pro</em></div>
+                        <div class="heading wpt-pro-logo"> <span class="visually-hidden">WebPageTest <em class="new-banner">Pro</em></span></div>
                         <span class="upsell">Save 20% with Annual Plans</span>
                     </div>
 
