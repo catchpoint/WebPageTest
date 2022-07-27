@@ -189,7 +189,8 @@ define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_CSS', @md5_file(__DIR__ . '/pagestyle2.css'));          // version of the sitewide css file
 define('VER_HEADER_CSS', @md5_file(__DIR__ . '/wpt-header.css')); // version of the header css file
 define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/css/account.css')); // version of the account css file
-define('VER_ACCOUNT_JS', @md5_file(__DIR__ . '/js/signup-price-changer.js')); // version of the account css file
+define('VER_PRICE_CHANGER_JS', @md5_file(__DIR__ . '/js/signup-price-changer.js'));
+define('VER_FAQ_JS', @md5_file(__DIR__ . '/js/accessible-faq.js'));
 define('VER_BUTTON_CSS', @md5_file(__DIR__ . '/css/button.css'));   // version of the button css file
 define('VER_JS', 41);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
