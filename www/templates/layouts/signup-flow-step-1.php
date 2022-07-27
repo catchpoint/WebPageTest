@@ -10,7 +10,7 @@ global $request_context;
 global $_SESSION;
 global $client_error;
 
-$page_title = $page_title ? $page_title : 'WebPageTest';
+$page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
 ?>
 <title><?php echo $page_title; ?></title>
 <?php require_once __DIR__ . '/head.inc'; ?>
@@ -20,7 +20,9 @@ $page_title = $page_title ? $page_title : 'WebPageTest';
 </head>
 
 <body>
-    <?php require_once __DIR__ . '/header.inc'; ?>
+    <?php
+    $GLOBALS['tab'] = "Pricing";
+    require_once __DIR__ . '/header.inc'; ?>
     <main>
         <?php echo $template_output; ?>
     </main>

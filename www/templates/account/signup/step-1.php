@@ -4,113 +4,89 @@
         <p>All the WebPageTest features you already love,
             <strong>plus API Access &amp; No-Code Experiments!</strong>
         </p>
-        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15/mo</span></p>
+        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15<span class="unit">/mo</span></span></p>
     </div> <!-- ./signup-hed -->
 </div>
 
-<div class="signup-step-1-content radiobutton-tab-container">
-    <h2> Save 20% by paying annually!</h2>
-    <!-- css only tabs. The html is in this order for a reason. -->
-    <label for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</label>
-    <input id="annual-plans" type="radio" name="plans" value="annual" checked />
-    <input id="monthly-plans" type="radio" name="plans" value="monthly" />
-    <div class="radiobutton-group subscription-type-selector" id="pro-plan-selector">
-        <div class="radio-button">
-            <label for="annual-plans">Annual</label>
-        </div>
-        <div class="radio-button">
-            <label for="monthly-plans">Monthly</label>
-        </div>
-    </div>
-
+<div class="signup-step-1-content" id="billingcycle-tab-container">
     <table class="comparison-table">
         <thead>
             <tr>
-                <td></td>
-                <th scope="col">
-                    <div class="plan-selector">
-                        <form method="POST" action="/signup">
-                            <p class="plan-name">Starter</p>
-                            <div class="runs"><b>300 Runs</b>/mo</div>
-                            <div class="price">Free</div>
-                            <input type="hidden" name="plan" value="free" />
-                            <input type="hidden" name="step" value="1" />
-                            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                            <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
-                            <button type="submit" class="signup-button">Start for free</button>
-                        </form>
-                    </div>
+                <th>
+                    <div class="h2">Compare Plans</div>
                 </th>
                 <th scope="col">
-                    <div class="plan-selector">
-                        <p class="plan-name">Pro</p>
-                        <div class="plan annual">
-                            <form method="POST" action="/signup">
-                                <label class="visually-hidden" for="annual-plan">Select Number of Runs per
-                                    month</label>
-                                <select name="plan" id="annual-plan" class="plan-select" onchange="changePrice('annual')">
+                    <span>Starter Plan</span>
+                </th>
+                <th scope="col" class="pro-plans">
+                    <div class="pro-plans-header">
+                        <div class="heading wpt-pro-logo"> <span class="visually-hidden">WebPageTest <em class="new-banner">Pro</em></span></div>
+                        <span class="upsell">Save 20% with Annual Plans</span>
+                    </div>
+
+                    <form method="POST" id="pro-plan-form" action="/signup">
+                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                        <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
+                        <input type="hidden" name="step" value="1" />
+                        <div>
+                            <label for="runs-per-month"> Runs/mo:</label>
+                            <div data-id="monthly-plan-select-wrapper" class="hidden">
+                                <select id="runs-per-month" name="plan" disabled data-cycle="/month">
                                     <?php
-
-                                    foreach ($annual_plans as $plan) : ?>
-                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>" data-price-monthly="<?= $plan->getMonthlyPrice() ?>">
-                                            <?= $plan->getRuns() ?> Runs/mo
-                                            ($<?= $plan->getAnnualPrice() ?>/<?= $plan->getBillingFrequency() ?>)</option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="price">
-                                    $<span><?= $annual_plans[0]->getAnnualPrice() ?></span>
-                                    /<?= $annual_plans[0]->getBillingFrequency() ?>
-                                </div>
-                                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                                <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
-                                <input type="hidden" name="step" value="1" />
-                                <button class="signup-button" type="submit">Select Plan</button>
-                            </form>
-                        </div>
-
-                        <div class="plan monthly">
-                            <form method="POST" action="/signup">
-                                <label class="visually-hidden" for="monthly-plan">Select Number of Runs per
-                                    month</label>
-                                <select id="monthly-plan" name="plan" class="plan-select" onchange="changePrice('monthly')">
-                                    <?php foreach ($monthly_plans as $plan) : ?>
-                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>" data-price-annual="<?= $plan->getAnnualPrice() ?>">
-                                            <?= $plan->getRuns() ?> Runs/mo ($<?= $plan->getMonthlyPrice() ?>/Monthly)
+                                    foreach ($monthly_plans as $plan) : ?>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getMonthlyPrice() ?>">
+                                            <?= $plan->getRuns() ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="price">$
-                                    <span><?= $monthly_plans[0]->getMonthlyPrice() ?></span>
-                                    /<?= $monthly_plans[0]->getBillingFrequency() ?>
-                                </div>
-                                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                                <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
-                                <input type="hidden" name="step" value="1" />
-                                <button class="signup-button" type="submit">Select Plan</button>
-                            </form>
+                            </div>
+                            <div data-id="annual-plan-select-wrapper">
+                                <select id="runs-per-month" name="plan" data-cycle="/year">
+                                    <?php
+                                    foreach ($annual_plans as $plan) : ?>
+                                        <option value="<?= $plan->getId() ?>" data-price="<?= $plan->getAnnualPrice() ?>">
+                                            <?= $plan->getRuns() ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
-
-
-                    </div>
+                        <div>
+                            <label for="billing-cycle"> Plan:</label>
+                            <select id="billing-cycle" name="billing-cycle">
+                                <option value="annual" selected>Annual</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </form>
                 </th>
 
-                <th scope="col" class="custom-plan">
-                    <div class="plan-selector">
-                        Custom Plans/Integrations?
-                    </div>
-                </th>
             </tr>
         </thead>
 
         <tbody>
             <tr>
-                <th scope="col">Runs Included</th>
+
+                <th scope="col">Price</th>
+                <td>
+                    <form method="POST" action="/signup">
+                        <span class="visually-hidden">Sign up for a Free Plan</span>
+                        <input type="hidden" name="plan" value="free" />
+                        <input type="hidden" name="step" value="1" />
+                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                        <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
+                        <button type="submit" class="signup-button">Start for free</button>
+                    </form>
+                </td>
+                <td>
+                    <span class="visually-hidden">Sign up for a Pro Plan</span>
+                    <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= $annual_plans[0]->getAnnualPrice() ?></span><span class="unit" data-id="plan-cycle">/year</span></button>
+                </td>
+            </tr>
+            <tr>
+                <th scope="col">Monthly Test Runs</th>
                 <td>300</td>
                 <td>As per plan</td>
-
-                <td rowspan="17" class="custom-plan">
-                    <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
-                </td>
             </tr>
 
             <tr>
@@ -272,10 +248,11 @@
                 </td>
             </tr>
 
-            <tr class="custom-plan-mobile">
-                <th>Looking for something custom or have additional questions?</th>
-
-                <td style="border:none">
+            <tr>
+                <th scope="col"></th>
+                <td></td>
+                <td>
+                    Need a custom plan?
                     <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
                 </td>
             </tr>
@@ -285,7 +262,7 @@
     <p><sup id="fn1">* Our list of available test locations is continually growing.</sup></p>
 
     <div class="FAQ">
-        <h3>What's included in WebPageTest Pro?</h3>
+        <h3>What' s included in WebPageTest Pro?</h3>
         <dl class="faq">
             <dt>
                 <button type="button" aria-expanded="false" aria-controls="faq1_desc">What is WebPageTest Pro and what is WebPageTest Starter?</button>

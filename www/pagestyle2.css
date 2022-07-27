@@ -9,6 +9,10 @@
   white-space: nowrap;
   width: 1px;
 }
+.hidden {
+  visibility: hidden;
+  display: none;
+}
 
 /* we use a lot of anchoring on tall pages. */
 
@@ -48,7 +52,7 @@ select {
   color: #fff;
 }
 
-/* 
+/*
 header {
     grid-column-gap: 1.25em;
     border-bottom: 5px solid #1E2B47;
@@ -1858,7 +1862,7 @@ footer ul {
 
 /* Header */
 
-/* 
+/*
 #wptAuthBar {
     list-style-type: none;
 }
@@ -2234,7 +2238,7 @@ footer ul {
   /* margin-right: .5em; */
 }
 
-/* 
+/*
 .result-summary .opportunities_summary {
     display: block;
     max-width: auto;
@@ -2811,7 +2815,7 @@ video:focus {
 
 /* @media screen and (min-width:60em) { */
 
-/* 
+/*
 nav {
     grid-row: 2;
     grid-column: 2 / 5;
@@ -2846,7 +2850,7 @@ nav li {
 
 /* } */
 
-/* 
+/*
 @media screen and (min-width:75em) {
     nav {
         grid-column: 4 / 10;
@@ -3071,7 +3075,7 @@ body.result #main {
   box-shadow: 0px 0px 5px 3px #85e0ff45;
 }
 
-/* 
+/*
 header {
     transition: border-color 1s ease-out;
 }
@@ -4729,7 +4733,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
   margin-top: 1em;
 }
 
-.notification a {
+.notification .message a {
   color: #093b80;
 }
 
@@ -4840,6 +4844,10 @@ form[name="filterLog"] .history_filter input[type="text"] {
 
 .test_box {
   padding: 2em 0 5em;
+}
+
+.test_box a {
+  color: #fff;
 }
 
 #advanced_settings {
