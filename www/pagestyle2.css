@@ -4733,7 +4733,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
   margin-top: 1em;
 }
 
-.notification a {
+.notification .message a {
   color: #093b80;
 }
 
@@ -4844,6 +4844,10 @@ form[name="filterLog"] .history_filter input[type="text"] {
 
 .test_box {
   padding: 2em 0 5em;
+}
+
+.test_box a {
+  color: #fff;
 }
 
 #advanced_settings {
