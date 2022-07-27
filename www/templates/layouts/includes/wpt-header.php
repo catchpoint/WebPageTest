@@ -58,6 +58,7 @@ if ($id) {
             <summary class="wptheader_menubtn">Menu:</summary>
             <nav>
                 <ul class="wptheader_nav">
+
                     <?= addTab('Start Test', '/'); ?>
 
                     <?php if (!Util::getSetting('disableTestlog')) : ?>
@@ -95,7 +96,9 @@ if ($id) {
                     </li>
 
 
+
                     <?= addTab('Pricing', '/signup'); ?>
+
 
                     <li class="wptheader_nav_menu">
                         <details>
@@ -105,7 +108,7 @@ if ($id) {
                                     <ul>
                                         <li class="wptheader_nav_menu_link"><a href="https://docs.webpagetest.org/">Docs</a></li>
                                         <li class="wptheader_nav_menu_link"><a href="https://blog.webpagetest.org/">Blog</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.webpagetest.org/events/wpt-upcoming-events-2022">Events</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/events/">Events</a></li>
                                         <?php if (Util::getSetting('forums_url')) : ?>
                                             <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
                                         <?php endif; //(Util::getSetting('forums_url')): 
@@ -126,6 +129,7 @@ if ($id) {
                     </li>
                     <?= addTab('About', '/about'); ?>
                 </ul>
+
                 <ul class="wptheader_acct">
 
                     <?php
@@ -151,7 +155,7 @@ if ($id) {
                             <?php else : ?>
                                 <li><a href="/login">Login</a></li>
                                 <li><a href='/signup'>Sign-up</a></li>
-                            <?php endif; //$is_logged_in 
+                            <?php endif; //$is_logged_in
                             ?>
                     <?php
                         } elseif (isset($user)) {
