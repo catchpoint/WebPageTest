@@ -1632,6 +1632,8 @@ dl.faq button[aria-expanded="true"]::after {
   color: #666666;
   font-size: 1rem;
   line-height: 1.25rem;
+}
+p sup {
   display: block;
 }
 
