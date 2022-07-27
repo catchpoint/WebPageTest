@@ -18,6 +18,7 @@ use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
+use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
@@ -669,5 +670,33 @@ class CPClient
           "sub_total_in_cents" => $data['subTotalInCents'],
           "tax_in_cents" => $data['taxInCents']
         ]);
+    }
+
+    public function getWptCustomer(): CPCustomer
+    {
+          $gql = (new Query('wptCustomer'))
+              ->setSelectionSet([
+                  'customerId',
+                  'wptPlanId',
+                  'subscriptionId',
+                  'ccLastFour',
+                  'daysPastDue',
+                  'subscriptionPrice',
+                  'maskedCreditCard',
+                  'nextBillingDate',
+                  'billingPeriodEndDate',
+                  'numberOfBillingCycles',
+                  'ccExpirationDate',
+                  'ccImageUrl',
+                  'status',
+                  'remainingRuns',
+                  'monthlyRuns',
+                  'planRenewalDate',
+                  'billingFrequency',
+                  'wptPlanName'
+              ]);
+        $response = $this->graphql_client->runQuery($gql, true);
+        $data = $response->getData()['wptCustomer'];
+        return new CPCustomer($data);
     }
 }
