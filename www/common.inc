@@ -15,7 +15,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\ForbiddenException;
 
 if (Util::getSetting('php_sessions')) {
-  // Start session handling for this request
+    // Start session handling for this request
     session_start();
 }
 
@@ -189,18 +189,20 @@ define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_CSS', @md5_file(__DIR__ . '/pagestyle2.css'));          // version of the sitewide css file
 define('VER_HEADER_CSS', @md5_file(__DIR__ . '/wpt-header.css')); // version of the header css file
 define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/css/account.css')); // version of the account css file
+define('VER_PRICE_CHANGER_JS', @md5_file(__DIR__ . '/js/signup-price-changer.js'));
+define('VER_FAQ_JS', @md5_file(__DIR__ . '/js/accessible-faq.js'));
 define('VER_BUTTON_CSS', @md5_file(__DIR__ . '/css/button.css'));   // version of the button css file
 define('VER_JS', 41);                 // version of the sitewide javascript file
 define('VER_JS_TEST', 47);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
 define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/js/account.js'));          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
-                                      // To find code that fails to check that a time
-                                      // is unknown, change this constant to a large
-                                      // negative number.
+// To find code that fails to check that a time
+// is unknown, change this constant to a large
+// negative number.
 
 // SEO stuff
-$page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
+$page_keywords = array('WebPageTest', 'Website Speed Test', 'Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
 
 $tempDir = './tmp';
@@ -384,7 +386,7 @@ if (strlen($id)) {
             $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
         }
 
-      // $owner is set by CP details in AttachUser middleware if loaded
+        // $owner is set by CP details in AttachUser middleware if loaded
         $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
         $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
 
@@ -399,8 +401,8 @@ if (strlen($id)) {
         $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
         $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
         $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
-      // there could be some domains blocked by default, mostly crytpo-miner stuff (this is why we can't have nice things)
-      // so we need to compare what our domain string is to what our default list is
+        // there could be some domains blocked by default, mostly crytpo-miner stuff (this is why we can't have nice things)
+        // so we need to compare what our domain string is to what our default list is
         $blockDomains = GetSetting('blockDomains');
         $blockDomainsString = array_key_exists('blockDomains', $test['testinfo']) ? htmlspecialchars($test['testinfo']['blockDomains']) : null;
         if (strlen($blockDomainsString) && strlen($blockDomains)) {
