@@ -60,4 +60,3 @@ if (count($Font3pReqs) > 0) {
         "good" =>  true
     );
 }
-
