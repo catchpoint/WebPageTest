@@ -57,10 +57,6 @@ class Account
     // {
     // }
 
-
-
-
-
     public static function changeContactInfo(RequestContext $request_context): void
     {
         $contact_info_validator = new Rules\AllOf(
