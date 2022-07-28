@@ -362,11 +362,15 @@ body.theme-b {
 }
 
 .wpt-plan-set {
-  display: none;
   flex-wrap: wrap;
   align-content: center;
   justify-content: space-between;
   text-align: center;
+  display: flex;
+}
+
+.wpt-plan-set.hidden {
+  display:none;
 }
 
 .wpt-plan-set .pill-button {
@@ -732,14 +736,7 @@ body.theme-b {
 
 a.button {
   text-decoration: none;
-  display: block;
-  color: #111;
-}
-
-a.button {
-  text-decoration: none;
   display: inline-block;
-  color: #111;
 }
 
 .signup-flow-layout .form-input .description,
@@ -1900,6 +1897,7 @@ ul.bulleted-list {
 
 .center-banner {
   text-align: center;
+  width: 100%;
 }
 
 .no-border {
@@ -1910,14 +1908,45 @@ ul.bulleted-list {
 }
 
 /** SELECT TABS **/
-#pro-plan-selector[data-chosen="annual"] ~ .annual-plans,
-#pro-plan-selector[data-chosen="monthly"] ~ .monthly-plans {
-  display: block;
-}
 .select-tabs {
   background-color: #141e33;
   color: white;
+  display: flex;
+  flex-direction: row;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 2rem;
 }
-div.select-tabs > * {
-  display: grid;
+.select-tabs .wpt-pro-logo {
+  background-size: 80%;
+  background-position: left;
+}
+.select-tabs h2 {
+  max-width: 30%;
+}
+.select-tabs select {
+  height: 40px;
+    width: 150px;
+}
+.select-tabs p {
+  padding: 0 2rem;
+}
+.select-tabs label {
+  margin-left: auto;
+  padding: 0 1rem;
+}
+
+.wpt-plan__reccomended:before {
+    content: "Most Popular";
+    background-color: purple;
+    color: #fff;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: -17px;
+    border-radius: 5px 5px 0 0;
+    padding: 2px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    border: none;
 }
