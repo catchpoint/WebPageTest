@@ -54,7 +54,7 @@
                         <div>
                             <label for="billing-cycle"> Plan:</label>
                             <select id="billing-cycle" name="billing-cycle">
-                                <option value="annual" selected>Annual</option>
+                                <option value="annual">Annual</option>
                                 <option value="monthly">Monthly</option>
                             </select>
                         </div>

@@ -31,7 +31,7 @@
         <?php require_once __DIR__ . '/main_hed.inc'; ?>
         <?= $template_output ?>
     </div>
-    <?php require_once __DIR__ . '/footer.inc'; ?>
+    <?php require_once __DIR__ . '/../../footer.inc'; ?>
 </body>
 
 </html>
