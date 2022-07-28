@@ -16,9 +16,9 @@
         <input type='hidden' name='type' value='upgrade-plan-1' />
         <fieldset class="wpt-plans select-tab-container">
            <div class="select-tabs">
-            <h2> Web Page Test <em class="new-banner">PRO</em> </h2>
+            <h2 class="wpt-pro-logo"><span class="visually-hidden"> Web Page Test PRO</span> </h2>
             <label for="pro-plan-selector"> Plan:</label>
-            <select name="plans" id="pro-plan-selector" data-chosen="annual" onchange="this.dataset.chosen = this.value;">
+            <select name="plans" id="pro-plan-selector">
               <option value="annual">Annual</option>
               <option value="monthly">Monthly</option>
             </select>
@@ -32,7 +32,8 @@
                   <div class="form-wrapper-radio">
                     <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required />
                     <label class="wpt-plan card {$reccomended}" for="annual-{$plan['id']}">
-                      <h5>{$plan['name']}</h5>
+                      <h5> Annual Pro </h5>
+                      <div>{$plan['name']}/mo</div>
                       <div><strong>\${$plan['annual_price']}</strong>/Year</div>
                       <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>
@@ -41,13 +42,14 @@
                     echo $plan_block;
                 endforeach; ?>
             </div>
-            <div class="wpt-plan-set monthly-plans">
+            <div class="wpt-plan-set monthly-plans hidden">
                 <?php foreach ($monthly_plans as $key => $plan) :
                     $plan_block = <<<HTML
                 <div class="form-wrapper-radio">
                     <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
                     <label class="card wpt-plan" for="monthly-{$plan['id']}">
-                        <h5>{$plan['name']}</h5>
+                        <h5>Monthly Pro</h5>
+                        <div>{$plan['name']}/Mo</div>
                         <div><strong>\${$plan['price']}</strong>/Month</div>
                         <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>
@@ -58,7 +60,7 @@
             </div>
         </fieldset>
         <div class="card">
-            <div><a href=" https://www.product.webpagetest.org/contact">Need more runs? Let's Talk</a></div>
+           <p class="center-banner">Need a custom plan? <a class="button pill-button green" href=" https://www.product.webpagetest.org/contact"> Let's Talk</a></p>
         </div>
 
         <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />

@@ -633,6 +633,18 @@
         handleRunUpdate();
       });
   } else {
+  // upgrade plan selector
+  document.getElementById('pro-plan-selector').addEventListener('change', (e) => {
+    if (e.target.value === "annual") {
+      document.querySelectorAll('.wpt-plan-set.annual-plans')[0].classList.remove("hidden");
+      document.querySelectorAll('.wpt-plan-set.monthly-plans')[0].classList.add("hidden");
+    } else {
+      document.querySelectorAll('.wpt-plan-set.annual-plans')[0].classList.add("hidden");
+      document.querySelectorAll('.wpt-plan-set.monthly-plans')[0].classList.remove("hidden");
+    }
+  })
+
+
     document.querySelectorAll(".edit-button button").forEach((el) => {
       el.addEventListener("click", (e) => {
         const card = e.target.closest("[data-modal]");
