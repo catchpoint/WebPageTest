@@ -11,13 +11,13 @@
         };
       });
       // Fill in countries
-      const countryOptions = this.countries.map(({code, name}) => {
+      const countryOptions = this.countries.map(({ code, name }) => {
         return new Option(name, code);
       });
 
       selector.options.length = 0;
-      countryOptions.forEach(opt => {
-          selector.options.add(opt);
+      countryOptions.forEach((opt) => {
+        selector.options.add(opt);
       });
 
       this.countrySelector = selector;
@@ -48,12 +48,12 @@
 
     fillSubdivision(countryCode) {
       const divisions = this.getSubdivisions(countryCode);
-      const opts = Object.keys(divisions).map(key => {
+      const opts = Object.keys(divisions).map((key) => {
         return new Option(divisions[key], key);
       });
 
       this.subdivisionSelector.options.length = 0;
-      opts.forEach(opt => {
+      opts.forEach((opt) => {
         this.subdivisionSelector.options.add(opt);
       });
     }
