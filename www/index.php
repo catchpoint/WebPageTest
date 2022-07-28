@@ -478,8 +478,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </li>
                                                 <li>
                                                     <label for="number_of_tests">
-                                                        Number of Tests to Run<br>
-                                                        <small>Up to <?php echo $max_runs; ?></small>
+                                                        Number of Tests to Run
                                                     </label>
                                                     <?php
                                                     $runs = 3;
@@ -494,7 +493,13 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     }
                                                     $runs = max(1, min($runs, $max_runs));
                                                     ?>
-                                                    <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$max_runs\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
+                                                    <select id="number_of_tests" class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
+                                                        <?php
+                                                        for ($i = 1; $i <= $max_runs; $i++) {
+                                                            echo '<option value="' . $i . '"' . ($i === $runs ? ' selected' : '') . '>' . $i . '</option>';
+                                                        }
+                                                        ?>
+                                                    </select>
                                                 </li>
                                                 <li>
                                                     <fieldset>
