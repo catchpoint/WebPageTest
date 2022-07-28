@@ -476,7 +476,7 @@ body.theme-b {
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   margin-bottom: 30px;
-  padding: 1.5rem;
+  padding: 2.5rem;
   border-radius: 10px;
   box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
   border: 1px solid rgb(204, 204, 204);
@@ -1276,7 +1276,6 @@ table.sortable th:not([aria-sort]) button:hover span::after {
  ----------------------------------------------------------------*/
 
 /* Comparison table */
-
 .comparison-table {
   border-spacing: 0;
   font-size: 1.15rem;
@@ -1288,6 +1287,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1.7rem;
   text-align: left;
 }
+
 .comparison-table thead th {
   vertical-align: bottom;
 }
@@ -1339,6 +1339,28 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   padding: 0.8em;
   width: 25%;
 }
+
+.account-upgrade-comparison-table {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.account-upgrade-comparison-table tr:last-child td:last-child,
+.account-upgrade-comparison-table tr td:last-child,
+.account-upgrade-comparison-table tbody td{
+  border: none;
+  border-radius: 0;
+}
+.account-upgrade-comparison-table tr td:not(:first-child):not(:last-child){
+  border-left:  1px solid #ddd;
+  border-right:  1px solid #ddd;
+}
+
+.account-upgrade-comparison-table thead th:first-child {
+  text-align: left;
+}
+
 
 @media (max-width: 1500px) {
   .signup-step-1-content {
@@ -1915,11 +1937,13 @@ ul.bulleted-list {
   flex-direction: row;
   padding: 1rem;
   border-radius: 5px;
-  margin-bottom: 2rem;
+  margin-bottom: 50px;
+  align-items: center;
 }
 .select-tabs .wpt-pro-logo {
-  background-size: 80%;
+  background-size: 70%;
   background-position: left;
+  margin: 0;
 }
 .select-tabs h2 {
   max-width: 30%;
@@ -1930,6 +1954,7 @@ ul.bulleted-list {
 }
 .select-tabs p {
   padding: 0 2rem;
+  margin: 0;
 }
 .select-tabs label {
   margin-left: auto;
