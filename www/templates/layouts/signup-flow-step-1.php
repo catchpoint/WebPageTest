@@ -26,7 +26,7 @@ $page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
     <main>
         <?php echo $template_output; ?>
     </main>
-    <?php require_once __DIR__ . '/footer.inc'; ?>
+    <?php require_once __DIR__ . '/../../footer.inc'; ?>
 </body>
 
 </html>

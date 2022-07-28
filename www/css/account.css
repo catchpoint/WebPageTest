@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+footer {
+  padding: 3rem 0;
+}
+
 .fg-modal fieldset {
   border: 0;
 }
@@ -1802,17 +1806,20 @@ ul.bulleted-list {
   border-color: #46637f;
 }
 
-
 /*------------
 TEMP FIX FOR UPGRADE
 -------- */
 /* account page sign up */
-.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.annual-plans,
-.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.monthly-plans {
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(1):checked
+  ~ .annual-plans,
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(2):checked
+  ~ .monthly-plans {
   display: flex;
 }
 
-.radiobutton-tab-container input[type=radio] {
+.radiobutton-tab-container input[type="radio"] {
   position: absolute;
   opacity: 0;
   top: 0;
@@ -1826,11 +1833,11 @@ TEMP FIX FOR UPGRADE
 
 @keyframes highlight {
   0% {
-    background: #6b25cf
+    background: #6b25cf;
   }
 
   100% {
-    background: #3881E5;
+    background: #3881e5;
   }
 }
 
@@ -1838,14 +1845,30 @@ TEMP FIX FOR UPGRADE
   position: relative;
 }
 
-.radiobutton-tab-container input[type="radio"]:nth-of-type(1):focus~.radiobutton-group .radio-button:nth-of-type(1) label,
-.radiobutton-tab-container input[type="radio"]:nth-of-type(2):focus~.radiobutton-group .radio-button:nth-of-type(2) label {
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(1):focus
+  ~ .radiobutton-group
+  .radio-button:nth-of-type(1)
+  label,
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(2):focus
+  ~ .radiobutton-group
+  .radio-button:nth-of-type(2)
+  label {
   animation: highlight 1s;
 }
 
-.radiobutton-tab-container input[type="radio"]:nth-of-type(1):checked~.radiobutton-group .radio-button:nth-of-type(1) label,
-.radiobutton-tab-container input[type="radio"]:nth-of-type(2):checked~.radiobutton-group .radio-button:nth-of-type(2) label {
-  background-color: #3881E5;
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(1):checked
+  ~ .radiobutton-group
+  .radio-button:nth-of-type(1)
+  label,
+.radiobutton-tab-container
+  input[type="radio"]:nth-of-type(2):checked
+  ~ .radiobutton-group
+  .radio-button:nth-of-type(2)
+  label {
+  background-color: #3881e5;
   color: white;
   font-weight: 600;
 }
