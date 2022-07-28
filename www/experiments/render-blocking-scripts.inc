@@ -31,7 +31,7 @@ if (!$blockingIndicator) {
 }
 if (count($blockingJSReqs) > 0) {
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  count($blockingJSReqs) . " externally-referenced JavaScript file" . (count($blockingJSReqs) > 1 ? "s are" : " is") . " blocking page rendering.",
+        "title" =>  count($blockingJSReqs) . " JavaScript file" . (count($blockingJSReqs) > 1 ? "s are" : " is") . " blocking page rendering.",
         "desc" =>  "By default, references to external JavaScript files will block the page from rendering while they are fetched and executed. Often, these files can be loaded in a different manner, freeing up the page to visually render sooner.",
         "examples" =>  $blockingJSReqs,
         "experiments" =>  array(
