@@ -74,4 +74,32 @@ class Plan
     {
         return $this->name;
     }
+
+    public function isUpgrade(Plan $currentPlan): bool
+    {
+        $currentRuns = $currentPlan->getRuns();
+        $isCurrentAnnual = $currentPlan->getBillingFrequency() == "Annually";
+        $newRuns = $this->getRuns();
+        $isNewAnnual = $this->getBillingFrequency() == "Annually";
+        // upgrade if:
+        // monthly low to monthly higher
+        if (!$isCurrentAnnual && !$isNewAnnual) {
+            return $newRuns > $currentRuns;
+        }
+        // monthly to annual (same runs or above)
+        if (!$isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' :
+            // 'monthly and annual $newRuns < $currentRuns';
+            return $newRuns >= $currentRuns;
+        }
+        // annual to annual higher
+        if ($isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' :
+            // 'annual and  annual $newRuns < $currentRuns';
+            return $newRuns > $currentRuns;
+        }
+        // annual to monthly (any)
+        // return "annual to monthly";
+        return false;
+    }
 }

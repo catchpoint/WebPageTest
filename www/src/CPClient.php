@@ -16,16 +16,20 @@ use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
+use WebPageTest\CPGraphQlTypes\ApiKey;
+use WebPageTest\CPGraphQlTypes\ApiKeyList;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceAddressType;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
-use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseTypeList;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
+use WebPageTest\CPGraphQlTypes\ContactUpdateInput;
 use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 
 class CPClient
@@ -193,10 +197,11 @@ class CPClient
                             ]),
 
                     ]),
-                (new Query('braintreeCustomerDetails'))
+                (new Query('wptCustomer'))
                     ->setSelectionSet([
                         'remainingRuns',
-                        'monthlyRuns'
+                        'monthlyRuns',
+                        'subscriptionId'
                     ])
             ]);
 
@@ -254,35 +259,33 @@ class CPClient
         }
     }
 
-    /**
-     * @return array WebPageTest\Plan[]
-     */
-    public function getWptPlans(): array
+    public function getWptPlans(): PlanList
     {
         $gql = (new Query('wptPlan'))
-        ->setSelectionSet([
-            'name',
-            'priceInCents',
-            'description',
-            'interval',
-            'monthlyTestRuns'
-        ]);
+            ->setSelectionSet([
+                'name',
+                'priceInCents',
+                'description',
+                'interval',
+                'monthlyTestRuns'
+            ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        return array_map(function ($data): Plan {
+        $plans = array_map(function ($data): Plan {
             $options = [
-            'id' => $data['name'],
-            'name' => $data['description'],
-            'priceInCents' => $data['priceInCents'],
-            'billingFrequency' => $data['interval'],
-            'runs' => $data['monthlyTestRuns']
+                'id' => $data['name'],
+                'name' => $data['description'],
+                'priceInCents' => $data['priceInCents'],
+                'billingFrequency' => $data['interval'],
+                'runs' => $data['monthlyTestRuns']
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan']);
+        }, $results->getData()['wptPlan'] ?? []);
+        return new PlanList(...$plans);
     }
 
-    public function getPaidAccountPageInfo(): array
+    public function getPaidAccountPageInfo(): PaidPageInfo
     {
         $gql = (new Query())
             ->setSelectionSet([
@@ -295,6 +298,54 @@ class CPClient
                         'changeDate'
                     ]),
                 (new Query('wptCustomer'))
+                    ->setSelectionSet([
+                        'customerId',
+                        'wptPlanId',
+                        'subscriptionId',
+                        'ccLastFour',
+                        'daysPastDue',
+                        'subscriptionPrice',
+                        'maskedCreditCard',
+                        'creditCardType',
+                        'nextBillingDate',
+                        'billingPeriodEndDate',
+                        'numberOfBillingCycles',
+                        'ccExpirationDate',
+                        'ccImageUrl',
+                        'status',
+                        'remainingRuns',
+                        'monthlyRuns',
+                        'planRenewalDate',
+                        'billingFrequency',
+                        'wptPlanName'
+                    ])
+            ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            $customer = $results->getData()['wptCustomer'];
+            $api_keys = array_map(function ($key): ApiKey {
+                return new ApiKey($key);
+            }, $results->getData()['wptApiKey']);
+            return new PaidPageInfo(new CPCustomer($customer), new ApiKeyList(...$api_keys));
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function getPaidEnterpriseAccountPageInfo(): array
+    {
+        $gql = (new Query())
+            ->setSelectionSet([
+                (new Query('wptApiKey'))
+                    ->setSelectionSet([
+                        'id',
+                        'name',
+                        'apiKey',
+                        'createDate',
+                        'changeDate'
+                    ]),
+                (new Query('braintreeCustomerDetails'))
                     ->setSelectionSet([
                         'customerId',
                         'wptPlanId',
@@ -319,36 +370,6 @@ class CPClient
                         'planRenewalDate',
                         'billingFrequency',
                         'wptPlanName'
-                    ]),
-                (new Query('braintreeTransactionHistory'))
-                    ->setSelectionSet([
-                        'amount',
-                        'cardType',
-                        'ccLastFour',
-                        'maskedCreditCard',
-                        'transactionDate'
-                    ])
-            ]);
-
-        try {
-            $results = $this->graphql_client->runQuery($gql, true);
-            return $results->getData();
-        } catch (QueryError $e) {
-            throw new ClientException(implode(",", $e->getErrorDetails()));
-        }
-    }
-
-    public function getPaidEnterpriseAccountPageInfo(): array
-    {
-        $gql = (new Query())
-            ->setSelectionSet([
-                (new Query('wptApiKey'))
-                    ->setSelectionSet([
-                        'id',
-                        'name',
-                        'apiKey',
-                        'createDate',
-                        'changeDate'
                     ])
             ]);
         try {
@@ -376,13 +397,10 @@ class CPClient
                 'email'
             ]);
 
-        $variables_array = array('contact' => [
-            'id' => $id,
-            'email' => $options['email'],
-            'firstName' => $options['first_name'],
-            'lastName' => $options['last_name'],
-            'companyName' => $options['company_name']
-        ]);
+        $contact_update = new ContactUpdateInput(array_merge([], ['id' => $id ], $options));
+        $variables_array = [
+          'contact' => $contact_update->toArray()
+        ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables_array);
         return $results->getData();
@@ -494,9 +512,13 @@ class CPClient
         }
     }
 
-    public function cancelWptSubscription(string $subscription_id, string $reason = "", string $suggestion = ""): array
-    {
-        $wpt_api_subscription_cancellation = new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
+    public function cancelWptSubscription(
+        string $subscription_id,
+        string $reason = "",
+        string $suggestion = ""
+    ): array {
+        $wpt_api_subscription_cancellation =
+            new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
 
         $gql = (new Mutation('wptCancelSubscription'))
             ->setVariables([
@@ -507,32 +529,11 @@ class CPClient
             ]);
 
         $variables = [
-          'wptApiSubscriptionCancellation' => $wpt_api_subscription_cancellation->toArray()
+            'wptApiSubscriptionCancellation' => $wpt_api_subscription_cancellation->toArray()
         ];
 
         try {
             $results = $this->graphql_client->runQuery($gql, true, $variables);
-            return $results->getData();
-        } catch (QueryError $e) {
-            throw new ClientException(implode(",", $e->getErrorDetails()));
-        }
-    }
-
-    public function updateWptSubscription(CustomerPaymentUpdateInput $customer)
-    {
-
-        $gql = (new Mutation('braintreeUpdatePayment'))
-            ->setVariables([
-                new Variable('wptUpdatePaymentDetails', 'CustomerPaymentUpdateInputType', true)
-            ])
-            ->setArguments([
-                'braintreeCustomer' => '$wptUpdatePaymentDetails'
-            ]);
-
-        $variables_array = array('wptUpdatePaymentDetails' => $customer->toArray());
-
-        try {
-            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
@@ -664,164 +665,165 @@ class CPClient
         $data = $response->getData()['wptSubscriptionPreview'];
 
         return new SubscriptionPreview([
-          "total_in_cents" => $data['totalInCents'],
-          "sub_total_in_cents" => $data['subTotalInCents'],
-          "tax_in_cents" => $data['taxInCents']
+            "total_in_cents" => $data['totalInCents'],
+            "sub_total_in_cents" => $data['subTotalInCents'],
+            "tax_in_cents" => $data['taxInCents']
         ]);
     }
 
     public function getWptCustomer(): CPCustomer
     {
-          $gql = (new Query('wptCustomer'))
-              ->setSelectionSet([
-                  'customerId',
-                  'wptPlanId',
-                  'subscriptionId',
-                  'ccLastFour',
-                  'daysPastDue',
-                  'subscriptionPrice',
-                  'maskedCreditCard',
-                  'nextBillingDate',
-                  'billingPeriodEndDate',
-                  'numberOfBillingCycles',
-                  'ccExpirationDate',
-                  'ccImageUrl',
-                  'status',
-                  'remainingRuns',
-                  'monthlyRuns',
-                  'planRenewalDate',
-                  'billingFrequency',
-                  'wptPlanName'
-              ]);
+        $gql = (new Query('wptCustomer'))
+            ->setSelectionSet([
+                'customerId',
+                'wptPlanId',
+                'subscriptionId',
+                'ccLastFour',
+                'daysPastDue',
+                'subscriptionPrice',
+                'maskedCreditCard',
+                'creditCardType',
+                'nextBillingDate',
+                'billingPeriodEndDate',
+                'numberOfBillingCycles',
+                'ccExpirationDate',
+                'ccImageUrl',
+                'status',
+                'remainingRuns',
+                'monthlyRuns',
+                'planRenewalDate',
+                'billingFrequency',
+                'wptPlanName'
+            ]);
         $response = $this->graphql_client->runQuery($gql, true);
         $data = $response->getData()['wptCustomer'];
         return new CPCustomer($data);
     }
 
-    public function getInvoice(string $subscription_id): ChargifyInvoiceResponseType
+    public function getInvoices(string $subscription_id): ChargifyInvoiceResponseTypeList
     {
 
         $gql = (new Query('invoice'))
-          ->setVariables([
-              new Variable('subscriptionId', 'String', true),
-          ])
-          ->setArguments([
-              'subscriptionId' => '$subscriptionId',
-          ])
-          ->setSelectionSet([
-              'number',
-              'issueDate',
-              'dueDate',
-              'status',
-              'currency',
-              'productName',
-              'memo',
-              'subtotalAmount',
-              'discountAmount',
-              'taxAmount',
-              'totalAmount',
-              'creditAmount',
-              'refundAmount',
-              'paidAmount',
-              'dueAmount',
-              (new Query('seller'))
-                  ->setSelectionSet([
-                      'name',
-                      'phone',
-                      (new Query('address'))
-                          ->setSelectionSet([
-                              'street',
-                              'line2',
-                              'city',
-                              'state',
-                              'zip',
-                              'country'
-                          ])
-                  ]),
-              (new Query('customer'))
-                  ->setSelectionSet([
-                      'chargifyId',
-                      'firstName',
-                      'lastName',
-                      'email',
-                      'organization'
-                  ]),
-              (new Query('billingAddress'))
-                  ->setSelectionSet([
-                      'street',
-                      'line2',
-                      'city',
-                      'state',
-                      'zip',
-                      'country'
-                  ]),
-              (new Query('shippingAddress'))
-                  ->setSelectionSet([
-                      'street',
-                      'line2',
-                      'city',
-                      'state',
-                      'zip',
-                      'country'
-                  ]),
-              (new Query('lineItems'))
-                  ->setSelectionSet([
-                      'title',
-                      'description',
-                      'quantity',
-                      'subtotalAmount',
-                      'unitPrice',
-                      'periodRangeStart',
-                      'periodRangeEnd'
-                  ]),
-              (new Query('taxes'))
-                  ->setSelectionSet([
-                      'title',
-                      'sourceType',
-                      'sourceId',
-                      'totalAmount',
-                      'percentage',
-                      'taxAmount'
-                ]),
-              (new Query('credits'))
-                  ->setSelectionSet([
-                      'creditNoteNumber',
-                      'transactionTime',
-                      'memo',
-                      'originalAmount',
-                      'appliedAmount'
-                ]),
-              (new Query('refunds'))
-                  ->setSelectionSet([
-                      'transactionId',
-                      'paymentId',
-                      'memo',
-                      'originalAmount',
-                      'appliedAmount',
-                      'gatewayTransactionId'
-                  ]),
-              (new Query('payments'))
-                  ->setSelectionSet([
-                      'transactionId',
-                      'transactionTime',
-                      'memo',
-                      'originalAmount',
-                      'appliedAmount',
-                      'prepayment',
-                      'gatewayTransactionId',
-                      (new Query('paymentMethod'))
-                          ->setSelectionSet([
-                              'details',
-                              'kind',
-                              'memo',
-                              'type',
-                              'cardBrand',
-                              'cardExpiration',
-                              'maskedCardNumber',
-                              'lastFour'
-                          ])
-                  ])
-          ]);
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+            ])
+            ->setSelectionSet([
+                'number',
+                'issueDate',
+                'dueDate',
+                'status',
+                'currency',
+                'productName',
+                'memo',
+                'subtotalAmount',
+                'discountAmount',
+                'taxAmount',
+                'totalAmount',
+                'creditAmount',
+                'refundAmount',
+                'paidAmount',
+                'dueAmount',
+                (new Query('seller'))
+                    ->setSelectionSet([
+                        'name',
+                        'phone',
+                        (new Query('address'))
+                            ->setSelectionSet([
+                                'street',
+                                'line2',
+                                'city',
+                                'state',
+                                'zip',
+                                'country'
+                            ])
+                    ]),
+                (new Query('customer'))
+                    ->setSelectionSet([
+                        'chargifyId',
+                        'firstName',
+                        'lastName',
+                        'email',
+                        'organization'
+                    ]),
+                (new Query('billingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ]),
+                (new Query('shippingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ]),
+                (new Query('lineItems'))
+                    ->setSelectionSet([
+                        'title',
+                        'description',
+                        'quantity',
+                        'subtotalAmount',
+                        'unitPrice',
+                        'periodRangeStart',
+                        'periodRangeEnd'
+                    ]),
+                (new Query('taxes'))
+                    ->setSelectionSet([
+                        'title',
+                        'sourceType',
+                        'sourceId',
+                        'totalAmount',
+                        'percentage',
+                        'taxAmount'
+                    ]),
+                (new Query('credits'))
+                    ->setSelectionSet([
+                        'creditNoteNumber',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount'
+                    ]),
+                (new Query('refunds'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'paymentId',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'gatewayTransactionId'
+                    ]),
+                (new Query('payments'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'prepayment',
+                        'gatewayTransactionId',
+                        (new Query('paymentMethod'))
+                            ->setSelectionSet([
+                                'details',
+                                'kind',
+                                'memo',
+                                'type',
+                                'cardBrand',
+                                'cardExpiration',
+                                'maskedCardNumber',
+                                'lastFour'
+                            ])
+                    ])
+            ]);
 
 
         $variables = [
@@ -829,54 +831,126 @@ class CPClient
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
-        $data = $results->getData('invoice');
-        return new ChargifyInvoiceResponseType($data);
+        $invoices = array_map(function ($invoice): ChargifyInvoiceResponseType {
+            return new ChargifyInvoiceResponseType($invoice);
+        }, $results->getData()['invoice']);
+        return new ChargifyInvoiceResponseTypeList(...$invoices);
     }
 
     public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
     {
-        $gql = (new Query('invoice'))
-          ->setVariables([
-              new Variable('subscriptionId', 'String', true),
-          ])
-          ->setArguments([
-              'subscriptionId' => '$subscriptionId',
-          ])
-          ->setSelectionSet([
-              (new Query('payments'))
-                        ->setSelectionSet([
-                            'transactionId',
-                            'transactionTime',
-                            'memo',
-                            'originalAmount',
-                            'appliedAmount',
-                            'prepayment',
-                            'gatewayTransactionId',
-                            (new Query('paymentMethod'))
-                                ->setSelectionSet([
-                                    'details',
-                                    'kind',
-                                    'memo',
-                                    'type',
-                                    'cardBrand',
-                                    'cardExpiration',
-                                    'maskedCardNumber',
-                                    'lastFour'
-                                ])
-                        ])
-          ]);
+        $gql = (new Query('invoices'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+            ])
+            ->setSelectionSet([
+                'publicUrl',
+                (new Query('payments'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'prepayment',
+                        'gatewayTransactionId',
+                        (new Query('paymentMethod'))
+                            ->setSelectionSet([
+                                'details',
+                                'kind',
+                                'memo',
+                                'type',
+                                'cardBrand',
+                                'cardExpiration',
+                                'maskedCardNumber',
+                                'lastFour'
+                            ])
+                    ])
+            ]);
 
         $variables = [
-          'subscriptionId' => $subscription_id
+            'subscriptionId' => $subscription_id
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
-        $data = $results->getData('invoice');
-        $payment_list = new ChargifyInvoicePaymentList();
-        foreach ($data['payments'] as $payment) {
-            $payment_list->add(new ChargifyInvoicePayment($payment));
-        }
+        $payments = array_map(function ($invoice): array {
+            $public_url = $invoice['publicUrl'];
+            return array_map(function ($payment) use ($public_url): ChargifyInvoicePayment {
+                $cip = new ChargifyInvoicePayment($payment);
+                $cip->setInvoiceLink($public_url);
+                return $cip;
+            }, $invoice['payments']);
+        }, $results->getData()['invoices']) ?? [];
+        return new ChargifyInvoicePaymentList(...array_merge([], ...array_values($payments)));
+    }
 
-        return $payment_list;
+    public function getApiKeys(): array
+    {
+        $gql = (new Query('wptApiKey'))
+            ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+            ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        $data = $results->getData()['wptApiKey'];
+        return $data;
+    }
+
+    public function updatePlan(string $subscription_id, string $next_plan_handle, bool $is_upgrade = true): bool
+    {
+        $mutation_name = $is_upgrade ? 'upgradeSubscription' : 'downgradeSubscription';
+        $gql = (new Mutation($mutation_name))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+                new Variable('nextPlanHandle', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+                'nextPlanHandle' => '$nextPlanHandle'
+            ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id,
+            'nextPlanHandle' => $next_plan_handle
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return $results->getData()[$mutation_name];
+    }
+
+    public function getBillingAddress(string $subscription_id): ChargifyInvoiceAddressType
+    {
+        $gql = (new Query('invoice'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId'
+            ])
+            ->setSelectionSet([
+                (new Query('shippingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ])
+            ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return new ChargifyInvoiceAddressType($results->getData()['invoice']['shippingAddress']);
     }
 }

@@ -4,22 +4,9 @@ declare(strict_types=1);
 
 require_once(__DIR__ . '/../common.inc');
 
-use WebPageTest\Template;
 use WebPageTest\Util;
-use WebPageTest\ValidatorPatterns;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
-
-
-function getPlan($id, $plans)
-{
-    foreach ($plans as $plan) {
-        if ($plan['id'] == $id) {
-            return $plan;
-            exit();
-        }
-    }
-}
 
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
@@ -47,195 +34,104 @@ $request_method = strtoupper($_SERVER['REQUEST_METHOD']);
 
 if ($request_method !== 'POST' && $request_method !== 'GET') {
     throw new ClientException("HTTP Method not supported for this endpoint", "/");
-    exit();
 }
 
 if ($request_method === 'POST') {
     $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
 
-    if ($type == 'contact_info') {
-        AccountHandler::changeContactInfo($request_context);
+    if ($type == 'contact-info') {
+        $body = AccountHandler::validateChangeContactInfo($_POST);
+        $redirect_uri = AccountHandler::changeContactInfo($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == 'password') {
-        AccountHandler::changePassword($request_context);
+        $body = AccountHandler::validateChangePassword($_POST);
+        $redirect_uri = AccountHandler::changePassword($request_context, $body);
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "account-signup") {
-        AccountHandler::subscribeToAccount($request_context);
+        $body = AccountHandler::validateSubscribeToAccount($_POST);
+        $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "account-signup-preview") {
-        AccountHandler::previewCost($request_context);
+        $response_body = "{}";
+        try {
+            $body = AccountHandler::validatePreviewCost($_POST);
+            $response_body = AccountHandler::previewCost($request_context, $body);
+        } catch (ClientException $e) {
+            $response_body = json_encode([
+                'error' => $e->getMessage()
+            ]);
+        }
+        header('Content-type: application/json');
+        echo $response_body;
+        exit();
     } elseif ($type == "cancel-subscription") {
-        AccountHandler::cancelSubscription($request_context);
+        $redirect_uri = AccountHandler::cancelSubscription($request_context);
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "update-payment-method") {
         AccountHandler::updatePaymentMethod($request_context);
     } elseif ($type == "create-api-key") {
-        try {
-            $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
-            $request_context->getClient()->createApiKey($name);
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            throw new ClientException($e->getMessage(), "/account");
-        }
+        AccountHandler::createApiKey($request_context);
+    } elseif ($type == "delete-api-key") {
+        AccountHandler::deleteApiKey($request_context);
     } elseif ($type == "upgrade-plan-1") {
-        $body = AccountHandler::validatePlanUpgrade();
-        $redirect_uri = AccountHandler::postPlanUpgrade($request_context);
-
-        $host = Util::getSetting('host');
-        setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
+        $body = AccountHandler::validatePlanUpgrade($_POST);
+        $redirect_uri = AccountHandler::postPlanUpgrade($request_context, $body);
 
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "upgrade-plan-2") {
-        AccountHandler::subscribeToAccount($request_context);
-    } elseif ($type == "delete-api-key") {
-        AccountHandler::deleteApiKey($request_context);
-    } elseif ($type == "resend-verification-email") {
+        $body = [
+            'plan' => $_POST['plan'],
+            'subscription_id' => $_POST['subscription_id'],
+            'is_upgrade' => !empty($_POST['is_upgrade'])
+        ];
         try {
-            $request_context->getClient()->resendEmailVerification();
-
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your plan as been successfully updated! '
+            );
+            Util::setBannerMessage('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $e->getMessage()
+            );
+            Util::setBannerMessage('form', $errorMessage);
+        }
+    } elseif ($type == "resend-verification-email") {
+        try {
+            $redirect_uri = AccountHandler::resendEmailVerification($request_context);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Email Verification link has been sent.'
+            );
+            Util::setBannerMessage('form', $successMessage);
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $e->getMessage()
+            );
+            Util::setBannerMessage('form', $errorMessage);
             throw new ClientException("There was an error", "/account");
         }
     } else {
         throw new ClientException("Incorrect post type", "/account");
         exit();
     }
+    exit();
 }
 
-$error_message = $_SESSION['client-error'] ?? null;
-
-$is_paid = $request_context->getUser()->isPaid();
-$is_verified = $request_context->getUser()->isVerified();
-$is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
-$user_id = $request_context->getUser()->getUserId();
-$remainingRuns = $request_context->getUser()->getRemainingRuns();
-$user_email = $request_context->getUser()->getEmail();
-$first_name = $request_context->getUser()->getFirstName();
-$last_name = $request_context->getUser()->getLastName();
-$company_name = $request_context->getUser()->getCompanyName();
-
-$contact_info = array(
-    'layout_theme' => 'b',
-    'is_paid' => $is_paid,
-    'is_verified' => $is_verified,
-    'first_name' => htmlspecialchars($first_name),
-    'last_name' => htmlspecialchars($last_name),
-    'email' => $user_email,
-    'company_name' => htmlspecialchars($company_name),
-    'id' => $user_id
-);
-
-$billing_info = array();
-$client_token = "";
-$country_list = Util::getCountryList();
-$state_list = Util::getStateList();
-$results = [];
-
-if ($is_paid) {
-    if ($is_wpt_enterprise) {
-        $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
-    } else {
-        $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
-        $customer_details = $billing_info['braintreeCustomerDetails'];
-        $billing_frequency = $customer_details['billingFrequency'] == 12 ? "Annually" : "Monthly";
-
-        if (isset($customer_details['planRenewalDate']) && $billing_frequency == "Annually") {
-            $runs_renewal_date = new DateTime($customer_details['planRenewalDate']);
-            $billing_info['runs_renewal'] = $runs_renewal_date->format('m/d/Y');
-        }
-
-        if (isset($customer_details['nextBillingDate'])) {
-            $plan_renewal_date = new DateTime($customer_details['nextBillingDate']);
-            $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
-        }
-
-        $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
-        $billing_info['billing_frequency'] = $billing_frequency;
-        $client_token = $billing_info['braintreeClientToken'];
-    }
-
-    $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
-    $results = array_merge($contact_info, $billing_info);
-} else {
-    $info = $request_context->getClient()->getUnpaidAccountpageInfo();
-    $client_token = $info['braintreeClientToken'];
-    $plans = $info['wptPlans'];
-    $annual_plans = array();
-    $monthly_plans = array();
-    usort($plans, function ($a, $b) {
-        if ($a['price'] == $b['price']) {
-            return 0;
-        }
-        return ($a['price'] < $b['price']) ? -1 : 1;
-    });
-    foreach ($plans as $plan) {
-        if ($plan['billingFrequency'] == 1) {
-            $plan['price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['annual_price'] = number_format(($plan['price'] * 12.00), 2, ".", ",");
-            $monthly_plans[] = $plan;
-        } else {
-            $plan['annual_price'] = number_format(($plan['price']), 2, ".", ",");
-            $plan['monthly_price'] = number_format(($plan['price'] / 12.00), 2, ".", ",");
-            $annual_plans[] = $plan;
-        }
-    }
-    $plansList = array(
-        'annual_plans' => $annual_plans,
-        'monthly_plans' => $monthly_plans
-    );
-
-    $results = array_merge($contact_info, $billing_info, $plansList);
-}
-
-$results['csrf_token'] = $_SESSION['csrf_token'];
-$results['validation_pattern'] = ValidatorPatterns::getContactInfo();
-$results['validation_pattern_password'] = ValidatorPatterns::getPassword();
-$results['bt_client_token'] = $client_token;
-$results['country_list'] = $country_list;
-$results['state_list'] = $state_list;
-$results['remainingRuns'] = $remainingRuns;
-
-if (!is_null($error_message)) {
-    $results['error_message'] = $error_message;
-    unset($_SESSION['client-error']);
-}
-$page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
-$results['pagefoo'] = isset($page) ? $page : 'test';
-
-$tpl = new Template('account');
-$tpl->setLayout('account');
-switch ($page) {
-    case 'update_billing':
-        echo $tpl->render('billing/billing-cycle', $results);
-        break;
-    case 'update_plan':
-        echo $tpl->render('plans/upgrade-plan', $results);
-        break;
-    case 'plan_summary':
-        $planCookie = $_COOKIE['upgrade-plan'];
-        if (isset($planCookie) && $planCookie) {
-            $results['plan'] = getPlan($planCookie, $plans);
-            echo $tpl->render('plans/plan-summary', $results);
-            break;
-        } else {
-            throw new ClientException("No plan chosen", $request->getRequestUri());
-            break;
-        }
-    default:
-        echo $tpl->render('my-account', $results);
-        break;
-}
-
-exit();
+AccountHandler::getAccountPage($request_context);

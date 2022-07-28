@@ -47,4 +47,15 @@ class ChargifyAddressInput
         "zipcode" => $this->zipcode
         ];
     }
+
+    public static function fromChargifyInvoiceAddress(ChargifyInvoiceAddressType $address): self
+    {
+        return new self([
+            'street_address' => $address->getStreet(),
+            'city' => $address->getCity(),
+            'state' => $address->getState(),
+            'country' => $address->getCountry(),
+            'zipcode' => $address->getZip()
+        ]);
+    }
 }
