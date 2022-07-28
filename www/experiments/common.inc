@@ -95,7 +95,7 @@ $requestsInitial = $testStepResult->getRequests();
 function initiatedByRoot($request)
 {
     global $rootURL;
-    return strcasecmp($request['initiator'], $rootURL) === 0;
+    return strcasecmp($request['initiator'], $rootURL) === 0 || $request['initiator'] == '';
 }
 
 
