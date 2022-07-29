@@ -13,7 +13,7 @@ use WebPageTest\Handlers\Account as AccountHandler;
 function getPlan($id, $plans)
 {
     foreach ($plans as $plan) {
-        if ($plan['id'] == $id) {
+        if ($plan->getId() == $id) {
             return $plan;
             exit();
         }
