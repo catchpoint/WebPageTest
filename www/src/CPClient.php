@@ -25,6 +25,7 @@ use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
+use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 
 class CPClient
 {
@@ -501,7 +502,9 @@ class CPClient
 
     public function cancelWptSubscription(string $subscription_id, string $reason = "", string $suggestion = ""): array
     {
-        $gql = (new Mutation('braintreeCancelSubscription'))
+        $wpt_api_subscription_cancellation = new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
+
+        $gql = (new Mutation('wptCancelSubscription'))
             ->setVariables([
                 new Variable('wptApiSubscriptionCancellation', 'WptSubscriptionCancellationInputType', true)
             ])
@@ -509,14 +512,12 @@ class CPClient
                 'wptApiSubscriptionCancellation' => '$wptApiSubscriptionCancellation'
             ]);
 
-        $variables_array = array('wptApiSubscriptionCancellation' => [
-            "subscriptionId" => $subscription_id,
-            "cancellationReason" => $reason,
-            "suggestion" => $suggestion
-        ]);
+        $variables = [
+          'wptApiSubscriptionCancellation' => $wpt_api_subscription_cancellation->toArray()
+        ];
 
         try {
-            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
