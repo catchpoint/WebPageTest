@@ -55,7 +55,8 @@
                     <div>
                         <h3><?= htmlspecialchars($first_name) . ' ' . htmlspecialchars($last_name) ?></h3>
                         <div class="info">
-                            <div><?= htmlspecialchars($email) ?></div>
+                            <p><?= htmlspecialchars($company_name); ?></p>
+                            <p><?= htmlspecialchars($email) ?></p>
                         </div>
                     </div>
                 </div>
@@ -86,11 +87,11 @@
                 <h3>Current Plan</h3>
                 <?php if ($is_paid) : ?>
                     <div class="card-section-subhed">
-                        <?= "{$braintreeCustomerDetails['wptPlanName']}"; ?>
+                        <?= "{$customer_details['wptPlanName']}"; ?>
                         <?php if ($is_canceled) : ?>
-                            <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                            <span class="status"><?= $customer_details['status']; ?></span>
                         <?php else : ?>
-                            <span class="status"><?= $braintreeCustomerDetails['status']; ?></span>
+                            <span class="status"><?= $customer_details['status']; ?></span>
                         <?php endif; ?>
 
                         <a href="/account/update_plan" class="pill-button yellow">Change Plan</a>
@@ -98,9 +99,9 @@
 
                     <ul>
                         <li><strong>Runs per month:</strong> 50</li>
-                        <li><strong>Remaining runs:</strong> <?= $braintreeCustomerDetails['remainingRuns'] ?> </li>
+                        <li><strong>Remaining runs:</strong> <?= $customer_details['remainingRuns'] ?> </li>
                         <li><strong>Run renewal:</strong> date here</li>
-                        <li><strong>Price:</strong> <?= $braintreeCustomerDetails['subscriptionPrice'] ?></li>
+                        <li><strong>Price:</strong> <?= $customer_details['subscriptionPrice'] ?></li>
                         <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
                         <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
                     </ul>

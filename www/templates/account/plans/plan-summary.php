@@ -19,9 +19,9 @@
             Pro
         </div>
         <ul class="plan-summary-list">
-            <li><strong>Runs per month:</strong> <?= $plan['name'] ?></li>
-            <li><strong>Billing Cycle:</strong> <?= $plan['billingFrequency'] == 1 ? 'Monthly' : 'Yearly'; ?></li>
-            <li><strong>Price:</strong> $<?= $plan['price'] ?></li>
+            <li><strong>Runs per month:</strong> <?= $plan->getName() ?></li>
+            <li><strong>Billing Cycle:</strong> <?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Yearly'; ?></li>
+            <li><strong>Price:</strong> $<?= $plan->getPrice() ?></li>
             <li><strong>Plan Renewal:</strong> </li>
         </ul>
     </div>
@@ -31,83 +31,83 @@
         <div class="box card-section">
             <h2>Payment Method</h2>
             <?php if ($is_paid) : ?>
-              <-- assume there is a CC on file if it's a paid account -->
-              <fieldset class="radiobutton-tab-ctontainer no-border">
-                    <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
-                    <label for="existing-card">
-                        <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
-                        Existing payment method
-                    </label>
-                    <label for="new-card">
-                        <input id="new-card" type="radio" name="payment" value="new-card" />
-                        New payment method
-                    </label>
-                </fieldset>
-                <div class="card payment-info tab-content" data-modal="payment-info-modal">
-                    <div class="card-section user-info">
-                        <div class="cc-type image">
-                            <img src="<?= $braintreeCustomerDetails['ccImageUrl'] ?>" alt="card-type" width="80px" height="54px" />
+                <-- assume there is a CC on file if it's a paid account -->
+                    <fieldset class="radiobutton-tab-ctontainer no-border">
+                        <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
+                        <label for="existing-card">
+                            <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
+                            Existing payment method
+                        </label>
+                        <label for="new-card">
+                            <input id="new-card" type="radio" name="payment" value="new-card" />
+                            New payment method
+                        </label>
+                    </fieldset>
+                    <div class="card payment-info tab-content" data-modal="payment-info-modal">
+                        <div class="card-section user-info">
+                            <div class="cc-type image">
+                                <img src="<?= $braintreeCustomerDetails['ccImageUrl'] ?>" alt="card-type" width="80px" height="54px" />
+                            </div>
+                            <div class="cc-details">
+                                <div class="cc-number"><?= $braintreeCustomerDetails['maskedCreditCard']; ?></div>
+                                <div class="cc-expiration">Expires: <?= $braintreeCustomerDetails['ccExpirationDate']; ?></div>
+                            </div>
                         </div>
-                        <div class="cc-details">
-                            <div class="cc-number"><?= $braintreeCustomerDetails['maskedCreditCard']; ?></div>
-                            <div class="cc-expiration">Expires: <?= $braintreeCustomerDetails['ccExpirationDate']; ?></div>
+                        <div class="card-section">
+                            <div class="edit-button">
+                                <button><span>Edit</span></button>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-section">
-                        <div class="edit-button">
-                            <button><span>Edit</span></button>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <div class="plan-billing-container tab-content">
-                <div class="card billing-container">
-                    <div id="braintree-container"></div>
-                    <div class="billing-info-section">
-                        <div class="info-container street-address">
-                            <label for="street-address">Street Address</label>
-                            <div>
-                                <input name="street-address" type="text" required />
+                <?php endif; ?>
+                <div class="plan-billing-container tab-content">
+                    <div class="card billing-container">
+                        <div id="braintree-container"></div>
+                        <div class="billing-info-section">
+                            <div class="info-container street-address">
+                                <label for="street-address">Street Address</label>
+                                <div>
+                                    <input name="street-address" type="text" required />
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-container city">
-                            <label for="city">City</label>
-                            <div>
-                                <input name="city" type="text" required />
+                            <div class="info-container city">
+                                <label for="city">City</label>
+                                <div>
+                                    <input name="city" type="text" required />
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-container state">
-                            <label for="state">State</label>
-                            <div>
-                                <input name="state" type="text" required />
+                            <div class="info-container state">
+                                <label for="state">State</label>
+                                <div>
+                                    <input name="state" type="text" required />
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-container country">
-                            <label for="country">Country</label>
-                            <div>
-                                <select name="country">
-                                    <?php foreach ($country_list as $country) : ?>
-                                        <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <div class="info-container country">
+                                <label for="country">Country</label>
+                                <div>
+                                    <select name="country">
+                                        <?php foreach ($country_list as $country) : ?>
+                                            <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-container zipcode">
-                            <label for="zipcode">Zip Code</label>
-                            <div>
-                                <input type="text" name="zipcode" required />
+                            <div class="info-container zipcode">
+                                <label for="zipcode">Zip Code</label>
+                                <div>
+                                    <input type="text" name="zipcode" required />
+                                </div>
                             </div>
-                        </div>
-                    </div> <!-- /.billing-info-section -->
-                </div> <!-- /.billing-container -->
-            </div> <!-- /.plan-billing-container -->
-            <input type="hidden" name="plan" value="<?= $plan ?>" />
-            <input type="hidden" name="nonce" id="hidden-nonce-input" required />
-            <input type="hidden" name="type" value="account-signup" required />
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
+                        </div> <!-- /.billing-info-section -->
+                    </div> <!-- /.billing-container -->
+                </div> <!-- /.plan-billing-container -->
+                <input type="hidden" name="plan" value="<?= $plan ?>" />
+                <input type="hidden" name="nonce" id="hidden-nonce-input" required />
+                <input type="hidden" name="type" value="account-signup" required />
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
         </div>
         <div class="add-subscription-button-wrapper">
-          <button type="submit" class="pill-button yellow">Upgrade Plan</button>
+            <button type="submit" class="pill-button yellow">Upgrade Plan</button>
         </div>
     </form>
 </div>
