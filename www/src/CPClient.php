@@ -23,6 +23,8 @@ use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
 
 class CPClient
 {
@@ -704,7 +706,6 @@ class CPClient
           ->setArguments([
               'subscriptionId' => '$subscriptionId',
           ])
-
           ->setSelectionSet([
               'number',
               'issueDate',
@@ -828,5 +829,52 @@ class CPClient
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         $data = $results->getData('invoice');
         return new ChargifyInvoiceResponseType($data);
+    }
+
+    public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
+    {
+        $gql = (new Query('invoice'))
+          ->setVariables([
+              new Variable('subscriptionId', 'String', true),
+          ])
+          ->setArguments([
+              'subscriptionId' => '$subscriptionId',
+          ])
+          ->setSelectionSet([
+              (new Query('payments'))
+                        ->setSelectionSet([
+                            'transactionId',
+                            'transactionTime',
+                            'memo',
+                            'originalAmount',
+                            'appliedAmount',
+                            'prepayment',
+                            'gatewayTransactionId',
+                            (new Query('paymentMethod'))
+                                ->setSelectionSet([
+                                    'details',
+                                    'kind',
+                                    'memo',
+                                    'type',
+                                    'cardBrand',
+                                    'cardExpiration',
+                                    'maskedCardNumber',
+                                    'lastFour'
+                                ])
+                        ])
+          ]);
+
+        $variables = [
+          'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $results->getData('invoice');
+        $payment_list = new ChargifyInvoicePaymentList();
+        foreach ($data['payments'] as $payment) {
+            $payment_list->add(new ChargifyInvoicePayment($payment));
+        }
+
+        return $payment_list;
     }
 }
