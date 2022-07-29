@@ -373,8 +373,11 @@ function ConnectionChanged() {
     }
 
     // enable/disable the fields as necessary
-    if (connection == "custom") $("#bwTable").show();
-    else $("#bwTable").hide();
+    if (connection == "custom") {
+      $("#bwTable").removeClass("hidden");
+    } else {
+      $("#bwTable").addClass("hidden");
+    }
 
     $("#backlog").text(backlog);
     if (backlog < 5)
