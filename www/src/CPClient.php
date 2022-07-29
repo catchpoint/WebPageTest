@@ -22,6 +22,7 @@ use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
 
 class CPClient
 {
@@ -691,5 +692,141 @@ class CPClient
         $response = $this->graphql_client->runQuery($gql, true);
         $data = $response->getData()['wptCustomer'];
         return new CPCustomer($data);
+    }
+
+    public function getInvoice(string $subscription_id): ChargifyInvoiceResponseType
+    {
+
+        $gql = (new Query('invoice'))
+          ->setVariables([
+              new Variable('subscriptionId', 'String', true),
+          ])
+          ->setArguments([
+              'subscriptionId' => '$subscriptionId',
+          ])
+
+          ->setSelectionSet([
+              'number',
+              'issueDate',
+              'dueDate',
+              'status',
+              'currency',
+              'productName',
+              'memo',
+              'subtotalAmount',
+              'discountAmount',
+              'taxAmount',
+              'totalAmount',
+              'creditAmount',
+              'refundAmount',
+              'paidAmount',
+              'dueAmount',
+              (new Query('seller'))
+                  ->setSelectionSet([
+                      'name',
+                      'phone',
+                      (new Query('address'))
+                          ->setSelectionSet([
+                              'street',
+                              'line2',
+                              'city',
+                              'state',
+                              'zip',
+                              'country'
+                          ])
+                  ]),
+              (new Query('customer'))
+                  ->setSelectionSet([
+                      'chargifyId',
+                      'firstName',
+                      'lastName',
+                      'email',
+                      'organization'
+                  ]),
+              (new Query('billingAddress'))
+                  ->setSelectionSet([
+                      'street',
+                      'line2',
+                      'city',
+                      'state',
+                      'zip',
+                      'country'
+                  ]),
+              (new Query('shippingAddress'))
+                  ->setSelectionSet([
+                      'street',
+                      'line2',
+                      'city',
+                      'state',
+                      'zip',
+                      'country'
+                  ]),
+              (new Query('lineItems'))
+                  ->setSelectionSet([
+                      'title',
+                      'description',
+                      'quantity',
+                      'subtotalAmount',
+                      'unitPrice',
+                      'periodRangeStart',
+                      'periodRangeEnd'
+                  ]),
+              (new Query('taxes'))
+                  ->setSelectionSet([
+                      'title',
+                      'sourceType',
+                      'sourceId',
+                      'totalAmount',
+                      'percentage',
+                      'taxAmount'
+                ]),
+              (new Query('credits'))
+                  ->setSelectionSet([
+                      'creditNoteNumber',
+                      'transactionTime',
+                      'memo',
+                      'originalAmount',
+                      'appliedAmount'
+                ]),
+              (new Query('refunds'))
+                  ->setSelectionSet([
+                      'transactionId',
+                      'paymentId',
+                      'memo',
+                      'originalAmount',
+                      'appliedAmount',
+                      'gatewayTransactionId'
+                  ]),
+              (new Query('payments'))
+                  ->setSelectionSet([
+                      'transactionId',
+                      'transactionTime',
+                      'memo',
+                      'originalAmount',
+                      'appliedAmount',
+                      'prepayment',
+                      'gatewayTransactionId',
+                      (new Query('paymentMethod'))
+                          ->setSelectionSet([
+                              'details',
+                              'kind',
+                              'memo',
+                              'type',
+                              'cardBrand',
+                              'cardExpiration',
+                              'maskedCardNumber',
+                              'lastFour'
+                          ])
+                  ])
+          ]);
+
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $results->getData('invoice');
+        return new ChargifyInvoiceResponseType($data);
     }
 }
