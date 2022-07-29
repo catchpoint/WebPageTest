@@ -545,6 +545,7 @@
           document.querySelector(`#${modal}`).open();
         });
       });
+
       document
         .querySelectorAll(".fg-modal .cancel-button button")
         .forEach((el) => {
@@ -597,53 +598,28 @@
           document.selectPlan.submit();
         });
       });
-
-    document
-      .querySelectorAll(".fg-modal .cancel-subscription-button button")
-      .forEach((el) => {
-        el.addEventListener("click", (e) => {
-          const modal = e.target.closest(".fg-modal");
-          modal.close();
-          document.querySelector("#subscription-plan-modal-confirm").open();
-        });
-
-        var sortableTables = document.querySelectorAll("table.sortable");
-        for (var i = 0; i < sortableTables.length; i++) {
-          new SortableTable(sortableTables[i]);
-        }
-
-        var toggleableAreas = document.querySelectorAll(".toggleable");
-        for (var i = 0; i < toggleableAreas.length; i++) {
-          new Toggleable(toggleableAreas[i]);
-        }
-
-        var hiddenContentCells = document.querySelectorAll("td.hidden-content");
-        for (var i = 0; i < hiddenContentCells.length; i++) {
-          new HiddenContent(hiddenContentCells[i]);
-        }
-
-        var deleteApiKeyBoxes = document.querySelectorAll(
-          "[data-apikeybox=select-all]"
-        );
-        for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
-          new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
-        }
-
-        attachListenerToBillingFrequencySelector();
-        handleRunUpdate();
-      });
   } else {
-  // upgrade plan selector
-  document.getElementById('pro-plan-selector').addEventListener('change', (e) => {
-    if (e.target.value === "annual") {
-      document.querySelectorAll('.wpt-plan-set.annual-plans')[0].classList.remove("hidden");
-      document.querySelectorAll('.wpt-plan-set.monthly-plans')[0].classList.add("hidden");
-    } else {
-      document.querySelectorAll('.wpt-plan-set.annual-plans')[0].classList.add("hidden");
-      document.querySelectorAll('.wpt-plan-set.monthly-plans')[0].classList.remove("hidden");
+    // upgrade plan selector
+    var updatePlan = document.getElementById("pro-plan-selector");
+    if (updatePlan) {
+      updatePlan.addEventListener("change", (e) => {
+        if (e.target.value === "annual") {
+          document
+            .querySelectorAll(".wpt-plan-set.annual-plans")[0]
+            .classList.remove("hidden");
+          document
+            .querySelectorAll(".wpt-plan-set.monthly-plans")[0]
+            .classList.add("hidden");
+        } else {
+          document
+            .querySelectorAll(".wpt-plan-set.annual-plans")[0]
+            .classList.add("hidden");
+          document
+            .querySelectorAll(".wpt-plan-set.monthly-plans")[0]
+            .classList.remove("hidden");
+        }
+      });
     }
-  })
-
 
     document.querySelectorAll(".edit-button button").forEach((el) => {
       el.addEventListener("click", (e) => {
@@ -652,6 +628,7 @@
         document.querySelector(`#${modal}`).open();
       });
     });
+
     document
       .querySelectorAll(".fg-modal .cancel-button button")
       .forEach((el) => {
@@ -660,6 +637,7 @@
           modal.close();
         });
       });
+
     document
       .querySelectorAll(".fg-modal .cancel-subscription-button button")
       .forEach((el) => {
@@ -669,6 +647,7 @@
           document.querySelector("#subscription-plan-modal-confirm").open();
         });
       });
+
     document
       .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
       .forEach((el) => {
