@@ -2,136 +2,936 @@
 
 declare(strict_types=1);
 
-require_once(__DIR__ . '/../common.inc');
+namespace WebPageTest;
 
-use WebPageTest\Util;
+use DateTime;
+use Exception as BaseException;
+use GraphQL\Query;
+use GraphQL\Exception\QueryError;
+use GraphQL\Mutation;
+use GraphQL\Variable;
+use GraphQL\Client as GraphQLClient;
+use GuzzleHttp\Client as GuzzleClient;
+use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
-use WebPageTest\Handlers\Account as AccountHandler;
+use WebPageTest\Exception\UnauthorizedException;
+use GuzzleHttp\Exception\ClientException as GuzzleException;
+use WebPageTest\CPGraphQlTypes\ApiKey;
+use WebPageTest\CPGraphQlTypes\ApiKeyList;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceAddressType;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
+use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
+use WebPageTest\TestRecord;
+use WebPageTest\Util;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseTypeList;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
+use WebPageTest\CPGraphQlTypes\ContactUpdateInput;
+use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 
-if (!Util::getSetting('cp_auth')) {
-    $protocol = $request_context->getUrlProtocol();
-    $host = Util::getSetting('host');
-    $route = '/';
-    $redirect_uri = "{$protocol}://{$host}{$route}";
+class CPClient
+{
+    private GuzzleClient $auth_client;
+    private GraphQLClient $graphql_client;
+    public ?string $client_id;
+    public ?string $client_secret;
+    private ?string $access_token;
+    private $handler; // For unit tests
 
-    header("Location: {$redirect_uri}");
-    exit();
-}
+    public function __construct(string $host, array $options = [])
+    {
+        $auth_client_options = $options['auth_client_options'] ?? array();
+        $graphql_client_options = array(
+            'timeout' => 30,
+            'connect_timeout' => 30
+        );
 
-$access_token = $request_context->getUser()->getAccessToken();
-if (is_null($access_token)) {
-    $protocol = $request_context->getUrlProtocol();
-    $host = Util::getSetting('host');
-    $route = '/login';
-    $query = http_build_query(["redirect_uri" => "/account"]);
-    $redirect_uri = "{$protocol}://{$host}{$route}?{$query}";
+        $this->client_id = $auth_client_options['client_id'] ?? null;
+        $this->client_secret = $auth_client_options['client_secret'] ?? null;
+        $this->handler = $auth_client_options['handler'] ?? null;
+        $this->auth_client = new GuzzleClient($auth_client_options);
 
-    header("Location: {$redirect_uri}");
-    exit();
-}
+        $this->access_token = null;
 
-$request_method = strtoupper($_SERVER['REQUEST_METHOD']);
-
-if ($request_method !== 'POST' && $request_method !== 'GET') {
-    throw new ClientException("HTTP Method not supported for this endpoint", "/");
-}
-
-if ($request_method === 'POST') {
-    $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
-
-    if ($type == 'contact-info') {
-        $body = AccountHandler::validateChangeContactInfo($_POST);
-        $redirect_uri = AccountHandler::changeContactInfo($request_context, $body);
-
-        header("Location: {$redirect_uri}");
-        exit();
-    } elseif ($type == 'password') {
-        $body = AccountHandler::validateChangePassword($_POST);
-        $redirect_uri = AccountHandler::changePassword($request_context, $body);
-        header("Location: {$redirect_uri}");
-        exit();
-    } elseif ($type == "account-signup") {
-        $body = AccountHandler::validateSubscribeToAccount($_POST);
-        $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
-
-        header("Location: {$redirect_uri}");
-        exit();
-    } elseif ($type == "account-signup-preview") {
-        $response_body = "{}";
-        try {
-            $body = AccountHandler::validatePreviewCost($_POST);
-            $response_body = AccountHandler::previewCost($request_context, $body);
-        } catch (ClientException $e) {
-            $response_body = json_encode([
-                'error' => $e->getMessage()
-            ]);
+        if (isset($this->handler)) {
+            $graphql_client_options['handler'] = $this->handler;
         }
-        header('Content-type: application/json');
-        echo $response_body;
-        exit();
-    } elseif ($type == "cancel-subscription") {
-        $redirect_uri = AccountHandler::cancelSubscription($request_context);
-        header("Location: {$redirect_uri}");
-        exit();
-    } elseif ($type == "update-payment-method") {
-        AccountHandler::updatePaymentMethod($request_context);
-    } elseif ($type == "create-api-key") {
-        AccountHandler::createApiKey($request_context);
-    } elseif ($type == "delete-api-key") {
-        AccountHandler::deleteApiKey($request_context);
-    } elseif ($type == "upgrade-plan-1") {
-        $body = AccountHandler::validatePlanUpgrade($_POST);
-        $redirect_uri = AccountHandler::postPlanUpgrade($request_context, $body);
+        $this->graphql_client = new GraphQLClient($host, [], $graphql_client_options);
 
-        header("Location: {$redirect_uri}");
-        exit();
-    } elseif ($type == "upgrade-plan-2") {
-        $body = [
-            'plan' => $_POST['plan'],
-            'subscription_id' => $_POST['subscription_id'],
-            'is_upgrade' => !empty($_POST['is_upgrade'])
-        ];
-        try {
-            $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
-            $successMessage = array(
-                'type' => 'success',
-                'text' => 'Your plan as been successfully updated! '
-            );
-            Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $errorMessage = array(
-                'type' => 'error',
-                'text' => $e->getMessage()
-            );
-            Util::setBannerMessage('form', $errorMessage);
-        }
-    } elseif ($type == "resend-verification-email") {
-        try {
-            $redirect_uri = AccountHandler::resendEmailVerification($request_context);
-            $successMessage = array(
-                'type' => 'success',
-                'text' => 'Email Verification link has been sent.'
-            );
-            Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $errorMessage = array(
-                'type' => 'error',
-                'text' => $e->getMessage()
-            );
-            Util::setBannerMessage('form', $errorMessage);
-            throw new ClientException("There was an error", "/account");
-        }
-    } else {
-        throw new ClientException("Incorrect post type", "/account");
-        exit();
+        $this->host = $host;
     }
-    exit();
-}
 
-AccountHandler::getAccountPage($request_context);
+    public function authenticate(string $access_token): void
+    {
+        $this->access_token = $access_token;
+
+        $options = array();
+        if (isset($this->handler)) {
+            $options['handler'] = $this->handler;
+        }
+
+        $this->graphql_client = new GraphQLClient(
+            $this->host,
+            ['Authorization' => "Bearer {$access_token}"],
+            $options
+        );
+    }
+
+    public function getAccessToken(): string
+    {
+        return $this->access_token;
+    }
+
+    public function isAuthenticated(): bool
+    {
+        return !!$this->access_token;
+    }
+
+    public function login(string $code, string $code_verifier, string $redirect_uri): AuthToken
+    {
+        if (is_null($this->client_id) || is_null($this->client_secret)) {
+            throw new BaseException("Client ID and Client Secret must be set in order to login");
+        }
+
+        $form_params = array(
+            'client_id' => $this->client_id,
+            'client_secret' => $this->client_secret,
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'code_verifier' => $code_verifier,
+            'scope' => 'openid Symphony offline_access',
+            'redirect_uri' => $redirect_uri
+        );
+
+
+        $body = array('form_params' =>  $form_params);
+        try {
+            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
+        $json = json_decode((string)$response->getBody());
+        return new AuthToken((array)$json);
+    }
+
+    public function refreshAuthToken(string $refresh_token): AuthToken
+    {
+        if (is_null($this->client_id) || is_null($this->client_secret)) {
+            throw new BaseException("Client ID and Client Secret all must be set in order to login");
+        }
+
+        $body = array(
+            'form_params' => array(
+                'client_id' => $this->client_id,
+                'client_secret' => $this->client_secret,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refresh_token
+            )
+        );
+        try {
+            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 400 || $e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
+        $json = json_decode((string)$response->getBody());
+        return new AuthToken((array)$json);
+    }
+
+    public function revokeToken(string $token, string $type = 'access_token'): void
+    {
+        $body = array(
+            'form_params' => array(
+                'token' => $token,
+                'token_type_hint' => $type,
+                'client_id' => $this->client_id,
+                'client_secret' => $this->client_secret
+            )
+        );
+        try {
+            $this->auth_client->request('POST', '/auth/connect/revocation', $body);
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
+    }
+
+    public function getUserDetails(): array
+    {
+        $gql = (new Query())
+            ->setSelectionSet([
+                (new Query('userIdentity'))
+                    ->setSelectionSet([
+                        (new Query('activeContact'))
+                            ->setSelectionSet([
+                                'id',
+                                'name',
+                                'email',
+                                'isWptPaidUser',
+                                'isWptAccountVerified'
+                            ]),
+                        (new Query('levelSummary'))
+                            ->setSelectionSet([
+                                'levelId',
+                                'levelType',
+                                'levelName',
+                                'isWptEnterpriseClient'
+                            ]),
+
+                    ]),
+                (new Query('wptCustomer'))
+                    ->setSelectionSet([
+                        'remainingRuns',
+                        'monthlyRuns',
+                        'subscriptionId'
+                    ])
+            ]);
+
+        try {
+            $account_details = $this->graphql_client->runQuery($gql, true);
+            return $account_details->getData();
+        } catch (GuzzleException $e) {
+            if ($e->getCode() == 401) {
+                throw new UnauthorizedException();
+            }
+            throw new ClientException($e->getMessage());
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
+    }
+
+
+    public function getUserContactInfo(int $id): array
+    {
+        $gql = (new Query('contact'))
+            ->setVariables([
+                new Variable('id', 'ID', true)
+            ])
+            ->setArguments(['id' => '$id'])
+            ->setSelectionSet([
+                'companyName',
+                'firstName',
+                'lastName'
+            ]);
+
+        $variables_array = array('id' => $id);
+
+        try {
+            $contact_info = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $contact_info->getData()['contact'][0];
+        } catch (BaseException $e) {
+            throw new ClientException($e->getMessage());
+        }
+    }
+
+    public function getWptPlans(): PlanList
+    {
+        $gql = (new Query('wptPlan'))
+            ->setSelectionSet([
+                'name',
+                'priceInCents',
+                'description',
+                'interval',
+                'monthlyTestRuns'
+            ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        $plans = array_map(function ($data): Plan {
+            $options = [
+                'id' => $data['name'],
+                'name' => $data['description'],
+                'priceInCents' => $data['priceInCents'],
+                'billingFrequency' => $data['interval'],
+                'runs' => $data['monthlyTestRuns']
+            ];
+
+            return new Plan($options);
+        }, $results->getData()['wptPlan'] ?? []);
+        return new PlanList(...$plans);
+    }
+
+    public function getPaidAccountPageInfo(): PaidPageInfo
+    {
+        $gql = (new Query())
+            ->setSelectionSet([
+                (new Query('wptApiKey'))
+                    ->setSelectionSet([
+                        'id',
+                        'name',
+                        'apiKey',
+                        'createDate',
+                        'changeDate'
+                    ]),
+                (new Query('wptCustomer'))
+                    ->setSelectionSet([
+                        'customerId',
+                        'wptPlanId',
+                        'subscriptionId',
+                        'ccLastFour',
+                        'daysPastDue',
+                        'subscriptionPrice',
+                        'maskedCreditCard',
+                        'creditCardType',
+                        'nextBillingDate',
+                        'billingPeriodEndDate',
+                        'numberOfBillingCycles',
+                        'ccExpirationDate',
+                        'ccImageUrl',
+                        'status',
+                        'remainingRuns',
+                        'monthlyRuns',
+                        'planRenewalDate',
+                        'billingFrequency',
+                        'wptPlanName'
+                    ])
+            ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            $customer = $results->getData()['wptCustomer'];
+            $api_keys = array_map(function ($key): ApiKey {
+                return new ApiKey($key);
+            }, $results->getData()['wptApiKey']);
+            return new PaidPageInfo(new CPCustomer($customer), new ApiKeyList(...$api_keys));
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function getPaidEnterpriseAccountPageInfo(): array
+    {
+        $gql = (new Query())
+            ->setSelectionSet([
+                (new Query('wptApiKey'))
+                    ->setSelectionSet([
+                        'id',
+                        'name',
+                        'apiKey',
+                        'createDate',
+                        'changeDate'
+                    ]),
+                (new Query('braintreeCustomerDetails'))
+                    ->setSelectionSet([
+                        'customerId',
+                        'wptPlanId',
+                        'subscriptionId',
+                        'ccLastFour',
+                        'daysPastDue',
+                        'subscriptionPrice',
+                        'maskedCreditCard',
+                        'nextBillingDate',
+                        'billingPeriodEndDate',
+                        'numberOfBillingCycles',
+                        'ccExpirationDate',
+                        'ccImageUrl',
+                        'status',
+                        (new Query('discount'))
+                            ->setSelectionSet([
+                                'amount',
+                                'numberOfBillingCycles'
+                            ]),
+                        'remainingRuns',
+                        'monthlyRuns',
+                        'planRenewalDate',
+                        'billingFrequency',
+                        'wptPlanName'
+                    ])
+            ]);
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function updateUserContactInfo(string $id, array $options): array
+    {
+        $gql = (new Mutation('wptContactUpdate'))
+            ->setVariables([
+                new Variable('contact', 'ContactUpdateInputType', true)
+            ])
+            ->setArguments([
+                'contact' => '$contact'
+            ])
+            ->setSelectionSet([
+                'id',
+                'firstName',
+                'lastName',
+                'companyName',
+                'email'
+            ]);
+
+        $contact_update = new ContactUpdateInput(array_merge([], ['id' => $id ], $options));
+        $variables_array = [
+          'contact' => $contact_update->toArray()
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+        return $results->getData();
+    }
+
+    public function changePassword(string $new_pass, string $current_pass): array
+    {
+        $gql = (new Mutation('userPasswordChange'))
+            ->setVariables([
+                new Variable('passwordChangedInput', 'UserPasswordChangeInputType', true)
+            ])
+            ->setArguments([
+                'changePassword' => '$passwordChangedInput'
+            ])
+            ->setSelectionSet([
+                'id',
+                'lastPasswordChangedDate'
+            ]);
+
+        $variables_array = array('passwordChangedInput' => [
+            'newPassword' => $new_pass,
+            'currentPassword' => $current_pass
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function createApiKey(string $name): array
+    {
+        $gql = (new Mutation('wptApiKeyCreate'))
+            ->setVariables([
+                new Variable('wptApiKey', 'WptApiKeyCreateInputType', true)
+            ])
+            ->setArguments([
+                'wptApiKey' => '$wptApiKey'
+            ])
+            ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+            ]);
+
+        $variables_array = array('wptApiKey' => [
+            'name' => $name,
+        ]);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function deleteApiKey(array $ids): array
+    {
+        $gql = (new Mutation('wptApiKeyBulkDelete'))
+            ->setVariables([
+                new Variable('ids', '[Int!]', true)
+            ])
+            ->setArguments([
+                'ids' => '$ids'
+            ])
+            ->setSelectionSet([
+                'id'
+            ]);
+
+        $variables_array = array('ids' => $ids);
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function addWptSubscription(ChargifySubscriptionInputType $subscription): array
+    {
+        $gql = (new Mutation('wptCreateSubscription'))
+            ->setVariables([
+                new Variable('subscription', 'ChargifySubscriptionInputType', true)
+            ])
+            ->setArguments([
+                'subscription' => '$subscription'
+            ])
+            ->setSelectionSet([
+                'company',
+                'firstName',
+                'lastName',
+                'email',
+                'loginVerificationId'
+            ]);
+
+        $variables = array('subscription' => $subscription->toArray());
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
+            return $results->getData()['wptCreateSubscription'];
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function cancelWptSubscription(
+        string $subscription_id,
+        string $reason = "",
+        string $suggestion = ""
+    ): array {
+        $wpt_api_subscription_cancellation =
+            new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
+
+        $gql = (new Mutation('wptCancelSubscription'))
+            ->setVariables([
+                new Variable('wptApiSubscriptionCancellation', 'WptSubscriptionCancellationInputType', true)
+            ])
+            ->setArguments([
+                'wptApiSubscriptionCancellation' => '$wptApiSubscriptionCancellation'
+            ]);
+
+        $variables = [
+            'wptApiSubscriptionCancellation' => $wpt_api_subscription_cancellation->toArray()
+        ];
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function resendEmailVerification()
+    {
+        $gql = (new Mutation('wptResendVerificationMail'));
+        try {
+            $results = $this->graphql_client->runQuery($gql, true);
+            return $results->getData();
+        } catch (QueryError $e) {
+            throw new ClientException(implode(",", $e->getErrorDetails()));
+        }
+    }
+
+    public function getTestHistory(int $days = 1): array
+    {
+        $view_hours = $days * 24;
+        $gql = (new Query('wptTestHistory'))
+            ->setVariables([
+                new Variable('viewHours', 'Int', true)
+            ])
+            ->setArguments([
+                'viewHours' => '$viewHours'
+            ])
+            ->setSelectionSet([
+                'id',
+                'testId',
+                'url',
+                'location',
+                'label',
+                'testStartTime',
+                'user',
+                'apiKey',
+                'testRuns'
+            ]);
+
+        $variables = [
+            'viewHours' => $view_hours
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptTestHistory'];
+        $test_history = array_map(function ($record): TestRecord {
+            try {
+                return new TestRecord($record);
+            } catch (\Exception $e) {
+                error_log($e->getMessage());
+            }
+        }, $data);
+        return $test_history;
+    }
+
+    /**
+     * Using this to get the total non-exempt runs a user has made since a passed
+     * $date (DateTime object). This will mostly be used to go from the first
+     * of the month UTC.
+     */
+    public function getTotalRunsSince(DateTime $date): int
+    {
+        $current_time = time();
+        $since_time = $date->getTimestamp();
+
+        $seconds_since = $current_time - $since_time;
+        $view_hours = ($seconds_since / 60) / 60;
+
+
+        $gql = (new Query('wptTestHistory'))
+            ->setVariables([
+                new Variable('viewHours', 'Int', true)
+            ])
+            ->setArguments([
+                'viewHours' => '$viewHours'
+            ])
+            ->setSelectionSet([
+                'url',
+                'testRuns'
+            ]);
+
+        $variables = [
+            'viewHours' => $view_hours
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptTestHistory'];
+
+        // filter exempt hosts so we don't count that against the user
+        $nonExemptRuns = array_filter($data, function ($val) {
+            $url = $val['url'];
+            $host = preg_replace('/www\./', '', parse_url($url, PHP_URL_HOST));
+            return $host != Util::getExemptHost();
+        });
+
+        $sum = array_reduce(array_map(function ($val) {
+            return $val['testRuns'];
+        }, $nonExemptRuns), function ($carry, $item) {
+            $carry += $item;
+            return $carry;
+        }, 0);
+
+        return $sum;
+    }
+
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
+    {
+        $gql = (new Query('wptSubscriptionPreview'))
+            ->setVariables([
+                new Variable('wptPlanHandle', 'String', true),
+                new Variable('shippingAddress', 'ChargifyAddressInputType', true)
+            ])
+            ->setArguments([
+                'wptPlanHandle' => '$wptPlanHandle',
+                'shippingAddress' => '$shippingAddress'
+            ])
+            ->setSelectionSet([
+                'totalInCents',
+                'subTotalInCents',
+                'taxInCents'
+            ]);
+
+        $variables = [
+            'wptPlanHandle' => $plan,
+            'shippingAddress' => $shipping_address->toArray()
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptSubscriptionPreview'];
+
+        return new SubscriptionPreview([
+            "total_in_cents" => $data['totalInCents'],
+            "sub_total_in_cents" => $data['subTotalInCents'],
+            "tax_in_cents" => $data['taxInCents']
+        ]);
+    }
+
+    public function getWptCustomer(): CPCustomer
+    {
+        $gql = (new Query('wptCustomer'))
+            ->setSelectionSet([
+                'customerId',
+                'wptPlanId',
+                'subscriptionId',
+                'ccLastFour',
+                'daysPastDue',
+                'subscriptionPrice',
+                'maskedCreditCard',
+                'creditCardType',
+                'nextBillingDate',
+                'billingPeriodEndDate',
+                'numberOfBillingCycles',
+                'ccExpirationDate',
+                'ccImageUrl',
+                'status',
+                'remainingRuns',
+                'monthlyRuns',
+                'planRenewalDate',
+                'billingFrequency',
+                'wptPlanName'
+            ]);
+        $response = $this->graphql_client->runQuery($gql, true);
+        $data = $response->getData()['wptCustomer'];
+        return new CPCustomer($data);
+    }
+
+    public function getInvoices(string $subscription_id): ChargifyInvoiceResponseTypeList
+    {
+
+        $gql = (new Query('invoice'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+            ])
+            ->setSelectionSet([
+                'number',
+                'issueDate',
+                'dueDate',
+                'status',
+                'currency',
+                'productName',
+                'memo',
+                'subtotalAmount',
+                'discountAmount',
+                'taxAmount',
+                'totalAmount',
+                'creditAmount',
+                'refundAmount',
+                'paidAmount',
+                'dueAmount',
+                (new Query('seller'))
+                    ->setSelectionSet([
+                        'name',
+                        'phone',
+                        (new Query('address'))
+                            ->setSelectionSet([
+                                'street',
+                                'line2',
+                                'city',
+                                'state',
+                                'zip',
+                                'country'
+                            ])
+                    ]),
+                (new Query('customer'))
+                    ->setSelectionSet([
+                        'chargifyId',
+                        'firstName',
+                        'lastName',
+                        'email',
+                        'organization'
+                    ]),
+                (new Query('billingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ]),
+                (new Query('shippingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ]),
+                (new Query('lineItems'))
+                    ->setSelectionSet([
+                        'title',
+                        'description',
+                        'quantity',
+                        'subtotalAmount',
+                        'unitPrice',
+                        'periodRangeStart',
+                        'periodRangeEnd'
+                    ]),
+                (new Query('taxes'))
+                    ->setSelectionSet([
+                        'title',
+                        'sourceType',
+                        'sourceId',
+                        'totalAmount',
+                        'percentage',
+                        'taxAmount'
+                    ]),
+                (new Query('credits'))
+                    ->setSelectionSet([
+                        'creditNoteNumber',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount'
+                    ]),
+                (new Query('refunds'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'paymentId',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'gatewayTransactionId'
+                    ]),
+                (new Query('payments'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'prepayment',
+                        'gatewayTransactionId',
+                        (new Query('paymentMethod'))
+                            ->setSelectionSet([
+                                'details',
+                                'kind',
+                                'memo',
+                                'type',
+                                'cardBrand',
+                                'cardExpiration',
+                                'maskedCardNumber',
+                                'lastFour'
+                            ])
+                    ])
+            ]);
+
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        $invoices = array_map(function ($invoice): ChargifyInvoiceResponseType {
+            return new ChargifyInvoiceResponseType($invoice);
+        }, $results->getData()['invoice']);
+        return new ChargifyInvoiceResponseTypeList(...$invoices);
+    }
+
+    public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
+    {
+        $gql = (new Query('invoices'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+            ])
+            ->setSelectionSet([
+                'publicUrl',
+                (new Query('payments'))
+                    ->setSelectionSet([
+                        'transactionId',
+                        'transactionTime',
+                        'memo',
+                        'originalAmount',
+                        'appliedAmount',
+                        'prepayment',
+                        'gatewayTransactionId',
+                        (new Query('paymentMethod'))
+                            ->setSelectionSet([
+                                'details',
+                                'kind',
+                                'memo',
+                                'type',
+                                'cardBrand',
+                                'cardExpiration',
+                                'maskedCardNumber',
+                                'lastFour'
+                            ])
+                    ])
+            ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        $payments = array_map(function ($invoice): array {
+            $public_url = $invoice['publicUrl'];
+            return array_map(function ($payment) use ($public_url): ChargifyInvoicePayment {
+                $cip = new ChargifyInvoicePayment($payment);
+                $cip->setInvoiceLink($public_url);
+                return $cip;
+            }, $invoice['payments']);
+        }, $results->getData()['invoices']) ?? [];
+        return new ChargifyInvoicePaymentList(...array_merge([], ...array_values($payments)));
+    }
+
+    public function getApiKeys(): array
+    {
+        $gql = (new Query('wptApiKey'))
+            ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+            ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        $data = $results->getData()['wptApiKey'];
+        return $data;
+    }
+
+    public function updatePlan(string $subscription_id, string $next_plan_handle, bool $is_upgrade = true): bool
+    {
+        $mutation_name = $is_upgrade ? 'upgradeSubscription' : 'downgradeSubscription';
+        $gql = (new Mutation($mutation_name))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+                new Variable('nextPlanHandle', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+                'nextPlanHandle' => '$nextPlanHandle'
+            ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id,
+            'nextPlanHandle' => $next_plan_handle
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return $results->getData()[$mutation_name];
+    }
+
+    public function getBillingAddress(string $subscription_id): ChargifyInvoiceAddressType
+    {
+        $gql = (new Query('invoice'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId'
+            ])
+            ->setSelectionSet([
+                (new Query('shippingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ])
+            ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return new ChargifyInvoiceAddressType($results->getData()['invoice']['shippingAddress']);
+    }
+}
