@@ -56,12 +56,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($braintreeTransactionHistory as $row) : ?>
+                        <?php foreach ($transactionHistory->toArray() as $row) : ?>
                             <tr>
-                                <td data-th="DateTime"><?= date_format(date_create($row['transactionDate']), 'M d Y H:i:s e') ?></td>
-                                <td data-th="Credit Card"><?= $row['cardType'] ?></td>
-                                <td data-th="Card No."><?= $row['maskedCreditCard'] ?></td>
-                                <td data-th="Amount">$<?= $row['amount'] ?></td>
+                                <td data-th="DateTime"><?= date_format($row->getTransactionTime(), 'M d Y H:i:s e') ?></td>
+                                <td data-th="Credit Card"><?= $row->getPaymentMethod()->getType() ?></td>
+                                <td data-th="Card No."><?= $row->getPaymentMethod()->getMaskedCardNumber() ?></td>
+                                <td data-th="Amount">$<?= $row->getAppliedAmount() ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

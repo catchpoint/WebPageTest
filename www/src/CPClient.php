@@ -881,7 +881,7 @@ class CPClient
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
-        $data = $results->getData('invoice');
+        $data = $results->getData()['invoice'];
         $payment_list = new ChargifyInvoicePaymentList();
         foreach ($data['payments'] as $payment) {
             $payment_list->add(new ChargifyInvoicePayment($payment));
@@ -902,7 +902,7 @@ class CPClient
             ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        $data = $results->getData('wptApiKey');
+        $data = $results->getData()['wptApiKey'];
         return $data;
     }
 }

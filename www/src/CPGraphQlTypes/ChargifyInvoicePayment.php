@@ -21,7 +21,7 @@ class ChargifyInvoicePayment
     public function __construct(array $options)
     {
         $this->transaction_id = $options['transactionId'];
-        $this->transaction_time = $options['transactionTime'];
+        $this->transaction_time = new DateTime($options['transactionTime']);
         $this->memo = $options['memo'];
         $this->original_amount = $options['originalAmount'];
         $this->applied_amount = $options['appliedAmount'];
