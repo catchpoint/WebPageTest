@@ -166,7 +166,8 @@ class User
 
     public function isWptEnterpriseClient(): bool
     {
-        return $this->is_wpt_enterprise_client;
+        return false;
+        // return $this->is_wpt_enterprise_client;
     }
 
     public function setEnterpriseClient(bool $is_wpt_enterprise_client): void
