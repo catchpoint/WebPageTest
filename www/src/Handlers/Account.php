@@ -13,7 +13,7 @@ use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\BillingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-use WebPageTest\Customer;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CustomerPaymentUpdateInput;
 
 class Account
@@ -128,7 +128,7 @@ class Account
             throw new ClientException("Please complete all required fields", "/account");
         }
 
-        $billing_address = new BillingAddress([
+        $address = new ChargifyAddressInput([
           'city' => $city,
           'country' => $country,
           'state' => $state,
@@ -136,14 +136,10 @@ class Account
           'zipcode' => $zipcode
         ]);
 
-        $customer = new Customer([
-          'payment_method_nonce' => $nonce,
-          'billing_address_model' => $billing_address,
-          'subscription_plan_id' => $plan
-        ]);
+        $subscription = new ChargifySubscriptionInputType($plan, $nonce, $address);
 
         try {
-            $data = $request_context->getClient()->addWptSubscription($customer);
+            $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             header("Location: {$redirect_uri}");
             exit();
