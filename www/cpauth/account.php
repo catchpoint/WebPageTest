@@ -141,7 +141,8 @@ if ($is_paid) {
             'wptApiKey' => $request_context->getClient()->getApiKeys(),
             'wptCustomer' => $request_context->getClient()->getWptCustomer(),
         ];
-        $billing_info['transactionHistory'] = $request_context->getClient()->getTransactionHistory($billing_info['wptCustomer']->getSubscriptionId());
+        $subId = $billing_info['wptCustomer']->getSubscriptionId();
+        $billing_info['transactionHistory'] = $request_context->getClient()->getTransactionHistory($subId);
     }
     $customer = $billing_info['wptCustomer'];
     $billing_frequency = $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly";
