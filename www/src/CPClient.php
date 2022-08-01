@@ -506,7 +506,8 @@ class CPClient
         string $reason = "",
         string $suggestion = ""
     ): array {
-        $wpt_api_subscription_cancellation = new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
+        $wpt_api_subscription_cancellation =
+            new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
 
         $gql = (new Mutation('wptCancelSubscription'))
             ->setVariables([
