@@ -10,16 +10,6 @@ use WebPageTest\ValidatorPatterns;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
-function getPlan($id, $plans)
-{
-    foreach ($plans as $plan) {
-        if ($plan->getId() == $id) {
-            return $plan;
-            exit();
-        }
-    }
-}
-
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
     $host = Util::getSetting('host');
@@ -218,7 +208,7 @@ switch ($page) {
     case 'plan_summary':
         $planCookie = $_COOKIE['upgrade-plan'];
         if (isset($planCookie) && $planCookie) {
-            $results['plan'] = getPlan($planCookie, $plans);
+            $results['plan'] = Util::getPlanFromArray($planCookie, $plans);
             echo $tpl->render('plans/plan-summary', $results);
             break;
         } else {
