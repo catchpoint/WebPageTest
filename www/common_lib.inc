@@ -2675,12 +2675,6 @@ function json_response(&$response, $allow_crossorigin = true)
         $out = json_encode($response);
     }
 
-    if (!isset($out) || $out === false || !is_string($out) || strlen($out) < 3) {
-        require_once('lib/json.php');
-        $jsonLib = new Services_JSON();
-        $out = $jsonLib->encode($response);
-    }
-
     echo $out;
 
     if (isset($_REQUEST['callback']) && strlen($_REQUEST['callback'])) {
