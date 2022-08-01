@@ -15,7 +15,7 @@ foreach ($requests as $request) {
 if ($browser == 'Chrome' || $browser == 'Edge') {
     if (count($unusedPreloads) > 0) {
         $assessment[$category]["opportunities"][] = array(
-            "title" =>  count($unusedPreloads) . " resource" . (count($unusedPreloads) > 1 ? "s are" : " is") . " being preloaded, but ". (count($unusedPreloads) > 1 ? "are" : "is") . " not used during page load.",
+            "title" =>  count($unusedPreloads) . " resource" . (count($unusedPreloads) > 1 ? "s are" : " is") . " being preloaded, but " . (count($unusedPreloads) > 1 ? "are" : "is") . " not used during page load.",
             "desc" =>  "Preloaded resources are fetched at a high priority, delaying the arrival of other resources in the page. In the case where a preloaded resource is never actually used by the page, that means potentially critical requests will be delayed, slowing down the initial loading of your site.",
             "examples" =>  array_unique($unusedPreloads),
             "experiments" =>  array(

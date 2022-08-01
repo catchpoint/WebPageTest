@@ -370,7 +370,7 @@ body.theme-b {
 }
 
 .wpt-plan-set.hidden {
-  display:none;
+  display: none;
 }
 
 .wpt-plan-set .pill-button {
@@ -1348,19 +1348,18 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 
 .account-upgrade-comparison-table tr:last-child td:last-child,
 .account-upgrade-comparison-table tr td:last-child,
-.account-upgrade-comparison-table tbody td{
+.account-upgrade-comparison-table tbody td {
   border: none;
   border-radius: 0;
 }
-.account-upgrade-comparison-table tr td:not(:first-child):not(:last-child){
-  border-left:  1px solid #ddd;
-  border-right:  1px solid #ddd;
+.account-upgrade-comparison-table tr td:not(:first-child):not(:last-child) {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
 }
 
 .account-upgrade-comparison-table thead th:first-child {
   text-align: left;
 }
-
 
 @media (max-width: 1500px) {
   .signup-step-1-content {
@@ -1950,7 +1949,7 @@ ul.bulleted-list {
 }
 .select-tabs select {
   height: 40px;
-    width: 150px;
+  width: 150px;
 }
 .select-tabs p {
   padding: 0 2rem;
@@ -1962,16 +1961,16 @@ ul.bulleted-list {
 }
 
 .wpt-plan__reccomended:before {
-    content: "Most Popular";
-    background-color: purple;
-    color: #fff;
-    width: 100%;
-    position: absolute;
-    left: 0;
-    top: -17px;
-    border-radius: 5px 5px 0 0;
-    padding: 2px;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    border: none;
+  content: "Most Popular";
+  background-color: purple;
+  color: #fff;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: -17px;
+  border-radius: 5px 5px 0 0;
+  padding: 2px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  border: none;
 }
