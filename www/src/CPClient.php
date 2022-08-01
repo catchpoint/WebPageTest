@@ -25,6 +25,7 @@ use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 
 class CPClient
@@ -473,14 +474,14 @@ class CPClient
         }
     }
 
-    public function addWptSubscription(Customer $customer): array
+    public function addWptSubscription(ChargifySubscriptionInputType $subscription): array
     {
-        $gql = (new Mutation('wptAddSubscription'))
+        $gql = (new Mutation('wptCreateSubscription'))
             ->setVariables([
-                new Variable('customer', 'CustomerInputType', true)
+                new Variable('subscription', 'ChargifySubscriptionInputType', true)
             ])
             ->setArguments([
-                'customer' => '$customer'
+                'subscription' => '$subscription'
             ])
             ->setSelectionSet([
                 'company',
@@ -490,11 +491,11 @@ class CPClient
                 'loginVerificationId'
             ]);
 
-        $variables_array = array('customer' => $customer->toArray());
+        $variables = array('subscription' => $subscription->toArray());
 
         try {
-            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
-            return $results->getData()['wptAddSubscription'];
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
+            return $results->getData()['wptCreateSubscription'];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
