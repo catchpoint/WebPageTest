@@ -88,7 +88,7 @@
                 <h3>Current Plan</h3>
                 <?php if ($is_paid) : ?>
                     <div class="card-section-subhed">
-                        <?= "{$customer_details['wptPlanName']}"; ?>
+                        <?= "{$wptCustomer->getWptPlanName()}"; ?>
                         <?php if ($is_canceled) : ?>
                             <span class="status status__red"><?= $status; ?></span>
                         <?php else : ?>
@@ -99,9 +99,9 @@
                     </div>
 
                     <ul>
-                        <li><strong>Runs per month:</strong> 50</li>
-                        <li><strong>Remaining runs:</strong> <?= $customer_details['remainingRuns'] ?> </li>
-                        <li><strong>Price:</strong> <?= $customer_details['subscriptionPrice'] ?></li>
+                        <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
+                        <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
+                        <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice()/100), 2, '.', ',') ?></li>
                         <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
                         <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
                     </ul>
