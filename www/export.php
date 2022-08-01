@@ -18,7 +18,6 @@ if ($userIsBot) {
     exit;
 }
 
-require_once __DIR__ . '/lib/json.php';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/har/HttpArchiveGenerator.php';
 
