@@ -101,7 +101,6 @@
                     <ul>
                         <li><strong>Runs per month:</strong> 50</li>
                         <li><strong>Remaining runs:</strong> <?= $customer_details['remainingRuns'] ?> </li>
-                        <li><strong>Run renewal:</strong> date here</li>
                         <li><strong>Price:</strong> <?= $customer_details['subscriptionPrice'] ?></li>
                         <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
                         <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>

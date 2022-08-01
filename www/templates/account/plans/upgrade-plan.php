@@ -33,7 +33,7 @@
                     <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}" required />
                     <label class="wpt-plan card {$reccomended}" for="annual-{$plan->getId()}">
                       <h5> Annual Pro </h5>
-                      <div>{$plan->getName()}/mo</div>
+                      <div>{$plan->getRuns()}runs/mo</div>
                       <div><strong>\${$plan->getAnnualPrice()}</strong>/Year</div>
                       <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>
@@ -49,7 +49,7 @@
                     <input type="radio" id="monthly-{$plan->getId()}" name="plan" value="{$plan->getId()}" required />
                     <label class="card wpt-plan" for="monthly-{$plan->getId()}">
                         <h5>Monthly Pro</h5>
-                        <div>{$plan->getName()}/Mo</div>
+                        <div>{$plan->getRuns()} runs/mo</div>
                         <div><strong>\${$plan->getMonthlyPrice()}</strong>/Month</div>
                         <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
                     </label>

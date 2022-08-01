@@ -13,7 +13,7 @@
         <?php endif; ?>
     </div>
     <!-- Address form -->
-    <form>
+    <form id="plan-summary-address-form">
         <div class="box card-section">
             <h3>Billing Address</h3>
             <div class="plan-billing-container tab-content">
@@ -143,7 +143,7 @@
             <div class="card-section-subhed">
                 Pro <?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Annual'; ?>
             </div>
-            <ul class="plan-summary-list">
+            <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getName() ?></li>
                 <li><strong><?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Yearly'; ?> Price:</strong> $<?= $plan->getPrice() ?></li>
                 <li><strong>Estimated Taxes:</strong> <span data-id="taxes">--</span> </li>
