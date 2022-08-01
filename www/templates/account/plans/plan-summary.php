@@ -59,7 +59,7 @@
                             </div>
                         </div>
                     </div>
-                <?php endif; ?>
+            <?php endif; ?>
                 <div class="plan-billing-container tab-content">
                     <div class="card billing-container">
                         <div id="braintree-container"></div>
