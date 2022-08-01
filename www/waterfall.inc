@@ -1760,11 +1760,6 @@ EOT;
     $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks=$nolinks;\n";
     $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
     $request_data = json_encode($requests, 0, 1024);
-    if (!isset($request_data) || $request_data === false || !is_string($request_data) || strlen($request_data) < 3) {
-        require_once('lib/json.php');
-        $jsonLib = new Services_JSON();
-        $request_data = $jsonLib->encode($requests);
-    }
     $out .= "wptRawRequestData['step$step']='" . base64_encode($request_data) . "';\n";
     $out .= "wptRawPageData['step$step']='" . base64_encode(json_encode($page_data)) . "';\n";
     $out .= "wptRequestData['step$step']=JSON.parse(window.atob(wptRawRequestData['step$step']));\n";
