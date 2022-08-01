@@ -153,6 +153,7 @@ if ($is_paid) {
     }
 
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
+    $billing_info['status'] = $customer_details['status'];
     $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
     $billing_info['billing_frequency'] = $billing_frequency;
     $client_token = $billing_info['braintreeClientToken'];
@@ -173,16 +174,11 @@ foreach ($plans as $plan) {
         $annual_plans[] = $plan;
     }
 }
-$billing_info = array(
-    'annual_plans' => $annual_plans,
-    'monthly_plans' => $monthly_plans
-);
-
 $plansList = array(
     'annual_plans' => $annual_plans,
     'monthly_plans' => $monthly_plans
 );
-$results = array_merge($contact_info, $billing_info);
+$results = array_merge($contact_info, $billing_info, $plansList);
 $results['csrf_token'] = $_SESSION['csrf_token'];
 $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
