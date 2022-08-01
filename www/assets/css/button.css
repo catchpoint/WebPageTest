@@ -26,6 +26,12 @@
   border: 0;
 }
 
+button.pill-button:disabled {
+  background: #d0d0d0;
+  color: #666;
+  cursor: default;
+}
+
 /** TODO
 update all the yellow buttons on the site
 **/

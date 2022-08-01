@@ -156,6 +156,9 @@ if ($is_paid) {
     $billing_info['status'] = $customer_details['status'];
     $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
     $billing_info['billing_frequency'] = $billing_frequency;
+    $billing_info['cc_image_url'] = $customer_details['ccImageUrl'];
+    $billing_info['masked_cc'] = $customer_details['maskedCreditCard'];
+    $billing_info['cc_expiration'] = $customer_details['ccExpirationDate'];
     $client_token = $billing_info['braintreeClientToken'];
 }
 $plans = $request_context->getClient()->getWptPlans();
