@@ -137,29 +137,30 @@ if ($is_paid) {
     if ($is_wpt_enterprise) {
         $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
     } else {
-        $billing_info = $request_context->getClient()->getPaidAccountPageInfo();
+        $billing_info = [
+            'wptApiKey' => $request_context->getClient()->getApiKeys(),
+            'wptCustomer' => $request_context->getClient()->getWptCustomer(),
+        ];
+        $billing_info['transactionHistory'] = $request_context->getClient()->getTransactionHistory($billing_info['wptCustomer']->getSubscriptionId());
     }
-    $customer_details = $billing_info['braintreeCustomerDetails'];
-    $billing_frequency = $customer_details['billingFrequency'] == 12 ? "Annually" : "Monthly";
+    $customer = $billing_info['wptCustomer'];
+    $billing_frequency = $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly";
 
-    if (isset($customer_details['planRenewalDate']) && $billing_frequency == "Annually") {
-        $runs_renewal_date = new DateTime($customer_details['planRenewalDate']);
-        $billing_info['runs_renewal'] = $runs_renewal_date->format('m/d/Y');
+    if (!is_null($customer->getPlanRenewalDate()) && $billing_frequency == "Annually") {
+        $billing_info['runs_renewal'] = $customer->getPlanRenewalDate()->format('m/d/Y');
     }
 
-    if (isset($customer_details['nextBillingDate'])) {
-        $plan_renewal_date = new DateTime($customer_details['nextBillingDate']);
-        $billing_info['plan_renewal'] = $plan_renewal_date->format('m/d/Y');
+    if (!is_null($customer->getNextBillingDate())) {
+        $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('m/d/Y');
     }
 
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
-    $billing_info['status'] = $customer_details['status'];
-    $billing_info['is_canceled'] = str_contains($customer_details['status'], 'CANCEL');
+    $billing_info['status'] = $customer->getStatus();
+    $billing_info['is_canceled'] = $customer->isCanceled();
     $billing_info['billing_frequency'] = $billing_frequency;
-    $billing_info['cc_image_url'] = $customer_details['ccImageUrl'];
-    $billing_info['masked_cc'] = $customer_details['maskedCreditCard'];
-    $billing_info['cc_expiration'] = $customer_details['ccExpirationDate'];
-    $client_token = $billing_info['braintreeClientToken'];
+    $billing_info['cc_image_url'] = $customer->getCCImageUrl();
+    $billing_info['masked_cc'] = $customer->getMaskedCreditCard();
+    $billing_info['cc_expiration'] = $customer->getCCExpirationDate();
 }
 $plans = $request_context->getClient()->getWptPlans();
 $annual_plans = array();

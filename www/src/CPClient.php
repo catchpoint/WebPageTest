@@ -889,4 +889,20 @@ class CPClient
 
         return $payment_list;
     }
+
+    public function getApiKeys(): array
+    {
+        $gql = (new Query('wptApiKey'))
+            ->setSelectionSet([
+                'id',
+                'name',
+                'apiKey',
+                'createDate',
+                'changeDate'
+            ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        $data = $results->getData('wptApiKey');
+        return $data;
+    }
 }
