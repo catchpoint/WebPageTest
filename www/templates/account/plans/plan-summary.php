@@ -65,43 +65,72 @@
     </form>
     <!-- main form -->
     <form id="wpt-account-upgrade" method="post" action="/account">
+        <input type='hidden' name='type' value='upgrade-plan-2' />
         <!--
             Add address inputs
                                     -->
-        <input type='hidden' name='type' value='upgrade-plan-2' />
+        <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
+        <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />
+        <input name="state" type="hidden" value="<?= $state_code ?>" data-chargify="state" required />
+        <input name="country" type="hidden" value="<?= $country_code ?>" data-chargify="country" required />
+        <input name="zipcode" type="hidden" value="<?= $zipcode ?>" required data-chargify="zip" />
+
         <!-- payment -->
         <div class="box card-section">
             <h3>Payment Method</h3>
-            <?php if ($is_paid) : ?>
-                <!-- assume there is a CC on file if it's a paid account -->
-                <fieldset class="radiobutton-tab-ctontainer no-border">
+            <div class=" radiobutton-tabs__container">
+                <?php if ($is_paid) : ?>
+                    <!-- assume there is a CC on file if it's a paid account: so show tabs -->
+
                     <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
+                    <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
                     <label for="existing-card">
-                        <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
                         Existing payment method
                     </label>
+                    <input id="new-card" type="radio" name="payment" value="new-card" />
                     <label for="new-card">
-                        <input id="new-card" type="radio" name="payment" value="new-card" />
                         New payment method
                     </label>
-                </fieldset>
-                <div class="card payment-info tab-content" data-modal="payment-info-modal">
-                    <div class="card-section user-info">
-                        <div class="cc-type image">
-                            <img src="<?= $cc_image_url ?>" alt="card-type" width="80px" height="54px" />
+
+
+                    <div class="card payment-info radiobutton-tabs__tab-content" data-modal="payment-info-modal" data-tab="existing-card">
+                        <div class="card-section user-info">
+                            <div class="cc-type image">
+                                <img src="<?= $cc_image_url ?>" alt="card-type" width="80px" height="54px" />
+                            </div>
+                            <div class="cc-details">
+                                <div class="cc-number"><?= $masked_cc; ?></div>
+                                <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
+                            </div>
                         </div>
-                        <div class="cc-details">
-                            <div class="cc-number"><?= $masked_cc; ?></div>
-                            <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
+                        <div class="card-section">
+                            <div class="edit-button">
+                                <button><span>Edit</span></button>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-section">
-                        <div class="edit-button">
-                            <button><span>Edit</span></button>
+                <?php endif; ?>
+                <div class="radiobutton-tabs__tab-content" data-tab="new-card">
+
+                    <!-- copied from sign up, oh god... I forgot about the iframes -->
+                    <div class="signup-card-body">
+                        A new card!
+                        <div>
+                            <span id="cc_cardholder_first_name"></span>
+                            <span id="cc_cardholder_last_name"></span>
+                        </div>
+                        <div>
+                            <div id="cc_number"></div>
+                        </div>
+                        <div>
+                            <span id="cc_month"></span>
+                            <span id="cc_year"></span>
+                            <span id="cc_cvv"></span>
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
+            <!-- .radiobutton-tab-container__notcss -->
 
             <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
             <input type="hidden" name="nonce" id="hidden-nonce-input" required />
@@ -127,9 +156,6 @@
         </div>
     </form>
 </div>
-<?php if ($is_paid) {
-    include_once __DIR__ . '/includes/modals/payment-info.php';
-} ?>
 
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
