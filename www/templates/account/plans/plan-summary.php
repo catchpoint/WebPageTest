@@ -116,7 +116,7 @@
             </div>
             <ul class="plan-summary-list">
                 <li><strong>Runs per month:</strong> <?= $plan->getName() ?></li>
-                <li><strong><?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Yearly'; ?><Price:< /strong> $<?= $plan->getPrice() ?></li>
+                <li><strong><?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Yearly'; ?> Price:</strong> $<?= $plan->getPrice() ?></li>
                 <li><strong>Estimated Taxes:</strong> <span data-id="taxes">--</span> </li>
                 <li class="plan-summary-list__total"><strong>Total including tax:</strong> <span data-id="total">--</span></li>
             </ul>
@@ -128,9 +128,9 @@
     </form>
 </div>
 <?php if ($is_paid) {
-    include_once __DIR__ . '/includes/modals/cancel-subscription.php';
     include_once __DIR__ . '/includes/modals/payment-info.php';
 } ?>
+
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
 
