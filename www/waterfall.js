@@ -469,7 +469,7 @@ $(".waterfall-transparency").on("input", function () {
 });
 
 if (document.getElementById("urlEntry")) {
-  $(".waterfall-container").on("click", "a[data-spof]", function (e) {
+  $("#test_results-container").on("click", "a[data-spof]", function (e) {
     $("#urlEntry").append(
       '<input type="hidden" name="spof" value="' +
         $(this).attr("data-spof") +
@@ -484,7 +484,7 @@ if (document.getElementById("urlEntry")) {
 
     return false;
   });
-  $(".waterfall-container").on("click", "a[data-block]", function (e) {
+  $("#test_results-container").on("click", "a[data-block]", function (e) {
     if ($("#requestBlockingSettings h2").length <= 0) {
       createRequestBlockingBox();
     }
@@ -515,7 +515,7 @@ if (document.getElementById("urlEntry")) {
 
     return false;
   });
-  $(".waterfall-container").on("click", "a[data-block-domain]", function (e) {
+  $("#test_results-container").on("click", "a[data-block-domain]", function (e) {
     if ($("#requestBlockingSettings h2").length <= 0) {
       createRequestBlockingBox();
     }
