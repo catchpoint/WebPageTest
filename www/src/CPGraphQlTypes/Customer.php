@@ -145,4 +145,9 @@ class Customer
     {
         return $this->plan_renewal_date;
     }
+
+    public function isCanceled(): bool
+    {
+        return str_contains($this->status, 'CANCEL');
+    }
 }
