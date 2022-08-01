@@ -89,9 +89,9 @@
                     <div class="card-section-subhed">
                         <?= "{$customer_details['wptPlanName']}"; ?>
                         <?php if ($is_canceled) : ?>
-                            <span class="status"><?= $customer_details['status']; ?></span>
+                            <span class="status status__red"><?= $status; ?></span>
                         <?php else : ?>
-                            <span class="status"><?= $customer_details['status']; ?></span>
+                            <span class="status"><?= $status; ?></span>
                         <?php endif; ?>
 
                         <a href="/account/update_plan" class="pill-button yellow">Change Plan</a>
