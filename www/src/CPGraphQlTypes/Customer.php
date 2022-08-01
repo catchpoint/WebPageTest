@@ -133,8 +133,11 @@ class Customer
     {
         return $this->cc_expiration_date;
     }
-    public function getRemainingRuns(): ?int
+    public function getRemainingRuns(): int
     {
+        if (is_null($this->remaining_runs)) {
+            return $this->monthly_runs;
+        }
         return $this->remaining_runs;
     }
     public function getBillingFrequency(): ?int
