@@ -19,7 +19,6 @@ use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
-use WebPageTest\Customer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
