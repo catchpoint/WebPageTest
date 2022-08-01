@@ -1022,6 +1022,39 @@ var getScrollbarWidth = function() {
 
     // jQuery UI Tabs
     $("#test_subbox-container").tabs();
+    $("#test_subbox-container").on("tabsshow", function (event, ui) {
+      if (
+        ui.tab.id === "tab-advanced" &&
+        !document.getElementById("codeflask-script") // already loaded
+      ) {
+        // load Flask
+        var injectScript = document.getElementById("injectScript");
+        var script = document.createElement("script");
+        script.src = "/js/codeflask.min.js";
+        script.id = "codeflask-script";
+        script.onload = function () {
+          // editor container
+          var codeEl = document.createElement("div");
+          codeEl.id = "injectscript-container";
+          injectScript.parentNode.insertBefore(codeEl, injectScript);
+          // switch textarea to a hidden input
+          var hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = "injectScript";
+          hidden.name = "injectScript";
+          injectScript.parentNode.replaceChild(hidden, injectScript);
+          // go!
+          let codeArea = new CodeFlask(codeEl, {
+            language: "js",
+            lineNumbers: true,
+          });
+          codeArea.onUpdate(function (code) {
+            hidden.value = code;
+          });
+        };
+        document.body.appendChild(script);
+      }
+    });
 
     // Truncatable
     $(".truncate").truncate({ max_length: 100, more: "..." });

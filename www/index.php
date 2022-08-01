@@ -444,7 +444,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                     <div id="test_subbox-container">
                                         <ul class="ui-tabs-nav ui-tabs-nav-advanced">
                                             <li><a href="#test-settings">Test Settings</a></li>
-                                            <li><a href="#advanced-settings">Advanced</a></li>
+                                            <li><a href="#advanced-settings" id="tab-advanced">Advanced</a></li>
                                             <li><a href="#advanced-chrome">Chromium</a></li>
                                             <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
                                                 <li><a href="#auth">Auth</a></li>
@@ -552,10 +552,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         }
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
-                                                            echo 'checked=checked';
+                                                                                                                                    echo 'checked=checked';
                                                                                                                               } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
-                                                            echo 'checked=checked';
+                                                                                                                                    echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
                                                     </fieldset>
                                                 </li>
@@ -655,33 +655,33 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <li>
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
-                                                                echo 'checked=checked';
+                                                                                                                                                    echo 'checked=checked';
                                                                                                                                               } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
                                                 <?php } ?>
-                                                <li>
-                                                    <label for="time">
-                                                        Minimum test duration<br>
-                                                        <small>Capture data for at least...</small>
-                                                    </label>
-                                                    <input id="time" type="number" class="text short" name="time" value=""> seconds
-                                                </li>
-                                                <li>
-                                                    <label for="customHeaders" class="full">
-                                                        Custom headers<br>
-                                                        <small>Add custom headers to all network requests emitted from the browser</small>
-                                                    </label>
-                                                    <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
-                                                </li>
-                                                <li>
-                                                    <label for="injectScript" class="full">
-                                                        Inject Script<br>
-                                                        <small>JavaScript to run after the document has started loading</small>
-                                                    </label>
-                                                    <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
-                                                </li>
+                                                    <li>
+                                                        <label for="time">
+                                                            Minimum test duration<br>
+                                                            <small>Capture data for at least...</small>
+                                                        </label>
+                                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
+                                                    </li>
+                                                    <li>
+                                                        <label for="customHeaders" class="full">
+                                                            Custom headers<br>
+                                                            <small>Add custom headers to all network requests emitted from the browser</small>
+                                                        </label>
+                                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
+                                                    </li>
+                                                    <li>
+                                                        <label for="injectScript" class="full">
+                                                            Inject Script<br>
+                                                            <small>JavaScript to run after the document has started loading</small>
+                                                        </label>
+                                                        <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
+                                                    </li>
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
@@ -865,8 +865,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 if (array_key_exists('script', $_REQUEST)) {
                                                     $script = htmlspecialchars($_REQUEST['script']);
                                                 }
-                                                echo "<textarea class=\"large\" name=\"script\" id=\"enter_script\" cols=\"0\" rows=\"0\">$script</textarea>\n";
                                                 ?>
+                                                <textarea class="large" name="script" id="enter_script" cols="0" rows="0"><?php echo $script; ?></textarea>
                                             </div>
                                             <br>
                                             <ul class="input_fields">
