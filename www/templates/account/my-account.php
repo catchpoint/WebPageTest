@@ -88,7 +88,10 @@
                 <h3>Current Plan</h3>
                 <?php if ($is_paid) : ?>
                     <div class="card-section-subhed card-section-subhed__grid">
-                        <span class="plan-name"> Plan name here
+                        <span class="plan-name">
+                            <?= $wptCustomer->getWptPlanName() ?>
+                            <?= $billing_frequency  ?>
+                            Pro
                             <?php if ($is_canceled) : ?>
                                 <span class="status status__red"><?= $status; ?></span>
                             <?php else : ?>
