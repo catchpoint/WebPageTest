@@ -87,29 +87,42 @@
             <div class="box card-section">
                 <h3>Current Plan</h3>
                 <?php if ($is_paid) : ?>
-                    <div class="card-section-subhed">
-                        <?= "{$wptCustomer->getWptPlanName()}"; ?>
-                        <?php if ($is_canceled) : ?>
-                            <span class="status status__red"><?= $status; ?></span>
-                        <?php else : ?>
-                            <span class="status"><?= $status; ?></span>
-                        <?php endif; ?>
-
-                        <a href="/account/update_plan" class="pill-button yellow">Change Plan</a>
+                    <div class="card-section-subhed card-section-subhed__grid">
+                        <span class="plan-name"> Plan name here
+                            <?php if ($is_canceled) : ?>
+                                <span class="status status__red"><?= $status; ?></span>
+                            <?php else : ?>
+                                <span class="status"><?= $status; ?></span>
+                            <?php endif; ?>
+                        </span>
+                        <div class="account-cta">
+                            <label class="dropdown">
+                                <input type="checkbox" class="dd-input" id="test">
+                                <div class="dd-button">
+                                    Update Subscription
+                                </div>
+                                <ul class="dd-menu">
+                                    <li><a href="/account/update_plan">Update Subscription</a></li>
+                                    <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
+                                </ul>
+                            </label>
+                        </div>
                     </div>
 
                     <ul>
                         <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
                         <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
-                        <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice()/100), 2, '.', ',') ?></li>
+                        <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
                         <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
                         <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
                     </ul>
                 <?php else : ?>
-                    <div class="card-section-subhed">
-                        Starter
-                        <span class="status">Active</span>
-                        <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+                    <div class="card-section-subhed card-section-subhed__grid">
+                        <span class="plan-name">Starter<span class="status">Active</span></span>
+
+                        <div class="account-cta">
+                            <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+                        </div>
                     </div>
                     <ul>
                         <li><strong>Runs per month:</strong> 50</li>
