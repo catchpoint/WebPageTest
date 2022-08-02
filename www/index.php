@@ -117,25 +117,12 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
     <div class="home_content_contain">
         <div class="home_content">
-
-
-
-
             <?php
             if (!$headless) {
                 ?>
-
-
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
-
-
-
-
-
-
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="0">
-
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -231,19 +218,14 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                         }
                     }
                     ?>
-
-
                     <div id="test_box-container" class="home_responsive_test">
                         <?php
                         $currNav = "Site Performance";
                         include("testTypesNav.php");
                         ?>
-
-
                         <div id="analytical-review" class="test_box">
                             <ul class="input_fields home_responsive_test_top">
                                 <li>
-
                                     <label for="url" class="vis-hidden">Enter URL to test</label>
                                     <?php
 
@@ -258,15 +240,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                 </li>
                             </ul>
                             <div class="simpleadvancedfields_contain">
-                                <input type="radio" name="simpleadvanced" value="simple" id="simple" <?php if (!$advancedFormDefault) {
-                                                                                                            echo "checked";
-                                                                                                     } ?>>
+                                <input type="radio" name="simpleadvanced" value="simple" id="simple" <?php echo !$advancedFormDefault ? "checked" : ""; ?>>
                                 <label for="simple">Simple Configuration <em> 3 test runs from recommended location and browser presets</em></label>
                                 <div class="simpleadvancedfields">
                                     <ul class="input_fields home_responsive_test_top">
-
                                         <li class="test_main_config">
-
                                             <div class="test_presets test_presets_easy">
                                                 <div class="fieldrow fieldrow-profiles">
                                                     <div class="profiles">
@@ -299,7 +277,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
                                                         <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
@@ -311,20 +288,13 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                     </ul>
                                 </div>
                             </div>
-
-
-
                             <div class="simpleadvancedfields_contain">
-                                <input type="radio" name="simpleadvanced" value="advanced" id="advanced" <?php if ($advancedFormDefault) {
-                                                                                                                echo "checked";
-                                                                                                         } ?>>
+                                <input type="radio" name="simpleadvanced" value="advanced" id="advanced" <?php echo $advancedFormDefault ? "checked" : ""; ?>>
                                 <label for="advanced">Advanced Configuration <em>Choose from all browser, location, &amp; device options</em></label>
                                 <div class="simpleadvancedfields">
                                     <ul class="input_fields home_responsive_test_top">
                                         <li class="test_main_config">
-
                                             <div class="test_presets">
-
                                                 <div class="fieldrow">
                                                     <label for="location">Test Location</label>
                                                     <select name="where" id="location">
@@ -408,7 +378,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
                                             </div>
                                         </li>
-
                                     </ul>
                                     <?php if (GetSetting('multi_locations')) { ?>
                                         <a href="javascript:OpenMultipleLocations()">
@@ -507,22 +476,9 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         ?>
                                                     </select>
                                                 </li>
-                                                <?php
-                                                /*
-                                    if ($admin) {
-                                      echo '<li>';
-                                      echo '<label for="custom_browser">';
-                                      echo '<a href="/custom_browsers.php">Custom Browser</a>';
-                                      echo '</label>';
-                                      echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
-                                      echo '</li>';
-                                    }
-                                    */
-                                                ?>
                                                 <li>
                                                     <label for="number_of_tests">
-                                                        Number of Tests to Run<br>
-                                                        <small>Up to <?php echo $max_runs; ?></small>
+                                                        Number of Tests to Run
                                                     </label>
                                                     <?php
                                                     $runs = 3;
@@ -537,7 +493,13 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     }
                                                     $runs = max(1, min($runs, $max_runs));
                                                     ?>
-                                                    <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$max_runs\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
+                                                    <select id="number_of_tests" class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
+                                                        <?php
+                                                        for ($i = 1; $i <= $max_runs; $i++) {
+                                                            echo '<option value="' . $i . '"' . ($i === $runs ? ' selected' : '') . '>' . $i . '</option>';
+                                                        }
+                                                        ?>
+                                                    </select>
                                                 </li>
                                                 <li>
                                                     <fieldset>
@@ -552,10 +514,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         }
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
-                                                            echo 'checked=checked';
+                                                                                                                                    echo 'checked=checked';
                                                                                                                               } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
-                                                            echo 'checked=checked';
+                                                                                                                                    echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
                                                     </fieldset>
                                                 </li>
@@ -655,33 +617,33 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <li>
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
-                                                                echo 'checked=checked';
+                                                                                                                                                    echo 'checked=checked';
                                                                                                                                               } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
                                                 <?php } ?>
-                                                <li>
-                                                    <label for="time">
-                                                        Minimum test duration<br>
-                                                        <small>Capture data for at least...</small>
-                                                    </label>
-                                                    <input id="time" type="number" class="text short" name="time" value=""> seconds
-                                                </li>
-                                                <li>
-                                                    <label for="customHeaders" class="full">
-                                                        Custom headers<br>
-                                                        <small>Add custom headers to all network requests emitted from the browser</small>
-                                                    </label>
-                                                    <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
-                                                </li>
-                                                <li>
-                                                    <label for="injectScript" class="full">
-                                                        Inject Script<br>
-                                                        <small>JavaScript to run after the document has started loading</small>
-                                                    </label>
-                                                    <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
-                                                </li>
+                                                    <li>
+                                                        <label for="time">
+                                                            Minimum test duration<br>
+                                                            <small>Capture data for at least...</small>
+                                                        </label>
+                                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
+                                                    </li>
+                                                    <li>
+                                                        <label for="customHeaders" class="full">
+                                                            Custom headers<br>
+                                                            <small>Add custom headers to all network requests emitted from the browser</small>
+                                                        </label>
+                                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
+                                                    </li>
+                                                    <li>
+                                                        <label for="injectScript" class="full">
+                                                            Inject Script<br>
+                                                            <small>JavaScript to run after the document has started loading</small>
+                                                        </label>
+                                                        <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
+                                                    </li>
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
@@ -700,7 +662,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         }
                                                         echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
                                                         ?>
-
                                                         Emulate Mobile Browser
                                                     </label>
                                                     <?php
@@ -738,14 +699,12 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         }
                                                     }
                                                     ?>
-
                                                 </li>
                                                 <li>
                                                     <label for="timeline" class="auto_width">
                                                         <input type="checkbox" name="timeline" id="timeline" class="checkbox" checked=checked style="float: left;width: auto;">
                                                         Capture Dev Tools Timeline
                                                     </label>
-
                                                 </li>
                                                 <li>
                                                     <label for="profiler" class="auto_width">
@@ -829,7 +788,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </li>
                                             </ul>
                                         </div>
-
                                         <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
                                             <div id="auth" class="test_subbox ui-tabs-hide">
 
@@ -854,11 +812,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </div>
                                             </div>
                                         <?php } ?>
-
                                         <div id="script" class="test_subbox ui-tabs-hide">
                                             <div>
-
-
                                                 <p><label for="enter_script" class="full_width">Enter Script</label></p>
                                                 <?php
                                                 $script = '';
@@ -891,9 +846,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </div>
                                             </div>
                                         </div>
-
-
-
                                         <div id="block" class="test_subbox ui-tabs-hide">
                                             <p>
                                                 <label for="block_requests_containing" class="full_width">
@@ -910,7 +862,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <textarea name="blockDomains" id="block_domains" cols="0" rows="0"></textarea>
                                             </p>
                                         </div>
-
                                         <div id="spof" class="test_subbox ui-tabs-hide">
                                             <p>
                                                 Simulate failure of specified domains. This is done by re-routing all requests for
@@ -930,8 +881,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
                                             <div>
-
-
                                                 <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                                 <textarea name="custom" class="large" id="custom_metrics" cols="0" rows="0"></textarea>
                                             </div>
@@ -943,7 +892,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </div>
                                             </div>
                                         </div>
-
                                         <?php if (ShowBulk()) { ?>
                                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                                 <p>
@@ -956,7 +904,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 upload list of URLs (one per line): <input type="file" name="bulkfile" size="40">
                                             </div>
                                         <?php } ?>
-
                                     </div>
                                 </div>
                             </div>
@@ -999,21 +946,12 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                         </div>
                     </div>
                 </form>
-
-
-
                 <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
                 }
             } // $headless
             ?>
-
-
-
-
-
-
             <div class="home_content_contain">
                 <div class="home_content">
                     <?php
@@ -1024,9 +962,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
             </div>
             <!--home_content-->
             <?php include('footer.inc'); ?>
-
         </div>
-
     </div>
     <!--home_content_contain-->
     </div>
@@ -1056,11 +992,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     </script>
     <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST; ?>"></script>
 </body>
-
 </html>
-
 <?php
-
 /**
  * Load the location information
  *
@@ -1107,7 +1040,6 @@ function LoadLocations()
             unset($loc['notify']);
         }
     }
-
     return $locations;
 }
 
