@@ -1,23 +1,23 @@
-<div class="my-account-page page_content">
-    <h3><?= htmlspecialchars($pagefoo) ?></h3>
-    <!-- VERIFIED EMAIL NOTICE ---->
-    <?php if (!$is_verified) : ?>
-        <div class="resend-email-verification-container">
-            <div class="resend-email-verification-hed">
-                <h3>A verification link was sent to your email</h3>
-            </div>
-            <div>Please click on the link that was sent to your email to complete your registration process.</div>
-            <div class="resend-link-container">
-                <span>Didn’t receive an email?</span>
-                <form method="POST" action="/account">
-                    <input type="hidden" name="type" value="resend-verification-email" />
-                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                    <button type="submit">Resend Verification Link</button>
-                </form>
-            </div>
+<!-- VERIFIED EMAIL NOTICE ---->
+<?php if (!$is_verified) : ?>
+    <div class="resend-email-verification-container">
+        <div>
+            <p>Please verify your email address in order to utilize key features of your WebPageTest Account</p>
+            <form method="POST" action="/account" class="form__pulse-wait">
+                <input type="hidden" name="type" value="resend-verification-email" />
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                <button type="submit" class="button pill-button grey-outline white"><span>Resend Verification Email</span></button>
+            </form>
         </div>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
 
+<div class="my-account-page page_content">
+
+    <!-- form notifications -->
+    <?php
+    include_once __DIR__ . '/../includes/form-notifications.php';
+    ?>
     <div class="subhed">
         <h1>My Account</h1>
         <?php if ($is_paid) : ?>
@@ -38,7 +38,7 @@
         <?php endif; ?>
 
         <!-- these link to sections on the account page, but have subpages for modifications,  use hash deep linking -->
-        <div class="tab-labels">
+        <div class="tab-labels" data-id="tab-labels">
             <label for="account-settings">Account Settings</label>
             <!-- these sections only exist for paid users-->
             <?php if ($is_paid) : ?>
@@ -80,72 +80,89 @@
                     </div>
                 </div>
             </div>
-        </div>
+
+            <?php if (!$is_wpt_enterprise) : ?>
+                <div class="box card-section">
+                    <h3>Current Plan</h3>
+                    <?php if ($is_paid) : ?>
+                        <div class="card-section-subhed card-section-subhed__grid">
+                            <span class="plan-name">
+                                <?= $wptCustomer->getWptPlanName() ?>
+                                <?= $billing_frequency  ?>
+                                Pro
+                                <?php if ($is_canceled) : ?>
+                                    <span class="status status__red"><?= $status; ?></span>
+                                <?php else : ?>
+                                    <span class="status"><?= $status; ?></span>
+                                <?php endif; ?>
+                            </span>
+                            <?php if (!$is_canceled) : ?>
+                                <div class="account-cta">
+                                    <label class="dropdown">
+                                        <input type="checkbox" class="dd-input" id="test">
+                                        <div class="dd-button">
+                                            Update Subscription
+                                        </div>
+                                        <ul class="dd-menu">
+                                            <li><a href="/account/update_plan">Update Subscription</a></li>
+                                            <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
+                                        </ul>
+                                    </label>
+                                </div>
+                            <?php endif; // !$is_canceled ?>
+                        </div>
+
+                        <ul>
+                            <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
+                            <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
+                            <li><strong>Run Renewal:</strong>
+                                <?php
+                                $date = new DateTime('now');
+                                $date->modify('first day of next month')->modify('+6 day');
+                                echo $date->format('F d, Y') ?>
+                            </li>
+                            <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
+                            <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
+                            <li><strong>Plan Renewal:</strong> <?= !is_null($plan_renewal) ? $plan_renewal : "N/A" ?></li>
+                        </ul>
+                    <?php else : //$is_paid ?>
+                        <div class="card-section-subhed card-section-subhed__grid">
+                            <span class="plan-name">Starter<span class="status">Active</span></span>
+
+                            <div class="account-cta">
+                                <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+                            </div>
+                        </div>
+                        <ul>
+                            <li><strong>Runs per month:</strong> 300</li>
+                            <li><strong>Remaining runs:</strong> <?= $remainingRuns ?> </li>
+                            <li><strong>Run Renewal:</strong>
+                                <?php
+                                $date = new DateTime('now');
+                                $date->modify('first day of next month')->modify('+6 day');
+                                echo $date->format('F d, Y') ?>
+                            </li>
+                        </ul>
+                    <?php endif; // $is_paid ?>
+                </div>
+            </div>
+            <?php endif; // !$is_wpt_enterprise ?>
+
 
         <?php if (!$is_wpt_enterprise) : ?>
-            <div class="box card-section">
-                <h3>Current Plan</h3>
-                <?php if ($is_paid) : ?>
-                    <div class="card-section-subhed card-section-subhed__grid">
-                        <span class="plan-name"> Plan name here
-                            <?php if ($is_canceled) : ?>
-                                <span class="status status__red"><?= $status; ?></span>
-                            <?php else : ?>
-                                <span class="status"><?= $status; ?></span>
-                            <?php endif; ?>
-                        </span>
-                        <div class="account-cta">
-                            <label class="dropdown">
-                                <input type="checkbox" class="dd-input" id="test">
-                                <div class="dd-button">
-                                    Update Subscription
-                                </div>
-                                <ul class="dd-menu">
-                                    <li><a href="/account/update_plan">Update Subscription</a></li>
-                                    <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
-                                </ul>
-                            </label>
-                        </div>
-                    </div>
-
-                    <ul>
-                        <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
-                        <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
-                        <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
-                        <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-                        <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
-                    </ul>
-                <?php else : ?>
-                    <div class="card-section-subhed card-section-subhed__grid">
-                        <span class="plan-name">Starter<span class="status">Active</span></span>
-
-                        <div class="account-cta">
-                            <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
-                        </div>
-                    </div>
-                    <ul>
-                        <li><strong>Runs per month:</strong> 50</li>
-                        <li><strong>Remaining runs:</strong> 50</li>
-                        <li><strong>Run renewal:</strong> date here</li>
-                    </ul>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-
-
-        <!-- PAYING ONLY: Billing Invoice tab -->
-        <?php if ($is_paid) : ?>
-            <div class="tab-content" id="billing-settings-content">
-                <?php if ($is_paid) {
-                    if (!$is_wpt_enterprise) {
-                        include_once __DIR__ . '/billing/invoice-history.php';
-                    }
-                } else {
-                    include_once __DIR__ . '/includes/signup.php';
-                } ?>
-            </div>
-        <?php endif; ?>
+            <!-- PAYING ONLY: Billing Invoice tab -->
+            <?php if ($is_paid) : ?>
+                <div class="tab-content" id="billing-settings-content">
+                    <?php if ($is_paid) {
+                        if (!$is_wpt_enterprise) {
+                            include_once __DIR__ . '/billing/invoice-history.php';
+                        }
+                    } else {
+                        include_once __DIR__ . '/includes/signup.php';
+                    } ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; // !$is_wpt_enterprise ?>
 
 
         <!-- PAYING ONLY:  API tab -->
@@ -163,10 +180,28 @@
 <?php
 include_once __DIR__ . '/includes/modals/contact-info.php';
 include_once __DIR__ . '/includes/modals/password.php';
-
-if ($is_paid) {
-    include_once __DIR__ . '/includes/modals/cancel-subscription.php';
-    include_once __DIR__ . '/includes/modals/payment-info.php';
-}
 ?>
+<?php if ($is_paid) {
+    include_once __DIR__ . '/includes/modals/cancel-subscription.php';
+} ?>
 <!-- /Modals -->
+
+<script>
+    (() => {
+        function setHash(e) {
+            history.pushState({}, "", "#" + e.target.id);
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                var openTab = window.location.hash.replace('#', '');
+                if (openTab) {
+                    document.getElementById(openTab).checked = "true";
+                }
+                document.querySelectorAll("input[name='account-tabs']").forEach((input) => {
+                    input.addEventListener('change', setHash)
+                });
+            });
+        }
+    })();
+</script>
