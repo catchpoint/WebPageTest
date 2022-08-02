@@ -621,12 +621,13 @@
       });
     }
 
-    document
-      .getElementById("cancel-subscription")
-      .addEventListener("click", (e) => {
+    var cancelSub = document.getElementById("cancel-subscription");
+    if (cancelSub) {
+      cancelSub.addEventListener("click", (e) => {
         e.preventDefault();
         document.querySelector("#subscription-plan-modal").open();
       });
+    }
 
     document.querySelectorAll(".edit-button button").forEach((el) => {
       el.addEventListener("click", (e) => {
