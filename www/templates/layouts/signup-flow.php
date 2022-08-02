@@ -19,6 +19,7 @@
     <?php require_once __DIR__ . '/head.inc'; ?>
     <link href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
     <script defer src="/assets/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
+
 </head>
 
 <body>
@@ -40,9 +41,9 @@
             </a>
             <?php if ($is_plan_free) : ?>
                 <ol class="free-plan">
-            <?php else : ?>
+                <?php else : ?>
                     <ol>
-            <?php endif; ?>
+                    <?php endif; ?>
                     <?php if ($step == 2) : ?>
                         <li>Choose Plan</li>
                         <li class="selected">Account Details</li>

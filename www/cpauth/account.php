@@ -189,6 +189,7 @@ $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
 $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
 $results['country_list'] = $country_list;
 $results['state_list'] = $state_list;
+$results['country_list_json_blob'] = Util::getCountryJsonBlob();
 $results['remainingRuns'] = $remainingRuns;
 
 if (!is_null($error_message)) {

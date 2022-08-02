@@ -32,21 +32,27 @@
                                 <input name="city" type="text" required />
                             </div>
                         </div>
-                        <div class="info-container state">
+                        <div class="form-input state">
                             <label for="state">State</label>
                             <div>
-                                <input name="state" type="text" required />
-                            </div>
-                        </div>
-                        <div class="info-container country">
-                            <label for="country">Country</label>
-                            <div>
-                                <select name="country">
-                                    <?php foreach ($country_list as $country) : ?>
-                                        <option value="<?= $country["key"] ?>"><?= $country["text"]; ?></option>
+                                <select name="state" data-country-selector="state-selector" required>
+                                    <?php foreach ($state_list as $state) : ?>
+                                        <option value="<?= $state['code'] ?>">
+                                            <?= $state['name']; ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                        </div>
+                        <div class="form-input country">
+                            <label for="country">Country</label>
+                            <select name="country" data-country-selector="selector" required>
+                                <?php foreach ($country_list as $country) : ?>
+                                    <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
+                                        <?= $country["name"]; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="info-container zipcode">
                             <label for="zipcode">Zip Code</label>
@@ -156,6 +162,27 @@
         </div>
     </form>
 </div>
+
+
+<script src="/js/country-list/country-list.js"></script>
+<script>
+    (() => {
+        const countryList = <?= $country_list_json_blob ?>;
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+                new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+            });
+        } else {
+            const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+            const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+            new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+        }
+    })();
+</script>
 
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
