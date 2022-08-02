@@ -4133,13 +4133,12 @@ ul.meta_exp_applied_list {
 }
 
 #injectscript-container {
-  height: 500px;
-  width: calc(100% - 0.1em);
+  display: contents;
 }
 
 #injectscript-container .codeflask {
+  position: relative;
   height: 500px;
-  width: calc(100% - 3.9em);
 }
 
 .result .test_presets li {

@@ -1044,9 +1044,8 @@ var getScrollbarWidth = function() {
           hidden.name = "injectScript";
           injectScript.parentNode.replaceChild(hidden, injectScript);
           // go!
-          let codeArea = new CodeFlask(codeEl, {
+          var codeArea = new CodeFlask(codeEl, {
             language: "js",
-            lineNumbers: true,
           });
           codeArea.onUpdate(function (code) {
             hidden.value = code;
