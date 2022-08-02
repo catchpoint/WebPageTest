@@ -28,10 +28,13 @@
                 <?php
                 foreach ($annual_plans as $key => $plan) :
                     $reccomended = ($key === 1) ? 'wpt-plan__reccomended' : '';
+                    $isCurrentPlan = strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId());
+                    $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
+                    $disabled =  $isCurrentPlan ? 'disabled' : '';
                     $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}" required />
-                    <label class="wpt-plan card {$reccomended}" for="annual-{$plan->getId()}">
+                    <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}" {$disabled}/>
+                    <label class="wpt-plan card {$reccomended} {$activePlan}" for="annual-{$plan->getId()}">
                       <h5> Annual Pro </h5>
                       <div>{$plan->getRuns()}runs/mo</div>
                       <div><strong>\${$plan->getAnnualPrice()}</strong>/Year</div>
@@ -44,10 +47,13 @@
             </div>
             <div class="wpt-plan-set monthly-plans hidden">
                 <?php foreach ($monthly_plans as $key => $plan) :
+                    $isCurrentPlan = strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId());
+                    $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
+                    $disabled =  $isCurrentPlan ? 'disabled' : '';
                     $plan_block = <<<HTML
                 <div class="form-wrapper-radio">
-                    <input type="radio" id="monthly-{$plan->getId()}" name="plan" value="{$plan->getId()}" required />
-                    <label class="card wpt-plan" for="monthly-{$plan->getId()}">
+                    <input type="radio" id="monthly-{$plan->getId()}" name="plan" value="{$plan->getId()}" required  {$disabled}/>
+                    <label class="card wpt-plan {$activePlan}" for="monthly-{$plan->getId()}">
                         <h5>Monthly Pro</h5>
                         <div>{$plan->getRuns()} runs/mo</div>
                         <div><strong>\${$plan->getMonthlyPrice()}</strong>/Month</div>
