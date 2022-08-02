@@ -186,7 +186,7 @@
 
 <script src="https://js.braintreegateway.com/web/3.85.2/js/client.min.js"></script>
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
-
+<script defer src="/js/estimate-taxes.js?v=asas<?= constant('VER_JS_ACCOUNT') ?>"></script>
 <script>
     braintree.dropin.create({
         authorization: "<?= $bt_client_token ?>",
