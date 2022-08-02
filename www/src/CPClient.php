@@ -905,4 +905,25 @@ class CPClient
         $data = $results->getData()['wptApiKey'];
         return $data;
     }
+
+    public function updatePlan(string $subscription_id, string $next_plan_handle): bool
+    {
+        $gql = (new Mutation('upgradeSubscription'))
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true),
+                new Variable('nextPlanHandle', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId',
+                'nextPlanHandle' => '$nextPlanHandle'
+            ]);
+
+        $variables = [
+          'subscriptionId' => $subscription_id,
+          'nextPlanHandle' => $next_plan_handle
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return $results->getData()['upgradeSubscription'];
+    }
 }
