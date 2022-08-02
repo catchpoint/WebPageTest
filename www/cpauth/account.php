@@ -80,7 +80,14 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "upgrade-plan-2") {
-        AccountHandler::subscribeToAccount($request_context);
+        $body = [
+            'plan' => $_POST['plan'],
+            'subscription_id' => $_POST['subscription_id']
+        ];
+        $redirect_uri = AccountHandler::updatePlan($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "resend-verification-email") {
         try {
             $request_context->getClient()->resendEmailVerification();
@@ -211,7 +218,11 @@ switch ($page) {
         $planCookie = $_COOKIE['upgrade-plan'];
         if (isset($planCookie) && $planCookie) {
             $results['plan'] = Util::getPlanFromArray($planCookie, $plans);
-            echo $tpl->render('plans/plan-summary', $results);
+            if ($is_paid) {
+                echo $tpl->render('plans/plan-summary-upgrade', $results);
+            } else {
+                echo $tpl->render('plans/plan-summary', $results);
+            }
             break;
         } else {
             throw new ClientException("No plan chosen", $request->getRequestUri());

@@ -13,10 +13,7 @@ use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\BillingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CustomerPaymentUpdateInput;
-use WebPageTest\Template;
-use GuzzleHttp\Exception\RequestException;
 
 class Account
 {
@@ -309,5 +306,15 @@ class Account
         } catch (\Exception $e) {
             error_log($e->getMessage());
         }
+    }
+
+    public static function updatePlan(RequestContext $request_context, array $body): string
+    {
+        $success = $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan']);
+
+        $host = Util::getSetting('host');
+        $protocol = $request_context->getUrlProtocol();
+        $redirect_uri = "{$protocol}://{$host}/account";
+        return $redirect_uri;
     }
 }
