@@ -4186,10 +4186,12 @@ ul.meta_exp_applied_list {
 }
 
 span.test_presets_tag-label {
+  display: inline-block !important;
   background: #fce075 !important;
   color: #333333 !important;
   max-width: 10em;
   text-overflow: ellipsis;
+  white-space: nowrap;
   overflow: hidden;
 }
 
