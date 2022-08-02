@@ -38,7 +38,7 @@
         <?php endif; ?>
 
         <!-- these link to sections on the account page, but have subpages for modifications,  use hash deep linking -->
-        <div class="tab-labels">
+        <div class="tab-labels" data-id="tab-labels">
             <label for="account-settings">Account Settings</label>
             <!-- these sections only exist for paid users-->
             <?php if ($is_paid) : ?>
@@ -245,3 +245,23 @@ include_once __DIR__ . '/includes/modals/password.php';
     include_once __DIR__ . '/includes/modals/payment-info.php';
 } ?>
 <!-- /Modals -->
+
+<script>
+    (() => {
+        function setHash(e) {
+            history.pushState({}, "", "#" + e.target.id);
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                var openTab = window.location.hash.replace('#', '');
+                if (openTab) {
+                    document.getElementById(openTab).checked = "true";
+                }
+                document.querySelectorAll("input[name='account-tabs']").forEach((input) => {
+                    input.addEventListener('change', setHash)
+                });
+            });
+        }
+    })();
+</script>

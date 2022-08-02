@@ -589,15 +589,15 @@
 
       attachListenerToBillingFrequencySelector();
       handleRunUpdate();
-    });
 
-    document
-      .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
-      .forEach((s) => {
-        s.addEventListener("change", (e) => {
-          document.selectPlan.submit();
+      document
+        .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
+        .forEach((s) => {
+          s.addEventListener("change", (e) => {
+            document.selectPlan.submit();
+          });
         });
-      });
+    });
   } else {
     // upgrade plan selector
     var updatePlan = document.getElementById("pro-plan-selector");

@@ -59,7 +59,7 @@ if ($request_method === 'POST') {
             $request_context->getClient()->createApiKey($name);
             $protocol = $request_context->getUrlProtocol();
             $host = Util::getSetting('host');
-            $route = '/account';
+            $route = '/account#api-consumers';
             $redirect_uri = "{$protocol}://{$host}{$route}";
 
             header("Location: {$redirect_uri}");

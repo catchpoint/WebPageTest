@@ -1,6 +1,6 @@
 <div class="my-account-page page_content">
     <ul class="breadcrumbs">
-        <li><a href="/account#payments">Payment & Invoices</a></li>
+        <li><a href="/account#payments-invoices">Payment & Invoices</a></li>
         <li> Update Billing Cycle</li>
     </ul>
     <div class="subhed">
