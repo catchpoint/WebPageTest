@@ -119,3 +119,6 @@ www/beanstalk.php
 
 # compiled Blade tamplates
 www/resources/compiled
+
+# developer settings
+www/dev.php
