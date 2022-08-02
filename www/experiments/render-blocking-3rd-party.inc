@@ -6,6 +6,7 @@ $blocking3pReqs = array();
 $blocking3pHosts = array();
 $potentiallyBlocking3pReqs = array();
 $potentiallyB3pHosts = array();
+$possibleRenderBlockers = $testStepResult->getMetric('possibly-render-blocking-reqs');
 $blockingIndicator = false;
 
 foreach ($requests as $request) {
@@ -20,8 +21,10 @@ foreach ($requests as $request) {
                 && ($request['contentType'] === "text/css" || $request['requestType'] === "script" || $request['request_type'] === "Script")
                 && $request['all_end'] < $startRender
     ) {
-        array_push($potentiallyBlocking3pReqs, $request['full_url']);
-        array_push($potentiallyBlocking3pHosts, $request['host']);
+        if( in_array( $request['full_url'], $possibleRenderBlockers ) ){
+            array_push($potentiallyBlocking3pReqs, $request['full_url']);
+            array_push($potentiallyBlocking3pHosts, $request['host']);
+        }
     }
 }
 
