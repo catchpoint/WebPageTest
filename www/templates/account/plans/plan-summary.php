@@ -151,7 +151,11 @@
             </div>
             <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getName() ?></li>
-                <li><strong><?= $plan->getBillingFrequency() == 1 ? 'Monthly' : 'Yearly'; ?> Price:</strong> $<?= $plan->getPrice() ?></li>
+<?php if($plan->getBillingFrequency() == 'Monthly'): ?>
+                <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
+<?php else: ?>
+                <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
+<?php endif; ?>
                 <li><strong>Estimated Taxes:</strong> <span data-id="taxes">--</span> </li>
                 <li class="plan-summary-list__total"><strong>Total including tax:</strong> <span data-id="total">--</span></li>
             </ul>
