@@ -116,3 +116,6 @@ tests/*.cache
 www/beanstalk.php
 .vscode/*
 */.vscode/*
+
+# compiled Blade tamplates
+www/resources/compiled
