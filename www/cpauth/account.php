@@ -84,7 +84,7 @@ if ($request_method === 'POST') {
             'plan' => $_POST['plan'],
             'subscription_id' => $_POST['subscription_id']
         ];
-        $redirect_uri = AccountHandler::updatePlan($request_context, $body);
+        $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
 
         header("Location: {$redirect_uri}");
         exit();
@@ -221,6 +221,8 @@ switch ($page) {
             if ($is_paid) {
                 echo $tpl->render('plans/plan-summary-upgrade', $results);
             } else {
+                $results['ch_client_token'] = Util::getSetting('ch_key_public');
+                $results['ch_site'] = Util::getSetting('ch_site');
                 echo $tpl->render('plans/plan-summary', $results);
             }
             break;

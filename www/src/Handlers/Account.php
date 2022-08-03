@@ -11,9 +11,9 @@ use WebPageTest\ValidatorPatterns;
 use WebPageTest\Util;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
-use WebPageTest\BillingAddress;
-use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\CustomerPaymentUpdateInput;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 
 class Account
 {
@@ -49,10 +49,16 @@ class Account
     //     subscribeToAccount($request_context)
     // }
 
-    // // Submit the plan upgrade
-    // public static function postUpdatePlanSummary(RequestContext $request_context): string
-    // {
-    // }
+    // Submit the plan upgrade
+    public static function postUpdatePlanSummary(RequestContext $request_context, array $body): string
+    {
+        $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan']);
+
+        $host = Util::getSetting('host');
+        $protocol = $request_context->getUrlProtocol();
+        $redirect_uri = "{$protocol}://{$host}/account";
+        return $redirect_uri;
+    }
 
     public static function changeContactInfo(RequestContext $request_context): void
     {
@@ -145,7 +151,7 @@ class Account
     public static function subscribeToAccount(RequestContext $request_context): void
     {
         $nonce = filter_input(INPUT_POST, 'nonce');
-        $plan = filter_input(INPUT_POST, 'plan');
+        $plan = strtolower(filter_input(INPUT_POST, 'plan'));
         $city = filter_input(INPUT_POST, 'city');
         $country = filter_input(INPUT_POST, 'country');
         $state = filter_input(INPUT_POST, 'state');
@@ -164,7 +170,7 @@ class Account
             throw new ClientException("Please complete all required fields", "/account");
         }
 
-        $billing_address = new BillingAddress([
+        $address = new ChargifyAddressInput([
             'city' => $city,
             'country' => $country,
             'state' => $state,
@@ -172,12 +178,7 @@ class Account
             'zipcode' => $zipcode
         ]);
 
-        $customer = new Customer([
-            'payment_method_nonce' => $nonce,
-            'billing_address_model' => $billing_address,
-            'subscription_plan_id' => $plan
-        ]);
-
+        $subscription = new ChargifySubscriptionInputType($plan, $nonce, $address);
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
@@ -185,7 +186,7 @@ class Account
             exit();
         } catch (BaseException $e) {
             error_log($e->getMessage());
-            throw new ClientException("There was an error", "/account");
+            throw new ClientException($e->getMessage(), "/account");
         }
     }
 
@@ -292,7 +293,7 @@ class Account
         try {
             $plan = $_POST['plan'];
             $address = new ChargifyAddressInput([
-                "street_address" => $_POST['street_address'],
+                "street_address" => $_POST['street-address'],
                 "city" => $_POST['city'],
                 "state" => $_POST['state'],
                 "country" => $_POST['country'],
@@ -304,17 +305,12 @@ class Account
             echo json_encode($preview_totals);
             exit();
         } catch (\Exception $e) {
+            header('Content-type: application/json');
+            echo json_encode([
+              'error' => $e->getMessage()
+            ]);
             error_log($e->getMessage());
+            exit();
         }
-    }
-
-    public static function updatePlan(RequestContext $request_context, array $body): string
-    {
-        $success = $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan']);
-
-        $host = Util::getSetting('host');
-        $protocol = $request_context->getUrlProtocol();
-        $redirect_uri = "{$protocol}://{$host}/account";
-        return $redirect_uri;
     }
 }
