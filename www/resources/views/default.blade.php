@@ -17,17 +17,19 @@
     global $noanalytics;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
-    $body_class = $body_class ? ' class="' . $body_class . '"' : '';
+    $body_class = $body_class ? ' class=' . $body_class : '';
 
     ?>
     <title>{{ $page_title ?? 'WebPageTest' }}</title>
     <?php require_once __DIR__ . '/../../templates/layouts/head.inc'; ?>
+    @yield('style')
 </head>
 
 <body {{$body_class }}>
     <?php require_once __DIR__ . '/../../templates/layouts/header.inc'; ?>
     <div id="main">
         <?php require_once __DIR__ . '/../../templates/layouts/main_hed.inc'; ?>
+        <?php echo $results_header; ?>
         @yield('content')
         <?php require_once __DIR__ . '/../../footer.inc'; ?>
     </div>

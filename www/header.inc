@@ -63,9 +63,9 @@ if (!defined('EMBED')) {
     $alert_expiration = Util::getSetting('alert_expiration');
     if (isset($client_error)) {
         echo '<div class="error-banner">' . $client_error . '</div>';
-    } elseif ($alert && $alert_expiration && new DateTime() < new DateTime($alert_expiration)) {
+    } elseif (!defined('NOBANNER') && $alert && $alert_expiration && new DateTime() < new DateTime($alert_expiration)) {
         echo '<div class="alert-banner">' . $alert . '</div>';
-    } elseif ($alert && empty($alert_expiration)) {
+    } elseif (!defined('NOBANNER') && $alert && empty($alert_expiration)) {
         echo '<div class="alert-banner">' . $alert . '</div>';
     }
 
@@ -79,14 +79,9 @@ if (!defined('EMBED')) {
 <div id="main">
 
 <?php
-
-
-
-
-
-
 //If we're looking at a test result, include the extra header section and sub-menu
 if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED')) {
+
     // make sure the test is actually complete
     if (isset($test['test']['completeTime'])) {
         if (!isset($testResults) || !isset($testInfo)) {
@@ -409,6 +404,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
             $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
+            $tabs['Console Log'] = $menuUrlGenerator->resultPage("consolelog", $endParams);
             if ($gradedRunResults->hasBreakdownTimeline()) {
             // currently only supported by standard urls
                 $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
