@@ -48,9 +48,9 @@
             </div>
             <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getRuns() ?></li>
-<?php if($plan->getBillingFrequency() == 'Monthly'): ?>
+<?php if ($plan->getBillingFrequency() == 'Monthly') : ?>
                 <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
-<?php else: ?>
+<?php else : ?>
                 <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
 <?php endif; ?>
             </ul>
