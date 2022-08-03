@@ -76,11 +76,12 @@ TODO update the NEW buttons on signup to this green
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: #141e33;
-  color: #141e33;
-  box-shadow: 9999px 0 0 -5px #141e33;
+  background-color: #fff;
+  color: #fff;
+  box-shadow: 9999px 0 0 -5px #fff;
   animation: dotPulse 1.5s infinite linear;
   animation-delay: 0.25s;
+  display: block;
 }
 
 .dot-pulse::before,
@@ -92,64 +93,64 @@ TODO update the NEW buttons on signup to this green
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: #141e33;
-  color: #141e33;
+  background-color: #fff;
+  color: #fff;
 }
 
 .dot-pulse::before {
-  box-shadow: 9984px 0 0 -5px #141e33;
+  box-shadow: 9984px 0 0 -5px #fff;
   animation: dotPulseBefore 1.5s infinite linear;
   animation-delay: 0s;
 }
 
 .dot-pulse::after {
-  box-shadow: 10014px 0 0 -5px #141e33;
+  box-shadow: 10014px 0 0 -5px #fff;
   animation: dotPulseAfter 1.5s infinite linear;
   animation-delay: 0.5s;
 }
 
 @keyframes dotPulseBefore {
   0% {
-    box-shadow: 9984px 0 0 -5px #141e33;
+    box-shadow: 9984px 0 0 -5px #fff;
   }
 
   30% {
-    box-shadow: 9984px 0 0 2px #141e33;
+    box-shadow: 9984px 0 0 2px #fff;
   }
 
   60%,
   100% {
-    box-shadow: 9984px 0 0 -5px #141e33;
+    box-shadow: 9984px 0 0 -5px #fff;
   }
 }
 
 @keyframes dotPulse {
   0% {
-    box-shadow: 9999px 0 0 -5px #141e33;
+    box-shadow: 9999px 0 0 -5px #fff;
   }
 
   30% {
-    box-shadow: 9999px 0 0 2px #141e33;
+    box-shadow: 9999px 0 0 2px #fff;
   }
 
   60%,
   100% {
-    box-shadow: 9999px 0 0 -5px #141e33;
+    box-shadow: 9999px 0 0 -5px #fff;
   }
 }
 
 @keyframes dotPulseAfter {
   0% {
-    box-shadow: 10014px 0 0 -5px #141e33;
+    box-shadow: 10014px 0 0 -5px #fff;
   }
 
   30% {
-    box-shadow: 10014px 0 0 2px #141e33;
+    box-shadow: 10014px 0 0 2px #fff;
   }
 
   60%,
   100% {
-    box-shadow: 10014px 0 0 -5px #141e33;
+    box-shadow: 10014px 0 0 -5px #fff;
   }
 }
 
