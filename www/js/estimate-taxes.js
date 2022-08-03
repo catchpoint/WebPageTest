@@ -8,17 +8,29 @@
     constructor(addressForm, summaryNode) {
       this.form = addressForm;
       this.summary = summaryNode;
-      this.form.addEventListener("submit", (e) => {
+      this.form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        // do something
-        // taxes!
-        this.updateTaxAndTotal("$1000", "$1200000000000");
+        const fd = new FormData(e.target);
+        const request = new Request("/account", {
+          method: "POST",
+          body: fd,
+        });
+        const response = await fetch(request);
+        const { taxInCents, totalInCents } = await response.json();
+        this.updateTaxAndTotal(taxInCents, totalInCents);
+        const updated = new CustomEvent("taxes-updated", {
+          bubbles: true,
+          detail: fd,
+        });
+        e.target.dispatchEvent(updated);
       });
     }
 
     updateTaxAndTotal(tax, total) {
-      this.summary.querySelector("[data-id=taxes]").innerText = tax;
-      this.summary.querySelector("[data-id=taxes]").innerText = total;
+      this.summary.querySelector("[data-id=taxes]").innerText =
+        "$" + (tax / 100).toFixed(2);
+      this.summary.querySelector("[data-id=total]").innerText =
+        "$" + (total / 100).toFixed(2);
     }
   }
 
