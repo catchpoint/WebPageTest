@@ -1,6 +1,15 @@
 <div class="box">
-    <h2>Payment &amp; Invoices</h2>
-    <a href="/account/update_billing" class="button pill-button">Upgrade to </a>
+    <div class="card-section-subhed card-section-subhed__grid">
+        <h3>Payment &amp; Invoices</h3>
+        <?php if (strtolower($billing_frequency) == "monthly") : ?>
+            <div class="account-cta">
+                <a href="/account/update_billing" class="two-tone-pill-button ">
+                    <span class="two-tone-pill-button__left">Upgrade to Annual Billing</span>
+                    <span class="two-tone-pill-button__right">Save 25%</span>
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
     <div class="card payment-info" data-modal="payment-info-modal">
         <div class="card-section user-info">
             <div class="cc-type image">
@@ -24,14 +33,13 @@
             <div class="info">
                 <table class="sortable responsive-vertical-table">
                     <caption>
-                        <h3>Billing History</h3>
                         <span class="sr-only">, column headers with buttons are sortable.</span>
                     </caption>
                     <thead>
                         <tr>
                             <th aria-sort="ascending">
                                 <button>
-                                    Date Time Stamp
+                                    Month
                                     <span aria-hidden="true"></span>
                                 </button>
                             </th>
@@ -58,7 +66,7 @@
                     <tbody>
                         <?php foreach ($transactionHistory->toArray() as $row) : ?>
                             <tr>
-                                <td data-th="DateTime"><?= date_format($row->getTransactionTime(), 'M d Y H:i:s e') ?></td>
+                                <td data-th="DateTime"><?= date_format($row->getTransactionTime(), 'F d Y') ?></td>
                                 <td data-th="Credit Card"><?= $row->getPaymentMethod()->getType() ?></td>
                                 <td data-th="Card No."><?= $row->getPaymentMethod()->getMaskedCardNumber() ?></td>
                                 <td data-th="Amount">$<?= $row->getAppliedAmount() ?></td>

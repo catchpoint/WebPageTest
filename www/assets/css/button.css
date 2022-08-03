@@ -12,6 +12,32 @@
   font-size: 1rem;
 }
 
+.two-tone-pill-button {
+  appearance: none;
+  width: auto;
+  background-color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+  color: #111;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 15px;
+  display: flex;
+  height: 50px;
+}
+
+.two-tone-pill-button span.two-tone-pill-button__left {
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 2rem 0 0 2rem;
+  padding: 0.7em 0.5em 0.7em 2.2em;
+}
+.two-tone-pill-button span.two-tone-pill-button__right {
+  border-radius: 0 2rem 2rem 0;
+  background-color: #f9d856;
+  padding: 0.7em 2.2em 0.7em 1.2rem;
+}
+
 .box-button {
   border-radius: 4px;
   height: 100%;
