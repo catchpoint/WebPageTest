@@ -57,14 +57,20 @@ $container->instance(\Illuminate\Contracts\View\Factory::class, $viewFactory);
 $container->alias(
     \Illuminate\Contracts\View\Factory::class,
     (new class extends View {
-        public static function getFacadeAccessor() { return parent::getFacadeAccessor(); }
+        public static function getFacadeAccessor()
+        {
+            return parent::getFacadeAccessor();
+        }
     })::getFacadeAccessor()
 );
 $container->instance(BladeCompiler::class, $bladeCompiler);
 $container->alias(
     BladeCompiler::class,
     (new class extends Blade {
-        public static function getFacadeAccessor() { return parent::getFacadeAccessor(); }
+        public static function getFacadeAccessor()
+        {
+            return parent::getFacadeAccessor();
+        }
     })::getFacadeAccessor()
 );
 
