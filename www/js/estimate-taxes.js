@@ -2,9 +2,6 @@
   "use strict";
 
   class EstimateTaxes {
-    /*
-  Maybe this is overengineered but yolo
-  */
     constructor(addressForm, summaryNode) {
       this.form = addressForm;
       this.summary = summaryNode;
