@@ -4,7 +4,7 @@
             <?php
 
             if ($experiments_paid && $experiments_logged_in) {
-            ?>
+                ?>
                 <div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
                     <div class="home_feature_hed_text">
                         <h1 class="attention"><span class="home_feature_hed_text_leadin">Welcome to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>

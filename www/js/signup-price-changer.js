@@ -95,8 +95,8 @@
     var submitButton = document.getElementById("submit-pro-plan");
     new PlanPriceUpdater(form, submitButton);
   }
-  window.addEventListener('pageshow',  function () {
-    var billingCycleSelect = document.getElementById('billing-cycle');
-    billingCycleSelect.value="annual"; // thanks webkit... for being the worst at cache
+  window.addEventListener("pageshow", function () {
+    var billingCycleSelect = document.getElementById("billing-cycle");
+    billingCycleSelect.value = "annual"; // thanks webkit... for being the worst at cache
   });
 })();
