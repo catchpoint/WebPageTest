@@ -128,9 +128,14 @@
                         </div>
                     </div>
                     <ul>
-                        <li><strong>Runs per month:</strong> 50</li>
-                        <li><strong>Remaining runs:</strong> 50</li>
-                        <li><strong>Run renewal:</strong> date here</li>
+                        <li><strong>Runs per month:</strong> 300</li>
+                        <li><strong>Remaining runs:</strong> <?= $remainingRuns ?> </li>
+                        <li><strong>Run Renewal:</strong>
+                            <?php
+                            $date = new DateTime('now');
+                            $date->modify('first day of next month');
+                            echo $date->format('F d, Y') ?>
+                        </li>
                     </ul>
                 <?php endif; ?>
             </div>
