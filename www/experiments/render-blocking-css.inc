@@ -5,7 +5,9 @@
     $blockingCSSReqs = array();
     $potentiallyBlockingCSSReqs = array();
     $startRender = $testStepResult->getMetric("render");
+    $possibleRenderBlockers = $testStepResult->getMetric('possibly-render-blocking-reqs');
     $blockingIndicator = false;
+
 foreach ($requests as $request) {
     if (isset($request['renderBlocking'])) {
         $blockingIndicator = true;
@@ -18,7 +20,12 @@ foreach ($requests as $request) {
             }
         }
     } elseif (!isset($request['renderBlocking']) && $request['contentType'] === "text/css" && $request['all_end'] < $startRender) {
-        array_push($potentiallyBlockingCSSReqs, documentRelativePath($request['url'], $requests[0]['url']));
+        $docRelUrl = documentRelativePath($request['url'], $requests[0]['url']);
+        foreach ($possibleRenderBlockers as $cssUrl) {
+            if( strpos( $cssUrl, $docRelUrl ) ){
+                array_push($potentiallyBlockingCSSReqs, $docRelUrl);
+            }
+        }
     }
 }
 if (!$blockingIndicator) {
