@@ -307,12 +307,12 @@ $assessment[$category]["opportunities"][] = array(
                 "expvar" => 'experiment-overrideHost',
                 "expfields" => array(
                     (object) [
-                        'label' => 'File/URL',
+                        'label' => 'Hostname',
                         'type' => 'text'
                     ]
                 ),
                 'addmore' => true,
-                'hint' => 'path/to/foo.jpg'
+                'hint' => 'example.com'
             ],
     ),
     "good" =>  null,
