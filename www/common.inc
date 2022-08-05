@@ -4,7 +4,6 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -102,6 +101,12 @@ umask(0);
 date_default_timezone_set('UTC');
 extract($_POST, EXTR_SKIP | EXTR_PREFIX_ALL | EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP | EXTR_PREFIX_ALL | EXTR_REFS, 'req');
+
+// load dev settings
+$dev_settings = __DIR__ . '/dev.php';
+if (file_exists($dev_settings)) {
+    require_once $dev_settings;
+}
 
 // Prevent embedding except for pages that were explicitly designed to be embedded (video)
 if (!isset($ALLOW_IFRAME) || !$ALLOW_IFRAME) {
