@@ -86,7 +86,7 @@ function check_it($val)
 }
 
 // single user history
-if (!$cvs && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']) && Util::getSetting('localHistory')))) {
+if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']) && Util::getSetting('localHistory')))) {
     $GLOBALS['tab'] = 'Test History';
     $tpl = new Template('testhistory');
     $tpl->setLayout('default');
