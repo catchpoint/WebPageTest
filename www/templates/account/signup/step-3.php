@@ -2,25 +2,7 @@
     <div class="content">
         <h1>Payment Details</h1>
         <form method="POST" action="/signup" id="wpt-signup-paid-account">
-            <div class="signup-card-container">
-                <div class="signup-card-hed">
-                  <h4>Pay with card</h4>
-                </div>
-                <div class="signup-card-body">
-                    <div>
-                        <span id="cc_cardholder_first_name"></span>
-                        <span id="cc_cardholder_last_name"></span>
-                    </div>
-                    <div>
-                        <div id="cc_number"></div>
-                    </div>
-                    <div>
-                        <span id="cc_month"></span>
-                        <span id="cc_year"></span>
-                        <span id="cc_cvv"></span>
-                    </div>
-                </div>
-            </div>
+            <?php include __DIR__ . '/../includes/chargify-payment-form.php'; ?>
             <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
             <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />
             <input name="state" type="hidden" value="<?= $state_code ?>" data-chargify="state" required />
@@ -109,120 +91,29 @@
     </div> <!-- /.plan-benefits -->
 </aside>
 
-<script src="https://js.chargify.com/latest/chargify.js"></script>
 <script>
-        var chargify = new Chargify();
+  var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
+  var form = document.querySelector("#wpt-signup-paid-account");
 
-chargify.load({
-    publicKey: "<?= $ch_client_token ?>",
-    type: 'card',
-    serverHost: "<?= $ch_site ?>", //'https://acme.chargify.com'
-    hideCardImage: true,
-    optionalLabel: ' ',
-    requiredLabel: '*',
-    style: {
-        input: {
-            fontSize: '1rem',
-            border: '1px solid #999999',
-            padding: '.375rem 0.75rem',
-            lineHeight: '1.5',
-            backgroundColor: "#ffffff"
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var button = event.target.querySelector('button[type=submit]');
+    button.disabled = true;
+    button.setAttribute('disabled', 'disabled');
+    button.innerText = 'Submitted';
+
+    chargify.token(
+        form,
+        function success(token) {
+            hiddenNonceInput.value = token;
+            form.submit();
         },
-        label: {
-            backgroundColor: 'transparent',
-            paddingTop: '0px',
-            paddingBottom: '1px',
-            fontSize: '16px',
-            fontWeight: '400',
-            color: '#ffffff'
+        function error(err) {
+            button.disabled = false;
+            button.removeAttribute('disabled');
+            button.innerText = 'Sign Up';
+            console.log('token ERROR - err: ', err);
         }
-    },
-    fields: {
-            firstName: {
-                selector: '#cc_cardholder_first_name',
-                label: 'Cardholder first name',
-                required: true
-            },
-            lastName: {
-                selector: '#cc_cardholder_last_name',
-                label: 'Cardholder last name',
-                required: true
-            },
-            number: {
-                selector: '#cc_number',
-                label: 'Card Number',
-                placeholder: 'Card Number',
-                message: 'Invalid Card',
-                required: true,
-                style: {
-                  input: {
-                    padding: '8px 48px',
-                    width: '494px'
-                  }
-                }
-            },
-            month: {
-                selector: '#cc_month',
-                label: 'Month',
-                placeholder: 'MM',
-                message: 'Invalid Month',
-                required: true,
-                style: {
-                  input: {
-                    width: '158px'
-                  }
-                }
-            },
-            year: {
-                selector: '#cc_year',
-                label: 'Year',
-                placeholder: 'YYYY',
-                message: 'Invalid Year',
-                required: true,
-                style: {
-                  input: {
-                    width: '158px'
-                  }
-                }
-            },
-            cvv: {
-                selector: '#cc_cvv',
-                label: 'CVC',
-                placeholder: 'CVC',
-                required: true,
-                message: 'Invalid CVC',
-                required: true,
-                style: {
-                  input: {
-                    width: '158px'
-                  }
-                }
-            }
-        }
-});
-
-        var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
-        var form = document.querySelector("#wpt-signup-paid-account");
-
-        form.addEventListener('submit', function (event) {
-          event.preventDefault();
-          var button = event.target.querySelector('button[type=submit]');
-          button.disabled = true;
-          button.setAttribute('disabled', 'disabled');
-          button.innerText = 'Submitted';
-
-          chargify.token(
-              form,
-              function success(token) {
-                  hiddenNonceInput.value = token;
-                  form.submit();
-              },
-              function error(err) {
-                  button.disabled = false;
-                  button.removeAttribute('disabled');
-                  button.innerText = 'Sign Up';
-                  console.log('token ERROR - err: ', err);
-              }
-          );
-        });
+    );
+  });
 </script>
