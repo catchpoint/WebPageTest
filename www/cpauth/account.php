@@ -203,6 +203,34 @@ if (!is_null($error_message)) {
     $results['error_message'] = $error_message;
     unset($_SESSION['client-error']);
 }
+// DELETE ME LATER
+$formBannerMessage = array(
+    'type' => 'success',
+    'text' => 'Your plan has successfully been updated!'
+);
+Util::set_banner_message('form', $formBannerMessage);
+
+$formBannerMessage2 = array(
+    'type' => 'info',
+    'text' => 'Important Information about your account'
+);
+Util::set_banner_message('form', $formBannerMessage2);
+
+$formBannerMessage3 = array(
+    'type' => 'error',
+    'text' => 'OH NO!'
+);
+Util::set_banner_message('form', $formBannerMessage3);
+
+$formBannerMessage4 = array(
+    'type' => 'warning',
+    'text' => 'Running low on runs. <a href="#">upgrade today</a>'
+);
+Util::set_banner_message('form', $formBannerMessage4);
+
+
+// get any messages
+$results['messages'] = Util::get_banner_message();
 $page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
 $tpl = new Template('account');
 $tpl->setLayout('account');

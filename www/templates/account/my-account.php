@@ -1,5 +1,9 @@
 <div class="my-account-page page_content">
     <h3><?= htmlspecialchars($pagefoo) ?></h3>
+    <!-- form notifications -->
+    <?php
+    include_once __DIR__ . '/../includes/form-notifications.php';
+    ?>
     <!-- VERIFIED EMAIL NOTICE ---->
     <?php if (!$is_verified) : ?>
         <div class="resend-email-verification-container">

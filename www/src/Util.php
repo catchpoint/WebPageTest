@@ -776,4 +776,25 @@ class Util
             }
         }
     }
+    /**
+     * Set a message in session storage to be accessed in the UI
+     * @param $message_type string  - example is something like FORM, ACCOUNT, TESTING  to handle styling different types of messaging, currently only used for form notifications
+     * @param $message object
+     * @param $message.type string error|success|warning|info
+     * @param $message.text string
+     */
+    public static function set_banner_message($message_type, $message): void
+    {
+        $_SESSION['messages'][$message_type][] = $message;
+    }
+
+    /**
+     * GET all messages in session storage and clear messages
+     */
+    public static function get_banner_message(): array
+    {
+        $messages_array = $_SESSION['messages'];
+        unset($_SESSION['messages']);
+        return $messages_array;
+    }
 }
