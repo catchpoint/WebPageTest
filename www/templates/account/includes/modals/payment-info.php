@@ -1,62 +1,60 @@
 <fg-modal id="payment-info-modal" class="payment-info-modal fg-modal">
     <form method="POST" action="/account" id="update-payment-form">
-        <fieldset>
-            <legend class="modal_title">Payment Information</legend>
+        <h3 class="modal_title">Payment Information</h3>
 
-            <div class="braintree-card-container">
-                <div id="braintree-container"></div>
-            </div> <!-- /.braintree-card-container -->
-            <div class="billing-address-information-container">
-                <div class="form-input address">
-                    <label for="streetAddress">Street Address</label>
-                    <div>
-                        <input name="streetAddress" type="text" required />
-                    </div>
+        <div class="braintree-card-container">
+            <div id="braintree-container"></div>
+        </div> <!-- /.braintree-card-container -->
+        <div class="billing-address-information-container">
+            <div class="form-input address">
+                <label for="streetAddress">Street Address</label>
+                <div>
+                    <input name="streetAddress" type="text" required />
                 </div>
-                <div class="form-input city">
-                    <label for="city">City</label>
-                    <input name="city" type="text" required />
-                </div>
-                <div class="form-input state">
-                    <label for="state">State</label>
-                    <div id="regionalArea">
-                        <select name="state" required>
-                            <?php
+            </div>
+            <div class="form-input city">
+                <label for="city">City</label>
+                <input name="city" type="text" required />
+            </div>
+            <div class="form-input state">
+                <label for="state">State</label>
+                <div id="regionalArea">
+                    <select name="state" required>
+                        <?php
 
-                            foreach ($state_list as $stateAbbr => $stateText) : ?>
-                                <option value="<?= $stateAbbr ?>">
-                                                                <?= $stateText; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-input country">
-                    <label for="country">Country</label>
-                    <select name="country">
-                        <?php foreach ($country_list as $country) : ?>
-                            <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
-                                <?= $country["text"]; ?>
+                        foreach ($state_list as $stateAbbr => $stateText) : ?>
+                            <option value="<?= $stateAbbr ?>">
+                                <?= $stateText; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-input zip">
-                    <label for="zipcode">Postal Code</label>
-                    <div>
-                        <input type="text" name="zipcode" required />
-                    </div>
-                </div>
-            </div> <!-- /.billing-address-information-container -->
-
-            <input type="hidden" id="hidden-nonce-input" name="nonce" />
-            <input type="hidden" name="type" value="update-payment-method" />
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-
-            <div class="save-button">
-                <button type="submit" class="pill-button blue">Save</button>
             </div>
-        </fieldset>
+            <div class="form-input country">
+                <label for="country">Country</label>
+                <select name="country">
+                    <?php foreach ($country_list as $country) : ?>
+                        <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
+                            <?= $country["text"]; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-input zip">
+                <label for="zipcode">Postal Code</label>
+                <div>
+                    <input type="text" name="zipcode" required />
+                </div>
+            </div>
+        </div> <!-- /.billing-address-information-container -->
+
+        <input type="hidden" id="hidden-nonce-input" name="nonce" />
+        <input type="hidden" name="type" value="update-payment-method" />
+        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+
+        <div class="save-button">
+            <button type="submit" class="pill-button blue">Save</button>
+        </div>
     </form>
 </fg-modal>
 
