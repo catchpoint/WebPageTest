@@ -782,6 +782,11 @@ class Util
      * @param $message object
      * @param $message.type string error|success|warning|info
      * @param $message.text string
+     *
+     * $formBannerMessage = array(
+     *  'type' => 'success',
+     * 'text' => 'Your plan has successfully been updated!');
+     * Util::set_banner_message('form', $formBannerMessage);
      */
     public static function set_banner_message($message_type, $message): void
     {
@@ -790,6 +795,7 @@ class Util
 
     /**
      * GET all messages in session storage and clear messages
+     *
      */
     public static function get_banner_message(): array
     {
