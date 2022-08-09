@@ -778,17 +778,18 @@ class Util
     }
     /**
      * Set a message in session storage to be accessed in the UI
-     * @param $message_type string  - example is something like FORM, ACCOUNT, TESTING  to handle styling different types of messaging, currently only used for form notifications
-     * @param $message object
+     * @param $message_type string  - example is something like FORM, ACCOUNT, TESTING  to handle styling different
+     * types of messaging, currently only used for form notifications
+     * @param $message array
      * @param $message.type string error|success|warning|info
      * @param $message.text string
      *
      * $formBannerMessage = array(
      *  'type' => 'success',
      * 'text' => 'Your plan has successfully been updated!');
-     * Util::set_banner_message('form', $formBannerMessage);
+     * Util::setBannerMessage('form', $formBannerMessage);
      */
-    public static function set_banner_message($message_type, $message): void
+    public static function setBannerMessage(string $message_type, array $message): void
     {
         $_SESSION['messages'][$message_type][] = $message;
     }
@@ -797,7 +798,7 @@ class Util
      * GET all messages in session storage and clear messages
      *
      */
-    public static function get_banner_message(): array
+    public static function getBannerMessage(): array
     {
         $messages_array = $_SESSION['messages'];
         unset($_SESSION['messages']);
