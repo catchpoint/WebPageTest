@@ -220,10 +220,9 @@
             <?php
 
             foreach ($annual_plans as $key => $plan) :
-                $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required  {$selected}/>
+                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required />
                     <label class="wpt-plan card" for="annual-{$plan['id']}">
                       <h5>{$plan['name']}</h5>
                       <div><strong>\${$plan['annual_price']}</strong>/Year</div>
@@ -329,6 +328,9 @@ HTML;
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
 
 <script>
+  // check default
+   document.getElementsByName("plan")[1]['checked'] = true;
+
     braintree.dropin.create({
         authorization: "<?= $bt_client_token ?>",
         container: '#braintree-container',
