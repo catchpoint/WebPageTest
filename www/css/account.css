@@ -759,43 +759,43 @@ a.button {
 }
 
 .signup-flow-layout aside h3 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   line-height: 1.6875rem;
 }
-
 .signup-flow-layout .plan-name {
   font-weight: 400;
   font-size: 1.25rem;
   line-height: 1.6875rem;
 }
-
+.signup-flow-layout .wpt-pro-logo {
+  margin: 0 0 1em;
+}
+.signup-flow-layout .wpt-pro-logo {
+    background-position: 0 0;
+}
 .signup-flow-layout .plan-details {
-  border-top: 1px solid #808080;
+  background: rgba(0,0,0,.2);
+  color: #fff;
+  padding: 1em;
+  border-radius: .6em;
+  margin: 1em 0;
 }
-
 .signup-flow-layout .plan-details table {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  gap: 0px 0px;
-  grid-template-areas: "." ".";
+  font-size: .95em;
+  width: 100%;
+  border-collapse: collapse;
 }
-
-.signup-flow-layout .plan-details table thead tr,
-.signup-flow-layout .plan-details table tbody tr {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 0px 0px;
-  grid-template-areas: "." ".";
-}
-
 .signup-flow-layout .plan-details table th {
   text-align: left;
+  padding: .6em 0;
+  font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,.5);
 }
-
 .signup-flow-layout .plan-details table td {
   text-align: right;
+  padding: .6em 0;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,.5);
 }
 
 .signup-flow-layout .plan-benefits ul {
