@@ -240,7 +240,7 @@
             foreach ($monthly_plans as $key => $plan) :
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" r data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" equired />
+                    <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" required />
                     <label class="card wpt-plan" for="monthly-{$plan['id']}">
                       <h5>{$plan['name']}</h5>
                       <div><strong>\${$plan['price']}</strong>/Month</div>
