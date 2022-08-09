@@ -46,28 +46,32 @@
 </section>
 <aside>
     <h3>Selected Plan</h3>
-    <div class="plan-name"><?= $is_plan_free ? "STARTER" : "PRO"; ?></div>
+    <div class="plan-name">
+        <?= $is_plan_free ? "STARTER" : '<div class="heading wpt-pro-logo"> <span class="visually-hidden">WebPageTest <em class="new-banner">Pro</em></span></div>' ?>
+    </div>
     <div class="plan-details">
         <table>
-            <thead>
-                <?php if (!$is_plan_free) : ?>
-                    <th>Runs per month</th>
-                <?php endif; ?>
-                <th>Price</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <?php if ($is_plan_free) : ?>
-                        <td>Free</td>
+            <?php if( !$is_plan_free ) : ?>
+            <tr>
+                <th>Pay Plan:</th>
+                <td><?= $billing_frequency ?></td>
+            </tr>
+            <?php endif; ?>
+            <tr>
+                <th>Runs/mo:</th>
+                <td><?= $runs ? $runs : 300; ?></td>                
+            </tr>
+            <tr>
+                <th>Price:</th>
+                <?php if ($is_plan_free) : ?>
+                    <td>Free</td>
+                <?php else : ?>
+                    <?php if ($billing_frequency == "Monthly") : ?>
+                        <td>$<?= "{$monthly_price}/mo" ?></td>
                     <?php else : ?>
-                        <td><?= $runs ?></td>
-                        <?php if ($billing_frequency == "Monthly") : ?>
-                            <td>$<?= "{$monthly_price} {$billing_frequency}" ?></td>
-                        <?php else : ?>
-                            <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price} {$billing_frequency}" ?></td>
-                        <?php endif; ?>
+                        <td><s>$<?= $other_annual ?></s> $<?= "{$annual_price}/yr" ?></td>
                     <?php endif; ?>
-                </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div> <!-- /.plan-details -->
