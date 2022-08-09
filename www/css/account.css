@@ -337,6 +337,7 @@ body.theme-b {
 
 .billing-container {
   width: 100%;
+  position: relative;
 }
 
 @media (min-width: 1400px) {
@@ -1871,4 +1872,13 @@ TEMP FIX FOR UPGRADE
   background-color: #3881e5;
   color: white;
   font-weight: 600;
+}
+
+.subscription-total {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 20px;
+}
+.subscription-total li {
+  padding: 1rem 0;
 }
