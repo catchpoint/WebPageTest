@@ -920,6 +920,11 @@ a.button {
   background-color: rgb(234, 234, 234);
 }
 
+.signup-flow-layout .plan-details table tr:last-child th,
+.signup-flow-layout .plan-details table tr:last-child td {
+  border-bottom: 0;
+}
+
 .card.api-consumers,
 .card.billing-history {
   display: block;
