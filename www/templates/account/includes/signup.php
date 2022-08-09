@@ -236,18 +236,18 @@
         </div>
         <div class="wpt-plan-set monthly-plans">
             <?php 
-                        $renewalDateMonthly = $newDate = date('Y-m-d', strtotime('+ 1 month'));
+            $renewalDateMonthly = $newDate = date('Y-m-d', strtotime('+ 1 month'));
             foreach ($monthly_plans as $key => $plan) :
                 $plan_block = <<<HTML
-      <div class="form-wrapper-radio">
-        <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" r data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" equired />
-        <label class="card wpt-plan" for="monthly-{$plan['id']}">
-          <h5>{$plan['name']}</h5>
-          <div><strong>\${$plan['price']}</strong>/Month</div>
-          <span aria-hidden="true" class="pill-button yellow">Select</span>
-        </label>
-      </div>
-HTML;
+                  <div class="form-wrapper-radio">
+                    <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" r data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" equired />
+                    <label class="card wpt-plan" for="monthly-{$plan['id']}">
+                      <h5>{$plan['name']}</h5>
+                      <div><strong>\${$plan['price']}</strong>/Month</div>
+                      <span aria-hidden="true" class="pill-button yellow">Select</span>
+                    </label>
+                  </div>
+                 HTML;
                 echo $plan_block;
             endforeach; ?>
         </div>
