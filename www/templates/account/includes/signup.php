@@ -218,12 +218,12 @@
         </div>
         <div class="wpt-plan-set annual-plans">
             <?php
-
+            $renewalDate = $newDate = date('Y-m-d', strtotime(' + 1 years'));
+  
             foreach ($annual_plans as $key => $plan) :
-                $selected = ($key === 1) ? 'checked' : '';
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}" required  {$selected}/>
+                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}"  data-cost="{$plan['annual_price']}" data-cycle="{$renewalDate}" required />
                     <label class="wpt-plan card" for="annual-{$plan['id']}">
                       <h5>{$plan['name']}</h5>
                       <div><strong>\${$plan['annual_price']}</strong>/Year</div>
@@ -235,17 +235,19 @@
             endforeach; ?>
         </div>
         <div class="wpt-plan-set monthly-plans">
-            <?php foreach ($monthly_plans as $key => $plan) :
+            <?php 
+            $renewalDateMonthly = $newDate = date('Y-m-d', strtotime('+ 1 month'));
+            foreach ($monthly_plans as $key => $plan) :
                 $plan_block = <<<HTML
-      <div class="form-wrapper-radio">
-        <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" required />
-        <label class="card wpt-plan" for="monthly-{$plan['id']}">
-          <h5>{$plan['name']}</h5>
-          <div><strong>\${$plan['price']}</strong>/Month</div>
-          <span aria-hidden="true" class="pill-button yellow">Select</span>
-        </label>
-      </div>
-HTML;
+                  <div class="form-wrapper-radio">
+                    <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" required />
+                    <label class="card wpt-plan" for="monthly-{$plan['id']}">
+                      <h5>{$plan['name']}</h5>
+                      <div><strong>\${$plan['price']}</strong>/Month</div>
+                      <span aria-hidden="true" class="pill-button yellow">Select</span>
+                    </label>
+                  </div>
+                 HTML;
                 echo $plan_block;
             endforeach; ?>
         </div>
@@ -299,6 +301,11 @@ HTML;
                     </div>
                 </div>
             </div> <!-- /.billing-info-section -->
+
+            <ul class="subscription-total">
+              <li><strong>Total due today:</strong> <span id="data-plan-total"> </span></li>
+              <li><strong>Next payment due:</strong> <span id="data-plan-renewal"> </span></li>
+            </ul>
         </div> <!-- /.billing-container -->
 
         <div class="card plan-details-container">
@@ -329,6 +336,18 @@ HTML;
 <script src="https://js.braintreegateway.com/web/dropin/1.33.0/js/dropin.min.js"></script>
 
 <script>
+const radios = document.querySelectorAll('input[name="plan"]')
+for (const radio of radios) {
+  radio.onclick = (e) => {
+    document.getElementById('data-plan-total').innerText = "$"+e.target.dataset.cost;
+    document.getElementById('data-plan-renewal').innerText = e.target.dataset.cycle;
+  }
+}
+  // check default
+   document.getElementsByName("plan")[1]['checked'] = true;
+   document.getElementById('data-plan-total').innerText = "$"+document.getElementsByName("plan")[1].dataset.cost
+   document.getElementById('data-plan-renewal').innerText = document.getElementsByName("plan")[1].dataset.cycle
+
     braintree.dropin.create({
         authorization: "<?= $bt_client_token ?>",
         container: '#braintree-container',
