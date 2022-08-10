@@ -408,9 +408,58 @@ body.theme-b {
   ~ .wpt-plan-set.annual-plans {
   display: flex;
 }
+/** feature list on upgrade plans **/
+.upgrade-plan-feature-list {
+  columns: 3;
+  -webkit-columns: 3;
+  -moz-columns: 3;
+  column-gap: 0px;
+  border-bottom: 1px solid rgb(204, 204, 204);
+  -webkit-column-rule: 1px solid rgb(204, 204, 204);
+  -moz-column-rule: 1px solid rgb(204, 204, 204);
+  column-rule: 1px solid rgb(204, 204, 204);
+}
+.upgrade-plan-feature-list li {
+  padding: 1rem;
+  min-height: 30px;
+}
+
+.upgrade-plan-feature-list li:nth-child(odd) {
+  background-color: #f4f4f4;
+}
+
+.upgrade-plan-feature-list-info {
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 10px;
+}
+.upgrade-plan-feature-list-info h3 {
+  padding: 1.5em 1em;
+}
 
 .wpt-plan-set .form-wrapper-radio {
   position: relative;
+  width: 23%;
+}
+
+@media (max-width: 860px) {
+  .wpt-plan-set .form-wrapper-radio {
+    width: 48%;
+  }
+  .upgrade-plan-feature-list {
+    columns: 2;
+    -webkit-columns: 2;
+    -moz-columns: 2;
+  }
+}
+@media (max-width: 400px) {
+  .wpt-plan-set .form-wrapper-radio {
+    width: 100%;
+  }
+  .upgrade-plan-feature-list {
+    columns: 1;
+    -webkit-columns: 1;
+    -moz-columns: 1;
+  }
 }
 
 .wpt-plan-set .form-wrapper-radio input[type="radio"] {
@@ -2112,6 +2161,7 @@ TEMP FIX FOR UPGRADE
   border-radius: 5px;
   margin-bottom: 50px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .select-tabs .wpt-pro-logo {
   background-size: 70%;
@@ -2132,6 +2182,24 @@ TEMP FIX FOR UPGRADE
 .select-tabs label {
   margin-left: auto;
   padding: 0 1rem;
+}
+@media (max-width: 400px) {
+  .select-tabs .wpt-pro-logo {
+    background-position: center;
+  }
+  .select-tabs h2 {
+    max-width: 100%;
+  }
+  .select-tabs label {
+    margin-left: 4em;
+  }
+  .select-tabs p {
+    margin: 0 auto;
+  }
+  .subhed,
+  .breadcrumbs {
+    padding-left: 1rem;
+  }
 }
 
 .wpt-plan__reccomended:before {
@@ -2169,31 +2237,4 @@ input#existing-card:not(:checked)
 input#existing-card:checked
   ~ .radiobutton-tabs__tab-content[data-tab="new-card"] {
   display: none;
-}
-
-.upgrade-plan-feature-list {
-  columns: 3;
-  -webkit-columns: 3;
-  -moz-columns: 3;
-  column-gap: 0px;
-  border-bottom: 1px solid rgb(204, 204, 204);
-  -webkit-column-rule: 1px solid rgb(204, 204, 204);
-  -moz-column-rule: 1px solid rgb(204, 204, 204);
-  column-rule: 1px solid rgb(204, 204, 204);
-}
-.upgrade-plan-feature-list li {
-  padding: 1rem;
-  min-height: 30px;
-}
-
-.upgrade-plan-feature-list li:nth-child(odd) {
-  background-color: #f4f4f4;
-}
-
-.upgrade-plan-feature-list-info {
-  border: 1px solid rgb(204, 204, 204);
-  border-radius: 10px;
-}
-.upgrade-plan-feature-list-info h3 {
-  padding: 1.5em 1em;
 }
