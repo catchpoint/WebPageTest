@@ -72,66 +72,31 @@
         <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />
     </form>
     <div class="card-section">
-        <div class="info">
-            <!-- comparison table -->
-            <table class="account-upgrade-comparison-table comparison-table">
-                <thead>
-                    <tr>
-                        <th>
-                            <h3>What's included in Pro?</h3>
-                        </th>
-                        <th scope="col">
+        <div class="upgrade-plan-feature-list-info">
+            <h3>What's included in Pro?</h3>
 
-                        </th>
-                        <th scope="col">
-
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td>Bulk Testing <em class="new-banner">NEW</em></td>
-                        <td>Opportunities <em class="new-banner">NEW</em></td>
-
-                        <td>Experiments <em class="new-banner">NEW</em></td>
-                    </tr>
-                    <tr>
-                        <td>300+ manual tests</td>
-                        <td>40 Locations <sup><a href="#fn1" id="ref1">*</a></sup></td>
-                        <td>All Browsers</td>
-                    </tr>
-
-                    <tr>
-                        <td>All Connection Speeds</td>
-                        <td>Filmstrip and Video</td>
-                        <td>Google Lighthouse</td>
-                    </tr>
-
-                    <tr>
-                        <td>Traceroute</td>
-                        <td>13 month Test History</td>
-                        <td>Priority Tests</td>
-                    </tr>
-
-                    <tr>
-                        <td>API Access</td>
-                        <td>Integrations</td>
-                        <td>Private Tests <em class="new-banner">NEW</em></td>
-                    </tr>
-
-
-
-
-                    <td>
-                        Dedicated Support
-                    </td>
-                    <td></td>
-                    <td></td>
-                    </tr>
-
-                </tbody>
-            </table>
+            <ul class="upgrade-plan-feature-list">
+                <li>Bulk Testing <em class="new-banner">NEW</em></li>
+                <li>Opportunities <em class="new-banner">NEW</em></li>
+                <li>Experiments <em class="new-banner">NEW</em></li>
+                <li>300+ manual tests</li>
+                <li>40 Locations <sup><a href="#fn1" id="ref1">*</a></sup></li>
+                <li>All Browsers</li>
+                <li>All Connection Speeds</li>
+                <li>Filmstrip and Video</li>
+                <li>Google Lighthouse</li>
+                <li>Traceroute</li>
+                <li>13 month Test History</li>
+                <li>Priority Tests</li>
+                <li>API Access</li>
+                <li>Integrations</li>
+                <li>Private Tests <em class="new-banner">NEW</em></li>
+                <li>
+                    Dedicated Support
+                </li>
+                <li></li>
+                <li></li>
+            </ul>
             <p><sup id="fn1">* Our list of available test locations is continually growing.</sup></p>
 
 

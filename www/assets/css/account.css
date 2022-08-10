@@ -941,9 +941,58 @@ a.button {
   }
 }
 
-.signup-flow-layout .plan-details table tr:last-child th,
-.signup-flow-layout .plan-details table tr:last-child td {
-  border-bottom: 0;
+.signup-flow-layout aside {
+  background: #24334f;
+  color: #dadada;
+  padding: 70px 30px;
+}
+
+.signup-flow-layout .plan-benefits ul {
+  list-style: disc;
+  padding: initial;
+  margin: initial;
+}
+
+.signup-flow-layout aside h3 {
+  font-size: 1rem;
+  line-height: 1.6875rem;
+}
+
+.signup-flow-layout .plan-name {
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.6875rem;
+}
+.signup-flow-layout .wpt-pro-logo {
+  margin: 0 0 1em;
+}
+.signup-flow-layout .wpt-pro-logo {
+  background-position: 0 0;
+}
+
+.signup-flow-layout .plan-details {
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 1em;
+  border-radius: 0.6em;
+  margin: 1em 0;
+}
+.signup-flow-layout .plan-details table {
+  font-size: 0.95em;
+  width: 100%;
+  border-collapse: collapse;
+}
+.signup-flow-layout .plan-details table th {
+  text-align: left;
+  padding: 0.6em 0;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+.signup-flow-layout .plan-details table td {
+  text-align: right;
+  padding: 0.6em 0;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .signup-flow-layout .plan-details table tr:last-child th,
@@ -2120,4 +2169,31 @@ input#existing-card:not(:checked)
 input#existing-card:checked
   ~ .radiobutton-tabs__tab-content[data-tab="new-card"] {
   display: none;
+}
+
+.upgrade-plan-feature-list {
+  columns: 3;
+  -webkit-columns: 3;
+  -moz-columns: 3;
+  column-gap: 0px;
+  border-bottom: 1px solid rgb(204, 204, 204);
+  -webkit-column-rule: 1px solid rgb(204, 204, 204);
+  -moz-column-rule: 1px solid rgb(204, 204, 204);
+  column-rule: 1px solid rgb(204, 204, 204);
+}
+.upgrade-plan-feature-list li {
+  padding: 1rem;
+  min-height: 30px;
+}
+
+.upgrade-plan-feature-list li:nth-child(odd) {
+  background-color: #f4f4f4;
+}
+
+.upgrade-plan-feature-list-info {
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 10px;
+}
+.upgrade-plan-feature-list-info h3 {
+  padding: 1.5em 1em;
 }
