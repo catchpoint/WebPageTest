@@ -190,7 +190,7 @@ class CPClient
                             ]),
 
                     ]),
-                (new Query('braintreeCustomerDetails'))
+                (new Query('wptCustomer'))
                     ->setSelectionSet([
                         'remainingRuns',
                         'monthlyRuns'

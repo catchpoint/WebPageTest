@@ -31,8 +31,8 @@ use WebPageTest\Exception\UnauthorizedException;
     if (!is_null($access_token)) {
         try {
             $data = $request->getClient()->getUserDetails();
-            $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
-            $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
+            $user->setRemainingRuns($data['wptCustomer']['remainingRuns']);
+            $user->setMonthlyRuns($data['wptCustomer']['monthlyRuns']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
             $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
@@ -67,8 +67,8 @@ use WebPageTest\Exception\UnauthorizedException;
                     );
                     $data = $request->getClient()->getUserDetails();
                     $user->setUserId($data['userIdentity']['activeContact']['id']);
-                    $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
-                    $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
+                    $user->setRemainingRuns($data['wptCustomer']['remainingRuns']);
+                    $user->setMonthlyRuns($data['wptCustomer']['monthlyRuns']);
                     $user->setEmail($data['userIdentity']['activeContact']['email']);
                     $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
                     $user->setVerified($data['userIdentity']['activeContact']['isWptAccountVerified']);
