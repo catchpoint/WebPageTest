@@ -289,30 +289,21 @@ class CPClient
                         'ccExpirationDate',
                         'ccImageUrl',
                         'status',
-                        (new Query('discount'))
-                            ->setSelectionSet([
-                                'amount',
-                                'numberOfBillingCycles'
-                            ]),
                         'remainingRuns',
                         'monthlyRuns',
                         'planRenewalDate',
                         'billingFrequency',
                         'wptPlanName'
-                    ]),
-                (new Query('braintreeTransactionHistory'))
-                    ->setSelectionSet([
-                        'amount',
-                        'cardType',
-                        'ccLastFour',
-                        'maskedCreditCard',
-                        'transactionDate'
                     ])
             ]);
 
         try {
             $results = $this->graphql_client->runQuery($gql, true);
-            return $results->getData();
+            $customer = $results->getData()['wptCustomer'];
+            return [
+              'wptCustomer' => new CPCustomer($customer),
+              'wptApiKey' => $results->getData()['wptApiKey']
+            ];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }

@@ -144,15 +144,15 @@ if ($is_paid) {
     if ($is_wpt_enterprise) {
         $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
     } else {
+        $acct_info = $request_context->getClient()->getPaidAccountPageInfo();
         $billing_info = [
-            'wptApiKey' => $request_context->getClient()->getApiKeys(),
-            'wptCustomer' => $request_context->getClient()->getWptCustomer(),
+            'wptApiKey' => $acct_info['wptApiKey'],
+            'wptCustomer' => $acct_info['wptCustomer']
         ];
         $subId = $billing_info['wptCustomer']->getSubscriptionId();
         $billing_info['transactionHistory'] = $request_context->getClient()->getTransactionHistory($subId);
     }
     $customer = $billing_info['wptCustomer'];
-    $billing_frequency = $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly";
 
     if (!is_null($customer->getPlanRenewalDate()) && $billing_frequency == "Annually") {
         $billing_info['runs_renewal'] = $customer->getPlanRenewalDate()->format('m/d/Y');
@@ -165,7 +165,7 @@ if ($is_paid) {
     $billing_info['is_wpt_enterprise'] = $is_wpt_enterprise;
     $billing_info['status'] = $customer->getStatus();
     $billing_info['is_canceled'] = $customer->isCanceled();
-    $billing_info['billing_frequency'] = $billing_frequency;
+    $billing_info['billing_frequency'] = $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly";
     $billing_info['cc_image_url'] = $customer->getCCImageUrl();
     $billing_info['masked_cc'] = $customer->getMaskedCreditCard();
     $billing_info['cc_expiration'] = $customer->getCCExpirationDate();
