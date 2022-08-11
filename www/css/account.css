@@ -770,9 +770,8 @@ a.button {
 }
 .signup-flow-layout .wpt-pro-logo {
   margin: 0 0 1em;
-}
-.signup-flow-layout .wpt-pro-logo {
     background-position: 0 0;
+  background-size: contain;
 }
 .signup-flow-layout .plan-details {
   background: rgba(0,0,0,.2);
