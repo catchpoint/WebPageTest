@@ -280,9 +280,9 @@ final class CPClientTest extends TestCase
           "isWptEnterpriseClient": false
         }
       },
-      "braintreeCustomerDetails": {
-        "remainingRuns": "300",
-        "monthlyRuns": "3000"
+      "wptCustomer": {
+        "remainingRuns": 300,
+        "monthlyRuns": 3000
       }
     }
     }');

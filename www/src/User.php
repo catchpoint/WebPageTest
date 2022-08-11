@@ -133,6 +133,7 @@ class User
 
     public function setRemainingRuns(?int $runs): void
     {
+        $runs = $runs ?? $this->monthly_runs;
         $this->remaining_runs = $runs;
     }
 

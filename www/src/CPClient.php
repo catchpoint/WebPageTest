@@ -210,9 +210,9 @@ class CPClient
             $data = $account_details->getData();
 
             $user = new User();
-            $remaining_runs = (int)$data['braintreeCustomerDetails']['remainingRuns'];
+            $remaining_runs = (int)$data['wptCustomer']['remainingRuns'];
             $user->setRemainingRuns($remaining_runs);
-            $monthly_runs = (int)$data['braintreeCustomerDetails']['monthlyRuns'];
+            $monthly_runs = (int)$data['wptCustomer']['monthlyRuns'];
             $user->setMonthlyRuns($monthly_runs);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
