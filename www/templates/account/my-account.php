@@ -254,7 +254,6 @@ include_once __DIR__ . '/includes/modals/password.php';
 ?>
 <?php if ($is_paid) {
     include_once __DIR__ . '/includes/modals/cancel-subscription.php';
-    include_once __DIR__ . '/includes/modals/payment-info.php';
 } ?>
 <!-- /Modals -->
 

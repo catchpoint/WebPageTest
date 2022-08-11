@@ -10,7 +10,7 @@
             </div>
         <?php endif; ?>
     </div>
-    <div class="card payment-info" data-modal="payment-info-modal">
+    <div class="card payment-info">
         <div class="card-section user-info">
             <div class="cc-type image">
                 <img src="<?= $cc_image_url ?>" alt="card-type" width="80px" height="54px" />
@@ -19,11 +19,6 @@
                 <div class="cc-number"><?= $masked_cc; ?></div>
                 <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
 
-            </div>
-        </div>
-        <div class="card-section">
-            <div class="edit-button">
-                <button><span>Edit</span></button>
             </div>
         </div>
     </div>
