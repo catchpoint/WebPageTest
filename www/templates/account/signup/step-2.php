@@ -22,53 +22,51 @@
                 <label for="password">Password</label>
                 <input type="password" name="password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
                 <p class="description">Must have at least 8 characters, including a number, lowercase letter, uppercase
-letter and symbol. No &lt;, &gt;.</p>
+                    letter and symbol. No &lt;, &gt;.</p>
             </div>
             <div class="form-input">
                 <label for="confirm-password">Confirm Password</label>
                 <input type="password" name="confirm-password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
             </div>
             <?php if (!$is_plan_free) : ?>
-<div>
-    <div class="form-input address">
-        <label for="street-address">Billing Address</label>
-        <div>
-            <input name="street-address" type="text" value="<?= $street_address ?>" required />
-        </div>
-    </div>
-    <div class="form-input city">
-        <label for="city">City</label>
-        <input name="city" type="text" value="<?= $city ?>" required />
-    </div>
-    <div class="form-input state">
-        <label for="state">State</label>
-        <div>
-            <select name="state" data-country-selector="state-selector" required>
-                <?php foreach ($state_list as $state) : ?>
-                    <option value="<?= $state['code'] ?>">
-                        <?= $state['name']; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-    </div>
-    <div class="form-input country">
-        <label for="country">Country</label>
-        <select name="country" data-country-selector="selector" required>
-                <?php foreach ($country_list as $country) : ?>
-                <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
-                    <?= $country["name"]; ?>
-                </option>
-                <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="form-input zip">
-        <label for="zipcode">Postal Code</label>
-        <div>
-            <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
-        </div>
-    </div>
-</div>
+
+                <div class="form-input address">
+                    <label for="street-address">Billing Address</label>
+                    <input name="street-address" type="text" value="<?= $street_address ?>" required />
+                </div>
+                <div class="form-input city">
+                    <label for="city">City</label>
+                    <input name="city" type="text" value="<?= $city ?>" required />
+                </div>
+                <div class="form-input state">
+                    <label for="state">State</label>
+
+                    <select name="state" data-country-selector="state-selector" required>
+                        <?php foreach ($state_list as $state) : ?>
+                            <option value="<?= $state['code'] ?>">
+                                <?= $state['name']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                </div>
+                <div class="form-input country">
+                    <label for="country">Country</label>
+                    <select name="country" data-country-selector="selector" required>
+                        <?php foreach ($country_list as $country) : ?>
+                            <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
+                                <?= $country["name"]; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-input zip">
+                    <label for="zipcode">Postal Code</label>
+
+                    <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
+
+                </div>
+
             <?php endif; ?>
             <div class="form-input">
                 <?php
@@ -89,23 +87,23 @@ letter and symbol. No &lt;, &gt;.</p>
 <?php require_once __DIR__ . '/includes/sidebar.php' ?>
 
 <?php if (!$is_plan_free) : ?>
-<script src="/js/country-list/country-list.js"></script>
-<script>
-(() => {
-    const countryList = <?= $country_list_json_blob ?>;
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => {
-        const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
-        const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+    <script src="/js/country-list/country-list.js"></script>
+    <script>
+        (() => {
+            const countryList = <?= $country_list_json_blob ?>;
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", () => {
+                    const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                    const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
 
-        new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-      });
-    } else {
-        const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
-        const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+                    new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+                });
+            } else {
+                const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
 
-        new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-    }
-})();
-</script>
+                new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+            }
+        })();
+    </script>
 <?php endif; ?>
