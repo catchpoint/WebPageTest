@@ -41,7 +41,7 @@ This was messing up the change password modal
 .fg-modal .save-button {
   margin-top: 1.25rem;
 }
-
+input.outlined_input,
 .fg-modal input {
   max-width: none;
   width: 100%;
@@ -771,6 +771,7 @@ body.theme-b {
   text-align: center;
 }
 
+.signup-flow-layout .form-input:not(:first-child),
 .signup-flow-layout .content form .form-input:not(:first-child) {
   margin-top: 1.875rem;
 }
@@ -793,6 +794,11 @@ body.theme-b {
   font-size: 1.25rem;
   line-height: 1.6875rem;
   padding: 0.6875rem 1.3125rem;
+}
+
+.signup-flow-layout .form-input select {
+  border: 1px solid #999999;
+  border-radius: 2px;
 }
 
 .signup-flow-layout .form-input button[type="submit"],
