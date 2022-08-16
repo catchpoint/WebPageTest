@@ -2246,6 +2246,6 @@ input#existing-card:checked
 }
 
 /* lets add some disabled buttons to forms that are invalid */
-form:invalid button {
+form:invalid button[type="submit"] {
   opacity: 0.3;
 }
