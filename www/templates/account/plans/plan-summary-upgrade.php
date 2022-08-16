@@ -18,11 +18,7 @@
                             <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
                         </div>
                     </div>
-                    <div class="card-section">
-                        <div class="edit-button">
-                            <button><span>Edit</span></button>
-                        </div>
-                    </div>
+
                 </div>
             </div>
             <!-- .radiobutton-tab-container__notcss -->
