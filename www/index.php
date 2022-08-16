@@ -413,7 +413,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                     <div id="test_subbox-container">
                                         <ul class="ui-tabs-nav ui-tabs-nav-advanced">
                                             <li><a href="#test-settings">Test Settings</a></li>
-                                            <li><a href="#advanced-settings">Advanced</a></li>
+                                            <li><a href="#advanced-settings" id="tab-advanced">Advanced</a></li>
                                             <li><a href="#advanced-chrome">Chromium</a></li>
                                             <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
                                                 <li><a href="#auth">Auth</a></li>
@@ -820,8 +820,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 if (array_key_exists('script', $_REQUEST)) {
                                                     $script = htmlspecialchars($_REQUEST['script']);
                                                 }
-                                                echo "<textarea class=\"large\" name=\"script\" id=\"enter_script\" cols=\"0\" rows=\"0\">$script</textarea>\n";
                                                 ?>
+                                                <textarea class="large" name="script" id="enter_script" cols="0" rows="0"><?php echo $script; ?></textarea>
                                             </div>
                                             <br>
                                             <ul class="input_fields">
