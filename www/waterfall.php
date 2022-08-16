@@ -58,6 +58,7 @@ $options = array(
   'step_id' => $step,
   'use_cpu' =>     (!isset($_REQUEST['cpu'])    || $_REQUEST['cpu'] != 0),
   'use_bw' =>      (!isset($_REQUEST['bw'])     || $_REQUEST['bw'] != 0),
+  'use_lt' =>      (!isset($_REQUEST['lt'])     || $_REQUEST['lt'] != 0),
   'show_labels' => $show_labels,
   'show_chunks' => $show_chunks,
   'max_bw' => $bwIn,

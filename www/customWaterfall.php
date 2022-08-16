@@ -46,7 +46,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                             <legend>Chart Coloring</legend>
                             <label><input type="radio" name="coloring" value="classic"> Classic</label>
                             <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label>
-                        </fieldset> 
+                        </fieldset>
                         <fieldset>
                             <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="930"></label>
                             <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
@@ -57,6 +57,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                             <label><input id="showUT" type="checkbox" checked>Lines for User Timing Marks</label>
                             <label><input id="showCPU" type="checkbox" checked>CPU Utilization</label>
                             <label><input id="showBW" type="checkbox" checked>Bandwidth Utilization</label>
+                            <label><input id="showLT" type="checkbox" checked>Long tasks</label>
                             <label><input id="showDots" type="checkbox" checked>Ellipsis (...) for missing items</label>
                             <label><input id="showLabels" type="checkbox" checked>Labels for requests (URL)</label>
                             <label><input id="showChunks" type="checkbox" checked>Download chunks</label>
@@ -68,23 +69,23 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 </details>
             </div>
             <div class="box">
-                
+
             <?php
 
             $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-                        echo $waterfallSnippet->create(true, '&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1');
+                        echo $waterfallSnippet->create(true, '&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1');
 
                 $extension = 'php';
             if (FRIENDLY_URLS) {
                 $extension = 'png';
             }
-                echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\"></div>";
-                echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
+                echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1\"></div>";
+                echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
 
             ?>
             </div>
             <?php include('footer.inc'); ?>
-        
+
 
         <script>
             $(document).ready(function(){
@@ -132,6 +133,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 var showBW = 0;
                 if( $('#showBW').attr('checked') )
                     showBW = 1;
+                var showLT = 0;
+                if( $('#showLT').attr('checked') )
+                    showLT = 1;
                 var showDots = 0;
                 if( $('#showDots').attr('checked') )
                     showDots = 1;
@@ -166,6 +170,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                           '&ut=' + showUT +
                           '&cpu=' + showCPU +
                           '&bw=' + showBW +
+                          '&lt=' + showLT +
                           '&dots=' + showDots +
                           '&labels=' + showLabels +
                           '&chunks=' + showChunks +

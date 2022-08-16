@@ -235,6 +235,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $data_height = $height;
     $use_cpu = (bool)@$options['use_cpu'];
     $use_bw = (bool)@$options['use_bw'];
+    $use_lt = (bool)@$options['use_lt'];
     $stepId = array_key_exists('step_id', $options) ? (int) $options['step_id'] : 1;
     $isCached = array_key_exists('is_cached', $options) ? $options['is_cached'] : false;
     $localPaths = new TestPaths($options['path'], $options['run_id'], $isCached, $stepId);
@@ -296,7 +297,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         }
     }
     // See if we have main-thread interactive data
-    if (!$is_image_map && gz_is_file($localPaths->interactiveFile())) {
+    if ($use_lt && !$is_image_map && gz_is_file($localPaths->interactiveFile())) {
         $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
         if (isset($interactive)) {
             if (is_array($interactive) && count($interactive) > 0) {
