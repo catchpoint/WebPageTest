@@ -69,7 +69,7 @@
             function error(err) {
                 button.disabled = false;
                 button.removeAttribute('disabled');
-                button.innerText = 'Sign Up';
+                button.innerText = 'Upgrade Plan';
                 console.log('token ERROR - err: ', err);
             }
         );
