@@ -228,7 +228,7 @@ switch ($page) {
             }
             break;
         } else {
-            throw new ClientException("No plan chosen", $request->getRequestUri());
+            echo $tpl->render('plans/upgrade-plan', $results);
             break;
         }
     default:

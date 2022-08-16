@@ -2,6 +2,7 @@
     <?php include_once __DIR__ . '/includes/breadcrumbs.php'; ?>
     <?php include_once __DIR__ . '/includes/subhed.php'; ?>
     <!-- main form -->
+    qdqwdqweq
     <form id="wpt-account-upgrade" method="post" action="/account">
         <!-- payment -->
         <div class="box card-section">
@@ -39,11 +40,11 @@
             </div>
             <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getRuns() ?></li>
-<?php if ($plan->getBillingFrequency() == 'Monthly') : ?>
-                <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
-<?php else : ?>
-                <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
-<?php endif; ?>
+                <?php if ($plan->getBillingFrequency() == 'Monthly') : ?>
+                    <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
+                <?php else : ?>
+                    <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
+                <?php endif; ?>
             </ul>
         </div>
 
