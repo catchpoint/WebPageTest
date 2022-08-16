@@ -7,6 +7,14 @@
       this.summary = summaryNode;
       this.form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        const pulse = e.target.querySelector(
+          "button[type='submit'] span[data-id='pulse']"
+        );
+        const submit = e.target.querySelector(
+          "button[type='submit'] span[data-id='button-text']"
+        );
+        submit.innerHTML = "Calculating taxes...";
+        pulse.classList.add("dot-pulse");
         const fd = new FormData(e.target);
         const request = new Request("/account", {
           method: "POST",
@@ -19,6 +27,8 @@
           bubbles: true,
           detail: fd,
         });
+        submit.innerHTML = "Add Billing Address";
+        pulse.classList.remove("dot-pulse");
         e.target.dispatchEvent(updated);
       });
     }

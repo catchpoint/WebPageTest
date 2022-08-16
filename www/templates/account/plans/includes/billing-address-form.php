@@ -41,7 +41,7 @@
         <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
         <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
         <div class="add-subscription-button-wrapper form-input">
-            <button type="submit" class="pill-button yellow">Add Billing Address</button>
+            <button type="submit" class="pill-button yellow"><span data-id="pulse"></span><span data-id="button-text">Add Billing Address</span></button>
         </div>
 
     </div>
@@ -50,6 +50,7 @@
 <script defer src="/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
 <script>
     (() => {
+        // state dropdown
         const countryList = <?= $country_list_json_blob ?>;
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", () => {
