@@ -22,6 +22,7 @@ use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseTypeList;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
@@ -699,7 +700,7 @@ class CPClient
         return new CPCustomer($data);
     }
 
-    public function getInvoice(string $subscription_id): ChargifyInvoiceResponseType
+    public function getInvoices(string $subscription_id): ChargifyInvoiceResponseTypeList
     {
 
         $gql = (new Query('invoice'))
@@ -830,13 +831,15 @@ class CPClient
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
-        $data = $results->getData('invoice');
-        return new ChargifyInvoiceResponseType($data);
+        $invoices = array_map(function ($invoice): ChargifyInvoiceResponseType {
+            return new ChargifyInvoiceResponseType($invoice);
+        }, $results->getData()['invoice']);
+        return new ChargifyInvoiceResponseTypeList(...$invoices);
     }
 
     public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
     {
-        $gql = (new Query('invoice'))
+        $gql = (new Query('invoices'))
             ->setVariables([
                 new Variable('subscriptionId', 'String', true),
             ])
@@ -872,13 +875,12 @@ class CPClient
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
-        $data = $results->getData()['invoice'];
-        $payment_list = new ChargifyInvoicePaymentList();
-        foreach ($data['payments'] as $payment) {
-            $payment_list->add(new ChargifyInvoicePayment($payment));
-        }
-
-        return $payment_list;
+        $payments = array_map(function ($invoice): array {
+            return array_map(function ($payment): ChargifyInvoicePayment {
+                return new ChargifyInvoicePayment($payment);
+            }, $invoice['payments']);
+        }, $results->getData()['invoices']) ?? [];
+        return new ChargifyInvoicePaymentList(...array_merge([], ...array_values($payments)));
     }
 
     public function getApiKeys(): array

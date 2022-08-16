@@ -29,7 +29,6 @@
                 <input type="password" name="confirm-password" pattern="<?= $password_pattern ?>" minlength="8" maxlength="32" required />
             </div>
             <?php if (!$is_plan_free) : ?>
-
                 <div class="form-input address">
                     <label for="street-address">Billing Address</label>
                     <input name="street-address" type="text" value="<?= $street_address ?>" required />
