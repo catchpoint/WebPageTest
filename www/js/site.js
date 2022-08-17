@@ -1022,36 +1022,31 @@ var getScrollbarWidth = function() {
 
     // jQuery UI Tabs
     $("#test_subbox-container").tabs();
-    $("#test_subbox-container").on("tabsshow", function (event, ui) {
+    $("#test_subbox-container").on("tabsshow", async function (event, ui) {
       if (
         ui.tab.id === "tab-advanced" &&
-        !document.getElementById("codeflask-script") // already loaded
+        !document.getElementById("injectscript-container")
       ) {
         // load Flask
+        const { default: CodeFlask } = await import("/js/codeflask.module.js");
         var injectScript = document.getElementById("injectScript");
-        var script = document.createElement("script");
-        script.src = "/js/codeflask.min.js";
-        script.id = "codeflask-script";
-        script.onload = function () {
-          // editor container
-          var codeEl = document.createElement("div");
-          codeEl.id = "injectscript-container";
-          injectScript.parentNode.insertBefore(codeEl, injectScript);
-          // switch textarea to a hidden input
-          var hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.id = "injectScript";
-          hidden.name = "injectScript";
-          injectScript.parentNode.replaceChild(hidden, injectScript);
-          // go!
-          var codeArea = new CodeFlask(codeEl, {
-            language: "js",
-          });
-          codeArea.onUpdate(function (code) {
-            hidden.value = code;
-          });
-        };
-        document.body.appendChild(script);
+        // editor container
+        var codeEl = document.createElement("div");
+        codeEl.id = "injectscript-container";
+        injectScript.parentNode.insertBefore(codeEl, injectScript);
+        // switch textarea to a hidden input
+        var hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = "injectScript";
+        hidden.name = "injectScript";
+        injectScript.parentNode.replaceChild(hidden, injectScript);
+        // go!
+        var codeArea = new CodeFlask(codeEl, {
+          language: "js",
+        });
+        codeArea.onUpdate(function (code) {
+          hidden.value = code;
+        });
       }
     });
 
