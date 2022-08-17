@@ -11,7 +11,6 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Middleware;
-
 use WebPageTest\Plan;
 
 final class CPClientTest extends TestCase
@@ -40,6 +39,18 @@ final class CPClientTest extends TestCase
 
         $this->assertEquals('123', $client->client_id);
         $this->assertEquals('345', $client->client_secret);
+    }
+
+    public function testAuthenticateSetsAccessToken(): void
+    {
+        $host = 'http://127.0.0.1';
+        $token = "ABCDEF123";
+
+        $client = new CPClient($host, array());
+        $this->assertFalse($client->isAuthenticated());
+        $client->authenticate($token);
+        $this->assertEquals($token, $client->getAccessToken());
+        $this->assertTrue($client->isAuthenticated());
     }
 
     public function testLoginCallsCorrectEndpointWithBody(): void
