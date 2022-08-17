@@ -4,7 +4,7 @@
 🙋🏽‍♀️ **Status** Proposed
 
 ## ℹ️ Context
-WPT codebase has grown from mostly one- or two-person project to a fairly complex codebase with a tons of features and a team of engineers plus community contributors working simluntaneously.
+WPT codebase has grown from mostly one- or two-person project to a fairly complex codebase with a tons of features and a team of engineers plus community contributors working simultaneously.
 
 We want contributors, both community and internal, to be able to get in, figure out the relevant place in the code, make their change, and get out, as quickly and painlessly as possible.
 
@@ -20,7 +20,7 @@ Migrating the home-grown codebase to a well-documented popular framework will he
 ## Process
 We want the migration to be gradual and as obtrusive as possible regarding day-to-day coding. We can attack the pieces (Routing, Models, Views, Controllers) separately and asynchronously.
 
-The following as suggestions based on what we have in codebase, personal opinions, and an [informative article](https://www.phparch.com/2019/03/migrating-legacy-web-applications-to-laravel/) desribing similar migrations.
+The following as suggestions based on what we have in codebase, personal opinions, and an [informative article](https://www.phparch.com/2019/03/migrating-legacy-web-applications-to-laravel/) describing similar migrations.
 
 ### Phases
 
