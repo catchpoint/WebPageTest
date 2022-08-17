@@ -9,7 +9,7 @@ There are some specific goals that we have for WebPageTest to ensure that key de
 - We want to make sure that we've thought carefully about architectural decisions, considered alternatives, and arrived at a decision the team agrees is best for the product and community.
 - We want to be as transparent as possible in our decision-making process.
 - We want contributors, both external and internal, to be able to have a strong understanding of why certain architectural decisions were made.
-- We want to leave a trail of docoumentation for ourselves so that we can revisit our decisions to see why they were made and if they still make sense.
+- We want to leave a trail of documentation for ourselves so that we can revisit our decisions to see why they were made and if they still make sense.
 
 ## 🤔 Decision
 We will document our architecure decisions for WebPageTest with an [Architecture Decision Record](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)—structured, relatively lightweight records of architectural decisions.
