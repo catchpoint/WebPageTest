@@ -15,7 +15,7 @@
         <p>These changes will take effect immediately. You can resubscribe at any time.</p>
         <button type="submit" class="pill-button red">Cancel Subscription</button>
         <input type="hidden" name="type" value="cancel-subscription" />
-        <input type="hidden" name="subscription-id" value="<?= $braintreeCustomerDetails['subscriptionId'] ?>" />
+        <input type="hidden" name="subscription-id" value="<?= $wptCustomer->getSubscriptionId() ?>" />
         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
     </form>
 </fg-modal>
