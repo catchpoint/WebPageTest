@@ -1,0 +1,33 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+
+        root   /var/www/webpagetest/www/;
+        add_header Timing-Allow-Origin *;
+
+        location /work/update {
+                autoindex on;
+        }
+
+        # pass the PHP scripts to FastCGI server
+        location ~ \.php$ {
+            try_files $uri =404;
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+            fastcgi_pass php:9000;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+            fastcgi_index index.php;
+            include fastcgi_params;
+        }
+
+        location ~ ^/(fpm-status|fpm-ping)$ {
+            access_log off;
+            allow 127.0.0.1;
+            deny all;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            include fastcgi_params;
+            fastcgi_pass php:9000;
+        }
+
+        include /var/www/webpagetest/www/nginx.conf;
+}
