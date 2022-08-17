@@ -238,12 +238,12 @@ function SelectRequest(step, request) {
     ) {
       //let's create a nice clean list of hints
       let hints = r["early_hint_headers"][1].substring(6);
-      hints = hints.split(",");
+      hints = hints.split(/(?=\<)/);
 
       details += "<b>Early Hints: </b>";
       details += "<ul class='hints'>";
       hints.forEach((hint) => {
-        details += "<li>" + htmlEncode(hint) + "</li>";
+        details += "<li>" + htmlEncode(hint.replace(/\,/, '')) + "</li>";
       });
       details += "</ul><br>";
     }
