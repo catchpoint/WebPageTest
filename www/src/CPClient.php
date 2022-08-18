@@ -847,6 +847,7 @@ class CPClient
                 'subscriptionId' => '$subscriptionId',
             ])
             ->setSelectionSet([
+                'publicUrl',
                 (new Query('payments'))
                     ->setSelectionSet([
                         'transactionId',
@@ -876,8 +877,11 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         $payments = array_map(function ($invoice): array {
-            return array_map(function ($payment): ChargifyInvoicePayment {
-                return new ChargifyInvoicePayment($payment);
+            $public_url = $invoice['publicUrl'];
+            return array_map(function ($payment) use ($public_url): ChargifyInvoicePayment {
+                $cip = new ChargifyInvoicePayment($payment);
+                $cip->setInvoiceLink($public_url);
+                return $cip;
             }, $invoice['payments']);
         }, $results->getData()['invoices']) ?? [];
         return new ChargifyInvoicePaymentList(...array_merge([], ...array_values($payments)));

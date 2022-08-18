@@ -17,6 +17,7 @@ class ChargifyInvoicePayment
     private bool $prepayment;
     private ?string $gateway_transaction_id;
     private ChargifyInvoicePaymentMethodType $payment_method;
+    private string $invoice_link;
 
     public function __construct(array $options)
     {
@@ -28,6 +29,7 @@ class ChargifyInvoicePayment
         $this->prepayment = $options['prepayment'];
         $this->gateway_transaction_id = $options['gatewayTransactionId'];
         $this->payment_method = new ChargifyInvoicePaymentMethodType($options['paymentMethod']);
+        $this->invoice_link = $options['publicUrl'] ?? "";
     }
 
     public function getTransactionId(): int
@@ -68,5 +70,15 @@ class ChargifyInvoicePayment
     public function getPaymentMethod(): ChargifyInvoicePaymentMethodType
     {
         return $this->payment_method;
+    }
+
+    public function setInvoiceLink(?string $link): void
+    {
+        $this->invoice_link = $link ?? "";
+    }
+
+    public function getInvoiceLink(): string
+    {
+        return $this->invoice_link;
     }
 }
