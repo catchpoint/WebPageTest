@@ -18,7 +18,7 @@ Migrating the home-grown codebase to a well-documented popular framework will he
 - hire engineers with potentially some Laravel experience
 
 ## Process
-We want the migration to be gradual and as obtrusive as possible regarding day-to-day coding. We can attack the pieces (Routing, Models, Views, Controllers) separately and asynchronously.
+We want the migration to be gradual and as unobtrusive as possible regarding day-to-day coding. We can attack the pieces (Routing, Models, Views, Controllers) separately and asynchronously.
 
 The following as suggestions based on what we have in codebase, personal opinions, and an [informative article](https://www.phparch.com/2019/03/migrating-legacy-web-applications-to-laravel/) describing similar migrations.
 
