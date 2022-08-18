@@ -51,22 +51,23 @@ if (isset($test) && is_array($test) && isset($test['testinfo']['bwIn'])) {
 }
 
 $options = array(
-  'id' => $id,
-  'path' => $testPath,
-  'run_id' => $run,
-  'is_cached' => $cached,
-  'step_id' => $step,
-  'use_cpu' =>     (!isset($_REQUEST['cpu'])    || $_REQUEST['cpu'] != 0),
-  'use_bw' =>      (!isset($_REQUEST['bw'])     || $_REQUEST['bw'] != 0),
-  'show_labels' => $show_labels,
-  'show_chunks' => $show_chunks,
-  'max_bw' => $bwIn,
-  'is_mime' => $is_mime,
-  'is_state' => $is_state,
-  'include_js' => $include_js,
-  'include_wait' => $include_wait,
-  'show_user_timing' => (isset($_REQUEST['ut']) ? $_REQUEST['ut'] : GetSetting('waterfall_show_user_timing')),
-  'rowcount' => $rowcount
+    'id' => $id,
+    'path' => $testPath,
+    'run_id' => $run,
+    'is_cached' => $cached,
+    'step_id' => $step,
+    'use_cpu' => (!isset($_REQUEST['cpu']) || $_REQUEST['cpu'] != 0),
+    'use_bw' => (!isset($_REQUEST['bw']) || $_REQUEST['bw'] != 0),
+    'use_lt' => (!isset($_REQUEST['lt']) || $_REQUEST['lt'] != 0),
+    'show_labels' => $show_labels,
+    'show_chunks' => $show_chunks,
+    'max_bw' => $bwIn,
+    'is_mime' => $is_mime,
+    'is_state' => $is_state,
+    'include_js' => $include_js,
+    'include_wait' => $include_wait,
+    'show_user_timing' => (isset($_REQUEST['ut']) ? $_REQUEST['ut'] : GetSetting('waterfall_show_user_timing')),
+    'rowcount' => $rowcount
 );
 
 $url = $testStepResult->readableIdentifier($url);
