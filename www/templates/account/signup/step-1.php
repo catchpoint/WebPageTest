@@ -80,7 +80,7 @@
                 </td>
                 <td>
                     <span class="visually-hidden">Sign up for a Pro Plan</span>
-                    <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= $annual_plans[0]->getAnnualPrice() ?></span><span class="unit" data-id="plan-cycle">/year</span></button>
+                    <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= count($annual_plans) > 0 ? $annual_plans[0]->getAnnualPrice() : "" ?></span><span class="unit" data-id="plan-cycle">/year</span></button>
                 </td>
             </tr>
             <tr>
