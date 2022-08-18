@@ -3,8 +3,7 @@
         <h3>Payment &amp; Invoices</h3>
         <?php if (strtolower($billing_frequency) == "monthly") : ?>
             <div class="account-cta">
-                <a href="/account/update_billing" class="two-tone-pill-button ">
-                    <span class="two-tone-pill-button__left">Upgrade to Annual Billing</span>
+                <a href="/account/update_billing" class="two-tone-pill-button "> <span class="two-tone-pill-button__left">Upgrade to Annual Billing</span>
                     <span class="two-tone-pill-button__right">Save 25%</span>
                 </a>
             </div>
@@ -56,6 +55,9 @@
                                     <span aria-hidden="true"></span>
                                 </button>
                             </th>
+                            <th>
+                                Download
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -65,6 +67,7 @@
                                 <td data-th="Credit Card"><?= $row->getPaymentMethod()->getType() ?></td>
                                 <td data-th="Card No."><?= $row->getPaymentMethod()->getMaskedCardNumber() ?></td>
                                 <td data-th="Amount">$<?= $row->getAppliedAmount() ?></td>
+                                <td data-th="Download"><a href="<?= $row->getInvoiceLink() ?>">Link</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
