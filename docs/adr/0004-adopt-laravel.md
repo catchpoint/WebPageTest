@@ -92,14 +92,14 @@ In essence the three phases are one long phase, interrupted by the Laravel switc
 
 ### Controllers
 
-Phase 1 - chill
-Phase 2 - create one controller (one idea is to use a 404 controller) that includes old code. Similar to what `www/index.php` does in phase 1.
-Phase 3 - convert old entry points to Laravel controllers
+- Phase 1 - chill
+- Phase 2 - create one controller (one idea is to use a 404 controller) that includes old code. Similar to what `www/index.php` does in phase 1.
+- Phase 3 - convert old entry points to Laravel controllers
 
 ### Models
 
-Phase 1 and 2 - rest
-Phase 3 - yank spaghetti off of places with names like `common`, `.inc`, etc and into beautiful classes in `possum/app/wpt`. Or to `possum/app/Models` if it's database heavy.
+- Phase 1 and 2 - rest
+- Phase 3 - yank spaghetti off of places with names like `common`, `.inc`, etc and into beautiful classes in `possum/app/wpt`. Or to `possum/app/Models` if it's database heavy.
 
 ## 📝 Changelog
 - 07/17/2022 Proposed
