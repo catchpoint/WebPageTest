@@ -179,7 +179,7 @@ class CPSignupClient
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan']);
+        }, $results->getData()['wptPlan']) ?? [];
     }
 
     public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
