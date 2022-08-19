@@ -427,7 +427,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         window.onhashchange = handleHash;
 
         <?php
-        include "waterfall.js";
+        include "assets/js/waterfall.js";
         ?>
         </script>
 

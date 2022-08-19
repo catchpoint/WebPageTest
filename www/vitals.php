@@ -130,7 +130,7 @@ $page_description = "Web Vitals details$testLabel";
         });
 
         <?php
-        include "waterfall.js";
+        include "assets/js/waterfall.js";
         if ($lcp_request != '') {
             ?>
         var stepLabel = "step1";
