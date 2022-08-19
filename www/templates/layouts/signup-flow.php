@@ -18,7 +18,7 @@
     <title><?php echo $page_title; ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
     <link href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
-    <script defer src="/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
+    <script defer src="/assets/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
 </head>
 
 <body>

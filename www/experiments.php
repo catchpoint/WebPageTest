@@ -466,7 +466,7 @@ $page_description = "Website performance test result$testLabel.";
         </div>
         </div>
         </div>
-        <script type="text/javascript" src="/js/jk-navigation.js"></script>
+        <script type="text/javascript" src="/assets/js/jk-navigation.js"></script>
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
             // collapse later opps

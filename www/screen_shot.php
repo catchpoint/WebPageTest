@@ -100,9 +100,9 @@ $userImages = true;
             </div>
             <?php include('footer.inc'); ?>
             <?php
-            if (!empty($hasJquery) && is_file('./js/jk-navigation.js') && $testRunResults->countSteps() > 1) {
+            if (!empty($hasJquery) && is_file('./assets/js/jk-navigation.js') && $testRunResults->countSteps() > 1) {
                 echo '<script>';
-                include('./js/jk-navigation.js');
+                include('./assets/js/jk-navigation.js');
                 echo 'addJKNavigation("h1.stepName")';
                 echo '</script>';
             }

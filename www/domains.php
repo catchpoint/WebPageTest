@@ -53,7 +53,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             include 'header.inc';
             ?>
 
-          
+
 <div class="results_main_contain">
         <div class="results_main">
 
@@ -68,7 +68,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             </div>
 
             <div id="result" class="results_body">
-           
+
             <?php
             if ($isMultistep) {
                 echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
@@ -127,8 +127,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <script src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
-            echo '<script src="/js/jk-navigation.js"></script>';
-            echo '<script src="/js/accordion.js"></script>';
+            echo '<script src="/assets/js/jk-navigation.js"></script>';
+            echo '<script src="/assets/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $firstViewResults->getRunNumber();
             echo '<script>';

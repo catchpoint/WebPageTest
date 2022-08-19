@@ -51,7 +51,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
              <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
-            
+
                 <?php
                 echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                 if (strlen($secret)) {
@@ -72,7 +72,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
             <input type="hidden" name="mobile" value="1">
             <input type="hidden" name="type" value="lighthouse">
 
-           
+
 
 
 
@@ -123,9 +123,9 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 
             </div>
 
-            
+
             </form>
-            
+
                 <?php
             } // $headless
             ?>
@@ -142,9 +142,9 @@ if (file_exists('./settings/server/lighthouse.ini')) {
           var location = sel.options[sel.selectedIndex].value;
           var d = new Date();
           d.setTime(d.getTime() + (365*24*60*60*1000));
-          document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";          
+          document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";
         };
         </script>
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>

@@ -36,12 +36,12 @@
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
-        echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
     if (
         !array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
-        is_file('./js/experiment.js')
+        is_file('./assets/js/experiment.js')
     ) {
         $headers = $_SERVER;
         preg_match_all(
@@ -54,9 +54,9 @@
         echo "<script>\n";
         echo "wptJSVer = '" . VER_JS . "';\n";
         echo "wptBrowser = '$browser';\n";
-        include('./js/experiment.js');
+        include('./assets/js/experiment.js');
         echo "</script>\n";
-        //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+        //echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }
 
     ?>

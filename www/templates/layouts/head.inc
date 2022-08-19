@@ -31,24 +31,24 @@
 <style>
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-light-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-light-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-light-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-light-webfont.woff') format('woff');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-regular-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-regular-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-regular-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-regular-webfont.woff') format('woff');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-bold-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-bold-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-bold-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-bold-webfont.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -110,7 +110,7 @@ if (is_file(__DIR__ . '/../../settings/custom.css')) {
     // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo '<script>';
-    require_once __DIR__ . '/../../js/catchpoint-rum.js';
+    require_once __DIR__ . '/../../assets/js/catchpoint-rum.js';
     echo '</script>';
 }
 

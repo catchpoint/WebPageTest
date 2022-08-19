@@ -81,10 +81,10 @@
 <script>
     <?php
     if ($is_logged_in) {
-        include __DIR__ . '/../../js/history-loggedin.js';
+        include __DIR__ . '/../../assets/js/history-loggedin.js';
     } else {
         // if not logged in, build a local searchable test history from the data stored in indexeddb.
-        include __DIR__ . '/../../js/history.js';
+        include __DIR__ . '/../../assets/js/history.js';
     }
     ?>
 </script>
