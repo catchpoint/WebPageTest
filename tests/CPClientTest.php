@@ -11,7 +11,6 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Middleware;
-use WebPageTest\Plan;
 
 final class CPClientTest extends TestCase
 {
@@ -277,28 +276,28 @@ final class CPClientTest extends TestCase
     public function testGetUser(): void
     {
         $handler = $this->createMockResponse(200, '{
-    "data": {
-      "userIdentity": {
-        "activeContact": {
-          "id": 263425,
-          "firstName": "Alice",
-          "lastName": "Bob",
-          "email": "alicebob@catchpoint.com",
-          "isWptPaidUser": true,
-          "isWptAccountVerified": true,
-          "companyName": null
-        },
-        "levelSummary": {
-          "levelId": 3,
-          "isWptEnterpriseClient": false
-        }
-      },
-      "wptCustomer": {
-        "remainingRuns": 300,
-        "monthlyRuns": 3000
-      }
-    }
-    }');
+            "data": {
+              "userIdentity": {
+                "activeContact": {
+                  "id": 263425,
+                  "firstName": "Alice",
+                  "lastName": "Bob",
+                  "email": "alicebob@catchpoint.com",
+                  "isWptPaidUser": true,
+                  "isWptAccountVerified": true,
+                  "companyName": null
+                },
+                "levelSummary": {
+                  "levelId": 3,
+                  "isWptEnterpriseClient": false
+                }
+              },
+              "wptCustomer": {
+                "remainingRuns": 300,
+                "monthlyRuns": 3000
+              }
+            }
+            }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -323,26 +322,26 @@ final class CPClientTest extends TestCase
     public function testGetUserWithError(): void
     {
         $handler = $this->createMockResponse(200, '{
-      "errors":[
-        {
-          "message":"Invalid data. This is an error, man",
-          "locations":[
-            {
-              "line":1,
-              "column":2
-            }
-          ],
-          "extensions":{
-            "code":"GRAPHQL_VALIDATION_FAILED",
-            "exception":{
-              "stacktrace":[
-                "Errors all over the place"
-              ]
-            }
-          }
-        }
-      ]
-    }');
+            "errors":[
+              {
+                "message":"Invalid data. This is an error, man",
+                "locations":[
+                  {
+                    "line":1,
+                    "column":2
+                  }
+                ],
+                "extensions":{
+                  "code":"GRAPHQL_VALIDATION_FAILED",
+                  "exception":{
+                    "stacktrace":[
+                      "Errors all over the place"
+                    ]
+                  }
+                }
+              }
+            ]
+          }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -360,16 +359,16 @@ final class CPClientTest extends TestCase
     public function testGetUserContactInfo(): void
     {
         $handler = $this->createMockResponse(200, '{
-    "data": {
-      "contact": [
-        {
-          "companyName": "catchpoint",
-          "firstName": "Janet",
-          "lastName": "Jones"
-        }
-      ]
-    }
-    }');
+            "data": {
+              "contact": [
+                {
+                  "companyName": "catchpoint",
+                  "firstName": "Janet",
+                  "lastName": "Jones"
+                }
+              ]
+            }
+        }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -387,26 +386,26 @@ final class CPClientTest extends TestCase
     public function testGetUserContactInfoWithError(): void
     {
         $handler = $this->createMockResponse(200, '{
-      "errors":[
-        {
-          "message":"Invalid data. This is an error, man",
-          "locations":[
+          "errors":[
             {
-              "line":1,
-              "column":2
+              "message":"Invalid data. This is an error, man",
+              "locations":[
+                {
+                  "line":1,
+                  "column":2
+                }
+              ],
+              "extensions":{
+                "code":"GRAPHQL_VALIDATION_FAILED",
+                "exception":{
+                  "stacktrace":[
+                    "Errors all over the place"
+                  ]
+                }
+              }
             }
-          ],
-          "extensions":{
-            "code":"GRAPHQL_VALIDATION_FAILED",
-            "exception":{
-              "stacktrace":[
-                "Errors all over the place"
-              ]
-            }
-          }
-        }
-      ]
-    }');
+          ]
+        }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -498,14 +497,43 @@ final class CPClientTest extends TestCase
 
           $plans = $client->getWptPlans();
           $this->assertEquals(8, count($plans));
-          foreach($plans as $plan)
-          {
-              $this->assertTrue($plan instanceof Plan);
-          }
+    }
+
+    public function testGetWptPlansNullResponse(): void
+    {
+        $handler = $this->createMockResponse(200, '{
+            "data": {
+              "wptPlan": null
+            }
+          }');
+
+          $host = "http://webpagetest.org";
+          $client = new CPClient($host, array(
+              'auth_client_options' => [
+                  'client_id' => '123',
+                  'client_secret' => '345',
+                  'grant_type' => 'these are good to have',
+                  'handler' => $handler
+              ]
+          ));
+
+          $plans = $client->getWptPlans();
+          $this->assertEquals(0, count($plans));
     }
 
     /**
-    public function getPaidAccountPageInfo(): array
+    public function getPaidAccountPageInfo(): PaidPageInfo
+		"wptApiKey": [
+			{
+				"id": 673,
+				"name": "webpagetest",
+				"apiKey": "12581d97-7b8b-4519-b02f-b404f401a973",
+				"createDate": "2022-03-23T09:12:57.937",
+				"changeDate": "2022-04-28T08:39:16.023"
+    },
+    "wptCustomer": {
+    }
+		],
     public function getPaidEnterpriseAccountPageInfo(): array
     public function updateUserContactInfo(string $id, array $options): array
     public function changePassword(string $new_pass, string $current_pass): array
