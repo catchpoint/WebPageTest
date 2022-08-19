@@ -17,7 +17,7 @@ if (strlen($page_description)) {
 }
 ?>
 <meta name="author" content="Patrick Meenan">
-<meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
@@ -29,24 +29,24 @@ if (strlen($page_description)) {
 <style>
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-light-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-light-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-light-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-light-webfont.woff') format('woff');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-regular-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-regular-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-regular-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-regular-webfont.woff') format('woff');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-bold-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-bold-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-bold-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-bold-webfont.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
