@@ -12,6 +12,8 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Middleware;
 
+use WebPageTest\Plan;
+
 final class CPClientTest extends TestCase
 {
     public function testConstructorSetsDefaults(): void
@@ -408,6 +410,108 @@ final class CPClientTest extends TestCase
         $client->getUserContactInfo(12345);
     }
 
+    public function testGetWptPlans(): void
+    {
+        $handler = $this->createMockResponse(200, '{
+            "data": {
+              "wptPlan": [
+                {
+                  "name": "MP1",
+                  "priceInCents": 1874,
+                  "description": "MP1",
+                  "interval": 1,
+                  "monthlyTestRuns": 1200
+                },
+                {
+                  "name": "MP2",
+                  "priceInCents": 500,
+                  "description": "MP2",
+                  "interval": 1,
+                  "monthlyTestRuns": 5000
+                },
+                {
+                  "name": "MP3",
+                  "priceInCents": 12499,
+                  "description": "MP3",
+                  "interval": 1,
+                  "monthlyTestRuns": 12000
+                },
+                {
+                  "name": "AP1",
+                  "priceInCents": 17988,
+                  "description": "AP1",
+                  "interval": 12,
+                  "monthlyTestRuns": 1200
+                },
+                {
+                  "name": "MP4",
+                  "priceInCents": 24999,
+                  "description": "MP4",
+                  "interval": 1,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP2",
+                  "priceInCents": 59988,
+                  "description": "AP2",
+                  "interval": 12,
+                  "monthlyTestRuns": 5000
+                },
+                {
+                  "name": "AP3",
+                  "priceInCents": 119988,
+                  "description": "AP3",
+                  "interval": 12,
+                  "monthlyTestRuns": 12000
+                },
+                {
+                  "name": "AP4",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                }
+              ]
+            }
+          }');
+
+          $host = "http://webpagetest.org";
+          $client = new CPClient($host, array(
+              'auth_client_options' => [
+                  'client_id' => '123',
+                  'client_secret' => '345',
+                  'grant_type' => 'these are good to have',
+                  'handler' => $handler
+              ]
+          ));
+
+          $plans = $client->getWptPlans();
+          $this->assertEquals(8, count($plans));
+          foreach($plans as $plan)
+          {
+              $this->assertTrue($plan instanceof Plan);
+          }
+    }
+
+    /**
+    public function getPaidAccountPageInfo(): array
+    public function getPaidEnterpriseAccountPageInfo(): array
+    public function updateUserContactInfo(string $id, array $options): array
+    public function changePassword(string $new_pass, string $current_pass): array
+    public function createApiKey(string $name): array
+    public function deleteApiKey(array $ids): array
+    public function addWptSubscription(ChargifySubscriptionInputType $subscription): array
+    public function cancelWptSubscription(
+    public function resendEmailVerification()
+    public function getTestHistory(int $days = 1): array
+    public function getTotalRunsSince(DateTime $date): int
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
+    public function getWptCustomer(): CPCustomer
+    public function getInvoices(string $subscription_id): ChargifyInvoiceResponseTypeList
+    public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
+    public function getApiKeys(): array
+    public function updatePlan(string $subscription_id, string $next_plan_handle): bool
+     */
     private function createMockResponse(int $status, string $body): HandlerStack
     {
         $mock = new MockHandler([new Response($status, [], $body)]);
