@@ -140,7 +140,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             // Note: "Comprehensive" if it's multi device?
         if ($experiment) {
-            echo "<h1 class=\"result_hed-pro\"><img src=\"/images/wpt-logo-pro.svg\" alt=\"WebPageTest Pro\"> Experiment</h1>";
+            echo "<h1 class=\"result_hed-pro\"><img src=\"/assets/images/wpt-logo-pro.svg\" alt=\"WebPageTest Pro\"> Experiment</h1>";
         } else {
             echo "<h1>Webpage Performance Test Result</h1>";
         }
@@ -188,7 +188,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
             $browser = $testResults->getBrowser();
                 //check to make sure we have a browser icon
-            if (isset($browser) && file_exists(__DIR__ . '/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
+            if (isset($browser) && file_exists(__DIR__ . '/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
                 //exists so let's use it
                 $browserIcon = true;
             } else {
@@ -225,7 +225,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     if (isset($browser)) {
                         echo '<span class="test_presets_tag">';
                         if ($browserIcon) {
-                            echo '<img src="/images/test_icons/' . strtolower($browser->getName()) . '.svg" alt="' . $browser->getName() . '">';
+                            echo '<img src="/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg" alt="' . $browser->getName() . '">';
                         } elseif ($browser->getName()) {
                             echo $browser->getName();
                         }
@@ -241,7 +241,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo '<span class="test_presets_tag">';
 
                     if ($flags[$test['test']['loc']]) {
-                        echo '<img src="/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
+                        echo '<img src="/assets/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
                     }
 
                     echo $locationSimple;
@@ -438,7 +438,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         $lhClass = 'ok';
                     }
 
-                    echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag " . $lhClass . "\">" . $lighthouse . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+                    echo "<li><a href=\"" . $lighthouseURL . "\" onclick=\"$onclick\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag " . $lhClass . "\">" . $lighthouse . "</span><img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
                 }
             }
 
@@ -448,7 +448,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 if ($tabUrl) {
                     $tabUrl = str_replace('{test id}', $id, $tabUrl);
                     $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Cloudinary']);}}catch(err){}";
-                    echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Image Analysis<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+                    echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Image Analysis<img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
                 }
             }
 
@@ -458,7 +458,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 if ($tabUrl) {
                     $tabUrl = str_replace('{test id}', $id, $tabUrl);
                     $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','RequestMap']);}}catch(err){}";
-                    echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Request Map<img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+                    echo "<li><a href=\"$tabUrl\" onclick=\"$onclick\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Request Map<img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
                 }
             }
 
@@ -473,7 +473,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
             $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','WhatDoesMySiteCost']);}}catch(err){}";
             echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-            "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+            "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\" onclick=\"$onclick\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
 
             if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
                 // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
@@ -491,7 +491,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
                 $onclick = "try{if(_gaq!=undefined){_gaq.push(['_trackEvent','Outbound','Click','Snyk']);}}catch(err){}";
                 $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
-                echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/images/icon-external.svg\" alt=\"\"></a></li>";
+                echo "<li><a href=\"$snykUrl\" onclick=\"$onclick\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
             }
 
 

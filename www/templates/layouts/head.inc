@@ -21,10 +21,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-<link rel="apple-touch-icon" sizes="192x192" href="/images/icons-192.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/images/icons-192.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon-16x16.png">
 
 
 
@@ -92,12 +92,12 @@ if (isset($_REQUEST['color'])) {
 
 if ($privateInstall) {
     if ($blkLogo) {
-        echo ".logo a {background-image: url(/images/logo_private_blk.png);}";
+        echo ".logo a {background-image: url(/assets/images/logo_private_blk.png);}";
     } else {
-        echo ".logo a {background-image: url(/images/logo_private.png);}";
+        echo ".logo a {background-image: url(/assets/images/logo_private.png);}";
     }
 } elseif ($blkLogo) {
-    echo ".logo a {background-image: url(/images/logo_blk.png);}";
+    echo ".logo a {background-image: url(/assets/images/logo_blk.png);}";
 }
 
     // include a custom style if one exists

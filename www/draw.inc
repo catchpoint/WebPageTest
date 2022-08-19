@@ -4,8 +4,8 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-$rbIcon = imagecreatefrompng(__DIR__ . '/images/render-block-icon.png');
-$nsIcon = imagecreatefrompng(__DIR__ . '/images/not-secure-icon.png');
+$rbIcon = imagecreatefrompng(__DIR__ . '/assets/images/render-block-icon.png');
+$nsIcon = imagecreatefrompng(__DIR__ . '/assets/images/not-secure-icon.png');
 
 /**
 * Draw label next to a request like "10 ms (404)".
@@ -356,7 +356,7 @@ function DrawBlocking($im, $x, $y, $width, $height)
     $width -= 4;
     $height -= 4;
 
-    $rbIcon = imagecreatefrompng('./images/render-block-icon.png');
+    $rbIcon = imagecreatefrompng('./assets/images/render-block-icon.png');
     imagecopyresampled($im, $rbIcon, $x, $y, 0, 0, $width, $height, 17, 17);
 }
 /**

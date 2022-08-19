@@ -12,14 +12,14 @@
 
 
     <footer>
-        <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
+        <a class="logo" href="/"><img src="/assets/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
 
         <ul>
         <li class="footer_social"><span>Find us on: </span>
-            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/images/github.svg" alt="Github"></a>
-            <a href="https://twitter.com/RealWebPageTest"><img src="/images/twitter.svg" alt="Twitter"></a>
-            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/images/youtube.svg" alt="Youtube"></a>
-            <a href="https://www.linkedin.com/company/webpagetest/"><img src="/images/linkedin.svg" alt="LinkedIn"></a>
+            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/assets/images/github.svg" alt="Github"></a>
+            <a href="https://twitter.com/RealWebPageTest"><img src="/assets/images/twitter.svg" alt="Twitter"></a>
+            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/assets/images/youtube.svg" alt="Youtube"></a>
+            <a href="https://www.linkedin.com/company/webpagetest/"><img src="/assets/images/linkedin.svg" alt="LinkedIn"></a>
         </li>
         <li><a href="https://www.product.webpagetest.org/contact">Contact Us</a></li>
         <?php

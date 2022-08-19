@@ -279,7 +279,7 @@ $page_description = "Website performance test result$testLabel.";
                                     $upgradeLink = <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
-                                    <a href="/signup"><span>Get <img class="pro_upgrade" src="/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
+                                    <a href="/signup"><span>Get <img class="pro_upgrade" src="/assets/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
                                     </div>
                                     EOT;
                                 }

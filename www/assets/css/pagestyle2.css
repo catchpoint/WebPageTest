@@ -269,7 +269,7 @@ details.metrics_shown summary {
   padding-left: 1.4em;
   font-size: 0.9em;
   text-decoration: dotted underline #888;
-  background: url(/images/src/icon_info_circle.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_info_circle.svg) left 50% no-repeat;
   background-size: 1.2em auto;
 }
 
@@ -433,7 +433,7 @@ h1 .pro-flag {
 
 .experiment_opportunities-resolved li {
   flex: 0 1 40%;
-  background: url("/images/src/icon_award.svg") top center no-repeat;
+  background: url("/assets/images/src/icon_award.svg") top center no-repeat;
   padding-top: 3.2rem;
   margin: 0;
   box-sizing: border-box;
@@ -495,7 +495,7 @@ a.experiment_meta-more,
 .experiment_meta summary {
   list-style: none;
   padding: 0.2em 1.3rem 0.2em 0.7em;
-  background-image: url(/images/src/icon_triangledown.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg);
   background-repeat: no-repeat;
   background-position: right 0.5em top 50%;
   background-color: #fafafa;
@@ -743,7 +743,7 @@ h3.grade_heading {
   height: 0.6em;
   display: inline-block;
   margin-right: 0.8rem;
-  background: url("/images/src/icon_triangledown.svg") left center no-repeat;
+  background: url("/assets/images/src/icon_triangledown.svg") left center no-repeat;
   background-size: 0.6em auto;
   transform: rotate(-90deg);
   padding-left: ;
@@ -770,7 +770,7 @@ p.grade_summary {
 }
 
 .experiments_grades .grade_heading.grade-a + p {
-  background: url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
 
 .experiments_grades .grade_heading.grade-a + p strong {
@@ -778,11 +778,11 @@ p.grade_summary {
 }
 
 .experiments_grades .grade_heading.grade-c + p {
-  background: url(/images/src/icon_grading_warn.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_warn.svg) left 50% no-repeat;
 }
 
 #Custom .grade_heading + p {
-  background: url(/images/src/icon_science_bubbling.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left 50% no-repeat;
   background-size: auto 2rem !important;
   background-position: left center !important;
 }
@@ -797,7 +797,7 @@ p.grade_summary {
 }
 
 .experiments_grades .grade_heading.grade-f + p {
-  background: url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
 }
 
 .experiments_grades .grade_heading + p {
@@ -897,7 +897,7 @@ p.grade_summary {
 
 .experiments_bottlenecks > ol > li > details > summary:before {
   content: "";
-  background: #6ca71a url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
@@ -916,7 +916,7 @@ p.grade_summary {
   > li.experiments_details-bad
   > details
   > summary:before {
-  background: #d26122 url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
+  background: #d26122 url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
   background-size: contain;
 }
 
@@ -925,7 +925,7 @@ p.grade_summary {
   > li.experiments_details-neutral
   > details
   > summary:before {
-  background: #2f80ed url(/images/src/icon_gear.svg) 50% 50% no-repeat;
+  background: #2f80ed url(/assets/images/src/icon_gear.svg) 50% 50% no-repeat;
   background-size: 0.9em auto;
 }
 
@@ -936,7 +936,7 @@ h4.experiments_list_hed {
   font-size: 1.3em;
   padding-bottom: 0;
   padding-left: 2.5em;
-  background: url(/images/src/icon_science_bubbling.svg) left bottom no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left bottom no-repeat;
   background-size: 1.6em;
   min-height: em;
   padding: 0em 0 0 1.7em;
@@ -944,7 +944,7 @@ h4.experiments_list_hed {
 }
 
 h4.experiments_list_hed-recs {
-  background-image: url(/images/src/icon_code_rec.svg);
+  background-image: url(/assets/images/src/icon_code_rec.svg);
   background-position: left 0 bottom -3px;
 }
 
@@ -1000,7 +1000,7 @@ h4.experiments_list_hed-recs {
   font-weight: 500;
   padding-right: 1.6em;
   margin-left: 0.5em;
-  background: url(/images/icon-external.svg) right center no-repeat;
+  background: url(/assets/images/icon-external.svg) right center no-repeat;
 }
 
 .experiment_description_text span {
@@ -1110,7 +1110,7 @@ h4.experiments_list_hed-recs {
   padding-top: 0.6em;
   padding-bottom: 0.6em;
   padding-left: 1.5em;
-  background: transparent url(/images/src/icon_lock.svg) left 0.8rem top 50%
+  background: transparent url(/assets/images/src/icon_lock.svg) left 0.8rem top 50%
     no-repeat;
   background-size: 1.5rem auto;
 }
@@ -1285,7 +1285,7 @@ h4.experiments_list_hed-recs {
   list-style: none;
   padding-left: 1.5em;
   text-decoration: dotted underline #888;
-  background: url(/images/src/icon_info_circle_white.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_info_circle_white.svg) left 50% no-repeat;
   background-size: 1.2em auto;
 }
 
@@ -1692,7 +1692,7 @@ footer .logo img {
 }
 
 body:not(.home) footer .logo {
-  background: url(/images/wpt-logo-dark.svg) no-repeat;
+  background: url(/assets/images/wpt-logo-dark.svg) no-repeat;
   background-size: contain;
 }
 
@@ -2054,15 +2054,15 @@ footer ul {
 }
 
 .opportunities_summary .grade_heading.grade-a > span {
-  background: url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
 
 .opportunities_summary .grade_heading.grade-c > span {
-  background: url(/images/src/icon_grading_warn.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_warn.svg) left 50% no-repeat;
 }
 
 .opportunities_summary .grade_heading.grade-f > span {
-  background: url(/images/src/icon_grading_alert.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
 }
 
 .opportunities_summary .grade_heading span {
@@ -2169,7 +2169,7 @@ footer ul {
 }
 
 .opportunities_summary_opps {
-  background: url(/images/src/icon_opportunities.svg) left 0 bottom 50%
+  background: url(/assets/images/src/icon_opportunities.svg) left 0 bottom 50%
     no-repeat;
   background-size: auto 1.4rem;
   padding-left: 2em;
@@ -2177,14 +2177,14 @@ footer ul {
 }
 
 .opportunities_summary_recs {
-  background: url(/images/src/icon_code_rec.svg) left 0 bottom 50% no-repeat;
+  background: url(/assets/images/src/icon_code_rec.svg) left 0 bottom 50% no-repeat;
   background-size: auto 2rem;
   padding-left: 2.2em;
   height: 1em;
 }
 
 .opportunities_summary_exps {
-  background: url(/images/src/icon_science_bubbling.svg) left 0 bottom 0
+  background: url(/assets/images/src/icon_science_bubbling.svg) left 0 bottom 0
     no-repeat;
   background-size: auto 2rem;
   padding-left: 2.2em;
@@ -2418,7 +2418,7 @@ footer ul {
 .testinfo_forms summary strong {
   font-weight: bold;
   color: #e33535;
-  background: url(/images/src/icon_grading_warn.svg) left center no-repeat;
+  background: url(/assets/images/src/icon_grading_warn.svg) left center no-repeat;
   background-size: 1em 1em;
   padding-left: 1.6em;
 }
@@ -2568,7 +2568,7 @@ details.details_custommetrics summary {
   content: "";
   width: 12px;
   height: 12px;
-  background: url(/images/external_header.svg) center center no-repeat;
+  background: url(/assets/images/external_header.svg) center center no-repeat;
   background-size: 12px;
 }
 
@@ -2585,7 +2585,7 @@ details.details_custommetrics summary {
 
 .compare-experiment.compare-loading .results_header {
   padding: 1.2rem 6rem 0;
-  background: url(/images/src/icon_science_bubbling.svg) left top no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left top no-repeat;
   background-size: 6rem auto;
   margin: 3rem 0 0;
 }
@@ -2683,7 +2683,7 @@ details.details_custommetrics summary {
 
 .header_screenshots .play {
   height: calc(3em);
-  background: url("/images/src/icon_play.svg") 50% no-repeat;
+  background: url("/assets/images/src/icon_play.svg") 50% no-repeat;
   overflow: hidden;
   text-indent: -999px;
   border-radius: 100%;
@@ -2701,7 +2701,7 @@ details.details_custommetrics summary {
 
 .header_screenshots.playing .play,
 .home.playing .play {
-  background-image: url("/images/src/icon_playpause.svg");
+  background-image: url("/assets/images/src/icon_playpause.svg");
 }
 
 .home.playing .play {
@@ -2966,7 +2966,7 @@ body.result #main {
 
 .home_feature_hed_contain {
   background-color: #6b25cf;
-  background-image: url(/images/wpt_home_swoop.svg),
+  background-image: url(/assets/images/wpt_home_swoop.svg),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%237D0688'/%3E%3Cstop offset='1' stop-color='%23150033'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23D617C5' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23D617C5' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.49'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
   background-position: bottom -12px left 50%, bottom 0 left 50%;
   background-repeat: no-repeat, no-repeat;
@@ -3003,7 +3003,7 @@ body.result #main {
 
 .home .play {
   padding: 25% 0 0 0;
-  background: #000 url("/images/src/icon_play.svg") 50% no-repeat;
+  background: #000 url("/assets/images/src/icon_play.svg") 50% no-repeat;
   overflow: hidden;
   text-indent: -999px;
   border-radius: 100%;
@@ -3067,7 +3067,7 @@ body.result #main {
 
 .home.feature-pro .home_feature_hed_contain {
   background-color: #0a234f;
-  background-image: url(/images/wpt_home_swoop.svg),
+  background-image: url(/assets/images/wpt_home_swoop.svg),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23123D80'/%3E%3Cstop offset='1' stop-color='%23050D26'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23307CD1' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23307CD1' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
 }
 
@@ -3329,7 +3329,7 @@ header .pro-flag {
   border: 1px solid #eee;
   border-radius: 0.4em;
   background-color: #fafafa;
-  background-image: url(/images/src/icon_triangledown.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg);
   max-width: 70vw;
   background-repeat: no-repeat;
   background-position: right 0.8em top 50%;
@@ -3608,7 +3608,7 @@ header .pro-flag {
   font-size: 1rem;
   margin: 0 1rem;
   background: #330033;
-  background-image: url("/images/icon_navigation.svg"),
+  background-image: url("/assets/images/icon_navigation.svg"),
     url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='413' height='413' viewBox='0 0 800 800' fill='%23505'%3e%3cpath fill='none' stroke='%23404' stroke-width='2.7' d='m769 229 268 31.9M927 880 731 737l-211-77-211-122-269 61 255 165-168.5 115.5L40 599l-237-106 299-111-133-153L126.5 79.5-69-63m38 292 268 32 153 121 213 111-294.5 44.5-207-156M370 905l-75-141m225-104 58 182 153-105 109-138-237-106-83 167-225 104 14-226 81-156 149-113 230-40L577.5 41.5 370 105 295-36 126.5 79.5 237 261 102 382 40 599-69 737l196 143M520-140l58.5 182.5L731-63M603 493l-64-224-302-8 133-156m532 277L539 269M390 382H102M-222 42l348.5 37.5L370 105l169 164 38.5-227.5L927 80 769 229l133 153-299 111 128 244M295-36l282.5 77.5M578 842l-283-78M40-201l87 281m-25 302-363-113'/%3e%3ccircle cx='769' cy='229' r='6'/%3e%3ccircle cx='539' cy='269' r='6'/%3e%3ccircle cx='603' cy='493' r='6'/%3e%3ccircle cx='731' cy='737' r='6'/%3e%3ccircle cx='520' cy='660' r='6'/%3e%3ccircle cx='309' cy='538' r='6'/%3e%3ccircle cx='295' cy='764' r='6'/%3e%3ccircle cx='40' cy='599' r='6'/%3e%3ccircle cx='102' cy='382' r='6'/%3e%3ccircle cx='127' cy='80' r='6'/%3e%3ccircle cx='370' cy='105' r='6'/%3e%3ccircle cx='578' cy='42' r='6'/%3e%3ccircle cx='237' cy='261' r='6'/%3e%3ccircle cx='390' cy='382' r='6'/%3e%3c/svg%3e");
   background-position: left 0.7em top 50%, 50% 50%;
   background-repeat: no-repeat, repeat;
@@ -3752,7 +3752,7 @@ nav.link_select {
   z-index: 999999;
   width: auto;
   min-width: 20rem;
-  background-image: url("/images/src/icon_triangledown.svg");
+  background-image: url("/assets/images/src/icon_triangledown.svg");
   max-width: 70vw;
 }
 
@@ -3861,7 +3861,7 @@ nav.link_select:focus,
 nav.link_select:hover {
   color: #1072ba;
   box-shadow: 0 0 10px rgba(47, 128, 237, 0.5);
-  background-image: url("/images/src/icon_triangledown.svg");
+  background-image: url("/assets/images/src/icon_triangledown.svg");
 }
 
 .home_responsive_test .home_test_select:focus ul,
@@ -4000,7 +4000,7 @@ label small {
 
 .test_presets_more .test_presets_tag {
   padding-right: 1.3rem;
-  background-image: url(/images/src/icon_triangledown.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg);
   background-repeat: no-repeat;
   background-position: right 0.5em top 50%;
   background-size: 0.7em auto;
@@ -4009,8 +4009,8 @@ label small {
 }
 
 .test_presets_more-share .test_presets_tag {
-  background-image: url(/images/src/icon_triangledown.svg),
-    url(/images/icon-send.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg),
+    url(/assets/images/icon-send.svg);
   padding-left: 1.5rem;
   background-size: 0.7em auto, 0.9em auto;
   background-position: right 0.5em top 50%, left 0.5em top 50%;
@@ -4079,7 +4079,7 @@ ul.meta_exp_applied_list {
   content: "";
   background: rgba(255, 255, 255, 0.8);
   border-radius: 100%;
-  background-image: url(/images/src/icon_triangledown.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg);
   background-repeat: no-repeat;
   background-position: left 50% bottom 50%;
   width: 1.1em;
@@ -4305,7 +4305,7 @@ span.test_preset_profile_tt:after {
 }
 
 .test_runs-warn span {
-  background: url(/images/src/icon_grading_alert.svg) no-repeat;
+  background: url(/assets/images/src/icon_grading_alert.svg) no-repeat;
   background-size: contain;
   background-position: left center;
   padding-left: 1.8em;
@@ -4650,7 +4650,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
 #CompareBtn,
 #runningHeader #CompareBtn {
   position: relative;
-  background: #fff url("/images/icon-compare.svg") 1em center no-repeat;
+  background: #fff url("/assets/images/icon-compare.svg") 1em center no-repeat;
   border-radius: 4px;
   border: 1px solid #ddd;
   padding: 0.6em 1.5em 0.6em 1.8em;
@@ -5160,7 +5160,7 @@ label.test_preset_profile {
 }
 
 /* label.test_preset_profile.test_preset_profile-Mobile span:after {
-    background: url(/images/test_icons/chrome.svg) left center no-repeat;
+    background: url(/assets/images/test_icons/chrome.svg) left center no-repeat;
     width: 100%;
     display: inline-block;
     background-size: contain, contain, contain;
@@ -5178,7 +5178,7 @@ label.test_preset_profile {
   margin-top: 1em;
   cursor: pointer;
   transition: background 0.1s ease-in-out;
-  background: url("/images/icon-map.svg") 50% 50% no-repeat transparent;
+  background: url("/assets/images/icon-map.svg") 50% 50% no-repeat transparent;
   text-indent: 0.5em;
   width: 1em;
   text-indent: -999px;
@@ -5278,7 +5278,7 @@ label.test_preset_profile {
   height: 100%;
   margin: 0px 0px 10px;
   border: 1px solid black;
-  background-image: url("/images/progress.gif");
+  background-image: url("/assets/images/progress.gif");
   background-repeat: no-repeat;
   background-position: center;
   max-width: 100% !important;
@@ -5378,7 +5378,7 @@ label.test_preset_profile {
 }
 
 #visual_comparison .urldiv a {
-  background: url("/images/icon-close.svg") left no-repeat transparent;
+  background: url("/assets/images/icon-close.svg") left no-repeat transparent;
   padding-left: 1.3em;
   text-decoration: none;
 }
@@ -5396,7 +5396,7 @@ label.test_preset_profile {
 #visual_comparison .addBtn {
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.9em;
-  background: rgba(0, 0, 0, 0.33) url("/images/icon-add.svg") top 50% left
+  background: rgba(0, 0, 0, 0.33) url("/assets/images/icon-add.svg") top 50% left
     0.8rem no-repeat;
   background-size: 0.9rem 0.9rem;
   color: #fff;
@@ -7130,7 +7130,7 @@ h4.accordion_opener:before {
   height: 0.8em;
   background-repeat: no-repeat;
   background-position: 50% 50%;
-  background-image: url(/images/src/icon_triangledown.svg);
+  background-image: url(/assets/images/src/icon_triangledown.svg);
 }
 
 h4.accordion_closed:before {
@@ -7142,7 +7142,7 @@ h4.accordion_opened:before {
 }
 
 h4.accordion_loading:before {
-  background-image: url(/images/activity_indicator.gif);
+  background-image: url(/assets/images/activity_indicator.gif);
 }
 
 /* end from breakdown php */
@@ -7408,7 +7408,7 @@ td.legend {
   /* margin-top: 3rem; */
   padding-bottom: 3rem;
   font-weight: 300;
-  background: url(/images/test_icons/comment.svg) bottom center no-repeat;
+  background: url(/assets/images/test_icons/comment.svg) bottom center no-repeat;
   background-size: 3rem;
   margin-bottom: 0.5rem;
   font-style: italic;
@@ -8062,7 +8062,7 @@ div.jqmdX {
   padding: 0 0 0 16px;
   height: 16px;
   width: 0px;
-  background: url(/images/dialog-close.png) no-repeat 0px -16px;
+  background: url(/assets/images/dialog-close.png) no-repeat 0px -16px;
   overflow: hidden;
 }
 
@@ -8296,37 +8296,37 @@ div.request-dialog-radio .ui-widget-header .ui-state-active {
 .ui-icon {
   width: 16px;
   height: 16px;
-  background-image: url(/images/ui-icons_222222_256x240.png);
+  background-image: url(/assets/images/ui-icons_222222_256x240.png);
 }
 
 .ui-widget-content .ui-icon {
-  background-image: url(/images/ui-icons_222222_256x240.png);
+  background-image: url(/assets/images/ui-icons_222222_256x240.png);
 }
 
 .ui-widget-header .ui-icon {
-  background-image: url(/images/ui-icons_ffffff_256x240.png);
+  background-image: url(/assets/images/ui-icons_ffffff_256x240.png);
 }
 
 .ui-state-default .ui-icon {
-  background-image: url(/images/ui-icons_ef8c08_256x240.png);
+  background-image: url(/assets/images/ui-icons_ef8c08_256x240.png);
 }
 
 .ui-state-hover .ui-icon,
 .ui-state-focus .ui-icon {
-  background-image: url(/images/ui-icons_ef8c08_256x240.png);
+  background-image: url(/assets/images/ui-icons_ef8c08_256x240.png);
 }
 
 .ui-state-active .ui-icon {
-  background-image: url(/images/ui-icons_ef8c08_256x240.png);
+  background-image: url(/assets/images/ui-icons_ef8c08_256x240.png);
 }
 
 .ui-state-highlight .ui-icon {
-  background-image: url(/images/ui-icons_228ef1_256x240.png);
+  background-image: url(/assets/images/ui-icons_228ef1_256x240.png);
 }
 
 .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-  background-image: url(/images/ui-icons_ffd27a_256x240.png);
+  background-image: url(/assets/images/ui-icons_ffd27a_256x240.png);
 }
 
 /* jQuery UI Button 1.8.17

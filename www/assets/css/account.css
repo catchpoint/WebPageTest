@@ -528,7 +528,7 @@ body.theme-b {
 .signup-hed-contain {
   color: white;
   background-color: #6b25cf;
-  background-image: url(/images/src/white-swoop.svg),
+  background-image: url(/assets/images/src/white-swoop.svg),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%237D0688'/%3E%3Cstop offset='1' stop-color='%23150033'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23D617C5' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23D617C5' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.49'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
   background-position: bottom -15px left 50%, bottom 0 left 50%;
   background-repeat: no-repeat, no-repeat;
@@ -1412,7 +1412,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 /* comparison table content */
 
 .icon.check {
-  background: #6ca71a url(/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
@@ -1427,7 +1427,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .icon.x-in-circle-temp {
-  background: #efefef url(/images/circle-x.svg) left 50% no-repeat;
+  background: #efefef url(/assets/images/circle-x.svg) left 50% no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
@@ -1561,7 +1561,7 @@ th.pro-plans {
 }
 
 .wpt-pro-logo {
-  background: transparent url(/images/wpt-logo-pro.svg) no-repeat;
+  background: transparent url(/assets/images/wpt-logo-pro.svg) no-repeat;
   display: block;
   width: 100%;
   height: 30px;

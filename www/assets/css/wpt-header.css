@@ -71,7 +71,7 @@ wpt-header .wptheader_menubtn {
   box-sizing: border-box;
   color: #fff;
   border: 0;
-  background: #141e33 url(/images/wpt-header-menubtn.svg) 50% 50% no-repeat;
+  background: #141e33 url(/assets/images/wpt-header-menubtn.svg) 50% 50% no-repeat;
   text-indent: -9999px;
   background-size: 16px auto;
   cursor: pointer;
@@ -79,7 +79,7 @@ wpt-header .wptheader_menubtn {
 }
 
 wpt-header .wptheader_menu[open] .wptheader_menubtn {
-  background-image: url(/images/wpt-header-menubtn-close.svg);
+  background-image: url(/assets/images/wpt-header-menubtn-close.svg);
   background-color: #fff;
 }
 
@@ -89,7 +89,7 @@ wpt-header .wptheader_menubtn:focus {
 }
 
 wpt-header .wptheader_menubtn-expanded {
-  background: url(/images/wpt-header-menubtn-close.svg) 50% 50% no-repeat;
+  background: url(/assets/images/wpt-header-menubtn-close.svg) 50% 50% no-repeat;
 }
 
 wpt-header nav {
@@ -167,7 +167,7 @@ wpt-header .wptheader_acct {
   padding-left: 2rem;
   margin: 1rem;
   padding: 2rem 1rem 2rem 2rem;
-  background: url(/images/icon-user.svg) left 50% no-repeat;
+  background: url(/assets/images/icon-user.svg) left 50% no-repeat;
 }
 
 wpt-header .wptheader_acct a,
