@@ -65,9 +65,9 @@ if (file_exists(__DIR__ . '/../../settings/server/customhead.inc.php')) {
 }
 ?>
 
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
-<script src="<?= "{$GLOBALS['cdnPath']}/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
+<script src="<?= "{$GLOBALS['cdnPath']}/assets/js/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
 
 <?php
     echo "<style>\n";
