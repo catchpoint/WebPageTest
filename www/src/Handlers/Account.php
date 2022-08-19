@@ -14,6 +14,8 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 
+use WebPageTest\Template;
+
 class Account
 {
     /** Upgrading plans from Account  */
@@ -269,5 +271,121 @@ class Account
             error_log($e->getMessage());
             exit();
         }
+    }
+
+    public static function getAccountPage(RequestContext $request_context)
+    {
+        $error_message = $_SESSION['client-error'] ?? null;
+
+        $is_paid = $request_context->getUser()->isPaid();
+        $is_verified = $request_context->getUser()->isVerified();
+        $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
+        $user_id = $request_context->getUser()->getUserId();
+        $remainingRuns = $request_context->getUser()->getRemainingRuns();
+        $user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
+        $user_email = $request_context->getUser()->getEmail();
+        $first_name = $user_contact_info['firstName'] ?? "";
+        $last_name = $user_contact_info['lastName'] ?? "";
+        $company_name = $user_contact_info['companyName'] ?? "";
+
+
+        $contact_info = array(
+            'layout_theme' => 'b',
+            'is_paid' => $is_paid,
+            'is_verified' => $is_verified,
+            'first_name' => htmlspecialchars($first_name),
+            'last_name' => htmlspecialchars($last_name),
+            'email' => $user_email,
+            'company_name' => htmlspecialchars($company_name),
+            'id' => $user_id
+        );
+
+        $billing_info = array();
+        $country_list = Util::getChargifyCountryList();
+        $state_list = Util::getChargifyUSStateList();
+
+        if ($is_paid) {
+            if ($is_wpt_enterprise) {
+                $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
+            } else {
+                $acct_info = $request_context->getClient()->getPaidAccountPageInfo();
+                $customer = $acct_info->getCustomer();
+                $subId = $customer->getSubscriptionId();
+
+                $billing_info = [
+                    'api_keys' => $acct_info->getApiKeys(),
+                    'wptCustomer' => $customer,
+                    'transactionHistory' => $request_context->getClient()->getTransactionHistory($subId),
+                    'is_wpt_enterprise' => $is_wpt_enterprise,
+                    'status' => $customer->getStatus(),
+                    'is_canceled' => $customer->isCanceled(),
+                    'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
+                    'cc_image_url' => $customer->getCCImageUrl(),
+                    'masked_cc' => $customer->getMaskedCreditCard(),
+                    'cc_expiration' => $customer->getCCExpirationDate()
+                ];
+            }
+
+            if (!is_null($customer->getPlanRenewalDate()) && $customer->getBillingFrequency() == "Annually") {
+                $billing_info['runs_renewal'] = $customer->getPlanRenewalDate()->format('m/d/Y');
+            }
+
+            if (!is_null($customer->getNextBillingDate())) {
+                $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('m/d/Y');
+            }
+
+        }
+        $plans = $request_context->getClient()->getWptPlans();
+        $plansList = [
+            'annual_plans' => $plans->getAnnualPlans(),
+            'monthly_plans' => $plans->getMonthlyPlans()
+        ];
+        $results = array_merge($contact_info, $billing_info, $plansList);
+        $results['csrf_token'] = $_SESSION['csrf_token'];
+        $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
+        $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
+        $results['country_list'] = $country_list;
+        $results['state_list'] = $state_list;
+        $results['country_list_json_blob'] = Util::getCountryJsonBlob();
+        $results['remainingRuns'] = $remainingRuns;
+
+        if (!is_null($error_message)) {
+            $results['error_message'] = $error_message;
+            unset($_SESSION['client-error']);
+        }
+
+        $page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+        $tpl = new Template('account');
+        $tpl->setLayout('account');
+
+        switch ($page) {
+            case 'update_billing':
+                echo $tpl->render('billing/billing-cycle', $results);
+                break;
+            case 'update_plan':
+                echo $tpl->render('plans/upgrade-plan', $results);
+                break;
+            case 'plan_summary':
+                $planCookie = $_COOKIE['upgrade-plan'];
+                if (isset($planCookie) && $planCookie) {
+                    $results['plan'] = Util::getPlanFromArray($planCookie, $plans);
+                    if ($is_paid) {
+                        echo $tpl->render('plans/plan-summary-upgrade', $results);
+                    } else {
+                        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+                        $results['ch_site'] = Util::getSetting('ch_site');
+                        echo $tpl->render('plans/plan-summary', $results);
+                    }
+                    break;
+                } else {
+                    echo $tpl->render('plans/upgrade-plan', $results);
+                    break;
+                }
+            default:
+                echo $tpl->render('my-account', $results);
+                break;
+        }
+
+        exit();
     }
 }

@@ -16,6 +16,8 @@ use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
+use WebPageTest\CPGraphQlTypes\ApiKey;
+use WebPageTest\CPGraphQlTypes\ApiKeyList;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
@@ -238,7 +240,7 @@ class CPClient
     /**
      * @return array WebPageTest\Plan[]
      */
-    public function getWptPlans(): array
+    public function getWptPlans(): PlanList
     {
         $gql = (new Query('wptPlan'))
             ->setSelectionSet([
@@ -250,7 +252,7 @@ class CPClient
             ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        return array_map(function ($data): Plan {
+        $plans = array_map(function ($data): Plan {
             $options = [
                 'id' => $data['name'],
                 'name' => $data['description'],
@@ -260,10 +262,11 @@ class CPClient
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan']) ?? [];
+        }, $results->getData()['wptPlan'] ?? []);
+        return new PlanList(...$plans);
     }
 
-    public function getPaidAccountPageInfo(): array
+    public function getPaidAccountPageInfo(): PaidPageInfo
     {
         $gql = (new Query())
             ->setSelectionSet([
@@ -301,10 +304,10 @@ class CPClient
         try {
             $results = $this->graphql_client->runQuery($gql, true);
             $customer = $results->getData()['wptCustomer'];
-            return [
-              'wptCustomer' => new CPCustomer($customer),
-              'wptApiKey' => $results->getData()['wptApiKey']
-            ];
+            $api_keys = array_map(function ($key): ApiKey {
+                return new ApiKey($key);
+            }, $results->getData()['wptApiKey']);
+            return new PaidPageInfo(new CPCustomer($customer), new ApiKeyList(...$api_keys));
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }

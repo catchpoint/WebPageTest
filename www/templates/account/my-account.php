@@ -2,7 +2,10 @@
     <h3><?= htmlspecialchars($pagefoo) ?></h3>
     <!-- form notifications -->
     <?php
-    include_once __DIR__ . '/../includes/form-notifications.php';
+
+        use WebPageTest\ApiKeyList;
+
+include_once __DIR__ . '/../includes/form-notifications.php';
     ?>
     <!-- VERIFIED EMAIL NOTICE ---->
     <?php if (!$is_verified) : ?>
@@ -217,21 +220,21 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($wptApiKey as $row) : ?>
+                                    <?php foreach ($api_keys as $key) : ?>
                                         <tr>
                                             <td data-th="Select">
-                                                <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $row['id'] ?>' />
+                                                <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $key->getId() ?>' />
                                             </td>
-                                            <td data-th="Name"><?= $row['name'] ?></td>
+                                            <td data-th="Name"><?= $key->getName() ?></td>
                                             <td data-th="API key" class="hidden-content">
                                                 <button type="button" class="view-button">View</button>
                                                 <span class="hidden-area closed">
-                                                    <span class="api-key"><?= $row['apiKey'] ?></span>
+                                                    <span class="api-key"><?= $key->getApiKey() ?></span>
                                                     <button type="button" class="hide-button"><span class="sr-only">Close</span></button>
                                             </td>
                                             </span>
-                                            <td data-th="Created"><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
-                                            <td data-th="Updated"><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Created"><?= date_format($key->getCreateDate(), 'M d Y H:i:s e') ?></td>
+                                            <td data-th="Updated"><?= date_format($key->getChangeDate(), 'M d Y H:i:s e') ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
