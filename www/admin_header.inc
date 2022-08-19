@@ -17,7 +17,7 @@ function header_link($url, $title)
 <html>
     <head>
         <title><?php echo $title; ?></title>
-        <link rel="stylesheet" href="/css/vendor/bootstrap-3.1.1.min.css">
+        <link rel="stylesheet" href="/assets/css/vendor/bootstrap-3.1.1.min.css">
 
         <?php
         if (!empty($refresh)) { ?>
