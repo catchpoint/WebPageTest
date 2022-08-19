@@ -35,7 +35,7 @@ In phase 1, We want to expose as little code to public www as possible as a prep
 
 Laravel does all its web routing in `[LARAVELROOT]/routes/web.php`. In preparation we will move all routing away from server configs to `/www/index.php` which will then include the required script (controller), e.g. `testlog.php` which will be moved away from `www/` and into a formerly-www directory called `/wpt`.
 
-The `/www` will contain only `/www/index.php` and static assets such as `/www/favicon.ico`, `/www/assets/js/`, `/www/assets/js/`
+The `/www` will contain only `/www/index.php` and static assets such as `/www/favicon.ico`, `/www/assets/js/`, `/www/assets/css/`
 
 In phase 2 we move all routing from `/www/index.php` to `[LARAVELROOT]/routes/web.php`.
 
