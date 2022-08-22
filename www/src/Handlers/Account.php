@@ -320,7 +320,7 @@ class Account
                     'status' => $customer->getStatus(),
                     'is_canceled' => $customer->isCanceled(),
                     'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
-                    'cc_image_url' => $customer->getCCImageUrl(),
+                    'cc_image_url' => "/images/cc-logos/{$customer->getCardType()}.svg",
                     'masked_cc' => $customer->getMaskedCreditCard(),
                     'cc_expiration' => $customer->getCCExpirationDate()
                 ];

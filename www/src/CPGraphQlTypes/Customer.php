@@ -18,6 +18,7 @@ class Customer
     private string $status;
     private string $wpt_plan_name;
     private int $monthly_runs;
+    private string $credit_card_type;
     private ?DateTime $next_billing_date;
     private ?int $days_past_due;
     private ?int $number_of_billing_cycles;
@@ -40,7 +41,8 @@ class Customer
             isset($options['subscriptionPrice']) &&
             isset($options['status']) &&
             isset($options['wptPlanName']) &&
-            isset($options['monthlyRuns'])
+            isset($options['monthlyRuns']) &&
+            isset($options['creditCardType'])
             )
         ) {
             throw new \Exception('Fields required are not set when getting customer information');
@@ -56,6 +58,7 @@ class Customer
         $this->status = $options['status'];
         $this->wpt_plan_name = $options['wptPlanName'];
         $this->monthly_runs = $options['monthlyRuns'];
+        $this->credit_card_type = $options['creditCardType'];
         $this->next_billing_date = isset($options['nextBillingDate']) ?
           new DateTime($options['nextBillingDate']) : null;
         $this->days_past_due = $options['daysPastDue'] ?? null;
@@ -81,6 +84,11 @@ class Customer
     public function getCCLastFour(): string
     {
         return $this->cc_last_four;
+    }
+
+    public function getCardType(): string
+    {
+        return $this->credit_card_type;
     }
 
     public function getSubscriptionId(): string
