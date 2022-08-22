@@ -64,7 +64,7 @@
                         <?php foreach ($transactionHistory->toArray() as $row) : ?>
                             <tr>
                                 <td data-th="DateTime"><?= date_format($row->getTransactionTime(), 'F d Y') ?></td>
-                                <td data-th="Credit Card"><?= $row->getPaymentMethod()->getType() ?></td>
+                                <td data-th="Credit Card"><?= $row->getPaymentMethod()->getCardBrand() ?></td>
                                 <td data-th="Card No."><?= $row->getPaymentMethod()->getMaskedCardNumber() ?></td>
                                 <td data-th="Amount">$<?= $row->getAppliedAmount() ?></td>
                                 <td data-th="Download"><a href="<?= $row->getInvoiceLink() ?>">Link</a></td>
