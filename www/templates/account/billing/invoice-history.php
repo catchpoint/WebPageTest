@@ -61,13 +61,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($transactionHistory->toArray() as $row) : ?>
+                        <?php foreach ($transactionHistory as $txn) : ?>
                             <tr>
-                                <td data-th="DateTime"><?= date_format($row->getTransactionTime(), 'F d Y') ?></td>
-                                <td data-th="Credit Card"><?= $row->getPaymentMethod()->getCardBrand() ?></td>
-                                <td data-th="Card No."><?= $row->getPaymentMethod()->getMaskedCardNumber() ?></td>
-                                <td data-th="Amount">$<?= $row->getAppliedAmount() ?></td>
-                                <td data-th="Download"><a href="<?= $row->getInvoiceLink() ?>">Link</a></td>
+                                <td data-th="DateTime"><?= date_format($txn->getTransactionTime(), 'F d Y') ?></td>
+                                <td data-th="Credit Card"><?= $txn->getPaymentMethod()->getCardBrand() ?></td>
+                                <td data-th="Card No."><?= $txn->getPaymentMethod()->getMaskedCardNumber() ?></td>
+                                <td data-th="Amount">$<?= $txn->getAppliedAmount() ?></td>
+                                <td data-th="Download"><a href="<?= $txn->getInvoiceLink() ?>">Link</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
