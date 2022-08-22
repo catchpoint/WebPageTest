@@ -294,7 +294,8 @@ final class CPClientTest extends TestCase
               },
               "wptCustomer": {
                 "remainingRuns": 300,
-                "monthlyRuns": 3000
+                "monthlyRuns": 3000,
+                "subscriptionId": "518235"
               }
             }
             }');

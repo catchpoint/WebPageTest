@@ -19,6 +19,7 @@ class User
     private string $first_name;
     private string $last_name;
     private string $company_name;
+    private string $subscription_id;
 
     public function __construct()
     {
@@ -36,6 +37,7 @@ class User
         $this->is_wpt_enterprise_client = false;
         $this->remaining_runs = 0;
         $this->monthly_runs = 300; // default to new, free account
+        $this->subscription_id = "";
     }
 
     public function getEmail(): ?string
@@ -214,5 +216,15 @@ class User
     public function setCompanyName(?string $company_name = ""): void
     {
         $this->company_name = $company_name ?? "";
+    }
+
+    public function getSubscriptionId(): string
+    {
+        return $this->subscription_id;
+    }
+
+    public function setSubscriptionId(string $subscription_id): void
+    {
+        $this->subscription_id = $subscription_id;
     }
 }

@@ -214,6 +214,7 @@ class CPClient
             $user->setRemainingRuns($remaining_runs);
             $monthly_runs = (int)$data['wptCustomer']['monthlyRuns'];
             $user->setMonthlyRuns($monthly_runs);
+            $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
             $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
