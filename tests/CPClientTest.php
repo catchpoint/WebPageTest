@@ -524,17 +524,17 @@ final class CPClientTest extends TestCase
 
     /**
     public function getPaidAccountPageInfo(): PaidPageInfo
-		"wptApiKey": [
-			{
-				"id": 673,
-				"name": "webpagetest",
-				"apiKey": "12581d97-7b8b-4519-b02f-b404f401a973",
-				"createDate": "2022-03-23T09:12:57.937",
-				"changeDate": "2022-04-28T08:39:16.023"
+        "wptApiKey": [
+            {
+                "id": 673,
+                "name": "webpagetest",
+                "apiKey": "12581d97-7b8b-4519-b02f-b404f401a973",
+                "createDate": "2022-03-23T09:12:57.937",
+                "changeDate": "2022-04-28T08:39:16.023"
     },
     "wptCustomer": {
     }
-		],
+        ],
     public function getPaidEnterpriseAccountPageInfo(): array
     public function updateUserContactInfo(string $id, array $options): array
     public function changePassword(string $new_pass, string $current_pass): array
