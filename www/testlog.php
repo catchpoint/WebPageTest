@@ -88,9 +88,7 @@ function check_it($val)
 // single user history
 if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']) && Util::getSetting('localHistory')))) {
     $GLOBALS['tab'] = 'Test History';
-    $tpl = new Template('testhistory');
-    $tpl->setLayout('default');
-    echo $tpl->render('user', array(
+    $vars = [
         'is_logged_in' => $is_logged_in,
         'protocol' => $protocol,
         'host' => $host,
@@ -100,7 +98,17 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
         'local' => isset($_REQUEST['local']) && $_REQUEST['local'],
         'body_class' => 'history',
         'page_title' => 'WebPageTest - Test History',
-    ));
+
+    ];
+    /*
+    // uncomment for Blade
+    require_once __DIR__ . '/resources/view.php';
+    echo view('pages.testhistory', $vars);
+    exit();
+    */
+    $tpl = new Template('testhistory');
+    $tpl->setLayout('default');
+    echo $tpl->render('user', $vars);
     exit();
 }
 
