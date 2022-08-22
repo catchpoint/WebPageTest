@@ -19,6 +19,7 @@ use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\CPGraphQlTypes\ApiKey;
 use WebPageTest\CPGraphQlTypes\ApiKeyList;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifyInvoiceAddressType;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\TestRecord;
@@ -196,7 +197,8 @@ class CPClient
                 (new Query('wptCustomer'))
                     ->setSelectionSet([
                         'remainingRuns',
-                        'monthlyRuns'
+                        'monthlyRuns',
+                        'subscriptionId'
                     ])
             ]);
 
@@ -904,5 +906,34 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         return $results->getData()['upgradeSubscription'];
+    }
+
+    public function getBillingAddress(string $subscription_id): ChargifyInvoiceAddressType
+    {
+        $gql = (new Query('invoice'))
+          ->setVariables([
+              new Variable('subscriptionId', 'String', true)
+          ])
+          ->setArguments([
+              'subscriptionId' => '$subscriptionId'
+          ])
+          ->setSelectionSet([
+              (new Query('shippingAddress'))
+                  ->setSelectionSet([
+                      'street',
+                      'line2',
+                      'city',
+                      'state',
+                      'zip',
+                      'country'
+                  ])
+          ]);
+
+        $variables = [
+            'subscriptionId' => $subscription_id
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return new ChargifyInvoiceAddressType($results->getData()['invoice']['shippingAddress']);
     }
 }

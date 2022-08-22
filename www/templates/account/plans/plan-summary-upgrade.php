@@ -37,9 +37,13 @@
             <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getRuns() ?></li>
                 <?php if ($plan->getBillingFrequency() == 'Monthly') : ?>
-                    <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
+                    <li><strong>Monthly Subtotal:</strong> $<?= $sub_total ?></li>
+                    <li><strong>Monthly Tax:</strong> $<?= $tax ?></li>
+                    <li><strong>Monthly Total:</strong> $<?= $total ?></li>
                 <?php else : ?>
-                    <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
+                    <li><strong>Yearly Subtotal:</strong> $<?= $sub_total ?></li>
+                    <li><strong>Yearly Tax:</strong> $<?= $tax ?></li>
+                    <li><strong>Yearly Total:</strong> $<?= $total ?></li>
                 <?php endif; ?>
             </ul>
         </div>

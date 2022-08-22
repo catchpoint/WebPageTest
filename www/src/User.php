@@ -16,6 +16,7 @@ class User
     private bool $is_wpt_enterprise_client;
     private int $remaining_runs;
     private int $monthly_runs;
+    private string $subscription_id;
 
     public function __construct()
     {
@@ -30,6 +31,7 @@ class User
         $this->is_wpt_enterprise_client = false;
         $this->remaining_runs = 0;
         $this->monthly_runs = 300; // default to new, free account
+        $this->subscription_id = "";
     }
 
     public function getEmail(): ?string
@@ -174,5 +176,15 @@ class User
     public function getUserPriority(): ?int
     {
         return $this->user_priority;
+    }
+
+    public function getSubscriptionId(): string
+    {
+        return $this->subscription_id;
+    }
+
+    public function setSubscriptionId(string $subscription_id): void
+    {
+        $this->subscription_id = $subscription_id;
     }
 }

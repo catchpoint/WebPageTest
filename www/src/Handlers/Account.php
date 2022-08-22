@@ -368,8 +368,15 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $results['plan'] = Util::getPlanFromArray($planCookie, $plans);
+                    $plan = Util::getPlanFromArray($planCookie, $plans);
+                    $results['plan'] = $plan;
                     if ($is_paid) {
+                        $billing_address = $request_context->getClient()->getBillingAddress($customer->getSubscriptionId());
+                        $address_input = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
+                        $preview_totals = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $address_input);
+                        $results['sub_total'] = number_format($preview_totals->getSubTotalInCents()/100, 2);
+                        $results['tax'] = number_format($preview_totals->getTaxInCents()/100, 2);
+                        $results['total'] = number_format($preview_totals->getTotalInCents()/100, 2);
                         echo $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');

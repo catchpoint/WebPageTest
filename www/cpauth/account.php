@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 require_once(__DIR__ . '/../common.inc');
 
-use WebPageTest\Template;
 use WebPageTest\Util;
-use WebPageTest\ValidatorPatterns;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Account as AccountHandler;
 
