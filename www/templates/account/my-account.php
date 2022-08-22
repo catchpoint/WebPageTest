@@ -5,7 +5,7 @@
 
         use WebPageTest\ApiKeyList;
 
-include_once __DIR__ . '/../includes/form-notifications.php';
+    include_once __DIR__ . '/../includes/form-notifications.php';
     ?>
     <!-- VERIFIED EMAIL NOTICE ---->
     <?php if (!$is_verified) : ?>

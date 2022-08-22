@@ -13,7 +13,6 @@ use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-
 use WebPageTest\Template;
 
 class Account
@@ -333,7 +332,6 @@ class Account
             if (!is_null($customer->getNextBillingDate())) {
                 $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('m/d/Y');
             }
-
         }
         $plans = $request_context->getClient()->getWptPlans();
         $plansList = [
@@ -371,12 +369,13 @@ class Account
                     $plan = Util::getPlanFromArray($planCookie, $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {
-                        $billing_address = $request_context->getClient()->getBillingAddress($customer->getSubscriptionId());
-                        $address_input = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
-                        $preview_totals = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $address_input);
-                        $results['sub_total'] = number_format($preview_totals->getSubTotalInCents()/100, 2);
-                        $results['tax'] = number_format($preview_totals->getTaxInCents()/100, 2);
-                        $results['total'] = number_format($preview_totals->getTotalInCents()/100, 2);
+                        $sub_id = $customer->getSubscriptionId();
+                        $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
+                        $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
+                        $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $addr);
+                        $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
+                        $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
+                        $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                         echo $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');

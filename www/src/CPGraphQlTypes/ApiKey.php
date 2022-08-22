@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace WebPageTest\CPGraphQlTypes;
+
 use DateTime;
 
 class ApiKey
