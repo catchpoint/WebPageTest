@@ -18,7 +18,7 @@
             <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
             @if ($is_logged_in)
                 <label for="days" class="a11y-hidden">Select how far back you want to see</label>
-                <select name="days">
+                <select name="days" id="days">
                     <option value="1" @if ($days === 1) selected @endif>1 Day</option>
                     <option value="7" @if ($days === 7) selected @endif>7 Days</option>
                     <option value="30" @if ($days === 30) selected @endif>30 Days</option>
@@ -49,7 +49,7 @@
                     <tbody id="historyBody">
                         @foreach ($test_history as $record)
                             <tr>
-                                <th><input type="checkbox" name="t[]" value="{{ $record->getTestId() }}" /></th>
+                                <th><input type="checkbox" name="t[]" value="{{ $record->getTestId() }}" aria-label="Select this test" /></th>
                                 <td class="url"><a href="/result/{{ $record->getTestId() }}/">{{ $record->getUrl() }}</a></td>
                                 <td class="date">{{ date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') }}</td>
                                 <td class="location">{{ $record->getLocation() }}</td>

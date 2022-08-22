@@ -57,6 +57,7 @@
 
                         <div class="overflow-container">
                             <table id="console-log" class="translucent">
+                                <thead>
                                 <tr>
                                     <th>Source</th>
                                     <th>Level</th>
@@ -64,6 +65,8 @@
                                     <th>URL</th>
                                     <th>Line</th>
                                 </tr>
+                                </thead>
+                                <tbody>
                                 @foreach ($log as &$log_entry)
                                 <?php $even = !$even ?>
                                 <tr @if ($even) class="even" @endif>
@@ -78,6 +81,7 @@
                                     <td width="50" class="line">{{ @$log_entry['line'] }}</td>
                                 </tr>
                                 @endforeach
+                                </tbody>
                             </table>
                         </div>
                     </div>
