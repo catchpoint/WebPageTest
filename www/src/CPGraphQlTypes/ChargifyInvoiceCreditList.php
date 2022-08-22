@@ -11,7 +11,6 @@ use ArrayIterator;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceCredit;
 
 class ChargifyInvoiceCreditList implements IteratorAggregate, Countable
-
 {
     private array $list;
 
