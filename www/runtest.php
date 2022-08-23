@@ -2244,7 +2244,7 @@ function WriteJob($location, &$test, &$job, $testId)
         if (AddTestJob($location, $job, $test, $testId)) {
             $ret = true;
         } else {
-            $error = "Sorry, that test location appears to be unavailable.  Pleasy try again later.";
+            $error = "Sorry, that test location appears to be unavailable.  Please try again later.";
         }
     }
 
