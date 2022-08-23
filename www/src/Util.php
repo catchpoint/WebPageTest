@@ -770,7 +770,8 @@ class Util
     public static function getPlanFromArray($id, $plans): Plan
     {
         foreach ($plans as $plan) {
-            if ($plan->getId() == $id) {
+            $planId = $plan->getId();
+            if (strtolower($planId) == strtolower($id)) {
                 return $plan;
                 exit();
             }
@@ -803,5 +804,34 @@ class Util
         $messages_array = $_SESSION['messages'];
         unset($_SESSION['messages']);
         return $messages_array;
+    }
+
+    /**
+     * if you upgrade you are paying today and the change starts today, if it's a downgrade it starts the following pay period.
+     */
+    public static function isUpgrade(Plan $currentPlan, Plan $newPlan): bool
+    {
+        $currentRuns = $currentPlan->getRuns();
+        $isCurrentAnnual = $currentPlan->getBillingFrequency() == "Annually";
+        $newRuns = $newPlan->getRuns();
+        $isNewAnnual = $newPlan->getBillingFrequency() == "Annually";
+        // upgrade if:
+        // monthly low to monthly higher
+        if (!$isCurrentAnnual && !$isNewAnnual) {
+            return $newRuns > $currentRuns;
+        }
+        // monthly to annual (same runs or above)
+        if (!$isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' : 'monthly and annual $newRuns < $currentRuns';
+            return $newRuns >= $currentRuns;
+        }
+        // annual to annual higher
+        if ($isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' : 'annual and  annual $newRuns < $currentRuns';
+            return $newRuns > $currentRuns;
+        }
+        // annual to monthly (any)
+        // return "annual to monthly";
+        return false;
     }
 }

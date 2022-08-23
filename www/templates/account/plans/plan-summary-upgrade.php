@@ -2,7 +2,6 @@
     <?php include_once __DIR__ . '/includes/breadcrumbs.php'; ?>
     <?php include_once __DIR__ . '/includes/subhed.php'; ?>
     <!-- main form -->
-    qdqwdqweq
     <form id="wpt-account-upgrade" method="post" action="/account">
         <!-- payment -->
         <div class="box card-section">
@@ -37,13 +36,21 @@
             <ul class="plan-summary-list" id="plan-summary">
                 <li><strong>Runs per month:</strong> <?= $plan->getRuns() ?></li>
                 <?php if ($plan->getBillingFrequency() == 'Monthly') : ?>
-                    <li><strong>Monthly Subtotal:</strong> $<?= $sub_total ?></li>
-                    <li><strong>Monthly Tax:</strong> $<?= $tax ?></li>
-                    <li><strong>Monthly Total:</strong> $<?= $total ?></li>
+                    <li><strong>Monthly Price:</strong> $<?= $plan->getMonthlyPrice() ?></li>
                 <?php else : ?>
-                    <li><strong>Yearly Subtotal:</strong> $<?= $sub_total ?></li>
-                    <li><strong>Yearly Tax:</strong> $<?= $tax ?></li>
-                    <li><strong>Yearly Total:</strong> $<?= $total ?></li>
+                    <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
+                <?php endif; ?>
+                <li><strong>Tax:</strong> $<?= $tax ?></li>
+                <?= $isUpgrade ?>
+                <?php if ($isUpgrade) : ?>
+                    <li class="total__due-today">
+                        <strong>Due today:</strong> $<?= $total ?>
+                    </li>
+                <?php else : ?>
+                    <li class="total__due-today">
+                        <strong>Due at the next billing date (<?= $renewaldate ?> ):</strong> $<?= $total ?>
+                    </li>
+                    <li>Plan change will not take effect until end of current subscription</li>
                 <?php endif; ?>
             </ul>
         </div>

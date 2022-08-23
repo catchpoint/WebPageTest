@@ -26,6 +26,7 @@
             </div>
             <div class="wpt-plan-set annual-plans">
                 <?php
+                $annual_plans = $plans->getAnnualPlans();
                 foreach ($annual_plans as $key => $plan) :
                     $reccomended = ($key === 1) ? 'wpt-plan__reccomended' : '';
                     $isCurrentPlan = isset($wptCustomer) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
@@ -46,7 +47,10 @@
                 endforeach; ?>
             </div>
             <div class="wpt-plan-set monthly-plans hidden">
-                <?php foreach ($monthly_plans as $key => $plan) :
+
+                <?php
+                $monthly_plans = $plans->getMonthlyPlans();
+                foreach ($monthly_plans as $key => $plan) :
                     $isCurrentPlan = isset($wptCustomer) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
                     $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
                     $disabled =  $isCurrentPlan ? 'disabled' : '';

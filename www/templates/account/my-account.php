@@ -3,7 +3,7 @@
     <!-- form notifications -->
     <?php
 
-        use WebPageTest\ApiKeyList;
+    use WebPageTest\ApiKeyList;
 
     include_once __DIR__ . '/../includes/form-notifications.php';
     ?>
@@ -124,9 +124,15 @@
                     <ul>
                         <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
                         <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
+                        <li><strong>Run Renewal:</strong>
+                            <?php
+                            $date = new DateTime('now');
+                            $date->modify('first day of next month')->modify('+6 day');
+                            echo $date->format('F d, Y') ?>
+                        </li>
                         <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
                         <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-                        <li><strong>Plan Renewal:</strong> <?= $runs_renewal ?></li>
+                        <li><strong>Plan Renewal:</strong> <?= $wptCustomer->getPlanRenewalDate()->format('m/d/Y') ?></li>
                     </ul>
                 <?php else : ?>
                     <div class="card-section-subhed card-section-subhed__grid">
@@ -142,7 +148,7 @@
                         <li><strong>Run Renewal:</strong>
                             <?php
                             $date = new DateTime('now');
-                            $date->modify('first day of next month');
+                            $date->modify('first day of next month')->modify('+6 day');
                             echo $date->format('F d, Y') ?>
                         </li>
                     </ul>

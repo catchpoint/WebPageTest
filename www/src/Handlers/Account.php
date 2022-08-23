@@ -265,7 +265,7 @@ class Account
         } catch (\Exception $e) {
             header('Content-type: application/json');
             echo json_encode([
-              'error' => $e->getMessage()
+                'error' => $e->getMessage()
             ]);
             error_log($e->getMessage());
             exit();
@@ -334,11 +334,8 @@ class Account
             }
         }
         $plans = $request_context->getClient()->getWptPlans();
-        $plansList = [
-            'annual_plans' => $plans->getAnnualPlans(),
-            'monthly_plans' => $plans->getMonthlyPlans()
-        ];
-        $results = array_merge($contact_info, $billing_info, $plansList);
+
+        $results = array_merge($contact_info, $billing_info);
         $results['csrf_token'] = $_SESSION['csrf_token'];
         $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
         $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
@@ -346,7 +343,7 @@ class Account
         $results['state_list'] = $state_list;
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
         $results['remainingRuns'] = $remainingRuns;
-
+        $results['plans'] = $plans;
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
@@ -366,7 +363,8 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $plans);
+                    $plan = Util::getPlanFromArray($planCookie, $plans);;
+                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {
                         $sub_id = $customer->getSubscriptionId();
@@ -376,6 +374,8 @@ class Account
                         $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                         $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
+                        $results['isUpgrade'] = Util::isUpgrade($oldPlan, $plan);
+                        $results['renewaldate'] = $customer->getPlanRenewalDate()->format('m/d/Y');
                         echo $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
