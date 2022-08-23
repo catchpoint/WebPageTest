@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
-use WebPageTest\Util\Cache;
+use Predis\Client as RedisClient;
 
 class RateLimiter
 {
-    public function __construct(string $ip, int $limit = 50, int $days = 28)
+    private RedisClient $client;
+    private int $limit;
+    private int $day_cycle_ttl;
+    private string $cache_key;
+
+    public function __construct(RedisClient $client, string $ip, int $limit = 50, int $days = 28)
     {
-        $this->ip = $ip;
+        $this->client = $client;
         $this->limit = $limit;
         $this->day_cycle_ttl = $days * (24 * 60 * 60);
         $this->cache_key = 'rladdr_' . 'per_month_' . $ip;
-        $this->bucket = array();
     }
 
     public function check(?int $run_count): bool
@@ -32,7 +36,7 @@ class RateLimiter
 
     private function fetchBucket(): array
     {
-        $bucket = Cache::fetch($this->cache_key);
+        $bucket = $this->client->get($this->cache_key);
         $bucket = is_array($bucket) ? $bucket : array($bucket);
         return array_filter($bucket, function ($value) {
             $time_constraint = time() - $this->day_cycle_ttl;
@@ -40,11 +44,15 @@ class RateLimiter
         }, ARRAY_FILTER_USE_BOTH);
     }
 
-    private function storeBucket(array $bucket): void
+    private function storeBucket(array $bucket): bool
     {
-        $success = Cache::store($this->cache_key, $bucket, $this->day_cycle_ttl);
-        if ($success) {
-            $this->bucket = $bucket;
+        try {
+            $this->client->set($this->cache_key, $bucket, null, $this->day_cycle_ttl);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
+
+        return true;
     }
 }

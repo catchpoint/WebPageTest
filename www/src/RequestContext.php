@@ -7,6 +7,7 @@ namespace WebPageTest;
 use WebPageTest\User;
 use WebPageTest\CPClient;
 use WebPageTest\CPSignupClient;
+use Predis\Client as RedisClient;
 
 class RequestContext
 {
@@ -14,6 +15,7 @@ class RequestContext
     private ?User $user;
     private ?CPClient $client;
     private ?CPSignupClient $signup_client;
+    private ?RedisClient $redis_client;
     private bool $ssl_connection;
     private string $url_protocol;
     private string $request_method;
@@ -25,6 +27,7 @@ class RequestContext
         $this->user = null;
         $this->client = null;
         $this->signup_client = null;
+        $this->redis_client = null;
 
         $https = isset($server['HTTPS']) && $server['HTTPS'] == 'on';
         $httpssl = isset($server['HTTP_SSL']) && $server['HTTP_SSL'] == 'On';
@@ -74,6 +77,18 @@ class RequestContext
     {
         if (isset($client)) {
             $this->signup_client = $client;
+        }
+    }
+
+    public function getRedisClient(): ?RedisClient
+    {
+        return $this->redis_client;
+    }
+
+    public function setRedisClient(?RedisClient $client): void
+    {
+        if (isset($client)) {
+            $this->redis_client = $client;
         }
     }
 

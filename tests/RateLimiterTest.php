@@ -3,10 +3,17 @@
 declare(strict_types=1);
 
 use WebPageTest\RateLimiter;
+use Predis\Client as RedisClient;
 use PHPUnit\Framework\TestCase;
+use M6Web\Component\RedisMock;
 
 final class RateLimiterTest extends TestCase
 {
+    private RedisClient $client;
+
+    protected function setup(): void
+    {
+    }
     public function testConstructorSetsDefaultValues(): void
     {
         $ip = '127.0.0.1';
@@ -27,10 +34,6 @@ final class RateLimiterTest extends TestCase
         $this->assertEquals('rladdr_per_month_127.0.0.0', $cmrl->cache_key);
     }
 
-  /**
-   *
-   * @requires extension apcu
-   */
     public function testCheckFirstTime(): void
     {
         $ip = '127.0.0.2';
@@ -39,10 +42,6 @@ final class RateLimiterTest extends TestCase
         $this->assertTrue($passes);
     }
 
-  /**
-   *
-   * @requires extension apcu
-   */
     public function testCheckPastLimit(): void
     {
         $ip = '127.0.0.3';
@@ -53,10 +52,6 @@ final class RateLimiterTest extends TestCase
         $this->assertFalse($passes);
     }
 
-  /**
-   *
-   * @requires extension apcu
-   */
     public function testCheckLastNumberGoesPastButStillPasses(): void
     {
         $ip = '127.0.0.4';
@@ -67,10 +62,6 @@ final class RateLimiterTest extends TestCase
         $this->assertTrue($passes);
     }
 
-  /**
-   *
-   * @requires extension apcu
-   */
     public function testCheckPastLimitLargeNumbers(): void
     {
         $ip = '127.0.0.5';

@@ -8,4 +8,5 @@ $baseDir = dirname($vendorDir);
 return array(
     'SecurityLib' => array($vendorDir . '/ircmaxell/security-lib/lib'),
     'RandomLib' => array($vendorDir . '/paragonie/random-lib/lib'),
+    'M6Web\\Component\\RedisMock' => array($vendorDir . '/m6web/redis-mock/src'),
 );

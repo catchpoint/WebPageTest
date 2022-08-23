@@ -335,6 +335,7 @@ if ($supportsCPAuth) {
     require_once __DIR__ . '/common/AttachClient.php';
     require_once __DIR__ . '/common/AttachUser.php';
     require_once __DIR__ . '/common/AttachSignupClient.php';
+    require_once __DIR__ . '/common/AttachRedis.php';
     require_once __DIR__ . '/common/CheckCSRF.php';
 }
 

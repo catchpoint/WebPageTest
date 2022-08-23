@@ -64,6 +64,7 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
             'Psr\\Container\\' => 14,
             'Psr\\Cache\\' => 10,
             'Prophecy\\' => 9,
+            'Predis\\' => 7,
             'PhpParser\\' => 10,
             'ParagonIE\\ConstantTime\\' => 23,
         ),
@@ -192,6 +193,10 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         array (
             0 => __DIR__ . '/..' . '/phpspec/prophecy/src/Prophecy',
         ),
+        'Predis\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/predis/predis/src',
+        ),
         'PhpParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
@@ -307,10 +312,18 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
                 0 => __DIR__ . '/..' . '/paragonie/random-lib/lib',
             ),
         ),
+        'M' => 
+        array (
+            'M6Web\\Component\\RedisMock' => 
+            array (
+                0 => __DIR__ . '/..' . '/m6web/redis-mock/src',
+            ),
+        ),
     );
 
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Google_AccessToken_Revoke' => __DIR__ . '/..' . '/google/apiclient/src/aliases.php',
         'Google_AccessToken_Verify' => __DIR__ . '/..' . '/google/apiclient/src/aliases.php',
         'Google_AuthHandler_AuthHandlerFactory' => __DIR__ . '/..' . '/google/apiclient/src/aliases.php',

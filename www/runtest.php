@@ -3654,9 +3654,10 @@ function CheckRateLimit($test, &$error)
         return true;
     }
 
+    $passesMonthly = false;
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $monthly_limit = Util::getSetting('rate_limit_anon_monthly') ?: 50;
-    $cmrl = new RateLimiter($test['ip'], $monthly_limit);
+    $cmrl = new RateLimiter($request_context->getRedisClient(), $test['ip'], $monthly_limit);
     $passesMonthly = $cmrl->check($total_runs);
 
     if (!$passesMonthly) {

@@ -6,7 +6,8 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^9",
-    "squizlabs/php_codesniffer": "^3"
+    "squizlabs/php_codesniffer": "^3",
+    "m6web/redis-mock": "^5.3"
   },
   "scripts": {
     "format:php": "phpcbf --extensions=php,inc --standard=PSR12 --ignore=www/lib/,www/ec2/,www/resources/compiled www/ tests/ bulktest/",
@@ -29,7 +30,8 @@
     "illuminate/view": "^8.0",
     "paragonie/random-lib": "^2.0",
     "php": "^7.4.0||^8.0",
-    "respect/validation": "^2.2"
+    "respect/validation": "^2.2",
+    "predis/predis": "^2.0"
   },
   "extra": {
     "google/apiclient-services": [
