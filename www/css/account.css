@@ -770,32 +770,32 @@ a.button {
 }
 .signup-flow-layout .wpt-pro-logo {
   margin: 0 0 1em;
-    background-position: 0 0;
+  background-position: 0 0;
   background-size: contain;
 }
 .signup-flow-layout .plan-details {
-  background: rgba(0,0,0,.2);
+  background: rgba(0, 0, 0, 0.2);
   color: #fff;
   padding: 1em;
-  border-radius: .6em;
+  border-radius: 0.6em;
   margin: 1em 0;
 }
 .signup-flow-layout .plan-details table {
-  font-size: .95em;
+  font-size: 0.95em;
   width: 100%;
   border-collapse: collapse;
 }
 .signup-flow-layout .plan-details table th {
   text-align: left;
-  padding: .6em 0;
+  padding: 0.6em 0;
   font-weight: 500;
-    border-bottom: 1px solid rgba(255,255,255,.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 .signup-flow-layout .plan-details table td {
   text-align: right;
-  padding: .6em 0;
+  padding: 0.6em 0;
   font-weight: 700;
-  border-bottom: 1px solid rgba(255,255,255,.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .signup-flow-layout .plan-benefits ul {

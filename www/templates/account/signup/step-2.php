@@ -51,7 +51,7 @@
     </div>
     <div class="plan-details">
         <table>
-            <?php if( !$is_plan_free ) : ?>
+            <?php if (!$is_plan_free) : ?>
             <tr>
                 <th>Pay Plan:</th>
                 <td><?= $billing_frequency ?></td>

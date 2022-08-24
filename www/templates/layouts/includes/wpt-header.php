@@ -95,8 +95,8 @@ if ($id) {
                         </details>
                     </li>
 
-                    <?php if ($supportsAuth && !defined('EMBED')): ?>
-                      <?= addTab('Pricing', '/signup'); ?>
+                    <?php if ($supportsAuth && !defined('EMBED')) : ?>
+                        <?= addTab('Pricing', '/signup'); ?>
                     <?php endif; ?>
 
                     <li class="wptheader_nav_menu">

@@ -243,7 +243,7 @@ function SelectRequest(step, request) {
       details += "<b>Early Hints: </b>";
       details += "<ul class='hints'>";
       hints.forEach((hint) => {
-        details += "<li>" + htmlEncode(hint.replace(/\,/, '')) + "</li>";
+        details += "<li>" + htmlEncode(hint.replace(/\,/, "")) + "</li>";
       });
       details += "</ul><br>";
     }

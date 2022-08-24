@@ -22,7 +22,7 @@ foreach ($requests as $request) {
     } elseif (!isset($request['renderBlocking']) && $request['contentType'] === "text/css" && $request['all_end'] < $startRender) {
         $docRelUrl = documentRelativePath($request['url'], $requests[0]['url']);
         foreach ($possibleRenderBlockers as $cssUrl) {
-            if( strpos( $cssUrl, $docRelUrl ) ){
+            if (strpos($cssUrl, $docRelUrl)) {
                 array_push($potentiallyBlockingCSSReqs, $docRelUrl);
             }
         }

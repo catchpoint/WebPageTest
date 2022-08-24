@@ -21,7 +21,7 @@ foreach ($requests as $request) {
                 && ($request['contentType'] === "text/css" || $request['requestType'] === "script" || $request['request_type'] === "Script")
                 && $request['all_end'] < $startRender
     ) {
-        if( in_array( $request['full_url'], $possibleRenderBlockers ) ){
+        if (in_array($request['full_url'], $possibleRenderBlockers)) {
             array_push($potentiallyBlocking3pReqs, $request['full_url']);
             array_push($potentiallyBlocking3pHosts, $request['host']);
         }

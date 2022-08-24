@@ -25,7 +25,7 @@ foreach ($requests as $request) {
     } elseif (!isset($request['renderBlocking']) && (isset($request['requestType']) && $request['requestType'] === "script" || $request['request_type'] === "Script") && $request['all_end'] < $startRender) {
         $docRelUrl = documentRelativePath($request['url'], $requests[0]['url']);
         foreach ($possibleRenderBlockers as $scriptUrl) {
-            if( strpos( $scriptUrl, $docRelUrl ) ){
+            if (strpos($scriptUrl, $docRelUrl)) {
                 array_push($potentiallyBlockingJSReqs, $docRelUrl);
             }
         }
