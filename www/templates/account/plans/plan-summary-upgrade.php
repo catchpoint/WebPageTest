@@ -41,7 +41,6 @@
                     <li><strong>Yearly Price:</strong> $<?= $plan->getAnnualPrice() ?></li>
                 <?php endif; ?>
                 <li><strong>Tax:</strong> $<?= $tax ?></li>
-                <?= $isUpgrade ?>
                 <?php if ($isUpgrade) : ?>
                     <li class="total__due-today">
                         <strong>Due today:</strong> $<?= $total ?>
