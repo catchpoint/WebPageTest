@@ -807,7 +807,8 @@ class Util
     }
 
     /**
-     * if you upgrade you are paying today and the change starts today, if it's a downgrade it starts the following pay period.
+     * if you upgrade you are paying today and the change starts today,
+     * if it's a downgrade it starts the following pay period.
      */
     public static function isUpgrade(Plan $currentPlan, Plan $newPlan): bool
     {
@@ -822,12 +823,14 @@ class Util
         }
         // monthly to annual (same runs or above)
         if (!$isCurrentAnnual && $isNewAnnual) {
-            // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' : 'monthly and annual $newRuns < $currentRuns';
+          // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' :
+          // 'monthly and annual $newRuns < $currentRuns';
             return $newRuns >= $currentRuns;
         }
         // annual to annual higher
         if ($isCurrentAnnual && $isNewAnnual) {
-            // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' : 'annual and  annual $newRuns < $currentRuns';
+          // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' :
+          // 'annual and  annual $newRuns < $currentRuns';
             return $newRuns > $currentRuns;
         }
         // annual to monthly (any)
