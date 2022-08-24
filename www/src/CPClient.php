@@ -127,7 +127,7 @@ class CPClient
         try {
             $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
         } catch (GuzzleException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 400 || $e->getCode() == 401) {
                 throw new UnauthorizedException();
             }
             throw new ClientException($e->getMessage());
