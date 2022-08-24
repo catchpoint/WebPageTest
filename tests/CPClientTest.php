@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use WebPageTest\CPClient;
 use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\UnauthorizedException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -191,7 +192,7 @@ final class CPClientTest extends TestCase
             ]
         ));
 
-        $this->expectException(ClientException::class);
+        $this->expectException(UnauthorizedException::class);
         $client->refreshAuthToken($refresh_token);
     }
 
