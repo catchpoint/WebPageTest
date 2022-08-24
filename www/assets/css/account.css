@@ -120,6 +120,10 @@ body.theme-b {
 .status {
   background-color: #c7edbc;
   padding: 0 10px;
+  margin-left: 5px;
+}
+.status__red {
+  background-color: rgba(208, 36, 36, 0.2);
 }
 
 .contact-support-button a {
