@@ -240,7 +240,7 @@ class CPClient
     }
 
     /**
-     * @return array WebPageTest\Plan[]
+     * @returns array WebPageTest\PlanList
      */
     public function getWptPlans(): PlanList
     {
@@ -902,8 +902,8 @@ class CPClient
             ]);
 
         $variables = [
-          'subscriptionId' => $subscription_id,
-          'nextPlanHandle' => $next_plan_handle
+            'subscriptionId' => $subscription_id,
+            'nextPlanHandle' => $next_plan_handle
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
@@ -913,23 +913,23 @@ class CPClient
     public function getBillingAddress(string $subscription_id): ChargifyInvoiceAddressType
     {
         $gql = (new Query('invoice'))
-          ->setVariables([
-              new Variable('subscriptionId', 'String', true)
-          ])
-          ->setArguments([
-              'subscriptionId' => '$subscriptionId'
-          ])
-          ->setSelectionSet([
-              (new Query('shippingAddress'))
-                  ->setSelectionSet([
-                      'street',
-                      'line2',
-                      'city',
-                      'state',
-                      'zip',
-                      'country'
-                  ])
-          ]);
+            ->setVariables([
+                new Variable('subscriptionId', 'String', true)
+            ])
+            ->setArguments([
+                'subscriptionId' => '$subscriptionId'
+            ])
+            ->setSelectionSet([
+                (new Query('shippingAddress'))
+                    ->setSelectionSet([
+                        'street',
+                        'line2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country'
+                    ])
+            ]);
 
         $variables = [
             'subscriptionId' => $subscription_id

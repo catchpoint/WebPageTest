@@ -823,18 +823,29 @@ class Util
         }
         // monthly to annual (same runs or above)
         if (!$isCurrentAnnual && $isNewAnnual) {
-          // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' :
-          // 'monthly and annual $newRuns < $currentRuns';
+            // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' :
+            // 'monthly and annual $newRuns < $currentRuns';
             return $newRuns >= $currentRuns;
         }
         // annual to annual higher
         if ($isCurrentAnnual && $isNewAnnual) {
-          // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' :
-          // 'annual and  annual $newRuns < $currentRuns';
+            // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' :
+            // 'annual and  annual $newRuns < $currentRuns';
             return $newRuns > $currentRuns;
         }
         // annual to monthly (any)
         // return "annual to monthly";
         return false;
+    }
+
+    public static function getAnnualPlanByRuns(int $runs, $annualPlans): Plan
+    {
+        foreach ($annualPlans as $plan) {
+            $planRuns = $plan->getRuns();
+            if ($planRuns == $runs) {
+                return $plan;
+                exit();
+            }
+        }
     }
 }

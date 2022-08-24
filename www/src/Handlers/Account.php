@@ -382,6 +382,18 @@ class Account
 
         switch ($page) {
             case 'update_billing':
+                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
+                $newPlan = Util::getAnnualPlanByRuns($oldPlan->getRuns(), $plans->getAnnualPlans());
+                $results['oldPlan'] = $oldPlan;
+                $results['newPlan'] = $newPlan;
+                $sub_id = $customer->getSubscriptionId();
+                $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
+                $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
+                $preview = $request_context->getClient()->getChargifySubscriptionPreview($newPlan->getId(), $addr);
+                $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
+                $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
+                $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
+                $results['renewaldate'] = $customer->getPlanRenewalDate()->format('m/d/Y');
                 echo $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
@@ -390,8 +402,7 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $plans);
-                    ;
+                    $plan = Util::getPlanFromArray($planCookie, $plans);;
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {

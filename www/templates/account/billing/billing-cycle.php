@@ -11,77 +11,53 @@
             </div>
         <?php endif; ?>
     </div>
-    <form>
+    <!-- main form -->
+    <form id="wpt-account-upgrade" method="post" action="/account">
+        <!-- payment -->
         <div class="box card-section">
-            <h2> New Billing Summary</h2>
-            <p><strong>Billing Cycle:</strong> Annual</p>
-            <ul class="plan-summary-list" id="plan-summary">
-                <li><strong>Price:</strong> <s>old amount</s> $newAmount</li>
-                <li><strong>Due Today</strong> $0.0</li>
-                <li><strong>Next Payment:</strong> Date here</li>
-            </ul>
-            <hr />
             <h3>Payment Method</h3>
-            <div class=" radiobutton-tabs__container">
-                <?php if ($is_paid) : ?>
-                    <!-- assume there is a CC on file if it's a paid account: so show tabs -->
-
-                    <legend for="payment-selection" class="visually-hidden"> Choose payment method:</legend>
-                    <input id="existing-card" type="radio" name="payment" value="existing-card" checked />
-                    <label for="existing-card">
-                        Existing payment method
-                    </label>
-                    <input id="new-card" type="radio" name="payment" value="new-card" />
-                    <label for="new-card">
-                        New payment method
-                    </label>
-
-
-                    <div class="card payment-info radiobutton-tabs__tab-content" data-modal="payment-info-modal" data-tab="existing-card">
-                        <div class="card-section user-info">
-                            <div class="cc-type image">
-                                <img src="<?= $cc_image_url ?>" alt="card-type" width="80px" height="54px" />
-                            </div>
-                            <div class="cc-details">
-                                <div class="cc-number"><?= $masked_cc; ?></div>
-                                <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
-                            </div>
+            <div class="radiobutton-tabs__container">
+                <div class="card payment-info radiobutton-tabs__tab-content" data-modal="payment-info-modal">
+                    <div class="card-section user-info">
+                        <div class="cc-type image">
+                            <img src="<?= $cc_image_url ?>" alt="card-type" width="80px" height="54px" />
                         </div>
-                        <div class="card-section">
-                            <div class="edit-button">
-                                <button><span>Edit</span></button>
-                            </div>
+                        <div class="cc-details">
+                            <div class="cc-number"><?= $masked_cc; ?></div>
+                            <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
                         </div>
                     </div>
-                <?php endif; ?>
-                <div class="radiobutton-tabs__tab-content" data-tab="new-card">
 
-                    <!-- copied from sign up, oh god... I forgot about the iframes -->
-                    <div class="signup-card-body">
-                        A new card!
-                        <div>
-                            <span id="cc_cardholder_first_name"></span>
-                            <span id="cc_cardholder_last_name"></span>
-                        </div>
-                        <div>
-                            <div id="cc_number"></div>
-                        </div>
-                        <div>
-                            <span id="cc_month"></span>
-                            <span id="cc_year"></span>
-                            <span id="cc_cvv"></span>
-                        </div>
-                    </div>
                 </div>
             </div>
             <!-- .radiobutton-tab-container__notcss -->
 
-            <input type="hidden" name="plan" value="" />
-            <input type="hidden" name="nonce" id="hidden-nonce-input" required />
+            <input type="hidden" name="plan" value="<?= $newPlan->getId() ?>" />
+            <input type='hidden' name='type' value='upgrade-plan-2' />
+            <input type="hidden" name="subscription_id" value="<?= $wptCustomer->getSubscriptionId() ?>" />
             <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
         </div>
+
+        <div class="box card-section">
+            <h2> New Billing Summary</h2>
+            <p><strong>Billing Cycle:</strong> Annual</p>
+
+            <ul class="plan-summary-list" id="plan-summary">
+
+                <li><strong>Price:</strong> <del>$<?= $oldPlan->getAnnualPrice() ?></del> $<?= $newPlan->getAnnualPrice() ?></li>
+
+                <li><strong>Tax:</strong> $<?= $tax ?></li>
+
+                <li class="total__due-today">
+                    <strong>Due today:</strong> $<?= $total ?>
+                </li>
+
+                <li><strong>Next Payment:</strong> <?= $renewaldate ?></li>
+            </ul>
+        </div>
+
         <div class="add-subscription-button-wrapper">
-            <button type="submit" class="pill-button yellow" disabled>Update billing cycle</button>
+            <button type="submit" class="pill-button yellow">Update billing cycle</button>
         </div>
     </form>
 </div>
