@@ -82,10 +82,23 @@ if ($request_method === 'POST') {
             'plan' => $_POST['plan'],
             'subscription_id' => $_POST['subscription_id']
         ];
-        $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
-
-        header("Location: {$redirect_uri}");
-        exit();
+        try {
+            $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your plan as been successfully updated! '
+            );
+            Util::setBannerMessage('form', $successMessage);
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $e->getMessage()
+            );
+            Util::setBannerMessage('form', $errorMessage);
+        }
     } elseif ($type == "resend-verification-email") {
         try {
             $request_context->getClient()->resendEmailVerification();

@@ -3,3 +3,14 @@
         <p> <?= htmlspecialchars_decode($message['text']) ?> </p>
     </div>
 <?php endforeach; ?>
+<script>
+    (() => {
+        if (document.readyState === "loading") {
+            document.body.addEventListener('click', e => {
+                document.querySelectorAll('.notification-banner').forEach(el => {
+                    el.remove();
+                })
+            });
+        }
+    })();
+</script>

@@ -801,7 +801,7 @@ class Util
      */
     public static function getBannerMessage(): array
     {
-        $messages_array = $_SESSION['messages'];
+        $messages_array = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
         unset($_SESSION['messages']);
         return $messages_array;
     }

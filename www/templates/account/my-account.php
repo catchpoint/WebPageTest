@@ -1,5 +1,5 @@
 <div class="my-account-page page_content">
-    <h3><?= htmlspecialchars($pagefoo) ?></h3>
+
     <!-- form notifications -->
     <?php
 

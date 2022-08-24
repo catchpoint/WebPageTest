@@ -9037,6 +9037,7 @@ body.screenshot .experiment_opportunities {
 .notification-banner p {
   display: flex;
   align-items: center;
+  margin: 0;
 }
 
 .notification-banner__success {

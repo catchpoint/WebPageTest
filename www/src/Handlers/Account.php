@@ -98,7 +98,11 @@ class Account
             $host = Util::getSetting('host');
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your contact information has been updated!'
+            );
+            Util::setBannerMessage('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
@@ -140,7 +144,11 @@ class Account
             $host = Util::getSetting('host');
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your password has been updated!'
+            );
+            Util::setBannerMessage('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
@@ -182,10 +190,20 @@ class Account
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your plan as been successfully updated! '
+            );
+            Util::setBannerMessage('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
             error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $e->getMessage()
+            );
+            Util::setBannerMessage('form', $errorMessage);
             throw new ClientException($e->getMessage(), "/account");
         }
     }
@@ -205,11 +223,20 @@ class Account
             $host = Util::getSetting('host');
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $cancelSuccessMessage = array(
+                'type' => 'success',
+                'text' => 'Your plan has been cancelled. You will not be charged next pay period.'
+            );
+            Util::setBannerMessage('form', $cancelSuccessMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (BaseException $e) {
             error_log($e->getMessage());
+            $cancelSuccessMessage = array(
+                'type' => 'error',
+                'text' => 'There was an error with canceling your account. Please try again.'
+            );
+            Util::setBannerMessage('form', $cancelSuccessMessage);
             throw new ClientException("There was an error", "/account");
         }
     }
@@ -344,11 +371,11 @@ class Account
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
         $results['remainingRuns'] = $remainingRuns;
         $results['plans'] = $plans;
+        $results['messages'] = Util::getBannerMessage();
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
         }
-
         $page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
         $tpl = new Template('account');
         $tpl->setLayout('account');
