@@ -2,11 +2,11 @@
     <div class="card-section-subhed card-section-subhed__grid">
         <h3>Payment &amp; Invoices</h3>
         <?php if (strtolower($billing_frequency) == "monthly") : ?>
-            <div class="account-cta">
+            <!-- <div class="account-cta">
                 <a href="/account/update_billing" class="two-tone-pill-button "> <span class="two-tone-pill-button__left">Upgrade to Annual Billing</span>
                     <span class="two-tone-pill-button__right">Save 25%</span>
                 </a>
-            </div>
+            </div> -->
         <?php endif; ?>
     </div>
     <div class="card payment-info">
