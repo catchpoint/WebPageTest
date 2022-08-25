@@ -34,7 +34,7 @@ class ConnectionViewHtmlSnippet
 
         $friendlyUrls = defined("FRIENDLY_URLS") && FRIENDLY_URLS;
         $urlGenerator = $this->stepResult->createUrlGenerator("", $friendlyUrls);
-        $waterfallImage = $urlGenerator->waterfallImage(true, 930, true);
+        $waterfallImage = $urlGenerator->waterfallImage(true, null, true);
         $out .= '<div class="waterfall-container"><img class="progress" alt="Connection View waterfall diagram"' .
             ' usemap="' . $this->mapName . '" id="' . $this->imageId . '" src="' . $waterfallImage . '"></div>';
 
