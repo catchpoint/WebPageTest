@@ -91,6 +91,10 @@ TODO update the NEW buttons on signup to this green
   border: 1px solid rgb(204, 204, 204);
 }
 
+.white {
+  background-color: #fff;
+  color: #111;
+}
 /**
  * ==============================================
  * Dot Pulse
