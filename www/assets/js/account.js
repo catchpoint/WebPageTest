@@ -656,6 +656,18 @@
         });
       });
 
+    // add pulse to submit button on click for any forms with this class
+    var fancyForm = document.querySelectorAll(".form__pulse-wait");
+    fancyForm.forEach((el) => {
+      el.addEventListener("submit", (e) => {
+        var submitButtons = e.target.querySelectorAll(".pill-button span");
+        for (const button of submitButtons) {
+          button.innerHTML = "";
+          button.classList.add("dot-pulse");
+          button.classList.add("dot-pulse__dark");
+        }
+      });
+    });
     document
       .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
       .forEach((el) => {

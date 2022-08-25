@@ -6,10 +6,10 @@ use WebPageTest\ApiKeyList; ?>
     <div class="resend-email-verification-container">
         <div>
             <p>Please verify your email address in order to utilize key features of your WebPageTest Account</p>
-            <form method="POST" action="/account">
+            <form method="POST" action="/account" class="form__pulse-wait">
                 <input type="hidden" name="type" value="resend-verification-email" />
                 <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                <button type="submit" class="button pill-button grey-outline white">Resend Verification Email</button>
+                <button type="submit" class="button pill-button grey-outline white"><span>Resend Verification Email</span></button>
             </form>
         </div>
     </div>

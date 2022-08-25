@@ -107,11 +107,20 @@ if ($request_method === 'POST') {
             $host = Util::getSetting('host');
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
-
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Email Verification link has been sent.'
+            );
+            Util::setBannerMessage('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $e->getMessage()
+            );
+            Util::setBannerMessage('form', $errorMessage);
             throw new ClientException("There was an error", "/account");
         }
     } else {

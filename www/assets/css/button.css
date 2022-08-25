@@ -97,7 +97,7 @@ TODO update the NEW buttons on signup to this green
 }
 /**
  * ==============================================
- * Dot Pulse
+ * Dot Pulse - default is white
  * ==============================================
  */
 .dot-pulse {
@@ -184,6 +184,75 @@ TODO update the NEW buttons on signup to this green
   }
 }
 
+.dot-pulse__dark {
+  background-color: #111;
+  color: #111;
+  box-shadow: 9999px 0 0 -5px #111;
+  animation: dotPulseDark 1.5s infinite linear;
+}
+
+.dot-pulse__dark::before,
+.dot-pulse__dark::after {
+  background-color: #111;
+  color: #111;
+}
+
+.dot-pulse::before {
+  box-shadow: 9984px 0 0 -5px #111;
+  animation: dotPulseBeforeDark 1.5s infinite linear;
+  animation-delay: 0s;
+}
+
+.dot-pulse::after {
+  box-shadow: 10014px 0 0 -5px #111;
+  animation: dotPulseAfterDark 1.5s infinite linear;
+  animation-delay: 0.5s;
+}
+
+@keyframes dotPulseBeforeDark {
+  0% {
+    box-shadow: 9984px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 9984px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9984px 0 0 -5px #111;
+  }
+}
+
+@keyframes dotPulseDark {
+  0% {
+    box-shadow: 9999px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 9999px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9999px 0 0 -5px #111;
+  }
+}
+
+@keyframes dotPulseAfterDark {
+  0% {
+    box-shadow: 10014px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 10014px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 10014px 0 0 -5px #111;
+  }
+}
 /** drop down button **/
 
 .dropdown {
