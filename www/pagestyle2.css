@@ -9096,3 +9096,8 @@ body.screenshot .header_screenshots img {
 body.screenshot .experiment_opportunities {
   display: none;
 }
+
+.linklike {
+  cursor: pointer;
+  text-decoration: underline;
+}

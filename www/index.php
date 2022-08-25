@@ -814,7 +814,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         <?php } ?>
                                         <div id="script" class="test_subbox ui-tabs-hide">
                                             <div>
-                                                <p><label for="enter_script" class="full_width">Enter Script</label></p>
+                                                <p>
+                                                    <label for="enter_script">Enter Script</label>
+                                                    <small>(or read it <label for="script_file" class="linklike">from a file</label>)</small>
+                                                </p>
+                                                <input type="file" id="script_file" multiple accept="text/*" class="a11y-hidden">
                                                 <?php
                                                 $script = '';
                                                 if (array_key_exists('script', $_REQUEST)) {

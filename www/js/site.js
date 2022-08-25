@@ -1193,3 +1193,26 @@ var getScrollbarWidth = function() {
     };
   }
 })();
+
+// handle script file uploads
+const uploadInput = document.getElementById("script_file");
+if (uploadInput) {
+  uploadInput.addEventListener(
+    "change",
+    () => {
+      const file = uploadInput.files[0];
+      const reader = new FileReader();
+      reader.addEventListener(
+        "load",
+        () => {
+          document.getElementById("enter_script").value = reader.result;
+        },
+        false
+      );
+      if (file) {
+        reader.readAsText(file);
+      }
+    },
+    false
+  );
+}
