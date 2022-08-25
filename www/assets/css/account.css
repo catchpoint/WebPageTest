@@ -1381,27 +1381,29 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .resend-email-verification-container {
-  background-color: rgb(244, 255, 241);
-  padding: 30px;
-  box-shadow: rgb(0 0 0 / 10%) 1px 1px 4px 0px;
-  border-radius: 10px;
+  background-color: #f9d856;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  margin-top: -32px;
+  padding: 1rem 0;
+}
+.resend-email-verification-container div {
+  text-align: center;
+}
+.resend-email-verification-container p,
+.resend-email-verification-container form {
+  display: inline-block;
+  margin: 0;
 }
 
-.resend-email-verification-hed h3 {
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.resend-email-verification-hed h3::before {
-  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM4M2M5OWM7fS5jbHMtMntmaWxsOm5vbmU7c3Ryb2tlOiNmZmY7c3Ryb2tlLW1pdGVybGltaXQ6MTA7c3Ryb2tlLXdpZHRoOjJweDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPkljb25zX1JlZGVzaWduPC90aXRsZT48ZyBpZD0iQ29weSI+PGNpcmNsZSBjbGFzcz0iY2xzLTEiIGN4PSI4IiBjeT0iOCIgcj0iOCIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTIiIHBvaW50cz0iNCA4IDYuNSAxMC41IDExLjUgNS41Ii8+PC9nPjwvc3ZnPg==)
-    center center / contain no-repeat;
-  display: block;
-  height: 20px;
-  width: 20px;
-  margin-right: 5px;
-  content: "";
+@media (max-width: 980px) {
+  .resend-email-verification-container form {
+    margin-left: 15px;
+  }
 }
 
 .resend-link-container {

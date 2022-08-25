@@ -1,30 +1,26 @@
+<?php
+
+use WebPageTest\ApiKeyList; ?>
+<!-- VERIFIED EMAIL NOTICE ---->
+<?php if (!$is_verified) : ?>
+    <div class="resend-email-verification-container">
+        <div>
+            <p>Please verify your email address in order to utilize key features of your WebPageTest Account</p>
+            <form method="POST" action="/account">
+                <input type="hidden" name="type" value="resend-verification-email" />
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
+                <button type="submit" class="button pill-button grey-outline white">Resend Verification Email</button>
+            </form>
+        </div>
+    </div>
+<?php endif; ?>
+
 <div class="my-account-page page_content">
 
     <!-- form notifications -->
     <?php
-
-    use WebPageTest\ApiKeyList;
-
     include_once __DIR__ . '/../includes/form-notifications.php';
     ?>
-    <!-- VERIFIED EMAIL NOTICE ---->
-    <?php if (!$is_verified) : ?>
-        <div class="resend-email-verification-container">
-            <div class="resend-email-verification-hed">
-                <h3>A verification link was sent to your email</h3>
-            </div>
-            <div>Please click on the link that was sent to your email to complete your registration process.</div>
-            <div class="resend-link-container">
-                <span>Didn’t receive an email?</span>
-                <form method="POST" action="/account">
-                    <input type="hidden" name="type" value="resend-verification-email" />
-                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                    <button type="submit">Resend Verification Link</button>
-                </form>
-            </div>
-        </div>
-    <?php endif; ?>
-
     <div class="subhed">
         <h1>My Account</h1>
         <?php if ($is_paid) : ?>
