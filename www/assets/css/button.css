@@ -10,6 +10,7 @@
   text-decoration: none;
   color: #111;
   font-size: 1rem;
+  text-transform: capitalize;
 }
 
 .two-tone-pill-button {

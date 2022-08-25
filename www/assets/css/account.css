@@ -2255,3 +2255,32 @@ input#existing-card:checked
 form:invalid button[type="submit"] {
   opacity: 0.3;
 }
+
+.upgrade-icon::before {
+  content: "";
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  vertical-align: middle;
+  background-image: url("data:image/svg+xml,%3Csvg width='26' height='26' viewBox='0 0 26 26' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg clip-path='url(%23clip0_1425_5853)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13 24C19.0751 24 24 19.0751 24 13C24 6.92487 19.0751 2 13 2C6.92487 2 2 6.92487 2 13C2 19.0751 6.92487 24 13 24ZM13 26C20.1797 26 26 20.1797 26 13C26 5.8203 20.1797 0 13 0C5.8203 0 0 5.8203 0 13C0 20.1797 5.8203 26 13 26ZM14 8.41421L18.2929 12.7071C18.6834 13.0976 19.3166 13.0976 19.7071 12.7071C20.0976 12.3166 20.0976 11.6834 19.7071 11.2929L13.8839 5.46967C13.3957 4.98152 12.6043 4.98151 12.1161 5.46967L6.29289 11.2929C5.90237 11.6834 5.90237 12.3166 6.29289 12.7071C6.68342 13.0976 7.31658 13.0976 7.70711 12.7071L12 8.41421L12 20C12 20.5523 12.4477 21 13 21C13.5523 21 14 20.5523 14 20L14 8.41421Z' fill='%2300A850'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_1425_5853'%3E%3Crect width='26' height='26' fill='white'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 5px;
+}
+
+.downgrade-icon::before {
+  content: "";
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  vertical-align: middle;
+  background-image: url("data:image/svg+xml,%3Csvg width='26' height='26' viewBox='0 0 26 26' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg clip-path='url(%23clip0_1425_5867)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13 24C19.0751 24 24 19.0751 24 13C24 6.92487 19.0751 2 13 2C6.92487 2 2 6.92487 2 13C2 19.0751 6.92487 24 13 24ZM13 26C20.1797 26 26 20.1797 26 13C26 5.8203 20.1797 0 13 0C5.8203 0 0 5.8203 0 13C0 20.1797 5.8203 26 13 26ZM12 17.5858L7.70711 13.2929C7.31658 12.9024 6.68342 12.9024 6.29289 13.2929C5.90237 13.6834 5.90237 14.3166 6.29289 14.7071L12.1161 20.5303C12.6043 21.0185 13.3957 21.0185 13.8839 20.5303L19.7071 14.7071C20.0976 14.3166 20.0976 13.6834 19.7071 13.2929C19.3166 12.9024 18.6834 12.9024 18.2929 13.2929L14 17.5858L14 6C14 5.44771 13.5523 5 13 5C12.4477 5 12 5.44771 12 6L12 17.5858Z' fill='%23808080'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_1425_5867'%3E%3Crect width='26' height='26' fill='white'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 5px;
+}
+
+.downgrade-icon__black::before,
+.upgrade-icon__black::before {
+  fill: #111111;
+}

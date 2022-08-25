@@ -30,8 +30,11 @@
                 foreach ($annual_plans as $key => $plan) :
                     $reccomended = ($key === 1) ? 'wpt-plan__reccomended' : '';
                     $isCurrentPlan = isset($wptCustomer) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
+                    $isUpgrade = $plan->isUpgrade($oldPlan);
                     $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
                     $disabled =  $isCurrentPlan ? 'disabled' : '';
+                    $upgrade = $isUpgrade ? 'upgrade' : 'downgrade';
+                    $buttonCopy = $isCurrentPlan ? 'Current Plan' : $upgrade;
                     $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
                     <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}" {$disabled}/>
@@ -39,8 +42,7 @@
                       <h5> Annual Pro </h5>
                       <div>{$plan->getRuns()}runs/mo</div>
                       <div><strong>\${$plan->getAnnualPrice()}</strong>/Year</div>
-                      <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
-                    </label>
+                      <span aria-hidden="true" class="pill-button yellow"><span class="{$buttonCopy}-icon upgrade-icon__black">{$buttonCopy}</span></span>
                   </div>
                 HTML;
                     echo $plan_block;
@@ -52,8 +54,11 @@
                 $monthly_plans = $plans->getMonthlyPlans();
                 foreach ($monthly_plans as $key => $plan) :
                     $isCurrentPlan = isset($wptCustomer) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
+                    $isUpgrade = $plan->isUpgrade($oldPlan);
                     $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
                     $disabled =  $isCurrentPlan ? 'disabled' : '';
+                    $upgrade = $isUpgrade ? 'upgrade' : 'downgrade';
+                    $buttonCopy = $isCurrentPlan ? 'Current Plan' : $upgrade;
                     $plan_block = <<<HTML
                 <div class="form-wrapper-radio">
                     <input type="radio" id="monthly-{$plan->getId()}" name="plan" value="{$plan->getId()}" required  {$disabled}/>
@@ -61,7 +66,7 @@
                         <h5>Monthly Pro</h5>
                         <div>{$plan->getRuns()} runs/mo</div>
                         <div><strong>\${$plan->getMonthlyPrice()}</strong>/Month</div>
-                        <span aria-hidden="true" class="pill-button yellow"><span>Select</span></span>
+                        <span aria-hidden="true" class="pill-button yellow"><span class="{$buttonCopy}-icon upgrade-icon__black">{$buttonCopy}</span></span>
                     </label>
                 </div>
                 HTML;
