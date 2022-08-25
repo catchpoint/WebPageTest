@@ -397,13 +397,14 @@ class Account
                 echo $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
+                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
+                $results['oldPlan'] = $oldPlan;
                 echo $tpl->render('plans/upgrade-plan', $results);
                 break;
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $plans);
-                    ;
+                    $plan = Util::getPlanFromArray($planCookie, $plans);;
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {
@@ -414,7 +415,7 @@ class Account
                         $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                         $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
-                        $results['isUpgrade'] = Util::isUpgrade($oldPlan, $plan);
+                        $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
                         $results['renewaldate'] = $customer->getPlanRenewalDate()->format('m/d/Y');
                         echo $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
