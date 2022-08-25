@@ -239,9 +239,6 @@ class CPClient
         }
     }
 
-    /**
-     * @returns array WebPageTest\PlanList
-     */
     public function getWptPlans(): PlanList
     {
         $gql = (new Query('wptPlan'))

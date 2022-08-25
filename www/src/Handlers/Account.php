@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
+use stdClass;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\ValidatorPatterns;
@@ -19,37 +20,37 @@ class Account
 {
     /** Upgrading plans from Account  */
     // Validate that a plan is selected
-    public static function validatePlanUpgrade(): object
+    //
+    // #[ValidationMethod]
+    // #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+    public static function validatePlanUpgrade(array $post_body): object
     {
-        if (isset($_POST['plan'])) {
-            $vars = (object)[];
-            $vars->plan =  filter_input(INPUT_POST, 'plan');
+        if (isset($post_body['plan'])) {
+            $vars = new stdClass();
+            $vars->plan = $post_body['plan'];
             return $vars;
         } else {
             throw new ClientException("No plan selected", "/account", 400);
         }
     }
+
     // Pass the plan id to the plan summary page
-    public static function postPlanUpgrade(RequestContext $request_context): string
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+    public static function postPlanUpgrade(RequestContext $request_context, object $body): string
     {
         $host = Util::getSetting('host');
+        setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account/plan_summary";
         return $redirect_uri;
     }
 
-    // // before rendering the plan_
-    // public static function getPlanSummary(RequestContext $request_context, array $vars): string
-
-    // }
-
-    // // validate the last step to upgrading
-    // public static function validatePlanSummary(RequestContext $request_context): object
-    // {
-    //     subscribeToAccount($request_context)
-    // }
-
     // Submit the plan upgrade
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'upgrade-plan-2')]
     public static function postUpdatePlanSummary(RequestContext $request_context, array $body): string
     {
         $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan']);
@@ -60,17 +61,24 @@ class Account
         return $redirect_uri;
     }
 
-    public static function changeContactInfo(RequestContext $request_context): void
+
+    // Validate change info
+    //
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'change-info')]
+    public static function validateChangeContactInfo(array $post_body): object
     {
+        $body = new stdClass();
+
         $contact_info_validator = new Rules\AllOf(
             new Rules\Regex('/' . ValidatorPatterns::getContactInfo() . '/'),
             new Rules\Length(0, 32)
         );
 
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
-        $first_name = filter_input(INPUT_POST, 'first-name');
-        $last_name = filter_input(INPUT_POST, 'last-name');
-        $company_name = filter_input(INPUT_POST, 'company-name');
+        $id = filter_var($post_body['id'], FILTER_SANITIZE_NUMBER_INT);
+        $first_name = $post_body['first-name'];
+        $last_name = $post_body['last-name'];
+        $company_name = $post_body['company-name'];
 
         try {
             $contact_info_validator->assert($first_name);
@@ -83,17 +91,31 @@ class Account
             throw new ClientException(implode(', ', $message));
         }
 
+        $body->id = $id;
+        $body->first_name = $first_name;
+        $body->last_name = $last_name;
+        $body->company_name = $company_name;
+
+        return $body;
+    }
+
+    // Change contact info
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'change-info')]
+    public static function changeContactInfo(RequestContext $request_context, object $body): string
+    {
         $email = $request_context->getUser()->getEmail();
 
-        $options = array(
+        $options = [
             'email' => $email,
-            'first_name' => $first_name,
-            'last_name' => $last_name,
-            'company_name' => $company_name
-        );
+            'first_name' => $body->first_name,
+            'last_name' => $body->last_name,
+            'company_name' => $body->company_name
+        ];
 
         try {
-            $request_context->getClient()->updateUserContactInfo($id, $options);
+            $request_context->getClient()->updateUserContactInfo($body->id, $options);
             $protocol = $request_context->getUrlProtocol();
             $host = Util::getSetting('host');
             $route = '/account';
@@ -103,23 +125,29 @@ class Account
                 'text' => 'Your contact information has been updated!'
             );
             Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
+            return $redirect_uri;
         } catch (BaseException $e) {
+            error_log($e->getMessage());
             throw new ClientException("Could not update user info", "/account", 400);
         }
     }
 
-    public static function changePassword(RequestContext $request_context): void
+    // Validate change password
+    //
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'password')]
+    public static function validateChangePassword(array $post_body): object
     {
+        $body = new stdClass();
+
         $password_validator = new Rules\AllOf(
             new Rules\Length(8, 32),
             new Rules\Regex('/' . ValidatorPatterns::getPassword() . '/')
         );
 
-        $current_password = filter_input(INPUT_POST, 'current-password');
-        $new_password = filter_input(INPUT_POST, 'new-password');
-        $confirm_new_password = filter_input(INPUT_POST, 'confirm-new-password');
+        $current_password = $post_body['current-password'];
+        $new_password = $post_body['new-password'];
+        $confirm_new_password = $post_body['confirm-new-password'];
 
         if ($new_password !== $confirm_new_password) {
             throw new ClientException("New Password must match confirmed password", "/account", 400);
@@ -138,8 +166,20 @@ class Account
             throw new ClientException(implode(', ', $message));
         }
 
+        $body->current_password = $current_password;
+        $body->new_password = $new_password;
+
+        return $body;
+    }
+
+    // Change password
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'password')]
+    public static function changePassword(RequestContext $request_context, object $body): string
+    {
         try {
-            $request_context->getClient()->changePassword($new_password, $current_password);
+            $request_context->getClient()->changePassword($body->new_password, $body->current_password);
             $protocol = $request_context->getUrlProtocol();
             $host = Util::getSetting('host');
             $route = '/account';
@@ -149,22 +189,27 @@ class Account
                 'text' => 'Your password has been updated!'
             );
             Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
+            return $redirect_uri;
         } catch (BaseException $e) {
             throw new ClientException($e->getMessage(), "/account", 400);
         }
     }
 
-    public static function subscribeToAccount(RequestContext $request_context): void
+    // Validate existing free user subscribes to a paid account
+    //
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'account-signup')]
+    public static function validateSubscribeToAccount(array $post_body): object
     {
-        $nonce = filter_input(INPUT_POST, 'nonce');
-        $plan = strtolower(filter_input(INPUT_POST, 'plan'));
-        $city = filter_input(INPUT_POST, 'city');
-        $country = filter_input(INPUT_POST, 'country');
-        $state = filter_input(INPUT_POST, 'state');
-        $street_address = filter_input(INPUT_POST, 'street-address');
-        $zipcode = filter_input(INPUT_POST, 'zipcode');
+        $body = new stdClass();
+
+        $nonce = $post_body['nonce'];
+        $plan = $post_body['plan'];
+        $city = $post_body['city'];
+        $country = $post_body['country'];
+        $state = $post_body['state'];
+        $street_address = $post_body['street-address'];
+        $zipcode = $post_body['zipcode'];
 
         if (
             empty($nonce) ||
@@ -178,15 +223,32 @@ class Account
             throw new ClientException("Please complete all required fields", "/account");
         }
 
+        $body->nonce = $nonce;
+        $body->plan = $plan;
+        $body->city = $city;
+        $body->country = $country;
+        $body->state = $state;
+        $body->street_address = $street_address;
+        $body->zipcode = $zipcode;
+
+        return $body;
+    }
+
+    // Existing free user subscribes to a paid account
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'account-signup')]
+    public static function subscribeToAccount(RequestContext $request_context, object $body): string
+    {
         $address = new ChargifyAddressInput([
-            'city' => $city,
-            'country' => $country,
-            'state' => $state,
-            'street_address' => $street_address,
-            'zipcode' => $zipcode
+            'city' => $body->city,
+            'country' => $body->country,
+            'state' => $body->state,
+            'street_address' => $body->street_address,
+            'zipcode' => $body->zipcode
         ]);
 
-        $subscription = new ChargifySubscriptionInputType($plan, $nonce, $address);
+        $subscription = new ChargifySubscriptionInputType($body->plan, $body->nonce, $address);
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
@@ -195,8 +257,7 @@ class Account
                 'text' => 'Your plan as been successfully updated! '
             );
             Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
+            return $redirect_uri;
         } catch (BaseException $e) {
             error_log($e->getMessage());
             $errorMessage = array(
@@ -208,11 +269,20 @@ class Account
         }
     }
 
+    // TODO: change user's credit card
+    //
+    // #[NotImplemented]
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'update-payment-method')]
     public static function updatePaymentMethod(RequestContext $request_context): void
     {
     }
 
-    public static function cancelSubscription(RequestContext $request_context)
+    // Cancel a paid subscription
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'cancel-subscription')]
+    public static function cancelSubscription(RequestContext $request_context): string
     {
 
         $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
@@ -228,8 +298,7 @@ class Account
                 'text' => 'Your plan has been cancelled. You will not be charged next pay period.'
             );
             Util::setBannerMessage('form', $cancelSuccessMessage);
-            header("Location: {$redirect_uri}");
-            exit();
+            return $redirect_uri;
         } catch (BaseException $e) {
             error_log($e->getMessage());
             $cancelSuccessMessage = array(
@@ -241,6 +310,32 @@ class Account
         }
     }
 
+    // Create a WPT api key for a user
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'create-api-key')]
+    public static function createApiKey(RequestContext $request_context): void
+    {
+        try {
+            $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
+            $request_context->getClient()->createApiKey($name);
+            $protocol = $request_context->getUrlProtocol();
+            $host = Util::getSetting('host');
+            $route = '/account#api-consumers';
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new ClientException($e->getMessage(), "/account");
+        }
+    }
+
+    // Delete a WPT api key for a user
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'delete-api-key')]
     public static function deleteApiKey(RequestContext $request_context)
     {
         try {
@@ -271,31 +366,92 @@ class Account
     }
 
     /**
-     * responds in JSON
+     *
+     * Previews cost (including taxes) of signing up with plan
+     *
+     * @return object $body
+     *
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'account-signup-preview')]
      */
-    public static function previewCost(RequestContext $request_context)
+    public static function validatePreviewCost(array $post): object
+    {
+        $body = new stdClass();
+
+        if (
+            !(
+            isset($post['plan']) &&
+            isset($post['street-address']) &&
+            isset($post['city']) &&
+            isset($post['state']) &&
+            isset($post['country']) &&
+            isset($post['zipcode'])
+            )
+        ) {
+            throw new ClientException("Plan, street address, city, state, country, and zipcode must all be filled", "/account");
+        }
+
+        $body->plan = $post['plan'];
+        $body->street_address = $post['street-address'];
+        $body->city = $post['city'];
+        $body->state = $post['state'];
+        $body->country = $post['country'];
+        $body->zipcode = $post['zipcode'];
+
+        return $body;
+    }
+
+    /**
+     *
+     * @return string $totals where totals are a json-encoding version of a SubscriptionPreview
+     *
+     * Previews cost (including taxes) of signing up with plan
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'account-signup-preview')]
+     */
+    public static function previewCost(RequestContext $request_context, object $body): string
     {
         try {
-            $plan = $_POST['plan'];
+            $plan = $body->plan;
             $address = new ChargifyAddressInput([
-                "street_address" => $_POST['street-address'],
-                "city" => $_POST['city'],
-                "state" => $_POST['state'],
-                "country" => $_POST['country'],
-                "zipcode" => $_POST['zipcode']
+                "street_address" => $body->street_address,
+                "city" => $body->city,
+                "state" => $body->state,
+                "country" => $body->country,
+                "zipcode" => $body->zipcode
             ]);
 
             $preview_totals = $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
-            header('Content-type: application/json');
-            echo json_encode($preview_totals);
-            exit();
+            return json_encode($preview_totals);
         } catch (\Exception $e) {
-            header('Content-type: application/json');
-            echo json_encode([
+            error_log($e->getMessage());
+            return json_encode([
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     *
+     * Triggers sending email verification email to a user
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'resend-email-verification')]
+     */
+    public static function resendEmailVerification(RequestContext $request_context): string
+    {
+        try {
+            $request_context->getClient()->resendEmailVerification();
+
+            $protocol = $request_context->getUrlProtocol();
+            $host = Util::getSetting('host');
+            $route = '/account';
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+            return $redirect_uri;
+        } catch (\Exception $e) {
             error_log($e->getMessage());
-            exit();
+            throw new ClientException($e->getMessage(), "/account");
         }
     }
 
