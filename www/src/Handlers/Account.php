@@ -75,12 +75,13 @@ class Account
             new Rules\Length(0, 32)
         );
 
-        if (!
-          ((isset($post_body['id'])) &&
-          (isset($post_body['first-name'])) &&
-          (isset($post_body['last-name'])))
+        if (
+            !
+            ((isset($post_body['id'])) &&
+            (isset($post_body['first-name'])) &&
+            (isset($post_body['last-name'])))
         ) {
-          throw new ClientException("Required fields must be filled", "/account");
+            throw new ClientException("Required fields must be filled", "/account");
         }
 
         $id = filter_var($post_body['id'], FILTER_SANITIZE_NUMBER_INT);
@@ -400,7 +401,8 @@ class Account
             isset($post['zipcode'])
             )
         ) {
-            throw new ClientException("Plan, street address, city, state, country, and zipcode must all be filled", "/account");
+            $msg = "Plan, street address, city, state, country, and zipcode must all be filled";
+            throw new ClientException($msg, "/account");
         }
 
         $body->plan = $post['plan'];
