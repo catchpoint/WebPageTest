@@ -14,13 +14,14 @@ class ContactUpdateInput
 
     public function __construct(array $options)
     {
-        if(!
-          ((isset($options['id'])) &&
-          (isset($options['first_name'])) &&
-          (isset($options['email'])) &&
-          (isset($options['last_name']))
-          ))
-        {
+        if (
+            !
+            ((isset($options['id'])) &&
+            (isset($options['first_name'])) &&
+            (isset($options['email'])) &&
+            (isset($options['last_name']))
+            )
+        ) {
             throw new \Exception("Required fields are missing");
         }
 
