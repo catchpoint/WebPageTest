@@ -75,15 +75,25 @@ class Account
             new Rules\Length(0, 32)
         );
 
+        if (!
+          ((isset($post_body['id'])) &&
+          (isset($post_body['first-name'])) &&
+          (isset($post_body['last-name'])))
+        ) {
+          throw new ClientException("Required fields must be filled", "/account");
+        }
+
         $id = filter_var($post_body['id'], FILTER_SANITIZE_NUMBER_INT);
         $first_name = $post_body['first-name'];
         $last_name = $post_body['last-name'];
-        $company_name = $post_body['company-name'];
+        $company_name = $post_body['company-name'] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
             $contact_info_validator->assert($last_name);
-            $contact_info_validator->assert($company_name);
+            if (!is_null($company_name)) {
+                $contact_info_validator->assert($company_name);
+            }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
                 'regex' => 'input cannot contain <, >, or &#'
@@ -94,7 +104,9 @@ class Account
         $body->id = $id;
         $body->first_name = $first_name;
         $body->last_name = $last_name;
-        $body->company_name = $company_name;
+        if (!is_null($company_name)) {
+            $body->company_name = $company_name;
+        }
 
         return $body;
     }

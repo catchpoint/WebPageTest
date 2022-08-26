@@ -29,6 +29,7 @@ use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseTypeList;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
+use WebPageTest\CPGraphQlTypes\ContactUpdateInput;
 use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 
 class CPClient
@@ -377,13 +378,10 @@ class CPClient
                 'email'
             ]);
 
-        $variables_array = array('contact' => [
-            'id' => $id,
-            'email' => $options['email'],
-            'firstName' => $options['first_name'],
-            'lastName' => $options['last_name'],
-            'companyName' => $options['company_name']
-        ]);
+        $contact_update = new ContactUpdateInput(array_merge([], ['id' => $id ], $options));
+        $variables_array = [
+          'contact' => $contact_update->toArray()
+        ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables_array);
         return $results->getData();
