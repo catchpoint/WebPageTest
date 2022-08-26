@@ -404,7 +404,8 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $plans);;
+                    $plan = Util::getPlanFromArray($planCookie, $plans);
+                    ;
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {

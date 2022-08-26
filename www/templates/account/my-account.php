@@ -1,6 +1,8 @@
 <?php
 
-use WebPageTest\ApiKeyList; ?>
+use WebPageTest\ApiKeyList;
+
+?>
 <!-- VERIFIED EMAIL NOTICE ---->
 <?php if (!$is_verified) : ?>
     <div class="resend-email-verification-container">
