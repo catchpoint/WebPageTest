@@ -760,7 +760,7 @@ class Util
      */
     public static function getCountryJsonBlob(): string
     {
-        $file = file_get_contents(__DIR__ . '/../js/country-list/country-list.json');
+        $file = file_get_contents(__DIR__ . '/../assets/js/country-list/country-list.json');
 
         return $file;
     }
