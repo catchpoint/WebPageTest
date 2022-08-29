@@ -198,13 +198,13 @@ TODO update the NEW buttons on signup to this green
   color: #111;
 }
 
-.dot-pulse::before {
+.dot-pulse__dark::before {
   box-shadow: 9984px 0 0 -5px #111;
   animation: dotPulseBeforeDark 1.5s infinite linear;
   animation-delay: 0s;
 }
 
-.dot-pulse::after {
+.dot-pulse__dark::after {
   box-shadow: 10014px 0 0 -5px #111;
   animation: dotPulseAfterDark 1.5s infinite linear;
   animation-delay: 0.5s;
