@@ -86,7 +86,7 @@
 <?php require_once __DIR__ . '/includes/sidebar.php' ?>
 
 <?php if (!$is_plan_free) : ?>
-    <script src="/js/country-list/country-list.js"></script>
+    <script src="/assets/js/country-list/country-list.js"></script>
     <script>
         (() => {
             const countryList = <?= $country_list_json_blob ?>;

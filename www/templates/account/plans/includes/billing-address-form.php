@@ -47,7 +47,7 @@
     </div>
 </form>
 
-<script defer src="/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
+<script defer src="/assets/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
 <script>
     (() => {
         // state dropdown
@@ -68,4 +68,4 @@
     })();
 </script>
 
-<script defer src="/js/estimate-taxes.js?v=<?= constant('VER_JS_ESTIMATE_TAXES') ?>"></script>
+<script defer src="/assets/js/estimate-taxes.js?v=<?= constant('VER_JS_ESTIMATE_TAXES') ?>"></script>
