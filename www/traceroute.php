@@ -72,11 +72,11 @@ $page_description = "Test network path from multiple locations around the world 
                 include("testTypesNav.php");
                 ?>
 
-                
+
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields home_responsive_test_top">
                         <li>
-                        <label for="url" class="vis-hidden">Enter URL to test</label>    
+                        <label for="url" class="vis-hidden">Enter URL to test</label>
                         <input type="text" name="url" id="url" required placeholder="Host Name/IP Address" class="text large" onkeypress="if (event.keyCode == 32) {return false;}">
                         </li>
 
@@ -148,7 +148,7 @@ $page_description = "Test network path from multiple locations around the world 
                               <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                             </div>
                         </li>
-                        
+
                     </ul>
                 </div>
             </div>
@@ -174,7 +174,7 @@ $page_description = "Test network path from multiple locations around the world 
                 </p>
             </div>
             </form>
-            
+
             <?php
             include(__DIR__ . '/include/home-subsections.inc');
             ?>
@@ -195,7 +195,7 @@ $page_description = "Test network path from multiple locations around the world 
         }
         ?>
         </script>
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 

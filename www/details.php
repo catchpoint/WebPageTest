@@ -74,7 +74,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 <div class="results_main_contain">
         <div class="results_main">
 
-        
+
         <div class="results_and_command">
 
            <div class="results_header">
@@ -122,7 +122,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     }
                     ?>
 
-               
+
                 <?php
                 $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
                 $htmlTable->disableColumns(array(
@@ -220,7 +220,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     echo $waterfallSnippet->create();
                 }
                 ?>
-               
+
                 <h3 class="hed_sub" name="connection_view">Connection View</h3>
                     <?php
                     if ($isMultistep) {
@@ -243,7 +243,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 }
                 ?>
 
-            
+
                 <?php
                     echo '';
                 if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS'])) {
@@ -266,7 +266,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 ?>
             </div>
                 </div>
-              
+
         </div>
         <?php include('footer.inc'); ?>
 
@@ -292,8 +292,8 @@ function createForm($formName, $btnText, $id, $owner, $secret)
               </div>
         <?php
         if ($isMultistep) {
-            echo '<script src="/js/jk-navigation.js"></script>';
-            echo '<script src="/js/accordion.js"></script>';
+            echo '<script src="/assets/js/jk-navigation.js"></script>';
+            echo '<script src="/assets/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $testRunResults->getRunNumber();
             echo '<script>';
@@ -375,7 +375,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                   if (scrollToNode.length > 0) {
                     expandRequest(scrollToNode);
                   }
-                    
+
                 }
                 if (scrollToNode.length > 0) {
                   scrollTo(scrollToNode);
@@ -427,9 +427,9 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         window.onhashchange = handleHash;
 
         <?php
-        include "waterfall.js";
+        include "assets/js/waterfall.js";
         ?>
         </script>
-        
+
     </body>
 </html>

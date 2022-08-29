@@ -124,10 +124,10 @@ $common_label = implode(" ", $common_labels);
 
             <div class="results_main_contain">
             <div class="results_main">
-    
-            
-    
-    
+
+
+
+
               <div class="results_and_command">
 
                <div class="results_header">
@@ -135,8 +135,8 @@ $common_label = implode(" ", $common_labels);
                     <p>Use this page to plot the results for each run in your test to help you spot outliers and patterns.</p>
                 </div>
                 </div>
-    
-    
+
+
                 <div id="result" class="results_body">
 <?php
 if (count($testsId) != 1) {
@@ -208,7 +208,7 @@ if (count($testsId) != 1) {
             </div>
 
             <div id="result" class="">
-            
+
             <?php
             $web_vitals = array();
             foreach ($pagesData as &$pageData) {
@@ -366,7 +366,7 @@ if (count($testsId) != 1) {
                     echo "var runs = $num_runs;\n";
                     echo "var zeroStart = $zero_start;\n";
                 ?>
-            <?php include('graph_page_data.js'); ?>
+            <?php include('assets/js/graph_page_data.js'); ?>
             </script>
         </div>
     </body>

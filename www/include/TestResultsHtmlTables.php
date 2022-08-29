@@ -384,10 +384,10 @@ class TestResultsHtmlTables
             return "";
         }
         $out = "<br><br><div><a href=\"/$dynatracePath\" title=\"Download dynaTrace Session\">\n";
-        $out .= "<img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\">\n";
+        $out .= "<img src=\"{$GLOBALS['cdnPath']}/assets/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\">\n";
         $out .= "</a></div><br>\n";
         $out .= "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\">\n";
-        $out .= "<img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>\n";
+        $out .= "<img src=\"{$GLOBALS['cdnPath']}/assets/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>\n";
         return $out;
     }
 

@@ -139,7 +139,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
     ?>
 
-   
+
     <!DOCTYPE html>
     <html lang="en-us">
         <head>
@@ -363,7 +363,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 div.compare-graph-progress {padding:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-timings {padding:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
                 div.compare-graph-cls {padding:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
-                
+
                 .compare-all-link{
                     padding: 5px;
                     background: #1151bb;
@@ -408,7 +408,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
             </style>
 
 
-            
+
         </head>
         <body class="result compare <?php if ($experiment) {
             echo ' compare-experiment';
@@ -437,10 +437,10 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     ?>
                     <div class="results_main_contain">
                     <div class="results_main">
-            
-                    
+
+
                     <div class="results_and_command">
-            
+
                        <div class="results_header">
                             <?php
 
@@ -503,7 +503,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                     // }
                                 ?>
 
-                                        
+
                                         <div class="experiment_opportunities-remaining">
                                             <h3 class="hed_sub">Remaining Opportunities</h3>
                                             <p>Here's how your overall opportunities look after this experiment:</p>
@@ -511,9 +511,9 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                         </div>
                                     </div>
 
-                                   
 
-                                    
+
+
 
 
                                     <?php
@@ -522,7 +522,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                             }
 
                             ?>
-                            
+
                     <?php
 
 
@@ -530,12 +530,12 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
                     ?>
                         </div>
-            
-                        
-            
+
+
+
                         </div>
-            
-                        
+
+
                         <div id="result" class="results_body">
 
 
@@ -583,7 +583,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 echo '</div>';
                 ?>
                 <?php include('footer.inc'); ?>
-                
+
                 </div>
                 </div></div>
                 </div>
@@ -618,7 +618,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 UpdateScrollPosition();
 
                 <?php
-                include "waterfall.js";
+                include "assets/js/waterfall.js";
                 ?>
 
                 const VIEWPORT_TO_FILMSTRIP_THRESHOLD = 100 / 60
@@ -1053,7 +1053,7 @@ function ScreenShotTable()
             }
             ?>
 
-       
+
         <?php   } // EMBED?>
         </div>
 

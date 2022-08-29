@@ -7,7 +7,7 @@
                 ?>
                 <div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
                     <div class="home_feature_hed_text">
-                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Welcome to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Welcome to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/assets/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
                         <p><b>You're ready to go!</b> Enjoy premium locations, bulk runs, test priority, our API, & No-Code Experiments!</p>
                     </div>
                 </div>
@@ -20,20 +20,20 @@
 
                     </div>
                     <div class="home_feature_hed_visual">
-                        <img src="/images/wpt_home_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                        <img src="/assets/images/wpt_home_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
                     </div>
                 </div>
                 <div class="home_feature_hed home_feature_hed-pro">
                     <div class="home_feature_hed_text">
-                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/assets/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
                         <p>All of the WebPageTest features you already love, <span class="home_feature_hed_text_line">plus <b>API Access</b> &amp; <b>No-Code Experiments!</b></span></p>
                         <a class="pill" href="/signup" style="padding: .9em 1.5em;">View Plans &amp; Learn More &gt;&gt;</a>
                     </div>
                     <div class="home_feature_hed_visual">
-                        <video width="1152" height="720" playsinline="" id="intro" poster="/images/pro-intro.jpg" preload="none">
-                            <source src="/images/pro-intro-1152.mp4" media="(min-width: 800px)">
-                            <source src="/images/pro-intro-480.mp4">
-                            <!--<track default="" kind="captions" srclang="en" src="/images/pro-intro.vtt">-->
+                        <video width="1152" height="720" playsinline="" id="intro" poster="/assets/images/pro-intro.jpg" preload="none">
+                            <source src="/assets/images/pro-intro-1152.mp4" media="(min-width: 800px)">
+                            <source src="/assets/images/pro-intro-480.mp4">
+                            <!--<track default="" kind="captions" srclang="en" src="/assets/images/pro-intro.vtt">-->
                         </video>
                         <button class="play" id="playbtn">Play/Pause Video</button>
                     </div>

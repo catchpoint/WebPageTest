@@ -26,10 +26,10 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
     <script src="http://example.com/this-will-fail.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0-rc.3/themes/smoothness/jquery-ui.css">
     <link rel="preload" href="foo/bar/baz.css" as="style">
-    <link rel="apple-touch-icon" sizes="96x96" href="/images/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/assets/images/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon-16x16.png">
 
 </head>
 
@@ -43,7 +43,7 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
         </script>
         <p class="logo">The Metric Times</p>
         <p class="logosub">Your source of performance antipattern test pages since 2022!</p>
-        
+
         <nav>
             <ul>
                 <li><a href="#">These</a></li>
@@ -63,7 +63,7 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
 
             <img src="dog.jpg" loading="lazy">
             <p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
-            
+
         </section>
 
         <section class="headlines-secondary">
@@ -90,7 +90,7 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
                 <p>Users are alarmed by increased webpage loading times, noting that helpful tools are "literally right here." <a href="#">Full Story</a></p>
 
                 <img src="dog.jpg?again">
-                
+
             </section>
 
             <section class="headlines-secondary">
@@ -106,7 +106,7 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
 
     </div>
 
-        
+
 
 
         <script>
@@ -123,7 +123,7 @@ if (!strpos($_SERVER['REQUEST_URI'], "index.php")) {
         </script>
 
 
-    
+
 
 
 </body>

@@ -19,10 +19,10 @@
     ?>
     <title><?= $page_title ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
-    <link rel="stylesheet" href="/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
-    <link rel="stylesheet" href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
-    <script defer src="/js/account.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
-    <script defer src="/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
+    <link rel="stylesheet" href="/assets/css/button.css?v=<?= constant('VER_BUTTON_CSS') ?>" />
+    <link rel="stylesheet" href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
+    <script defer src="/assets/js/account.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
+    <script defer src="/assets/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
 </head>
 
 <body>
