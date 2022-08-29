@@ -40,9 +40,9 @@
             </a>
             <?php if ($is_plan_free) : ?>
                 <ol class="free-plan">
-                <?php else : ?>
+            <?php else : ?>
                     <ol>
-                    <?php endif; ?>
+            <?php endif; ?>
                     <?php if ($step == 2) : ?>
                         <li>Choose Plan</li>
                         <li class="selected">Account Details</li>
