@@ -1202,6 +1202,9 @@ function GetTestInfoHtml($includeScript = true)
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine'])) {
         $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
     }
+    if (isset($test['testinfo']['extensions']) && strlen($test['testinfo']['extensions'])) {
+        $html .= '<li>Enable extension: ' . htmlspecialchars($test['testinfo']['extensions']) . '</li>';
+    }
 
     if (isset($test['testinfo']['connectivity']) && strcasecmp($test['testinfo']['connectivity'], 'custom') != 0) {
         $html .= "<li>Connectivity: {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
@@ -3318,11 +3321,39 @@ function PopulateTestInfo(&$test)
             $ret[$key] = $test[$key];
         }
     };
-    $keys = array('url', 'runs', 'fvonly', 'web10', 'ignoreSSL', 'video', 'label',
-      'priority', 'block', 'location', 'browser', 'connectivity', 'bwIn', 'bwOut',
-      'latency', 'plr', 'tcpdump', 'timeline', 'trace', 'bodies', 'netlog',
-      'standards', 'noscript', 'pngss', 'iq', 'bodies', 'keepua', 'benchmark',
-      'mobile', 'tsview_id', 'addCmdLine');
+    $keys = array(
+        'addCmdLine',
+        'benchmark',
+        'block',
+        'bodies',
+        'browser',
+        'bwIn',
+        'bwOut',
+        'connectivity',
+        'extensions',
+        'fvonly',
+        'ignoreSSL',
+        'iq',
+        'keepua',
+        'label',
+        'latency',
+        'location',
+        'mobile',
+        'netlog',
+        'noscript',
+        'plr',
+        'pngss',
+        'priority',
+        'runs',
+        'standards',
+        'tcpdump',
+        'timeline',
+        'trace',
+        'tsview_id',
+        'url',
+        'video',
+        'web10',
+    );
     foreach ($keys as $key) {
         $copy($key);
     }

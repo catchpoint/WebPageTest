@@ -519,6 +519,10 @@ if (@strlen($req_rkey)) {
             $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
         }
 
+        if (isset($_REQUEST['extensions']) && is_string($_REQUEST['extensions']) && strlen($_REQUEST['extensions']) == 32) {
+            $test['extensions'] = $_REQUEST['extensions'];
+        }
+
         // Store an opaque metadata string/JSON object if one was provided (up to 10KB)
         if (isset($_REQUEST['metadata']) && is_string($_REQUEST['metadata']) && strlen($_REQUEST['metadata'] <= 10240)) {
             $metadata = $_REQUEST['metadata'];
@@ -3043,6 +3047,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine'])) {
                 $job['addCmdLine'] = $test['addCmdLine'];
+            }
+            if (array_key_exists('extensions', $test) && strlen($test['extensions'])) {
+                $job['extensions'] = $test['extensions'];
             }
             if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl'])) {
                 $job['customBrowserUrl'] = $test['customBrowserUrl'];
