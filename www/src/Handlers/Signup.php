@@ -51,7 +51,7 @@ class Signup
             $vars['annual_plans'] = $annual_plans;
             $vars['monthly_plans'] = $monthly_plans;
         } catch (RequestException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 401 || $e->getCode() == 400) {
                 // get auth token again and retry!
                 unset($_SESSION['signup-auth-token']);
                 $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;

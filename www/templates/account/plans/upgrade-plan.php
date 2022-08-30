@@ -32,7 +32,7 @@
                 $annual_plans = $plans->getAnnualPlans();
                 foreach ($annual_plans as $key => $plan) :
                     $reccomended = ($key === 1) ? 'wpt-plan__reccomended' : '';
-                    $isCurrentPlan = isset($wptCustomer) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
+                    $isCurrentPlan = (isset($wptCustomer) && !is_null($wptCustomer)) ? strtolower($wptCustomer->getWptPlanId()) == strtolower($plan->getId()) : false;
                     $isUpgrade = $plan->isUpgrade($oldPlan);
                     $activePlan = $isCurrentPlan ? 'wpt-plan__active' : '';
                     $disabled =  $isCurrentPlan ? 'disabled' : '';
