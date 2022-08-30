@@ -33,23 +33,8 @@ class Signup
 
         try {
             $wpt_plans = $request_context->getSignupClient()->getWptPlans();
-            $annual_plans = array();
-            $monthly_plans = array();
-            usort($wpt_plans, function ($a, $b) {
-                if ($a->getPrice() == $b->getPrice()) {
-                    return 0;
-                }
-                return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
-            });
-            foreach ($wpt_plans as $plan) {
-                if ($plan->getBillingFrequency() == "Monthly") {
-                    $monthly_plans[] = $plan;
-                } else {
-                    $annual_plans[] = $plan;
-                }
-            }
-            $vars['annual_plans'] = $annual_plans;
-            $vars['monthly_plans'] = $monthly_plans;
+            $vars['annual_plans'] = $wpt_plans->getAnnualPlans();
+            $vars['monthly_plans'] = $wpt_plans->getMonthlyPlans();
         } catch (RequestException $e) {
             if ($e->getCode() == 401 || $e->getCode() == 400) {
                 // get auth token again and retry!

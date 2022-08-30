@@ -154,32 +154,30 @@ class CPSignupClient
         }
     }
 
-    /**
-     * @return array WebPageTest\Plan[]
-     */
-    public function getWptPlans(): array
+    public function getWptPlans(): PlanList
     {
         $gql = (new Query('wptPlan'))
-        ->setSelectionSet([
-            'name',
-            'priceInCents',
-            'description',
-            'interval',
-            'monthlyTestRuns'
-        ]);
+            ->setSelectionSet([
+                'name',
+                'priceInCents',
+                'description',
+                'interval',
+                'monthlyTestRuns'
+            ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        return array_map(function ($data): Plan {
+        $plans = array_map(function ($data): Plan {
             $options = [
-            'id' => $data['name'],
-            'name' => $data['description'],
-            'priceInCents' => $data['priceInCents'],
-            'billingFrequency' => $data['interval'],
-            'runs' => $data['monthlyTestRuns']
+                'id' => $data['name'],
+                'name' => $data['description'],
+                'priceInCents' => $data['priceInCents'],
+                'billingFrequency' => $data['interval'],
+                'runs' => $data['monthlyTestRuns']
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan']) ?? [];
+        }, $results->getData()['wptPlan'] ?? []);
+        return new PlanList(...$plans);
     }
 
     public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
