@@ -53,7 +53,8 @@ final class AccountTest extends TestCase
     {
         $body = [
             'subscription_id' => 'abcdef',
-            'plan' => 'ap74'
+            'plan' => 'ap74',
+            'is_upgrade' => true
         ];
 
         $client = $this->createMock(CPClient::class);
