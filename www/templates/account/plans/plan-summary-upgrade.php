@@ -47,11 +47,15 @@
                     </li>
                 <?php else : ?>
                     <li class="total__due-today">
+                        <strong>Due today:</strong> $0.00
+                        <br>
                         <strong>Due at the next billing date (<?= $renewaldate ?> ):</strong> $<?= $total ?>
                     </li>
-                    <li>Plan change will not take effect until end of current subscription</li>
                 <?php endif; ?>
             </ul>
+            <?php if (!$isUpgrade) : ?>
+                <span class="info-notice"> Plan change will not take effect until the end of current subscription</span>
+            <?php endif; ?>
         </div>
 
         <div class="add-subscription-button-wrapper">
