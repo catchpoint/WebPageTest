@@ -24,6 +24,9 @@
                 </select>
                 <p>Save 20% with Annual Plans</p>
             </div>
+            <div class="upgrade-legend">
+
+            </div>
             <div class="wpt-plan-set annual-plans">
                 <?php
                 $annual_plans = $plans->getAnnualPlans();
