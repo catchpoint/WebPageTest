@@ -28,104 +28,110 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
 $data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
 $isMultistep = $testRunResults->countSteps() > 1;
 
-$page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
+$page_keywords = array('Performance Test', 'Details', 'WebPageTest', 'Website Speed Test', 'Page Speed');
 $page_description = "Web Vitals details$testLabel";
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title><?php echo "$page_title - Web Vitals Details"; ?></title>
-        <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Vitals';
-        include('head.inc'); ?>
-    </head>
-    <body class="result">
-            <?php
-            $tab = 'Test Result';
-            $subtab = 'Web Vitals';
-            include 'header.inc';
-            ?>
+<head>
+    <title><?php echo "$page_title - Web Vitals Details"; ?></title>
+    <script>
+        document.documentElement.classList.add('has-js');
+    </script>
 
-            <div class="results_main_contain">
-                <div class="results_main">
+    <?php $gaTemplate = 'Vitals';
+    include('head.inc'); ?>
+</head>
 
+<body class="result">
+    <?php
+    $tab = 'Test Result';
+    $subtab = 'Web Vitals';
+    include 'header.inc';
+    ?>
 
-                <div class="results_and_command">
-
-                    <div class="results_header">
-                        <h2>Core Web Vitals</h2>
-                        <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/assets/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
-                    </div>
+    <div class="results_main_contain">
+        <div class="results_main">
 
 
+            <div class="results_and_command">
+
+                <div class="results_header">
+                    <h2>Core Web Vitals</h2>
+                    <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/assets/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
                 </div>
+
+
+            </div>
 
 
 
 
             <div id="result" class="results_body vitals-diagnostics crux-embed">
 
-            <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
+                <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
 
-            <?php
-            if (isset($testRunResults)) {
-                require_once(__DIR__ . '/include/CrUX.php');
-            }
-            ?>
-            <?php
-            if ($isMultistep) {
-                for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-                    $stepResult = $testRunResults->getStepResult($i);
-                    echo "<h4>" . $stepResult->readableIdentifier() . "</h4>";
+                <?php
+                if (isset($testRunResults)) {
+                    require_once(__DIR__ . '/include/CrUX.php');
+                }
+                ?>
+                <?php
+                if ($isMultistep) {
+                    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+                        $stepResult = $testRunResults->getStepResult($i);
+                        echo "<h4>" . $stepResult->readableIdentifier() . "</h4>";
+                        InsertWebVitalsHTML($stepResult);
+                    }
+                } else {
+                    $stepResult = $testRunResults->getStepResult(1);
                     InsertWebVitalsHTML($stepResult);
                 }
-            } else {
-                $stepResult = $testRunResults->getStepResult(1);
-                InsertWebVitalsHTML($stepResult);
-            }
-            ?>
+                ?>
             </div>
-            </div>
-            <?php include('footer.inc'); ?>
-            </div>
-                  </div>
-
         </div>
+        <?php include('footer.inc'); ?>
+    </div>
+    </div>
 
-        <script>
+    </div>
+
+    <script>
         function expandRequest(targetNode) {
-          if (targetNode.length) {
-            var div_to_expand = $('#' + targetNode.attr('data-target-id'));
+            if (targetNode.length) {
+                var div_to_expand = $('#' + targetNode.attr('data-target-id'));
 
-            if (div_to_expand.is(":visible")) {
-                div_to_expand.hide();
-                targetNode.html('+' + targetNode.html().substring(1));
-            } else {
-                div_to_expand.show();
-                targetNode.html('-' + targetNode.html().substring(1));
+                if (div_to_expand.is(":visible")) {
+                    div_to_expand.hide();
+                    targetNode.html('+' + targetNode.html().substring(1));
+                } else {
+                    div_to_expand.show();
+                    targetNode.html('-' + targetNode.html().substring(1));
+                }
             }
-          }
         }
 
         function expandAll(step) {
-          var expandAllNode = $("#step" + step + "_all");
-          var expandText = expandAllNode.html();
-          var doShow = expandText.substring(0, 1) == "+";
-          expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
-          $("#header_details_step" + step + " .header_details").each(function(index) {
-            $(this).toggle(doShow);
-          });
+            var expandAllNode = $("#step" + step + "_all");
+            var expandText = expandAllNode.html();
+            var doShow = expandText.substring(0, 1) == "+";
+            expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
+            $("#header_details_step" + step + " .header_details").each(function(index) {
+                $(this).toggle(doShow);
+            });
         }
 
         function scrollTo(node) {
-            $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
+            $('html, body').animate({
+                scrollTop: node.offset().top + 'px'
+            }, 'fast');
         }
 
         // init existing snippets
         $(document).ready(function() {
             <?php if ($isMultistep) { ?>
-                'accordionHandler' in window && accordionHandler.connect();
+                    'accordionHandler' in window && accordionHandler.connect();
             <?php } ?>
         });
 
@@ -133,14 +139,15 @@ $page_description = "Web Vitals details$testLabel";
         include "assets/js/waterfall.js";
         if ($lcp_request != '') {
             ?>
-        var stepLabel = "step1";
-$("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
+            var stepLabel = "step1";
+            $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
 
             <?php
         }
         ?>
-        </script>
-    </body>
+    </script>
+</body>
+
 </html>
 
 <?php
@@ -411,7 +418,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
                 echo "<tr><th align='left'>Background Image</th><td>{$lcp['element']['background-image']}</td></tr>";
                 preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
                 if ($matches) {
-                     $lcpSource = $matches[3][0];
+                    $lcpSource = $matches[3][0];
                 }
             }
             echo "<tr><th align='left'>Outer HTML</th><td>";
@@ -699,9 +706,9 @@ function MergeBlockingTime(&$times, $start, $end)
         $e = $times[1];
         if (
             ($start >= $s && $start <= $e) ||
-                ($end >= $s && $end <= $e) ||
-                ($s >= $start && $s <= $end) ||
-                ($e >= $start && $e <= $end)
+            ($end >= $s && $end <= $e) ||
+            ($s >= $start && $s <= $end) ||
+            ($e >= $start && $e <= $end)
         ) {
             $times[0] = min($start, $s);
             $times[1] = max($end, $e);
@@ -839,28 +846,28 @@ function InsertWebVitalsHTML_TBT($stepResult)
                     ?>
                     <h4>Main Thread Blocking Time by Script Origin</h4>
                     <div class="scrollableTable">
-                    <table class="pretty">
-                        <thead>
-                            <tr>
-                                <th class="domain">Script Origin</th>
-                                <th class="blocking">Blocking Time (ms)</th>
-                            </tr>
-                        </thead>
-                    <?php
-                    echo "<tbody>";
-                    foreach ($domains as $domain => $blocking) {
-                        echo "<tr>";
-                        echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
-                        echo "<td class='blocking'>$blocking</td>";
-                        echo "</tr>";
-                    }
-                    echo "</tbody></table></div>\n";
-                    ?>
-                    <script>
-                        window.addEventListener('DOMContentLoaded', (event) => {
-                            $(document).find(".tableDetails").tablesorter();
-                        });
-                    </script>
+                        <table class="pretty">
+                            <thead>
+                                <tr>
+                                    <th class="domain">Script Origin</th>
+                                    <th class="blocking">Blocking Time (ms)</th>
+                                </tr>
+                            </thead>
+                            <?php
+                            echo "<tbody>";
+                            foreach ($domains as $domain => $blocking) {
+                                echo "<tr>";
+                                echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
+                                echo "<td class='blocking'>$blocking</td>";
+                                echo "</tr>";
+                            }
+                            echo "</tbody></table></div>\n";
+                            ?>
+                            <script>
+                                window.addEventListener('DOMContentLoaded', (event) => {
+                                    $(document).find(".tableDetails").tablesorter();
+                                });
+                            </script>
                     <?php
                 }
             }
