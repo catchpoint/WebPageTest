@@ -34,6 +34,7 @@ $page_description = "Web Vitals details$testLabel";
 <!DOCTYPE html>
 <html lang="en-us">
 
+
 <head>
     <title><?php echo "$page_title - Web Vitals Details"; ?></title>
     <script>
@@ -95,6 +96,7 @@ $page_description = "Web Vitals details$testLabel";
     </div>
     </div>
 
+
     </div>
 
     <script>
@@ -131,7 +133,7 @@ $page_description = "Web Vitals details$testLabel";
         // init existing snippets
         $(document).ready(function() {
             <?php if ($isMultistep) { ?>
-                accordionHandler.connect();
+                    'accordionHandler' in window && accordionHandler.connect();
             <?php } ?>
         });
 
@@ -868,7 +870,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
                                     $(document).find(".tableDetails").tablesorter();
                                 });
                             </script>
-        <?php
+                    <?php
                 }
             }
 

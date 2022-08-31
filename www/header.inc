@@ -56,7 +56,7 @@ if (!isset($experiment)) {
 }
 
 if (!defined('EMBED')) {
-    ?>
+?>
     <?php
     $alert = Util::getSetting('alert');
     // in settings.ini add alert_expiration as a non unix timestamp '2021-11-17 13:02:18'
@@ -72,7 +72,7 @@ if (!defined('EMBED')) {
     require_once __DIR__ . '/templates/layouts/includes/wpt-header.php';
     ?>
 
-    <?php
+<?php
 } // EMBED
 ?>
 
@@ -196,7 +196,7 @@ if (!defined('EMBED')) {
             } else {
                 $device = "Desktop";
             }
-            ?>
+    ?>
             <div class="test_presets">
                 <ul>
                     <?php
@@ -274,7 +274,7 @@ if (!defined('EMBED')) {
             </div>
 </div>
 
-            <?php
+<?php
 
             echo '<div class="header_screenshots">';
 
@@ -293,7 +293,7 @@ if (!defined('EMBED')) {
                     <source src="/video/video.php?tests=' . $tests[0]['id'] . ',' . $tests[1]['id'] . '&amp;applyGrey=0&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
                 </video>
                 <button class="play" id="playbtn">Play/Pause Video</button>';
-                ?>
+?>
     <script>
         (function() {
             var container = document.querySelector(".header_screenshots");
@@ -325,19 +325,19 @@ if (!defined('EMBED')) {
 
         }());
     </script>
-                <?php
+<?php
             } else {
                 require_once __DIR__ . '/screen_shot_embed.php';
             }
 
             echo '</div></div></div>';
 
-            ?>
+?>
 
 
-            <?php
+<?php
             if (!isset($hideResultsNav)) {
-                ?>
+?>
     <div class="results_nav_contain">
         <div class="results_nav">
             <div class="results_nav_pair">
@@ -494,7 +494,7 @@ if (!defined('EMBED')) {
 
                 echo '</div></div>';
             }
-            ?>
+                ?>
 
             <?php
             echo '<div id="test_results-container">';
@@ -508,8 +508,8 @@ if (!defined('EMBED')) {
                     <div id="test-1" class="test_results">
                         <div class="test_results-content">
                     <?php
-        }
-    }
+                }
+            }
 
             // include the comparison UI pop-up dialog
             /*
@@ -523,4 +523,4 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 
 
 
-    ?>
+                    ?>

@@ -198,7 +198,7 @@ $page_description = "Website performance test result$testLabel.";
                                 do {
                                     $link .= $id . '-r:' . $cnt;
                                     $repeatlink .= $id . '-r:' . $cnt . '-c:1';
-                                    if ($tests[0]['step']) {
+                                    if (!empty($tests) && $tests[0]['step']) {
                                         $link .= '-s:' . $test['step'];
                                         $repeatlink .= '-s:' . $test['step'];
                                     }
@@ -235,6 +235,37 @@ $page_description = "Website performance test result$testLabel.";
                                         }
                                     }
                                 }
+                                echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
+                            }
+                        ?>
+                        <?php
+                        } // fvMedian
+                        if (!$fvMedian || $is_test_error) {
+                            $error = 'The test completed but there were no successful results.';
+                            $detail = null;
+                            if ($is_test_error) {
+                                $error = 'The test failed to run.';
+                                $detail = $test['testinfo']['test_error'];
+                            } elseif (
+                                array_key_exists('testinfo', $test) &&
+                                array_key_exists('errors', $test['testinfo'])
+                            ) {
+                                // just grab the first error we find from an individual run
+                                foreach ($test['testinfo']['errors'] as &$error_run) {
+                                    foreach ($error_run as &$error_str) {
+                                        if (strlen($error_str)) {
+                                            $error = 'The testing completed but failed.';
+                                            $detail = $error_str;
+                                            break 2;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!$fvMedian) {
+                                echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                            }
+                            if (isset($detail)) {
+                                echo '<h4>' . htmlspecialchars($detail) . '</h4>';
                             }
                             if (!$fvMedian) {
                                 echo '<h3>' . htmlspecialchars($error) . '</h3>';
