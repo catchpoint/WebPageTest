@@ -35,7 +35,7 @@ $requests = $testStepResult->getRequests();
 $blockingReqs = array();
 
 foreach ($requests as $request) {
-    if ($request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript") {
+    if (!empty($request['renderBlocking']) && $request['renderBlocking'] === "blocking" && $request['contentType'] === "application/javascript") {
         array_push($blockingReqs, $request['host'] . $request['url']);
     }
 }
@@ -218,7 +218,7 @@ $page_description = "Website performance test result$testLabel.";
                         do {
                             $link .= $id . '-r:' . $cnt;
                             $repeatlink .= $id . '-r:' . $cnt . '-c:1';
-                            if ($tests[0]['step']) {
+                            if (!empty($tests) && $tests[0]['step']) {
                                 $link .= '-s:' . $test['step'];
                                 $repeatlink .= '-s:' . $test['step'];
                             }

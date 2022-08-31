@@ -162,8 +162,8 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
             }
                 $gaTemplate = 'Visual Comparison';
                 $useScreenshot = true;
-                $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
-                $socialDesc = $experiment ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
+                $socialTitle = !empty($experiment) ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
+                $socialDesc = !empty($experiment) ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
 
                 include('head.inc');
             ?>
@@ -420,7 +420,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 <?php
                 $tab = 'Test Result';
                 //$nosubheader = false;
-                if ($experiment) {
+                if (!empty($experiment)) {
                     $subtab = 'Experiment Results & Filmstrip';
                 } else {
                     $subtab = 'Filmstrip';

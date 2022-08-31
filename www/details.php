@@ -103,6 +103,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                             $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false);
 
                             $link = $menuUrlGenerator->resultPage("details", $endParams);
+                            $linkCACHED = null;
                             if ($hasRepeats) {
                                 $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true);
                                 $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);

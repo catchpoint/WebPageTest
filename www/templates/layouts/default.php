@@ -16,8 +16,8 @@
     global $test_is_private;
     global $noanalytics;
 
-    $page_title = $page_title ? $page_title : 'WebPageTest';
-    $body_class = $body_class ? ' class="' . $body_class . '"' : '';
+    $page_title = $page_title ?? 'WebPageTest';
+    $body_class = !empty($body_class) ? ' class="' . $body_class . '"' : '';
 
     ?>
     <title><?php echo $page_title; ?></title>

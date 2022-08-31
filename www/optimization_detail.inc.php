@@ -131,7 +131,7 @@ function createGradeArray($scores)
         $grade = 'N/A';
         $weight = 0;
         if ($check == 'cdn') {
-            if ($item['score'] >= 80) {
+            if (isset($item['score']) && $item['score'] >= 80) {
                 $item['grade'] = "&#10003;";
                 $item['class'] = 'A';
             } else {

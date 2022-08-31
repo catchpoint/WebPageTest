@@ -39,7 +39,7 @@ function addTab($tabName, $tabUrl, $addClass = '')
     }
 }
 
-if ($id) {
+if (!empty($id)) {
     $resultUrl = "/results.php?test=$id";
     if (array_key_exists('end', $_REQUEST)) {
         $resultUrl .= "&end={$_REQUEST['end']}";
