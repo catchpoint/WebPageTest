@@ -72,13 +72,18 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($is_paid) {
-        include_once __DIR__ . '/includes/billing-data.php';
-        include_once __DIR__ . '/includes/modals/subscription-plan.php';
-        include_once __DIR__ . '/includes/modals/payment-info.php';
+    <?php
+    if ($is_paid) {
+        if (!$is_wpt_enterprise) {
+            include_once __DIR__ . '/includes/billing-data.php';
+            include_once __DIR__ . '/includes/modals/subscription-plan.php';
+            include_once __DIR__ . '/includes/modals/payment-info.php';
+        }
+        include_once __DIR__ . '/includes/api-keys.php';
     } else {
         include_once __DIR__ . '/includes/signup.php';
-    } ?>
+    }
+    ?>
 </div>
 
 

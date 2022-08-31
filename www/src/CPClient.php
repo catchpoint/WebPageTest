@@ -315,7 +315,6 @@ class CPClient
     {
         $gql = (new Query())
             ->setSelectionSet([
-                'braintreeClientToken',
                 (new Query('wptApiKey'))
                     ->setSelectionSet([
                         'id',
@@ -323,32 +322,6 @@ class CPClient
                         'apiKey',
                         'createDate',
                         'changeDate'
-                    ]),
-                (new Query('braintreeCustomerDetails'))
-                    ->setSelectionSet([
-                        'customerId',
-                        'wptPlanId',
-                        'subscriptionId',
-                        'ccLastFour',
-                        'daysPastDue',
-                        'subscriptionPrice',
-                        'maskedCreditCard',
-                        'nextBillingDate',
-                        'billingPeriodEndDate',
-                        'numberOfBillingCycles',
-                        'ccExpirationDate',
-                        'ccImageUrl',
-                        'status',
-                        (new Query('discount'))
-                            ->setSelectionSet([
-                                'amount',
-                                'numberOfBillingCycles'
-                            ]),
-                        'remainingRuns',
-                        'monthlyRuns',
-                        'planRenewalDate',
-                        'billingFrequency',
-                        'wptPlanName'
                     ])
             ]);
         try {
