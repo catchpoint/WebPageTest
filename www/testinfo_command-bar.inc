@@ -35,7 +35,7 @@
 
   <?php
   if (
-    empty($headless) && gz_is_file("$testPath/testinfo.json")
+    !$headless && gz_is_file("$testPath/testinfo.json")
     && !array_key_exists('published', $test['testinfo'])
     && ($isOwner || !$test['testinfo']['sensitive'])
     && !isset($tests)
@@ -74,11 +74,11 @@
 
     if ($showTTFBWarn) {
       echo <<<EOT
-        <div class="highttfb_warn">
-          <p><strong>High TTFB</strong>: Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
-          <p><label><input type="checkbox" name="keepua"> Preserve original User Agent string in re-run</label></p>
-        </div>
-      EOT;
+                            <div class="highttfb_warn">
+                              <p><strong>High TTFB</strong>: Some networks intentionally slow performance for bots like the WebPageTest agent. If you suspect this is happening, you can try re-running your test with the browser's original User Agent string to see if it helps.</p>
+                              <p><label><input type="checkbox" name="keepua"> Preserve original User Agent string in re-run</label></p>
+                            </div>
+                          EOT;
     }
 
 

@@ -91,7 +91,7 @@ $page_description = "Website performance test result$testLabel.";
 
             <?php
             if (!$testComplete) {
-            ?>
+                ?>
                 <p class="left">
                     <?php
                     if (GetSetting('nolinks')) {
@@ -212,8 +212,8 @@ $page_description = "Website performance test result$testLabel.";
                                 }
                                 echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
                             }
-                        ?>
-                        <?php
+                            ?>
+                            <?php
                         } // fvMedian
                         if (!$fvMedian || $is_test_error) {
                             $error = 'The test completed but there were no successful results.';
@@ -266,19 +266,6 @@ $page_description = "Website performance test result$testLabel.";
                             }
                             if (isset($detail)) {
                                 echo '<h4>' . htmlspecialchars($detail) . '</h4>';
-                            }
-                            if (!$fvMedian) {
-                                echo '<h3>' . htmlspecialchars($error) . '</h3>';
-                            }
-                            if (isset($detail)) {
-                                echo '<h4>' . htmlspecialchars($detail) . '</h4>';
-                            }
-                        }
-                        ?>
-                    </div>
-
-
-
                     <?php
                     if (isset($fvRunResults)) {
                         echo '<div class="cruxembed">';
@@ -315,7 +302,7 @@ $page_description = "Website performance test result$testLabel.";
     <?php
     $breakdown = $resultTables->getBreakdown();
     if ($breakdown) {
-    ?>
+        ?>
         <script src="//www.google.com/jsapi"></script>
         <script>
             <?php
@@ -452,7 +439,7 @@ $page_description = "Website performance test result$testLabel.";
             </script>
         <?php
     }
-        ?>
+    ?>
 </body>
 
 </html>

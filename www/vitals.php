@@ -848,28 +848,28 @@ function InsertWebVitalsHTML_TBT($stepResult)
 ?>
                     <h4>Main Thread Blocking Time by Script Origin</h4>
                     <div class="scrollableTable">
-                        <table class="pretty">
-                            <thead>
-                                <tr>
-                                    <th class="domain">Script Origin</th>
-                                    <th class="blocking">Blocking Time (ms)</th>
-                                </tr>
-                            </thead>
-                            <?php
-                            echo "<tbody>";
-                            foreach ($domains as $domain => $blocking) {
-                                echo "<tr>";
-                                echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
-                                echo "<td class='blocking'>$blocking</td>";
-                                echo "</tr>";
-                            }
-                            echo "</tbody></table></div>\n";
-                            ?>
-                            <script>
-                                window.addEventListener('DOMContentLoaded', (event) => {
-                                    $(document).find(".tableDetails").tablesorter();
-                                });
-                            </script>
+                    <table class="pretty">
+                        <thead>
+                            <tr>
+                                <th class="domain">Script Origin</th>
+                                <th class="blocking">Blocking Time (ms)</th>
+                            </tr>
+                        </thead>
+                    <?php
+                    echo "<tbody>";
+                    foreach ($domains as $domain => $blocking) {
+                        echo "<tr>";
+                        echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
+                        echo "<td class='blocking'>$blocking</td>";
+                        echo "</tr>";
+                    }
+                    echo "</tbody></table></div>\n";
+                    ?>
+                    <script>
+                        window.addEventListener('DOMContentLoaded', (event) => {
+                            $(document).find(".tableDetails").tablesorter();
+                        });
+                    </script>
                     <?php
                 }
             }
