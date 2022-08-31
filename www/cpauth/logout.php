@@ -35,6 +35,24 @@ use WebPageTest\RequestContext;
 
         setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
         setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+
+        // Destroy the session
+        $_SESSION = array();
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
     }
 
     header("Location: {$redirect_uri}");

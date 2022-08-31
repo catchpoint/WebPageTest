@@ -743,7 +743,8 @@ h3.grade_heading {
   height: 0.6em;
   display: inline-block;
   margin-right: 0.8rem;
-  background: url("/assets/images/src/icon_triangledown.svg") left center no-repeat;
+  background: url("/assets/images/src/icon_triangledown.svg") left center
+    no-repeat;
   background-size: 0.6em auto;
   transform: rotate(-90deg);
   padding-left: ;
@@ -782,7 +783,8 @@ p.grade_summary {
 }
 
 #Custom .grade_heading + p {
-  background: url(/assets/images/src/icon_science_bubbling.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left 50%
+    no-repeat;
   background-size: auto 2rem !important;
   background-position: left center !important;
 }
@@ -897,7 +899,8 @@ p.grade_summary {
 
 .experiments_bottlenecks > ol > li > details > summary:before {
   content: "";
-  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50%
+    no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
@@ -916,7 +919,8 @@ p.grade_summary {
   > li.experiments_details-bad
   > details
   > summary:before {
-  background: #d26122 url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
+  background: #d26122 url(/assets/images/src/icon_grading_alert.svg) left 50%
+    no-repeat;
   background-size: contain;
 }
 
@@ -936,7 +940,8 @@ h4.experiments_list_hed {
   font-size: 1.3em;
   padding-bottom: 0;
   padding-left: 2.5em;
-  background: url(/assets/images/src/icon_science_bubbling.svg) left bottom no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left bottom
+    no-repeat;
   background-size: 1.6em;
   min-height: em;
   padding: 0em 0 0 1.7em;
@@ -1110,8 +1115,8 @@ h4.experiments_list_hed-recs {
   padding-top: 0.6em;
   padding-bottom: 0.6em;
   padding-left: 1.5em;
-  background: transparent url(/assets/images/src/icon_lock.svg) left 0.8rem top 50%
-    no-repeat;
+  background: transparent url(/assets/images/src/icon_lock.svg) left 0.8rem top
+    50% no-repeat;
   background-size: 1.5rem auto;
 }
 
@@ -1285,7 +1290,8 @@ h4.experiments_list_hed-recs {
   list-style: none;
   padding-left: 1.5em;
   text-decoration: dotted underline #888;
-  background: url(/assets/images/src/icon_info_circle_white.svg) left 50% no-repeat;
+  background: url(/assets/images/src/icon_info_circle_white.svg) left 50%
+    no-repeat;
   background-size: 1.2em auto;
 }
 
@@ -2177,7 +2183,8 @@ footer ul {
 }
 
 .opportunities_summary_recs {
-  background: url(/assets/images/src/icon_code_rec.svg) left 0 bottom 50% no-repeat;
+  background: url(/assets/images/src/icon_code_rec.svg) left 0 bottom 50%
+    no-repeat;
   background-size: auto 2rem;
   padding-left: 2.2em;
   height: 1em;
@@ -2418,7 +2425,8 @@ footer ul {
 .testinfo_forms summary strong {
   font-weight: bold;
   color: #e33535;
-  background: url(/assets/images/src/icon_grading_warn.svg) left center no-repeat;
+  background: url(/assets/images/src/icon_grading_warn.svg) left center
+    no-repeat;
   background-size: 1em 1em;
   padding-left: 1.6em;
 }
@@ -2585,7 +2593,8 @@ details.details_custommetrics summary {
 
 .compare-experiment.compare-loading .results_header {
   padding: 1.2rem 6rem 0;
-  background: url(/assets/images/src/icon_science_bubbling.svg) left top no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left top
+    no-repeat;
   background-size: 6rem auto;
   margin: 3rem 0 0;
 }
@@ -5396,8 +5405,8 @@ label.test_preset_profile {
 #visual_comparison .addBtn {
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.9em;
-  background: rgba(0, 0, 0, 0.33) url("/assets/images/icon-add.svg") top 50% left
-    0.8rem no-repeat;
+  background: rgba(0, 0, 0, 0.33) url("/assets/images/icon-add.svg") top 50%
+    left 0.8rem no-repeat;
   background-size: 0.9rem 0.9rem;
   color: #fff;
   padding: 0.8em 0.8em 0.8em 2.5em;

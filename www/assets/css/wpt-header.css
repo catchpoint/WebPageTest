@@ -71,7 +71,8 @@ wpt-header .wptheader_menubtn {
   box-sizing: border-box;
   color: #fff;
   border: 0;
-  background: #141e33 url(/assets/images/wpt-header-menubtn.svg) 50% 50% no-repeat;
+  background: #141e33 url(/assets/images/wpt-header-menubtn.svg) 50% 50%
+    no-repeat;
   text-indent: -9999px;
   background-size: 16px auto;
   cursor: pointer;

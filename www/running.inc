@@ -22,7 +22,7 @@
             if (!isset($test)) {
                 echo "<h3>Test Not Found</h3>\n";
                 echo "<p>Sorry, the test you requested could not be found.</p>";
-            } else if (TestArchiveExpired($id)) {
+            } elseif (TestArchiveExpired($id)) {
                 echo "<h3>Test Result Expired</h3>\n";
                 $retain_months = GetSetting('archive_retention_months', null);
                 if ($retain_months) {

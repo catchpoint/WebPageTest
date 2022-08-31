@@ -1412,7 +1412,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 /* comparison table content */
 
 .icon.check {
-  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
+  background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50%
+    no-repeat;
   color: #fff;
   border-radius: 100%;
   font-weight: 900;
