@@ -7,7 +7,7 @@ function documentRelativePath($url, $path)
     $basePath = explode('/', $path);
     array_pop($basePath);
     $basePath = implode('/', $basePath);
-    if (strpos($url, $basePath) === 0) {
+    if ($basePath && strpos($url, $basePath) === 0) {
         $url = substr($url, strlen($basePath) + 1);
     }
     return $url;
@@ -95,7 +95,7 @@ $requestsInitial = $testStepResult->getRequests();
 function initiatedByRoot($request)
 {
     global $rootURL;
-    return strcasecmp($request['initiator'], $rootURL) === 0 || $request['initiator'] == '';
+    return empty($request['initiator']) || strcasecmp($request['initiator'], $rootURL) === 0;
 }
 
 
@@ -126,9 +126,6 @@ include __DIR__ . '/insecure-requests.inc';
 include __DIR__ . '/generated-content.inc';
 
 include __DIR__ . '/custom.inc';
-
-
-
 
 // fill out high-level info in
 foreach ($assessment as $key => $cat) {

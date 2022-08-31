@@ -1835,7 +1835,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
 
                 // Pull the lat and lng from the location if available
-                $test_loc = $locations[$test['location']];
+                $test_loc = array_key_exists($test['location'], $locations) ? $locations[$test['location']] : [];
                 if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0) {
                     $test['lat'] = floatval($_REQUEST['lat']);
                 }
@@ -1884,7 +1884,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
 
                 // figure out what the location working directory and friendly name are
-                $test['locationText'] = $locations[$test['location']]['label'];
+                $test['locationText'] = array_key_exists($test['location'], $locations) ? $locations[$test['location']]['label'] : null;
 
                 if (isset($locations[$test['location']]['label'])) {
                     $test['locationLabel'] = $locations[$test['location']]['label'];

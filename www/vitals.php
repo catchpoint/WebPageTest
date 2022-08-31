@@ -125,7 +125,7 @@ $page_description = "Web Vitals details$testLabel";
         // init existing snippets
         $(document).ready(function() {
             <?php if ($isMultistep) { ?>
-              accordionHandler.connect();
+                'accordionHandler' in window && accordionHandler.connect();
             <?php } ?>
         });
 
@@ -189,7 +189,7 @@ function InsertWebVitalsHTML_Summary($stepResult)
     $windows = array();
     if ($stepResult) {
         $cls = $stepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
-        $events = $stepResult->getMetric('LayoutShifts');
+        $events = $stepResult->getMetric('LayoutShifts') ?? [];
         foreach ($events as $event) {
             $num = isset($event['shift_window_num']) ? strval($event['shift_window_num']) : '1';
             if (!isset($windows[$num])) {
@@ -463,8 +463,8 @@ function InsertWebVitalsHTML_LCP($stepResult)
             echo $out;
             echo "</div>";
 
-                //image
-            if ($lcpSource) {
+            //image
+            if (!empty($lcpSource)) {
                 echo "<div class='lcp-image'><h4>LCP Image</h4><img src='" . $lcpSource . "' /></div>";
             }
 
@@ -488,7 +488,7 @@ function InsertWebVitalsHTML_CLS($stepResult)
     $windows = array();
     if ($stepResult) {
         $cls = $stepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
-        $events = $stepResult->getMetric('LayoutShifts');
+        $events = $stepResult->getMetric('LayoutShifts') ?? [];
         foreach ($events as $event) {
             $num = isset($event['shift_window_num']) ? strval($event['shift_window_num']) : '1';
             if (!isset($windows[$num])) {

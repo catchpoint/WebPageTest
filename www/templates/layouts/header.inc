@@ -36,7 +36,7 @@ if (isset($testResults)) {
 
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
 if (
-    $id && isset($test) && is_array($test) &&
+    !empty($id) && isset($test) && is_array($test) &&
         isset($test['testinfo']['created']) &&
         isset($test['testinfo']['url']) &&
         !isset($user) && !isset($_COOKIE['google_email'])

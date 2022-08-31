@@ -470,8 +470,8 @@ if (strlen($id)) {
     $experiment = false;
     if ($test['testinfo']) {
         $testTestInfo = $test['testinfo'];
-        $metaInfo = $testTestInfo['metadata'];
-        if (isset($metaInfo) && is_string($metaInfo)) {
+        $metaInfo = $testTestInfo['metadata'] ?? null;
+        if (is_string($metaInfo)) {
             $metaInfo = json_decode($metaInfo, true);
             if ($metaInfo['experiment'] && $metaInfo['experiment']['control'] === false) {
                 $experiment = true;

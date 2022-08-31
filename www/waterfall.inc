@@ -32,7 +32,7 @@ function GetConnectionRows(&$requests, $show_labels = true)
                     'start' => $request['all_start'],
                     'end' => $request['all_end'],
                     'requests' => array($request),
-                    'renderBlocking' => $request['renderBlocking']
+                    'renderBlocking' => $request['renderBlocking'] ?? null,
                 );
             } else {
                 $host_connections[$host][$socket]['end'] = $request['all_end'];
@@ -120,7 +120,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true)
             'is_secure' => $request['is_secure'],
             'requests' => array($request),
             'contentType' => $request['contentType'],
-            'renderBlocking' => $request['renderBlocking']
+            'renderBlocking' => $request['renderBlocking'] ?? null,
         );
 
         $last_request_number = $request['number'];

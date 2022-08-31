@@ -108,7 +108,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
 
-
+        $data_class = $data_class ?? '';
         echo "<div id=\"header_data\"$data_class>";
         // for multistep, link the first URL and show additional text. Otherwise take the test URL
         $numSteps = $gradeRunResults->countSteps();

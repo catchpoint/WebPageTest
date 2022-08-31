@@ -1,8 +1,8 @@
 <div class="test_meta_commands">
-                
+
                 <p class="results_nav_hed">Tools:</p>
-                
-               
+
+
                 <details>
                 <summary>Export</summary>
                   <ul class="testinfo_artifacts-list">
@@ -38,7 +38,7 @@
 
                   <?php
                     if (
-                        !$headless && gz_is_file("$testPath/testinfo.json")
+                        empty($headless) && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && !isset($tests)
