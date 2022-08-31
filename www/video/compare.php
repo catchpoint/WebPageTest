@@ -137,7 +137,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
     }
 
 
-    ?>
+?>
 
 
     <!DOCTYPE html>
@@ -154,19 +154,19 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
             $autoRefresh = true;
             $noanalytics = true;
 
-            ?>
+        ?>
             <noscript>
                 <meta http-equiv="refresh" content="10" />
             </noscript>
             <script language="JavaScript">
                 let reloadTimeout = setTimeout("window.location.reload(true)", 10000);
             </script>
-            <?php
+        <?php
         }
         $gaTemplate = 'Visual Comparison';
         $useScreenshot = true;
-        $socialTitle = !empty($experiment) ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
-        $socialDesc = !empty($experiment) ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
+        $socialTitle = $experiment ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
+        $socialDesc = $experiment ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
 
         include('head.inc');
         ?>
@@ -211,7 +211,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
             }
 
             <?php if ($stickyFilmstrip) {
-                ?>body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
+            ?>body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
                 position: sticky;
                 top: 0;
                 z-index: 9999;
@@ -431,7 +431,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
             <?php
             if (defined('EMBED')) {
-                ?>#location {
+            ?>#location {
                 display: none;
             }
 
@@ -473,20 +473,20 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 padding: 0;
             }
 
-                <?php
+            <?php
             }
             ?>
 
             /* div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;} */
             <?php
             if ($stickyFilmstrip) {
-                ?>div.waterfall-sliders {
+            ?>div.waterfall-sliders {
                 position: sticky;
                 top: 0;
                 z-index: 9999;
             }
 
-                <?php
+            <?php
             }
             ?>
         </style>
@@ -521,7 +521,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
         if ($error) {
             echo "<h1>$error</h1>";
         } elseif ($ready) {
-            ?>
+        ?>
             <div class="results_main_contain">
                 <div class="results_main">
 
@@ -603,7 +603,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
 
 
-                                <?php
+                            <?php
 
                                 echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment vs. Control)</em></h3>';
                             }
@@ -663,12 +663,12 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     DisplayGraphs();
                     echo '</div>';
                     echo '</div>';
-        } else {
-            DisplayStatus();
-        }
+                } else {
+                    DisplayStatus();
+                }
 
                 echo '</div>';
-        ?>
+                    ?>
                     <?php include('footer.inc'); ?>
 
                     </div>
@@ -1149,7 +1149,7 @@ function ScreenShotTable()
                     }
                     InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
                 }
-                ?>
+            ?>
 
 
             <?php   } // EMBED
@@ -1165,7 +1165,7 @@ function ScreenShotTable()
             var scrollPos = <?php echo "$scrollPos;"; ?>
             document.getElementById("videoDiv").scrollLeft = scrollPos;
         </script>
-        <?php
+    <?php
     }
 }
 
@@ -1596,7 +1596,7 @@ function DisplayGraphs()
     </script>
     <?php
     if ($stickyFilmstrip) {
-        ?>
+    ?>
         <script>
             var videoContainer = document.querySelector("#videoContainer");
             var waterfallSliders = document.querySelector(".waterfall-sliders").parentNode;
@@ -1615,9 +1615,9 @@ function DisplayGraphs()
             setTop();
             window.addEventListener("resize", setTop)
         </script>
-        <?php
+    <?php
     }
     ?>
-    <?php
+<?php
 }
 ?>

@@ -13,7 +13,7 @@
 <?php if (isset($page_keywords) && count($page_keywords)) : ?>
     <meta name="keywords" content="<?= implode(',', $page_keywords) ?>" />
 <?php endif; ?>
-<?php if (!empty($page_description)) : ?>
+<?php if (strlen($page_description)) : ?>
     <meta name="description" content="<?= $page_description ?>" />
 <?php endif; ?>
 <meta name="author" content="Patrick Meenan">

@@ -62,7 +62,7 @@ $page_description = "Website performance test result$testLabel.";
     </style>
     <?php if (!$testComplete) {
         $autoRefresh = true;
-        ?>
+    ?>
         <noscript>
             <meta http-equiv="refresh" content="30" />
         </noscript>
@@ -78,7 +78,7 @@ $page_description = "Website performance test result$testLabel.";
 
 <body class="result result-summary <?php if ($req_screenshot) {
                                         echo ' screenshot';
-                                   } ?>">
+                                    } ?>">
     <?php
     $tab = 'Test Result';
     $subtab = 'Performance Summary';
@@ -91,7 +91,7 @@ $page_description = "Website performance test result$testLabel.";
 
             <?php
             if (!$testComplete) {
-                ?>
+            ?>
                 <p class="left">
                     <?php
                     if (GetSetting('nolinks')) {
@@ -103,7 +103,7 @@ $page_description = "Website performance test result$testLabel.";
                     echo GetTestInfoHtml();
                     ?>
                 </p>
-                <?php
+            <?php
                 $expected = $test['test']['runs'];
                 $available = $testResults->countRuns();
                 echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh as tests complete.</h3>";
@@ -111,7 +111,7 @@ $page_description = "Website performance test result$testLabel.";
                 echo "var availableTests=$available;\n";
                 echo "</script>\n";
             } else {
-                ?>
+            ?>
 
                 <div class="results_and_command">
                     <div class="results_header">
@@ -198,7 +198,7 @@ $page_description = "Website performance test result$testLabel.";
                                 do {
                                     $link .= $id . '-r:' . $cnt;
                                     $repeatlink .= $id . '-r:' . $cnt . '-c:1';
-                                    if (!empty($tests) && $tests[0]['step']) {
+                                    if ($tests[0]['step']) {
                                         $link .= '-s:' . $test['step'];
                                         $repeatlink .= '-s:' . $test['step'];
                                     }
@@ -212,8 +212,8 @@ $page_description = "Website performance test result$testLabel.";
                                 }
                                 echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\" class=\"result_plot\">Plot Full Results</a>";
                             }
-                            ?>
-                            <?php
+                        ?>
+                        <?php
                         } // fvMedian
                         if (!$fvMedian || $is_test_error) {
                             $error = 'The test completed but there were no successful results.';
@@ -256,7 +256,7 @@ $page_description = "Website performance test result$testLabel.";
                         echo '</div>';
                     }
                     ?>
-            <?php } ?>
+                <?php } ?>
 
 
 
@@ -284,7 +284,7 @@ $page_description = "Website performance test result$testLabel.";
     <?php
     $breakdown = $resultTables->getBreakdown();
     if ($breakdown) {
-        ?>
+    ?>
         <script src="//www.google.com/jsapi"></script>
         <script>
             <?php
@@ -351,13 +351,13 @@ $page_description = "Website performance test result$testLabel.";
                 }
             }
         </script>
-        <?php
+    <?php
     } // $breakdown
 
     if (!$testComplete) {
         echo "<script>\n";
         echo "var testId = '$id';\n";
-        ?>
+    ?>
         // polyfill performance.now
         if ("performance" in window == false) {
         window.performance = {};
@@ -421,7 +421,7 @@ $page_description = "Website performance test result$testLabel.";
             </script>
         <?php
     }
-    ?>
+        ?>
 </body>
 
 </html>

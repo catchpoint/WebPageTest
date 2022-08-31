@@ -131,18 +131,18 @@ $page_description = "Web Vitals details$testLabel";
         // init existing snippets
         $(document).ready(function() {
             <?php if ($isMultistep) { ?>
-                    'accordionHandler' in window && accordionHandler.connect();
+                accordionHandler.connect();
             <?php } ?>
         });
 
         <?php
         include "assets/js/waterfall.js";
         if ($lcp_request != '') {
-            ?>
+        ?>
             var stepLabel = "step1";
             $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
 
-            <?php
+        <?php
         }
         ?>
     </script>
@@ -843,7 +843,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
                 }
                 arsort($domains);
                 if (count($domains)) {
-                    ?>
+?>
                     <h4>Main Thread Blocking Time by Script Origin</h4>
                     <div class="scrollableTable">
                         <table class="pretty">
@@ -868,7 +868,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
                                     $(document).find(".tableDetails").tablesorter();
                                 });
                             </script>
-                    <?php
+        <?php
                 }
             }
 
