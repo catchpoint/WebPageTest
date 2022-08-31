@@ -1,0 +1,69 @@
+---
+version: '3.6'
+# READ THE DOCKER/LOCAL/README FOR MORE INFORMATION
+services:
+
+  web:
+    build: 
+      context: .
+      dockerfile: docker/local/Dockerfile-nginx
+    # privileged: true
+    ports:
+      - target: 80
+        published: 80
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - 'node.labels.upgrade-test == true'
+    volumes:
+      - .:/var/www/webpagetest
+    secrets:
+      - source: wpt_settings_ini
+        target: /var/www/webpagetest/settings/settings.ini
+      - source: wpt_keys_ini
+        target: /var/www/webpagetest/settings/keys.ini
+
+  php:
+    build: 
+      context: .
+      dockerfile: docker/local/Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    user: "1000:1000"
+    # privileged: true
+    expose:
+      - 9000
+    volumes:
+      - .:/var/www/webpagetest
+      - ./docker/local/server/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./docker/local/server/xdebug/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - 'node.labels.upgrade-test == true'
+    secrets:
+      - source: wpt_settings_ini
+        target: /var/www/webpagetest/www/settings/settings.ini
+      - source: wpt_keys_ini
+        target: /var/www/webpagetest/www/settings/keys.ini
+      - source: wpt_locations_ini
+        target: /var/www/webpagetest/www/settings/locations.ini
+
+  #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
+  agent:
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile-wptagent
+    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+  #### ####
+
+secrets:
+  wpt_settings_ini:
+    file: ./docker/local/wptconfig/settings.ini
+  wpt_keys_ini:
+    file: ./docker/local/wptconfig/keys.ini
+  wpt_locations_ini:
+    file: ./docker/local/wptconfig/locations.ini

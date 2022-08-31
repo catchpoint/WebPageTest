@@ -1,7 +1,176 @@
-# Running local docker container for development
 
-The [dockerfile](Dockerfile_dev) in this folder can be used to build a local image of webpagetest server based on [the official one](https://hub.docker.com/r/webpagetest/server/).
+# Local Docker Compose For Webpagetest
+![Alt text](assests/index.png?raw=true "Index.png")
+A multi-container Docker image for Webpagetest development. 
+- First docker container is Nginx:Apline container called "Dockerfile-Nginx"
+- Second docker container is php:7.4-fpm-alpine container called "Dockerfile-PHP"
+- Third Docker container is Ubuntu container called "Dockerfile-wptagent"
 
-That image will [xdebug](https://xdebug.org) and can be used to debug the server from an IDE like described [here](https://gist.github.com/chadrien/c90927ec2d160ffea9c4) for intellij.
 
-The [bash script](run_local_container.sh) in this folder will build the image locally (under current os user as owner) and run a container with it. The server code in folder `/www` will be mounted to `/var/www/html` inside the container. All results located under `results/` in this folder will be available in running container.
+## Running A Local Webpagetest Server with Wptagent
+
+Clone the project
+
+```bash
+  git clone https://github.com/WPO-Foundation/webpagetest.git
+```
+Go to the project directory
+
+```bash
+  cd webpagetest
+```
+Building / Running Image
+
+```bash
+  docker-compose up
+```
+
+Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container. !IMPORTANT! Traffic-Shapping will not work with Docker image of WPTagent. Instead goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)".
+
+## Running a Standalone Agent with the Server
+Since the Webpagetest container is packaged with an agent, we first need to stop that agent from running on "docker-compose up". The most elegant way is to just comment out the agent portion of the docker-compose.yml.
+
+```docker-compose.yml
+  #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
+  agent:
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile-wptagent
+    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+  #### ####
+```
+
+Then follow the guide on how to install Wptagent (https://github.com/WPO-Foundation/wptagent). Once the Agent is working, which can be confirmed by running a local test with...
+
+```bash
+    python3 wptagent.py -vvvv --xvfb --testurl www.google.com --shaper none #Shaper doesn't work with my instance
+    # or
+    python3 wptagent.py -vvvv --xvfb --testurl www.google.com
+```
+Then we can then tell the agent to look for work from the Webpagetest container with the command...
+```bash
+    python3 wptagent.py -vvvv --xvfb --server  http://127.0.0.1:80/work/ --location Test --key 123456789
+```
+Of course --location Test and --key 123456789 are preconfigured within docker/local/wptconfig/locations.ini and can be changed how you see fit
+
+## Webpagetest Environment Configs
+
+Adding Custom Agents? Add them here
+`docker/local/wptconfig/locations.ini`
+
+Changing Webpagetest Settings? Change them here
+`docker/local/wptconfig/settings.ini`
+
+Adjusting Webpagetest Keys? Adjust them here
+`docker/local/wptconfig/keys.ini`
+
+Looking for more information setting up? Check Out 
+ - `https://github.com/WPO-Foundation/wptserver-install`
+ - `https://www.robinosborne.co.uk/2021/12/22/automate-your-webpagetest-private-instance-with-terraform-2021-edition/`
+
+
+
+
+
+## Debugging
+
+
+### Webpagetest Installation Check 
+```Browser
+    http://localhost/install/
+```
+![Alt text](assests/install.png?raw=true "Index.png")
+
+All of the tests inside of /install need to pass for Webpagetest to work properly. (If the test are not passing please checkout "Unexpected problems installing" down below)
+### Agent Connection Debugging
+```Browser
+    http://localhost/getTesters.php?f=html
+```
+Great location for seeing more details about agents
+
+### Debugging PHP with XDebug on VScode
+![Alt text](assests/xdebug.png?raw=true "Index.png")
+First you need to install the following extensions for VScode.
+![Alt text](assests/xdebugext.png?raw=true "Index.png")
+![Alt text](assests/dockerext.png?raw=true "Index.png")
+
+Next inside of .vscode/launch.json we can add these configurations 
+to the launch.json to be able to add breakpoints and debug PHP with XDebug.
+```.vscode/launch.json
+    "configurations": [
+        {
+            "name": "Listen for XDebug on Docker",
+            "type": "php",
+            "request": "launch",
+            "port": 9000,
+            "hostname": "0.0.0.0",
+            "stopOnEntry": true,
+            "pathMappings": {
+                "/var/www/webpagetest": "${workspaceFolder}" 
+        },
+        "log": true
+        }
+    ]
+```
+Please note pathMappings goes as follows (Docker location:/.../.../Webpagetest (Location of Webpagtest folder on your machine)
+## Unexpected problems installing
+
+### Running Web Tests Results in "Bad" Results
+  One of the most common reasons for "Bad" results is Traffic-shapping. Traffic-Shappiing will not work with Docker-container. To disable the defaulted traffic-shapping you have to goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)"
+  ![Alt text](assests/xdebug.png?raw=true "traffic-shape.png")
+  
+
+### Another Process is using localhost port 80
+  ```yml
+  # Inside Webpagetest/docker-compose.yml
+  web:
+    ports:
+      - target: 80
+        published: 80 # Changing this value to a non-conflicting port will fix the problem
+
+```
+  
+### "docker compose up" stalls on the building process
+  Delete any docker file images associated with Webpagetest, then restart to fix this issue.
+  Still hanging because of Xdebug installing? Another solution is to go inside Webpagetest/docker/local/Dockerfile-PHP comment out Xdebug, build, then uncomment Xdebug and rebuild the container `docker-compose up -d --build`.
+  ```docker-php
+  # Might hang at gcc just delete current docker files and restart
+  # INSTALLS XDEBUG
+  RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+      && pecl install xdebug-3.0.0 \
+      && docker-php-ext-enable xdebug \
+      && apk del -f .build-deps
+  ```
+### localhost won't load because it can't find vendor/autoload.php
+  Inside of Webpagetest/docker/local/Dockerfile-PHP uncomment
+  ```docker-php
+    # Might need to uncomment this if vendor/autoload.php has a problem loading
+    # RUN curl -s https://getcomposer.org/installer | PHP
+    # RUN mv composer.phar /usr/local/bin/composer
+    # RUN composer install --working-dir=/var/www/webpagetest/
+  ``` 
+
+### localhost/install/ Filesystem checks all failed
+  Php doesn't have permission to read/write. The Fix is to change Php user:group permissions to be the same
+  as the user:group external to the container
+  ```bash
+  #Inside your Linux Terminal or WSL
+  id -u #Grab the user Id
+  id -g #Grab the Group Id
+  ```
+  and Inside of Webpagetest/docker-compose.yml
+  ```yml
+   php:
+    build: 
+      context: .
+      dockerfile: docker/local/Dockerfile-php
+      args:
+        - UID=${UID:-1000} # change this with your user id
+        - GID=${GID:-1000} # change this with your group id
+    user: "1000:1000" # userId:groupID Change these values as well
+  ```
+  More information about the problem
+  https://aschmelyun.com/blog/fixing-permissions-issues-with-docker-compose-and-php/
+
+
+    
