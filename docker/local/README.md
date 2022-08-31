@@ -4,9 +4,10 @@
 A multi-container Docker image for Webpagetest development. 
 - First docker container is Nginx:Apline container called "Dockerfile-Nginx"
 - Second docker container is php:7.4-fpm-alpine container called "Dockerfile-PHP"
+- Third Docker container is Ubuntu container called "Dockerfile-wptagent"
 
 
-## Running A Local Webpagetest Server
+## Running A Local Webpagetest Server with Wptagent
 
 Clone the project
 
@@ -24,13 +25,22 @@ Building / Running Image
   docker-compose up
 ```
 
-Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container.
+Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container. !IMPORTANT! Traffic-Shapping will not work with Docker image of WPTagent. Instead goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)".
 
+## Running a Standalone Agent with the Server
+Since the Webpagetest container is packaged with an agent, we first need to stop that agent from running on "docker-compose up". The most elegant way is to just comment out the agent portion of the docker-compose.yml.
 
+```docker-compose.yml
+  #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
+  agent:
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile-wptagent
+    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+  #### ####
+```
 
-## Running Agent with Server
-
-Follow the guide on how to install Wptagent (https://github.com/WPO-Foundation/wptagent). Once the Agent is working, which can be confirmed by running a local test with...
+Then follow the guide on how to install Wptagent (https://github.com/WPO-Foundation/wptagent). Once the Agent is working, which can be confirmed by running a local test with...
 
 ```bash
     python3 wptagent.py -vvvv --xvfb --testurl www.google.com --shaper none #Shaper doesn't work with my instance
@@ -104,6 +114,11 @@ to the launch.json to be able to add breakpoints and debug PHP with XDebug.
 ```
 Please note pathMappings goes as follows (Docker location:/.../.../Webpagetest (Location of Webpagtest folder on your machine)
 ## Unexpected problems installing
+
+### Running Web Tests Results in "Bad" Results
+  One of the most common reasons for "Bad" results is Traffic-shapping. Traffic-Shappiing will not work with Docker-container. To disable the defaulted traffic-shapping you have to goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)"
+  ![Alt text](assests/xdebug.png?raw=true "traffic-shape.png")
+  
 
 ### Another Process is using localhost port 80
   ```yml

@@ -52,6 +52,13 @@ services:
       - source: wpt_locations_ini
         target: /var/www/webpagetest/www/settings/locations.ini
 
+  #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
+  agent:
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile-wptagent
+    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+  #### ####
 
 secrets:
   wpt_settings_ini:
@@ -60,4 +67,3 @@ secrets:
     file: ./docker/local/wptconfig/keys.ini
   wpt_locations_ini:
     file: ./docker/local/wptconfig/locations.ini
-
