@@ -20,17 +20,15 @@
             $tab = 'Test Result';
             include 'header.inc';
             if (!isset($test)) {
-                if (TestArchiveExpired($id)) {
-                    echo "<h3>Test Result Expired</h3>\n";
-                    $retain_months = GetSetting('archive_retention_months', null);
-                    if ($retain_months) {
-                        $retain_months = htmlspecialchars($retain_months);
-                        echo "<p>Sorry, the test you requested has expired. Test results are kept for $retain_months months.</p>";
-                    } else {
-                        echo "<p>Sorry, the test you requested could not be found.</p>";
-                    }
+                echo "<h3>Test Not Found</h3>\n";
+                echo "<p>Sorry, the test you requested could not be found.</p>";
+            } elseif (TestArchiveExpired($id)) {
+                echo "<h3>Test Result Expired</h3>\n";
+                $retain_months = GetSetting('archive_retention_months', null);
+                if ($retain_months) {
+                    $retain_months = htmlspecialchars($retain_months);
+                    echo "<p>Sorry, the test you requested has expired. Test results are kept for $retain_months months.</p>";
                 } else {
-                    echo "<h3>Test Not Found</h3>\n";
                     echo "<p>Sorry, the test you requested could not be found.</p>";
                 }
             } else {
@@ -59,8 +57,8 @@
                     echo GetTestInfoHtml(false);
                 ?>
                 </p>
-                
-                
+
+
                 <?php
                 $statusText = $status['statusText'];
                 $statusStep = "waiting";
@@ -80,14 +78,14 @@
                 <?php
                 echo '<h3 id="statusText" class="runningStatusText">' . htmlspecialchars($statusText) . '</h3>';
                 ?>
-                            
+
             <p>Your webpage-performance test has been submitted and is now being processed.  This page will automatically update with the test status as
             the test continues to run.  When the test is complete the final results will be available here.</p>
             <p>You can either leave this page open in your browser until the test
              is complete, or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
             </div>
-            
-            
+
+
             <?php } ?>
             <?php
             $tip = GetTip();
@@ -99,7 +97,7 @@
             ?>
             <?php include('footer.inc'); ?>
         </div>
-        
+
         <script>
             var testId = "<?php echo $id; ?>";
             var lastStatusCode = 0;

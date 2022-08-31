@@ -12,14 +12,14 @@
 
 
     <footer>
-        <a class="logo" href="/"><img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
+        <a class="logo" href="/"><img src="/assets/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint"></a>
 
         <ul>
         <li class="footer_social"><span>Find us on: </span>
-            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/images/github.svg" alt="Github"></a>
-            <a href="https://twitter.com/RealWebPageTest"><img src="/images/twitter.svg" alt="Twitter"></a>
-            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/images/youtube.svg" alt="Youtube"></a>
-            <a href="https://www.linkedin.com/company/webpagetest/"><img src="/images/linkedin.svg" alt="LinkedIn"></a>
+            <a href="https://github.com/WPO-Foundation/webpagetest/"><img src="/assets/images/github.svg" alt="Github"></a>
+            <a href="https://twitter.com/RealWebPageTest"><img src="/assets/images/twitter.svg" alt="Twitter"></a>
+            <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/assets/images/youtube.svg" alt="Youtube"></a>
+            <a href="https://www.linkedin.com/company/webpagetest/"><img src="/assets/images/linkedin.svg" alt="LinkedIn"></a>
         </li>
         <li><a href="https://www.product.webpagetest.org/contact">Contact Us</a></li>
         <?php
@@ -36,12 +36,12 @@
     </footer>
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
-        echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/site.js?v=" . VER_JS . "\"></script>\n";
         $hasJquery = true;
     }
     if (
         !array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
-        is_file('./js/experiment.js')
+        is_file('./assets/js/experiment.js')
     ) {
         $headers = $_SERVER;
         preg_match_all(
@@ -54,9 +54,9 @@
         echo "<script>\n";
         echo "wptJSVer = '" . VER_JS . "';\n";
         echo "wptBrowser = '$browser';\n";
-        include('./js/experiment.js');
+        include('./assets/js/experiment.js');
         echo "</script>\n";
-        //echo "<script src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+        //echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/experiment.js?v=" . VER_JS . "\"></script>\n";
     }
 
     ?>

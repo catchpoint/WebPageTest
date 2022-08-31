@@ -30,15 +30,15 @@ if (!$privateInstall && !$admin) {
             margin:0;
         }
         li.pass {
-            background:url("../images/check.png") no-repeat 0 0;
+            background:url("../assets/images/check.png") no-repeat 0 0;
             padding-left: 20px;
         }
         li.fail {
-            background:url("../images/error.png") no-repeat 0 0;
+            background:url("../assets/images/error.png") no-repeat 0 0;
             padding-left: 20px;
         }
         li.warn {
-            background:url("../images/warning.png") no-repeat 0 0;
+            background:url("../assets/images/warning.png") no-repeat 0 0;
             padding-left: 20px;
         }
         span.pass {

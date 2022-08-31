@@ -297,7 +297,7 @@ $page_description = "Website performance test result$testLabel.";
 
             <?php include('footer.inc'); ?>
         </div>
-        <script src="/js/jk-navigation.js"></script>
+        <script src="/assets/js/jk-navigation.js"></script>
         <script>
             addJKNavigation("tr.stepResultRow");
         </script>

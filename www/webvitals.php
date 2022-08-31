@@ -36,7 +36,7 @@ $profiles = parse_ini_file($profile_file, true);
         <?php $gaTemplate = 'Main';
         include('head.inc');?>
         <style>
-        
+
 
         </style>
     </head>
@@ -74,8 +74,8 @@ $profiles = parse_ini_file($profile_file, true);
                 <?php
                 $currNav = "Core Web Vitals";
                 include("testTypesNav.php");
-                ?>              
-                
+                ?>
+
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields home_responsive_test_top">
                         <li>
@@ -122,10 +122,10 @@ $profiles = parse_ini_file($profile_file, true);
 
 
             </form>
-            
 
 
-        
+
+
                 <?php
             } // $headless
             ?>
@@ -136,10 +136,10 @@ $profiles = parse_ini_file($profile_file, true);
         <div class="home_content_contain">
           <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3250" src="https://www.product.webpagetest.org/second"></iframe>
             </div><!--home_content_contain-->
-          
+
             <div class="home_content_contain">
         <div class="home_content">
-          
+
         <?php
           include('footer.inc');
         ?>
@@ -148,7 +148,7 @@ $profiles = parse_ini_file($profile_file, true);
         </div>
         <?php
         if (!isset($site_js_loaded) || !$site_js_loaded) {
-            echo "<script src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+            echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/site.js?v=" . VER_JS . "\"></script>\n";
             $hasJquery = true;
         }
         ?>
@@ -175,6 +175,6 @@ $profiles = parse_ini_file($profile_file, true);
         };
         profileChanged();
         </script>
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>

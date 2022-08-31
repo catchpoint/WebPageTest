@@ -23,17 +23,17 @@ $quote = $quotes[array_rand($quotes)];
 </figure>
 <div class="tri-col feature-callouts">
     <div>
-        <img src="/images/real-experience-icon.svg" alt="">
+        <img src="/assets/images/real-experience-icon.svg" alt="">
         <h2 class="alt">Real Experience</h2>
         <p>Test your user’s real experience with global locations, modern devices, and the latest browser versions.</p>
     </div>
     <div>
-        <img src="/images/video-capture-icon.svg" alt="">
+        <img src="/assets/images/video-capture-icon.svg" alt="">
         <h2 class="alt">Video Capture</h2>
         <p>Correlate your user’s visual experience to the technical measurements of your site.</p>
     </div>
     <div>
-        <img src="/images/indepth-metrics-icon.svg" alt="">
+        <img src="/assets/images/indepth-metrics-icon.svg" alt="">
         <h2 class="alt">In-Depth Metrics</h2>
         <p>Dive into the anatomy of your webpage with components like DNS, TCP, TLS, and more.</p>
     </div>
@@ -42,21 +42,21 @@ $quote = $quotes[array_rand($quotes)];
 <div class="tri-col">
     <div class="resource-block">
         <a href="https://blog.webpagetest.org/posts/full-throttle-comparing-packet-level-and-dev-tools-throttling/">
-            <img src="/images/tiles/blog-throttling.png" alt="">
+            <img src="/assets/images/tiles/blog-throttling.png" alt="">
             <h3>Full Throttle: Comparing packet-level and DevTools throttling</h3>
             <p>Learn why packet-level throttling is better than DevTools throttling and the gold standard in accuracy for WebPerf measurements.</p>
         </a>
     </div>
     <div class="resource-block">
         <a href="https://css-tricks.com/webpagetest-api/">
-            <img src="/images/tiles/CSS.png" alt="">
+            <img src="/assets/images/tiles/CSS.png" alt="">
             <h3>WebPageTest API Review on CSS Tricks</h3>
             <p>Chris Coyier takes the API out for a spin and shares where he sees the most promise for developers</p>
         </a>
     </div>
     <div class="resource-block">
         <a href="https://blog.webpagetest.org/posts/new-render-blocking-indicator-in-chrome-and-webpagetest/">
-            <img src="/images/tiles/blog-renderblock.png" alt="">
+            <img src="/assets/images/tiles/blog-renderblock.png" alt="">
             <h3>New Render Blocking Indicator in Chrome and WebPageTest</h3>
             <p>How to use WebPageTest's render-blocking indicator to improve on one of the most common performance bottlenecks.</p>
         </a>

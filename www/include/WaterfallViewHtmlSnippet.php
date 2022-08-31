@@ -131,8 +131,8 @@ class WaterfallViewHtmlSnippet
         $out .= "</tr>\n</table>\n";
         $out .= '<table class="waterfall-legend" cellspacing="0">';
         $out .= "\n<tr>\n";
-        $out .= $this->_legendImageTableCell("/images/render-block-icon.png", "Render Blocking Resource", 4);
-        $out .= $this->_legendImageTableCell("/images/not-secure-icon.png", "Insecure Request", 4);
+        $out .= $this->_legendImageTableCell("/assets/images/render-block-icon.png", "Render Blocking Resource", 4);
+        $out .= $this->_legendImageTableCell("/assets/images/not-secure-icon.png", "Insecure Request", 4);
         $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
         $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
         $out .= $this->_legendTextTableCell("#3030ff", "Doesn't Belong to Main Doc");

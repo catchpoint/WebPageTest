@@ -63,10 +63,10 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
 
 
-            
 
-                
-            
+
+
+
 
 
 
@@ -75,7 +75,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
             <p>Quickly jump to the sections below:</p>
 
-                
+
 
                 <table id="optimization_summary" class="grades">
                     <tr>
@@ -106,7 +106,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
                     ?>
                 </table>
             </div>
-            
+
                 <?php
                 // still multistep
                 $accordionHelper = new AccordionHtmlHelper($testRunResults);
@@ -130,18 +130,18 @@ $isMultistep = $testRunResults->countSteps() > 1;
             ?>
 
         </div>
-    
+
             <?php include('footer.inc'); ?>
         </div>
         </div>
         </div>
-        
+
 
         <!--Load the AJAX API-->
         <?php
         if ($isMultistep) {
-            echo '<script src="/js/jk-navigation.js"></script>';
-            echo '<script src="/js/accordion.js"></script>';
+            echo '<script src="/assets/js/jk-navigation.js"></script>';
+            echo '<script src="/assets/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $testRunResults->getRunNumber();
             ?>

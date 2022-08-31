@@ -219,7 +219,7 @@
         <div class="wpt-plan-set annual-plans">
             <?php
             $renewalDate = $newDate = date('Y-m-d', strtotime(' + 1 years'));
-  
+
             foreach ($annual_plans as $key => $plan) :
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
@@ -235,7 +235,7 @@
             endforeach; ?>
         </div>
         <div class="wpt-plan-set monthly-plans">
-            <?php 
+            <?php
             $renewalDateMonthly = $newDate = date('Y-m-d', strtotime('+ 1 month'));
             foreach ($monthly_plans as $key => $plan) :
                 $plan_block = <<<HTML

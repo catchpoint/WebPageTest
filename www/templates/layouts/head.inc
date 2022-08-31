@@ -21,34 +21,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-<link rel="apple-touch-icon" sizes="192x192" href="/images/icons-192.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/images/icons-192.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon-16x16.png">
 
 
 
 <style>
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-light-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-light-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-light-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-light-webfont.woff') format('woff');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-regular-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-regular-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-regular-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-regular-webfont.woff') format('woff');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Open Sans';
-    src: url('/fonts/opensans-bold-webfont.woff2') format('woff2'),
-         url('/fonts/opensans-bold-webfont.woff') format('woff');
+    src: url('/assets/fonts/opensans-bold-webfont.woff2') format('woff2'),
+         url('/assets/fonts/opensans-bold-webfont.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -65,9 +65,9 @@ if (file_exists(__DIR__ . '/../../settings/server/customhead.inc.php')) {
 }
 ?>
 
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
-<script src="<?= "{$GLOBALS['cdnPath']}/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
+<script src="<?= "{$GLOBALS['cdnPath']}/assets/js/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
 
 <?php
     echo "<style>\n";
@@ -92,12 +92,12 @@ if (isset($_REQUEST['color'])) {
 
 if ($privateInstall) {
     if ($blkLogo) {
-        echo ".logo a {background-image: url(/images/logo_private_blk.png);}";
+        echo ".logo a {background-image: url(/assets/images/logo_private_blk.png);}";
     } else {
-        echo ".logo a {background-image: url(/images/logo_private.png);}";
+        echo ".logo a {background-image: url(/assets/images/logo_private.png);}";
     }
 } elseif ($blkLogo) {
-    echo ".logo a {background-image: url(/images/logo_blk.png);}";
+    echo ".logo a {background-image: url(/assets/images/logo_blk.png);}";
 }
 
     // include a custom style if one exists
@@ -110,7 +110,7 @@ if (is_file(__DIR__ . '/../../settings/custom.css')) {
     // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo '<script>';
-    require_once __DIR__ . '/../../js/catchpoint-rum.js';
+    require_once __DIR__ . '/../../assets/js/catchpoint-rum.js';
     echo '</script>';
 }
 

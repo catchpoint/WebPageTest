@@ -1,0 +1,59 @@
+.pill-button {
+  appearance: none;
+  width: auto;
+  background-color: #f4f4f4;
+  border: 0;
+  border-radius: 2rem;
+  cursor: pointer;
+  display: inline-block;
+  padding: 0.7em 2.2em;
+  text-decoration: none;
+  color: #111;
+  font-size: 1rem;
+}
+
+.box-button {
+  border-radius: 4px;
+  height: 100%;
+  font-size: 1.25em;
+  padding: 0.9em 1.5em;
+  align-self: flex-start;
+  margin-left: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  justify-self: flex-end;
+  text-decoration: none;
+  border: 0;
+}
+
+/** TODO
+update all the yellow buttons on the site
+**/
+.yellow {
+  background-color: #f9d856;
+}
+
+.blue {
+  background-color: #3881e5;
+  color: #fff;
+}
+
+/**
+TODO update the NEW buttons on signup to this green
+**/
+.green {
+  background-color: #80bc06;
+}
+
+.red {
+  background-color: #d02424;
+  color: #fff;
+}
+
+.purple {
+  background-color: #6b25cf;
+}
+
+.grey-outline {
+  border: 1px solid rgb(204, 204, 204);
+}

@@ -24,6 +24,12 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function ($e) {
+        if (Util::getSetting('environment') == "dev") {
+            echo "<pre>";
+            var_dump($e);
+            echo "</pre>";
+            exit();
+        }
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
@@ -191,16 +197,16 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', @md5_file(__DIR__ . '/pagestyle2.css'));          // version of the sitewide css file
-define('VER_HEADER_CSS', @md5_file(__DIR__ . '/wpt-header.css')); // version of the header css file
-define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/css/account.css')); // version of the account css file
-define('VER_PRICE_CHANGER_JS', @md5_file(__DIR__ . '/js/signup-price-changer.js'));
-define('VER_FAQ_JS', @md5_file(__DIR__ . '/js/accessible-faq.js'));
-define('VER_BUTTON_CSS', @md5_file(__DIR__ . '/css/button.css'));   // version of the button css file
-define('VER_JS', @md5_file(__DIR__ . '/js/site.js'));                 // version of the sitewide javascript file
-define('VER_JS_TEST', @md5_file(__DIR__ . '/js/test.js'));            // version of the javascript specific to the test pages
-define('VER_JS_RUNNING', @md5_file(__DIR__ . '/js/running.js'));          // version of the javascript specific to the test running status page
-define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/js/account.js'));          // version of the javascript specific to the test running status page
+define('VER_CSS', @md5_file(__DIR__ . '/assets/css/pagestyle2.css'));          // version of the sitewide css file
+define('VER_HEADER_CSS', @md5_file(__DIR__ . '/assets/css/wpt-header.css')); // version of the header css file
+define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/assets/css/account.css')); // version of the account css file
+define('VER_PRICE_CHANGER_JS', @md5_file(__DIR__ . '/assets/js/signup-price-changer.js'));
+define('VER_FAQ_JS', @md5_file(__DIR__ . '/assets/js/accessible-faq.js'));
+define('VER_BUTTON_CSS', @md5_file(__DIR__ . '/assets/css/button.css'));   // version of the button css file
+define('VER_JS', @md5_file(__DIR__ . '/assets/js/site.js'));                 // version of the sitewide javascript file
+define('VER_JS_TEST', @md5_file(__DIR__ . '/assets/js/test.js'));            // version of the javascript specific to the test pages
+define('VER_JS_RUNNING', @md5_file(__DIR__ . '/assets/js/running.js'));          // version of the javascript specific to the test running status page
+define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/assets/js/account.js'));          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
 // To find code that fails to check that a time
 // is unknown, change this constant to a large

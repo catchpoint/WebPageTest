@@ -30,7 +30,7 @@ if (!$testInfo->isFirstViewOnly()) {
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
- 
+
         <?php $gaTemplate = 'Content Breakdown';
         include('head.inc'); ?>
     </head>
@@ -41,7 +41,7 @@ if (!$testInfo->isFirstViewOnly()) {
             include 'header.inc';
             ?>
 
-            
+
 <div class="results_main_contain">
         <div class="results_main">
 
@@ -112,8 +112,8 @@ if (!$testInfo->isFirstViewOnly()) {
         <script src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
-            echo '<script src="/js/jk-navigation.js"></script>';
-            echo '<script src="/js/accordion.js"></script>';
+            echo '<script src="/assets/js/jk-navigation.js"></script>';
+            echo '<script src="/assets/js/accordion.js"></script>';
             $testId = $testInfo->getId();
             $testRun = $firstViewResults->getRunNumber();
             echo '<script>';

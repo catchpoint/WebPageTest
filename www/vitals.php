@@ -55,7 +55,7 @@ $page_description = "Web Vitals details$testLabel";
 
                     <div class="results_header">
                         <h2>Core Web Vitals</h2>
-                        <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
+                        <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/assets/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
                     </div>
 
 
@@ -130,7 +130,7 @@ $page_description = "Web Vitals details$testLabel";
         });
 
         <?php
-        include "waterfall.js";
+        include "assets/js/waterfall.js";
         if ($lcp_request != '') {
             ?>
         var stepLabel = "step1";
@@ -301,7 +301,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
             echo "<a href='$filmstripUrl&highlightLCP=1'>View as Filmstrip</a>";
             $videoUrl = $urlGenerator->createVideo();
             echo " - <a href='$videoUrl'>View Video</a>";
-            echo " - <a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/images/icon-external.svg'></a>";
+            echo " - <a href='https://web.dev/lcp/' target='_blank' rel='noopener'>About Largest Contentful Paint (LCP) <img src='/assets/images/icon-external.svg'></a>";
             echo "</p>";
 
             // 3-frame filmstrip (if video is available)
@@ -522,7 +522,7 @@ function InsertWebVitalsHTML_CLS($stepResult)
         echo "<a href='$filmstripUrl&highlightCLS=1'>View as Filmstrip</a>";
         $videoUrl = $urlGenerator->createVideo();
         echo " - <a href='$videoUrl'>View Video</a>";
-        echo " - <a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/images/icon-external.svg'></a>";
+        echo " - <a href='https://web.dev/cls/' target='_blank' rel='noopener'>About Cumulative Layout Shift (CLS) <img src='/assets/images/icon-external.svg'></a>";
         echo "</p>";
 
         foreach ($windows as $window) {
@@ -723,7 +723,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
         if (isset($tbt)) {
             echo "<div class='metric'>";
             echo "<h3 class=\"hed_sub\" id='tbt'>Total Blocking Time ($tbt ms)</h3>";
-            echo "<p><a href='https://web.dev/tbt/' target='_blank' rel='noopener'>About Total Blocking Time (TBT) <img src='/images/icon-external.svg'></a></p>";
+            echo "<p><a href='https://web.dev/tbt/' target='_blank' rel='noopener'>About Total Blocking Time (TBT) <img src='/assets/images/icon-external.svg'></a></p>";
 
             // Load and filter the JS executions to only the blocking time blocks
             $long_tasks = null;
@@ -810,7 +810,7 @@ function InsertWebVitalsHTML_TBT($stepResult)
                 }
 
                 if (isset($timeline)) {
-                    echo "<br><p><a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>View in Chrome Dev Tools Performance Panel <img src='/images/icon-external.svg'></a></p>\n";
+                    echo "<br><p><a href='$timeline' target='_blank' title='View in Chrome Dev Tools Performance Panel'>View in Chrome Dev Tools Performance Panel <img src='/assets/images/icon-external.svg'></a></p>\n";
                 }
 
                 // Break down the long tasks by domain

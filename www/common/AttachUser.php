@@ -92,14 +92,6 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
-    // In a dev environment, default to showing paid content, use a flag for unpaid
-    if (Util::getSetting('environment') == 'dev') {
-        $user->setPaid(true);
-        if (isset($_REQUEST['unpaid'])) {
-            $user->setPaid(false);
-        }
-    }
-
     $isPaid = $user->isPaid();
     if ($isPaid) {
         //calculate based on paid priority

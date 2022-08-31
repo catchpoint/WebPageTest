@@ -55,6 +55,9 @@ $page_description = "Website performance test result$testLabel.";
             td.separation {
                 height: 2em;
             }
+            .selectall, .unselectall {
+                cursor: pointer;
+            }
         </style>
         <?php if (!$testComplete) {
             $autoRefresh = true;
@@ -116,7 +119,7 @@ $page_description = "Website performance test result$testLabel.";
                     <p>WebPageTest helps identify opportunities to improve a site's experience. Select one or more No-Code Experiments below and submit to test their impact.</p>
                 </div>
 
-                
+
 
             </div>
 
@@ -276,7 +279,7 @@ $page_description = "Website performance test result$testLabel.";
                                     $upgradeLink = <<<EOT
                                     </div>
                                     <div class="experiment_description_go">
-                                    <a href="/signup"><span>Get <img class="pro_upgrade" src="/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
+                                    <a href="/signup"><span>Get <img class="pro_upgrade" src="/assets/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"></span> <span>for unlimited experiments.</span></a>
                                     </div>
                                     EOT;
                                 }
@@ -284,7 +287,12 @@ $page_description = "Website performance test result$testLabel.";
 
                                 if ($exp->expvar && $exp->expval) {
                                     if (count($exp->expval)) {
+                                        $enable_select_all = count($exp->expval) > 7;
                                         $out .= '<details class="experiment_assets ' . (($hideassets === true || $exp->hideassets === true) ? "experiment_assets-hide" : "" )  . '"><summary>Assets included in experiment:</summary>';
+                                        if ($enable_select_all) {
+                                            $out .= '<span class="selectall">Select all</span> <span class="unselectall">Unselect all</span>';
+                                        }
+
                                         $out .= '<ol>';
 
                                         foreach ($exp->expval as $in => $val) {
@@ -458,7 +466,7 @@ $page_description = "Website performance test result$testLabel.";
         </div>
         </div>
         </div>
-        <script type="text/javascript" src="/js/jk-navigation.js"></script>
+        <script type="text/javascript" src="/assets/js/jk-navigation.js"></script>
         <script type="text/javascript">
             addJKNavigation("tr.stepResultRow");
             // collapse later opps
@@ -540,7 +548,7 @@ $page_description = "Website performance test result$testLabel.";
 
 
 
-    
+
           </script>
             <?php
         }
@@ -563,7 +571,7 @@ $page_description = "Website performance test result$testLabel.";
                     var keyval = pair.split("=");
                     if( keyval[0] !== 'runs' ){
                         var input = form.find("[name='" + keyval[0] + "']");
-                        
+
                         if( input.length ){
                             if( input.filter("[type=checkbox],[type=radio]").length ){
                                 input = input.filter( "[value='"+ keyval[1] +"']" ).attr("checked", true);
@@ -573,7 +581,7 @@ $page_description = "Website performance test result$testLabel.";
                         }
                     }
                 });
-            
+
         }
     }
 
@@ -632,7 +640,7 @@ $page_description = "Website performance test result$testLabel.";
 
     updateTestRunTotal();
 
-        
+
 
 
     // try and restore state at load
@@ -641,13 +649,25 @@ $page_description = "Website performance test result$testLabel.";
     $("form.experiments_grades").on("change input submit", updateCount );
 
     // add add buttons
-    $(".experiment_pair_value-add").after("<button type='button' class='experiment_pair_value_addbtn'>Add more</button>").next().on("click", function(){ $(this).before($(this).prev().clone());}); 
+    $(".experiment_pair_value-add").after("<button type='button' class='experiment_pair_value_addbtn'>Add more</button>").next().on("click", function(){ $(this).before($(this).prev().clone());});
 
     $('<button type="button">Expand All</button>')
         .on('click', function(){
             $(this).closest(".util_overflow_more").addClass("util_overflow_more-expanded");
         })
         .appendTo(".util_overflow_more");
+
+    // select all
+    document.querySelectorAll('.experiment_assets').forEach(details => {
+        details.addEventListener('click', e => {
+            if (e.target.className === 'selectall') {
+                details.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = true);
+            }
+            if (e.target.className === 'unselectall') {
+                details.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
+            }
+        });
+    });
 
 </script>
     </body>

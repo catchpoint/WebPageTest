@@ -14,9 +14,9 @@ $page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
 ?>
 <title><?php echo $page_title; ?></title>
 <?php require_once __DIR__ . '/head.inc'; ?>
-<link href="/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
-<script defer src="/js/accessible-faq.js?v=<?= constant('VER_FAQ_JS') ?>"></script>
-<script defer src="/js/signup-price-changer.js?v=<?= constant('VER_PRICE_CHANGER_JS') ?>"></script>
+<link href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
+<script defer src="/assets/js/accessible-faq.js?v=<?= constant('VER_FAQ_JS') ?>"></script>
+<script defer src="/assets/js/signup-price-changer.js?v=<?= constant('VER_PRICE_CHANGER_JS') ?>"></script>
 </head>
 
 <body>

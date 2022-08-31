@@ -52,7 +52,7 @@ if ($id) {
 <wpt-header>
     <header>
         <a class="wptheader_logo" href="/">
-            <img src="/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
+            <img src="/assets/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
         </a>
         <details class="wptheader_menu">
             <summary class="wptheader_menubtn">Menu:</summary>
@@ -71,7 +71,7 @@ if ($id) {
                             <summary><span>Products</span></summary>
                             <div class="wptheader_nav_menu_content">
                                 <div class="wptheader_nav_menu_section">
-                                    <img src="/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
+                                    <img src="/assets/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
                                 </div>
                                 <div class="wptheader_nav_menu_section">
                                     <ul>
@@ -95,8 +95,8 @@ if ($id) {
                         </details>
                     </li>
 
-                    <?php if ($supportsAuth && !defined('EMBED')): ?>
-                      <?= addTab('Pricing', '/signup'); ?>
+                    <?php if ($supportsAuth && !defined('EMBED')) : ?>
+                        <?= addTab('Pricing', '/signup'); ?>
                     <?php endif; ?>
 
                     <li class="wptheader_nav_menu">
@@ -117,10 +117,10 @@ if ($id) {
                                 <div class="wptheader_nav_menu_section">
                                     <p class="wptheader_nav_cta">Find us on...</p>
                                     <ul class="wptheader_nav_menu_linkgrid">
-                                        <li class="wptheader_nav_menu_link"><img src="/images/twitter.svg" alt=""><a href="https://twitter.com/RealWebPageTest">Twitter</a></li>
-                                        <li class="wptheader_nav_menu_link"><img src="/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
-                                        <li class="wptheader_nav_menu_link"><img src="/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
-                                        <li class="wptheader_nav_menu_link"><img src="/images/github.svg" alt=""><a href="https://github.com/WPO-Foundation/webpagetest/">Github</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/assets/images/twitter.svg" alt=""><a href="https://twitter.com/RealWebPageTest">Twitter</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/assets/images/youtube.svg" alt=""><a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q">Youtube</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/assets/images/linkedin.svg" alt=""><a href="https://www.linkedin.com/company/webpagetest/">LinkedIn</a></li>
+                                        <li class="wptheader_nav_menu_link"><img src="/assets/images/github.svg" alt=""><a href="https://github.com/WPO-Foundation/webpagetest/">Github</a></li>
                                     </ul>
                                 </div>
                             </div>
