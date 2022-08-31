@@ -16,8 +16,8 @@ require_once __DIR__ . '/include/TestRunResults.php';
  */
 function getOptimizationGradesForStep($testInfo, $testStepResult)
 {
-  // The function getOptimizationGradesForRun is more powerful as it can compute averages.
-  // With one step, it will do exactly what we want, so we create an artificial run
+    // The function getOptimizationGradesForRun is more powerful as it can compute averages.
+    // With one step, it will do exactly what we want, so we create an artificial run
     $singlestepRunResult = TestRunResults::fromStepResults(
         $testInfo,
         $testStepResult->getRunNumber(),
@@ -81,7 +81,7 @@ function createGradeArray($scores)
 
     $opt = array();
 
-  // put them in rank-order
+    // put them in rank-order
     $opt['ttfb'] = array();
     $opt['keep-alive'] = array();
     $opt['gzip'] = array();
@@ -100,13 +100,13 @@ function createGradeArray($scores)
     }
     if (array_key_exists('progressive_jpeg', $scores) && $scores['progressive_jpeg'] >= 0) {
         $opt['progressive_jpeg'] = array(
-        'score' => $scores['progressive_jpeg'],
-        'label' => 'Progressive JPEGs',
-        'important' => true
+            'score' => $scores['progressive_jpeg'],
+            'label' => 'Progressive JPEGs',
+            'important' => true
         );
     }
 
-  // define the labels for all of them
+    // define the labels for all of them
     $opt['ttfb']['label'] = 'First Byte Time';
     $opt['keep-alive']['label'] = 'Keep-alive Enabled';
     $opt['gzip']['label'] = 'Compress Transfer';
@@ -118,7 +118,7 @@ function createGradeArray($scores)
     $opt['minify']['label'] = 'Minify JavaScript';
     $opt['e-tags']['label'] = 'Disable E-Tags';
 
-  // flag the important ones
+    // flag the important ones
     $opt['ttfb']['important'] = true;
     $opt['keep-alive']['important'] = true;
     $opt['gzip']['important'] = true;
@@ -126,7 +126,7 @@ function createGradeArray($scores)
     $opt['caching']['important'] = true;
     $opt['cdn']['important'] = true;
 
-  // apply grades
+    // apply grades
     foreach ($opt as $check => &$item) {
         $grade = 'N/A';
         $weight = 0;
@@ -179,7 +179,7 @@ function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target)
 {
     $score = null;
     if ($ttfb) {
-      // see if we can fast-path fail this test without loading the object data
+        // see if we can fast-path fail this test without loading the object data
         if (isset($latency)) {
             $rtt = (int)$latency + 100;
             $worstCase = $rtt * 7 + 1000;  // 7 round trips including dns, socket, request and ssl + 1 second back-end
@@ -211,13 +211,13 @@ function getTargetTTFBForStep($localPaths, &$rtt)
     $target = null;
     $latency = $rtt;
 
-  // load the object data (unavoidable, we need the socket connect time to the first host)
+    // load the object data (unavoidable, we need the socket connect time to the first host)
     require_once('object_detail.inc');
 
     $secure = false;
     $requests = getRequestsForStep($localPaths, null, $secure);
     if (count($requests)) {
-      // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
+        // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
         if (
             isset($requests[0]['connect_start']) &&
             $requests[0]['connect_start'] >= 0 &&
@@ -234,7 +234,7 @@ function getTargetTTFBForStep($localPaths, &$rtt)
             }
         }
 
-      // allow for a minimum of 100ms for the RTT
+        // allow for a minimum of 100ms for the RTT
         $rtt = max($rtt, 100);
 
         $ssl_ms = 0;
@@ -244,7 +244,7 @@ function getTargetTTFBForStep($localPaths, &$rtt)
             if (
                 isset($requests[$i]['contentType']) &&
                 (stripos($requests[$i]['contentType'], 'ocsp') !== false ||
-                stripos($requests[$i]['contentType'], 'crl') !== false)
+                    stripos($requests[$i]['contentType'], 'crl') !== false)
             ) {
                 $i++;
             } else {
@@ -258,12 +258,12 @@ function getTargetTTFBForStep($localPaths, &$rtt)
             }
         }
 
-      // Set the target derived from the time when the first request was sent (if available)
+        // Set the target derived from the time when the first request was sent (if available)
         $buffer = $latency > 100 ? 150 : 100;
         if (isset($request_start)) {
             $target = $request_start + $rtt + $buffer;
         } else {
-          // RTT's: DNS + Socket Connect + HTTP Request + 100ms allowance
+            // RTT's: DNS + Socket Connect + HTTP Request + 100ms allowance
             $target = ($rtt * 3) + $ssl_ms + $buffer;
         }
     }

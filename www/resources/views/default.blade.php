@@ -33,6 +33,6 @@
         @yield('content')
         <?php require_once __DIR__ . '/../../footer.inc'; ?>
     </div>
-    </body>
+</body>
 
 </html>

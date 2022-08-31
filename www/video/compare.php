@@ -52,7 +52,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
     $testPath = GetTestPath($tests[0]['id']);
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
-    $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
+    $page_keywords = array('Video', 'comparison', 'WebPageTest', 'Website Speed Test');
     $page_description = "Visual comparison of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 
     $title = 'Webpage visual comparison';
@@ -142,306 +142,393 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
     <!DOCTYPE html>
     <html lang="en-us">
-        <head>
-            <title>WebPageTest - <?php echo ($experiment ? "Experiment Results" : "Visual Comparison"); ?></title>
-            <script>document.documentElement.classList.add('has-js');</script>
 
-            <?php
-            if (!$ready) {
-                $autoRefresh = true;
-                $noanalytics = true;
+    <head>
+        <title>WebPageTest - <?php echo ($experiment ? "Experiment Results" : "Visual Comparison"); ?></title>
+        <script>
+            document.documentElement.classList.add('has-js');
+        </script>
 
-                ?>
-                <noscript>
-                <meta http-equiv="refresh" content="10" />
-                </noscript>
-                <script language="JavaScript">
-                let reloadTimeout = setTimeout( "window.location.reload(true)", 10000 );
-                </script>
-                <?php
-            }
-                $gaTemplate = 'Visual Comparison';
-                $useScreenshot = true;
-                $socialTitle = !empty($experiment) ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
-                $socialDesc = !empty($experiment) ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
+        <?php
+        if (!$ready) {
+            $autoRefresh = true;
+            $noanalytics = true;
 
-                include('head.inc');
             ?>
-            <style>
+            <noscript>
+                <meta http-equiv="refresh" content="10" />
+            </noscript>
+            <script language="JavaScript">
+                let reloadTimeout = setTimeout("window.location.reload(true)", 10000);
+            </script>
             <?php
-                $bgcolor = 'ffffff';
-                $color = '222222';
+        }
+        $gaTemplate = 'Visual Comparison';
+        $useScreenshot = true;
+        $socialTitle = !empty($experiment) ? "WebPageTest Pro Experiment Results" : "WebPageTest Visual Performance Comparison";
+        $socialDesc = !empty($experiment) ? "Check out this WebPageTest Pro Experiment: " : "Check out this visual page loading comparison.";
+
+        include('head.inc');
+        ?>
+        <style>
+            <?php
+            $bgcolor = 'ffffff';
+            $color = '222222';
             if (array_key_exists('bg', $_GET)) {
                 $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
             }
             if (array_key_exists('text', $_GET)) {
                 $color = preg_replace('/[^0-9a-fA-F]/', '', $_GET['text']);
             }
-            ?>
-                #video
-                {
-                    margin-left: auto;
-                    margin-right: auto;
-                    padding-right: 100%;
-                }
-                #video td{
-                    vertical-align: top;
-                }
-                #videoDiv
-                {
-                    overflow-y: hidden;
-                    position: relative;
-                    overflow: auto;
-                    width: 100%;
-                    height: 100%;
-                    padding-bottom: 1em;
-                    border-left: 1px solid #f00;
-                }
-                #videoContainer
-                {
-                    <?php
-                            echo "background: #$bgcolor;\n";
-                            echo "color: #$color;\n"
-                    ?>
-                    table-layout: fixed;
-                    margin-left: auto;
-                    margin-right: auto;
-                    width: 100%;
-                }
-                <?php if ($stickyFilmstrip) { ?>
-                    body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
-                        position: sticky;
-                        top: 0;
-                        z-index: 9999;
-                    }
-                <?php } ?>
+            ?>#video {
+                margin-left: auto;
+                margin-right: auto;
+                padding-right: 100%;
+            }
 
-                #videoContainer td
-                {
-                    margin: 2px;
-                }
-                #labelContainer
-                {
-                    width: 8em;
-                    vertical-align: top;
-                    text-align: right;
-                    padding-right: 0.5em;
-                }
-                #videoLabels
-                {
-                    table-layout: fixed;
-                    width: 100%;
-                    overflow: hidden;
-                }
-                th{ font-weight: normal; }
-                #videoLabels td
-                {
-                    padding: 2px;
-                }
-                #video td{ padding: 2px; }
-                div.content
-                {
-                    text-align:center;
-                    <?php
-                        //echo "background: #$bgcolor;\n";
-                        //echo "color: #$color;\n"
-                    ?>
-                    font-family: arial,sans-serif
-                }
-                .pagelink,
-                .pagelinks a
-                {
-                    <?php
-                        //echo "color: #$color;\n"
-                    ?>
-                    word-wrap: break-word;
-                    text-decoration: none;
+            #video td {
+                vertical-align: top;
+            }
 
-                }
-                .thumb{ border: 3px solid #000; }
-                .thumbChanged{border: 3px solid #FFC233;}
-                .thumbLCP{border: 3px solid #FF0000;}
-                .thumbLayoutShifted{border-style: dotted;}
-                #createForm
-                {
-                    width:100%;
-                }
-                #bottom
-                {
-                    width:100%;
-                    text-align: left;
-                }
-                #layout
-                {
-                    float: right;
-                    position: relative;
-                    top: -8em;
-                    z-index: 4;
-                    margin-bottom: -3em;
-                }
-                #layoutTable
-                {
-                    text-align: left;
-                }
-                #layoutTable th
-                {
-                    padding-left: 1em;
-                    text-decoration: underline;
-                }
-                #layoutTable td
-                {
-                    padding-left: 2em;
-                    vertical-align: top;
-                }
-                #statusTable
-                {
-                    table-layout: fixed;
-                    margin-left: auto;
-                    margin-right: auto;
-                    font-size: larger;
-                    text-align: left;
-                }
-                #statusTable th
-                {
-                    text-decoration: underline;
-                    padding-left: 2em;
-                }
-                #statusTable td
-                {
-                    padding-top: 1em;
-                    padding-left: 2em;
-                }
-                #statusTable a
-                {
-                    color: inherit;
-                }
-                #image
-                {
-                    margin-left:auto;
-                    margin-right:auto;
-                    clear: both;
-                }
-                #advanced
-                {
-                    <?php
-                        //echo "background: #$bgcolor;\n";
-                        //echo "color: #$color;\n"
-                    ?>
-                    /* font-family: arial,sans-serif;
+            #videoDiv {
+                overflow-y: hidden;
+                position: relative;
+                overflow: auto;
+                width: 100%;
+                height: 100%;
+                padding-bottom: 1em;
+                border-left: 1px solid #f00;
+            }
+
+            #videoContainer {
+                <?php
+                echo "background: #$bgcolor;\n";
+                echo "color: #$color;\n"
+                ?>table-layout: fixed;
+                margin-left: auto;
+                margin-right: auto;
+                width: 100%;
+            }
+
+            <?php if ($stickyFilmstrip) {
+                ?>body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
+                position: sticky;
+                top: 0;
+                z-index: 9999;
+            }
+
+            <?php } ?>#videoContainer td {
+                margin: 2px;
+            }
+
+            #labelContainer {
+                width: 8em;
+                vertical-align: top;
+                text-align: right;
+                padding-right: 0.5em;
+            }
+
+            #videoLabels {
+                table-layout: fixed;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            th {
+                font-weight: normal;
+            }
+
+            #videoLabels td {
+                padding: 2px;
+            }
+
+            #video td {
+                padding: 2px;
+            }
+
+            div.content {
+                text-align: center;
+                <?php
+                //echo "background: #$bgcolor;\n";
+                //echo "color: #$color;\n"
+                ?>font-family: arial, sans-serif
+            }
+
+            .pagelink,
+            .pagelinks a {
+                <?php
+                //echo "color: #$color;\n"
+                ?>word-wrap: break-word;
+                text-decoration: none;
+
+            }
+
+            .thumb {
+                border: 3px solid #000;
+            }
+
+            .thumbChanged {
+                border: 3px solid #FFC233;
+            }
+
+            .thumbLCP {
+                border: 3px solid #FF0000;
+            }
+
+            .thumbLayoutShifted {
+                border-style: dotted;
+            }
+
+            #createForm {
+                width: 100%;
+            }
+
+            #bottom {
+                width: 100%;
+                text-align: left;
+            }
+
+            #layout {
+                float: right;
+                position: relative;
+                top: -8em;
+                z-index: 4;
+                margin-bottom: -3em;
+            }
+
+            #layoutTable {
+                text-align: left;
+            }
+
+            #layoutTable th {
+                padding-left: 1em;
+                text-decoration: underline;
+            }
+
+            #layoutTable td {
+                padding-left: 2em;
+                vertical-align: top;
+            }
+
+            #statusTable {
+                table-layout: fixed;
+                margin-left: auto;
+                margin-right: auto;
+                font-size: larger;
+                text-align: left;
+            }
+
+            #statusTable th {
+                text-decoration: underline;
+                padding-left: 2em;
+            }
+
+            #statusTable td {
+                padding-top: 1em;
+                padding-left: 2em;
+            }
+
+            #statusTable a {
+                color: inherit;
+            }
+
+            #image {
+                margin-left: auto;
+                margin-right: auto;
+                clear: both;
+            }
+
+            #advanced {
+                <?php
+                //echo "background: #$bgcolor;\n";
+                //echo "color: #$color;\n"
+                ?>
+                /* font-family: arial,sans-serif;
                     padding: 20px; */
-                }
-                #advanced td
-                {
-                    padding: 2px 10px;
-                }
-                #advanced-ok
-                {
-                    margin-left: auto;
-                    margin-right: auto;
-                    margin-top: 10px;
-                    display: block;
-                }
-                .waterfall_marker {
-                    position: absolute; top: 10px; left: 250px;
-                    height: 100%;
-                    width: 2px;
-                    background-color: #D00;
-                }
-                #location {
-                    text-align: left;
-                    padding: 5px;
-                    width: 100%;
-                }
-                .max-shift-window b {
-                    color: #FFC233;
-                    font-weight: 700;
-                    font-size: 1.2em;
-                    font-weight: normal;
-                    line-height: 1.3;
-                }
-                div.compare-graph {padding:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-progress {padding:20px 0; width:900px; height:400px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-timings {padding:20px 0; width:900px; height:900px;margin-left:auto; margin-right:auto;}
-                div.compare-graph-cls {padding:20px 0; width:900px; height:200px;margin-left:auto; margin-right:auto;}
+            }
 
-                .compare-all-link{
-                    padding: 5px;
-                    background: #1151bb;
-                    color: #fff;
-                    text-decoration: none;
-                    margin: .5em 5px;
-                    padding: 0.6875em 2.625em;
-                    border-radius: 4px;
-                    font-size: .9em;
-                    display: inline-block;
-                }
-                .compare-all-link:hover {
-                    background: #296ee1;
-                }
+            #advanced td {
+                padding: 2px 10px;
+            }
+
+            #advanced-ok {
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 10px;
+                display: block;
+            }
+
+            .waterfall_marker {
+                position: absolute;
+                top: 10px;
+                left: 250px;
+                height: 100%;
+                width: 2px;
+                background-color: #D00;
+            }
+
+            #location {
+                text-align: left;
+                padding: 5px;
+                width: 100%;
+            }
+
+            .max-shift-window b {
+                color: #FFC233;
+                font-weight: 700;
+                font-size: 1.2em;
+                font-weight: normal;
+                line-height: 1.3;
+            }
+
+            div.compare-graph {
+                padding: 20px 0;
+                width: 900px;
+                height: 600px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            div.compare-graph-progress {
+                padding: 20px 0;
+                width: 900px;
+                height: 400px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            div.compare-graph-timings {
+                padding: 20px 0;
+                width: 900px;
+                height: 900px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            div.compare-graph-cls {
+                padding: 20px 0;
+                width: 900px;
+                height: 200px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .compare-all-link {
+                padding: 5px;
+                background: #1151bb;
+                color: #fff;
+                text-decoration: none;
+                margin: .5em 5px;
+                padding: 0.6875em 2.625em;
+                border-radius: 4px;
+                font-size: .9em;
+                display: inline-block;
+            }
+
+            .compare-all-link:hover {
+                background: #296ee1;
+            }
+
+            <?php
+            if (defined('EMBED')) {
+                ?>#location {
+                display: none;
+            }
+
+            #bottom {
+                display: none;
+            }
+
+            #layout {
+                display: none;
+            }
+
+            #export {
+                display: none;
+            }
+
+            div.content {
+                padding: 0;
+                background-color: #fff;
+            }
+
+            div.page {
+                width: 100%;
+            }
+
+            #videoContainer {
+                background-color: #000;
+                border-spacing: 0;
+                width: 100%;
+                margin: 0;
+            }
+
+            #videoDiv {
+                padding-bottom: 0;
+            }
+
+            body {
+                background-color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+
                 <?php
-                if (defined('EMBED')) {
-                    ?>
-                #location {display: none;}
-                #bottom {display: none;}
-                #layout {display: none;}
-                #export {display: none;}
-                div.content {padding: 0; background-color: #fff;}
-                div.page {width: 100%;}
-                #videoContainer {background-color: #000; border-spacing: 0; width: 100%; margin: 0;}
-                #videoDiv {padding-bottom: 0;}
-                body {background-color: #fff; margin: 0; padding: 0;}
-                    <?php
-                }
-                ?>
-                /* div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;} */
+            }
+            ?>
+
+            /* div.waterfall-container {top: -2em; width:1012px; margin: 0 auto;} */
+            <?php
+            if ($stickyFilmstrip) {
+                ?>div.waterfall-sliders {
+                position: sticky;
+                top: 0;
+                z-index: 9999;
+            }
+
                 <?php
-                if ($stickyFilmstrip) {
-                    ?>
-                    div.waterfall-sliders {
-                        position: sticky;
-                        top: 0;
-                        z-index: 9999;
-                    }
-                    <?php
-                }
-                ?>
-            </style>
+            }
+            ?>
+        </style>
 
 
 
-        </head>
-        <body class="result compare <?php if ($experiment) {
-            echo ' compare-experiment';
-                                    }  if ($req_screenshot) {
-                                        echo ' screenshot';
-                                    } if (!$ready) {
-                                        echo ' compare-loading';
-                                    }   ?>">
-                <?php
-                $tab = 'Test Result';
-                //$nosubheader = false;
-                if (!empty($experiment)) {
-                    $subtab = 'Experiment Results & Filmstrip';
-                } else {
-                    $subtab = 'Filmstrip';
-                }
+    </head>
 
-                //$headerType = 'video';
-                $filmstrip = $_REQUEST['tests'];
+    <body class="result compare <?php if ($experiment) {
+                                    echo ' compare-experiment';
+                                }
+                                if ($req_screenshot) {
+                                    echo ' screenshot';
+                                }
+                                if (!$ready) {
+                                    echo ' compare-loading';
+                                }   ?>">
+        <?php
+        $tab = 'Test Result';
+        //$nosubheader = false;
+        if (!empty($experiment)) {
+            $subtab = 'Experiment Results & Filmstrip';
+        } else {
+            $subtab = 'Filmstrip';
+        }
 
-                include __DIR__ . '/../header.inc';
+        //$headerType = 'video';
+        $filmstrip = $_REQUEST['tests'];
 
-                if ($error) {
-                    echo "<h1>$error</h1>";
-                } elseif ($ready) {
-                    ?>
-                    <div class="results_main_contain">
-                    <div class="results_main">
+        include __DIR__ . '/../header.inc';
+
+        if ($error) {
+            echo "<h1>$error</h1>";
+        } elseif ($ready) {
+            ?>
+            <div class="results_main_contain">
+                <div class="results_main">
 
 
                     <div class="results_and_command">
 
-                       <div class="results_header">
+                        <div class="results_header">
                             <?php
 
 
@@ -485,8 +572,8 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                 ?>
 
 
-                                    <div class="experiment_opportunities">
-                                <?php
+                                <div class="experiment_opportunities">
+                                    <?php
                                     include __DIR__ . '/../experiments/compare-assessments.inc';
                                     // if(count($assessmentChanges)){
                                     //     $numAssessmentChanged = count($assessmentChanges);
@@ -501,63 +588,63 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                     //     }
                                     // echo '</ol></div>';
                                     // }
-                                ?>
+                                    ?>
 
 
-                                        <div class="experiment_opportunities-remaining">
-                                            <h3 class="hed_sub">Remaining Opportunities</h3>
-                                            <p>Here's how your overall opportunities look after this experiment:</p>
+                                    <div class="experiment_opportunities-remaining">
+                                        <h3 class="hed_sub">Remaining Opportunities</h3>
+                                        <p>Here's how your overall opportunities look after this experiment:</p>
                                         <?php include __DIR__ . '/../experiments/summary.inc'; ?>
-                                        </div>
                                     </div>
+                                </div>
 
 
 
 
 
 
-                                    <?php
+                                <?php
 
-                                    echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment vs. Control)</em></h3>';
+                                echo '<h3 class="hed_sub">Filmstrip Comparison <em>(Experiment vs. Control)</em></h3>';
                             }
 
                             ?>
 
-                    <?php
+                            <?php
 
 
 
 
-                    ?>
+                            ?>
                         </div>
 
 
 
-                        </div>
+                    </div>
 
 
-                        <div id="result" class="results_body">
+                    <div id="result" class="results_body">
 
 
-                    <?php
+                        <?php
 
-                    echo '<div class=""><div class="test_results-content">';
-                    echo '<div class="test_results_header">';
-
-
-                    echo '<div class="compare_settings">';
-                    include 'video/filmstrip_settings.php';
+                        echo '<div class=""><div class="test_results-content">';
+                        echo '<div class="test_results_header">';
 
 
-                    echo '</div>';
+                        echo '<div class="compare_settings">';
+                        include 'video/filmstrip_settings.php';
 
-                    echo '<div class="compare_key">
+
+                        echo '</div>';
+
+                        echo '<div class="compare_key">
                     <h3>Filmstrip key:</h3>
                     <ul class="key">';
-                    if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {?>
-                    <li class="max-shift-window full"><b>*</b> Shift impacts LCP Score</li>
-                    <?php }
-                    echo '
+                        if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) { ?>
+                            <li class="max-shift-window full"><b>*</b> Shift impacts LCP Score</li>
+                        <?php }
+                        echo '
                         <li><b class="thumbChanged"></b>Visual change</li>
                         <li><b class="thumbChanged thumbLayoutShifted"></b>Visual change + Layout Shift</li>
                         <li><b class="thumbLCP"></b>Largest Contentful Paint</li>
@@ -565,7 +652,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     </ul>
                     </div><!--compare_key-->
                     </div>';
-                    ?>
+                        ?>
 
 
                     <?php
@@ -576,22 +663,24 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     DisplayGraphs();
                     echo '</div>';
                     echo '</div>';
-                } else {
-                    DisplayStatus();
-                }
+        } else {
+            DisplayStatus();
+        }
 
                 echo '</div>';
-                ?>
-                <?php include('footer.inc'); ?>
+        ?>
+                    <?php include('footer.inc'); ?>
 
+                    </div>
                 </div>
-                </div></div>
-                </div>
+            </div>
+            </div>
 
             <script>
-                function ShowAdvanced()
-                {
-                    $("#advanced").modal({opacity:80});
+                function ShowAdvanced() {
+                    $("#advanced").modal({
+                        opacity: 80
+                    });
                 }
 
                 $("#videoDiv").scroll(function() {
@@ -603,7 +692,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     var viewable = $("#videoDiv").width();
                     var width = $("#video").width();
                     if (thumbWidth && thumbWidth < width)
-                      width -= thumbWidth;
+                        width -= thumbWidth;
                     <?php
                     $padding = 250;
                     if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls']) {
@@ -613,7 +702,9 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     ?>
                     var marker = parseInt(padLeft + ((position / width) * (1012 - padLeft)));
                     $('.waterfall_marker').css('left', marker + 'px');
-                    $('.waterfall_marker').parent()[0].scrollTo( {left: marker - (viewable - 50) } )
+                    $('.waterfall_marker').parent()[0].scrollTo({
+                        left: marker - (viewable - 50)
+                    })
                 }
                 UpdateScrollPosition();
 
@@ -622,9 +713,11 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 ?>
 
                 const VIEWPORT_TO_FILMSTRIP_THRESHOLD = 100 / 60
+
                 function UpdateFilmstripStickyness(viewportTooShort) {
                     document.body.classList.toggle('viewport-too-short-for-sticky-filmstrip', viewportTooShort)
                 }
+
                 function WatchViewportToFilmstripThreshold(callback) {
                     const filmstrip = document.getElementById('videoContainer')
                     const viewportHeightThreshold = filmstrip.offsetHeight * VIEWPORT_TO_FILMSTRIP_THRESHOLD
@@ -637,16 +730,17 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 }
                 WatchViewportToFilmstripThreshold(UpdateFilmstripStickyness)
             </script>
-        </body>
+    </body>
+
     </html>
 
     <?php
 }
 
 /**
-* Build a side-by-side table with the captured frames from each test
-*
-*/
+ * Build a side-by-side table with the captured frames from each test
+ *
+ */
 function ScreenShotTable()
 {
     global $tests;
@@ -781,11 +875,13 @@ function ScreenShotTable()
                                 if ($paint['time'] == $lcp) {
                                     $has_lcp_rect = true;
                                 }
-                                $lcp_events[] = array('time' => $paint['time'],
-                                                      'top' => $paint['element']['boundingRect']['y'],
-                                                      'left' => $paint['element']['boundingRect']['x'],
-                                                      'width' => $paint['element']['boundingRect']['width'],
-                                                      'height' => $paint['element']['boundingRect']['height']);
+                                $lcp_events[] = array(
+                                    'time' => $paint['time'],
+                                    'top' => $paint['element']['boundingRect']['y'],
+                                    'left' => $paint['element']['boundingRect']['x'],
+                                    'width' => $paint['element']['boundingRect']['width'],
+                                    'height' => $paint['element']['boundingRect']['height']
+                                );
                             }
                         }
                         usort($lcp_events, function ($a, $b) {
@@ -892,15 +988,15 @@ function ScreenShotTable()
                                 }
                                 if (
                                     isset($viewport) &&
-                                        isset($viewport['width']) &&
-                                        $viewport['width'] > 0 &&
-                                        isset($viewport['height']) &&
-                                        $viewport['height'] > 0 &&
-                                        isset($shift['rects']) &&
-                                        is_array($shift['rects']) &&
-                                        count($shift['rects']) &&
-                                        isset($shift['score']) &&
-                                        $shift['score'] > 0
+                                    isset($viewport['width']) &&
+                                    $viewport['width'] > 0 &&
+                                    isset($viewport['height']) &&
+                                    $viewport['height'] > 0 &&
+                                    isset($shift['rects']) &&
+                                    is_array($shift['rects']) &&
+                                    count($shift['rects']) &&
+                                    isset($shift['score']) &&
+                                    $shift['score'] > 0
                                 ) {
                                     $has_layout_shifts = true;
 
@@ -926,10 +1022,10 @@ function ScreenShotTable()
                         }
                         if (
                             isset($viewport) &&
-                                isset($viewport['width']) &&
-                                $viewport['width'] > 0 &&
-                                isset($viewport['height']) &&
-                                $viewport['height'] > 0
+                            isset($viewport['width']) &&
+                            $viewport['width'] > 0 &&
+                            isset($viewport['height']) &&
+                            $viewport['height'] > 0
                         ) {
                             while (count($lcp_events) && $ms > $lcp_events[0]['time']) {
                                 $lcp_event = array_shift($lcp_events);
@@ -1014,47 +1110,50 @@ function ScreenShotTable()
         echo "</tbody></table></div>\n";
 
         // end of the container table
-        echo "</td></tr></table>\n";?>
+        echo "</td></tr></table>\n"; ?>
 
         <div class="compare_contain_wrap">
 
-        <?php if (!defined('EMBED')) {
-            // display the waterfall if there is only one test
-            $end_seconds = $filmstrip_end_time / 1000;
-            if (count($tests) == 1) {
-                /* @var TestStepResult $stepResult */
-                $stepResult = $tests[0]["stepResult"];
-                $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
-                echo CreateWaterfallHtml(
-                    '',
-                    $requests,
-                    $tests[0]['id'],
-                    $tests[0]['run'],
-                    $tests[0]['cached'],
-                    $stepResult->getRawResults(),
-                    "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1",
-                    $tests[0]['step']
-                );
-                // echo '<br><br>';
-            } else {
-                $waterfalls = array();
-                foreach ($tests as &$test) {
-                    $waterfalls[] = array('id' => $test['id'],
-                                    'label' => htmlspecialchars($test['name']),
-                                    'run' => $test['run'],
-                                    'step' => $test['step'],
-                                    'cached' => $test['cached']);
+            <?php if (!defined('EMBED')) {
+                // display the waterfall if there is only one test
+                $end_seconds = $filmstrip_end_time / 1000;
+                if (count($tests) == 1) {
+                    /* @var TestStepResult $stepResult */
+                    $stepResult = $tests[0]["stepResult"];
+                    $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
+                    echo CreateWaterfallHtml(
+                        '',
+                        $requests,
+                        $tests[0]['id'],
+                        $tests[0]['run'],
+                        $tests[0]['cached'],
+                        $stepResult->getRawResults(),
+                        "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1",
+                        $tests[0]['step']
+                    );
+                    // echo '<br><br>';
+                } else {
+                    $waterfalls = array();
+                    foreach ($tests as &$test) {
+                        $waterfalls[] = array(
+                            'id' => $test['id'],
+                            'label' => htmlspecialchars($test['name']),
+                            'run' => $test['run'],
+                            'step' => $test['step'],
+                            'cached' => $test['cached']
+                        );
+                    }
+                    $labels = '';
+                    if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls']) {
+                        $labels = '&labels=0';
+                    }
+                    InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
                 }
-                $labels = '';
-                if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls']) {
-                    $labels = '&labels=0';
-                }
-                InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
-            }
+                ?>
+
+
+            <?php   } // EMBED
             ?>
-
-
-        <?php   } // EMBED?>
         </div>
 
         <?php
@@ -1071,9 +1170,9 @@ function ScreenShotTable()
 }
 
 /**
-* Not all of the tests are done yet so display a progress update
-*
-*/
+ * Not all of the tests are done yet so display a progress update
+ *
+ */
 function DisplayStatus()
 {
     global $tests;
@@ -1117,10 +1216,10 @@ function DisplayStatus()
 }
 
 /**
-* Create a wrapable string from what was passed in
-*
-* @param mixed $in
-*/
+ * Create a wrapable string from what was passed in
+ *
+ * @param mixed $in
+ */
 function WrapableString($in)
 {
     if (strpos(trim($in), ' ')) {
@@ -1133,25 +1232,27 @@ function WrapableString($in)
 }
 
 /**
-* Display the comparison graph with the various time metrics
-*
-*/
+ * Display the comparison graph with the various time metrics
+ *
+ */
 function DisplayGraphs()
 {
     global $tests;
     global $filmstrip_end_frame;
     require_once('breakdown.inc');
-    $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font','video', 'other');
-    $timeMetrics = array('visualComplete' => 'Visually Complete',
-                        'lastVisualChange' => 'Last Visual Change',
-                        'docTime' => 'Load Time (onload)',
-                        'fullyLoaded' => 'Load Time (Fully Loaded)',
-                        'domContentLoadedEventStart' => 'DOM Content Loaded',
-                        'SpeedIndex' => 'Speed Index',
-                        'TTFB' => 'Time to First Byte',
-                        'titleTime' => 'Time to Title',
-                        'render' => 'Time to Start Render',
-                        'fullyLoadedCPUms' => 'CPU Busy Time');
+    $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font', 'video', 'other');
+    $timeMetrics = array(
+        'visualComplete' => 'Visually Complete',
+        'lastVisualChange' => 'Last Visual Change',
+        'docTime' => 'Load Time (onload)',
+        'fullyLoaded' => 'Load Time (Fully Loaded)',
+        'domContentLoadedEventStart' => 'DOM Content Loaded',
+        'SpeedIndex' => 'Speed Index',
+        'TTFB' => 'Time to First Byte',
+        'titleTime' => 'Time to Title',
+        'render' => 'Time to Start Render',
+        'fullyLoadedCPUms' => 'CPU Busy Time'
+    );
     $progress_end = 0;
     $layout_shifts_end = 0;
     $has_cls = false;
@@ -1294,8 +1395,11 @@ function DisplayGraphs()
     ?>
     <script src="//www.google.com/jsapi"></script>
     <script>
-        google.load('visualization', '1', {'packages':['table', 'corechart']});
+        google.load('visualization', '1', {
+            'packages': ['table', 'corechart']
+        });
         google.setOnLoadCallback(drawCharts);
+
         function drawCharts() {
             var dataTimes = new google.visualization.DataTable();
             var dataRequests = new google.visualization.DataTable();
@@ -1494,22 +1598,22 @@ function DisplayGraphs()
     if ($stickyFilmstrip) {
         ?>
         <script>
-          var videoContainer = document.querySelector("#videoContainer");
-          var waterfallSliders = document.querySelector(".waterfall-sliders").parentNode;
+            var videoContainer = document.querySelector("#videoContainer");
+            var waterfallSliders = document.querySelector(".waterfall-sliders").parentNode;
 
-        //   console.log(videoContainer);
-        //   console.log(waterfallSliders);
-        //   console.log(videoContainer.offsetHeight);
-          function setTop(){
-            waterfallSliders.style.top = (videoContainer.offsetHeight ).toString() + "px";
-            waterfallSliders.style.position = "sticky";
-            waterfallSliders.style.zIndex = "999999";
-            waterfallSliders.style.background = "rgba(255,255,255,0.9)";
+            //   console.log(videoContainer);
+            //   console.log(waterfallSliders);
+            //   console.log(videoContainer.offsetHeight);
+            function setTop() {
+                waterfallSliders.style.top = (videoContainer.offsetHeight).toString() + "px";
+                waterfallSliders.style.position = "sticky";
+                waterfallSliders.style.zIndex = "999999";
+                waterfallSliders.style.background = "rgba(255,255,255,0.9)";
 
-            waterfallSliders.style.paddingBottom = "0";
-          }
-          setTop();
-          window.addEventListener( "resize", setTop )
+                waterfallSliders.style.paddingBottom = "0";
+            }
+            setTop();
+            window.addEventListener("resize", setTop)
         </script>
         <?php
     }

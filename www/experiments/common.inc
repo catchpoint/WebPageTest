@@ -283,9 +283,9 @@ foreach ($assessment as $key => $cat) {
     } elseif (
         $numRecommended > 2
         // and it's the quickness category and fcp is reasonably slow
-        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
-        && ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
-        && ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2))  )
+        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3)
+        && ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0)
+        && ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2)))
     ) {
         $assessment[$key]["grade"] = "f";
         $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
