@@ -24,7 +24,7 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function ($e) {
-        if(Util::getSetting('environment') == "dev") {
+        if (Util::getSetting('environment') == "dev") {
             echo "<pre>";
             var_dump($e);
             echo "</pre>";

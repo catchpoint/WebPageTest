@@ -1028,7 +1028,9 @@ var getScrollbarWidth = function() {
         !document.getElementById("injectscript-container")
       ) {
         // load Flask
-        const { default: CodeFlask } = await import("/assets/js/codeflask.module.js");
+        const { default: CodeFlask } = await import(
+          "/assets/js/codeflask.module.js"
+        );
         var injectScript = document.getElementById("injectScript");
         // editor container
         var codeEl = document.createElement("div");
