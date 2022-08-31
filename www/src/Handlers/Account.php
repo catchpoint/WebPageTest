@@ -55,7 +55,7 @@ class Account
     {
         $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan'], $body['is_upgrade']);
 
-        $host = Util::getSetting('host');
+        $host = Util::getSetting('host', 'www.webpagetest.org');
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account";
         return $redirect_uri;

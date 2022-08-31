@@ -7,6 +7,7 @@ namespace WebPageTest;
 use WebPageTest\User;
 use WebPageTest\CPClient;
 use WebPageTest\CPSignupClient;
+use WebPageTest\Util;
 
 class RequestContext
 {
@@ -95,5 +96,10 @@ class RequestContext
     public function getRequestUri(): string
     {
         return $this->request_uri;
+    }
+
+    public function getHost(): string
+    {
+        return Util::getSetting('host');
     }
 }

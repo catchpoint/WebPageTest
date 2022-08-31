@@ -10,6 +10,7 @@ use WebPageTest\CPClient;
 use WebPageTest\Handlers\Account;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
+use WebPageTest\Util;
 
 function setcookie($name, $value, $expiration, $path, $domain)
 {
