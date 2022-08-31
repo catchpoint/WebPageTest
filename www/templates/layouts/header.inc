@@ -37,9 +37,9 @@ if (isset($testResults)) {
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
 if (
     !empty($id) && isset($test) && is_array($test) &&
-        isset($test['testinfo']['created']) &&
-        isset($test['testinfo']['url']) &&
-        !isset($user) && !isset($_COOKIE['google_email'])
+    isset($test['testinfo']['created']) &&
+    isset($test['testinfo']['url']) &&
+    !isset($user) && !isset($_COOKIE['google_email'])
 ) {
     $history = array(
         'id' => $id,
@@ -58,7 +58,7 @@ if (
 $tab ??= "";
 
 if (defined('EMBED')) {
-  // You don't need a header
+    // You don't need a header
     return;
 }
 ?>
@@ -76,4 +76,3 @@ if (isset($client_error)) {
 }
 
 require_once __DIR__ . '/includes/wpt-header.php';
-

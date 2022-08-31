@@ -13,11 +13,11 @@ class ConnectionViewHtmlSnippet
     private $requests;
     private $mapName;
 
-  /**
-   * ConnectionViewHtmlSnippet constructor.
-   * @param TestInfo $testInfo
-   * @param TestStepResult $stepResult
-   */
+    /**
+     * ConnectionViewHtmlSnippet constructor.
+     * @param TestInfo $testInfo
+     * @param TestStepResult $stepResult
+     */
     public function __construct($testInfo, $stepResult)
     {
         $this->testInfo = $testInfo;
@@ -48,14 +48,14 @@ class ConnectionViewHtmlSnippet
         if (isset($requests)) {
             $connection_rows = GetConnectionRows($requests);
             $options = array(
-            'id' => $this->testInfo->getId(),
-            'path' => $this->testInfo->getRootDirectory(),
-            'run_id' => $this->stepResult->getRunNumber(),
-            'is_cached' => $this->stepResult->isCachedRun(),
-            'step_id' => $this->stepResult->getStepNumber(),
-            'use_cpu' => true,
-            'show_labels' => true,
-            'width' => 930
+                'id' => $this->testInfo->getId(),
+                'path' => $this->testInfo->getRootDirectory(),
+                'run_id' => $this->stepResult->getRunNumber(),
+                'is_cached' => $this->stepResult->isCachedRun(),
+                'step_id' => $this->stepResult->getStepNumber(),
+                'use_cpu' => true,
+                'show_labels' => true,
+                'width' => 930
             );
             $page_data = $this->stepResult->getRawResults();
             $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $page_data);
