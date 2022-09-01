@@ -1880,8 +1880,8 @@ TEMP FIX FOR UPGRADE
 }
 
 .subscription-total {
-  position: absolute;
-  bottom: 0;
+  display: grid;
+  align-self: end;
   margin-bottom: 20px;
 }
 .subscription-total li {
