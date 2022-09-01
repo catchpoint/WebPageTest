@@ -2,6 +2,20 @@
 
 // container for assessment including opportunities, experiments to recommend
 
+// initial host is used by a few opps, so we'll calculate it here
+$initialHost = null;
+$rootURL = null; 
+$initialOrigin = null;
+foreach ($requests as $request) {
+	if ($request['is_base_page'] == "true") {
+		$initialHost = $request['host'];
+		$rootURL = trim($request['full_url']);
+		$initialOrigin = "http" . (strpos( $rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
+		break;
+	}
+}
+
+
 function documentRelativePath($url, $path)
 {
     $basePath = explode('/', $path);
