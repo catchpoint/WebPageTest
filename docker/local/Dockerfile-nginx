@@ -1,0 +1,22 @@
+FROM nginx:alpine
+RUN rm /etc/nginx/conf.d/default.conf \
+    && mkdir -p /var/www/ \
+    && mkdir /etc/nginx/sites-enabled \
+    && chown -R nginx:nginx /var/cache/nginx/ /var/www/ /run \
+    && chown -R nginx:nginx /var/www/
+
+COPY docker/local/server/config/nginx.conf /etc/nginx/nginx.conf
+COPY docker/local/server/config/default /etc/nginx/sites-enabled
+COPY /www/nginx.conf /var/www/nginx.conf
+
+COPY --chown=nginx / /var/www/webpagetest
+
+COPY docker/local/server/config/connectivity.ini /var/www/webpagetest/www/settings/connectivity.ini
+COPY docker/local/server/config/mobile_devices.ini /var/www/webpagetest/www/settings/mobile_devices.ini
+
+RUN chown -R nginx /var/www/webpagetest/www/settings/
+
+
+USER nginx
+EXPOSE 80
+CMD ["nginx","-g", "daemon off;"]
