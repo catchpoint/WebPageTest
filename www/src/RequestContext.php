@@ -37,7 +37,7 @@ class RequestContext
         $this->request_method = isset($server['REQUEST_METHOD']) ? strtoupper($server['REQUEST_METHOD']) : '';
         $this->request_uri = $server['REQUEST_URI'] ?? '/';
 
-        $this->host = $options['host'] ?? Util::getSetting('host');
+        $this->host = $options['host'] ?? Util::getSetting('host', "");
     }
 
     public function getRaw(): array
