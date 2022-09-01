@@ -43,4 +43,24 @@ final class UserTest extends TestCase
         $user->setUserPriority(0);
         $this->assertEquals($user->getUserPriority(), 0);
     }
+
+    public function testGetSetFirstName(): void
+    {
+        $user = new User();
+        $this->assertEquals("", $user->getFirstName());
+        $user->setFirstName();
+        $this->assertEquals("", $user->getFirstName());
+        $user->setFirstName("Gooby");
+        $this->assertEquals("Gooby", $user->getFirstName());
+    }
+
+    public function testGetSetLastName(): void
+    {
+        $user = new User();
+        $this->assertEquals("", $user->getLastName());
+        $user->setLastName();
+        $this->assertEquals("", $user->getLastName());
+        $user->setLastName("Pls");
+        $this->assertEquals("Pls", $user->getLastName());
+    }
 }
