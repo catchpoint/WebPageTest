@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace WebPageTest;
+
 use WebPageTest\RateLimiter;
 use PHPUnit\Framework\TestCase;
 
