@@ -19,8 +19,9 @@ class RequestContext
     private string $url_protocol;
     private string $request_method;
     private string $request_uri;
+    private string $host;
 
-    public function __construct(array $global_request, array $server = [])
+    public function __construct(array $global_request, array $server = [], array $options = [])
     {
         $this->raw = $global_request;
         $this->user = null;
@@ -35,6 +36,8 @@ class RequestContext
         $this->url_protocol = $this->ssl_connection ? 'https' : 'http';
         $this->request_method = isset($server['REQUEST_METHOD']) ? strtoupper($server['REQUEST_METHOD']) : '';
         $this->request_uri = $server['REQUEST_URI'] ?? '/';
+
+        $this->host = $options['host'] ?? Util::getSetting('host');
     }
 
     public function getRaw(): array
@@ -100,6 +103,6 @@ class RequestContext
 
     public function getHost(): string
     {
-        return Util::getSetting('host');
+        return $this->host;
     }
 }

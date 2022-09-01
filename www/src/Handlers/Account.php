@@ -40,7 +40,7 @@ class Account
     // #[Route(Http::POST, '/account', 'upgrade-plan-1')]
     public static function postPlanUpgrade(RequestContext $request_context, object $body): string
     {
-        $host = Util::getSetting('host');
+        $host = $request_context->getHost();
         setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account/plan_summary";
@@ -55,7 +55,7 @@ class Account
     {
         $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan'], $body['is_upgrade']);
 
-        $host = Util::getSetting('host', 'www.webpagetest.org');
+        $host = $request_context->getHost();
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account";
         return $redirect_uri;

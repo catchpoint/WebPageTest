@@ -10,7 +10,6 @@ use WebPageTest\CPClient;
 use WebPageTest\Handlers\Account;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
-use WebPageTest\Util;
 
 function setcookie($name, $value, $expiration, $path, $domain)
 {
@@ -45,9 +44,10 @@ final class AccountTest extends TestCase
         $post_body = (object)[
             'plan' => 'ap1'
         ];
-        $req = new RequestContext([]);
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
         $url = Account::postPlanUpgrade($req, $post_body);
-        $this->assertEquals('http://127.0.0.1/account/plan_summary', $url);
+        $this->assertEquals('http://127.0.0.2/account/plan_summary', $url);
     }
 
     public function testPostUpdatePlanSummary(): void
@@ -60,14 +60,14 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('updatePlan')
-          ->with('abcdef', 'ap74');
+            ->method('updatePlan')
+            ->with('abcdef', 'ap74');
 
-        $req = new RequestContext([]);
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
         $req->setClient($client); // intelephense gets made about MockObject getting passed here
         $url = Account::postUpdatePlanSummary($req, $body);
 
-        $this->assertEquals('http://127.0.0.1/account', $url);
+        $this->assertEquals('http://127.0.0.2/account', $url);
     }
 
     public function testValidateChangeContactInfo(): void
