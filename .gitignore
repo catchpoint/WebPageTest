@@ -117,8 +117,5 @@ www/beanstalk.php
 .vscode/*
 */.vscode/*
 
-# compiled Blade tamplates
-www/resources/compiled
-
 # developer settings
 www/dev.php
