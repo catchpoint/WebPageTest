@@ -47,13 +47,26 @@ class Account
         return $redirect_uri;
     }
 
+    // validate PostUpdatePlanSummary
+    //
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'upgrade-plan-2')]
+    public static function validatePostUpdatePlanSummary(array $post_body): object
+    {
+        $body = new stdClass();
+        $body->plan = $post_body['plan'];
+        $body->subscription_id = $post_body['subscription_id'];
+        $body->is_upgrade = !empty($post_body['is_upgrade']);
+        return $body;
+    }
+
     // Submit the plan upgrade
     //
     // #[HandlerMethod]
     // #[Route(Http::POST, '/account', 'upgrade-plan-2')]
-    public static function postUpdatePlanSummary(RequestContext $request_context, array $body): string
+    public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
     {
-        $request_context->getClient()->updatePlan($body['subscription_id'], $body['plan'], $body['is_upgrade']);
+        $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
 
         $host = $request_context->getHost();
         $protocol = $request_context->getUrlProtocol();
@@ -123,13 +136,13 @@ class Account
             'email' => $email,
             'first_name' => $body->first_name,
             'last_name' => $body->last_name,
-            'company_name' => $body->company_name
+            'company_name' => $body->company_name ?? ""
         ];
 
         try {
             $request_context->getClient()->updateUserContactInfo($body->id, $options);
             $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
+            $host = $request_context->getHost();
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
             $successMessage = array(
@@ -167,7 +180,6 @@ class Account
 
         try {
             $password_validator->assert($new_password);
-            $password_validator->assert($confirm_new_password);
         } catch (NestedValidationException $e) {
             $msg = "The requirements are at least 8 characters, including a number, lowercase letter, uppercase ";
             $msg .= "letter and symbol. No <, >.";

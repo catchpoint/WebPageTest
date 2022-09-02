@@ -10,6 +10,7 @@ use WebPageTest\CPClient;
 use WebPageTest\Handlers\Account;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
+use WebPageTest\User;
 
 function setcookie($name, $value, $expiration, $path, $domain)
 {
@@ -50,13 +51,46 @@ final class AccountTest extends TestCase
         $this->assertEquals('http://127.0.0.2/account/plan_summary', $url);
     }
 
-    public function testPostUpdatePlanSummary(): void
+    public function testValidatePostUpdatePlanSummary(): void
     {
-        $body = [
+        $expected = new stdClass();
+        $expected->subscription_id = 'abcdef';
+        $expected->plan = 'ap74';
+        $expected->is_upgrade = "1";
+
+        $post_body = [
             'subscription_id' => 'abcdef',
             'plan' => 'ap74',
             'is_upgrade' => true
         ];
+
+        $actual = Account::validatePostUpdatePlanSummary($post_body);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testValidatePostUpdatePlanSummaryNoUpgrade(): void
+    {
+        $expected = new stdClass();
+        $expected->subscription_id = 'abcdef';
+        $expected->plan = 'ap74';
+        $expected->is_upgrade = false;
+
+        $post_body = [
+            'subscription_id' => 'abcdef',
+            'plan' => 'ap74',
+            'is_upgrade' => ''
+        ];
+
+        $actual = Account::validatePostUpdatePlanSummary($post_body);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testPostUpdatePlanSummary(): void
+    {
+        $body = new stdClass();
+        $body->subscription_id = 'abcdef';
+        $body->plan = 'ap74';
+        $body->is_upgrade = true;
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
@@ -73,14 +107,14 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfo(): void
     {
         $expected = new stdClass();
-        $expected->first_name = "Glooby";
-        $expected->last_name = "Plz";
+        $expected->first_name = "Bloopy";
+        $expected->last_name = "Pineapples";
         $expected->id = "5";
         $expected->company_name = "Catchpoint";
 
         $body = [
-          'first-name' => "Glooby",
-          'last-name' => "Plz",
+          'first-name' => "Bloopy",
+          'last-name' => "Pineapples",
           'id' => "5",
           'company-name' => "Catchpoint"
         ];
@@ -93,8 +127,8 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfoMissingId(): void
     {
         $body = [
-          'first-name' => "Glooby",
-          'last-name' => "Plz",
+          'first-name' => "Bloopy",
+          'last-name' => "Pineapples",
           'company-name' => "Catchpoint"
         ];
 
@@ -106,7 +140,7 @@ final class AccountTest extends TestCase
     {
         $body = [
           'id' => "5",
-          'last-name' => "Plz",
+          'last-name' => "Pineapples",
           'company-name' => "Catchpoint"
         ];
 
@@ -118,7 +152,7 @@ final class AccountTest extends TestCase
     {
         $body = [
           'id' => "5",
-          'first-name' => "Plz",
+          'first-name' => "Pineapples",
           'company-name' => "Catchpoint"
         ];
 
@@ -129,17 +163,147 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfoNoCompanyName(): void
     {
         $expected = new stdClass();
-        $expected->first_name = "Glooby";
-        $expected->last_name = "Plz";
+        $expected->first_name = "Bloopy";
+        $expected->last_name = "Pineapples";
         $expected->id = "5";
 
         $body = [
           'id' => "5",
-          'first-name' => "Glooby",
-          'last-name' => "Plz"
+          'first-name' => "Bloopy",
+          'last-name' => "Pineapples"
         ];
 
         $actual = Account::validateChangeContactInfo($body);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testChangeContactInfo(): void
+    {
+
+        $body = new stdClass();
+        $body->first_name = "Bloopy";
+        $body->last_name = "Pineapples";
+        $body->company_name = "Moose";
+        $body->id = "5";
+
+        $email = 'gloobsemailz@mail.biz';
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('updateUserContactInfo')
+          ->with('5', [
+            'email' => $email,
+            'first_name' => $body->first_name,
+            'last_name' => $body->last_name,
+            'company_name' => $body->company_name
+          ]);
+
+        $req->setClient($client);
+
+        $user = new User();
+        $user->setEmail($email);
+        $req->setUser($user);
+
+        $url = Account::changeContactInfo($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
+    public function testChangeContactInfoNoCompanyName(): void
+    {
+
+        $body = new stdClass();
+        $body->first_name = "Bloopy";
+        $body->last_name = "Pineapples";
+        $body->id = "5";
+
+        $email = 'emailz@mail.biz';
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('updateUserContactInfo')
+          ->with('5', [
+            'email' => $email,
+            'first_name' => $body->first_name,
+            'last_name' => $body->last_name,
+            'company_name' => ""
+          ]);
+
+        $req->setClient($client);
+
+        $user = new User();
+        $user->setEmail($email);
+        $req->setUser($user);
+
+        $url = Account::changeContactInfo($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
+    public function testValidateChangePasswordNoMatch(): void
+    {
+        $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+        $good_pass_2 = 'WiJtGMAqsgxE!4.@qCVnoiBQN';
+        $good_pass_3 = 'hf9YBewsCeKp.DVY.72Kq-c7_';
+
+        $body = [
+        'current-password' => $good_pass_1,
+        'new-password' => $good_pass_2,
+        'confirm-new-password' => $good_pass_3
+        ];
+
+        $this->expectException(ClientException::class);
+        Account::validateChangePassword($body);
+    }
+
+    public function testValidateChangePasswordBadLengthShort(): void
+    {
+        $short_pw = 'HTor_v6';
+        $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+
+        $body = [
+        'current-password' => $good_pass_1,
+        'new-password' => $short_pw,
+        'confirm-new-password' => $short_pw
+        ];
+
+        $this->expectException(ClientException::class);
+        Account::validateChangePassword($body);
+    }
+
+    public function testValidateChangePasswordBadLengthLong(): void
+    {
+        $long_pw = '-aHC_FZG7GzDeiBnmsiM3-t7egZtLfKn4';
+        $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+
+        $body = [
+        'current-password' => $good_pass_1,
+        'new-password' => $long_pw,
+        'confirm-new-password' => $long_pw
+        ];
+
+        $this->expectException(ClientException::class);
+        Account::validateChangePassword($body);
+    }
+
+    public function testValidateChangePassword(): void
+    {
+        $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+        $good_pass_2 = 'WiJtGMAqsgxE!4.@qCVnoiBQN';
+
+        $body = [
+        'current-password' => $good_pass_1,
+        'new-password' => $good_pass_2,
+        'confirm-new-password' => $good_pass_2
+        ];
+
+        $expected = new stdClass();
+        $expected->current_password = $good_pass_1;
+        $expected->new_password = $good_pass_2;
+
+        $actual = Account::validateChangePassword($body);
         $this->assertEquals($expected, $actual);
     }
 }

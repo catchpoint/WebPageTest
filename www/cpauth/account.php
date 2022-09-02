@@ -86,12 +86,8 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "upgrade-plan-2") {
-        $body = [
-            'plan' => $_POST['plan'],
-            'subscription_id' => $_POST['subscription_id'],
-            'is_upgrade' => !empty($_POST['is_upgrade'])
-        ];
         try {
+            $body = AccountHandler::validatePostUpdatePlanSummary($_POST);
             $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
             $successMessage = array(
                 'type' => 'success',
