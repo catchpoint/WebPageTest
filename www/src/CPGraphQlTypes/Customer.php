@@ -17,6 +17,7 @@ class Customer
     private float $subscription_price;
     private string $status;
     private string $wpt_plan_name;
+    private string $next_wpt_plan_id;
     private int $monthly_runs;
     private string $credit_card_type;
     private ?DateTime $next_billing_date;
@@ -31,18 +32,17 @@ class Customer
     public function __construct(array $options)
     {
         if (
-            !(
-            isset($options['customerId']) &&
-            isset($options['maskedCreditCard']) &&
-            isset($options['ccLastFour']) &&
-            isset($options['subscriptionId']) &&
-            isset($options['wptPlanId']) &&
-            isset($options['billingPeriodEndDate']) &&
-            isset($options['subscriptionPrice']) &&
-            isset($options['status']) &&
-            isset($options['wptPlanName']) &&
-            isset($options['monthlyRuns']) &&
-            isset($options['creditCardType'])
+            !(isset($options['customerId']) &&
+                isset($options['maskedCreditCard']) &&
+                isset($options['ccLastFour']) &&
+                isset($options['subscriptionId']) &&
+                isset($options['wptPlanId']) &&
+                isset($options['billingPeriodEndDate']) &&
+                isset($options['subscriptionPrice']) &&
+                isset($options['status']) &&
+                isset($options['wptPlanName']) &&
+                isset($options['monthlyRuns']) &&
+                isset($options['creditCardType'])
             )
         ) {
             throw new \Exception('Fields required are not set when getting customer information');
@@ -60,7 +60,7 @@ class Customer
         $this->monthly_runs = $options['monthlyRuns'];
         $this->credit_card_type = $options['creditCardType'];
         $this->next_billing_date = isset($options['nextBillingDate']) ?
-          new DateTime($options['nextBillingDate']) : null;
+            new DateTime($options['nextBillingDate']) : null;
         $this->days_past_due = $options['daysPastDue'] ?? null;
         $this->number_of_billing_cycles = $options['numberOfBillingCycles'] ?? null;
         $this->cc_image_url = $options['ccImageUrl'] ?? null;
@@ -68,7 +68,8 @@ class Customer
         $this->remaining_runs = $options['remainingRuns'] ?? null;
         $this->billing_frequency = $options['billingFrequency'] ?? null;
         $this->plan_renewal_date = isset($options['planRenewalDate']) ?
-          new DateTime($options['nextBillingDate']) : null;
+            new DateTime($options['nextBillingDate']) : null;
+        $this->next_wpt_plan_id = $options['nextWptPlanId'] ?? null;
     }
 
     public function getCustomerId(): string
@@ -99,6 +100,11 @@ class Customer
     public function getWptPlanId(): string
     {
         return $this->wpt_plan_id;
+    }
+
+    public function getNextWptPlanId(): string
+    {
+        return $this->next_wpt_plan_id;
     }
 
     public function getBillingPeriodEndDate(): DateTime

@@ -83,7 +83,7 @@
 
             <?php if (!$is_wpt_enterprise) : ?>
                 <div class="box card-section">
-                    <h3>Current Plan</h3>
+                    <h3>Subscription Plan</h3>
                     <?php if ($is_paid) : ?>
                         <div class="card-section-subhed card-section-subhed__grid">
                             <span class="plan-name">
@@ -109,7 +109,7 @@
                                         </ul>
                                     </label>
                                 </div>
-                            <?php endif; // !$is_canceled ?>
+                            <?php endif; ?>
                         </div>
 
                         <ul>
@@ -123,9 +123,25 @@
                             </li>
                             <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
                             <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-                            <li><strong>Plan Renewal:</strong> <?= !is_null($plan_renewal) ? $plan_renewal : "N/A" ?></li>
+                            <?php if (!isset($upcoming_plan)) : ?>
+                                <li><strong>Plan Renewal:</strong> <?= !is_null($plan_renewal) ? $plan_renewal : "N/A" ?></li>
+                            <?php endif; ?>
                         </ul>
-                    <?php else : //$is_paid ?>
+                        <?php if (isset($upcoming_plan)) : ?>
+                            <h3>Upcoming Subscription</h3>
+                            <div class="card-section-subhed card-section-subhed__grid">
+                                <span class="plan-name">
+                                    <?= $upcoming_plan->getBillingFrequency() ?> Pro
+                                    <span class="status status__info">Subscription Begins: <?= $plan_renewal ?></span>
+                                </span>
+                            </div>
+                            <ul>
+                                <li><strong>Runs per month:</strong><?= $upcoming_plan->getRuns() ?> </li>
+                                <li><strong>Price:</strong> $<?= number_format(($upcoming_plan->getPrice() / 100), 2, '.', ',') ?> </li>
+                                <li><strong>Billing Cycle:</strong> <?= $upcoming_plan->getBillingFrequency() ?></li>
+                            </ul>
+                        <?php endif; ?>
+                    <?php else : ?>
                         <div class="card-section-subhed card-section-subhed__grid">
                             <span class="plan-name">Starter<span class="status">Active</span></span>
 
@@ -143,26 +159,26 @@
                                 echo $date->format('F d, Y') ?>
                             </li>
                         </ul>
-                    <?php endif; // $is_paid ?>
+                    <?php endif; ?>
                 </div>
-            </div>
-            <?php endif; // !$is_wpt_enterprise ?>
+            <?php endif; //!$is_wpt_enterprise?>
+        </div>
 
 
         <?php if (!$is_wpt_enterprise) : ?>
             <!-- PAYING ONLY: Billing Invoice tab -->
             <?php if ($is_paid) : ?>
                 <div class="tab-content" id="billing-settings-content">
-                    <?php if ($is_paid) {
-                        if (!$is_wpt_enterprise) {
-                            include_once __DIR__ . '/billing/invoice-history.php';
-                        }
-                    } else {
-                        include_once __DIR__ . '/includes/signup.php';
-                    } ?>
+                <?php
+                if ($is_paid) {
+                    include_once __DIR__ . '/billing/invoice-history.php';
+                } else {
+                    include_once __DIR__ . '/includes/signup.php';
+                }
+                ?>
                 </div>
             <?php endif; ?>
-        <?php endif; // !$is_wpt_enterprise ?>
+        <?php endif; //!$is_wpt_enterprise ?>
 
 
         <!-- PAYING ONLY:  API tab -->

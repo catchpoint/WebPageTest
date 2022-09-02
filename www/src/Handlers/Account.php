@@ -604,6 +604,10 @@ class Account
                     break;
                 }
             default:
+                $nextPlan = $customer->getNextWptPlanId();
+                if (isset($nextPlan)) {
+                    $results['upcoming_plan'] =  Util::getPlanFromArray($nextPlan, $plans);
+                }
                 echo $tpl->render('my-account', $results);
                 break;
         }

@@ -125,6 +125,9 @@ body.theme-b {
 .status__red {
   background-color: rgba(208, 36, 36, 0.2);
 }
+.status__info {
+  background-color: #e8f1ff;
+}
 
 .contact-support-button a {
   display: flex;
@@ -2292,7 +2295,7 @@ form:invalid button[type="submit"] {
   display: block;
   margin: 0 -2em -2em;
 }
-
+.status__info::before,
 .info-notice::before {
   content: "";
   background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20ZM9 5C9 4.44772 9.44771 4 10 4C10.5523 4 11 4.44772 11 5C11 5.55228 10.5523 6 10 6C9.44771 6 9 5.55228 9 5ZM9 9C9 8.44772 9.44771 8 10 8C10.5523 8 11 8.44772 11 9V15C11 15.5523 10.5523 16 10 16C9.44771 16 9 15.5523 9 15V9Z' fill='%230078D4'/%3E%3C/svg%3E");
@@ -2307,4 +2310,8 @@ form:invalid button[type="submit"] {
 
 .total__due-today {
   border-top: 1px solid #c8c8c8;
+}
+
+.card-section ul {
+  margin-bottom: 1rem;
 }

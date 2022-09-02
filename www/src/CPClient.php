@@ -318,7 +318,8 @@ class CPClient
                         'monthlyRuns',
                         'planRenewalDate',
                         'billingFrequency',
-                        'wptPlanName'
+                        'wptPlanName',
+                        'nextWptPlanId'
                     ])
             ]);
 
@@ -398,9 +399,9 @@ class CPClient
                 'email'
             ]);
 
-        $contact_update = new ContactUpdateInput(array_merge([], ['id' => $id ], $options));
+        $contact_update = new ContactUpdateInput(array_merge([], ['id' => $id], $options));
         $variables_array = [
-          'contact' => $contact_update->toArray()
+            'contact' => $contact_update->toArray()
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables_array);
@@ -694,7 +695,8 @@ class CPClient
                 'monthlyRuns',
                 'planRenewalDate',
                 'billingFrequency',
-                'wptPlanName'
+                'wptPlanName',
+                'nextWptPlanId'
             ]);
         $response = $this->graphql_client->runQuery($gql, true);
         $data = $response->getData()['wptCustomer'];
