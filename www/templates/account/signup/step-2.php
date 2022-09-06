@@ -12,7 +12,7 @@
             </div>
             <div class="form-input">
                 <label for="company-name">Company</label>
-                <input type="text" name="company-name" pattern="<?= $contact_info_pattern ?>" />
+                <input type="text" name="company-name" pattern="<?= $contact_info_pattern ?>" maxlength="32" />
             </div>
             <div class="form-input">
                 <label for="email">Email</label>
