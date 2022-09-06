@@ -49,6 +49,7 @@ use WebPageTest\Util;
 use WebPageTest\Util\Cache;
 use WebPageTest\Template;
 use WebPageTest\RateLimiter;
+use WebPageTest\Util\IniReader;
 
 require_once('./ec2/ec2.inc.php');
 require_once(__DIR__ . '/include/CrUX.php');
@@ -520,7 +521,12 @@ if (@strlen($req_rkey)) {
         }
 
         if (isset($_REQUEST['extensions']) && is_string($_REQUEST['extensions']) && strlen($_REQUEST['extensions']) == 32) {
-            $test['extensions'] = $_REQUEST['extensions'];
+            $extensions = IniReader::getExtensions();
+            $requested = $_REQUEST['extensions'];
+            if (array_key_exists($requested, $extensions)) {
+                $test['extensions'] = $_REQUEST['extensions'];
+                $test['extensionName'] = $extensions[$requested];
+            }
         }
 
         // Store an opaque metadata string/JSON object if one was provided (up to 10KB)
@@ -3050,6 +3056,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if (array_key_exists('extensions', $test) && strlen($test['extensions'])) {
                 $job['extensions'] = $test['extensions'];
+            }
+            if (array_key_exists('extensionName', $test) && strlen($test['extensionName'])) {
+                $job['extensionName'] = $test['extensionName'];
             }
             if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl'])) {
                 $job['customBrowserUrl'] = $test['customBrowserUrl'];

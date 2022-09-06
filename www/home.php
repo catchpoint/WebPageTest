@@ -7,6 +7,8 @@
 include 'common.inc';
 
 use WebPageTest\Util;
+use WebPageTest\Util\IniReader;
+
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -787,9 +789,8 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;" autocomplete="off">
                                                 </li>
                                                 <?php
-                                                $rawextensions = Util::getSetting('extensions');
-                                                if ($rawextensions) {
-                                                    $extensions = explode(',', $rawextensions);
+                                                $extensions = IniReader::getExtensions();
+                                                if ($extensions) {
                                                 ?>
                                                 <li>
                                                     <label for="extensions">
@@ -798,8 +799,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <select name="extensions" id="extensions">
                                                         <option>Pick an extension...</option>
                                                         <?php
-                                                        foreach($extensions as $ext) {
-                                                            [$id, $name] = explode('/', $ext);
+                                                        foreach($extensions as $id => $name) {
                                                             echo '<option value="'.$id.'">' . htmlspecialchars($name) . '</option>';
                                                         }
                                                         ?>

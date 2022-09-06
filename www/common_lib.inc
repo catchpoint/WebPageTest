@@ -1202,8 +1202,8 @@ function GetTestInfoHtml($includeScript = true)
     if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine'])) {
         $html .= '<li>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</li>';
     }
-    if (isset($test['testinfo']['extensions']) && strlen($test['testinfo']['extensions'])) {
-        $html .= '<li>Enable extension: ' . htmlspecialchars($test['testinfo']['extensions']) . '</li>';
+    if (isset($test['testinfo']['extensionName']) && strlen($test['testinfo']['extensionName'])) {
+        $html .= '<li>Enable extension: ' . htmlspecialchars($test['testinfo']['extensionName']) . '</li>';
     }
 
     if (isset($test['testinfo']['connectivity']) && strcasecmp($test['testinfo']['connectivity'], 'custom') != 0) {
@@ -3331,6 +3331,7 @@ function PopulateTestInfo(&$test)
         'bwOut',
         'connectivity',
         'extensions',
+        'extensionName',
         'fvonly',
         'ignoreSSL',
         'iq',
