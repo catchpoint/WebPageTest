@@ -262,7 +262,7 @@ class Account
         }
 
         $body->nonce = $nonce;
-        $body->plan = $plan;
+        $body->plan = strtolower($plan);
         $body->city = $city;
         $body->country = $country;
         $body->state = $state;
