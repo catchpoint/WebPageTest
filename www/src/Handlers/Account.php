@@ -568,7 +568,7 @@ class Account
                 $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
-                $results['renewaldate'] = $customer->getPlanRenewalDate()->format('m/d/Y');
+                $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
                 echo $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
@@ -591,7 +591,7 @@ class Account
                         $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                         $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
-                        $results['renewaldate'] = $customer->getPlanRenewalDate()->format('m/d/Y');
+                        $results['renewaldate'] = $customer->getNextPlanStartDate();
                         echo $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');

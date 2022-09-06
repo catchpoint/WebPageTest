@@ -167,4 +167,9 @@ class Customer
     {
         return str_contains($this->status, 'CANCEL');
     }
+
+    public function getNextPlanStartDate(): ?DateTime
+    {
+        return isset($this->plan_renewal_date) ? $this->plan_renewal_date : $this->billing_period_end_date;
+    }
 }

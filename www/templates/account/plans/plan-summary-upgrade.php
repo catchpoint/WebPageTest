@@ -50,7 +50,7 @@
                     <li class="total__due-today">
                         <strong>Due today:</strong> $0.00
                         <br>
-                        <strong>Due at the next billing date (<?= $renewaldate ?> ):</strong> $<?= $total ?>
+                        <strong>Due at the next billing date (<?= $renewaldate ? $renewaldate->format('m/d/Y') : ''; ?> ):</strong> $<?= $total ?>
                     </li>
                 <?php endif; ?>
             </ul>
