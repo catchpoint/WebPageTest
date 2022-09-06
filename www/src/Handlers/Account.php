@@ -586,17 +586,19 @@ class Account
                 echo $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
-                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
-                $results['oldPlan'] = $oldPlan;
+                if ($is_paid) {
+                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
+                    $results['oldPlan'] = $oldPlan;
+                }
                 echo $tpl->render('plans/upgrade-plan', $results);
                 break;
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
                     $plan = Util::getPlanFromArray($planCookie, $plans);
-                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {
+                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                         $sub_id = $customer->getSubscriptionId();
                         $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
@@ -618,7 +620,7 @@ class Account
                     break;
                 }
             default:
-                $nextPlan = $customer->getNextWptPlanId();
+                $nextPlan = ($is_paid && !$is_wpt_enterprise) ? $customer->getNextWptPlanId() : null;
                 if (isset($nextPlan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($nextPlan, $plans);
                 }
