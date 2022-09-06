@@ -17,7 +17,7 @@ class Customer
     private float $subscription_price;
     private string $status;
     private string $wpt_plan_name;
-    private string $next_wpt_plan_id;
+    private ?string $next_wpt_plan_id;
     private int $monthly_runs;
     private string $credit_card_type;
     private ?DateTime $next_billing_date;
@@ -102,7 +102,7 @@ class Customer
         return $this->wpt_plan_id;
     }
 
-    public function getNextWptPlanId(): string
+    public function getNextWptPlanId(): ?string
     {
         return $this->next_wpt_plan_id;
     }
