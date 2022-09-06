@@ -292,7 +292,7 @@ class Account
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             $successMessage = array(
                 'type' => 'success',
-                'text' => 'Your plan as been successfully updated! '
+                'text' => 'Your plan has been successfully updated! '
             );
             Util::setBannerMessage('form', $successMessage);
             return $redirect_uri;
