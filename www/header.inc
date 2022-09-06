@@ -81,8 +81,8 @@ if (!defined('EMBED')) {
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
 if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED')) {
-    // make sure the test is actually complete
-    if (isset($test['test']['completeTime']) || file_exists("$testPath/test.complete")) {
+    // make sure the test is actually complete and the second check can be applied to non-compare pages
+        if (isset($test['test']['completeTime']) || (!isset($tests) && file_exists("$testPath/test.complete") ) ) {
         if (!isset($testResults) || !isset($testInfo)) {
             $testInfo = TestInfo::fromFiles($testPath);
             $testResults = TestResults::fromFiles($testInfo);
