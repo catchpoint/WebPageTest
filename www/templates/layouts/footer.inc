@@ -27,6 +27,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 <?php
 if (!isset($site_js_loaded) || !$site_js_loaded) {
+    echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/jquery.js\"></script>\n";
     echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/site.js?v=" . constant('VER_JS') . "\"></script>\n";
     $hasJquery = true;
 }

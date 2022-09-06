@@ -97,11 +97,10 @@ $is_verified = $request_context->getUser()->isVerified();
 $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
 $user_id = $request_context->getUser()->getUserId();
 $remainingRuns = $request_context->getUser()->getRemainingRuns();
-$user_contact_info = $request_context->getClient()->getUserContactInfo($user_id);
 $user_email = $request_context->getUser()->getEmail();
-$first_name = $user_contact_info['firstName'] ?? "";
-$last_name = $user_contact_info['lastName'] ?? "";
-$company_name = $user_contact_info['companyName'] ?? "";
+$first_name = $request_context->getUser()->getFirstName();
+$last_name = $request_context->getUser()->getLastName();
+$company_name = $request_context->getUser()->getCompanyName();
 
 $contact_info = array(
     'layout_theme' => 'b',

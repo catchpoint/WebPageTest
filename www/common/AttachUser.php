@@ -18,28 +18,17 @@ use WebPageTest\Exception\UnauthorizedException;
 
     $user = new User();
 
-    if ($request->getClient()->isAuthenticated()) {
-        $user->setAccessToken($request->getClient()->getAccessToken());
-    }
-    if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
-        $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
-    }
-
-    $access_token = $user->getAccessToken();
-
     // Signed in, grab info on user
-    if (!is_null($access_token)) {
+    if ($request->getClient()->isAuthenticated()) {
         try {
-            $data = $request->getClient()->getUserDetails();
-            $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
-            $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
-            $user->setUserId($data['userIdentity']['activeContact']['id']);
-            $user->setEmail($data['userIdentity']['activeContact']['email']);
-            $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
-            $user->setVerified($data['userIdentity']['activeContact']['isWptAccountVerified']);
-            $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
-            $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
+            $user = $request->getClient()->getUser();
             $owner = $user->getOwnerId();
+            if ($request->getClient()->isAuthenticated()) {
+                $user->setAccessToken($request->getClient()->getAccessToken());
+            }
+            if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
+                $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
+            }
         } catch (UnauthorizedException $e) {
             error_log($e->getMessage());
             // if this fails, Refresh and retry
@@ -65,16 +54,14 @@ use WebPageTest\Exception\UnauthorizedException;
                         "/",
                         $host
                     );
-                    $data = $request->getClient()->getUserDetails();
-                    $user->setUserId($data['userIdentity']['activeContact']['id']);
-                    $user->setRemainingRuns($data['braintreeCustomerDetails']['remainingRuns']);
-                    $user->setMonthlyRuns($data['braintreeCustomerDetails']['monthlyRuns']);
-                    $user->setEmail($data['userIdentity']['activeContact']['email']);
-                    $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
-                    $user->setVerified($data['userIdentity']['activeContact']['isWptAccountVerified']);
-                    $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
-                    $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
+                    $user = $request->getClient()->getUser();
                     $owner = $user->getOwnerId();
+                    if ($request->getClient()->isAuthenticated()) {
+                        $user->setAccessToken($request->getClient()->getAccessToken());
+                    }
+                    if (isset($_COOKIE[$cp_refresh_token_cookie_name])) {
+                        $user->setRefreshToken($_COOKIE[$cp_refresh_token_cookie_name]);
+                    }
                 } catch (Exception $e) {
                     error_log($e->getMessage());
                     // if this fails, delete all the cookies

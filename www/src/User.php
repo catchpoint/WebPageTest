@@ -16,10 +16,16 @@ class User
     private bool $is_wpt_enterprise_client;
     private int $remaining_runs;
     private int $monthly_runs;
+    private string $first_name;
+    private string $last_name;
+    private string $company_name;
 
     public function __construct()
     {
         $this->email = null;
+        $this->first_name = "";
+        $this->last_name = "";
+        $this->company_name = "";
         $this->is_admin = false;
         $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
@@ -172,5 +178,35 @@ class User
     public function getUserPriority(): ?int
     {
         return $this->user_priority;
+    }
+
+    public function getFirstName(): string
+    {
+        return $this->first_name;
+    }
+
+    public function setFirstName(?string $first_name = ""): void
+    {
+        $this->first_name = $first_name ?? "";
+    }
+
+    public function getLastName(): string
+    {
+        return $this->last_name;
+    }
+
+    public function setLastName(?string $last_name = ""): void
+    {
+        $this->last_name = $last_name ?? "";
+    }
+
+    public function getCompanyName(): string
+    {
+        return $this->company_name;
+    }
+
+    public function setCompanyName(?string $company_name = ""): void
+    {
+        $this->company_name = $company_name ?? "";
     }
 }

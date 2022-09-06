@@ -128,18 +128,7 @@ $page_description = "Website performance test result$testLabel.";
                 <?php
                     $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
                     $requests = $testStepResult->getRequests();
-                    // initial host is used by a few opps, so we'll calculate it here
-                    $initialHost = null;
-                    $rootURL = null;
-                    $initialOrigin = null;
-                foreach ($requests as $request) {
-                    if ($request['is_base_page'] == "true") {
-                        $initialHost = $request['host'];
-                        $rootURL = trim($request['full_url']);
-                        $initialOrigin = "http" . (strpos($rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
-                        break;
-                    }
-                }
+                    
 
                     include __DIR__ . '/experiments/common.inc';
 

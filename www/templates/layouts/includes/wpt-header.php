@@ -112,6 +112,7 @@ if ($id) {
                                             <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
                                         <?php endif; //(Util::getSetting('forums_url')):
                                         ?>
+                                        <li class="wptheader_nav_menu_link"><a href="https://store-catchpoint.myshopify.com/collections/webpagetest">Shop Gear</a></li>
                                     </ul>
                                 </div>
                                 <div class="wptheader_nav_menu_section">
