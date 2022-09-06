@@ -205,35 +205,49 @@ class Account
         try {
             $request_context->getClient()->changePassword($body->new_password, $body->current_password);
             $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
+            $host = $request_context->getHost();
             $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-            $successMessage = array(
-                'type' => 'success',
-                'text' => 'Your password has been updated!'
-            );
-            Util::setBannerMessage('form', $successMessage);
-            return $redirect_uri;
+            return "{$protocol}://{$host}{$route}";
         } catch (BaseException $e) {
             throw new ClientException($e->getMessage(), "/account", 400);
         }
     }
 
-    // Validate existing free user subscribes to a paid account
-    //
-    // #[ValidatorMethod]
-    // #[Route(Http::POST, '/account', 'account-signup')]
+    /* Validate existing free user subscribes to a paid account
+
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'account-signup')]
+     *
+     * @param array{
+     *  nonce: string,
+     *  plan: string,
+     *  city: string,
+     *  country: string,
+     *  state: string,
+     *  'street-address': string,
+     *  zipcode: string} $post_body
+     *
+     * @return object{
+     *  nonce: string,
+     *  plan: string,
+     *  city: string,
+     *  country: string,
+     *  state: string,
+     *  street_address: string,
+     *  zipcode: string
+     *  } $body
+     */
     public static function validateSubscribeToAccount(array $post_body): object
     {
         $body = new stdClass();
 
-        $nonce = $post_body['nonce'];
-        $plan = $post_body['plan'];
-        $city = $post_body['city'];
-        $country = $post_body['country'];
-        $state = $post_body['state'];
-        $street_address = $post_body['street-address'];
-        $zipcode = $post_body['zipcode'];
+        $nonce = $post_body['nonce'] ?? "";
+        $plan = $post_body['plan'] ?? "";
+        $city = $post_body['city'] ?? "";
+        $country = $post_body['country'] ?? "";
+        $state = $post_body['state'] ?? "";
+        $street_address = $post_body['street-address'] ?? "";
+        $zipcode = $post_body['zipcode'] ?? "";
 
         if (
             empty($nonce) ||

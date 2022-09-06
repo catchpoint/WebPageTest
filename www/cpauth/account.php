@@ -46,10 +46,29 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == 'password') {
-        $body = AccountHandler::validateChangePassword($_POST);
-        $redirect_uri = AccountHandler::changePassword($request_context, $body);
-        header("Location: {$redirect_uri}");
-        exit();
+        try {
+            $body = AccountHandler::validateChangePassword($_POST);
+            $redirect_uri = AccountHandler::changePassword($request_context, $body);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your password has been updated!'
+            );
+            Util::setBannerMessage('form', $successMessage);
+            header("Location: {$redirect_uri}");
+            exit();
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => 'Password update failed'
+            );
+            Util::setBannerMessage('form', $errorMessage);
+            $host = Util::getSetting('host');
+            $protocol = $request_context->getUrlProtocol();
+            $redirect_uri = "{$protocol}://{$host}/account";
+            header("Location: {$redirect_uri}");
+            exit();
+        }
     } elseif ($type == "account-signup") {
         $body = AccountHandler::validateSubscribeToAccount($_POST);
         $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
@@ -103,6 +122,11 @@ if ($request_method === 'POST') {
                 'text' => $e->getMessage()
             );
             Util::setBannerMessage('form', $errorMessage);
+            $host = Util::getSetting('host');
+            $protocol = $request_context->getUrlProtocol();
+            $redirect_uri = "{$protocol}://{$host}/account";
+            header("Location: {$redirect_uri}");
+            exit();
         }
     } elseif ($type == "resend-verification-email") {
         try {
@@ -121,7 +145,11 @@ if ($request_method === 'POST') {
                 'text' => $e->getMessage()
             );
             Util::setBannerMessage('form', $errorMessage);
-            throw new ClientException("There was an error", "/account");
+            $host = Util::getSetting('host');
+            $protocol = $request_context->getUrlProtocol();
+            $redirect_uri = "{$protocol}://{$host}/account";
+            header("Location: {$redirect_uri}");
+            exit();
         }
     } else {
         throw new ClientException("Incorrect post type", "/account");

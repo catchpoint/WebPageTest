@@ -306,4 +306,91 @@ final class AccountTest extends TestCase
         $actual = Account::validateChangePassword($body);
         $this->assertEquals($expected, $actual);
     }
+
+    public function testChangePassword(): void
+    {
+        $new_pw = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+        $current_pw = 'WiJtGMAqsgxE!4.@qCVnoiBQN';
+
+        $body = new stdClass();
+        $body->new_password = $new_pw;
+        $body->current_password = $current_pw;
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('changePassword')
+          ->with($new_pw, $current_pw);
+        $req->setClient($client);
+
+        $this->assertEquals("http://127.0.0.2/account", Account::changePassword($req, $body));
+    }
+
+    public function testChangePasswordError(): void
+    {
+        $new_pw = 'hAuw@ViEja*DA_MHo4mCxW@ys';
+        $current_pw = 'WiJtGMAqsgxE!4.@qCVnoiBQN';
+
+        $body = new stdClass();
+        $body->new_password = $new_pw;
+        $body->current_password = $current_pw;
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->getMockBuilder(CPClient::class)
+                     ->disableOriginalConstructor()
+                     ->disableOriginalClone()
+                     ->disableArgumentCloning()
+                     ->disallowMockingUnknownTypes()
+                     ->getMock();
+
+        $client = $this->createMock(CPClient::class);
+        $client->method('changePassword')
+          ->willThrowException(new \Exception('Password failed to change'));
+        $req->setClient($client);
+
+        $this->expectException(ClientException::class);
+        Account::changePassword($req, $body);
+    }
+
+    public function testValidateSubscribeToAccount(): void
+    {
+        $post = [
+            'nonce' => 'abcdef',
+            'plan' => 'ap1',
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street-address' => '123 Main St',
+            'zipcode' => '12345-123'
+        ];
+
+        $expected = new stdClass();
+        $expected->nonce = 'abcdef';
+        $expected->plan = 'ap1';
+        $expected->city = 'New York';
+        $expected->country = 'US';
+        $expected->state = 'NY';
+        $expected->street_address = '123 Main St';
+        $expected->zipcode = '12345-123';
+
+        $actual = Account::validateSubscribeToAccount($post);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testValidateSubscribeToAccountError(): void
+    {
+        $post = [
+            'nonce' => 'abcdef',
+            'plan' => 'ap1',
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'zipcode' => '12345-123'
+        ];
+
+        $this->expectException(ClientException::class);
+        Account::validateSubscribeToAccount($post);
+    }
 }
