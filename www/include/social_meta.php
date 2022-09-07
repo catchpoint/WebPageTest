@@ -9,7 +9,7 @@
     $screenshotURI = CreateUrlVariation($pageURI, "screenshot=1");
 
     $d = new DateTime();
-    $socialImage = isset($useScreenshot) ? "https://wpt-screenshot.netlify.app/" . urlencode($screenshotURI) . "/opengraph/" . $d->format('Ymdd') : "/images/social-logo.jpg";
+    $socialImage = isset($useScreenshot) ? "https://wpt-screenshot.netlify.app/" . urlencode($screenshotURI) . "/opengraph/" . $d->format('Ymdd') : "/assets/images/social-logo.jpg";
     $socialTitle = isset($socialTitle) ? $socialTitle : "WebPageTest";
     $socialDesc = isset($socialDesc) ? $socialDesc : "View this on WebPageTest.org...";
     $emailSubject = "View this on WebPageTest!";
