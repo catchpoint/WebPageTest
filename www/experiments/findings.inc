@@ -131,9 +131,9 @@ if ($experiment) {
 
 if ($ttfbDiffNotable) {
     if ($removeTTFBfromDiffs) {
-        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> This comparison view is omitting TTFB to adjust for network variance. <a href="' . $experimentResultsHref . '">View this comparison with TTFB differences visible.</a>';
+        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> The metric comparisons above exclude differences in response time that exist between the median experiment and control runs of this experiment. <a href="' . $experimentResultsHref . '">View this comparison with TTFB differences included</a>.';
     } else {
-        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> This experiment had a ' . $ttfbDiffClean . 's difference in response time between the median experiment and control runs, which can make other metric changes seem more significant than they really are. To examine the variability of response times in all test runs, you can <a href="/graph_page_data.php?tests='.$tests[0]["id"]. ',' .$tests[1]['id'].'&medianMetric=ttfb&control=1">plot full results</a>. Or, you can <a href="' . $experimentResultsHref . '&ignoreTTFB">view this comparison with TTFB removed from later metric comparisons</a>.';
+        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> This experiment had a ' . $ttfbDiffClean . 's difference in response time between the median experiment and control runs, which can make other metric changes seem more significant than they really are. To examine the variability of response times in all test runs, you can <a href="/graph_page_data.php?tests='.$tests[0]["id"]. ',' .$tests[1]['id'].'&medianMetric=ttfb&control=1">plot full results</a>. Or, you can <a href="' . $experimentResultsHref . '&ignoreTTFB">view this comparison with TTFB removed from relevant metric comparisons</a>.';
     }
 }
 
