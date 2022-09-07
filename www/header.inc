@@ -81,8 +81,8 @@ if (!defined('EMBED')) {
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
 if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED')) {
-    // make sure the test is actually complete
-    if (isset($test['test']['completeTime']) || file_exists("$testPath/test.complete")) {
+    // make sure the test is actually complete and the second check can be applied to non-compare pages
+    if (isset($test['test']['completeTime']) || (!isset($tests) && file_exists("$testPath/test.complete") )) {
         if (!isset($testResults) || !isset($testInfo)) {
             $testInfo = TestInfo::fromFiles($testPath);
             $testResults = TestResults::fromFiles($testInfo);
@@ -115,16 +115,16 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 || !$url ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '', FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
-            echo "<ul class=\"header_data_urltime\">";
+        echo "<ul class=\"header_data_urltime\">";
 
-            echo "<li><strong>URL: </strong>";
+        echo "<li><strong>URL: </strong>";
         if (GetSetting('nolinks')) {
             echo "<span class=\"page-tested\">$shortUrl</span>";
         } else {
             echo "<a class=\"url\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
         }
-            echo "</li>";
-            echo "<li><strong>Date: </strong>";
+        echo "</li>";
+        echo "<li><strong>Date: </strong>";
 
         if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started']))) {
             if (isset($test['testinfo']['completed'])) {
@@ -136,9 +136,9 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $time = strftime('%x %X', $completed);
             echo "<span class=\"jsdate\" date=\"$timeStr\">$time</span>\n";
         }
-            echo "</li></ul>";
+        echo "</li></ul>";
 
-            // Note: "Comprehensive" if it's multi device?
+        // Note: "Comprehensive" if it's multi device?
         if ($experiment) {
             echo "<h1 class=\"result_hed-pro\"><img src=\"/assets/images/wpt-logo-pro.svg\" alt=\"WebPageTest Pro\"> Experiment</h1>";
         } else {
@@ -146,137 +146,137 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         }
 
 
-            $flags = array(
-                    'ec2-us-east-1' => 'US',
-                    'gce-us-west3' => 'US',
-                    'ec2-us-west-1' => 'US',
-                    'ec2-ca-central-1' => 'CA',
-                    'ec2-sa-east-1' => 'BR',
-                    'ec2-eu-west-1' => 'IE',
-                    'London_EC2_Loc' => 'GB',
-                    'ec2-eu-west-3' => 'FR',
-                    'gce-europe-west4' => 'NL',
-                    'ec2-eu-central-1' => 'DE',
-                    'ec2-eu-south-1' => 'IT',
-                    'ec2-eu-north-1' => 'SE',
-                    'ec2-af-south-1' => 'ZA',
-                    'ec2-me-south-1' => 'BS',
-                    'azure-uae-north' => 'AE',
-                    'ap-south-1' => 'IN',
-                    'tencent-bangkok' => 'TH',
-                    'ec2-ap-southeast-1' => 'SG',
-                    'gce-asia-southeast2' => 'MC',
-                    'ec2-ap-east-1' => 'HK',
-                    'tencent-shanghai' => 'CN',
-                    'ec2-cn-north-1' => 'CN',
-                    'tencent-beijing' => 'CN',
-                    'ec2-cn-northwest-1' =>  'CN',
-                    'ec2-ap-northeast-2' =>  'KR',
-                    'ec2-ap-northeast-1' => 'JP',
-                    'ec2-ap-northeast-3' => 'JP',
-                    'azure-australia-southeast' => 'AU',
-                    'ec2-ap-southeast-2' => 'AU',
-                    'LosAngeles_M1MacMini' => 'US',
-                    'NewYork_M1MacMini' => 'US',
-                    'LosAngeles_M1MacMini' => 'US',
-                    'NYC_Android' => 'US',
-                    'Dulles_Android' => 'US'
-                );
+        $flags = array(
+                'ec2-us-east-1' => 'US',
+                'gce-us-west3' => 'US',
+                'ec2-us-west-1' => 'US',
+                'ec2-ca-central-1' => 'CA',
+                'ec2-sa-east-1' => 'BR',
+                'ec2-eu-west-1' => 'IE',
+                'London_EC2_Loc' => 'GB',
+                'ec2-eu-west-3' => 'FR',
+                'gce-europe-west4' => 'NL',
+                'ec2-eu-central-1' => 'DE',
+                'ec2-eu-south-1' => 'IT',
+                'ec2-eu-north-1' => 'SE',
+                'ec2-af-south-1' => 'ZA',
+                'ec2-me-south-1' => 'BS',
+                'azure-uae-north' => 'AE',
+                'ap-south-1' => 'IN',
+                'tencent-bangkok' => 'TH',
+                'ec2-ap-southeast-1' => 'SG',
+                'gce-asia-southeast2' => 'MC',
+                'ec2-ap-east-1' => 'HK',
+                'tencent-shanghai' => 'CN',
+                'ec2-cn-north-1' => 'CN',
+                'tencent-beijing' => 'CN',
+                'ec2-cn-northwest-1' =>  'CN',
+                'ec2-ap-northeast-2' =>  'KR',
+                'ec2-ap-northeast-1' => 'JP',
+                'ec2-ap-northeast-3' => 'JP',
+                'azure-australia-southeast' => 'AU',
+                'ec2-ap-southeast-2' => 'AU',
+                'LosAngeles_M1MacMini' => 'US',
+                'NewYork_M1MacMini' => 'US',
+                'LosAngeles_M1MacMini' => 'US',
+                'NYC_Android' => 'US',
+                'Dulles_Android' => 'US'
+            );
 
-            $locationSimple = explode("-", $test['testinfo']['locationLabel'])[ 0 ];
-            $connectivity = $test['test']['connectivity'];
+        $locationSimple = explode("-", $test['testinfo']['locationLabel'])[ 0 ];
+        $connectivity = $test['test']['connectivity'];
 
-            $browser = $testResults->getBrowser();
-                //check to make sure we have a browser icon
-            if (isset($browser) && file_exists(__DIR__ . '/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
-                //exists so let's use it
-                $browserIcon = true;
-            } else {
-                $browserIcon = false;
-            }
+        $browser = $testResults->getBrowser();
+            //check to make sure we have a browser icon
+        if (isset($browser) && file_exists(__DIR__ . '/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
+            //exists so let's use it
+            $browserIcon = true;
+        } else {
+            $browserIcon = false;
+        }
 
-            if ($test['testinfo']['mobile'] == 1) {
-                $device = strtolower($test['testinfo']['mobileDevice']);
-            } else {
-                $device = "Desktop";
-            }
+        if ($test['testinfo']['mobile'] == 1) {
+            $device = strtolower($test['testinfo']['mobileDevice']);
+        } else {
+            $device = "Desktop";
+        }
 
-            ?>
+        ?>
 
             <div class="test_presets">
                 <ul>
-                    <?php
+                <?php
 
-                    echo '<li>';
+                echo '<li>';
 
-                    if ($test['testinfo'] && $test['testinfo']['label']) {
-                        $labelClass = "test_presets_tag-label";
-                        if ($experiment) {
-                            $labelClass .= " test_presets_tag-experiment";
-                        }
-                        echo '<span class="' . $labelClass . '" title="' . $test['testinfo']['label'] . '">' . $test['testinfo']['label'] . '</span>';
-                    }
-
-
-                    echo '<b>Settings:</b> <strong>' . $device . '</strong>';
-
-
-                    //browser and version
-                    if (isset($browser)) {
-                        echo '<span class="test_presets_tag">';
-                        if ($browserIcon) {
-                            echo '<img src="/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg" alt="' . $browser->getName() . '">';
-                        } elseif ($browser->getName()) {
-                            echo $browser->getName();
-                        }
-                        if ($browser->getVersion()) {
-                            echo 'v' . strtok($browser->getVersion(), '.');
-                        }
-                        echo '</span>';
-                    }
-
-                    //connectivity
-                    echo '<span class="test_presets_tag">' . $connectivity . '</span>';
-                    //location
-                    echo '<span class="test_presets_tag">';
-
-                    if ($flags[$test['test']['loc']]) {
-                        echo '<img src="/assets/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
-                    }
-
-                    echo $locationSimple;
-                    echo '</span>';
-
-
-
-
-
-                    // TODO what is show sensitive?
-                    //$show_sensitive = false;
-                    echo '<details class="test_presets_more"><summary><span class="test_presets_tag">More</span></summary><div class="details_contain">';
-                    echo GetTestInfoHtml();
+                if ($test['testinfo'] && $test['testinfo']['label']) {
+                    $labelClass = "test_presets_tag-label";
                     if ($experiment) {
-                        $experimentData = $metaInfo['experiment'];
-                        echo "<p class=\"meta_exp_applied_hed\">Experiment Info:</p>";
-                        echo '<ul class="meta_exp_applied_list">';
-                        include __DIR__ . '/experiments/list_applied.inc';
-                        echo '</ul>';
-                        echo "<p>Related Links: <a href=\"" . $controlTestHref . "\">Original (Control Run)</a>, <a href=\"" . $experimentOriginalTestHref . "\">Original Test</a></p><ul>";
+                        $labelClass .= " test_presets_tag-experiment";
                     }
-                    echo '</div></details>';
+                    echo '<span class="' . $labelClass . '" title="' . $test['testinfo']['label'] . '">' . $test['testinfo']['label'] . '</span>';
+                }
 
-                    if (isset($socialImage)) {
-                        echo "<details class=\"test_presets_more test_presets_more-share\"><summary><span class=\"test_presets_tag\">Share</span></summary>
+
+                echo '<b>Settings:</b> <strong>' . $device . '</strong>';
+
+
+                //browser and version
+                if (isset($browser)) {
+                    echo '<span class="test_presets_tag">';
+                    if ($browserIcon) {
+                        echo '<img src="/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg" alt="' . $browser->getName() . '">';
+                    } elseif ($browser->getName()) {
+                        echo $browser->getName();
+                    }
+                    if ($browser->getVersion()) {
+                        echo 'v' . strtok($browser->getVersion(), '.');
+                    }
+                    echo '</span>';
+                }
+
+                //connectivity
+                echo '<span class="test_presets_tag">' . $connectivity . '</span>';
+                //location
+                echo '<span class="test_presets_tag">';
+
+                if ($flags[$test['test']['loc']]) {
+                    echo '<img src="/assets/images/test_icons/flags/' . $flags[$test["test"]["loc"]] . '.svg" alt="">';
+                }
+
+                echo $locationSimple;
+                echo '</span>';
+
+
+
+
+
+                // TODO what is show sensitive?
+                //$show_sensitive = false;
+                echo '<details class="test_presets_more"><summary><span class="test_presets_tag">More</span></summary><div class="details_contain">';
+                echo GetTestInfoHtml();
+                if ($experiment) {
+                    $experimentData = $metaInfo['experiment'];
+                    echo "<p class=\"meta_exp_applied_hed\">Experiment Info:</p>";
+                    echo '<ul class="meta_exp_applied_list">';
+                    include __DIR__ . '/experiments/list_applied.inc';
+                    echo '</ul>';
+                    echo "<p>Related Links: <a href=\"" . $controlTestHref . "\">Original (Control Run)</a>, <a href=\"" . $experimentOriginalTestHref . "\">Original Test</a></p><ul>";
+                }
+                echo '</div></details>';
+
+                if (isset($socialImage)) {
+                    echo "<details class=\"test_presets_more test_presets_more-share\"><summary><span class=\"test_presets_tag\">Share</span></summary>
                         <div class=\"details_contain\">
                             <ul>
                             <li><a href=\"" . $emailURI . "\">Share via Email</a></li>"
-                            . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Share on Twitter</a></li>" : "")
-                            . "<li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">View Formatted Screenshot Image</a></li>"
-                            . "</ul>
+                        . (isset($tweetURI) ? "<li><a href=\"" . $tweetURI . "\">Share on Twitter</a></li>" : "")
+                        . "<li><a href=\"" . $socialImage . "\" download=\"WebPageTest Pro Experiment Results\">View Formatted Screenshot Image</a></li>"
+                        . "</ul>
                         </div></details>";
-                    }
+                }
 
-                    ?>
+                ?>
                     </li>
 
                 </ul>
