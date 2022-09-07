@@ -131,9 +131,9 @@ if ($experiment) {
 
 if ($ttfbDiffNotable) {
     if ($removeTTFBfromDiffs) {
-        echo "<p class=\"ttfb_experiment_warning\"><strong>Note:</strong> This comparison view is omitting TTFB to adjust for network variance. <a href=\"" . $experimentResultsHref . "\">View this comparison with TTFB differences visible.</a>";
+        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> This comparison view is omitting TTFB to adjust for network variance. <a href="' . $experimentResultsHref . '">View this comparison with TTFB differences visible.</a>';
     } else {
-        echo "<p class=\"ttfb_experiment_warning\"><strong>Note:</strong> We noticed a " . $ttfbDiffClean . "s difference in response time between the experiment and control runs, which are usually unrelated to the experiment and can might make other metric changes seem more significant than they really are. <a href=\"" . $experimentResultsHref . "&ignoreTTFB\">View this comparison with TTFB differences removed</a>";
+        echo '<p class="ttfb_experiment_warning"><strong>Note:</strong> We noticed a ' . $ttfbDiffClean . 's difference in response time between the experiment and control runs, which can make other metric changes seem more significant than they really are. <a href="' . $experimentResultsHref . '&ignoreTTFB">View this comparison with TTFB differences removed</a>';
     }
 }
 
