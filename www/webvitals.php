@@ -42,7 +42,7 @@ $profiles = parse_ini_file($profile_file, true);
     </head>
     <body class="home">
             <?php
-            $tab = 'Home';
+            $tab = 'Start Test';
             include 'header.inc';
             if (!$headless) {
                 ?>
