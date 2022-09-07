@@ -22,18 +22,17 @@ if ($experiment) {
     $blockingReqsDiff = count($controlBlockingReqs) - count($experimentBlockingReqs);
 
 
-
+    // item args: metric key name, readable name, units, optional comparative terms if not faster/slower, available for optional ttfb removal
     $diffMetrics = array(
-        //array( "TTFB", "Time to First Byte", "s"), 
-        array("render", "Start Render", "s"),
-        array("firstContentfulPaint", "First Contentful Paint", "s"),
-        array("SpeedIndex", "Speed Index", "s"),
-        array("chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "s"),
-        array("chromeUserTiming.CumulativeLayoutShift", "Cumulative Layout Shift", "", array("Better", "Worse")),
-        array("TotalBlockingTime", "Total Blocking Time", "s"),
-        array("visualComplete", "Visual Complete", "s"),
-        array("fullyLoaded", "Fully Loaded", "s"),
-        array("BytesIn", "Total Bytes", "kb", array("Lighter", "Heavier"))
+        array("render", "Start Render", "s", null, true),
+        array("firstContentfulPaint", "First Contentful Paint", "s", null, true),
+        array("SpeedIndex", "Speed Index", "s", null, true),
+        array("chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "s", null, true),
+        array("chromeUserTiming.CumulativeLayoutShift", "Cumulative Layout Shift", "", array("Better", "Worse"), false),
+        array("TotalBlockingTime", "Total Blocking Time", "s", null, false),
+        array("visualComplete", "Visual Complete", "s", null, true),
+        array("fullyLoaded", "Fully Loaded", "s", null, true),
+        array("BytesIn", "Total Bytes", "kb", array("Lighter", "Heavier"), false)
     );
 
 
@@ -48,25 +47,6 @@ if ($experiment) {
     $removeTTFBfromDiffs = isset($_GET['ignoreTTFB']);
 
 
-    // check if metric might benefit from TTFB removal
-    function ignoreTTFBforMetric($metric)
-    {
-        global $removeTTFBfromDiffs;
-        if (
-            $removeTTFBfromDiffs
-            && ($metric === "render"
-                || $metric === "firstContentfulPaint"
-                || $metric === "SpeedIndex"
-                || $metric === "chromeUserTiming.LargestContentfulPaint"
-                || $metric === "visualComplete"
-                || $metric === "fullyLoaded")
-        ) {
-            return true;
-        }
-        return false;
-    }
-
-
 ?>
     <div class="scrollableTable">
         <table id="tableResults" class="pretty">
@@ -76,7 +56,7 @@ if ($experiment) {
                     foreach ($diffMetrics as $metric) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
-                        if (ignoreTTFBforMetric($metric[0])) {
+                        if ($ttfbDiffNotable && $removeTTFBfromDiffs && $metric[4]) {
                             $experimentMetric = $experimentMetric - $experimentTTFB;
                             $controlMetric = $controlMetric - $controlTTFB;
                         }
@@ -100,7 +80,7 @@ if ($experiment) {
                     foreach ($diffMetrics as $metric) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
-                        if (ignoreTTFBforMetric($metric[0])) {
+                        if ($ttfbDiffNotable && $removeTTFBfromDiffs && $metric[4]) {
                             $experimentMetric = $experimentMetric - $experimentTTFB;
                             $controlMetric = $controlMetric - $controlTTFB;
                         }
