@@ -281,6 +281,15 @@ details.metrics_shown summary::-webkit-details-marker {
   margin-bottom: 1.5rem;
 }
 
+.compare-experiment p.ttfb_experiment_warning {
+    font-size: .9rem;
+    padding: 1em;
+    border: 1px solid #e6b57e;
+    background: #fff6df;
+    max-width: none;
+    border-radius: 0.5em;
+}
+
 .opportunities_summary .extended {
   white-space: break-spaces;
 }
