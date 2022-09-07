@@ -161,7 +161,7 @@ $profiles = parse_ini_file($profile_file, true);
         var wptStorage = window.localStorage || {};
 
         var profileChanged = function() {
-          var sel = document.getElementById("profile");
+          var sel = document.getElementById("webvital_profile");
           var txt = document.getElementById("description");
           var profile = sel.options[sel.selectedIndex].value;
           var description = "";
