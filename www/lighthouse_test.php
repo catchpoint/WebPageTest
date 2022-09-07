@@ -38,8 +38,9 @@ if (file_exists('./settings/server/lighthouse.ini')) {
         #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>
     </head>
-    <body class="home">
-            <?php
+    <body class="home feature-pro">
+       <?php
+            $tab = 'Start Test';
             include 'header.inc';
             if (!$headless) {
                 ?>

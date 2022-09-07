@@ -30,9 +30,9 @@ if (is_file($profile_file)) {
         <?php $gaTemplate = 'Visual Test';
         include('head.inc'); ?>
     </head>
-    <body class="home">
-            <?php
-            $tab = 'Home';
+    <body class="home feature-pro">
+       <?php
+            $tab = 'Start Test';
             include 'header.inc';
             ?>
 
