@@ -636,7 +636,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             Add custom headers to all network requests emitted from the browser
                                                             (type in or read <label for="customHeaders_file" class="linklike">from a text file</label>)
                                                         </small>
-                                                        <input type="file" id="customHeaders_file" multiple accept="text/*" class="a11y-hidden">
+                                                        <input type="file" id="customHeaders_file" accept="text/*" class="a11y-hidden">
                                                         <script>
                                                             document.addEventListener('DOMContentLoaded', () => initFileReader('customHeaders_file', 'customHeaders'));
                                                         </script>
@@ -647,7 +647,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         <small>JavaScript to run after the document has started loading
                                                             (type in or read <label for="injectScript_file" class="linklike">from a text file</label>)
                                                         </small>
-                                                        <input type="file" id="injectScript_file" multiple accept="text/*" class="a11y-hidden">
+                                                        <input type="file" id="injectScript_file" accept="text/*" class="a11y-hidden">
                                                         <script>
                                                             document.addEventListener('DOMContentLoaded', () => initFileReader('injectScript_file', 'injectScript'));
                                                         </script>
@@ -829,7 +829,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <small>
                                                         (or read it <label for="script_file" class="linklike">from a text file</label>)
                                                     </small>
-                                                    <input type="file" id="script_file" multiple accept="text/*" class="a11y-hidden">
+                                                    <input type="file" id="script_file" accept="text/*" class="a11y-hidden">
                                                     <script>
                                                         document.addEventListener('DOMContentLoaded', () => initFileReader('script_file', 'enter_script'));
                                                     </script>
@@ -873,7 +873,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <small>Space-separated list
                                                     (type in or read <label for="block_requests_containing_file" class="linklike">from a text file</label>)
                                                 </small>
-                                                <input type="file" id="block_requests_containing_file" multiple accept="text/*" class="a11y-hidden">
+                                                <input type="file" id="block_requests_containing_file" accept="text/*" class="a11y-hidden">
                                                 <script>
                                                     document.addEventListener('DOMContentLoaded', () => initFileReader('block_requests_containing_file', 'block_requests_containing'));
                                                 </script>
@@ -884,7 +884,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <small>Space-separated list of domains
                                                     (type in or read <label for="block_domains_file" class="linklike">from a text file</label>)
                                                 </small>
-                                                <input type="file" id="block_domains_file" multiple accept="text/*" class="a11y-hidden">
+                                                <input type="file" id="block_domains_file" accept="text/*" class="a11y-hidden">
                                                 <script>
                                                     document.addEventListener('DOMContentLoaded', () => initFileReader('block_domains_file', 'block_domains'));
                                                 </script>
@@ -903,7 +903,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <small>
                                                     Type in or read <label for="spof_hosts_file" class="linklike">from a text file</label>
                                                 </small>
-                                                <input type="file" id="spof_hosts_file" multiple accept="text/*" class="a11y-hidden">
+                                                <input type="file" id="spof_hosts_file" accept="text/*" class="a11y-hidden">
                                                 <script>
                                                     document.addEventListener('DOMContentLoaded', () => initFileReader('spof_hosts_file', 'spof_hosts'));
                                                 </script>
@@ -924,7 +924,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <small>
                                                         Type in or read <label for="custom_metrics_file" class="linklike">from a text file</label>
                                                     </small>
-                                                    <input type="file" id="custom_metrics_file" multiple accept="text/*" class="a11y-hidden">
+                                                    <input type="file" id="custom_metrics_file" accept="text/*" class="a11y-hidden">
                                                     <script>
                                                         document.addEventListener('DOMContentLoaded', () => initFileReader('custom_metrics_file', 'custom_metrics'));
                                                     </script>
