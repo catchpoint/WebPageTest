@@ -40,7 +40,7 @@ $profiles = parse_ini_file($profile_file, true);
 
         </style>
     </head>
-    <body class="home">
+    <body class="home feature-pro">
             <?php
             $tab = 'Start Test';
             include 'header.inc';
