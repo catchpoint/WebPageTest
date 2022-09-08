@@ -791,7 +791,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <?php
                                                 $extensions = IniReader::getExtensions();
                                                 if ($extensions) {
-                                                ?>
+                                                    ?>
                                                 <li>
                                                     <label for="extensions">
                                                         Enable extension<br>
@@ -799,13 +799,13 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <select name="extensions" id="extensions">
                                                         <option>Pick an extension...</option>
                                                         <?php
-                                                        foreach($extensions as $id => $name) {
-                                                            echo '<option value="'.$id.'">' . htmlspecialchars($name) . '</option>';
+                                                        foreach ($extensions as $id => $name) {
+                                                            echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
                                                         }
                                                         ?>
                                                     <select>
                                                 </li>
-                                                <?php
+                                                    <?php
                                                 }
                                                 ?>
                                             </ul>
