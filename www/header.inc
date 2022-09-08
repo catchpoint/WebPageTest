@@ -90,8 +90,7 @@ if( !strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
     // make sure the test is actually complete
-    if(isset($test['test']['completeTime']))
-    {
+        if (isset($test['test']['completeTime']) || (!isset($tests) && file_exists("$testPath/test.complete") ) ) {
         if (!isset($testResults) || !isset($testInfo)) {
           $testInfo = TestInfo::fromFiles($testPath);
           $testResults = TestResults::fromFiles($testInfo);

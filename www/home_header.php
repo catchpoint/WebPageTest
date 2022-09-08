@@ -23,6 +23,17 @@
 						<img src="/images/wpt_home_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
 					</div>
 				</div>
+				<div class="home_feature_hed home_feature_hed-lfwp">
+					<div class="home_feature_hed_text">
+						<h1 class="attention"><span class="home_feature_hed_text_leadin">Lightning-Fast </span> <strong>Web Performance</strong></h1>
+						<p><b class="flag">Online Course</b>Learn to analyze site performance, fix issues, monitor for regressions, and deliver fast, responsive designs from the start.</p>
+						<a class="pill" href="/learn/lightning-fast-web-performance/" style="padding: .9em 1.5em;">Free! Start Course Now &gt;&gt;</a>
+					</div>
+					<div class="home_feature_hed_visual">
+					<iframe src="https://player.vimeo.com/video/735047569?h=9f45d3647f&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Course Intro"></iframe>
+
+					</div>
+				</div>
 				<div class="home_feature_hed home_feature_hed-pro">
 					<div class="home_feature_hed_text">
 						<h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
@@ -38,6 +49,8 @@
 							<button class="play" id="playbtn">Play/Pause Video</button>
 					</div>
 				</div>
+
+				
 			<?php } ?>
 		</div>
 
@@ -51,9 +64,17 @@
     </div>
 
     <script>
-        setInterval(() => {
-            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
-                document.body.classList.toggle("feature-pro");
+        let featureSlides = setInterval(() => {
+            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
+				if( document.body.classList.contains("feature-pro") ){
+					document.body.classList.remove("feature-pro");
+					document.body.classList.add("feature-lfwp");
+				} else if( document.body.classList.contains("feature-lfwp") ){
+					document.body.classList.remove("feature-lfwp");
+				} else {
+					document.body.classList.add("feature-pro");
+				}
+				
             }
         },8000);
 
@@ -92,6 +113,8 @@
 						intro.pause();
 					}
 				});
+
+				
 				
 				document.body.addEventListener("mousedown",function( e ){
 					if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){

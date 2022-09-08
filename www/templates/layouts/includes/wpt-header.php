@@ -95,12 +95,12 @@ if ($id) {
 
 
 
-            <li><a href="/signup"><span>Pricing</span></a></li>
+            <?= addTab('Pricing', '/signup'); ?>
 
 
             <li class="wptheader_nav_menu">
                 <details>
-                    <summary><span>Resources</span></summary>
+                    <summary <?php if(isset($tab) && !strcasecmp('Resources', $tab) ) { echo 'class="wptheader-current"'; } ?>><span>Resources</span></summary>
                     <div class="wptheader_nav_menu_content">
                         <div class="wptheader_nav_menu_section">
                             <ul>
@@ -111,7 +111,12 @@ if ($id) {
                                 <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
 <?php endif; //(Util::getSetting('forums_url')): ?>
                             </ul>
+                            <a href="/learn/lightning-fast-web-performance/" class="banner_lfwp">
+                                <span class="banner_lfwp_line">Lightning-Fast <b>Web Performance</b></span>
+                                <span class="banner_lfwp_line"><b class="banner_lfwp_flag">Online Course</b> <em class="banner_lfwp_pill">Free! Start Now</em></span>
+                            </a>
                         </div>
+                            
                         <div class="wptheader_nav_menu_section">
                             <p class="wptheader_nav_cta">Find us on...</p>
                             <ul class="wptheader_nav_menu_linkgrid">
