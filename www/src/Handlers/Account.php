@@ -18,11 +18,14 @@ use WebPageTest\Template;
 
 class Account
 {
-    /** Upgrading plans from Account  */
-    // Validate that a plan is selected
-    //
-    // #[ValidationMethod]
-    // #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+    /* Validate that a plan is selected
+     *
+     * #[ValidationMethod]
+     * #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+     *
+     *  @param array{plan: string} $post_body
+     *  @return object{plan: string} $vars
+     */
     public static function validatePlanUpgrade(array $post_body): object
     {
         if (isset($post_body['plan'])) {
@@ -34,10 +37,15 @@ class Account
         }
     }
 
-    // Pass the plan id to the plan summary page
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+    /* Pass the plan id to the plan summary page by setting a cookie to be retrieved
+    *
+    *  #[HandlerMethod]
+    *  #[Route(Http::POST, '/account', 'upgrade-plan-1')]
+    *
+    *  @param WebPageTest\RequestContext $request_context
+    *  @param object{plan: string} $body
+    *  @return string $redirect_uri
+    */
     public static function postPlanUpgrade(RequestContext $request_context, object $body): string
     {
         $host = $request_context->getHost();
@@ -47,10 +55,14 @@ class Account
         return $redirect_uri;
     }
 
-    // validate PostUpdatePlanSummary
-    //
-    // #[ValidatorMethod]
-    // #[Route(Http::POST, '/account', 'upgrade-plan-2')]
+    /* validate PostUpdatePlanSummary
+     *
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'upgrade-plan-2')]
+     *
+     *  @param array{plan: string, subscription_id: string, is_upgrade: string} $post_body
+     *  @return object{plan: string, subscription_id: string, is_upgrade: bool} $body
+     */
     public static function validatePostUpdatePlanSummary(array $post_body): object
     {
         $body = new stdClass();
@@ -60,10 +72,15 @@ class Account
         return $body;
     }
 
-    // Submit the plan upgrade
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'upgrade-plan-2')]
+    /* Submit the plan upgrade
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'upgrade-plan-2')]
+     *
+     *  @param WebPageTest\RequestContext $request_context
+     *  @param object{plan: string, subscription_id: string, is_upgrade: bool} $body
+     *  @return string $redirect_uri
+     */
     public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
     {
         $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
@@ -75,10 +92,14 @@ class Account
     }
 
 
-    // Validate change info
-    //
-    // #[ValidatorMethod]
-    // #[Route(Http::POST, '/account', 'change-info')]
+    /* Validate change info
+     *
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'change-info')]
+     *
+     *  @param array{id: string, first-name: string, last-name: string, company-name: ?string} $post_body
+     *  @return object{id: string, first_name: string, last_name: string, company_name: ?string} $body
+     */
     public static function validateChangeContactInfo(array $post_body): object
     {
         $body = new stdClass();
@@ -124,10 +145,15 @@ class Account
         return $body;
     }
 
-    // Change contact info
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'change-info')]
+    /* Change contact info
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'change-info')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param object{first_name: string, last_name: string, company_name: ?string} $body
+     * @return string $redirect_uri
+     */
     public static function changeContactInfo(RequestContext $request_context, object $body): string
     {
         $email = $request_context->getUser()->getEmail();
