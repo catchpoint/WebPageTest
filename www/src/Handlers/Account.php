@@ -222,10 +222,16 @@ class Account
         return $body;
     }
 
-    // Change password
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'password')]
+    /* Change password
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'password')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param object{new_password: string, current_password: string} $body
+     *
+     * @return string $redirect_uri
+     */
     public static function changePassword(RequestContext $request_context, object $body): string
     {
         try {
@@ -642,13 +648,15 @@ class Account
                     }
                     break;
                 } else {
+                  //TODO redirect instead
                     echo $tpl->render('plans/upgrade-plan', $results);
                     break;
                 }
             default:
-                $nextPlan = ($is_paid && !$is_wpt_enterprise) ? $customer->getNextWptPlanId() : null;
-                if (isset($nextPlan)) {
-                    $results['upcoming_plan'] =  Util::getPlanFromArray($nextPlan, $plans);
+                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$customer->isCanceled());
+                $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
+                if (isset($next_plan)) {
+                    $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $plans);
                 }
                 echo $tpl->render('my-account', $results);
                 break;
