@@ -60,19 +60,19 @@
     </div>
 
     <script>
-        // let featureSlides = setInterval(() => {
-        //     if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
-		// 		if( document.body.classList.contains("feature-pro") ){
-		// 			document.body.classList.remove("feature-pro");
-		// 			document.body.classList.add("feature-lfwp");
-		// 		} else if( document.body.classList.contains("feature-lfwp") ){
-		// 			document.body.classList.remove("feature-lfwp");
-		// 		} else {
-		// 			document.body.classList.add("feature-pro");
-		// 		}
+        let featureSlides = setInterval(() => {
+            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
+				if( document.body.classList.contains("feature-pro") ){
+					document.body.classList.remove("feature-pro");
+					document.body.classList.add("feature-lfwp");
+				} else if( document.body.classList.contains("feature-lfwp") ){
+					document.body.classList.remove("feature-lfwp");
+				} else {
+					document.body.classList.add("feature-pro");
+				}
 				
-        //     }
-        // },8000);
+            }
+        },8000);
 
 
         (function(){
