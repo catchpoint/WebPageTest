@@ -46,30 +46,11 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == 'password') {
-        try {
-            $body = AccountHandler::validateChangePassword($_POST);
-            $redirect_uri = AccountHandler::changePassword($request_context, $body);
-            $successMessage = array(
-                'type' => 'success',
-                'text' => 'Your password has been updated!'
-            );
-            Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $errorMessage = array(
-                'type' => 'error',
-                'text' => 'Password update failed'
-            );
-            Util::setBannerMessage('form', $errorMessage);
-            $host = Util::getSetting('host');
-            $protocol = $request_context->getUrlProtocol();
-            $redirect_uri = "{$protocol}://{$host}/account";
-            header("Location: {$redirect_uri}");
-            exit();
-        }
-    } elseif ($type == "account-signup") {
+        $body = AccountHandler::validateChangePassword($_POST);
+        $redirect_uri = AccountHandler::changePassword($request_context, $body);
+        header("Location: {$redirect_uri}");
+        exit();
+    } elseif ($type == "account-signp") {
         $body = AccountHandler::validateSubscribeToAccount($_POST);
         $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
 
@@ -105,29 +86,11 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "upgrade-plan-2") {
-        try {
-            $body = AccountHandler::validatePostUpdatePlanSummary($_POST);
-            $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
-            $successMessage = array(
-                'type' => 'success',
-                'text' => 'Your plan as been successfully updated! '
-            );
-            Util::setBannerMessage('form', $successMessage);
-            header("Location: {$redirect_uri}");
-            exit();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $errorMessage = array(
-                'type' => 'error',
-                'text' => $e->getMessage()
-            );
-            Util::setBannerMessage('form', $errorMessage);
-            $host = Util::getSetting('host');
-            $protocol = $request_context->getUrlProtocol();
-            $redirect_uri = "{$protocol}://{$host}/account";
-            header("Location: {$redirect_uri}");
-            exit();
-        }
+        $body = AccountHandler::validatePostUpdatePlanSummary($_POST);
+        $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "resend-verification-email") {
         try {
             $redirect_uri = AccountHandler::resendEmailVerification($request_context);

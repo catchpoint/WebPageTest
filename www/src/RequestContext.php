@@ -8,6 +8,7 @@ use WebPageTest\User;
 use WebPageTest\CPClient;
 use WebPageTest\CPSignupClient;
 use WebPageTest\Util;
+use WebPageTest\BannerMessageManager;
 
 class RequestContext
 {
@@ -20,6 +21,7 @@ class RequestContext
     private string $request_method;
     private string $request_uri;
     private string $host;
+    private ?BannerMessageManager $banner_message_manager;
 
     public function __construct(array $global_request, array $server = [], array $options = [])
     {
@@ -27,6 +29,7 @@ class RequestContext
         $this->user = null;
         $this->client = null;
         $this->signup_client = null;
+        $this->banner_message_manager = null;
 
         $https = isset($server['HTTPS']) && $server['HTTPS'] == 'on';
         $httpssl = isset($server['HTTP_SSL']) && $server['HTTP_SSL'] == 'On';
@@ -78,6 +81,18 @@ class RequestContext
     {
         if (isset($client)) {
             $this->signup_client = $client;
+        }
+    }
+
+    public function getBannerMessageManager(): ?BannerMessageManager
+    {
+        return $this->banner_message_manager;
+    }
+
+    public function setBannerMessageManager(?BannerMessageManager $manager): void
+    {
+        if (isset($manager)) {
+            $this->banner_message_manager = $manager;
         }
     }
 

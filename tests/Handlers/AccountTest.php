@@ -11,8 +11,18 @@ use WebPageTest\Handlers\Account;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
 use WebPageTest\User;
+use WebPageTest\BannerMessageManager;
 
+/**
+ * These are std lib functions in php that are called in this
+ * handler that set no bearing on whether or not the function
+ * worked/did what it was supposed to. This just cancels them
+ * out for the test
+ */
 function setcookie($name, $value, $expiration, $path, $domain)
+{
+}
+function error_log($str)
 {
 }
 
@@ -97,8 +107,53 @@ final class AccountTest extends TestCase
             ->method('updatePlan')
             ->with('abcdef', 'ap74');
 
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'success',
+                'text' => 'Your plan has been successfully updated!'
+            ]);
+
+
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
-        $req->setClient($client); // intelephense gets made about MockObject getting passed here
+        $req->setClient($client); // intelephense gets mad about MockObject getting passed here
+        $req->setBannerMessageManager($bmm); // intelephense gets mad about MockObject getting passed here
+        $url = Account::postUpdatePlanSummary($req, $body);
+
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
+    public function testPostUpdatePlanSummaryError(): void
+    {
+        $body = new stdClass();
+        $body->subscription_id = 'abcdef';
+        $body->plan = 'ap74';
+        $body->is_upgrade = true;
+
+        $client = $this->getMockBuilder(CPClient::class)
+                     ->disableOriginalConstructor()
+                     ->disableOriginalClone()
+                     ->disableArgumentCloning()
+                     ->disallowMockingUnknownTypes()
+                     ->getMock();
+
+        $client = $this->createMock(CPClient::class);
+        $client->method('updatePlan')
+          ->willThrowException(new \Exception('Plan name incorrect'));
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'error',
+                'text' => 'There was an error updating your plan. Please try again or contact customer service.'
+            ]);
+
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+        $req->setClient($client); // intelephense gets mad about MockObject getting passed here
+        $req->setBannerMessageManager($bmm); // intelephense gets mad about MockObject getting passed here
         $url = Account::postUpdatePlanSummary($req, $body);
 
         $this->assertEquals('http://127.0.0.2/account', $url);
@@ -322,7 +377,18 @@ final class AccountTest extends TestCase
         $client->expects($this->once())
           ->method('changePassword')
           ->with($new_pw, $current_pw);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+
+        $bmm->expects($this->once())
+          ->method('put')
+          ->with('form', [
+            'type' => "success",
+            'text' => "Your password has been updated!"
+          ]);
+
         $req->setClient($client);
+        $req->setBannerMessageManager($bmm);
 
         $this->assertEquals("http://127.0.0.2/account", Account::changePassword($req, $body));
     }
@@ -350,8 +416,18 @@ final class AccountTest extends TestCase
           ->willThrowException(new \Exception('Password failed to change'));
         $req->setClient($client);
 
-        $this->expectException(ClientException::class);
-        Account::changePassword($req, $body);
+        $bmm = $this->createMock(BannerMessageManager::class);
+
+        $bmm->expects($this->once())
+          ->method('put')
+          ->with('form', [
+            'type' => "error",
+            'text' => "Password update failed"
+          ]);
+
+        $req->setBannerMessageManager($bmm);
+
+        $this->assertEquals("http://127.0.0.2/account", Account::changePassword($req, $body));
     }
 
     public function testValidateSubscribeToAccount(): void

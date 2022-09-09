@@ -83,12 +83,30 @@ class Account
      */
     public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
     {
-        $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
+        try {
+            $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
 
-        $host = $request_context->getHost();
-        $protocol = $request_context->getUrlProtocol();
-        $redirect_uri = "{$protocol}://{$host}/account";
-        return $redirect_uri;
+            $success_message = [
+                'type' => 'success',
+                'text' => 'Your plan has been successfully updated!'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
+            $host = $request_context->getHost();
+            $protocol = $request_context->getUrlProtocol();
+
+            return "{$protocol}://{$host}/account";
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            $error_message = [
+                'type' => 'error',
+                'text' => 'There was an error updating your plan. Please try again or contact customer service.'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+            $host = $request_context->getHost();
+            $protocol = $request_context->getUrlProtocol();
+
+            return "{$protocol}://{$host}/account";
+        }
     }
 
 
@@ -234,14 +252,25 @@ class Account
      */
     public static function changePassword(RequestContext $request_context, object $body): string
     {
+        $protocol = $request_context->getUrlProtocol();
+        $host = $request_context->getHost();
+        $route = '/account';
         try {
             $request_context->getClient()->changePassword($body->new_password, $body->current_password);
-            $protocol = $request_context->getUrlProtocol();
-            $host = $request_context->getHost();
-            $route = '/account';
+            $success_message = [
+                'type' => 'success',
+                'text' => 'Your password has been updated!'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
             return "{$protocol}://{$host}{$route}";
         } catch (BaseException $e) {
-            throw new ClientException($e->getMessage(), "/account", 400);
+            error_log($e->getMessage());
+            $error_message = [
+                'type' => 'error',
+                'text' => 'Password update failed'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+            return "{$protocol}://{$host}{$route}";
         }
     }
 
@@ -592,7 +621,7 @@ class Account
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
         $results['remainingRuns'] = $remainingRuns;
         $results['plans'] = $plans;
-        $results['messages'] = Util::getBannerMessage();
+        $results['messages'] = $request_context->getBannerMessageManager()->get();
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
