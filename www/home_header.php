@@ -26,7 +26,7 @@
 				<div class="home_feature_hed home_feature_hed-lfwp">
 					<div class="home_feature_hed_text">
 						<h1 class="attention"><span class="home_feature_hed_text_leadin">Lightning-Fast </span> <strong>Web Performance</strong></h1>
-						<p><b class="flag">Online Course</b>Learn to analyze site performance, fix issues, monitor for regressions, and deliver fast, responsive designs from the start.</p>
+						<p><b class="flag">Online Course</b>Learn to analyze performance, fix issues, and deliver fast websites from the start.</p>
 						<a class="pill" href="/learn/lightning-fast-web-performance/" style="padding: .9em 1.5em;">Free! Start Course Now &gt;&gt;</a>
 					</div>
 					<div class="home_feature_hed_visual">
@@ -56,23 +56,23 @@
 
 
 
-
+		</div>
     </div>
 
     <script>
-        let featureSlides = setInterval(() => {
-            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
-				if( document.body.classList.contains("feature-pro") ){
-					document.body.classList.remove("feature-pro");
-					document.body.classList.add("feature-lfwp");
-				} else if( document.body.classList.contains("feature-lfwp") ){
-					document.body.classList.remove("feature-lfwp");
-				} else {
-					document.body.classList.add("feature-pro");
-				}
+        // let featureSlides = setInterval(() => {
+        //     if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
+		// 		if( document.body.classList.contains("feature-pro") ){
+		// 			document.body.classList.remove("feature-pro");
+		// 			document.body.classList.add("feature-lfwp");
+		// 		} else if( document.body.classList.contains("feature-lfwp") ){
+		// 			document.body.classList.remove("feature-lfwp");
+		// 		} else {
+		// 			document.body.classList.add("feature-pro");
+		// 		}
 				
-            }
-        },8000);
+        //     }
+        // },8000);
 
 
         (function(){

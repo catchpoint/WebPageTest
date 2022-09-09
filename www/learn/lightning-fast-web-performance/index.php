@@ -424,9 +424,11 @@ EOT;
 											</div>
 									</div>
 						</details></li>
-						<?php if($experiments_logged_in){ 
-							$username = "Ferguson Taylor";
-							$CertimgURL = "https://wpt-screenshot.netlify.app/https%3A%2F%2Fscott.webpagetest.org%2Flearn%2Flightning-fast-web-performance%2Fcertificate.php%3Fname%3D". $username ."%26screenshot%3D1/opengraph/2022090101";
+						<?php if($experiments_logged_in  ){ 
+							
+							
+
+							$CertimgURL = "https://wpt-screenshot.netlify.app/https%3A%2F%2Fscott.webpagetest.org%2Flearn%2Flightning-fast-web-performance%2Fcertificate.php%3Fscreenshot%3D1/opengraph/20220901011";
 							?>
 						<li class="cert-li"><details><summary><span>Certificate of Completion</span></summary>
 									<div class="chapter_inner">

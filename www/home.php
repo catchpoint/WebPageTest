@@ -103,7 +103,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     ?>
 </head>
 
-<body class="home feature-pro">
+<body class="home feature-lfwp">
     <?php
     $tab = 'Start Test';
     include 'header.inc';
