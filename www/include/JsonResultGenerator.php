@@ -278,11 +278,13 @@ class JsonResultGenerator
         $cached = $testStepResult->isCachedRun();
         $step = $testStepResult->getStepNumber();
 
+        $url_friendly_dir = str_replace('./results/', '/result/', $this->testInfo->getRootDirectory());
+
         $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached, $step);
+        $remotePaths = new TestPaths($this->urlStart . $url_friendly_dir, $run, $cached, $step);
         $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
         $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
         $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
-        $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, $step);
 
         $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
@@ -320,12 +322,12 @@ class JsonResultGenerator
         if ($this->fileHandler->gzFileExists($localPaths->devtoolsScriptTimingFile())) {
             $ret['rawData']['scriptTiming'] = $urlGenerator->getGZip($nameOnlyPaths->devtoolsScriptTimingFile());
         }
-        $ret['rawData']['headers'] = $urlPaths->headersFile();
-        $ret['rawData']['pageData'] = $urlPaths->pageDataFile();
-        $ret['rawData']['requestsData'] = $urlPaths->requestDataFile();
-        $ret['rawData']['utilization'] = $urlPaths->utilizationFile();
+        $ret['rawData']['headers'] = $remotePaths->headersFile();
+        $ret['rawData']['pageData'] = $remotePaths->pageDataFile();
+        $ret['rawData']['requestsData'] = $remotePaths->requestDataFile();
+        $ret['rawData']['utilization'] = $remotePaths->utilizationFile();
         if ($this->fileHandler->fileExists($localPaths->bodiesFile())) {
-            $ret['rawData']['bodies'] = $urlPaths->bodiesFile();
+            $ret['rawData']['bodies'] = $remotePaths->bodiesFile();
         }
         if ($this->fileHandler->gzFileExists($localPaths->devtoolsTraceFile())) {
             $ret['rawData']['trace'] = $urlGenerator->getGZip($nameOnlyPaths->devtoolsTraceFile() . ".gz");
