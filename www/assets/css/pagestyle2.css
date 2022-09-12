@@ -282,12 +282,12 @@ details.metrics_shown summary::-webkit-details-marker {
 }
 
 .compare-experiment p.ttfb_experiment_warning {
-    font-size: .9rem;
-    padding: 1em;
-    border: 1px solid #e6b57e;
-    background: #fff6df;
-    max-width: none;
-    border-radius: 0.5em;
+  font-size: 0.9rem;
+  padding: 1em;
+  border: 1px solid #e6b57e;
+  background: #fff6df;
+  max-width: none;
+  border-radius: 0.5em;
 }
 
 .opportunities_summary .extended {
