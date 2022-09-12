@@ -123,7 +123,6 @@ $page_description = "Website speed test custom waterfall$testLabel";
     </div>
     <?php include('footer.inc'); ?>
 
-
     <script>
         const details_form = document.getElementById('details_form');
         const permalink = document.getElementById('customized-permalink');
@@ -146,8 +145,6 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 inputElement.value = requestParams[i];
             }
         });
-
-
 
         $(document).ready(function() {
 
@@ -174,8 +171,6 @@ $page_description = "Website speed test custom waterfall$testLabel";
             });
         });
 
-
-
         function getFormParams() {
             const params = {};
             Object.keys(serverData).forEach(k => params[k] = serverData[k]);
@@ -187,7 +182,6 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     params[i] = inputElement.value;
                 }
             });
-            console.log(params);
             return params;
         }
 
