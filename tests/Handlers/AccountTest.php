@@ -12,6 +12,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
 use WebPageTest\User;
 use WebPageTest\BannerMessageManager;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 
 /**
  * These are std lib functions in php that are called in this
@@ -468,5 +469,107 @@ final class AccountTest extends TestCase
 
         $this->expectException(ClientException::class);
         Account::validateSubscribeToAccount($post);
+    }
+
+    public function testValidatePreviewCost(): void
+    {
+        $post = [
+            'plan' => 'ap1',
+            'street-address' => '123 Main St',
+            'city' => 'New York',
+            'state' => 'NY',
+            'country' => 'US',
+            'zipcode' => '12345-1234'
+        ];
+
+        $expected = new stdClass();
+        $expected->plan = 'ap1';
+        $expected->city = 'New York';
+        $expected->country = 'US';
+        $expected->state = 'NY';
+        $expected->street_address = '123 Main St';
+        $expected->zipcode = '12345-1234';
+
+        $this->assertEquals($expected, Account::validatePreviewCost($post));
+    }
+
+    public function testValidatePreviewCostError(): void
+    {
+        $post = [
+            'plan' => 'ap1',
+            'city' => 'New York',
+            'state' => 'NY',
+            'country' => 'US',
+            'zipcode' => '12345-1234'
+        ];
+
+        $expected = new stdClass();
+        $expected->plan = 'ap1';
+        $expected->city = 'New York';
+        $expected->country = 'US';
+        $expected->state = 'NY';
+        $expected->street_address = '123 Main St';
+        $expected->zipcode = '12345-1234';
+
+        $this->expectException(ClientException::class);
+        Account::validatePreviewCost($post);
+    }
+
+    public function testPreviewCost(): void
+    {
+        $address = new ChargifyAddressInput([
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street_address' => '123 Main St',
+            'zipcode' => '12345-1234'
+        ]);
+
+        $body = new stdClass();
+        $body->plan = 'ap1';
+        $body->city = $address->getCity();
+        $body->country = $address->getCountry();
+        $body->state = $address->getState();
+        $body->street_address = $address->getStreetAddress();
+        $body->zipcode = $address->getZipcode();
+
+        $req = new RequestContext([]);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('getChargifySubscriptionPreview')
+          ->with($body->plan, $address);
+
+        $req->setClient($client);
+
+        Account::previewCost($req, $body);
+    }
+
+    public function testResendEmailVerification(): void
+    {
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('resendEmailVerification');
+
+        $req->setClient($client);
+
+        $this->assertEquals('http://127.0.0.2/account', Account::resendEmailVerification($req));
+    }
+
+    public function testResendEmailVerificationError(): void
+    {
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+          ->method('resendEmailVerification')
+          ->willThrowException(new \Exception('Resend did not work'));
+
+        $req->setClient($client);
+
+        $this->expectException(ClientException::class);
+        Account::resendEmailVerification($req);
     }
 }

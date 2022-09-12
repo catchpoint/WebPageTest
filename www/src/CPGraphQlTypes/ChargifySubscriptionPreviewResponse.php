@@ -20,9 +20,10 @@ class ChargifySubscriptionPreviewResponse implements JsonSerializable
     public function __construct(array $options)
     {
         if (
-            !(isset($options['total_in_cents'])) ||
-            !(isset($options['sub_total_in_cents'])) ||
-            !(isset($options['tax_in_cents']))
+            !
+            (isset($options['total_in_cents'])) &&
+            (isset($options['sub_total_in_cents'])) &&
+            (isset($options['tax_in_cents']))
         ) {
             throw new Exception("Total, subtotal, and tax must all be passed");
         }

@@ -60,12 +60,14 @@ if ($request_method === 'POST') {
         $response_body = "{}";
         try {
             $body = AccountHandler::validatePreviewCost($_POST);
-            $response_body = AccountHandler::previewCost($request_context, $body);
+            $preview = AccountHandler::previewCost($request_context, $body);
+            $response_body = json_encode($preview);
         } catch (ClientException $e) {
             $response_body = json_encode([
                 'error' => $e->getMessage()
             ]);
         }
+
         header('Content-type: application/json');
         echo $response_body;
         exit();
@@ -74,11 +76,18 @@ if ($request_method === 'POST') {
         header("Location: {$redirect_uri}");
         exit();
     } elseif ($type == "update-payment-method") {
-        AccountHandler::updatePaymentMethod($request_context);
+        throw new ClientException('There was an error.', '/account');
+        // AccountHandler::updatePaymentMethod($request_context);
     } elseif ($type == "create-api-key") {
-        AccountHandler::createApiKey($request_context);
+        $body = AccountHandler::validateCreateApiKey($_POST);
+        $redirect_uri = AccountHandler::createApiKey($request_context, $body);
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "delete-api-key") {
-        AccountHandler::deleteApiKey($request_context);
+        $body = AccountHandler::validateDeleteApiKey($_POST);
+        $redirect_uri = AccountHandler::deleteApiKey($request_context, $body);
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "upgrade-plan-1") {
         $body = AccountHandler::validatePlanUpgrade($_POST);
         $redirect_uri = AccountHandler::postPlanUpgrade($request_context, $body);

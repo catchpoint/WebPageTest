@@ -15,6 +15,7 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\Template;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 
 class Account
 {
@@ -83,6 +84,9 @@ class Account
      */
     public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
     {
+        $host = $request_context->getHost();
+        $protocol = $request_context->getUrlProtocol();
+
         try {
             $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
 
@@ -91,8 +95,6 @@ class Account
                 'text' => 'Your plan has been successfully updated!'
             ];
             $request_context->getBannerMessageManager()->put('form', $success_message);
-            $host = $request_context->getHost();
-            $protocol = $request_context->getUrlProtocol();
 
             return "{$protocol}://{$host}/account";
         } catch (\Exception $e) {
@@ -102,8 +104,6 @@ class Account
                 'text' => 'There was an error updating your plan. Please try again or contact customer service.'
             ];
             $request_context->getBannerMessageManager()->put('form', $error_message);
-            $host = $request_context->getHost();
-            $protocol = $request_context->getUrlProtocol();
 
             return "{$protocol}://{$host}/account";
         }
@@ -409,69 +409,160 @@ class Account
         }
     }
 
-    // Create a WPT api key for a user
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'create-api-key')]
-    public static function createApiKey(RequestContext $request_context): void
+    /* Validate createApiKey
+     *
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'create-api-key')]
+     *
+     * @param array{api-key-name: string} $post_body
+     * @return object{name: string} $vars
+     */
+    public static function validateCreateApiKey(array $post_body): object
     {
-        try {
-            $name = filter_input(INPUT_POST, 'api-key-name', FILTER_SANITIZE_STRING);
-            $request_context->getClient()->createApiKey($name);
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account#api-consumers';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
+        $vars = new stdClass();
 
-            header("Location: {$redirect_uri}");
-            exit();
+        $name = $post_body['api-key-name'] ?? "";
+        $vars->name = filter_var($name, FILTER_SANITIZE_STRING);
+
+        if (empty($vars->name)) {
+            throw new ClientException('Valid name required for API key', '/account#api-consumers');
+        }
+
+        return $vars;
+    }
+
+    /* Create a WPT api key for a user
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'create-api-key')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param object{name: string} $body
+     *
+     * @return string $redirect_uri
+     */
+    public static function createApiKey(RequestContext $request_context, object $body): string
+    {
+        $protocol = $request_context->getUrlProtocol();
+        $host = Util::getSetting('host');
+        $route = '/account#api-consumers';
+
+        try {
+            $request_context->getClient()->createApiKey($body->name);
+            $success_message = [
+                'type' => 'success',
+                'text' => 'You added an API key'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+            return $redirect_uri;
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new ClientException($e->getMessage(), "/account");
+            $error_message = [
+                'type' => 'error',
+                'text' => 'There was an error adding your API key, please try again'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+            $redirect_uri = "{$protocol}://{$host}{$route}";
+            return $redirect_uri;
         }
     }
 
-    // Delete a WPT api key for a user
-    //
-    // #[HandlerMethod]
-    // #[Route(Http::POST, '/account', 'delete-api-key')]
-    public static function deleteApiKey(RequestContext $request_context)
+    /* Validate deleteApiKey
+     *
+     * #[ValidatorMethod]
+     * #[Route(Http::POST, '/account', 'delete-api-key')]
+     *
+     * @param array{api-key-id: array<string>} $post_body
+     * @return object{api_key_ids: array<int>} $vars
+     */
+    public static function validateDeleteApiKey(array $post_body): object
     {
+        $vars = new stdClass();
+        $api_key_ids = $post_body['api-key-id'];
+        if (empty($api_key_ids)) {
+            throw new ClientException('Must select api key to delete', '/account#api-consumers');
+        }
+
+        $sanitized_keys = array_filter($api_key_ids, function ($v) {
+            return filter_var($v, FILTER_SANITIZE_NUMBER_INT);
+        });
+        if (empty($sanitized_keys)) {
+            throw new ClientException('Must be valid api keys', '/account#api-consumers');
+        }
+
+        $vars->api_key_ids = array_map(function ($v) {
+            return intval($v);
+        }, $sanitized_keys);
+
+        return $vars;
+    }
+
+    /* Delete a WPT api key for a user
+     *
+     * #[HandlerMethod]
+     * #[Route(Http::POST, '/account', 'delete-api-key')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param object{api_key_ids: array<int>} $body
+     *
+     * @return string $redirect_uri
+     */
+    public static function deleteApiKey(RequestContext $request_context, object $body): string
+    {
+
+        $protocol = $request_context->getUrlProtocol();
+        $host = Util::getSetting('host');
+        $route = '/account#api-consumers';
+        $redirect_uri = "{$protocol}://{$host}{$route}";
+
         try {
-            $api_key_ids = $_POST['api-key-id'];
-            if (!empty($api_key_ids)) {
-                $sanitized_keys = array_filter($api_key_ids, function ($v) {
-                    return filter_var($v, FILTER_SANITIZE_NUMBER_INT);
-                });
-                $ints = array_map(function ($v) {
-                    return intval($v);
-                }, $sanitized_keys);
-
-                $request_context->getClient()->deleteApiKey($ints);
-            }
-
-
-            $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
-            $route = '/account';
-            $redirect_uri = "{$protocol}://{$host}{$route}";
-
-            header("Location: {$redirect_uri}");
-            exit();
+            $request_context->getClient()->deleteApiKey($body->api_key_ids);
+            $success_message = [
+              'type' => "success",
+              'text' => "Successfully deleted"
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
+            return $redirect_uri;
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new ClientException("There was an error", "/account");
+            $error_message = [
+              'type' => "error",
+              'text' => "There was a problem deleting your key. Try again or contact customer service."
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+            return $redirect_uri;
         }
+
+
+        header("Location: {$redirect_uri}");
+        exit();
     }
 
     /**
      *
      * Previews cost (including taxes) of signing up with plan
      *
-     * @return object $body
-     *
      * #[ValidatorMethod]
      * #[Route(Http::POST, '/account', 'account-signup-preview')]
+     *
+     * @param array{
+     *     plan: string,
+     *     street-address: string,
+     *     city: string,
+     *     state: string,
+     *     country: string,
+     *     zipcode: string
+     * } $post
+     *
+     * @return object{
+     *     plan: string,
+     *     street_address: string,
+     *     city: string,
+     *     state: string,
+     *     country: string,
+     *     zipcode: string
+     * } $body
      */
     public static function validatePreviewCost(array $post): object
     {
@@ -501,34 +592,36 @@ class Account
     }
 
     /**
-     *
-     * @return string $totals where totals are a json-encoding version of a SubscriptionPreview
-     *
      * Previews cost (including taxes) of signing up with plan
+     *
+     * On error, returns an array{error: string}
      *
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'account-signup-preview')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param object{
+     *     plan: string,
+     *     street_address: string,
+     *     city: string,
+     *     state: string,
+     *     country: string,
+     *     zipcode: string
+     * } $body
+     * @return WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse|array $totals
      */
-    public static function previewCost(RequestContext $request_context, object $body): string
+    public static function previewCost(RequestContext $request_context, object $body): SubscriptionPreview
     {
-        try {
-            $plan = $body->plan;
-            $address = new ChargifyAddressInput([
-                "street_address" => $body->street_address,
-                "city" => $body->city,
-                "state" => $body->state,
-                "country" => $body->country,
-                "zipcode" => $body->zipcode
-            ]);
+        $plan = $body->plan;
+        $address = new ChargifyAddressInput([
+            "street_address" => $body->street_address,
+            "city" => $body->city,
+            "state" => $body->state,
+            "country" => $body->country,
+            "zipcode" => $body->zipcode
+        ]);
 
-            $preview_totals = $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
-            return json_encode($preview_totals);
-        } catch (\Exception $e) {
-            error_log($e->getMessage());
-            return json_encode([
-                'error' => $e->getMessage()
-            ]);
-        }
+        return $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
     }
 
     /**
@@ -537,6 +630,9 @@ class Account
      *
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'resend-email-verification')]
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @return string $redirect_uri
      */
     public static function resendEmailVerification(RequestContext $request_context): string
     {
@@ -544,7 +640,7 @@ class Account
             $request_context->getClient()->resendEmailVerification();
 
             $protocol = $request_context->getUrlProtocol();
-            $host = Util::getSetting('host');
+            $host = $request_context->getHost();
             $route = '/account';
             $redirect_uri = "{$protocol}://{$host}{$route}";
             return $redirect_uri;

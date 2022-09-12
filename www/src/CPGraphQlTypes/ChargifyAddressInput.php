@@ -37,6 +37,31 @@ class ChargifyAddressInput
         $this->zipcode = $options['zipcode'];
     }
 
+    public function getStreetAddress(): string
+    {
+        return $this->street_address;
+    }
+
+    public function getCity(): string
+    {
+        return $this->city;
+    }
+
+    public function getState(): string
+    {
+        return $this->state;
+    }
+
+    public function getCountry(): string
+    {
+        return $this->country;
+    }
+
+    public function getZipcode(): string
+    {
+        return $this->zipcode;
+    }
+
     public function toArray(): array
     {
         return [
