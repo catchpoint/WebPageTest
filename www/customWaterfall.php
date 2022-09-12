@@ -38,7 +38,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <h1>Generate a Custom Waterfall</h1>
         <details open class="box details_panel">
             <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
-            <form class="details_panel_content" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
+            <form class="details_panel_content" id="details_form" action="javascript:UpdateWaterfall();" method="GET">
                 <fieldset>
                     <legend>Chart Type</legend>
                     <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
@@ -46,43 +46,78 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 </fieldset>
                 <fieldset>
                     <legend>Chart Coloring</legend>
-                    <label><input type="radio" name="coloring" value="classic"> Classic</label>
-                    <label><input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type</label>
+                    <label><input type="radio" name="mime" value="0"> Classic</label>
+                    <label><input type="radio" name="mime" value="1" checked="checked"> By MIME Type</label>
                 </fieldset>
                 <fieldset>
-                    <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="930"></label>
+                    <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="1012"></label>
                     <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
                     <label>Requests <em>(i.e. 1,2,3,4-9,8)</em>: <input id="requests" type="text" name="requests" value=""></label>
                 </fieldset>
                 <fieldset>
                     <legend>Show/Hide Extras</legend>
-                    <label><input id="showUT" type="checkbox" checked>Lines for User Timing Marks</label>
-                    <label><input id="showCPU" type="checkbox" checked>CPU Utilization</label>
-                    <label><input id="showBW" type="checkbox" checked>Bandwidth Utilization</label>
-                    <label><input id="showLT" type="checkbox" checked>Long tasks</label>
-                    <label><input id="showDots" type="checkbox" checked>Ellipsis (...) for missing items</label>
-                    <label><input id="showLabels" type="checkbox" checked>Labels for requests (URL)</label>
-                    <label><input id="showChunks" type="checkbox" checked>Download chunks</label>
-                    <label><input id="showJS" type="checkbox" checked>JS Execution chunks</label>
-                    <label><input id="showWait" type="checkbox" checked>Wait Time</label>
+                    <label><input id="ut" type="checkbox" checked>Lines for User Timing Marks</label>
+                    <label><input id="cpu" type="checkbox" checked>CPU Utilization</label>
+                    <label><input id="bw" type="checkbox" checked>Bandwidth Utilization</label>
+                    <label><input id="lt" type="checkbox" checked>Long tasks</label>
+                    <label><input id="dots" type="checkbox" checked>Ellipsis (...) for missing items</label>
+                    <label><input id="labels" type="checkbox" checked>Labels for requests (URL)</label>
+                    <label><input id="chunks" type="checkbox" checked>Download chunks</label>
+                    <label><input id="js" type="checkbox" checked>JS Execution chunks</label>
+                    <label><input id="wait" type="checkbox" checked>Wait Time</label>
                 </fieldset>
-                <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
+                <a href="#" id="customized-permalink">Permalink to this waterfall page</a>
             </form>
         </details>
     </div>
     <div class="box">
 
         <?php
-
+        $uri_params = [
+            'max' => '',
+            'width' => 1012,
+            'type' => 'waterfall',
+            'mime' => 1,
+            'ut' => 1,
+            'cpu' => 1,
+            'bw' => 1,
+            'lt' => 1,
+            'dots' => 1,
+            'labels' => 1,
+            'chunks' => 1,
+            'js' => 1,
+            'wait' => 1,
+            'requests' => '',
+        ];
+        $server_params = [
+            'test' => $id,
+            'run' => $run,
+            'cached' => $cached,
+            'step' => $step,
+        ];
+        $request_params = [];
+        foreach ($server_params as $key => $default) {
+            $request_params[$key] = $default;
+            if (array_key_exists($param, $_REQUEST)) {
+                $request_params[$param] = $_REQUEST[$param];
+            }
+        }
+        foreach ($uri_params as $key => $default) {
+            $request_params[$key] = $default;
+            if (array_key_exists($key, $_REQUEST)) {
+                $request_params[$key] = $_REQUEST[$key];
+            }
+        }
+        $query_string = http_build_query($request_params);
         $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-        echo $waterfallSnippet->create(true, '&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1');
+        echo $waterfallSnippet->create(true, $query_string);
 
         $extension = 'php';
         if (FRIENDLY_URLS) {
             $extension = 'png';
         }
-        echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1\"></div>";
-        echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&lt=1&ut=1&mime=1&js=1&wait=1\">Download Waterfall Image</a></p>";
+        echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?$query_string\"></div>";
+        echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?$query_string\">Download Waterfall Image</a></p>";
 
         ?>
     </div>
@@ -90,6 +125,30 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
 
     <script>
+        const details_form = document.getElementById('details_form');
+        const permalink = document.getElementById('customized-permalink');
+        permalink.href = location.origin + location.pathname + '?<?php echo $query_string; ?>';
+
+        const formInputs = ['<?php echo implode("', '", array_keys($uri_params));?>'];
+        const serverData = {
+            test: '<?php echo $id; ?>',
+            run: <?php echo (int)$run; ?>,
+            cached: <?php echo (int)$cached; ?>,
+            step: <?php echo (int)$step; ?>,
+        };
+        const requestParams = <?php echo json_encode($request_params); ?>;
+
+        formInputs.forEach(i => {
+            const inputElement = details_form[i];
+            if (inputElement.type === 'checkbox') {
+                inputElement.checked = requestParams[i] == 1;
+            } else {
+                inputElement.value = requestParams[i];
+            }
+        });
+
+
+
         $(document).ready(function() {
 
             // handle when the selection changes for the location
@@ -104,7 +163,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 UpdateWaterfall();
             });
 
-            $("input[name=coloring], input[type=checkbox]").click(UpdateWaterfall);
+            $("input[name=mime], input[type=checkbox]").click(UpdateWaterfall);
             $("input[type=text]:not(#requests)").on("input", UpdateWaterfall);
             $("input#requests").on("change", UpdateWaterfall);
 
@@ -115,71 +174,37 @@ $page_description = "Website speed test custom waterfall$testLabel";
             });
         });
 
+
+
+        function getFormParams() {
+            const params = {};
+            Object.keys(serverData).forEach(k => params[k] = serverData[k]);
+            formInputs.forEach(i => {
+                const inputElement = details_form[i];
+                if (inputElement.type === 'checkbox') {
+                    params[i] = inputElement.checked === true ? 1 : 0;
+                } else {
+                    params[i] = inputElement.value;
+                }
+            });
+            console.log(params);
+            return params;
+        }
+
         function UpdateWaterfall() {
             $('body').css('cursor', 'wait');
-            var type = $('input[name=type]:checked').val();
-            var coloring = $('input[name=coloring]:checked').val();
-            var mime = 0;
-            if (coloring == 'mime')
-                mime = 1;
-            var width = $('#width').val();
-            var max = $('#max').val();
-            var requests = $('#requests').val();
-            var showUT = 0;
-            if ($('#showUT').attr('checked'))
-                showUT = 1;
-            var showCPU = 0;
-            if ($('#showCPU').attr('checked'))
-                showCPU = 1;
-            var showBW = 0;
-            if ($('#showBW').attr('checked'))
-                showBW = 1;
-            var showLT = 0;
-            if ($('#showLT').attr('checked'))
-                showLT = 1;
-            var showDots = 0;
-            if ($('#showDots').attr('checked'))
-                showDots = 1;
-            var showLabels = 0;
-            if ($('#showLabels').attr('checked'))
-                showLabels = 1;
-            var showChunks = 0;
-            if ($('#showChunks').attr('checked'))
-                showChunks = 1;
-            var showJS = 0;
-            if ($('#showJS').attr('checked'))
-                showJS = 1;
-            var showWait = 0;
-            if ($('#showWait').attr('checked'))
-                showWait = 1;
-            <?php
-            echo "var testId='$id';\n";
-            echo "var testRun='$run';\n";
-            echo "var cached='$cached';\n";
-            echo "var extension='$extension';\n";
-            echo "var step='$step';\n";
-            ?>
 
-            var src = '/waterfall.' + extension + '?test=' + testId +
-                '&run=' + testRun +
-                '&cached=' + cached +
-                '&step=' + step +
-                '&max=' + max +
-                '&width=' + width +
-                '&type=' + type +
-                '&mime=' + mime +
-                '&ut=' + showUT +
-                '&cpu=' + showCPU +
-                '&bw=' + showBW +
-                '&lt=' + showLT +
-                '&dots=' + showDots +
-                '&labels=' + showLabels +
-                '&chunks=' + showChunks +
-                '&js=' + showJS +
-                '&wait=' + showWait +
-                '&requests=' + requests;
+            const params = getFormParams();
+            let search = '?';
+            Object.keys(params).forEach(param => {
+                search += param + '=' + encodeURIComponent(params[param]) + '&';
+            });
+
+            const extension = '<?php echo $extension; ?>';
+            const src = '/waterfall.' + extension + search;
             $('#waterfallImage').attr("src", src);
             $('.customwaterfall_download a').attr("href", src);
+            permalink.href = location.origin + location.pathname + search;
         };
     </script>
 </body>
