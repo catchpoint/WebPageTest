@@ -182,15 +182,15 @@ $page_description = "Website performance test result$testLabel.";
                           echo "<ul>";
 
                           $url = strtok($_SERVER["REQUEST_URI"], '?');
-                        foreach ($medianMetrics as $key => $value) {
-                            if ($pageData[$run][$cached][$key]) {
-                                echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
-                            }
-                        }
+                          foreach ($medianMetrics as $key => $value) {
+                              if ($pageData[$run][$cached][$key]) {
+                                  echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
+                              }
+                          }
                           echo "</ul>";
 
 
-                         echo '</details>)</em>';
+                          echo '</details>)</em>';
                       }
                         echo '</h3>';
 
@@ -198,7 +198,7 @@ $page_description = "Website performance test result$testLabel.";
                           <summary><strong>Note:</strong> Metrics offered will vary</summary>
                           <p><strong>Please note:</strong> Supported metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
                           </details>';
-                        
+
                       $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
                       $resultTable->useLabelLinks(true);
                       $resultTable->disableColumns(array(
