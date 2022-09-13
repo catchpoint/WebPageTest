@@ -245,7 +245,7 @@ class FriendlyUrlGenerator extends UrlGenerator
         if (sizeof($parts) > 2) {
             $testPath .= "/" . $parts[2];
         }
-        return $this->baseUrl . "/results/" . $testPath . "/" . $this->underscorePrefix() . $image . ".png";
+        return $this->baseUrl . "/result/" . $testPath . "/" . $this->underscorePrefix() . $image . ".png";
     }
 
     public function resultSummary($extraParams = null)
