@@ -45,6 +45,8 @@ function wptLogout(redirectUrl) {
   } catch (e) {}
 })(jQuery);
 
+window.codeFlasks = {};
+
 (function ($) {
   $(document).ready(function () {
     // Advanced Settings toggle
@@ -101,6 +103,7 @@ function wptLogout(redirectUrl) {
         codeArea.onUpdate(function (code) {
           hidden.value = code;
         });
+        window.codeFlasks.injectScript = codeArea;
       }
     });
 
@@ -248,25 +251,36 @@ function wptLogout(redirectUrl) {
   }
 })();
 
-// handle script file uploads
-const uploadInput = document.getElementById("script_file");
-if (uploadInput) {
-  uploadInput.addEventListener(
-    "change",
-    () => {
-      const file = uploadInput.files[0];
-      const reader = new FileReader();
-      reader.addEventListener(
-        "load",
-        () => {
-          document.getElementById("enter_script").value = reader.result;
-        },
-        false
-      );
-      if (file) {
-        reader.readAsText(file);
-      }
-    },
-    false
-  );
+/**
+ * Handle file picks
+ * @param {string} source Element ID of the file picker
+ * @param {string} dest Element ID of the input where file content goes
+ */
+function initFileReader(source, dest) {
+  const uploadInput = document.getElementById(source);
+  if (uploadInput) {
+    uploadInput.addEventListener(
+      "change",
+      () => {
+        const file = uploadInput.files[0];
+        const reader = new FileReader();
+        reader.addEventListener(
+          "load",
+          () => {
+            if (dest in window.codeFlasks) {
+              // the textarea was replaced by a codeflask input
+              window.codeFlasks[dest].updateCode(reader.result);
+            } else {
+              document.getElementById(dest).value = reader.result;
+            }
+          },
+          false
+        );
+        if (file) {
+          reader.readAsText(file);
+        }
+      },
+      false
+    );
+  }
 }
