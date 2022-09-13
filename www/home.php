@@ -7,6 +7,8 @@
 include 'common.inc';
 
 use WebPageTest\Util;
+use WebPageTest\Util\IniReader;
+
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -631,16 +633,26 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         <input id="time" type="number" class="text short" name="time" value=""> seconds
                                                     </li>
                                                     <li>
-                                                        <label for="customHeaders" class="full">
-                                                            Custom headers<br>
-                                                            <small>Add custom headers to all network requests emitted from the browser</small>
-                                                        </label>
+                                                        <label for="customHeaders" class="full">Custom headers</label>
+                                                        <small>
+                                                            Add custom headers to all network requests emitted from the browser
+                                                            (type in or read <label for="customHeaders_file" class="linklike">from a text file</label>)
+                                                        </small>
+                                                        <input type="file" id="customHeaders_file" accept="text/*" class="a11y-hidden">
+                                                        <script>
+                                                            document.addEventListener('DOMContentLoaded', () => initFileReader('customHeaders_file', 'customHeaders'));
+                                                        </script>
                                                         <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                                     </li>
                                                     <li>
-                                                        <label for="injectScript" class="full">
-                                                            Inject Script<br>
-                                                            <small>JavaScript to run after the document has started loading</small>
+                                                        <label for="injectScript" class="full">Inject Script</label>
+                                                        <small>JavaScript to run after the document has started loading
+                                                            (type in or read <label for="injectScript_file" class="linklike">from a text file</label>)
+                                                        </small>
+                                                        <input type="file" id="injectScript_file" accept="text/*" class="a11y-hidden">
+                                                        <script>
+                                                            document.addEventListener('DOMContentLoaded', () => initFileReader('injectScript_file', 'injectScript'));
+                                                        </script>
                                                         </label>
                                                         <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
                                                     </li>
@@ -786,6 +798,26 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     </label>
                                                     <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;" autocomplete="off">
                                                 </li>
+                                                <?php
+                                                $extensions = IniReader::getExtensions();
+                                                if ($extensions) {
+                                                    ?>
+                                                <li>
+                                                    <label for="extensions">
+                                                        Enable extension<br>
+                                                    </label>
+                                                    <select name="extensions" id="extensions">
+                                                        <option>Pick an extension...</option>
+                                                        <?php
+                                                        foreach ($extensions as $id => $name) {
+                                                            echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
+                                                        }
+                                                        ?>
+                                                    <select>
+                                                </li>
+                                                    <?php
+                                                }
+                                                ?>
                                             </ul>
                                         </div>
                                         <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
@@ -816,9 +848,14 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                             <div>
                                                 <p>
                                                     <label for="enter_script">Enter Script</label>
-                                                    <small>(or read it <label for="script_file" class="linklike">from a file</label>)</small>
+                                                    <small>
+                                                        (or read it <label for="script_file" class="linklike">from a text file</label>)
+                                                    </small>
+                                                    <input type="file" id="script_file" accept="text/*" class="a11y-hidden">
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('script_file', 'enter_script'));
+                                                    </script>
                                                 </p>
-                                                <input type="file" id="script_file" multiple accept="text/*" class="a11y-hidden">
                                                 <?php
                                                 $script = '';
                                                 if (array_key_exists('script', $_REQUEST)) {
@@ -853,16 +890,26 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         <div id="block" class="test_subbox ui-tabs-hide">
                                             <p>
                                                 <label for="block_requests_containing" class="full_width">
-                                                    Block Requests Containing (URL substrings)...<br>
-                                                    <small>Space-separated list</small>
+                                                    Block Requests Containing (URL substrings)...
                                                 </label>
+                                                <small>Space-separated list
+                                                    (type in or read <label for="block_requests_containing_file" class="linklike">from a text file</label>)
+                                                </small>
+                                                <input type="file" id="block_requests_containing_file" accept="text/*" class="a11y-hidden">
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', () => initFileReader('block_requests_containing_file', 'block_requests_containing'));
+                                                </script>
                                                 <textarea name="block" id="block_requests_containing" cols="0" rows="0"></textarea>
                                             </p>
                                             <p>
-                                                <label for="block_domains" class="full_width">
-                                                    Block Domains (full host names)...<br>
-                                                    <small>Space-separated list of domains</small>
-                                                </label>
+                                                <label for="block_domains" class="full_width">Block Domains (full host names)...</label>
+                                                <small>Space-separated list of domains
+                                                    (type in or read <label for="block_domains_file" class="linklike">from a text file</label>)
+                                                </small>
+                                                <input type="file" id="block_domains_file" accept="text/*" class="a11y-hidden">
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', () => initFileReader('block_domains_file', 'block_domains'));
+                                                </script>
                                                 <textarea name="blockDomains" id="block_domains" cols="0" rows="0"></textarea>
                                             </p>
                                         </div>
@@ -875,17 +922,35 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <label for="spof_hosts" class="full_width">
                                                     Hosts to fail (one host per line)...
                                                 </label>
+                                                <small>
+                                                    Type in or read <label for="spof_hosts_file" class="linklike">from a text file</label>
+                                                </small>
+                                                <input type="file" id="spof_hosts_file" accept="text/*" class="a11y-hidden">
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', () => initFileReader('spof_hosts_file', 'spof_hosts'));
+                                                </script>
                                             </p>
-                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
-                                            if (array_key_exists('spof', $_REQUEST)) {
-                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                            }
-                                            ?></textarea>
+                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0">
+                                                <?php
+                                                if (array_key_exists('spof', $_REQUEST)) {
+                                                    echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                                }
+                                                ?>
+                                            </textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
                                             <div>
-                                                <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
+                                                <p>
+                                                    <label for="custom_metrics" class="full_width">Custom Metrics:</label>
+                                                    <small>
+                                                        Type in or read <label for="custom_metrics_file" class="linklike">from a text file</label>
+                                                    </small>
+                                                    <input type="file" id="custom_metrics_file" accept="text/*" class="a11y-hidden">
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('custom_metrics_file', 'custom_metrics'));
+                                                    </script>
+                                                </p>
                                                 <textarea name="custom" class="large" id="custom_metrics" cols="0" rows="0"></textarea>
                                             </div>
                                             <div class="notification-container">
@@ -996,6 +1061,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     </script>
     <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST; ?>"></script>
 </body>
+
 </html>
 <?php
 /**

@@ -267,7 +267,8 @@ class XmlResultGenerator
 
         $localPaths = new TestPaths($testRoot, $run, $cached, $step);
         $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
-        $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached, $step);
+        $url_friendly_dir = str_replace('./results/', '/result/', $this->testInfo->getRootDirectory());
+        $remotePaths = new TestPaths($this->baseUrl . $url_friendly_dir, $run, $cached, $step);
 
 
         echo "<results>\n";
@@ -318,19 +319,19 @@ class XmlResultGenerator
             echo "<scriptTiming>" . htmlspecialchars($urlGenerator->getGZip($nameOnlyPaths->devtoolsScriptTimingFile())) . "</scriptTiming>\n";
         }
         if ($this->fileHandler->gzFileExists($localPaths->headersFile())) {
-            echo "<headers>" . $urlPaths->headersFile() . "</headers>\n";
+            echo "<headers>" . $remotePaths->headersFile() . "</headers>\n";
         }
         if ($this->fileHandler->gzFileExists($localPaths->bodiesFile())) {
-            echo "<bodies>" . $urlPaths->bodiesFile() . "</bodies>\n";
+            echo "<bodies>" . $remotePaths->bodiesFile() . "</bodies>\n";
         }
         if ($this->fileHandler->gzFileExists($localPaths->pageDataFile())) {
-            echo "<pageData>" . $urlPaths->pageDataFile() . "</pageData>\n";
+            echo "<pageData>" . $remotePaths->pageDataFile() . "</pageData>\n";
         }
         if ($this->fileHandler->gzFileExists($localPaths->requestDataFile())) {
-            echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
+            echo "<requestsData>" . $remotePaths->requestDataFile() . "</requestsData>\n";
         }
         if ($this->fileHandler->gzFileExists($localPaths->utilizationFile())) {
-            echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
+            echo "<utilization>" . $remotePaths->utilizationFile() . "</utilization>\n";
         }
         echo "</rawData>\n";
 

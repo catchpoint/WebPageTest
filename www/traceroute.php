@@ -38,7 +38,7 @@ $page_description = "Test network path from multiple locations around the world 
        <?php
             $tab = 'Start Test';
             include 'header.inc';
-            ?>
+        ?>
 
 <?php include("home_header.php"); ?>
 
