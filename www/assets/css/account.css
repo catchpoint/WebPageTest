@@ -100,6 +100,10 @@ body.theme-b {
   padding-bottom: 10px;
 }
 
+.account-page-content#main {
+    grid-column: 3/11;
+}
+
 #billing-settings-content .card-section-subhed {
   border-bottom: none;
 }
@@ -559,6 +563,7 @@ body.theme-b {
 }
 
 .wpt-plan.card {
+  box-sizing: border-box;
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   margin-bottom: 30px;
@@ -2160,7 +2165,7 @@ TEMP FIX FOR UPGRADE
   border: none;
 }
 
-.plan-summary-address .contents-container {
+.my-account-page .contents-container {
   max-width: 33rem;
 }
 
@@ -2231,7 +2236,7 @@ TEMP FIX FOR UPGRADE
   left: 0;
   top: -17px;
   border-radius: 5px 5px 0 0;
-  padding: 2px;
+  padding: 5px;
   font-size: 0.9rem;
   box-sizing: border-box;
   border: none;

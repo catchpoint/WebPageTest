@@ -6,17 +6,19 @@
     <form id="wpt-account-upgrade" method="post" action="/account">
         <!-- payment -->
         <div class="box card-section">
-            <h3>Payment Method</h3>
-            <?php require_once __DIR__ . '/../includes/chargify-payment-form.php' ?>
-            <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
-            <input type="hidden" name="nonce" id="hidden-nonce-input" required />
-            <input type="hidden" name="type" value="account-signup" required />
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
-            <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
-            <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />
-            <input name="state" type="hidden" value="<?= $state_code ?>" data-chargify="state" required />
-            <input name="country" type="hidden" value="<?= $country_code ?>" data-chargify="country" required />
-            <input name="zipcode" type="hidden" value="<?= $zipcode ?>" required data-chargify="zip" />
+            <div class="contents-container">
+              <h3>Payment Method</h3>
+                <?php require_once __DIR__ . '/../includes/chargify-payment-form.php' ?>
+                <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
+                <input type="hidden" name="nonce" id="hidden-nonce-input" required />
+                <input type="hidden" name="type" value="account-signup" required />
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
+                <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
+                <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />
+                <input name="state" type="hidden" value="<?= $state_code ?>" data-chargify="state" required />
+                <input name="country" type="hidden" value="<?= $country_code ?>" data-chargify="country" required />
+                <input name="zipcode" type="hidden" value="<?= $zipcode ?>" required data-chargify="zip" />
+            </div>
 
         </div>
 

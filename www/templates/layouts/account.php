@@ -33,7 +33,7 @@
 
 <body>
     <?php require_once __DIR__ . '/header.inc'; ?>
-    <div id="main">
+    <div class="account-page-content" id="main">
         <?php require_once __DIR__ . '/main_hed.inc'; ?>
         <?= $template_output ?>
     </div>
