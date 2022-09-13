@@ -38,11 +38,11 @@ $page_description = "Website speed test custom waterfall$testLabel";
         <h1>Generate a Custom Waterfall</h1>
         <details open class="box details_panel">
             <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Waterfall Settings</span></span></summary>
-            <form class="details_panel_content" id="details_form" action="javascript:UpdateWaterfall();" method="GET">
+            <form class="details_panel_content" id="details_form" action="javascript:updateWaterfall();" method="GET">
                 <fieldset>
                     <legend>Chart Type</legend>
                     <label><input type="radio" name="type" value="waterfall" checked>Waterfall</label>
-                    <label><input type="radio" name="type" value="connection"> Connection View</label>
+                    <label><input type="radio" name="type" value="connection">Connection View</label>
                 </fieldset>
                 <fieldset>
                     <legend>Chart Coloring</legend>
@@ -117,7 +117,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
             $extension = 'png';
         }
         echo "<div class=\"waterfall-container\"><img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?$query_string\"></div>";
-        echo "<p class=\"customwaterfall_download\"><a class=\"pill\" download href=\"/waterfall.$extension?$query_string\">Download Waterfall Image</a></p>";
+        echo "<p class=\"customwaterfall_download\"><a id=\"waterfallImageLink\" class=\"pill\" download href=\"/waterfall.$extension?$query_string\">Download Waterfall Image</a></p>";
 
         ?>
     </div>
@@ -145,30 +145,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 inputElement.value = requestParams[i];
             }
         });
+        details_form.requests.disabled = details_form.type.value === 'connection';
 
-        $(document).ready(function() {
-
-            // handle when the selection changes for the location
-            $("input[name=type]").click(function() {
-                // disable the requests for connection view
-                var type = $('input[name=type]:checked').val();
-                if (type == 'connection')
-                    $('#requests').attr("disabled", "disabled");
-                else
-                    $('#requests').removeAttr("disabled");
-
-                UpdateWaterfall();
-            });
-
-            $("input[name=mime], input[type=checkbox]").click(UpdateWaterfall);
-            $("input[type=text]:not(#requests)").on("input", UpdateWaterfall);
-            $("input#requests").on("change", UpdateWaterfall);
-
-
-            // reset the wait cursor when the image loads
-            $('#waterfallImage').load(function() {
-                $('body').css('cursor', 'default');
-            });
+        // event isteners
+        details_form.addEventListener('input', updateWaterfall);
+        document.getElementById('waterfallImage').addEventListener('load', () => {
+            document.body.style.cursor = 'default';
         });
 
         function getFormParams() {
@@ -185,8 +167,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
             return params;
         }
 
-        function UpdateWaterfall() {
-            $('body').css('cursor', 'wait');
+        function updateWaterfall() {
+            document.body.style.cursor = 'wait';
+            details_form.requests.disabled = details_form.type.value === 'connection';
 
             const params = getFormParams();
             let search = '?';
@@ -196,8 +179,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
             const extension = '<?php echo $extension; ?>';
             const src = '/waterfall.' + extension + search;
-            $('#waterfallImage').attr("src", src);
-            $('.customwaterfall_download a').attr("href", src);
+            document.getElementById('waterfallImage').src = src;
+            document.getElementById('waterfallImageLink').href = src;
             permalink.href = location.origin + location.pathname + search;
         };
     </script>
