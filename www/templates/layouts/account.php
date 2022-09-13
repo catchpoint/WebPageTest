@@ -4,8 +4,6 @@
 <head>
     <?php
 
-    require_once __DIR__ . '/../../common.inc';
-
     global $USER_EMAIL;
     global $supportsAuth;
     global $supportsSaml;
@@ -14,8 +12,14 @@
     global $_SESSION;
     global $client_error;
     global $site_js_loaded;
+    global $page_title;
+    global $page_description;
+    global $cdnPath;
+    global $experiments_paid;
 
-    $page_title = $page_title ? $page_title : 'WebPageTest';
+
+    $page_title ??= 'WebPageTest';
+
     ?>
     <title><?= $page_title ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>

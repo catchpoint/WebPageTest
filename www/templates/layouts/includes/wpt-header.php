@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../../../common.inc';
-
 use WebPageTest\Util;
 
 function addTab($tabName, $tabUrl, $addClass = '')
@@ -43,7 +41,7 @@ if ($id) {
     $resultUrl = "/results.php?test=$id";
     if (array_key_exists('end', $_REQUEST)) {
         $resultUrl .= "&end={$_REQUEST['end']}";
-    } elseif (FRIENDLY_URLS) {
+    } elseif (constant('FRIENDLY_URLS')) {
         $resultUrl = "/result/$id/";
     }
 }

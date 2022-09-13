@@ -13,7 +13,7 @@
 <?php if (isset($page_keywords) && count($page_keywords)) : ?>
     <meta name="keywords" content="<?= implode(',', $page_keywords) ?>" />
 <?php endif; ?>
-<?php if (strlen($page_description)) : ?>
+<?php if (isset($page_description) && strlen($page_description)) : ?>
     <meta name="description" content="<?= $page_description ?>" />
 <?php endif; ?>
 <meta name="author" content="Patrick Meenan">
@@ -79,7 +79,9 @@ echo "<style>\n";
 
 // switch to the private install logo if we're not running on webpagetest
 $privateInstall = true;
-if (stristr($_SERVER['HTTP_HOST'], 'webpagetest.org') !== false) {
+$server_host = !is_null($request_context) ? $request_context->getHost() : null;
+$server_host ??= isset($_SERVER) && isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+if (stristr($server_host, 'webpagetest.org') !== false) {
     $privateInstall = false;
 }
 
