@@ -15,9 +15,8 @@
     
 <?php 
     $name = 'Your Name Here!';
-	if($experiments_logged_in){
-		$thisUser = $request_context->getUser();
-		$name = $thisUser->getFirstName() . " " . $thisUser->getLastName();
+	if(isset($_GET['name']) ){
+        $name = htmlentities( rawurldecode( $_GET['name'] ) );
 	}
 ?>
 
@@ -27,7 +26,7 @@
 <div class="learn_feature learn_feature-certificate">
 				<img src="/assets/images/wpt-logo-dark.svg"  alt="WebPageTest, by Catchpoint" />
 				<h1>Certificate of Achievement</h1>
-				<p>This certificate recognizes that <strong contenteditable><?=$name?></strong> has completed the following professional skills training course from Catchpoint.</p>
+				<p>This certificate recognizes that <strong><?=$name?></strong> has completed the following professional skills training course from Catchpoint.</p>
     <div class="learn_feature_hed_contain">
 			
 				

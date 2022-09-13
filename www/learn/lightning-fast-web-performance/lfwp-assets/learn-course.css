@@ -1021,7 +1021,7 @@ div.chapter_extra .experiment_description_go a {
     font-size: calc(.9em + .2vw);
     font-weight: 500;
     padding: .5em 1em .5em 3em;
-    background: url("/images/src/icon_grading_check.svg") 0 .5em no-repeat;
+    background: url("/assets/images/src/icon_grading_check.svg") 0 .5em no-repeat;
     color: #584d32;
     background-size: 2em;
     line-height: 1.5;

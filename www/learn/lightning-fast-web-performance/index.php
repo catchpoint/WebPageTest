@@ -427,8 +427,9 @@ EOT;
 						<?php if($experiments_logged_in  ){ 
 							
 							
-
-							$CertimgURL = "https://wpt-screenshot.netlify.app/https%3A%2F%2Fscott.webpagetest.org%2Flearn%2Flightning-fast-web-performance%2Fcertificate.php%3Fscreenshot%3D1/opengraph/20220901011";
+							$thisUser = $request_context->getUser();
+							$name = $thisUser->getFirstName() . " " . $thisUser->getLastName();
+							$CertimgURL = "https://wpt-screenshot.netlify.app/" . rawurlencode( "https://scott.webpagetest.org/learn/lightning-fast-web-performance/certificate.php?name=" . $name . "&screenshot=1" ) . "/opengraph/20220913";
 							?>
 						<li class="cert-li"><details><summary><span>Certificate of Completion</span></summary>
 									<div class="chapter_inner">
