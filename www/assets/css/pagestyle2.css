@@ -8764,11 +8764,6 @@ div.bar {
   margin: 1rem 0;
 }
 
-.details_panel button {
-  display: none;
-  /* necessary button? does non-js work anyway? */
-}
-
 .customwaterfall_hed {
   padding: 0 1.5rem;
 }
