@@ -650,7 +650,15 @@ class Account
         }
     }
 
-    public static function getAccountPage(RequestContext $request_context)
+    /**
+     * GET for the account page
+     *
+     * @param WebPageTest\RequestContext $request_context
+     * @param string $page the specific account route being accessed
+     *
+     * @return string $contents the contents of the page
+     */
+    public static function getAccountPage(RequestContext $request_context, string $page): string
     {
         $error_message = $_SESSION['client-error'] ?? null;
 
@@ -665,7 +673,7 @@ class Account
         $company_name = $request_context->getUser()->getCompanyName();
 
 
-        $contact_info = array(
+        $contact_info = [
             'layout_theme' => 'b',
             'is_paid' => $is_paid,
             'is_verified' => $is_verified,
@@ -674,9 +682,9 @@ class Account
             'email' => $user_email,
             'company_name' => htmlspecialchars($company_name),
             'id' => $user_id
-        );
+        ];
 
-        $billing_info = array();
+        $billing_info = [];
         $country_list = Util::getChargifyCountryList();
         $state_list = Util::getChargifyUSStateList();
 
@@ -686,12 +694,12 @@ class Account
             } else {
                 $acct_info = $request_context->getClient()->getPaidAccountPageInfo();
                 $customer = $acct_info->getCustomer();
-                $subId = $customer->getSubscriptionId();
+                $sub_id = $customer->getSubscriptionId();
 
                 $billing_info = [
                     'api_keys' => $acct_info->getApiKeys(),
                     'wptCustomer' => $customer,
-                    'transactionHistory' => $request_context->getClient()->getTransactionHistory($subId),
+                    'transactionHistory' => $request_context->getClient()->getTransactionHistory($sub_id),
                     'is_wpt_enterprise' => $is_wpt_enterprise,
                     'status' => $customer->getStatus(),
                     'is_canceled' => $customer->isCanceled(),
@@ -709,7 +717,7 @@ class Account
         $plans = $request_context->getClient()->getWptPlans();
 
         $results = array_merge($contact_info, $billing_info);
-        $results['csrf_token'] = $_SESSION['csrf_token'];
+        $results['csrf_token'] = $_SESSION['csrf_token'] ?? null;
         $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
         $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
         $results['country_list'] = $country_list;
@@ -722,7 +730,6 @@ class Account
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
         }
-        $page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
         $tpl = new Template('account');
         $tpl->setLayout('account');
 
@@ -740,14 +747,14 @@ class Account
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
-                echo $tpl->render('billing/billing-cycle', $results);
+                return $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
                 if ($is_paid) {
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
                     $results['oldPlan'] = $oldPlan;
                 }
-                echo $tpl->render('plans/upgrade-plan', $results);
+                return $tpl->render('plans/upgrade-plan', $results);
                 break;
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
@@ -765,16 +772,16 @@ class Account
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                         $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
                         $results['renewaldate'] = $customer->getNextPlanStartDate();
-                        echo $tpl->render('plans/plan-summary-upgrade', $results);
+                        return $tpl->render('plans/plan-summary-upgrade', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
-                        echo $tpl->render('plans/plan-summary', $results);
+                        return $tpl->render('plans/plan-summary', $results);
                     }
                     break;
                 } else {
                   //TODO redirect instead
-                    echo $tpl->render('plans/upgrade-plan', $results);
+                    return $tpl->render('plans/upgrade-plan', $results);
                     break;
                 }
             default:
@@ -783,7 +790,7 @@ class Account
                 if (isset($next_plan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $plans);
                 }
-                echo $tpl->render('my-account', $results);
+                return $tpl->render('my-account', $results);
                 break;
         }
 

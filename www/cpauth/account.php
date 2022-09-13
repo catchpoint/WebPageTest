@@ -130,4 +130,7 @@ if ($request_method === 'POST') {
     exit();
 }
 
-AccountHandler::getAccountPage($request_context);
+$page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+$contents = AccountHandler::getAccountPage($request_context, $page);
+echo $contents;
+exit();

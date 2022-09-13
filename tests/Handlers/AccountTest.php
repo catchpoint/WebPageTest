@@ -572,4 +572,26 @@ final class AccountTest extends TestCase
         $this->expectException(ClientException::class);
         Account::resendEmailVerification($req);
     }
+
+    public function testGetAccountPageDefaultFree(): void
+    {
+        $page = "";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getWptPlans');
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        Account::getAccountPage($req, $page);
+    }
 }
