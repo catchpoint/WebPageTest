@@ -2159,6 +2159,11 @@ TEMP FIX FOR UPGRADE
 .no-border {
   border: none;
 }
+
+.plan-summary-address .contents-container {
+  max-width: 33rem;
+}
+
 .plan-summary-list li {
   line-height: 2rem;
 }
