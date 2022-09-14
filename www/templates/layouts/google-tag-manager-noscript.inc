@@ -1,4 +1,5 @@
 <?php
+
 use WebPageTest\Util;
 
 $gtm_id = Util::getSetting('gtm_id');

@@ -101,7 +101,7 @@ body.theme-b {
 }
 
 .account-page-content#main {
-    grid-column: 3/11;
+  grid-column: 3/11;
 }
 
 #billing-settings-content .card-section-subhed {
