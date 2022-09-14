@@ -4,7 +4,6 @@
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
     <?php
-	include __DIR__ . '/../../common.inc';
         $gaTemplate = 'Main';
         $useScreenshot = true;
         require_once __DIR__ . '/../../head.inc';
