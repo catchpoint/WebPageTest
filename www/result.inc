@@ -177,7 +177,20 @@ $page_description = "Website performance test result$testLabel.";
                           $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
                       if ($testResults->countRuns() > 1) {
-                          echo '<em>(Based on Median Run by ' . $friendlyMedianMetric . ')</em>';
+                          echo '<em>(Based on Median Run by: 
+                          <details><summary>' . $friendlyMedianMetric . '</summary>';
+                          echo "<ul>";
+
+                          $url = strtok($_SERVER["REQUEST_URI"], '?');
+                          foreach ($medianMetrics as $key => $value) {
+                              if ($pageData[$run][$cached][$key]) {
+                                  echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
+                              }
+                          }
+                          echo "</ul>";
+
+
+                          echo '</details>)</em>';
                       }
                         echo '</h3>';
 
@@ -186,17 +199,6 @@ $page_description = "Website performance test result$testLabel.";
                           <p><strong>Please note:</strong> Supported metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
                           </details>';
 
-                        echo "<div class='median_metric-selector'>";
-                        echo "<h3>Change Median Metric</h3>";
-                        echo "<ul>";
-
-                        $url = strtok($_SERVER["REQUEST_URI"], '?');
-                      foreach ($medianMetrics as $key => $value) {
-                          if ($pageData[$run][$cached][$key]) {
-                              echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
-                          }
-                      }
-                        echo "</ul></div>";
                       $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
                       $resultTable->useLabelLinks(true);
                       $resultTable->disableColumns(array(

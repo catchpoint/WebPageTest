@@ -189,6 +189,38 @@ h3.hed_sub {
     color: #555;
     /* display: block; */
     font-weight: 500;
+
+}
+
+.hed_sub em details {
+    display: inline-block;
+    position: relative;
+    z-index: 20;
+    margin: 0 0 0 1.2em;
+}
+
+.hed_sub em details summary {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    list-style-position: outside;
+}
+
+.hed_sub em details ul {
+    position: absolute;
+    background: #fff;
+    border-radius: .6em;
+    border: 1px solid #eee;
+    padding: .2em .6em;
+    top: 2em;
+    min-width: 100%;
+    width: 15em;
+    left: 0;
+    box-shadow: 0 0 3px rgba(0, 0, 0, .1)
+}
+
+.hed_sub em details li {
+    padding: .4em
 }
 
 @media (max-width: 50em) {
@@ -196,6 +228,12 @@ h3.hed_sub {
         font-size: 1em;
         margin: 0.5em 0 0;
     }
+
+    .hed_sub em details ul {
+        left: auto;
+        right: 0;
+    }
+    
     h2 {
         font-size: 1.2em;
     }
@@ -284,12 +322,12 @@ details.metrics_shown summary::-webkit-details-marker {
 }
 
 .compare-experiment p.ttfb_experiment_warning {
-    font-size: .9rem;
-    padding: 1em;
-    border: 1px solid #e6b57e;
-    background: #fff6df;
-    max-width: none;
-    border-radius: 0.5em;
+  font-size: 0.9rem;
+  padding: 1em;
+  border: 1px solid #e6b57e;
+  background: #fff6df;
+  max-width: none;
+  border-radius: 0.5em;
 }
 
 .opportunities_summary .extended {
@@ -3043,6 +3081,7 @@ body.result #main {
     }
 }
 
+
 .home_feature_hed-main,
 .home_feature_hed-lfwp {
     position: absolute;
@@ -3075,6 +3114,7 @@ body.result #main {
 .home.feature-lfwp .home_feature_hed_contain {
     background-color: #352A20;
     background-image: url(/assets/images/wpt_home_swoop.svg), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23776340'/%3E%3Cstop offset='1' stop-color='%2317150C'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23CCB77F' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23CCB77F' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
+
 }
 
 .home.feature-pro .home_feature_hed_contain {
@@ -3192,6 +3232,7 @@ header .pro-flag {
     display: flex;
     margin: 0 auto;
     max-width: 1400px;
+
     padding: 3rem 0 5rem;
     justify-content: space-between;
     align-items: flex-start;
@@ -4315,7 +4356,6 @@ span.test_presets_tag-experiment {
     padding: 1.5em;
     display: none;
     box-shadow: 0 0 5px #a90da5;
-    /* border: 1px solid a90da5; */
     font-size: 1rem;
     max-width: 80vw;
 }
@@ -5419,6 +5459,7 @@ label.test_preset_profile {
         font-size: 1.1em;
     }
 }
+
 
 @media screen and (min-width: 50em) {
     #visual_comparison .urldiv {
@@ -8842,11 +8883,6 @@ div.bar {
     margin: 1rem 0;
 }
 
-.details_panel button {
-    display: none;
-    /* necessary button? does non-js work anyway? */
-}
-
 .customwaterfall_hed {
     padding: 0 1.5rem;
 }
@@ -8898,77 +8934,6 @@ div.bar {
     overflow: hidden;
     padding: 0;
     position: absolute;
-}
-
-.median_metric-selector {
-    justify-self: center;
-    position: relative;
-    border: 0;
-    z-index: 200000;
-    cursor: pointer;
-    width: 15em;
-    margin-bottom: 2em;
-    display: inline-block;
-}
-
-.median_metric-selector h3 {
-    font-weight: normal;
-    border-radius: 2px;
-    border: 1px solid #999;
-    font-size: 1rem;
-    padding: 0.5em 1em;
-    border-radius: 0.5rem;
-    margin: 0;
-}
-
-.has-js .median_metric-selector h3:after {
-    background-image: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%23000' fill='none' stroke-width='2'/%3e%3c/svg%3e");
-    background-repeat: no-repeat, repeat;
-    background-size: contain;
-    background-color: #fff;
-    margin-left: 0.5em;
-    top: 0.3em;
-    position: relative;
-    content: " ";
-    display: inline-block;
-    height: 0.8em;
-    width: 0.8em;
-}
-
-.has-js .median_metric-selector:hover h3:after,
-.has-js .median_metric-selector:hover h3:focus {
-    transform: rotate(180deg);
-    top: -0.1em;
-}
-
-.has-js .median_metric-selector ul {
-    position: absolute;
-    box-shadow: 0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.11);
-    display: none;
-    right: 0;
-    left: auto;
-    width: 100%;
-    padding: 0.5em;
-    box-sizing: border-box;
-    background: #fff;
-}
-
-.has-js .median_metric-selector:hover ul,
-.has-js .median_metric-selector:focus ul {
-    display: block;
-}
-
-.median_metric-selector a {
-    text-decoration: none;
-    color: #333333;
-    display: block;
-    padding: 0.75em 1em;
-}
-
-.median_metric-selector a:hover,
-.median_metric-selector a:focus {
-    text-decoration: underline;
-    background: #f9f9f9;
 }
 
 .logout-form button[type="submit"] {

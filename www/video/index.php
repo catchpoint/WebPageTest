@@ -34,7 +34,7 @@ if (is_file($profile_file)) {
        <?php
             $tab = 'Start Test';
             include 'header.inc';
-            ?>
+        ?>
 
 <?php include("home_header.php"); ?>
 
