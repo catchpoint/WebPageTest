@@ -3534,7 +3534,7 @@ header .pro-flag {
 
 @media (max-width: 70em) {
     .home_feature_hed-lfwp .home_feature_hed_visual {
-        padding-top: 62.62% !important;
+        /* padding-top: 62.62% !important; */
     }
 }
 
@@ -3721,11 +3721,11 @@ header .pro-flag {
 
 .home_feature_hed-lfwp .attention .home_feature_hed_text_leadin {
     font-style: italic;
-    margin-right: .5em;
+    margin-right: .2em;
 }
 
 .home_feature_hed-lfwp .home_feature_hed_visual {
-    padding-top: 23%;
+    /* padding-top: 24%; */
 }
 
 .home_feature_hed-lfwp b.flag {
@@ -3740,9 +3740,9 @@ header .pro-flag {
     font-weight: 700;
 }
 
-@media (min-width: 70em) {
+@media (min-width: 80em) {
     .home_feature_hed-lfwp .home_feature_hed_visual {
-        padding-top: 27%;
+        /* padding-top: 27%; */
     }
 }
 

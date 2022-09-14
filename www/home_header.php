@@ -30,9 +30,9 @@
 						<a class="pill" href="/learn/lightning-fast-web-performance/" style="padding: .9em 1.5em;">Free! Start Course Now &gt;&gt;</a>
 					</div>
 					<div class="home_feature_hed_visual">
-					<iframe src="https://player.vimeo.com/video/735047569?h=9f45d3647f&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Course Intro"></iframe>
-
-					</div>
+                        <img src="/assets/images/wpt_home_lfwp_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                    </div>
+					
 				</div>
                 <div class="home_feature_hed home_feature_hed-pro">
                     <div class="home_feature_hed_text">

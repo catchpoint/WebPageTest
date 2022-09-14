@@ -807,6 +807,10 @@ video {
     padding: 0;
 }
 
+.curric h2 {
+    scroll-margin-top: 2em;
+}
+
 .see-ahead p,
 .curric p,
 .whatyoulllearn p,

@@ -154,8 +154,8 @@ EOT;
 			
 			
 
-			<section class="curric" id="toc">
-				<h2>Start The Course!</h2>
+			<section class="curric" >
+				<h2 id="toc">Start The Course!</h2>
 				<p>This free course consists of a series of video lectures that combine screencasts and narrated slides. Closed captioning is provided and a PDF is included with each video for links to resources mentioned within. Some videos require signing up for a free WebPageTest account.</p>
 				<ol>
 					<li>
