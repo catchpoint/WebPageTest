@@ -2,6 +2,7 @@
 <html class="account-layout">
 
 <head>
+    <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
     <?php
         $gaTemplate = 'Main';
         $useScreenshot = true;
