@@ -236,9 +236,12 @@ function SelectRequest(step, request) {
       r["early_hint_headers"] !== undefined &&
       r["early_hint_headers"][0] == "HTTP/1.1 103"
     ) {
-      //let's create a nice clean list of hints
-      let hints = r["early_hint_headers"][1].substring(6);
-      hints = hints.split(/(?=\<)/);
+      // let's create a nice clean list of hints
+      // slice off the first element (HTTP status) and strip leading "link: " from each header
+      let hints = [];
+      r["early_hint_headers"].slice(1).forEach((header) => {
+        hints = hints.concat(header.substring(6).split(/(?=\<)/));
+      });
 
       details += "<b>Early Hints: </b>";
       details += "<ul class='hints'>";
