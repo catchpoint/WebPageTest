@@ -22,7 +22,9 @@
 
 	 <p>To view the rest of videos in this course, you'll need a WebPageTest account. <strong>It's free!</strong></p> 
 	 <div class="experiment_description_go">
-	 <a href="https://webpagetest.org/login"><span>Sign Up or Login</span> <span>to access this video.</span></a>
+	 <a href="/signup?redirect_uri=/learn/lightning-fast-web-performance" style="background: #0e70b9;min-width: auto;margin-right: .5em;"><span style="color: #fff !important;">Sign Up</span> </a>
+	 <em style="margin-right: .5em;">or...</em> 
+	 <a href="/login?redirect_uri=/learn/lightning-fast-web-performance" style="min-width: auto;"><span>Log In</span> </a>
 	 </div>
 EOT;
 
