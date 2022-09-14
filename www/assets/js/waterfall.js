@@ -239,7 +239,7 @@ function SelectRequest(step, request) {
       // let's create a nice clean list of hints
       // slice off the first element (HTTP status) and strip leading "link: " from each header
       let hints = [];
-      r["early_hint_headers"].slice(1).forEach(header => {
+      r["early_hint_headers"].slice(1).forEach((header) => {
         hints = hints.concat(header.substring(6).split(/(?=\<)/));
       });
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="62px" height="62px" viewBox="0 0 62 62" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.5 (67469) - http://www.bohemiancoding.com/sketch -->
+    <title>Group</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-8" transform="translate(-819.000000, -206.000000)">
+            <g id="Group" transform="translate(819.000000, 206.000000)">
+                <circle id="Oval" fill="#FFFFFF" cx="31" cy="31" r="31"></circle>
+                <polygon id="Triangle" fill="#82BF40" transform="translate(34.500000, 32.000000) rotate(-270.000000) translate(-34.500000, -32.000000) " points="34.5 22 49 42 20 42"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

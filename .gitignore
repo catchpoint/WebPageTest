@@ -48,6 +48,7 @@ agent/js/5c.sh
 agent/js/5c2.sh
 /*.sublime-project
 /*.sublime-workspace
+/*.code-workspace
 /www/dat
 /www/settings/uniqueId.dat
 /www/ec2/log
