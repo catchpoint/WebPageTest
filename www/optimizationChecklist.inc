@@ -103,9 +103,9 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
     }
 
     // load the image icons (and size them)
-    $checkIcon = imagecreatefrompng('images/check.png');
-    $warningIcon = imagecreatefrompng('images/warning.png');
-    $errorIcon = imagecreatefrompng('images/error.png');
+    $checkIcon = imagecreatefrompng(__DIR__ . '/assets/images/check.png');
+    $warningIcon = imagecreatefrompng(__DIR__ . '/assets/images/warning.png');
+    $errorIcon = imagecreatefrompng(__DIR__ . '/assets/images/error.png');
 
     // draw the request information
     $i = 0;
