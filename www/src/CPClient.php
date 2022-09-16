@@ -349,34 +349,24 @@ class CPClient
                     ]),
                 (new Query('braintreeCustomerDetails'))
                     ->setSelectionSet([
-                        'customerId',
                         'wptPlanId',
-                        'subscriptionId',
-                        'ccLastFour',
-                        'daysPastDue',
-                        'subscriptionPrice',
-                        'maskedCreditCard',
-                        'nextBillingDate',
                         'billingPeriodEndDate',
                         'numberOfBillingCycles',
-                        'ccExpirationDate',
-                        'ccImageUrl',
                         'status',
-                        (new Query('discount'))
-                            ->setSelectionSet([
-                                'amount',
-                                'numberOfBillingCycles'
-                            ]),
                         'remainingRuns',
                         'monthlyRuns',
                         'planRenewalDate',
-                        'billingFrequency',
-                        'wptPlanName'
                     ])
             ]);
         try {
             $results = $this->graphql_client->runQuery($gql, true);
-            return $results->getData();
+            $api_keys = array_map(function ($key): ApiKey {
+                return new ApiKey($key);
+            }, $results->getData()['wptApiKey']);
+            return [
+              'api_keys' => $api_keys,
+              'braintreeCustomerDetails' => $results->getData()['braintreeCustomerDetails']
+            ];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }

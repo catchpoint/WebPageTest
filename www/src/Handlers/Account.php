@@ -790,6 +790,7 @@ class Account
                 if (isset($next_plan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $plans);
                 }
+
                 return $tpl->render('my-account', $results);
                 break;
         }

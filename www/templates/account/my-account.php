@@ -33,7 +33,9 @@
         <input type="radio" name="account-tabs" id="account-settings" value="account settings" checked />
         <!-- these sections only exist for paid users-->
         <?php if ($is_paid) : ?>
-            <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
+            <?php if (!$is_wpt_enterprise): ?>
+                <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
+            <?php endif; ?>
             <input type="radio" name="account-tabs" id="api-consumers" value="api consumers" />
         <?php endif; ?>
 
@@ -42,7 +44,9 @@
             <label for="account-settings">Account Settings</label>
             <!-- these sections only exist for paid users-->
             <?php if ($is_paid) : ?>
-                <label for="payments-invoices">Payments and Invoices</label>
+                <?php if (!$is_wpt_enterprise): ?>
+                    <label for="payments-invoices">Payments and Invoices</label>
+                <?php endif; ?>
                 <label for="api-consumers">Api Consumers</label>
             <?php endif; ?>
         </div>
@@ -165,20 +169,12 @@
         </div>
 
 
-        <?php if (!$is_wpt_enterprise) : ?>
-            <!-- PAYING ONLY: Billing Invoice tab -->
-            <?php if ($is_paid) : ?>
-                <div class="tab-content" id="billing-settings-content">
-                <?php
-                if ($is_paid) {
-                    include_once __DIR__ . '/billing/invoice-history.php';
-                } else {
-                    include_once __DIR__ . '/includes/signup.php';
-                }
-                ?>
-                </div>
-            <?php endif; ?>
-        <?php endif; //!$is_wpt_enterprise ?>
+        <!-- PAYING ONLY: Billing Invoice tab -->
+        <?php if ($is_paid && !$is_wpt_enterprise) : ?>
+            <div class="tab-content" id="billing-settings-content">
+            <?php include_once __DIR__ . '/billing/invoice-history.php'; ?>
+            </div>
+        <?php endif; ?>
 
 
         <!-- PAYING ONLY:  API tab -->
@@ -197,7 +193,7 @@
 include_once __DIR__ . '/includes/modals/contact-info.php';
 include_once __DIR__ . '/includes/modals/password.php';
 ?>
-<?php if ($is_paid) {
+<?php if ($is_paid && !$is_wpt_enterprise) {
     include_once __DIR__ . '/includes/modals/cancel-subscription.php';
 } ?>
 <!-- /Modals -->
