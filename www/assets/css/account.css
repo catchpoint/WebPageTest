@@ -2095,6 +2095,10 @@ TEMP FIX FOR UPGRADE
   margin-bottom: 30px;
 }
 
+.tab-labels label {
+  cursor: pointer;
+}
+
 .tab-labels label:not(:first-of-type) {
   margin-left: 2em;
 }
