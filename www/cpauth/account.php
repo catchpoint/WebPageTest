@@ -50,7 +50,7 @@ if ($request_method === 'POST') {
         $redirect_uri = AccountHandler::changePassword($request_context, $body);
         header("Location: {$redirect_uri}");
         exit();
-    } elseif ($type == "account-signp") {
+    } elseif ($type == "account-signup") {
         $body = AccountHandler::validateSubscribeToAccount($_POST);
         $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
 
