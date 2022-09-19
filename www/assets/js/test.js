@@ -185,7 +185,7 @@ function LocationChanged() {
   }
 
   // Add the emulated Chrome devices
-  if (has_chrome && 'mobileDevices' in window && mobileDevices) {
+  if (has_chrome && "mobileDevices" in window && mobileDevices) {
     group = "Chrome Device Emulation";
     groups.push(group);
     for (let deviceId in mobileDevices) {
