@@ -143,7 +143,7 @@ class Account
         try {
             $contact_info_validator->assert($first_name);
             $contact_info_validator->assert($last_name);
-            if (!is_null($company_name)) {
+            if (!is_null($company_name) && !empty($company_name)) {
                 $contact_info_validator->assert($company_name);
             }
         } catch (NestedValidationException $e) {

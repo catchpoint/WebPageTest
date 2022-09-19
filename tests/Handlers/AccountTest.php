@@ -241,6 +241,25 @@ final class AccountTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testValidateChangeContactInfoEmptyCompanyName(): void
+    {
+        $expected = new stdClass();
+        $expected->first_name = "Bloopy";
+        $expected->last_name = "Pineapples";
+        $expected->company_name = "";
+        $expected->id = "5";
+
+        $body = [
+          'id' => "5",
+          'first-name' => "Bloopy",
+          'last-name' => "Pineapples",
+          'company-name' => ""
+        ];
+
+        $actual = Account::validateChangeContactInfo($body);
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testChangeContactInfo(): void
     {
 
