@@ -1201,7 +1201,7 @@ table.sortable th button:hover {
 
 table.sortable th:not([aria-sort]) button:focus span::after,
 table.sortable th:not([aria-sort]) button:hover span::after {
-  content: "â–¼";
+  content: "▼";
   color: currentColor;
   font-size: 50%;
   top: 0;
