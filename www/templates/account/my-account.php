@@ -33,7 +33,7 @@
         <input type="radio" name="account-tabs" id="account-settings" value="account settings" checked />
         <!-- these sections only exist for paid users-->
         <?php if ($is_paid) : ?>
-            <?php if (!$is_wpt_enterprise): ?>
+            <?php if (!$is_wpt_enterprise) : ?>
                 <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
             <?php endif; ?>
             <input type="radio" name="account-tabs" id="api-consumers" value="api consumers" />
@@ -44,7 +44,7 @@
             <label for="account-settings">Account Settings</label>
             <!-- these sections only exist for paid users-->
             <?php if ($is_paid) : ?>
-                <?php if (!$is_wpt_enterprise): ?>
+                <?php if (!$is_wpt_enterprise) : ?>
                     <label for="payments-invoices">Payments and Invoices</label>
                 <?php endif; ?>
                 <label for="api-consumers">Api Consumers</label>
