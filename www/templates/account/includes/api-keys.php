@@ -26,25 +26,25 @@
                     <tr>
                         <th class="no-sort select-all-box"><label class="sr-only" for="select-all-api-keys">Select all api keys</label><input type="checkbox" name="select-all-api-keys" data-apikeybox="select-all" /></th>
                         <th aria-sort="ascending">
-                            <button>
+                            <button type="button">
                                 Name
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 API Key
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 Create Date
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 Last Updated
                                 <span aria-hidden="true"></span>
                             </button>
