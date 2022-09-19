@@ -3,8 +3,10 @@
 let styles = document.querySelectorAll('style').forEach(style => {
     let thisText = "";
     for (let i in style.sheet.cssRules) {
-        thisText += style.sheet.cssRules[i].cssText;
+        if (style.sheet.cssRules[i] && style.sheet.cssRules[i].cssText) {
+            thisText += style.sheet.cssRules[i].cssText;
+        }
     }
-    style.innerText = "/* inner styles set by WPT to match CSSOM */" + thisText;
+    style.textContent = "/* inner styles set by WPT to match CSSOM */" +thisText;
 });
 return document.documentElement.outerHTML;
