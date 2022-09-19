@@ -67,7 +67,7 @@
                                 <td data-th="Credit Card"><?= $txn->getPaymentMethod()->getCardBrand() ?></td>
                                 <td data-th="Card No."><?= $txn->getPaymentMethod()->getMaskedCardNumber() ?></td>
                                 <td data-th="Amount">$<?= $txn->getAppliedAmount() ?></td>
-                                <td data-th="Download"><a href="<?= $txn->getInvoiceLink() ?>">Link</a></td>
+                                <td data-th="Download"><a href="<?= $txn->getInvoiceLink() ?>" target="_blank" rel="noopener noreferrer">Link</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
