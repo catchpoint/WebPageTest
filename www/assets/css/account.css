@@ -1159,21 +1159,21 @@ table.sortable th button span {
 }
 
 table.sortable th[aria-sort="descending"] span::after {
-  content: "â–¼";
+  content: "▼";
   color: currentColor;
   font-size: 50%;
   top: 0;
 }
 
 table.sortable th[aria-sort="ascending"] span::after {
-  content: "â–²";
+  content: "▲";
   color: currentColor;
   font-size: 50%;
   top: 0;
 }
 
 table.show-unsorted-icon th:not([aria-sort]) button span::after {
-  content: "â™¢";
+  content: "♢";
   color: currentColor;
   font-size: 50%;
   position: relative;
