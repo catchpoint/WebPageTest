@@ -128,9 +128,7 @@ class User
 
     public function getRemainingRuns(): int
     {
-        // TODO - fix remaining and monthly runs for enterprise users
-        return $this->isWptEnterpriseClient() ? 1000 : $this->remaining_runs;
-        // return $this->remaining_runs;
+        return $this->remaining_runs;
     }
 
     public function setRemainingRuns(?int $runs): void
@@ -147,9 +145,7 @@ class User
 
     public function getMonthlyRuns(): int
     {
-        // TODO - fix remaining and monthly runs for enterprise users
-        return $this->isWptEnterpriseClient() ? 1000 : $this->monthly_runs;
-        //return $this->monthly_runs;
+        return $this->monthly_runs;
     }
 
     public function setMonthlyRuns(?int $runs): void
