@@ -42,9 +42,9 @@
         <?php if (!$is_wpt_enterprise) : ?>
             <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
             <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-                    <?php if (!isset($upcoming_plan)) : ?>
-                <li><strong>Plan Renewal:</strong> <?= !is_null($plan_renewal) ? $plan_renewal : "N/A" ?></li>
-                    <?php endif; ?>
+            <?php if (!isset($upcoming_plan) && !$is_canceled) : ?>
+                <li><strong>Plan Renewal:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+            <?php endif; ?>
         <?php endif; ?>
         </ul>
         <?php if (isset($upcoming_plan)) : ?>
