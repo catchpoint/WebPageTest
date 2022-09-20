@@ -690,28 +690,26 @@ class Account
         $state_list = Util::getChargifyUSStateList();
 
         if ($is_paid) {
-            if ($is_wpt_enterprise) {
-                $billing_info = $request_context->getClient()->getPaidEnterpriseAccountPageInfo();
-            } else {
-                $acct_info = $request_context->getClient()->getPaidAccountPageInfo();
-                $customer = $acct_info->getCustomer();
-                $sub_id = $customer->getSubscriptionId();
+            $acct_info = $is_wpt_enterprise
+                ? $request_context->getClient()->getPaidEnterpriseAccountPageInfo()
+                : $request_context->getClient()->getPaidAccountPageInfo();
+            $customer = $acct_info->getCustomer();
+            $sub_id = $customer->getSubscriptionId();
 
-                $billing_info = [
-                    'api_keys' => $acct_info->getApiKeys(),
-                    'wptCustomer' => $customer,
-                    'transactionHistory' => $request_context->getClient()->getTransactionHistory($sub_id),
-                    'status' => $customer->getStatus(),
-                    'is_canceled' => $customer->isCanceled(),
-                    'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
-                    'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
-                    'masked_cc' => $customer->getMaskedCreditCard(),
-                    'cc_expiration' => $customer->getCCExpirationDate()
-                ];
+            $billing_info = [
+                'api_keys' => $acct_info->getApiKeys(),
+                'wptCustomer' => $customer,
+                'transactionHistory' => $sub_id ? $request_context->getClient()->getTransactionHistory($sub_id) : null,
+                'status' => $customer->getStatus(),
+                'is_canceled' => $customer->isCanceled(),
+                'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
+                'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
+                'masked_cc' => $customer->getMaskedCreditCard(),
+                'cc_expiration' => $customer->getCCExpirationDate()
+            ];
 
-                if (!is_null($customer->getNextBillingDate())) {
-                    $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('F d, Y');
-                }
+            if (!is_null($customer->getNextBillingDate())) {
+                $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('F d, Y');
             }
         }
         $plans = $request_context->getClient()->getWptPlans();

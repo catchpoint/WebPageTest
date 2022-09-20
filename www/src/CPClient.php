@@ -22,6 +22,7 @@ use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceAddressType;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
+use WebPageTest\CPGraphQlTypes\EnterpriseCustomer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
@@ -31,6 +32,7 @@ use WebPageTest\CPGraphQlTypes\ChargifyInvoicePaymentList;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ContactUpdateInput;
 use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
+use WebPageTest\PaidPageInfo;
 
 class CPClient
 {
@@ -335,7 +337,7 @@ class CPClient
         }
     }
 
-    public function getPaidEnterpriseAccountPageInfo(): array
+    public function getPaidEnterpriseAccountPageInfo(): EnterprisePaidPageInfo
     {
         $gql = (new Query())
             ->setSelectionSet([
@@ -347,15 +349,14 @@ class CPClient
                         'createDate',
                         'changeDate'
                     ]),
-                (new Query('braintreeCustomerDetails'))
+                (new Query('wptCustomer'))
                     ->setSelectionSet([
                         'wptPlanId',
-                        'billingPeriodEndDate',
-                        'numberOfBillingCycles',
                         'status',
                         'remainingRuns',
                         'monthlyRuns',
                         'planRenewalDate',
+                        'billingPeriodEndDate'
                     ])
             ]);
         try {
@@ -363,10 +364,8 @@ class CPClient
             $api_keys = array_map(function ($key): ApiKey {
                 return new ApiKey($key);
             }, $results->getData()['wptApiKey']);
-            return [
-              'api_keys' => $api_keys,
-              'braintreeCustomerDetails' => $results->getData()['braintreeCustomerDetails']
-            ];
+            $customer = new EnterpriseCustomer($results->getData()['wptCustomer']);
+            return new EnterprisePaidPageInfo($customer, new ApiKeyList(...$api_keys));
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
         }
