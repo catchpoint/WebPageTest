@@ -2102,10 +2102,7 @@ TEMP FIX FOR UPGRADE
 
 .tab-labels label {
   cursor: pointer;
-}
-
-.tab-labels label:not(:first-of-type) {
-  margin-left: 2em;
+  display: block;
 }
 
 .tabs-container .tab-content {
@@ -2146,6 +2143,16 @@ TEMP FIX FOR UPGRADE
   opacity: 0;
   top: 0;
   left: 0;
+}
+
+@media (min-width: 31rem) {
+  .tab-labels label {
+    display: inline;
+  }
+
+  .tab-labels label:not(:first-of-type) {
+    margin-left: 2em;
+  }
 }
 
 .payment-info {
