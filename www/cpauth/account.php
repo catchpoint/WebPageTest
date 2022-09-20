@@ -10,7 +10,7 @@ use WebPageTest\Handlers\Account as AccountHandler;
 
 if (!Util::getSetting('cp_auth')) {
     $protocol = $request_context->getUrlProtocol();
-    $host = Util::getSetting('host');
+    $host = $request_context->getHost();
     $route = '/';
     $redirect_uri = "{$protocol}://{$host}{$route}";
 
@@ -21,7 +21,7 @@ if (!Util::getSetting('cp_auth')) {
 $access_token = $request_context->getUser()->getAccessToken();
 if (is_null($access_token)) {
     $protocol = $request_context->getUrlProtocol();
-    $host = Util::getSetting('host');
+    $host = $request_context->getHost();
     $route = '/login';
     $query = http_build_query(["redirect_uri" => "/account"]);
     $redirect_uri = "{$protocol}://{$host}{$route}?{$query}";
@@ -103,21 +103,21 @@ if ($request_method === 'POST') {
     } elseif ($type == "resend-verification-email") {
         try {
             $redirect_uri = AccountHandler::resendEmailVerification($request_context);
-            $successMessage = array(
+            $successMessage = [
                 'type' => 'success',
                 'text' => 'Email Verification link has been sent.'
-            );
-            Util::setBannerMessage('form', $successMessage);
+            ];
+            $request_context->getBannerMessageManager()->put('form', $successMessage);
             header("Location: {$redirect_uri}");
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $errorMessage = array(
+            $errorMessage = [
                 'type' => 'error',
                 'text' => $e->getMessage()
-            );
-            Util::setBannerMessage('form', $errorMessage);
-            $host = Util::getSetting('host');
+            ];
+            $request_context->getBannerMessageManager()->put('form', $errorMessage);
+            $host = $request_context->getHost();
             $protocol = $request_context->getUrlProtocol();
             $redirect_uri = "{$protocol}://{$host}/account";
             header("Location: {$redirect_uri}");

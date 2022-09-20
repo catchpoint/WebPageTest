@@ -358,7 +358,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
     $id = $_REQUEST['test'];
 }
 
-$median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
+$median_metric = Util::getSetting('medianMetric', null) ?? 'loadTime';
 $testLabel = '';
 $page_title = 'WebPageTest Test';
 $test_is_private = false;
