@@ -349,7 +349,7 @@ if ($supportsCPAuth) {
     require_once __DIR__ . '/common/AttachUser.php';
     require_once __DIR__ . '/common/AttachSignupClient.php';
     require_once __DIR__ . '/common/AttachBannerMessageManager.php';
-//    require_once __DIR__ . '/common/CheckCSRF.php';
+    require_once __DIR__ . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data
