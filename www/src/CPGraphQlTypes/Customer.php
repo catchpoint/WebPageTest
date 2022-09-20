@@ -15,6 +15,7 @@ class Customer
     private string $wpt_plan_id;
     private DateTime $billing_period_end_date;
     private float $subscription_price;
+    private string $formatted_subscription_price;
     private string $status;
     private string $wpt_plan_name;
     private ?string $next_wpt_plan_id;
@@ -55,6 +56,7 @@ class Customer
         $this->wpt_plan_id = $options['wptPlanId'];
         $this->billing_period_end_date = new DateTime($options['billingPeriodEndDate']);
         $this->subscription_price = $options['subscriptionPrice'];
+        $this->formatted_subscription_price = number_format(($options['subscriptionPrice'] / 100), 2, '.', ',');
         $this->status = $options['status'];
         $this->wpt_plan_name = $options['wptPlanName'];
         $this->monthly_runs = $options['monthlyRuns'];
@@ -114,6 +116,10 @@ class Customer
     public function getSubscriptionPrice(): float
     {
         return $this->subscription_price;
+    }
+    public function getFormattedSubscriptionPrice(): string
+    {
+        return $this->formatted_subscription_price;
     }
     public function getStatus(): string
     {

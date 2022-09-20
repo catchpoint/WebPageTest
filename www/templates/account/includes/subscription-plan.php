@@ -40,10 +40,14 @@
                 echo $date->format('F d, Y') ?>
             </li>
         <?php if (!$is_wpt_enterprise) : ?>
-            <li><strong>Price:</strong> $<?= number_format(($wptCustomer->getSubscriptionPrice() / 100), 2, '.', ',') ?></li>
+            <li><strong>Price:</strong> $<?= $wptCustomer->getFormattedSubscriptionPrice() ?></li>
             <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
-            <?php if (!isset($upcoming_plan) && !$is_canceled) : ?>
-                <li><strong>Plan Renewal:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+            <?php if (!isset($upcoming_plan)) : ?>
+                <?php if ($is_canceled) : ?>
+                    <li><strong>End Date:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+                <?php else : ?>
+                    <li><strong>Plan Renewal:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+                <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
         </ul>
