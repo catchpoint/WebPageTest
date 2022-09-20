@@ -133,6 +133,11 @@ body.theme-b {
   background-color: #e8f1ff;
 }
 
+.contact-support-button {
+  margin-bottom: 1.6875em;
+  margin-top: 2.5em;
+}
+
 .contact-support-button a {
   display: flex;
   align-items: center;
@@ -2228,6 +2233,7 @@ TEMP FIX FOR UPGRADE
   .subhed,
   .breadcrumbs {
     padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 
