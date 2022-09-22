@@ -203,7 +203,8 @@ class CPClient
                     ->setSelectionSet([
                         'remainingRuns',
                         'monthlyRuns',
-                        'subscriptionId'
+                        'subscriptionId',
+                        'planRenewalDate'
                     ])
             ]);
 
@@ -216,6 +217,7 @@ class CPClient
             $user->setRemainingRuns($remaining_runs);
             $monthly_runs = (int)$data['wptCustomer']['monthlyRuns'];
             $user->setMonthlyRuns($monthly_runs);
+            $user->setRunRenewalDate($data['wptCustomer']['planRenewalDate']);
             $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);

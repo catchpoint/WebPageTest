@@ -4,10 +4,10 @@
         <div class="card-section-subhed card-section-subhed__grid">
             <span class="plan-name">
                 <?= $wptCustomer->getWptPlanName() ?>
-        <?php if (!$is_wpt_enterprise) : ?>
-                <?= $billing_frequency  ?>
-                Pro
-        <?php endif; ?>
+                <?php if (!$is_wpt_enterprise) : ?>
+                    <?= $billing_frequency  ?>
+                    Pro
+                <?php endif; ?>
                 <?php if ($is_canceled) : ?>
                     <span class="status status__red"><?= $status; ?></span>
                 <?php else : ?>
@@ -31,22 +31,17 @@
         </div>
 
         <ul>
-            <li><strong>Runs per month:</strong> <?= $wptCustomer->getMonthlyRuns() ?></li>
-            <li><strong>Remaining runs:</strong> <?= $wptCustomer->getRemainingRuns() ?> </li>
-            <li><strong>Run Renewal:</strong>
-                <?php
-                $date = new DateTime('now');
-                $date->modify('first day of next month')->modify('+6 day');
-                echo $date->format('F d, Y') ?>
-            </li>
+            <li><strong>Runs per month:</strong> <?= $monthly_runs ?></li>
+            <li><strong>Remaining runs:</strong> <?= $remaining_runs ?> </li>
+            <li><strong>Run Renewal:</strong> <?= $run_renewal_date ?></li>
         <?php if (!$is_wpt_enterprise) : ?>
             <li><strong>Price:</strong> $<?= $wptCustomer->getFormattedSubscriptionPrice() ?></li>
             <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
             <?php if (!isset($upcoming_plan)) : ?>
                 <?php if ($is_canceled) : ?>
-                    <li><strong>End Date:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+                    <li><strong>End Date:</strong> <?= $next_billing_date ?: "N/A" ?></li>
                 <?php else : ?>
-                    <li><strong>Plan Renewal:</strong> <?= $plan_renewal ?: "N/A" ?></li>
+                    <li><strong>Plan Renewal:</strong> <?= $next_billing_date ?: "N/A" ?></li>
                 <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
@@ -56,7 +51,7 @@
             <div class="card-section-subhed card-section-subhed__grid">
                 <span class="plan-name">
                     <?= $upcoming_plan->getBillingFrequency() ?> Pro
-                    <span class="status status__info">Subscription Begins: <?= $plan_renewal ?></span>
+                    <span class="status status__info">Subscription Begins: <?= $next_billing_date ?></span>
                 </span>
             </div>
             <ul>
@@ -74,14 +69,9 @@
             </div>
         </div>
         <ul>
-            <li><strong>Runs per month:</strong> 300</li>
-            <li><strong>Remaining runs:</strong> <?= $remainingRuns ?> </li>
-            <li><strong>Run Renewal:</strong>
-                <?php
-                $date = new DateTime('now');
-                $date->modify('first day of next month')->modify('+6 day');
-                echo $date->format('F d, Y') ?>
-            </li>
+            <li><strong>Runs per month:</strong> <?= $monthly_runs ?></li>
+            <li><strong>Remaining runs:</strong> <?= $remaining_runs ?> </li>
+            <li><strong>Run Renewal:</strong> <?= $run_renewal_date ?></li>
         </ul>
     <?php endif; ?>
 </div>

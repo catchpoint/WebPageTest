@@ -295,7 +295,8 @@ final class CPClientTest extends TestCase
               "wptCustomer": {
                 "remainingRuns": 300,
                 "monthlyRuns": 3000,
-                "subscriptionId": "518235"
+                "subscriptionId": "518235",
+                "planRenewalDate": "2125-12-25"
               }
             }
             }');
@@ -315,6 +316,7 @@ final class CPClientTest extends TestCase
         $this->assertEquals('Bob', $user->getLastName());
         $this->assertEquals('', $user->getCompanyName());
         $this->assertEquals('alicebob@catchpoint.com', $user->getEmail());
+        $this->assertEquals(new DateTime('2125-12-25'), $user->getRunRenewalDate());
         $this->assertTrue($user->isPaid());
         $this->assertTrue($user->isVerified());
         $this->assertFalse($user->isWptEnterpriseClient());

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
+use DateTimeInterface;
+use DateTime;
+
 class User
 {
     private ?string $email;
@@ -20,6 +23,7 @@ class User
     private string $last_name;
     private string $company_name;
     private string $subscription_id;
+    private DateTime $run_renewal_date;
 
     public function __construct()
     {
@@ -38,6 +42,7 @@ class User
         $this->remaining_runs = 0;
         $this->monthly_runs = 300; // default to new, free account
         $this->subscription_id = "";
+        $this->run_renewal_date = $this->getFreeRunRenewalDate(); // default to free
     }
 
     public function getEmail(): ?string
@@ -221,5 +226,28 @@ class User
     public function setSubscriptionId(string $subscription_id): void
     {
         $this->subscription_id = $subscription_id;
+    }
+
+    public function getRunRenewalDate(): DateTimeInterface
+    {
+        return $this->run_renewal_date;
+    }
+
+    public function setRunRenewalDate(?string $date_string): void
+    {
+        if ((isset($date_string) && !is_null($date_string) && !empty($date_string))) {
+            $this->run_renewal_date = new DateTime($date_string);
+        }
+    }
+
+    private function getFreeRunRenewalDate(): DateTimeInterface
+    {
+        $day_of_month = (int)date('j');
+
+        if ($day_of_month > 6) {
+            return (new DateTime('now'))->modify('first day of next month')->modify('+6 day');
+        } else {
+            return (new DateTime('now'))->modify('first day of this month')->modify('+6 day');
+        }
     }
 }

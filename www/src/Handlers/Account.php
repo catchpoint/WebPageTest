@@ -666,7 +666,9 @@ class Account
         $is_verified = $request_context->getUser()->isVerified();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
         $user_id = $request_context->getUser()->getUserId();
-        $remainingRuns = $request_context->getUser()->getRemainingRuns();
+        $remaining_runs = $request_context->getUser()->getRemainingRuns();
+        $monthly_runs = $request_context->getUser()->getMonthlyRuns();
+        $run_renewal_date = $request_context->getUser()->getRunRenewalDate()->format('F d, Y');
         $user_email = $request_context->getUser()->getEmail();
         $first_name = $request_context->getUser()->getFirstName();
         $last_name = $request_context->getUser()->getLastName();
@@ -705,23 +707,25 @@ class Account
                 'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
                 'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
                 'masked_cc' => $customer->getMaskedCreditCard(),
-                'cc_expiration' => $customer->getCCExpirationDate()
+                'cc_expiration' => $customer->getCCExpirationDate(),
             ];
 
             if (!is_null($customer->getNextBillingDate())) {
-                $billing_info['plan_renewal'] = $customer->getNextBillingDate()->format('F d, Y');
+                $billing_info['next_billing_date'] = $customer->getNextBillingDate()->format('F d, Y');
             }
         }
         $plans = $request_context->getClient()->getWptPlans();
 
         $results = array_merge($contact_info, $billing_info);
+        $results['run_renewal_date'] = $run_renewal_date;
+        $results['remaining_runs'] = $remaining_runs;
+        $results['monthly_runs'] = $monthly_runs;
         $results['csrf_token'] = $_SESSION['csrf_token'] ?? null;
         $results['validation_pattern'] = ValidatorPatterns::getContactInfo();
         $results['validation_pattern_password'] = ValidatorPatterns::getPassword();
         $results['country_list'] = $country_list;
         $results['state_list'] = $state_list;
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
-        $results['remainingRuns'] = $remainingRuns;
         $results['plans'] = $plans;
         $results['messages'] = $request_context->getBannerMessageManager()->get();
         if (!is_null($error_message)) {
