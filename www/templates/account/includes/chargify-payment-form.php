@@ -3,17 +3,27 @@
         <h4>Pay with card</h4>
     </div>
     <div class="signup-card-body">
-        <div>
-            <span id="cc_cardholder_first_name"></span>
-            <span id="cc_cardholder_last_name"></span>
+        <div class="cardholder-name-container">
+            <div class="cardholder-name">
+                <span id="cc_cardholder_first_name"></span>
+            </div>
+            <div class="cardholder-name">
+                <span id="cc_cardholder_last_name"></span>
+            </div>
         </div>
         <div>
             <div id="cc_number"></div>
         </div>
-        <div>
-            <span id="cc_month"></span>
-            <span id="cc_year"></span>
-            <span id="cc_cvv"></span>
+        <div class="cc-detail-container">
+            <div class="cc-detail">
+                <span id="cc_month"></span>
+            </div>
+            <div class="cc-detail">
+                <span id="cc_year"></span>
+            </div>
+            <div class="cc-detail">
+                <span id="cc_cvv"></span>
+            </div>
         </div>
     </div>
 </div>

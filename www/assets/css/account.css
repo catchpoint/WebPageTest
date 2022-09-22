@@ -2352,3 +2352,10 @@ form:invalid button[type="submit"] {
 .card-section ul {
   margin-bottom: 1rem;
 }
+
+.cc-detail-container,
+.cardholder-name-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+}
