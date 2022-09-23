@@ -365,12 +365,15 @@ class Account
             return $redirect_uri;
         } catch (BaseException $e) {
             error_log($e->getMessage());
+            $message = "There was an error. Please try again or contact customer service.";
             $errorMessage = array(
                 'type' => 'error',
-                'text' => $e->getMessage()
+                'text' => $message
             );
             Util::setBannerMessage('form', $errorMessage);
-            throw new ClientException($e->getMessage(), "/account");
+            $host = $request_context->getHost();
+            $protocol = $request_context->getUrlProtocol();
+            return "{$protocol}://{$host}/account";
         }
     }
 
