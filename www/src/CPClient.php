@@ -204,7 +204,8 @@ class CPClient
                         'remainingRuns',
                         'monthlyRuns',
                         'subscriptionId',
-                        'planRenewalDate'
+                        'planRenewalDate',
+                        'nextBillingDate'
                     ])
             ]);
 
@@ -217,7 +218,12 @@ class CPClient
             $user->setRemainingRuns($remaining_runs);
             $monthly_runs = (int)$data['wptCustomer']['monthlyRuns'];
             $user->setMonthlyRuns($monthly_runs);
-            $user->setRunRenewalDate($data['wptCustomer']['planRenewalDate']);
+            $run_renewal_date = $data['wptCustomer']['planRenewalDate'];
+            // monthly users have next billing date set but not run renewal when they sign up
+            if (is_null($run_renewal_date) && !is_null($data['wptCustomer']['nextBillingDate'])) {
+                $run_renewal_date = $data['wptCustomer']['nextBillingDate'];
+            }
+            $user->setRunRenewalDate($run_renewal_date);
             $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
