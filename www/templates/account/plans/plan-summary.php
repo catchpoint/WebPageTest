@@ -40,7 +40,7 @@
         </div>
 
         <div class="add-subscription-button-wrapper">
-            <button type="submit" class="pill-button yellow">Upgrade Plan</button>
+            <button type="submit" class="pill-button yellow" disabled>Upgrade Plan</button>
         </div>
     </form>
 </div>
@@ -94,6 +94,9 @@
             streetAddressInput.value = data['street-address'];
             const zipInput = form.querySelector('input[name=zipcode]');
             zipInput.value = data['zipcode'];
+            const submitButton = form.querySelector('button[type=submit]');
+            submitButton.disabled = false;
+            submitButton.removeAttribute('disabled');
         });
     })();
 </script>
