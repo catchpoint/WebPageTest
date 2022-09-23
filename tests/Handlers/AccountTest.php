@@ -611,13 +611,20 @@ final class AccountTest extends TestCase
 
         $req = new RequestContext([]);
         $user = new User();
-        $user->setFirstName("Goober");
-        $user->setLastName("Goob");
+        $user->setUserId(12345);
         $req->setUser($user);
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
             ->method('getWptPlans');
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+              'firstName' => "Goober",
+              'lastName' => "Goob",
+              'companyName' => ""
+            ]);
         $req->setClient($client);
 
         $bmm = $this->createMock(BannerMessageManager::class);

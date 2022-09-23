@@ -684,9 +684,10 @@ class Account
         $monthly_runs = $request_context->getUser()->getMonthlyRuns();
         $run_renewal_date = $request_context->getUser()->getRunRenewalDate()->format('F d, Y');
         $user_email = $request_context->getUser()->getEmail();
-        $first_name = $request_context->getUser()->getFirstName();
-        $last_name = $request_context->getUser()->getLastName();
-        $company_name = $request_context->getUser()->getCompanyName();
+        $contact_info = $request_context->getClient()->getUserContactInfo($user_id);
+        $first_name = $contact_info['firstName'];
+        $last_name = $contact_info['lastName'];
+        $company_name = $contact_info['companyName'];
 
 
         $contact_info = [
