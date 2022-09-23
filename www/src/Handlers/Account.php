@@ -61,8 +61,8 @@ class Account
      * #[ValidatorMethod]
      * #[Route(Http::POST, '/account', 'upgrade-plan-2')]
      *
-     *  @param array{plan: string, subscription_id: string, is_upgrade: string} $post_body
-     *  @return object{plan: string, subscription_id: string, is_upgrade: bool} $body
+     *  @param array{plan: string, subscription_id: string, is_upgrade: string, runs: string} $post_body
+     *  @return object{plan: string, subscription_id: string, is_upgrade: bool, runs: int} $body
      */
     public static function validatePostUpdatePlanSummary(array $post_body): object
     {
@@ -70,6 +70,7 @@ class Account
         $body->plan = $post_body['plan'];
         $body->subscription_id = $post_body['subscription_id'];
         $body->is_upgrade = !empty($post_body['is_upgrade']);
+        $body->runs = (int)filter_var($post_body['runs'] ?? "", FILTER_SANITIZE_NUMBER_INT);
         return $body;
     }
 
@@ -79,7 +80,7 @@ class Account
      * #[Route(Http::POST, '/account', 'upgrade-plan-2')]
      *
      *  @param WebPageTest\RequestContext $request_context
-     *  @param object{plan: string, subscription_id: string, is_upgrade: bool} $body
+     *  @param object{plan: string, subscription_id: string, is_upgrade: bool, runs: int} $body
      *  @return string $redirect_uri
      */
     public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
@@ -95,6 +96,11 @@ class Account
                 'text' => 'Your plan has been successfully updated!'
             ];
             $request_context->getBannerMessageManager()->put('form', $success_message);
+
+            // NOTE1: doing this to beat out a race condition, yay distributed systems
+            if ($body->is_upgrade) {
+                $_SESSION['new-run-count'] = $body->runs;
+            }
 
             return "{$protocol}://{$host}/account";
         } catch (\Exception $e) {
@@ -667,6 +673,11 @@ class Account
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
         $user_id = $request_context->getUser()->getUserId();
         $remaining_runs = $request_context->getUser()->getRemainingRuns();
+        // See NOTE1
+        if (isset($_SESSION['new-run-count'])) {
+            $remaining_runs = $_SESSION['new-run-count'];
+            unset($_SESSION['new-run-count']);
+        }
         $monthly_runs = $request_context->getUser()->getMonthlyRuns();
         $run_renewal_date = $request_context->getUser()->getRunRenewalDate()->format('F d, Y');
         $user_email = $request_context->getUser()->getEmail();

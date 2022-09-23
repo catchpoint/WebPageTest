@@ -23,6 +23,7 @@
             <!-- .radiobutton-tab-container__notcss -->
 
             <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
+            <input type="hidden" name="runs" value="<?= $plan->getRuns() ?>" />
             <input type="hidden" name="is_upgrade" value="<?= $isUpgrade ?>" />
             <input type='hidden' name='type' value='upgrade-plan-2' />
             <input type="hidden" name="subscription_id" value="<?= $wptCustomer->getSubscriptionId() ?>" />

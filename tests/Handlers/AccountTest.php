@@ -75,12 +75,14 @@ final class AccountTest extends TestCase
         $expected = new stdClass();
         $expected->subscription_id = 'abcdef';
         $expected->plan = 'ap74';
-        $expected->is_upgrade = "1";
+        $expected->is_upgrade = true;
+        $expected->runs = 5000;
 
         $post_body = [
             'subscription_id' => 'abcdef',
             'plan' => 'ap74',
-            'is_upgrade' => true
+            'is_upgrade' => '1',
+            'runs' => '5000'
         ];
 
         $actual = Account::validatePostUpdatePlanSummary($post_body);
@@ -93,11 +95,13 @@ final class AccountTest extends TestCase
         $expected->subscription_id = 'abcdef';
         $expected->plan = 'ap74';
         $expected->is_upgrade = false;
+        $expected->runs = 1000;
 
         $post_body = [
             'subscription_id' => 'abcdef',
             'plan' => 'ap74',
-            'is_upgrade' => ''
+            'is_upgrade' => '',
+            'runs' => 1000
         ];
 
         $actual = Account::validatePostUpdatePlanSummary($post_body);
@@ -110,6 +114,7 @@ final class AccountTest extends TestCase
         $body->subscription_id = 'abcdef';
         $body->plan = 'ap74';
         $body->is_upgrade = true;
+        $body->runs = 1000;
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
