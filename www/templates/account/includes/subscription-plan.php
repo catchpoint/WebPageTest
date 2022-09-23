@@ -35,7 +35,7 @@
             <li><strong>Remaining runs:</strong> <?= $remaining_runs ?> </li>
             <li><strong>Run Renewal:</strong> <?= $run_renewal_date ?></li>
         <?php if (!$is_wpt_enterprise) : ?>
-            <li><strong>Price:</strong> $<?= $wptCustomer->getFormattedSubscriptionPrice() ?></li>
+            <li><strong>Price:</strong> $<?= $wptCustomer->getFormattedSubscriptionPrice() ?> (+ applicable taxes)</li>
             <li><strong>Billing Cycle:</strong> <?= $billing_frequency ?></li>
             <?php if (!isset($upcoming_plan)) : ?>
                 <?php if ($is_canceled) : ?>
