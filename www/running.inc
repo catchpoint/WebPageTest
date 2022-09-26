@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>WebPageTest - Running web page performance and optimization tests...</title>
+        <title><?php echo $page_title; ?> - Running web page performance and optimization tests...</title>
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
