@@ -30,28 +30,30 @@
 <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
 
 <script>
-  var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
-  var form = document.querySelector("#wpt-signup-paid-account");
+(() => {
+    let hiddenNonceInput = document.querySelector('#hidden-nonce-input');
+    const form = document.querySelector("#wpt-signup-paid-account");
 
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    var button = event.target.querySelector('button[type=submit]');
-    button.disabled = true;
-    button.setAttribute('disabled', 'disabled');
-    button.innerText = 'Submitted';
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      let button = event.target.querySelector('button[type=submit]');
+      button.disabled = true;
+      button.setAttribute('disabled', 'disabled');
+      button.innerText = 'Submitted';
 
-    chargify.token(
-        form,
-        function success(token) {
-            hiddenNonceInput.value = token;
-            form.submit();
-        },
-        function error(err) {
-            button.disabled = false;
-            button.removeAttribute('disabled');
-            button.innerText = 'Sign Up';
-            console.log('token ERROR - err: ', err);
-        }
-    );
-  });
+      chargify.token(
+          form,
+          function success(token) {
+              hiddenNonceInput.value = token;
+              form.submit();
+          },
+          function error(err) {
+              button.disabled = false;
+              button.removeAttribute('disabled');
+              button.innerText = 'Sign Up';
+              form.setCustomValidity('There was an error with your payment. Please try again or try a different card.');
+          }
+      );
+    });
+})();
 </script>
