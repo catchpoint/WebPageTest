@@ -483,6 +483,27 @@ final class CPClientTest extends TestCase
                   "description": "",
                   "interval": 12,
                   "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP5",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP6",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "MP7",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
                 }
               ]
             }
@@ -499,7 +520,7 @@ final class CPClientTest extends TestCase
           ));
 
           $plans = $client->getWptPlans();
-          $this->assertEquals(8, count($plans));
+          $this->assertEquals(3, count($plans));
     }
 
     public function testGetWptPlansNullResponse(): void

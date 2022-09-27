@@ -282,7 +282,7 @@ class CPClient
             ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        $plans = array_map(function ($data): Plan {
+        $plans = array_filter(array_map(function ($data): Plan {
             $options = [
                 'id' => $data['name'],
                 'name' => $data['description'],
@@ -292,7 +292,19 @@ class CPClient
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan'] ?? []);
+        }, $results->getData()['wptPlan'] ?? []), function (Plan $plan) {
+          /** This is a bit of a hack for now. These are our approved plans for new
+           * customers to be able to use. We will better handle this from the backend
+           * */
+            return strtolower($plan->getId()) == 'ap5' ||
+                   strtolower($plan->getId()) == 'ap6' ||
+                   strtolower($plan->getId()) == 'ap7' ||
+                   strtolower($plan->getId()) == 'ap8' ||
+                   strtolower($plan->getId()) == 'mp5' ||
+                   strtolower($plan->getId()) == 'mp6' ||
+                   strtolower($plan->getId()) == 'mp7' ||
+                   strtolower($plan->getId()) == 'mp8';
+        });
         return new PlanList(...$plans);
     }
 
