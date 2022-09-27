@@ -31,7 +31,7 @@ if ($experiment) {
         array("TotalBlockingTime", "Total Blocking Time", "s", null, false),
         array("visualComplete", "Visual Complete", "s", null, true),
         array("fullyLoaded", "Fully Loaded", "s", null, true),
-        array("bytesIn", "Total Bytes", "KB", array("Lighter", "Heavier"), false)
+        array("bytesIn", "Page Weight", "KB", array("Lighter", "Heavier"), false)
     );
 
     // see if there's a notable diff in TTFB first, which is usually unrelated to the experiment
