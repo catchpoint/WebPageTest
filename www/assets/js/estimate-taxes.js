@@ -3,6 +3,9 @@
 
   class EstimateTaxes {
     constructor(addressForm, summaryNode) {
+      if(!addressForm || !summaryNode) {
+        return;
+      }
       this.form = addressForm;
       this.summary = summaryNode;
       this.form.addEventListener("submit", async (e) => {
