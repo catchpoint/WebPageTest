@@ -4,39 +4,35 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
-use WebPageTest\Discount;
-
 class Plan
 {
     private string $billing_frequency;
-    private float $price;
+    private int $price_in_cents;
     private string $monthly_price;
     private string $annual_price;
     private string $other_annual;
     private int $runs;
     private string $id;
     private string $name;
-    private ?Discount $discount;
     private float $annual_savings = 5.0 / 4.0; // Monthly costs 25% more than annual per year
 
     public function __construct(array $options = [])
     {
         $bf = $options['billingFrequency'] == 1 ? "Monthly" : "Annually";
-        $monthly_price = $bf == "Monthly" ? $options['price'] : $options['price'] / 12;
-        $annual_price =  $bf == "Monthly" ? $options['price'] * 12 : $options['price'];
-        $monthly_extra = $annual_price * (1 / $this->annual_savings);
-        $annual_savings = $annual_price * $this->annual_savings;
-        $other_annual = $bf == "Monthly" ?  $monthly_extra : $annual_savings;
+        $monthly_price_in_cents = $bf == "Monthly" ? $options['priceInCents'] : $options['priceInCents'] / 12;
+        $annual_price_in_cents =  $bf == "Monthly" ? $options['priceInCents'] * 12 : $options['priceInCents'];
+        $monthly_extra_in_cents = $annual_price_in_cents * (1 / $this->annual_savings);
+        $annual_savings_in_cents = $annual_price_in_cents * $this->annual_savings;
+        $other_annual = $bf == "Monthly" ?  $monthly_extra_in_cents : $annual_savings_in_cents;
 
         $this->billing_frequency = $bf;
-        $this->price = $options['price'];
-        $this->monthly_price = number_format(($monthly_price), 2, ".", ",");
-        $this->annual_price = number_format(($annual_price), 2, ".", ",");
-        $this->other_annual = number_format(($other_annual), 2, ".", ",");
-        $this->runs = (int) filter_var($options['name'], FILTER_SANITIZE_NUMBER_INT);
+        $this->price_in_cents = $options['priceInCents'];
+        $this->monthly_price = number_format(($monthly_price_in_cents / 100), 2, ".", ",");
+        $this->annual_price = number_format(($annual_price_in_cents / 100), 2, ".", ",");
+        $this->other_annual = number_format(($other_annual / 100), 2, ".", ",");
+        $this->runs = $options['runs'];
         $this->id = $options['id'];
         $this->name = $options['name'];
-        $this->discount = isset($options['discount']) ? new Discount($options['discount']) : null;
     }
 
     public function getBillingFrequency(): string
@@ -46,7 +42,7 @@ class Plan
 
     public function getPrice(): float
     {
-        return $this->price;
+        return $this->price_in_cents;
     }
 
     public function getMonthlyPrice(): string
@@ -79,8 +75,31 @@ class Plan
         return $this->name;
     }
 
-    public function getDiscount(): Discount
+    public function isUpgrade(Plan $currentPlan): bool
     {
-        return $this->discount;
+        $currentRuns = $currentPlan->getRuns();
+        $isCurrentAnnual = $currentPlan->getBillingFrequency() == "Annually";
+        $newRuns = $this->getRuns();
+        $isNewAnnual = $this->getBillingFrequency() == "Annually";
+        // upgrade if:
+        // monthly low to monthly higher
+        if (!$isCurrentAnnual && !$isNewAnnual) {
+            return $newRuns > $currentRuns;
+        }
+        // monthly to annual (same runs or above)
+        if (!$isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns >= $currentRuns ? 'monthly and annual $newRuns >= $currentRuns' :
+            // 'monthly and annual $newRuns < $currentRuns';
+            return $newRuns >= $currentRuns;
+        }
+        // annual to annual higher
+        if ($isCurrentAnnual && $isNewAnnual) {
+            // return  $newRuns > $currentRuns ? 'annual and annual $newRuns > $currentRuns' :
+            // 'annual and  annual $newRuns < $currentRuns';
+            return $newRuns > $currentRuns;
+        }
+        // annual to monthly (any)
+        // return "annual to monthly";
+        return false;
     }
 }

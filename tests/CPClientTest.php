@@ -40,6 +40,18 @@ final class CPClientTest extends TestCase
         $this->assertEquals('345', $client->client_secret);
     }
 
+    public function testAuthenticateSetsAccessToken(): void
+    {
+        $host = 'http://127.0.0.1';
+        $token = "ABCDEF123";
+
+        $client = new CPClient($host, array());
+        $this->assertFalse($client->isAuthenticated());
+        $client->authenticate($token);
+        $this->assertEquals($token, $client->getAccessToken());
+        $this->assertTrue($client->isAuthenticated());
+    }
+
     public function testLoginCallsCorrectEndpointWithBody(): void
     {
         $results = [];
@@ -264,28 +276,30 @@ final class CPClientTest extends TestCase
     public function testGetUser(): void
     {
         $handler = $this->createMockResponse(200, '{
-    "data": {
-      "userIdentity": {
-        "activeContact": {
-          "id": 263425,
-          "firstName": "Alice",
-          "lastName": "Bob",
-          "email": "alicebob@catchpoint.com",
-          "isWptPaidUser": true,
-          "isWptAccountVerified": true,
-          "companyName": null
-        },
-        "levelSummary": {
-          "levelId": 3,
-          "isWptEnterpriseClient": false
-        }
-      },
-      "braintreeCustomerDetails": {
-        "remainingRuns": "300",
-        "monthlyRuns": "3000"
-      }
-    }
-    }');
+            "data": {
+              "userIdentity": {
+                "activeContact": {
+                  "id": 263425,
+                  "firstName": "Alice",
+                  "lastName": "Bob",
+                  "email": "alicebob@catchpoint.com",
+                  "isWptPaidUser": true,
+                  "isWptAccountVerified": true,
+                  "companyName": null
+                },
+                "levelSummary": {
+                  "levelId": 3,
+                  "isWptEnterpriseClient": false
+                }
+              },
+              "wptCustomer": {
+                "remainingRuns": 300,
+                "monthlyRuns": 3000,
+                "subscriptionId": "518235",
+                "planRenewalDate": "2125-12-25"
+              }
+            }
+            }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -302,6 +316,7 @@ final class CPClientTest extends TestCase
         $this->assertEquals('Bob', $user->getLastName());
         $this->assertEquals('', $user->getCompanyName());
         $this->assertEquals('alicebob@catchpoint.com', $user->getEmail());
+        $this->assertEquals(new DateTime('2125-12-25'), $user->getRunRenewalDate());
         $this->assertTrue($user->isPaid());
         $this->assertTrue($user->isVerified());
         $this->assertFalse($user->isWptEnterpriseClient());
@@ -310,26 +325,26 @@ final class CPClientTest extends TestCase
     public function testGetUserWithError(): void
     {
         $handler = $this->createMockResponse(200, '{
-      "errors":[
-        {
-          "message":"Invalid data. This is an error, man",
-          "locations":[
-            {
-              "line":1,
-              "column":2
-            }
-          ],
-          "extensions":{
-            "code":"GRAPHQL_VALIDATION_FAILED",
-            "exception":{
-              "stacktrace":[
-                "Errors all over the place"
-              ]
-            }
-          }
-        }
-      ]
-    }');
+            "errors":[
+              {
+                "message":"Invalid data. This is an error, man",
+                "locations":[
+                  {
+                    "line":1,
+                    "column":2
+                  }
+                ],
+                "extensions":{
+                  "code":"GRAPHQL_VALIDATION_FAILED",
+                  "exception":{
+                    "stacktrace":[
+                      "Errors all over the place"
+                    ]
+                  }
+                }
+              }
+            ]
+          }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -347,16 +362,16 @@ final class CPClientTest extends TestCase
     public function testGetUserContactInfo(): void
     {
         $handler = $this->createMockResponse(200, '{
-    "data": {
-      "contact": [
-        {
-          "companyName": "catchpoint",
-          "firstName": "Janet",
-          "lastName": "Jones"
-        }
-      ]
-    }
-    }');
+            "data": {
+              "contact": [
+                {
+                  "companyName": "catchpoint",
+                  "firstName": "Janet",
+                  "lastName": "Jones"
+                }
+              ]
+            }
+        }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -374,26 +389,26 @@ final class CPClientTest extends TestCase
     public function testGetUserContactInfoWithError(): void
     {
         $handler = $this->createMockResponse(200, '{
-      "errors":[
-        {
-          "message":"Invalid data. This is an error, man",
-          "locations":[
+          "errors":[
             {
-              "line":1,
-              "column":2
+              "message":"Invalid data. This is an error, man",
+              "locations":[
+                {
+                  "line":1,
+                  "column":2
+                }
+              ],
+              "extensions":{
+                "code":"GRAPHQL_VALIDATION_FAILED",
+                "exception":{
+                  "stacktrace":[
+                    "Errors all over the place"
+                  ]
+                }
+              }
             }
-          ],
-          "extensions":{
-            "code":"GRAPHQL_VALIDATION_FAILED",
-            "exception":{
-              "stacktrace":[
-                "Errors all over the place"
-              ]
-            }
-          }
-        }
-      ]
-    }');
+          ]
+        }');
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -408,125 +423,158 @@ final class CPClientTest extends TestCase
         $client->getUserContactInfo(12345);
     }
 
-    public function testGetUnpaidAccountpageInfo(): void
+    public function testGetWptPlans(): void
     {
         $handler = $this->createMockResponse(200, '{
-    "data": {
-      "braintreeClientToken": "abcdef",
-      "wptPlans": [
-        {
-          "id": "ap7",
-          "name": "10,000 runs",
-          "price": 1620.00,
-          "billingFrequency": 12,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "mp7",
-          "name": "10,000 runs",
-          "price": 168.75,
-          "billingFrequency": 1,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "ap5",
-          "name": "1,000 runs",
-          "price": 180.00,
-          "billingFrequency": 12,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "mp5",
-          "name": "1000 runs",
-          "price": 18.75,
-          "billingFrequency": 1,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "ap8",
-          "name": "20,000 runs",
-          "price": 3000.00,
-          "billingFrequency": 12,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "mp8",
-          "name": "20,000 runs",
-          "price": 312.50,
-          "billingFrequency": 1,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "ap6",
-          "name": "5,000 runs",
-          "price": 840.00,
-          "billingFrequency": 12,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        },
-        {
-          "id": "mp6",
-          "name": "5,000 runs",
-          "price": 87.50,
-          "billingFrequency": 1,
-          "billingDayOfMonth": null,
-          "currencyIsoCode": "USD",
-          "numberOfBillingCycles": null,
-          "trialDuration": null,
-          "trialPeriod": false,
-          "discount": null
-        }
-      ]
-    }
-    }');
-        $host = "http://webpagetest.org";
-        $client = new CPClient($host, array(
-            'auth_client_options' => [
-                'client_id' => '123',
-                'client_secret' => '345',
-                'grant_type' => 'these are good to have',
-                'handler' => $handler
-            ]
-        ));
+            "data": {
+              "wptPlan": [
+                {
+                  "name": "MP1",
+                  "priceInCents": 1874,
+                  "description": "MP1",
+                  "interval": 1,
+                  "monthlyTestRuns": 1200
+                },
+                {
+                  "name": "MP2",
+                  "priceInCents": 500,
+                  "description": "MP2",
+                  "interval": 1,
+                  "monthlyTestRuns": 5000
+                },
+                {
+                  "name": "MP3",
+                  "priceInCents": 12499,
+                  "description": "MP3",
+                  "interval": 1,
+                  "monthlyTestRuns": 12000
+                },
+                {
+                  "name": "AP1",
+                  "priceInCents": 17988,
+                  "description": "AP1",
+                  "interval": 12,
+                  "monthlyTestRuns": 1200
+                },
+                {
+                  "name": "MP4",
+                  "priceInCents": 24999,
+                  "description": "MP4",
+                  "interval": 1,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP2",
+                  "priceInCents": 59988,
+                  "description": "AP2",
+                  "interval": 12,
+                  "monthlyTestRuns": 5000
+                },
+                {
+                  "name": "AP3",
+                  "priceInCents": 119988,
+                  "description": "AP3",
+                  "interval": 12,
+                  "monthlyTestRuns": 12000
+                },
+                {
+                  "name": "AP4",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP5",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "AP6",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                },
+                {
+                  "name": "MP7",
+                  "priceInCents": 158388,
+                  "description": "",
+                  "interval": 12,
+                  "monthlyTestRuns": 25000
+                }
+              ]
+            }
+          }');
 
-        $data = $client->getUnpaidAccountpageInfo();
-        $this->assertEquals(8, count($data['wptPlans']));
+          $host = "http://webpagetest.org";
+          $client = new CPClient($host, array(
+              'auth_client_options' => [
+                  'client_id' => '123',
+                  'client_secret' => '345',
+                  'grant_type' => 'these are good to have',
+                  'handler' => $handler
+              ]
+          ));
+
+          $plans = $client->getWptPlans();
+          $this->assertEquals(3, count($plans));
     }
 
+    public function testGetWptPlansNullResponse(): void
+    {
+        $handler = $this->createMockResponse(200, '{
+            "data": {
+              "wptPlan": null
+            }
+          }');
+
+          $host = "http://webpagetest.org";
+          $client = new CPClient($host, array(
+              'auth_client_options' => [
+                  'client_id' => '123',
+                  'client_secret' => '345',
+                  'grant_type' => 'these are good to have',
+                  'handler' => $handler
+              ]
+          ));
+
+          $plans = $client->getWptPlans();
+          $this->assertEquals(0, count($plans));
+    }
+
+    /**
+    public function getPaidAccountPageInfo(): PaidPageInfo
+        "wptApiKey": [
+            {
+                "id": 673,
+                "name": "webpagetest",
+                "apiKey": "12581d97-7b8b-4519-b02f-b404f401a973",
+                "createDate": "2022-03-23T09:12:57.937",
+                "changeDate": "2022-04-28T08:39:16.023"
+    },
+    "wptCustomer": {
+    }
+        ],
+    public function getPaidEnterpriseAccountPageInfo(): array
+    public function updateUserContactInfo(string $id, array $options): array
+    public function changePassword(string $new_pass, string $current_pass): array
+    public function createApiKey(string $name): array
+    public function deleteApiKey(array $ids): array
+    public function addWptSubscription(ChargifySubscriptionInputType $subscription): array
+    public function cancelWptSubscription(
+    public function resendEmailVerification()
+    public function getTestHistory(int $days = 1): array
+    public function getTotalRunsSince(DateTime $date): int
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
+    public function getWptCustomer(): CPCustomer
+    public function getInvoices(string $subscription_id): ChargifyInvoiceResponseTypeList
+    public function getTransactionHistory(string $subscription_id): ChargifyInvoicePaymentList
+    public function getApiKeys(): array
+    public function updatePlan(string $subscription_id, string $next_plan_handle): bool
+     */
     private function createMockResponse(int $status, string $body): HandlerStack
     {
         $mock = new MockHandler([new Response($status, [], $body)]);

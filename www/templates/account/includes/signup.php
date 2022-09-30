@@ -223,10 +223,10 @@
             foreach ($annual_plans as $key => $plan) :
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="annual-{$plan['id']}" name="plan" value="{$plan['id']}"  data-cost="{$plan['annual_price']}" data-cycle="{$renewalDate}" required />
-                    <label class="wpt-plan card" for="annual-{$plan['id']}">
-                      <h5>{$plan['name']}</h5>
-                      <div><strong>\${$plan['annual_price']}</strong>/Year</div>
+                    <input type="radio" id="annual-{$plan->getId()}" name="plan" value="{$plan->getId()}"  data-cost="{$plan->getAnnualPrice()}" data-cycle="{$renewalDate}" required {$selected} />
+                    <label class="wpt-plan card" for="annual-{$plan->getId()}">
+                      <h5>{$plan->getName()}</h5>
+                      <div><strong>\${$plan->getAnnualPrice()}</strong>/Year</div>
                       <span aria-hidden="true" class="pill-button yellow">Select</span>
                     </label>
                   </div>
@@ -240,10 +240,10 @@
             foreach ($monthly_plans as $key => $plan) :
                 $plan_block = <<<HTML
                   <div class="form-wrapper-radio">
-                    <input type="radio" id="monthly-{$plan['id']}" name="plan" value="{$plan['id']}" data-cost="{$plan['price']}" data-cycle="{$renewalDateMonthly}" required />
-                    <label class="card wpt-plan" for="monthly-{$plan['id']}">
-                      <h5>{$plan['name']}</h5>
-                      <div><strong>\${$plan['price']}</strong>/Month</div>
+                    <input type="radio" id="monthly-{$plan->getId()}" name="plan" value="{$plan->getId()}"  data-cost="{$plan->getMonthlyPrice()}" data-cycle="{$renewalDateMonthly}" required />
+                    <label class="card wpt-plan" for="monthly-{$plan->getId()}">
+                      <h5>{$plan->getName()}</h5>
+                      <div><strong>\${$plan->getMonthlyPrice()}</strong>/Month</div>
                       <span aria-hidden="true" class="pill-button yellow">Select</span>
                     </label>
                   </div>
@@ -274,8 +274,8 @@
                 </div>
                 <div class="info-container state">
                     <label for="state">State</label>
-                    <div id="regionalArea">
-                        <select name="state" required>
+                    <div>
+                        <select name="state" data-country-selector="state-selector" required>
                             <?php foreach ($state_list as $stateAbbr => $stateText) : ?>
                                 <option value="<?= $stateAbbr ?>">
                                     <?= $stateText; ?>
@@ -286,7 +286,7 @@
                 </div>
                 <div class="info-container country">
                     <label for="country">Country</label>
-                    <select name="country">
+                    <select name="country" data-country-selector="selector" required>
                         <?php foreach ($country_list as $country) : ?>
                             <option value="<?= $country["key"] ?>" <?php ($country["key"] === "United States") ? 'selected' : '' ?>>
                                 <?= $country["text"]; ?>

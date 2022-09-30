@@ -3459,7 +3459,7 @@ function ProcessTestScript($url, &$test)
                     $origin .= ':' . $parts['port'];
                 }
                 $script = str_ireplace('%ORIGIN%', $origin, $script);
-
+                $script = str_ireplace('%TEST_ID%', $test['id'], $script);
                 $script = str_ireplace('%HOST_REGEX%', str_replace('.', '\\.', $host), $script);
                 if (stripos($script, '%HOSTR%') !== false) {
                     if (GetRedirect($url, $rhost, $rurl)) {
