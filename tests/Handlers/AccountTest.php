@@ -34,6 +34,7 @@ define('VER_JS', "site.js");
 define('VER_BUTTON_CSS', "button.css");
 define('VER_ACCOUNT_CSS', "account.css");
 define('VER_JS_ACCOUNT', "account.js");
+define('VER_JS_ESTIMATE_TAXES', "estimate-taxes.js");
 define('FRIENDLY_URLS', true);
 
 final class AccountTest extends TestCase
@@ -146,15 +147,15 @@ final class AccountTest extends TestCase
         $body->is_upgrade = true;
 
         $client = $this->getMockBuilder(CPClient::class)
-                     ->disableOriginalConstructor()
-                     ->disableOriginalClone()
-                     ->disableArgumentCloning()
-                     ->disallowMockingUnknownTypes()
-                     ->getMock();
+            ->disableOriginalConstructor()
+            ->disableOriginalClone()
+            ->disableArgumentCloning()
+            ->disallowMockingUnknownTypes()
+            ->getMock();
 
         $client = $this->createMock(CPClient::class);
         $client->method('updatePlan')
-          ->willThrowException(new \Exception('Plan name incorrect'));
+            ->willThrowException(new \Exception('Plan name incorrect'));
 
         $bmm = $this->createMock(BannerMessageManager::class);
         $bmm->expects($this->once())
@@ -182,10 +183,10 @@ final class AccountTest extends TestCase
         $expected->company_name = "Catchpoint";
 
         $body = [
-          'first-name' => "Bloopy",
-          'last-name' => "Pineapples",
-          'id' => "5",
-          'company-name' => "Catchpoint"
+            'first-name' => "Bloopy",
+            'last-name' => "Pineapples",
+            'id' => "5",
+            'company-name' => "Catchpoint"
         ];
 
         $actual = Account::validateChangeContactInfo($body);
@@ -196,9 +197,9 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfoMissingId(): void
     {
         $body = [
-          'first-name' => "Bloopy",
-          'last-name' => "Pineapples",
-          'company-name' => "Catchpoint"
+            'first-name' => "Bloopy",
+            'last-name' => "Pineapples",
+            'company-name' => "Catchpoint"
         ];
 
         $this->expectException(ClientException::class);
@@ -208,9 +209,9 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfoMissingFirstName(): void
     {
         $body = [
-          'id' => "5",
-          'last-name' => "Pineapples",
-          'company-name' => "Catchpoint"
+            'id' => "5",
+            'last-name' => "Pineapples",
+            'company-name' => "Catchpoint"
         ];
 
         $this->expectException(ClientException::class);
@@ -220,9 +221,9 @@ final class AccountTest extends TestCase
     public function testValidateChangeContactInfoMissingLastName(): void
     {
         $body = [
-          'id' => "5",
-          'first-name' => "Pineapples",
-          'company-name' => "Catchpoint"
+            'id' => "5",
+            'first-name' => "Pineapples",
+            'company-name' => "Catchpoint"
         ];
 
         $this->expectException(ClientException::class);
@@ -237,9 +238,9 @@ final class AccountTest extends TestCase
         $expected->id = "5";
 
         $body = [
-          'id' => "5",
-          'first-name' => "Bloopy",
-          'last-name' => "Pineapples"
+            'id' => "5",
+            'first-name' => "Bloopy",
+            'last-name' => "Pineapples"
         ];
 
         $actual = Account::validateChangeContactInfo($body);
@@ -255,10 +256,10 @@ final class AccountTest extends TestCase
         $expected->id = "5";
 
         $body = [
-          'id' => "5",
-          'first-name' => "Bloopy",
-          'last-name' => "Pineapples",
-          'company-name' => ""
+            'id' => "5",
+            'first-name' => "Bloopy",
+            'last-name' => "Pineapples",
+            'company-name' => ""
         ];
 
         $actual = Account::validateChangeContactInfo($body);
@@ -280,13 +281,13 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('updateUserContactInfo')
-          ->with('5', [
-            'email' => $email,
-            'first_name' => $body->first_name,
-            'last_name' => $body->last_name,
-            'company_name' => $body->company_name
-          ]);
+            ->method('updateUserContactInfo')
+            ->with('5', [
+                'email' => $email,
+                'first_name' => $body->first_name,
+                'last_name' => $body->last_name,
+                'company_name' => $body->company_name
+            ]);
 
         $req->setClient($client);
 
@@ -312,13 +313,13 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('updateUserContactInfo')
-          ->with('5', [
-            'email' => $email,
-            'first_name' => $body->first_name,
-            'last_name' => $body->last_name,
-            'company_name' => ""
-          ]);
+            ->method('updateUserContactInfo')
+            ->with('5', [
+                'email' => $email,
+                'first_name' => $body->first_name,
+                'last_name' => $body->last_name,
+                'company_name' => ""
+            ]);
 
         $req->setClient($client);
 
@@ -337,9 +338,9 @@ final class AccountTest extends TestCase
         $good_pass_3 = 'hf9YBewsCeKp.DVY.72Kq-c7_';
 
         $body = [
-        'current-password' => $good_pass_1,
-        'new-password' => $good_pass_2,
-        'confirm-new-password' => $good_pass_3
+            'current-password' => $good_pass_1,
+            'new-password' => $good_pass_2,
+            'confirm-new-password' => $good_pass_3
         ];
 
         $this->expectException(ClientException::class);
@@ -352,9 +353,9 @@ final class AccountTest extends TestCase
         $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
 
         $body = [
-        'current-password' => $good_pass_1,
-        'new-password' => $short_pw,
-        'confirm-new-password' => $short_pw
+            'current-password' => $good_pass_1,
+            'new-password' => $short_pw,
+            'confirm-new-password' => $short_pw
         ];
 
         $this->expectException(ClientException::class);
@@ -367,9 +368,9 @@ final class AccountTest extends TestCase
         $good_pass_1 = 'hAuw@ViEja*DA_MHo4mCxW@ys';
 
         $body = [
-        'current-password' => $good_pass_1,
-        'new-password' => $long_pw,
-        'confirm-new-password' => $long_pw
+            'current-password' => $good_pass_1,
+            'new-password' => $long_pw,
+            'confirm-new-password' => $long_pw
         ];
 
         $this->expectException(ClientException::class);
@@ -382,9 +383,9 @@ final class AccountTest extends TestCase
         $good_pass_2 = 'WiJtGMAqsgxE!4.@qCVnoiBQN';
 
         $body = [
-        'current-password' => $good_pass_1,
-        'new-password' => $good_pass_2,
-        'confirm-new-password' => $good_pass_2
+            'current-password' => $good_pass_1,
+            'new-password' => $good_pass_2,
+            'confirm-new-password' => $good_pass_2
         ];
 
         $expected = new stdClass();
@@ -408,17 +409,17 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('changePassword')
-          ->with($new_pw, $current_pw);
+            ->method('changePassword')
+            ->with($new_pw, $current_pw);
 
         $bmm = $this->createMock(BannerMessageManager::class);
 
         $bmm->expects($this->once())
-          ->method('put')
-          ->with('form', [
-            'type' => "success",
-            'text' => "Your password has been updated!"
-          ]);
+            ->method('put')
+            ->with('form', [
+                'type' => "success",
+                'text' => "Your password has been updated!"
+            ]);
 
         $req->setClient($client);
         $req->setBannerMessageManager($bmm);
@@ -438,25 +439,25 @@ final class AccountTest extends TestCase
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
 
         $client = $this->getMockBuilder(CPClient::class)
-                     ->disableOriginalConstructor()
-                     ->disableOriginalClone()
-                     ->disableArgumentCloning()
-                     ->disallowMockingUnknownTypes()
-                     ->getMock();
+            ->disableOriginalConstructor()
+            ->disableOriginalClone()
+            ->disableArgumentCloning()
+            ->disallowMockingUnknownTypes()
+            ->getMock();
 
         $client = $this->createMock(CPClient::class);
         $client->method('changePassword')
-          ->willThrowException(new \Exception('Password failed to change'));
+            ->willThrowException(new \Exception('Password failed to change'));
         $req->setClient($client);
 
         $bmm = $this->createMock(BannerMessageManager::class);
 
         $bmm->expects($this->once())
-          ->method('put')
-          ->with('form', [
-            'type' => "error",
-            'text' => "Password update failed"
-          ]);
+            ->method('put')
+            ->with('form', [
+                'type' => "error",
+                'text' => "Password update failed"
+            ]);
 
         $req->setBannerMessageManager($bmm);
 
@@ -569,8 +570,8 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('getChargifySubscriptionPreview')
-          ->with($body->plan, $address);
+            ->method('getChargifySubscriptionPreview')
+            ->with($body->plan, $address);
 
         $req->setClient($client);
 
@@ -583,7 +584,7 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('resendEmailVerification');
+            ->method('resendEmailVerification');
 
         $req->setClient($client);
 
@@ -596,8 +597,8 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-          ->method('resendEmailVerification')
-          ->willThrowException(new \Exception('Resend did not work'));
+            ->method('resendEmailVerification')
+            ->willThrowException(new \Exception('Resend did not work'));
 
         $req->setClient($client);
 
@@ -621,9 +622,9 @@ final class AccountTest extends TestCase
             ->method('getUserContactInfo')
             ->with(12345)
             ->willReturn([
-              'firstName' => "Goober",
-              'lastName' => "Goob",
-              'companyName' => ""
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => ""
             ]);
         $req->setClient($client);
 
