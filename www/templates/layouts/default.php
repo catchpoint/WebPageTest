@@ -15,12 +15,15 @@
     global $client_error;
     global $test_is_private;
     global $noanalytics;
+    global $page_title;
+    global $page_description;
+    global $cdnPath;
 
-    $page_title = $page_title ? $page_title : 'WebPageTest';
+    $page_title ??= 'WebPageTest';
     $body_class = $body_class ? ' class="' . $body_class . '"' : '';
 
     ?>
-    <title><?php echo $page_title; ?></title>
+    <title><?= $page_title; ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
 </head>
 

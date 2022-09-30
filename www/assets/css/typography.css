@@ -1,0 +1,149 @@
+body {
+  margin: 0 0 40px;
+  color: #111;
+  font: 100%/1.4em "Open Sans", sans-serif;
+  background-color: #f4f4f4;
+  grid-column-gap: 1.25em;
+  grid-template-columns:
+    [gutter-start] calc(50vw - 45em) repeat(10, minmax(0, 1fr))
+    calc(50vw - 45em) [gutter-end];
+  width: 100%;
+  scrollbar-gutter: stable;
+}
+
+body:not(.home) {
+  background: #fff;
+}
+
+body,
+input,
+button,
+select {
+  font-family: "Open Sans", sans-serif;
+}
+
+h1,
+.h1 {
+  display: flex;
+  font-size: 1.7em;
+  font-family: "Open Sans", sans-serif;
+  line-height: 1em;
+  font-weight: 700;
+  margin-bottom: 1em;
+  margin-top: 1.5em;
+  padding: 0;
+  text-align: left;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  padding: 0.5em 0;
+  margin: 0 0 0.5em;
+}
+
+h2,
+.h2 {
+  font-size: 1.6em;
+  line-height: 1.4em;
+  font-weight: 700;
+}
+
+h3,
+.h3 {
+  font-size: 1.25rem;
+  line-height: 1.4em;
+  font-weight: 700;
+}
+
+h3.hed_sub,
+.h3_hed_sub {
+  font-size: 1.8em;
+  font-weight: 900;
+  margin: 1em 0 0;
+  font-style: normal;
+  line-height: 1.4;
+  text-transform: none;
+  color: #2a3d64;
+}
+
+.hed_sub em,
+.results_header .hed_sub + p {
+  font-size: 0.5em;
+  font-style: normal;
+  text-transform: none;
+  color: #555;
+  /* display: block; */
+  font-weight: 500;
+}
+
+.hed_sub em details {
+  display: inline-block;
+  position: relative;
+  z-index: 20;
+  margin: 0 0 0 1.2em;
+}
+
+.hed_sub em details summary {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  list-style-position: outside;
+}
+
+.hed_sub em details ul {
+  position: absolute;
+  background: #fff;
+  border-radius: 0.6em;
+  border: 1px solid #eee;
+  padding: 0.2em 0.6em;
+  top: 2em;
+  min-width: 100%;
+  width: 15em;
+  left: 0;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.hed_sub em details li {
+  padding: 0.4em;
+}
+
+@media (max-width: 50em) {
+  .hed_sub {
+    font-size: 1em;
+    margin: 0.5em 0 0;
+  }
+
+  h2,
+  .h2 {
+    font-size: 1.2em;
+  }
+
+  h3,
+  .h3 {
+    font-size: 1.1em;
+  }
+
+  h3.hed_sub,
+  .h3_hed_sub {
+    font-size: 1.6em;
+  }
+
+  .hed_sub em,
+  .results_header .hed_sub + p {
+    display: block;
+    font-size: 0.6em;
+    margin: 0.5em 0;
+  }
+  .hed_sub em details ul {
+    left: auto;
+    right: 0;
+  }
+}

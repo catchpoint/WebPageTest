@@ -10,6 +10,33 @@
   text-decoration: none;
   color: #111;
   font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.two-tone-pill-button {
+  appearance: none;
+  width: auto;
+  background-color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+  color: #111;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 15px;
+  display: flex;
+  height: 50px;
+}
+
+.two-tone-pill-button span.two-tone-pill-button__left {
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 2rem 0 0 2rem;
+  padding: 0.7em 0.5em 0.7em 2.2em;
+}
+.two-tone-pill-button span.two-tone-pill-button__right {
+  border-radius: 0 2rem 2rem 0;
+  background-color: #f9d856;
+  padding: 0.7em 2.2em 0.7em 1.2rem;
 }
 
 .box-button {
@@ -24,6 +51,12 @@
   justify-self: flex-end;
   text-decoration: none;
   border: 0;
+}
+
+button.pill-button:disabled {
+  background: #d0d0d0;
+  color: #666;
+  cursor: default;
 }
 
 /** TODO
@@ -43,6 +76,7 @@ TODO update the NEW buttons on signup to this green
 **/
 .green {
   background-color: #80bc06;
+  color: #fff;
 }
 
 .red {
@@ -56,4 +90,254 @@ TODO update the NEW buttons on signup to this green
 
 .grey-outline {
   border: 1px solid rgb(204, 204, 204);
+}
+
+.white {
+  background-color: #fff;
+  color: #111;
+}
+/**
+ * ==============================================
+ * Dot Pulse - default is white
+ * ==============================================
+ */
+.dot-pulse {
+  position: relative;
+  left: -9999px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #fff;
+  box-shadow: 9999px 0 0 -5px #fff;
+  animation: dotPulse 1.5s infinite linear;
+  animation-delay: 0.25s;
+  display: block;
+}
+
+.dot-pulse::before,
+.dot-pulse::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #fff;
+}
+
+.dot-pulse::before {
+  box-shadow: 9984px 0 0 -5px #fff;
+  animation: dotPulseBefore 1.5s infinite linear;
+  animation-delay: 0s;
+}
+
+.dot-pulse::after {
+  box-shadow: 10014px 0 0 -5px #fff;
+  animation: dotPulseAfter 1.5s infinite linear;
+  animation-delay: 0.5s;
+}
+
+@keyframes dotPulseBefore {
+  0% {
+    box-shadow: 9984px 0 0 -5px #fff;
+  }
+
+  30% {
+    box-shadow: 9984px 0 0 2px #fff;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9984px 0 0 -5px #fff;
+  }
+}
+
+@keyframes dotPulse {
+  0% {
+    box-shadow: 9999px 0 0 -5px #fff;
+  }
+
+  30% {
+    box-shadow: 9999px 0 0 2px #fff;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9999px 0 0 -5px #fff;
+  }
+}
+
+@keyframes dotPulseAfter {
+  0% {
+    box-shadow: 10014px 0 0 -5px #fff;
+  }
+
+  30% {
+    box-shadow: 10014px 0 0 2px #fff;
+  }
+
+  60%,
+  100% {
+    box-shadow: 10014px 0 0 -5px #fff;
+  }
+}
+
+.dot-pulse__dark {
+  background-color: #111;
+  color: #111;
+  box-shadow: 9999px 0 0 -5px #111;
+  animation: dotPulseDark 1.5s infinite linear;
+}
+
+.dot-pulse__dark::before,
+.dot-pulse__dark::after {
+  background-color: #111;
+  color: #111;
+}
+
+.dot-pulse__dark::before {
+  box-shadow: 9984px 0 0 -5px #111;
+  animation: dotPulseBeforeDark 1.5s infinite linear;
+  animation-delay: 0s;
+}
+
+.dot-pulse__dark::after {
+  box-shadow: 10014px 0 0 -5px #111;
+  animation: dotPulseAfterDark 1.5s infinite linear;
+  animation-delay: 0.5s;
+}
+
+@keyframes dotPulseBeforeDark {
+  0% {
+    box-shadow: 9984px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 9984px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9984px 0 0 -5px #111;
+  }
+}
+
+@keyframes dotPulseDark {
+  0% {
+    box-shadow: 9999px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 9999px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 9999px 0 0 -5px #111;
+  }
+}
+
+@keyframes dotPulseAfterDark {
+  0% {
+    box-shadow: 10014px 0 0 -5px #111;
+  }
+
+  30% {
+    box-shadow: 10014px 0 0 2px #111;
+  }
+
+  60%,
+  100% {
+    box-shadow: 10014px 0 0 -5px #111;
+  }
+}
+/** drop down button **/
+
+.dropdown {
+  display: inline-block;
+  position: relative;
+}
+
+.dd-button {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 10px 30px 10px 20px;
+  background-color: #f9d856;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.dd-button:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 0;
+  height: 0;
+  border: solid black;
+  border-width: 0 1px 1px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(45deg) translateY(-50%);
+  -webkit-transform: rotate(45deg) translateY(-50%);
+}
+.dd-input:checked ~ .dd-button:after {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.dd-button:hover {
+  background-color: #eeeeee;
+}
+
+.dd-input {
+  display: none;
+}
+
+.dd-menu {
+  position: absolute;
+  top: 100%;
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 4px;
+  padding: 0;
+  margin: 2px 0 0 0;
+  box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  list-style-type: none;
+  font-size: 1rem;
+}
+
+.dd-input ~ .dd-menu {
+  display: none;
+}
+
+.dd-input:checked ~ .dd-menu {
+  display: block;
+}
+
+.dd-menu li {
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dd-menu li:hover {
+  background-color: #f6f6f6;
+}
+
+.dd-menu li a {
+  display: block;
+  text-decoration: none;
+  color: #111;
+  margin: -10px -20px;
+  padding: 10px 20px;
+}
+
+.dd-menu li.divider {
+  padding: 0;
+  border-bottom: 1px solid rgb(204, 204, 204);
 }

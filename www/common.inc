@@ -24,12 +24,14 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function ($e) {
-        if (Util::getSetting('environment') == "dev") {
-            echo "<pre>";
+        // Developer envs just get a print out
+        if (Util::getSetting('environment') == 'dev') {
+            echo '<pre>';
             var_dump($e);
-            echo "</pre>";
+            echo '</pre>';
             exit();
         }
+
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
@@ -197,6 +199,8 @@ if (!$privateInstall) {
 
 // constants
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
+define('VER_TYPOGRAPHY_CSS', @md5_file(__DIR__ . '/assets/css/typography.css'));          // version of the typography css file
+define('VER_LAYOUT_CSS', @md5_file(__DIR__ . '/assets/css/layout.css'));          // version of the layout css file
 define('VER_CSS', @md5_file(__DIR__ . '/assets/css/pagestyle2.css'));          // version of the sitewide css file
 define('VER_HEADER_CSS', @md5_file(__DIR__ . '/assets/css/wpt-header.css')); // version of the header css file
 define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/assets/css/account.css')); // version of the account css file
@@ -207,7 +211,10 @@ define('VER_JS', @md5_file(__DIR__ . '/assets/js/site.js'));                 // 
 define('VER_JS_TEST', @md5_file(__DIR__ . '/assets/js/test.js'));            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', @md5_file(__DIR__ . '/assets/js/running.js'));          // version of the javascript specific to the test running status page
 define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/assets/js/account.js'));          // version of the javascript specific to the test running status page
+define('VER_JS_ESTIMATE_TAXES', @md5_file(__DIR__ . '/assets/js/estimate-taxes.js'));
+define('VER_JS_COUNTRY_LIST', @md5_file(__DIR__ . '/assets/js/country-list/country-list.js'));
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
+
 // To find code that fails to check that a time
 // is unknown, change this constant to a large
 // negative number.
@@ -341,6 +348,7 @@ if ($supportsCPAuth) {
     require_once __DIR__ . '/common/AttachClient.php';
     require_once __DIR__ . '/common/AttachUser.php';
     require_once __DIR__ . '/common/AttachSignupClient.php';
+    require_once __DIR__ . '/common/AttachBannerMessageManager.php';
     require_once __DIR__ . '/common/CheckCSRF.php';
 }
 
@@ -350,7 +358,7 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
     $id = $_REQUEST['test'];
 }
 
-$median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
+$median_metric = Util::getSetting('medianMetric', null) ?? 'loadTime';
 $testLabel = '';
 $page_title = 'WebPageTest Test';
 $test_is_private = false;

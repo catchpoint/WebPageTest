@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../../common.inc';
-
 use WebPageTest\Util;
 
 $gtm_id = Util::getSetting('gtm_id');

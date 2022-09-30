@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../common.inc';
+
 use WebPageTest\RequestContext;
 use WebPageTest\Util;
 use WebPageTest\Exception\ClientException;
@@ -11,7 +12,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
 (function (RequestContext $request_context) {
     if (!Util::getSetting('cp_auth')) {
         $protocol = $request_context->getUrlProtocol();
-        $host = Util::getSetting('host');
+        $host = $request_context->getHost();
         $route = '/';
         $redirect_uri = "{$protocol}://{$host}{$route}";
 
@@ -22,7 +23,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     //check if they already have an account
     if ($request_context->getUser()->getEmail()) {
         $protocol = $request_context->getUrlProtocol();
-        $host = Util::getSetting('host');
+        $host = $request_context->getHost();
         $route = '/account';
         $redirect_uri = "{$protocol}://{$host}{$route}";
 
@@ -45,7 +46,6 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 if ($body->plan == 'free') {
                     $redirect_uri = SignupHandler::postStepTwoFree($request_context, $body);
                     header("Location: {$redirect_uri}");
-                    exit();
                 } else {
                     $redirect_uri = SignupHandler::postStepTwoPaid($request_context, $body);
                     header("Location: {$redirect_uri}");
@@ -61,7 +61,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 $_SESSION['signup-state'] = $body->state;
                 $_SESSION['signup-zipcode'] = $body->zipcode;
 
-                $host = Util::getSetting('host');
+                $host = $request_context->getHost();
                 $redirect_uri = SignupHandler::postStepThree($request_context, $body);
 
                 // unset values
@@ -84,7 +84,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
                 $body = SignupHandler::validatePostStepOne();
                 $redirect_uri = SignupHandler::postStepOne($request_context);
 
-                $host = Util::getSetting('host');
+                $host = $request_context->getHost();
                 setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
 
                 header("Location: {$redirect_uri}");
@@ -114,7 +114,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     $vars['is_plan_free'] = $is_plan_free;
     $vars['step'] = $signup_step;
 
-    $host = Util::getSetting('host');
+    $host = $request_context->getHost();
     if (isset($_GET['redirect_uri'])) {
         $comeback_route = $_GET['redirect_uri'];
         setcookie(

@@ -1,0 +1,87 @@
+#main {
+  padding: 1.5em 0;
+}
+
+@media screen and (min-width: 75em) {
+  #main {
+    grid-column: 2 / 12;
+    padding-top: 2em;
+  }
+}
+
+.box {
+  background: #fff;
+  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.2);
+  padding: 1em 2em;
+  margin: 2em 0;
+  padding-bottom: 2em;
+}
+
+@media screen and (min-width: 50em) {
+  .box {
+    border-radius: 10px;
+  }
+}
+
+.box form input[type="text"],
+.box form select {
+  border: 1px solid #999;
+}
+
+.about h1,
+.common h1 {
+  margin-left: 3rem;
+}
+
+#custom-waterfall .box:not(.details_panel),
+.about .box,
+.common .box,
+.video .box {
+  padding: 3rem;
+}
+
+@media (max-width: 60em) {
+  .about h1,
+  .common h1 {
+    margin-left: 1.5rem;
+  }
+
+  #custom-waterfall .box:not(.details_panel),
+  .about .box,
+  .common .box,
+  .video .box,
+  #page-images .box {
+    padding: 1em 1.5em;
+  }
+}
+
+.page_content {
+  margin: auto;
+  width: 100%;
+  grid-column: 1 / 13;
+  border: 0;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.subhed {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Breadcrumbs */
+ul.breadcrumbs li {
+  display: inline-table;
+}
+
+ul.breadcrumbs li:not(:last-child)::after {
+  content: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%231a2a4a' fill='none' stroke-width='2'/%3e%3c/svg%3e");
+  transform: rotate(270deg);
+  display: inline-table;
+}
+
+.breadcrumbs a {
+  text-decoration: none;
+}

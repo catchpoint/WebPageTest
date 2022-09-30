@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace WebPageTest;
+
 use PHPUnit\Framework\TestCase;
 use WebPageTest\User;
 
