@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" />
     <script defer src="/assets/js/account.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
     <script defer src="/assets/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
-    <script defer src="/assets/js/estimate-taxes.js?v=asas<?= constant('VER_JS_ACCOUNT') ?>"></script>
+    <script defer src="/assets/js/estimate-taxes.js?v=<?= constant('VER_JS_ESTIMATE_TAXES') ?>"></script>
 
 </head>
 
