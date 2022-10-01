@@ -3,6 +3,7 @@
 
 <head>
     <?php
+        require_once __DIR__ . '/../../common.inc';
         $gaTemplate = 'Main';
         $useScreenshot = true;
         require_once __DIR__ . '/../../head.inc';
