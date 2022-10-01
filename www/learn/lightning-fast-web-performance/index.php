@@ -4,6 +4,9 @@
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
     <?php
+
+        require_once __DIR__ . '/../../common.inc';
+    
         $gaTemplate = 'Main';
         $socialTitle = 'Lightning-Fast Web Performance Online Course from WebPageTest';
         $useScreenshot = true;
