@@ -33,6 +33,8 @@ use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ContactUpdateInput;
 use WebPageTest\CPGraphQlTypes\SubscriptionCancellationInputType;
 use WebPageTest\PaidPageInfo;
+use WebPageTest\PlanList;
+use WebPageTest\PlanListSet;
 
 class CPClient
 {
@@ -270,6 +272,49 @@ class CPClient
         }
     }
 
+    public function getFullWptPlanSet(): PlanListSet
+    {
+        $gql = (new Query('wptPlan'))
+            ->setSelectionSet([
+                'name',
+                'priceInCents',
+                'description',
+                'interval',
+                'monthlyTestRuns'
+            ]);
+
+        $results = $this->graphql_client->runQuery($gql, true);
+        $all_plans = array_map(function ($data): Plan {
+            $options = [
+                'id' => $data['name'],
+                'name' => $data['description'],
+                'priceInCents' => $data['priceInCents'],
+                'billingFrequency' => $data['interval'],
+                'runs' => $data['monthlyTestRuns']
+            ];
+
+            return new Plan($options);
+        }, $results->getData()['wptPlan'] ?? []);
+
+          $current_plans = array_filter($all_plans, function (Plan $plan) {
+              /** This is a bit of a hack for now. These are our approved plans for new
+               * customers to be able to use. We will better handle this from the backend
+               * */
+                return strtolower($plan->getId()) == 'ap5' ||
+                     strtolower($plan->getId()) == 'ap6' ||
+                     strtolower($plan->getId()) == 'ap7' ||
+                     strtolower($plan->getId()) == 'ap8' ||
+                     strtolower($plan->getId()) == 'mp5' ||
+                     strtolower($plan->getId()) == 'mp6' ||
+                     strtolower($plan->getId()) == 'mp7' ||
+                     strtolower($plan->getId()) == 'mp8';
+          });
+        $set = new PlanListSet();
+        $set->setAllPlans(new PlanList(...$all_plans));
+        $set->setCurrentPlans(new PlanList(...$current_plans));
+        return $set;
+    }
+
     public function getWptPlans(): PlanList
     {
         $gql = (new Query('wptPlan'))
@@ -293,18 +338,16 @@ class CPClient
 
             return new Plan($options);
         }, $results->getData()['wptPlan'] ?? []), function (Plan $plan) {
-          /** This is a bit of a hack for now. These are our approved plans for new
-           * customers to be able to use. We will better handle this from the backend
-           * */
-            return strtolower($plan->getId()) == 'ap5' ||
-                   strtolower($plan->getId()) == 'ap6' ||
-                   strtolower($plan->getId()) == 'ap7' ||
-                   strtolower($plan->getId()) == 'ap8' ||
-                   strtolower($plan->getId()) == 'mp5' ||
-                   strtolower($plan->getId()) == 'mp6' ||
-                   strtolower($plan->getId()) == 'mp7' ||
-                   strtolower($plan->getId()) == 'mp8';
+                return strtolower($plan->getId()) == 'ap5' ||
+                     strtolower($plan->getId()) == 'ap6' ||
+                     strtolower($plan->getId()) == 'ap7' ||
+                     strtolower($plan->getId()) == 'ap8' ||
+                     strtolower($plan->getId()) == 'mp5' ||
+                     strtolower($plan->getId()) == 'mp6' ||
+                     strtolower($plan->getId()) == 'mp7' ||
+                     strtolower($plan->getId()) == 'mp8';
         });
+
         return new PlanList(...$plans);
     }
 
