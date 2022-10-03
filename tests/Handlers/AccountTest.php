@@ -617,7 +617,7 @@ final class AccountTest extends TestCase
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
-            ->method('getWptPlans');
+            ->method('getFullWptPlanSet');
         $client->expects($this->once())
             ->method('getUserContactInfo')
             ->with(12345)

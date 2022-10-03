@@ -3,7 +3,7 @@
 
   class EstimateTaxes {
     constructor(addressForm, summaryNode) {
-      if(!addressForm || !summaryNode) {
+      if (!addressForm || !summaryNode) {
         return;
       }
       this.form = addressForm;
