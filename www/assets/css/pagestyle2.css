@@ -2530,6 +2530,7 @@ details.details_custommetrics summary {
   min-height: 6rem;
   padding-bottom: 0.5rem;
   flex: 1 1 60%;
+  max-width: 100%;
   /* padding: ; */
 }
 
