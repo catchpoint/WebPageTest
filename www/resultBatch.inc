@@ -9,9 +9,7 @@ require_once('./video/visualProgress.inc.php');
 //error_reporting(E_ALL);
 
 set_time_limit(3600);
-if (!defined('BARE_UI')) {
-    define('BARE_UI', true);
-}
+
 $csv = false;
 $json = false;
 if (array_key_exists('f', $_REQUEST)) {
