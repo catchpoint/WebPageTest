@@ -773,7 +773,6 @@ class Util
             $planId = $plan->getId();
             if (strtolower($planId) == strtolower($id)) {
                 return $plan;
-                exit();
             }
         }
     }

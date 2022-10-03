@@ -729,7 +729,9 @@ class Account
                 $billing_info['next_billing_date'] = $customer->getNextBillingDate()->format('F d, Y');
             }
         }
-        $plans = $request_context->getClient()->getWptPlans();
+        $plan_set = $request_context->getClient()->getFullWptPlanSet();
+        $current_plans = $plan_set->getCurrentPlans();
+        $all_plans = $plan_set->getAllPlans();
 
         $results = array_merge($contact_info, $billing_info);
         $results['run_renewal_date'] = $run_renewal_date;
@@ -741,7 +743,7 @@ class Account
         $results['country_list'] = $country_list;
         $results['state_list'] = $state_list;
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
-        $results['plans'] = $plans;
+        $results['plans'] = $current_plans;
         $results['messages'] = $request_context->getBannerMessageManager()->get();
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
@@ -752,8 +754,8 @@ class Account
 
         switch ($page) {
             case 'update_billing':
-                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
-                $newPlan = Util::getAnnualPlanByRuns($oldPlan->getRuns(), $plans->getAnnualPlans());
+                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                $newPlan = Util::getAnnualPlanByRuns($oldPlan->getRuns(), $all_plans->getAnnualPlans());
                 $results['oldPlan'] = $oldPlan;
                 $results['newPlan'] = $newPlan;
                 $sub_id = $customer->getSubscriptionId();
@@ -768,7 +770,7 @@ class Account
                 break;
             case 'update_plan':
                 if ($is_paid) {
-                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
+                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                     $results['oldPlan'] = $oldPlan;
                 }
                 return $tpl->render('plans/upgrade-plan', $results);
@@ -776,10 +778,10 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $plans);
+                    $plan = Util::getPlanFromArray($planCookie, $all_plans);
                     $results['plan'] = $plan;
                     if ($is_paid) {
-                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $plans);
+                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                         $sub_id = $customer->getSubscriptionId();
                         $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
@@ -805,7 +807,7 @@ class Account
                 $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$customer->isCanceled());
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
                 if (isset($next_plan)) {
-                    $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $plans);
+                    $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);
                 }
 
                 return $tpl->render('my-account', $results);
