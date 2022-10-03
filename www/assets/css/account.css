@@ -851,6 +851,10 @@ a.button {
   text-align: center;
 }
 
+.signup-flow-layout .disclaimer a {
+  color: #dadada;
+}
+
 .signup-flow-layout aside {
   background: #24334f;
   color: #dadada;

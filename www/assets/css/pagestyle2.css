@@ -6829,6 +6829,7 @@ table.pretty .metric_groups th {
   /* display: block; */
   padding-top: 24px;
   font-size: 0.9em;
+  vertical-align: top;
 }
 
 .results-filmstrip-container h4 {
@@ -6901,7 +6902,7 @@ table.pretty .metric_groups th {
 table#tableResults.pretty td {
   border: 0 solid #fff;
   padding: 5px 2rem 0.5rem 0;
-  font-size: 3em;
+  font-size: 2.75em;
   font-weight: 900;
   border-top-width: 0;
   vertical-align: baseline;
