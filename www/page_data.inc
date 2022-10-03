@@ -1389,7 +1389,7 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data)
 * Time To Interactive: https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md
 *
 * @param mixed $localPaths
-* @param mixed $firstMeaningfulPaint
+* @param mixed $startTime
 * @param mixed $interactiveWindows
 */
 function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, $long_tasks, &$measurement_end, &$first_interactive, &$last_interactive, &$total_blocking_time, &$max_fid, $DCL)
