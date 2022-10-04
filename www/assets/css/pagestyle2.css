@@ -1090,6 +1090,13 @@ h4.experiments_list_hed-recs {
   margin: 0;
 }
 
+.experiment_description_go-multi
+  label.experiment_pair_check:not(:has(input:checked))
+  + label:not(.experiment_pair_value-add) {
+  height: 3em;
+  overflow: hidden;
+}
+
 .experiment_description_go > label.experiment_pair_value {
   border-left: 0;
   margin-left: 0;
@@ -1104,6 +1111,7 @@ h4.experiments_list_hed-recs {
   overflow: hidden;
   text-indent: -999px;
   display: inline-block;
+  position: absolute;
 }
 
 .experiment_pair_value_addbtn {
@@ -1135,11 +1143,14 @@ h4.experiments_list_hed-recs {
 .experiment_description_go > label.experiment_pair_value-visible span {
   font-weight: 500;
   text-transform: initial;
+  position: relative;
+  max-width: 50%;
 }
 
 .experiment_description_go > label.experiment_pair_value-visible span em {
   font-size: 0.8em;
   color: #222;
+  display: block;
 }
 
 .experiment_description_go
@@ -1149,7 +1160,8 @@ h4.experiments_list_hed-recs {
   flex: 1 1 auto;
 }
 
-.experiment_description_go > label.experiment_pair_value input {
+.experiment_description_go > label.experiment_pair_value input,
+.experiment_description_go > label.experiment_pair_value textarea {
   width: 14em;
   margin: 0;
   padding: 1.45em;
@@ -1157,6 +1169,26 @@ h4.experiments_list_hed-recs {
   font-size: 1em;
   font-family: monospace;
   line-height: 1;
+}
+
+.experiment_description_go > label.experiment_pair_value textarea {
+  width: calc(100% - 4em);
+  display: block;
+  box-sizing: border-box;
+  margin: 0 1em 1em 3em;
+  padding: 1em;
+  height: 10em;
+  border: 0;
+  max-width: none;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.experiment_description_go > label.experiment_pair_value textarea:focus {
+  outline: none;
+  background: #fafafa;
+  border: 1px solid #ccc;
 }
 
 .experiments_foot {
