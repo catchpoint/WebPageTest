@@ -5123,8 +5123,8 @@ label.test_preset_profile {
 
 .testerror h1 {
   color: #dc9739;
-  text-align: left;
   margin: 1em 0;
+  border-bottom: 1px solid #ddd;
 }
 
 .testerror h1 em {
@@ -5133,8 +5133,7 @@ label.test_preset_profile {
   font-weight: 500;
   font-size: 0.8em;
   color: #333;
-  margin: 0.3em 0 0.5em;
-  border-bottom: 1px solid #ddd;
+  margin: 0.1em 0.3em;
   padding-bottom: 1em;
 }
 
