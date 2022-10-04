@@ -92,9 +92,6 @@ if (array_key_exists('tests', $_REQUEST)) {
             $test['started'] = time();
             $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
             $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
-            if (array_key_exists('tsview_id', $_REQUEST) && strlen($_REQUEST['tsview_id'])) {
-                $test['tsview_id'] = $_REQUEST['tsview_id'];
-            }
             if (array_key_exists('k', $_REQUEST)) {
                 $test['key'] = $_REQUEST['k'];
             }
@@ -318,12 +315,6 @@ if (array_key_exists('tests', $_REQUEST)) {
                     echo '<li>
                       <input type="text" name="k" id="k" value="' . $key . '" size="80">
                       <label for="k">API Key<br><small>(required)</small></label>
-                      </li>';
-                }
-                if (GetSetting('tsviewdb')) {
-                    echo '<li>
-                      <input type="text" name="tsview_id" id="tsview_id" value="" size="80">
-                      <label for="label">TSView ID<br><small>(optional - for time-series trending)</small></label>
                       </li>';
                 }
                 ?>

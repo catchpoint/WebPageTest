@@ -3350,7 +3350,6 @@ function PopulateTestInfo(&$test)
         'tcpdump',
         'timeline',
         'trace',
-        'tsview_id',
         'url',
         'video',
         'web10',

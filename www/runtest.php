@@ -425,18 +425,6 @@ if (@strlen($req_rkey)) {
             $test['securityInsights'] = 1;
         }
 
-        if (array_key_exists('tsview_id', $_REQUEST)) {
-            $test['tsview_id'] = $_REQUEST['tsview_id'];
-
-            $protocol = getUrlProtocol();
-            $test['tsview_results_host'] = "{$protocol}://{$_SERVER['HTTP_HOST']}";
-
-            // tsview_configs format: KEY>VALUE,KEY>VALUE,......
-            if (array_key_exists('tsview_configs', $_REQUEST)) {
-                $test['tsview_configs'] = $_REQUEST['tsview_configs'];
-            }
-        }
-
         if (array_key_exists('affinity', $_REQUEST)) {
             $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
         }
