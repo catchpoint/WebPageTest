@@ -5,17 +5,9 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
-// only allow download of relay tests
 $ok = false;
 if (is_file("$testPath/test.complete") || is_file("$testPath/.archived")) {
-    if (
-        strpos($testPath, 'relay') !== false
-        && strpos($testPath, 'results') !== false
-        && strpos($testPath, '..') === false
-        && is_dir($testPath)
-    ) {
-        $ok = DownloadTest($testPath);
-    } elseif (isset($_REQUEST['s']) && GetServerSecret() == $_REQUEST['s']) {
+    if (isset($_REQUEST['s']) && GetServerSecret() == $_REQUEST['s']) {
         $ok = DownloadTest($testPath);
     }
 }
