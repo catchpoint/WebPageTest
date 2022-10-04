@@ -3060,21 +3060,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (array_key_exists('extensionName', $test) && strlen($test['extensionName'])) {
                 $job['extensionName'] = $test['extensionName'];
             }
-            if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl'])) {
-                $job['customBrowserUrl'] = $test['customBrowserUrl'];
-            }
-            if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5'])) {
-                $job['customBrowserMD5'] = $test['customBrowserMD5'];
-            }
-            if (
-                array_key_exists('customBrowserSettings', $test) &&
-                is_array($test['customBrowserSettings']) &&
-                count($test['customBrowserSettings'])
-            ) {
-                foreach ($test['customBrowserSettings'] as $setting => $value) {
-                    $job["customBrowser_$setting"] = $value;
-                }
-            }
             if (isset($test['uastring'])) {
                 $job['uastring'] = $test['uastring'];
             }
