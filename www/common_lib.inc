@@ -3909,9 +3909,6 @@ function CheckCron()
   // send the cron requests
     if ($should_run) {
         SendAsyncRequest('/cron/5min.php');
-        if (is_file('./jpeginfo/cleanup.php')) {
-            SendAsyncRequest('/jpeginfo/cleanup.php');
-        }
         if ($minutes15) {
             SendAsyncRequest('/cron/15min.php');
         }

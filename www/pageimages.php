@@ -100,8 +100,6 @@ $userImages = true;
                         } else {
                             echo "Progressive (Renders blurry to sharp): {$request['jpeg_scan_count']} scans";
                         }
-                        $analyze_url = 'jpeginfo/jpeginfo.php?url=' . urlencode($reqUrl);
-                        echo " - <a href=\"$analyze_url\">Analyze JPEG</a><br>";
                     }
                     if (stristr($request['contentType'], 'svg') !== false) {
                         echo "<img width=100 height=100 src=\"$reqUrl\">";
