@@ -231,11 +231,7 @@ $tempDir = realpath($tempDir) . '/';
 
 if (isset($_REQUEST['embed'])) {
     define('EMBED', true);
-    define('BARE_UI', true);
-    define('NAV_NO_SHARE', true);
 } elseif (isset($_REQUEST['bare'])) {
-    define('BARE_UI', true);
-    define('NAV_NO_SHARE', true);
     $noanalytics = true;
 }
 $is_ssl = isSslConnection();
