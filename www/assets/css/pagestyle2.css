@@ -1090,9 +1090,7 @@ h4.experiments_list_hed-recs {
   margin: 0;
 }
 
-.experiment_description_go-multi
-  label.experiment_pair_check:not(:has(input:checked))
-  + label:not(.experiment_pair_value-add) {
+.experiment_description_go-multi label.experiment_pair_check:not(:has(input:checked)) + label:not(.experiment_pair_value-add) {
   height: 3em;
   overflow: hidden;
 }
