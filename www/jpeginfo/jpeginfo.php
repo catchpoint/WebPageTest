@@ -234,6 +234,7 @@ function FetchUrl($url)
         curl_setopt($curl, CURLOPT_FILETIME, true);
         curl_setopt($curl, CURLOPT_FAILONERROR, true);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS | CURLPROTO_HTTP);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
