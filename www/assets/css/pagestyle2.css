@@ -392,8 +392,8 @@ h1 .pro-flag {
   flex: 1 1 50%;
 }
 
-.experiment_meta_urls>p,
-.experiment_meta_included>p {
+.experiment_meta_urls > p,
+.experiment_meta_included > p {
   margin: 0 0 0.5em;
   font-size: 0.9rem !important;
   text-transform: uppercase;
@@ -402,8 +402,8 @@ h1 .pro-flag {
   padding: 0.3rem 0;
 }
 
-.experiment_meta_urls>ul,
-.experiment_meta_included>ul {
+.experiment_meta_urls > ul,
+.experiment_meta_included > ul {
   display: flex;
   gap: 0.5rem;
   margin: 0;
@@ -495,8 +495,8 @@ a.experiment_meta-more:focus {
   border-bottom-right-radius: 0;
 }
 
-.experiment_meta details>div,
-.experiment_meta details>ul {
+.experiment_meta details > div,
+.experiment_meta details > ul {
   position: absolute;
   background: #2a3c64;
   padding: 2em 2em;
@@ -514,8 +514,8 @@ a.experiment_meta-more:focus {
   list-style: disc;
 }
 
-.experiment_meta_urls details>div,
-.experiment_meta_urls details>ul {
+.experiment_meta_urls details > div,
+.experiment_meta_urls details > ul {
   right: 0;
   left: auto;
   max-width: 20rem;
@@ -611,7 +611,7 @@ span.lh-flag.poor {
   border-top-left-radius: 1rem;
 }
 
-.form_clip>.experiments_foot {
+.form_clip > .experiments_foot {
   border-bottom-right-radius: 1rem;
   border-bottom-left-radius: 1rem;
 }
@@ -734,20 +734,20 @@ p.grade_summary {
   margin: 1em 0 2rem 0rem;
 }
 
-.experiments_bottlenecks>ol {
+.experiments_bottlenecks > ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.experiments_bottlenecks>ol>li>details>summary {
+.experiments_bottlenecks > ol > li > details > summary {
   font-size: 1.1875rem;
   font-weight: 900;
   cursor: pointer;
   margin: 0;
 }
 
-.experiments_bottlenecks>ol>li>details>summary:focus {
+.experiments_bottlenecks > ol > li > details > summary:focus {
   outline: none;
   text-decoration: dotted underline #4e8e37;
 }
@@ -764,12 +764,12 @@ p.grade_summary {
   padding: 1em 0 1rem 4.5em;
 }
 
-.experiments_details_desc>ul {
+.experiments_details_desc > ul {
   width: 100%;
   overflow: auto;
 }
 
-.experiments_details_desc>ul li {
+.experiments_details_desc > ul li {
   list-style: disc;
   margin-left: 1em;
   white-space: nowrap;
@@ -784,29 +784,29 @@ p.grade_summary {
   padding: 0 1rem;
 }
 
-.experiments_bottlenecks>ol>li {
+.experiments_bottlenecks > ol > li {
   border-bottom: 1px solid #eee;
   padding: 1em 0;
   margin: 0;
 }
 
-.experiments_bottlenecks>ol>li:last-child {
+.experiments_bottlenecks > ol > li:last-child {
   border-bottom: none;
 }
 
-.experiments_bottlenecks>p {
+.experiments_bottlenecks > p {
   font-size: 0.9em;
   margin: 0.5em 0 0;
   max-width: 40em;
   line-height: 1.4;
 }
 
-.experiments_bottlenecks>p {
+.experiments_bottlenecks > p {
   font-size: 1rem;
   margin: 1.5em 0;
 }
 
-.experiments_bottlenecks>ol>li>details>summary:before {
+.experiments_bottlenecks > ol > li > details > summary:before {
   content: "";
   background: #6ca71a url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
   color: #fff;
@@ -822,12 +822,12 @@ p.grade_summary {
   vertical-align: middle;
 }
 
-.experiments_bottlenecks>ol>li.experiments_details-bad>details>summary:before {
+.experiments_bottlenecks > ol > li.experiments_details-bad > details > summary:before {
   background: #d26122 url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
   background-size: contain;
 }
 
-.experiments_bottlenecks>ol>li.experiments_details-neutral>details>summary:before {
+.experiments_bottlenecks > ol > li.experiments_details-neutral > details > summary:before {
   background: #2f80ed url(/assets/images/src/icon_gear.svg) 50% 50% no-repeat;
   background-size: 0.9em auto;
 }
@@ -855,7 +855,7 @@ h4.experiments_list_hed-recs {
   padding: 0;
 }
 
-.experiments_list>li {
+.experiments_list > li {
   border: 1px solid #eee;
   padding: 1rem 1.5rem;
   margin: 0.8rem 0;
@@ -975,8 +975,8 @@ h4.experiments_list_hed-recs {
   align-self: center;
 }
 
-.experiment_description_go>label,
-.experiment_description_go>a {
+.experiment_description_go > label,
+.experiment_description_go > a {
   padding: 0.9em 1.5em 0.9em 1.1em;
   background: #fff;
   box-shadow: 0 0 3px rgb(0 0 0 / 10%);
@@ -990,11 +990,11 @@ h4.experiments_list_hed-recs {
   text-decoration: none;
 }
 
-.experiment_description_go>label.experiment_pair_check {
+.experiment_description_go > label.experiment_pair_check {
   min-width: auto;
 }
 
-.experiment_description_go>a {
+.experiment_description_go > a {
   font-size: 1rem;
   line-height: 1.6;
   color: #0e70b9;
@@ -1009,7 +1009,7 @@ h4.experiments_list_hed-recs {
   background-size: 1.5rem auto;
 }
 
-.experiment_description_go>a .pro_upgrade {
+.experiment_description_go > a .pro_upgrade {
   margin: 0;
   border: none;
   display: inline-block;
@@ -1017,11 +1017,11 @@ h4.experiments_list_hed-recs {
   width: 8em;
 }
 
-.experiment_description_go>a span {
+.experiment_description_go > a span {
   display: block;
 }
 
-.experiment_description_go>a span:last-child {
+.experiment_description_go > a span:last-child {
   display: block;
   font-size: 0.7em;
   font-weight: 500;
@@ -1029,12 +1029,12 @@ h4.experiments_list_hed-recs {
   color: #222;
 }
 
-.experiment_description_go>label:hover,
-.experiment_description_go>a:hover {
+.experiment_description_go > label:hover,
+.experiment_description_go > a:hover {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
-.experiment_description_go>label>input {
+.experiment_description_go > label > input {
   margin-right: 1em;
   display: inline-block;
   width: 1.2em;
@@ -1060,7 +1060,7 @@ h4.experiments_list_hed-recs {
   background: #fff;
 }
 
-.experiment_description_go.experiment_description_go-multi>label {
+.experiment_description_go.experiment_description_go-multi > label {
   display: block;
   border-radius: 0;
   text-align: left;
@@ -1068,7 +1068,7 @@ h4.experiments_list_hed-recs {
   box-shadow: none;
 }
 
-.experiment_description_go>label.experiment_pair_check {
+.experiment_description_go > label.experiment_pair_check {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   border-right: 0;
@@ -1080,7 +1080,7 @@ h4.experiments_list_hed-recs {
   overflow: hidden;
 }
 
-.experiment_description_go>label.experiment_pair_value {
+.experiment_description_go > label.experiment_pair_value {
   border-left: 0;
   margin-left: 0;
   border-top-left-radius: 0;
@@ -1090,7 +1090,7 @@ h4.experiments_list_hed-recs {
   position: relative;
 }
 
-.experiment_description_go>label.experiment_pair_value span {
+.experiment_description_go > label.experiment_pair_value span {
   overflow: hidden;
   text-indent: -999px;
   display: inline-block;
@@ -1116,33 +1116,33 @@ h4.experiments_list_hed-recs {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.experiment_description_go>label.experiment_pair_value-visible {
+.experiment_description_go > label.experiment_pair_value-visible {
   padding: 0.1em 1em 0.5em 3.3em;
   display: flex;
   gap: 0.5em;
   align-items: center;
 }
 
-.experiment_description_go>label.experiment_pair_value-visible span {
+.experiment_description_go > label.experiment_pair_value-visible span {
   font-weight: 500;
   text-transform: initial;
   position: relative;
   max-width: 50%;
 }
 
-.experiment_description_go>label.experiment_pair_value-visible span em {
+.experiment_description_go > label.experiment_pair_value-visible span em {
   font-size: 0.8em;
   color: #222;
   /* display: block; */
 }
 
-.experiment_description_go>label.experiment_pair_value-visible input[type="text"] {
+.experiment_description_go > label.experiment_pair_value-visible input[type="text"] {
   border: 1px solid #ddd;
   flex: 1 1 auto;
 }
 
-.experiment_description_go>label.experiment_pair_value input,
-.experiment_description_go>label.experiment_pair_value textarea {
+.experiment_description_go > label.experiment_pair_value input,
+.experiment_description_go > label.experiment_pair_value textarea {
   width: 14em;
   margin: 0;
   padding: 1.45em;
@@ -1152,7 +1152,7 @@ h4.experiments_list_hed-recs {
   line-height: 1;
 }
 
-.experiment_description_go>label.experiment_pair_value textarea {
+.experiment_description_go > label.experiment_pair_value textarea {
   width: calc(100% - 4em);
   display: block;
   box-sizing: border-box;
@@ -1166,13 +1166,13 @@ h4.experiments_list_hed-recs {
   overflow: auto;
 }
 
-.experiment_description_go>label.experiment_pair_value textarea:focus {
+.experiment_description_go > label.experiment_pair_value textarea:focus {
   outline: none;
   background: #fafafa;
   border: 1px solid #ccc;
 }
 
-.experiment_description_go>label.experiment_pair_value textarea:focus {
+.experiment_description_go > label.experiment_pair_value textarea:focus {
   b
 }
 
@@ -1218,7 +1218,7 @@ h4.experiments_list_hed-recs {
   outline: none;
 }
 
-.experiments_foot details>div {
+.experiments_foot details > div {
   position: absolute;
   bottom: 3em;
   color: #333;
@@ -1283,7 +1283,7 @@ h4.experiments_list_hed-recs {
   /* NOTE this counters the top margin on the footer */
 }
 
-.experiments_foot>div {
+.experiments_foot > div {
   display: flex;
   gap: 2rem;
   align-items: center;
@@ -1507,22 +1507,22 @@ h2 .medium {
     display: flex;
     margin-bottom: 4rem;
   }
-  .tri-col>div {
+  .tri-col > div {
     width: 33%;
     flex-grow: 1;
     margin-right: 1.5em;
     align-self: stretch;
   }
-  .tri-col>div:nth-child(3n) {
+  .tri-col > div:nth-child(3n) {
     margin-right: 0;
   }
   .feature-callouts {
     max-width: none;
   }
-  .feature-callouts>div {
+  .feature-callouts > div {
     margin-right: 4.375em;
   }
-  .feature-callouts>div:last-child {
+  .feature-callouts > div:last-child {
     margin-right: 0;
   }
 }
@@ -1831,8 +1831,8 @@ footer ul {
   color: #3c3c3c;
 }
 
-.opportunities_summary>p,
-.results_header .opportunities_summary>p {
+.opportunities_summary > p,
+.results_header .opportunities_summary > p {
   font-size: 0.9rem;
   margin: 0;
   padding-bottom: 0;
@@ -1842,7 +1842,7 @@ footer ul {
   flex: 1 1 15%;
 }
 
-.results_header .opportunities_summary>p {
+.results_header .opportunities_summary > p {
   display: none;
 }
 
@@ -1861,22 +1861,22 @@ footer ul {
   text-decoration: underline;
 }
 
-.opportunities_summary p>strong {
+.opportunities_summary p > strong {
   display: inline-block;
   margin-bottom: 1rem;
   color: #2a3c64;
   font-weight: 900;
 }
 
-.opportunities_summary .grade_heading.grade-a>span {
+.opportunities_summary .grade_heading.grade-a > span {
   background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
 
-.opportunities_summary .grade_heading.grade-c>span {
+.opportunities_summary .grade_heading.grade-c > span {
   background: url(/assets/images/src/icon_grading_warn.svg) left 50% no-repeat;
 }
 
-.opportunities_summary .grade_heading.grade-f>span {
+.opportunities_summary .grade_heading.grade-f > span {
   background: url(/assets/images/src/icon_grading_alert.svg) left 50% no-repeat;
 }
 
@@ -1897,7 +1897,7 @@ footer ul {
   color: #dd5000;
 }
 
-.opportunities_summary .grade_heading>span {
+.opportunities_summary .grade_heading > span {
   padding-left: 1.5em;
   background-position: 50% left !important;
   background-size: auto 1.2em !important;
@@ -1915,7 +1915,7 @@ footer ul {
   margin: 0;
 }
 
-.opportunities_summary .grade_heading>span {
+.opportunities_summary .grade_heading > span {
   color: #444;
   font-size: 0.9em;
   display: block;
@@ -2013,21 +2013,21 @@ footer ul {
   margin: 0;
 }
 
-.experiments_bottlenecks>ol>li>details>summary {
+.experiments_bottlenecks > ol > li > details > summary {
   padding-left: 2.7em;
   list-style-position: outside;
   margin-left: 1em;
   position: relative;
 }
 
-.experiments_bottlenecks>ol>li>details>summary::marker {
+.experiments_bottlenecks > ol > li > details > summary::marker {
   position: absolute;
   left: 0;
   display: block;
   margin: 0;
 }
 
-.experiments_bottlenecks>ol>li>details>summary:before {
+.experiments_bottlenecks > ol > li > details > summary:before {
   position: absolute;
   left: 0;
 }
@@ -2042,7 +2042,7 @@ footer ul {
   .result-opportunities .opportunities_summary {
     margin-bottom: 3rem;
   }
-  .result .opportunities_summary>p {
+  .result .opportunities_summary > p {
     text-align: left;
     margin: 0 0 1em;
   }
@@ -2060,21 +2060,21 @@ footer ul {
   .experiment_meta {
     display: block;
   }
-  .experiment_meta>*:first-child {
+  .experiment_meta > *:first-child {
     margin-bottom: 2rem;
   }
   .experiments_foot-stick {
     position: relative;
     display: block;
   }
-  .experiments_list>li {
+  .experiments_list > li {
     display: block;
   }
   .experiment_description_go {
     justify-content: flex-start;
     margin: 1em 0;
   }
-  .experiments_foot>div {
+  .experiments_foot > div {
     display: block;
   }
   .experiments_foot p:last-child {
@@ -2155,7 +2155,7 @@ footer ul {
   text-align: left;
 }
 
-.testinfo_forms details>div {
+.testinfo_forms details > div {
   color: #222;
   position: absolute;
   background: #fff;
@@ -2318,7 +2318,7 @@ details.details_custommetrics summary {
   font-weight: 300;
 }
 
-.summary_opps>p {
+.summary_opps > p {
   line-height: 1.5;
   font-weight: 700;
   border-bottom: 1px solid #1071ba;
@@ -2329,7 +2329,7 @@ details.details_custommetrics summary {
   color: #2a3b64;
 }
 
-.summary_opps>p a {
+.summary_opps > p a {
   font-weight: 700;
   font-size: 0.6em;
   padding: 0.4em 1em;
@@ -2341,8 +2341,8 @@ details.details_custommetrics summary {
   margin-left: 1em;
 }
 
-.summary_opps>p a:hover,
-.summary_opps>p a:focus {
+.summary_opps > p a:hover,
+.summary_opps > p a:focus {
   background-color: #5c9811;
   border-color: #448204;
   color: #fff;
@@ -3008,7 +3008,7 @@ header .pro-flag {
 }
 
 .results_nav .test_meta_commands summary,
-.results_nav .test_meta_commands>form>input[type="submit"] {
+.results_nav .test_meta_commands > form > input[type="submit"] {
   list-style: none;
   font-size: 0.9rem;
   display: inline-block;
@@ -3028,7 +3028,7 @@ header .pro-flag {
   font-weight: 900;
 }
 
-.results_nav .test_meta_commands>form>input[type="submit"] {
+.results_nav .test_meta_commands > form > input[type="submit"] {
   background-image: none;
   padding-right: 1em;
 }
@@ -3044,8 +3044,8 @@ header .pro-flag {
   font-size: 0.9em;
 }
 
-.results_nav .test_meta_commands details>form,
-.results_nav .test_meta_commands details>ul {
+.results_nav .test_meta_commands details > form,
+.results_nav .test_meta_commands details > ul {
   position: absolute;
   background: #fff;
   padding: 1em;
@@ -3344,7 +3344,7 @@ header .pro-flag {
   gap: 2rem;
 }
 
-.home_feature_main_pro_content>div {
+.home_feature_main_pro_content > div {
   flex: 1 1 50%;
 }
 
@@ -3910,13 +3910,13 @@ span.test_presets_tag-experiment {
   border: 0;
 }
 
-.test_preset_profile>span {
+.test_preset_profile > span {
   background-color: transparent;
   padding: 0;
   max-height: none;
 }
 
-.test_preset_profile>span.test_preset_profile_tt {
+.test_preset_profile > span.test_preset_profile_tt {
   position: absolute;
   background: rgb(255 255 255 / 93%);
   bottom: 110%;
@@ -4527,7 +4527,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
   margin-top: 2rem;
 }
 
-#test_subbox-container>div {
+#test_subbox-container > div {
   padding: 1em 1.875em 2.25em;
 }
 
@@ -5551,7 +5551,7 @@ table.details td.reqMime {
   color: #d02424;
 }
 
-.summary-container>a {
+.summary-container > a {
   flex: 1;
   text-align: left;
 }
@@ -6203,10 +6203,10 @@ th.header {
 .results-filmstrip-container,
 div.waterfall-container,
 div.overflow-container,
-.breakdownFrame_item>div,
+.breakdownFrame_item > div,
 #videoDiv,
 .experiment_opportunities-resolved ol,
-.experiments_details_desc>ul {
+.experiments_details_desc > ul {
   background: linear-gradient(90deg, #fff 33%, rgba(255, 255, 255, 0)), linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 66%) 0 100%, radial-gradient(farthest-side at 0 50%, rgb(106 106 106 / 40%), transparent), radial-gradient( farthest-side at 100% 50%, rgba(106 106 106 / 40%), transparent) 0 100%;
   background-repeat: no-repeat;
   background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
@@ -6216,11 +6216,11 @@ div.overflow-container,
 
 .scrollableTable table,
 .results-filmstrip-container img,
-div:not(.compare_contain_wrap)>div.waterfall-container img,
-div.overflow-container>*,
-.breakdownFrame_item>div>*,
-.experiment_opportunities-resolved ol>*,
-.experiments_details_desc>ul li {
+div:not(.compare_contain_wrap) > div.waterfall-container img,
+div.overflow-container > *,
+.breakdownFrame_item > div > *,
+.experiment_opportunities-resolved ol > *,
+.experiments_details_desc > ul li {
   mix-blend-mode: multiply;
 }
 
@@ -6584,7 +6584,7 @@ table.legend td {
   flex: 0 1 50%;
 }
 
-.breakdownFrame_item>div {
+.breakdownFrame_item > div {
   width: 100%;
   overflow: auto;
 }
@@ -7085,7 +7085,7 @@ td.legend {
   position: relative;
 }
 
-.simpleadvancedfields_contain>input+label {
+.simpleadvancedfields_contain > input+label {
   font-size: 1em;
   font-weight: 700;
   padding: 0 0 1.4em 2.4em;
@@ -7099,7 +7099,7 @@ td.legend {
   border-bottom: 1px solid #ddd;
 }
 
-.simpleadvancedfields_contain>input+label:before {
+.simpleadvancedfields_contain > input+label:before {
   content: "";
   background: url("data:image/svg+xml,%3csvg width='16' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M1.7 1.7 8 8 14.3 1.7' stroke='%23fff' fill='none' stroke-width='2'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -7117,21 +7117,21 @@ td.legend {
   left: 0;
 }
 
-.simpleadvancedfields_contain>input:checked+label {
+.simpleadvancedfields_contain > input:checked+label {
   cursor: default;
 }
 
-.simpleadvancedfields_contain>input:not(:checked)+label:before {
+.simpleadvancedfields_contain > input:not(:checked)+label:before {
   transform: rotate(-90deg);
 }
 
-.simpleadvancedfields_contain>input+label em {
+.simpleadvancedfields_contain > input+label em {
   font-weight: 300;
   font-size: 0.9em;
   font-style: normal;
 }
 
-.simpleadvancedfields_contain>input {
+.simpleadvancedfields_contain > input {
   position: absolute;
   width: 100%;
   height: 2.5rem;
@@ -7145,15 +7145,15 @@ td.legend {
 }
 
 @media (max-width: 40em) {
-  .simpleadvancedfields_contain>input+label em {
+  .simpleadvancedfields_contain > input+label em {
     display: block;
   }
-  .simpleadvancedfields_contain>input {
+  .simpleadvancedfields_contain > input {
     height: 4em;
   }
 }
 
-.simpleadvancedfields_contain>input:focus-visible {
+.simpleadvancedfields_contain > input:focus-visible {
   opacity: 1;
   background: none;
   appearance: none;
@@ -8035,7 +8035,7 @@ div.bar {
   display: none;
 }
 
-.details_panel_hed>span {
+.details_panel_hed > span {
   display: flex;
   gap: 0.5rem;
 }
@@ -8082,7 +8082,7 @@ div.bar {
   background: #555;
 }
 
-.details_panel[open]>.details_panel_hed .icon_plus {
+.details_panel[open] > .details_panel_hed .icon_plus {
   transform: rotate(45deg);
   position: absolute;
   right: 1rem;
