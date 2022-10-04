@@ -3,7 +3,7 @@
 $category = "Custom";
 $assessment[$category]["opportunities"][] = array(
     "title" =>  "Add HTML to document",
-    "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding script tags.",
+    "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding script tags such as those used in analytics!",
     "examples" =>  array(),
     "experiments" =>  array(
         (object) [
@@ -15,7 +15,7 @@ $assessment[$category]["opportunities"][] = array(
         (object) [
             'id' => '020',
             'title' => 'Add HTML to end of <code>head</code>',
-            "desc" => '<p>This experiment adds arbitrary HTML text to the end of the head of the tested website.</p>',
+            "desc" => '<p>This experiment adds arbitrary HTML text to the end of the head of the tested website. </p>',
             "expvar" => 'insertheadend'
         ],
         (object) [

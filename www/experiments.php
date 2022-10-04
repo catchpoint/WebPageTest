@@ -186,6 +186,7 @@ $page_description = "Website performance test result$testLabel.";
                         global $test;
                         global $experiments_paid;
                         global $experiments_logged_in;
+                        $allowedFreeExperimentIds = array('001','020');
 
                         $bottleneckTitle = $parts["title"];
 
@@ -243,7 +244,7 @@ $page_description = "Website performance test result$testLabel.";
                                 }
 
                                 // experiments are enabled for the following criteria
-                                $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
+                                $experimentEnabled = $experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds) && $experiments_logged_in);
                                 // exception allowed for tests on the metric times
                                 if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes') && $experiments_logged_in) {
                                     $experimentEnabled = true;
@@ -324,7 +325,7 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
                                         EOT;
                                         $addmore = $exp->addmore ? ' experiment_pair_value-add' : '';
 
@@ -347,11 +348,12 @@ $page_description = "Website performance test result$testLabel.";
                                     }
                                 } elseif ($exp->expvar && !$exp->expval && $textinput) {
                                     if ($experimentEnabled) {
+                                        $placeholderEncodedVal = htmlentities('<script src="https://example.com/test.js"></script>');
                                         $out .= <<<EOT
                                         </div>
-                                        <div class="experiment_description_go">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run with:</label>
-                                        <label class="experiment_pair_value"><span>Value: </span><input type="text" name="{$expNum}-{$exp->expvar}[]" placeholder="experiment value..."></label>
+                                        <div class="experiment_description_go experiment_description_go-multi">
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
+                                        <label class="experiment_pair_value"><span>Value: </span><textarea name="{$expNum}-{$exp->expvar}[]" placeholder="{$placeholderEncodedVal}"></textarea></label>
 
                                         </div>
                                         EOT;
