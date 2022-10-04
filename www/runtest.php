@@ -961,7 +961,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 $recipeScript = '';
                 $experimentSpof = "";
                 $experimentBlock = "";
-                $allowedFreeExperimentIds = array('001');
+                $allowedFreeExperimentIds = array('001', '020');
                 foreach ($req_recipes as $key => $value) {
                     // optional, but the experiments page prefixes recipe names with an index and a dash to keep ingredients paired with an opportunity's recipe name
                     // also, for wpt params (liks spof, block) meant to run on only experiment runs, there's a experiment- prefix after the number
