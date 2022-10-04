@@ -3,7 +3,7 @@
 $category = "Custom";
 $assessment[$category]["opportunities"][] = array(
     "title" =>  "Add HTML to document",
-    "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding script tags.",
+    "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding scripts, 3rd-party tags, or resource hints.",
     "examples" =>  array(),
     "experiments" =>  array(
         (object) [
