@@ -186,6 +186,7 @@ $page_description = "Website performance test result$testLabel.";
                         global $test;
                         global $experiments_paid;
                         global $experiments_logged_in;
+                        $allowedFreeExperimentIds = array('001','020');
 
                         $bottleneckTitle = $parts["title"];
 
@@ -243,7 +244,7 @@ $page_description = "Website performance test result$testLabel.";
                                 }
 
                                 // experiments are enabled for the following criteria
-                                $experimentEnabled = $experiments_paid || ($expNum === "001" && $experiments_logged_in);
+                                $experimentEnabled = $experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds) && $experiments_logged_in);
                                 // exception allowed for tests on the metric times
                                 if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes') && $experiments_logged_in) {
                                     $experimentEnabled = true;
