@@ -9,8 +9,6 @@ use DateTime;
 class Customer
 {
     private string $customer_id;
-    private string $masked_credit_card;
-    private string $cc_last_four;
     private string $subscription_id;
     private string $wpt_plan_id;
     private DateTime $billing_period_end_date;
@@ -20,7 +18,9 @@ class Customer
     private string $wpt_plan_name;
     private ?string $next_wpt_plan_id;
     private int $monthly_runs;
-    private string $credit_card_type;
+    private ?string $masked_credit_card;
+    private ?string $cc_last_four;
+    private ?string $credit_card_type;
     private ?DateTime $next_billing_date;
     private ?int $days_past_due;
     private ?int $number_of_billing_cycles;
@@ -34,24 +34,19 @@ class Customer
     {
         if (
             !(isset($options['customerId']) &&
-                isset($options['maskedCreditCard']) &&
-                isset($options['ccLastFour']) &&
                 isset($options['subscriptionId']) &&
                 isset($options['wptPlanId']) &&
                 isset($options['billingPeriodEndDate']) &&
                 isset($options['subscriptionPrice']) &&
                 isset($options['status']) &&
                 isset($options['wptPlanName']) &&
-                isset($options['monthlyRuns']) &&
-                isset($options['creditCardType'])
+                isset($options['monthlyRuns'])
             )
         ) {
             throw new \Exception('Fields required are not set when getting customer information');
         }
 
         $this->customer_id = $options['customerId'];
-        $this->masked_credit_card = $options['maskedCreditCard'];
-        $this->cc_last_four = $options['ccLastFour'];
         $this->subscription_id = $options['subscriptionId'];
         $this->wpt_plan_id = $options['wptPlanId'];
         $this->billing_period_end_date = new DateTime($options['billingPeriodEndDate']);
@@ -60,11 +55,13 @@ class Customer
         $this->status = $options['status'];
         $this->wpt_plan_name = $options['wptPlanName'];
         $this->monthly_runs = $options['monthlyRuns'];
-        $this->credit_card_type = $options['creditCardType'];
         $this->next_billing_date = isset($options['nextBillingDate']) ?
             new DateTime($options['nextBillingDate']) : null;
         $this->days_past_due = $options['daysPastDue'] ?? null;
         $this->number_of_billing_cycles = $options['numberOfBillingCycles'] ?? null;
+        $this->masked_credit_card = $options['maskedCreditCard'] ?? null;
+        $this->cc_last_four = $options['ccLastFour'] ?? null;
+        $this->credit_card_type = $options['creditCardType'] ?? null;
         $this->cc_image_url = $options['ccImageUrl'] ?? null;
         $this->cc_expiration_date = $options['ccExpirationDate'] ?? null;
         $this->remaining_runs = $options['remainingRuns'] ?? null;
@@ -79,17 +76,17 @@ class Customer
         return $this->customer_id;
     }
 
-    public function getMaskedCreditCard(): string
+    public function getMaskedCreditCard(): ?string
     {
         return $this->masked_credit_card;
     }
 
-    public function getCCLastFour(): string
+    public function getCCLastFour(): ?string
     {
         return $this->cc_last_four;
     }
 
-    public function getCardType(): string
+    public function getCardType(): ?string
     {
         return $this->credit_card_type;
     }
