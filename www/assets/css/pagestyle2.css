@@ -3860,13 +3860,13 @@ ul.meta_exp_applied_list {
   min-width: 5em;
 }
 
-#injectscript-container {
+.codeflask-container {
   display: contents;
 }
 
-#injectscript-container .codeflask {
+.codeflask-container .codeflask {
   position: relative;
-  height: 500px;
+  height: 400px;
 }
 
 .result .test_presets li {
