@@ -29,7 +29,6 @@ if (GetSetting('ec2_key')) {
 
 PruneCruxCache();
 PruneVideos();
-ApkUpdate();
 
 Unlock($cron_lock);
 
@@ -39,14 +38,6 @@ if (GetSetting('cron_archive')) {
 }
 
 echo "Done\n";
-
-function ApkUpdate()
-{
-    if (GetSetting('apkPackages')) {
-        echo "Updating APKs from attached device...\n";
-        include __DIR__ . '/apkUpdate.php';
-    }
-}
 
 function PruneVideos()
 {

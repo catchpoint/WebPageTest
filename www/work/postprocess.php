@@ -44,27 +44,6 @@ if (array_key_exists('test', $_REQUEST)) {
             ArchiveTest($id);
         }
 
-      // post the test to tsview if requested
-        $tsviewdb = GetSetting('tsviewdb');
-        if (
-            array_key_exists('tsview_id', $testInfo) &&
-            strlen($testInfo['tsview_id']) &&
-            strlen($tsviewdb) &&
-            is_file('./lib/tsview.inc.php')
-        ) {
-            require_once('./lib/tsview.inc.php');
-            TSViewPostResult($testInfo, $id, $testPath, GetSetting('tsviewdb'), $testInfo['tsview_id']);
-        }
-
-      // post the test to statsd if requested
-        if (
-            GetSetting('statsdHost') &&
-            is_file('./lib/statsd.inc.php')
-        ) {
-            require_once('./lib/statsd.inc.php');
-            StatsdPostResult($testInfo, $testPath);
-        }
-
       // send an email notification if necessary
         $notifyFrom = GetSetting('notifyFrom');
         if ($notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini")) {
