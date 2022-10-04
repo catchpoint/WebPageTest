@@ -3315,7 +3315,10 @@ function RelayTest()
     $test['vd'] = '';
     $test['vh'] = '';
     $job = trim($_POST['job']);
-    $ini = trim($_POST['ini']);
+    $ini = @parse_ini_string(trim($_POST['ini']));
+    if (!$ini) {
+        $error = "Invalid testinfo ini";
+    }
     $location = trim($_POST['location']);
     $test['workdir'] = $locations[$location]['localDir'];
 
