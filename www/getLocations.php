@@ -17,11 +17,7 @@ $locations = LoadLocations($includePaid);
 
 // get the backlog for each location
 foreach ($locations as $id => &$location) {
-    if (strlen($location['relayServer']) && strlen($location['relayLocation'])) {
-        $location['PendingTests'] = GetRemoteBacklog($location['relayServer'], $location['relayLocation']);
-    } else {
-        $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
-    }
+    $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
 
   // calculate the ratio of pending tests to agents
     if (isset($location['PendingTests']['Total'])) {
@@ -256,12 +252,6 @@ function LoadLocations($isPaid = false)
                             if (isset($loc[$group[$j]]['scheduler_node'])) {
                                 $locations[$loc_name]['node'] = $loc[$group[$j]]['scheduler_node'];
                             }
-                            if (isset($loc[$group[$j]]['relayServer'])) {
-                                $locations[$loc_name]['relayServer'] = $loc[$group[$j]]['relayServer'];
-                            }
-                            if (isset($loc[$group[$j]]['relayLocation'])) {
-                                $locations[$loc_name]['relayLocation'] = $loc[$group[$j]]['relayLocation'];
-                            }
 
                             if ($default == $loc['locations'][$i] && $def == $group[$j]) {
                                 $locations[$loc_name]['default'] = true;
@@ -335,42 +325,6 @@ function GetBacklog($dir, $locationId)
     $backlog['LowPriority'] = $lowCount;
     $backlog['Testing'] = $testing;
     $backlog['Idle'] = $idle;
-
-    return $backlog;
-}
-
-/**
-* Pull the location information from a remote server
-*/
-function GetRemoteBacklog($server, $remote_location)
-{
-    $backlog = array();
-    global $remote_cache;
-
-    $server_hash = md5($server);
-
-    if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
-      // see if we need to populate the cache from the remote server
-        if (!array_key_exists($server_hash, $remote_cache)) {
-            $xml = http_fetch("$server/getLocations.php?hidden=1");
-            if ($xml) {
-                $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
-                if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
-                    $cache_entry = array();
-                    foreach ($remote['data']['location'] as &$location) {
-                        $parts = explode(':', $location['id']);
-                        $id = $parts[0];
-                        $cache_entry[$id] = $location['PendingTests'];
-                    }
-                    $remote_cache[$server_hash] = $cache_entry;
-                }
-            }
-        }
-
-        if (array_key_exists($server_hash, $remote_cache) && array_key_exists($remote_location, $remote_cache[$server_hash])) {
-            $backlog = $remote_cache[$server_hash][$remote_location];
-        }
-    }
 
     return $backlog;
 }

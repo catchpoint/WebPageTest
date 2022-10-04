@@ -45,17 +45,6 @@ function GetServerSecret()
 function GetTestPath($id)
 {
     $base = 'results';
-    // see if it is a relay test (which includes the key)
-    $separator = strrpos($id, '.');
-    if ($separator !== false) {
-        $key = trim(substr($id, 0, $separator));
-        $real_id = trim(substr($id, $separator + 1));
-        if (strlen($key) && strlen($real_id)) {
-            $id = $real_id;
-            $base .= "/relay/$key";
-        }
-    }
-
     $testPath = "$base/$id";
     if (strpos($id, '_') == 6) {
         $parts = explode('_', $id);
@@ -818,8 +807,7 @@ function FilterLocations(
                     unset($locations[$name]);
                 }
             } else {
-              // TODO: Fix this so it only hides local locations, not relay and API
-                if (!isset($_REQUEST['hidden']) && !array_key_exists('relayServer', $locRef) && !isset($locRef['scheduler_node'])) {
+                if (!isset($_REQUEST['hidden']) && !isset($locRef['scheduler_node'])) {
                     unset($locations[$name]);
                 }
             }
@@ -2694,15 +2682,8 @@ function ValidateTestId(&$id)
 {
     $valid = false;
     $testId = $id;
-  // see if it is a relay test (includes the key)
-    if (strpos($id, '.') !== false) {
-        $parts = explode('.', $id);
-        if (count($parts) == 2) {
-            $testId = trim($parts[1]);
-        }
-    }
 
-    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
+    if (preg_match('/^(?:[a-zA-Z0-9_]+)+$/', @$testId)) {
         $testYear = intval(substr($testId, 0, 2));
         $currentYear = intval(date("y"));
         if ($testYear >= 8 && $testYear <= $currentYear) {

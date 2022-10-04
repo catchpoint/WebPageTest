@@ -126,7 +126,7 @@ if (GetSetting('host', '') != 'www.webpagetest.org') {
     header('X-Robots-Tag: noindex');
 }
 
-// set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
+// set up a global curl context that can be used for keep-alive connections
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
     if ($CURL_CONTEXT !== false) {
@@ -364,10 +364,6 @@ $page_title = 'WebPageTest Test';
 $test_is_private = false;
 
 if (strlen($id)) {
-    if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
-        // We are serving a relay request, so munge the id accordingly.
-        $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
-    }
     if (!$userIsBot) {
         RestoreTest($id);   // restore the test if it is archived (and deleted)
     }
