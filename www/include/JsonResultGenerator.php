@@ -1,5 +1,4 @@
 <?php
-
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -16,23 +15,23 @@ class JsonResultGenerator
     const WITHOUT_LIGHTHOUSE = 8;
     const WITHOUT_REPEAT_VIEW = 9;
 
-  /* @var TestInfo */
+    /* @var TestInfo */
     private $testInfo;
     private $urlStart;
-  /* @var FileHandler */
+    /* @var FileHandler */
     private $fileHandler;
     private $infoFlags;
     private $friendlyUrls;
     private $forceMultistep;
 
-  /**
-   * JsonResultGenerator constructor.
-   * @param TestInfo $testInfo Information about the test
-   * @param string $urlStart Start for test-related URLS
-   * @param FileHandler $fileHandler FileHandler to be used. Optional
-   * @param array $infoFlags Array of WITHOUT_* and BASIC_* constants to define if some info should be left out. Optional
-   * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
-   */
+    /**
+     * JsonResultGenerator constructor.
+     * @param TestInfo $testInfo Information about the test
+     * @param string $urlStart Start for test-related URLS
+     * @param FileHandler $fileHandler FileHandler to be used. Optional
+     * @param array $infoFlags Array of WITHOUT_* and BASIC_* constants to define if some info should be left out. Optional
+     * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
+     */
     public function __construct($testInfo, $urlStart, $fileHandler = null, $infoFlags = array(), $friendlyUrls = true)
     {
         $this->testInfo = $testInfo;
@@ -42,26 +41,26 @@ class JsonResultGenerator
         $this->friendlyUrls = $friendlyUrls;
     }
 
-  /**
-   * @param bool $force True if multistep format should be used even with singlestep results, false otherwise (compatible format)
-   */
+    /**
+     * @param bool $force True if multistep format should be used even with singlestep results, false otherwise (compatible format)
+     */
     public function forceMultistepFormat($force)
     {
         $this->forceMultistep = $force ? true : false;
     }
 
-  /**
-   * @param TestResults $testResults The test results to use for constructing the data array
-   * @param string $medianMetric Metric to consider when selecting the median run
-   * @return array An array containing all data about the test, in a form that can be encoded with JSON
-   */
+    /**
+     * @param TestResults $testResults The test results to use for constructing the data array
+     * @param string $medianMetric Metric to consider when selecting the median run
+     * @return array An array containing all data about the test, in a form that can be encoded with JSON
+     */
     public function resultDataArray($testResults, $medianMetric)
     {
         $testInfo = $this->testInfo->getInfoArray();
         $fvOnly = $this->testInfo->isFirstViewOnly();
         $cacheLabels = array('firstView', 'repeatView');
 
-      // summary information
+        // summary information
         $ret = array();
         $ret['id'] = $this->testInfo->getId();
 
@@ -141,7 +140,7 @@ class JsonResultGenerator
             $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
         }
 
-      // lighthouse
+        // lighthouse
         if (!$this->hasInfoFlag(self::BASIC_INFO_ONLY) && !$this->hasInfoFlag(self::WITHOUT_LIGHTHOUSE)) {
             $lighthouse = $testResults->getLighthouseResult();
             if (isset($lighthouse)) {
@@ -156,7 +155,7 @@ class JsonResultGenerator
             }
         }
 
-      // average
+        // average
         $stats = array($testResults->getFirstViewAverage(), $testResults->getRepeatViewAverage());
         if (!$this->hasInfoFlag(self::WITHOUT_AVERAGE)) {
             $ret['average'] = array();
@@ -166,7 +165,7 @@ class JsonResultGenerator
             }
         }
 
-      // standard deviation
+        // standard deviation
         if (!$this->hasInfoFlag(self::WITHOUT_STDDEV)) {
             $ret['standardDeviation'] = array();
             for ($cached = 0; $cached <= $cachedMax; $cached++) {
@@ -178,7 +177,7 @@ class JsonResultGenerator
             }
         }
 
-      // median
+        // median
         if (!$this->hasInfoFlag(self::WITHOUT_MEDIAN)) {
             $ret['median'] = array();
             for ($cached = 0; $cached <= $cachedMax; $cached++) {
@@ -190,7 +189,7 @@ class JsonResultGenerator
             }
         }
 
-      // runs
+        // runs
         if (!$this->hasInfoFlag(self::WITHOUT_RUNS)) {
             $ret['runs'] = array();
             for ($run = 1; $run <= $runs; $run++) {
@@ -204,26 +203,26 @@ class JsonResultGenerator
         return $ret;
     }
 
-  /**
-   * @param TestRunResults $testRunResults Results of the median run
-   * @return array Array with data about the median run that can be serialized as JSON
-   */
+    /**
+     * @param TestRunResults $testRunResults Results of the median run
+     * @return array Array with data about the median run that can be serialized as JSON
+     */
     public function medianRunDataArray($testRunResults)
     {
         $runInfo = $this->basicRunInfoArray($testRunResults);
         if ($this->forceMultistep || $testRunResults->countSteps() > 1) {
             $medianInfo = $testRunResults->aggregateRawResults();
         } else {
-          // in singlestep we simply give back the results of the first step
+            // in singlestep we simply give back the results of the first step
             $medianInfo = $this->stepDataArray($testRunResults->getStepResult(1));
         }
         return array_merge($runInfo, $medianInfo);
     }
 
-  /**
-   * @param TestRunResults $testRunResults Results of the run
-   * @return array Array with data about the run that can be serialized as JSON
-   */
+    /**
+     * @param TestRunResults $testRunResults Results of the run
+     * @return array Array with data about the run that can be serialized as JSON
+     */
     public function runDataArray($testRunResults)
     {
         $runInfo = $this->basicRunInfoArray($testRunResults);
@@ -240,16 +239,16 @@ class JsonResultGenerator
                 $stepResults["steps"][] = $stepArray;
             }
         } else {
-          // in singlestep we simply give back the results of the first step
+            // in singlestep we simply give back the results of the first step
             $stepResults = $this->stepDataArray($testRunResults->getStepResult(1));
         }
         return array_merge($runInfo, $stepResults);
     }
 
-  /**
-   * @param TestRunResults $testRunResults
-   * @return array With numSteps, run, and tester info
-   */
+    /**
+     * @param TestRunResults $testRunResults
+     * @return array With numSteps, run, and tester info
+     */
     private function basicRunInfoArray($testRunResults)
     {
         $ret = array();
@@ -260,12 +259,12 @@ class JsonResultGenerator
         return $ret;
     }
 
-  /**
-   * Gather all of the data that we collect for a single run
-   *
-   * @param TestStepResult $testStepResult
-   * @return array Array with run information which can be serialized as JSON
-   */
+    /**
+     * Gather all of the data that we collect for a single run
+     *
+     * @param TestStepResult $testStepResult
+     * @return array Array with run information which can be serialized as JSON
+     */
     private function stepDataArray($testStepResult)
     {
         if (!$testStepResult) {
@@ -344,12 +343,98 @@ class JsonResultGenerator
         return in_array($flag, $this->infoFlags);
     }
 
-  /**
-   * @param TestStepResult $testStepResult The test results of this step
-   * @param UrlGenerator $urlGenerator For video frame URL generation for this tep
-   * @param TestPaths $nameOnlyPaths To get the name of the video dir for this step
-   * @return array Array with the additional information about this step
-   */
+    /**
+     * @param Array $times An array of potential long task times
+     * @param Timestamp $start The starting time stamp
+     * @param Timestamp $end The ending time stamp
+     * @return array A new array of merged long task times
+     *
+     */
+    private function MergeBlockingTime($times, $start, $end)
+    {
+        $merged = false;
+        // See if it overlaps with an existing window
+        for ($i = 0; $i < count($times) && !$merged; $i++) {
+            $s = $times[0];
+            $e = $times[1];
+            if (
+                ($start >= $s && $start <= $e) ||
+                ($end >= $s && $end <= $e) ||
+                ($s >= $start && $s <= $end) ||
+                ($e >= $start && $e <= $end)
+            ) {
+                $times[0] = min($start, $s);
+                $times[1] = max($end, $e);
+                $merged = true;
+            }
+        }
+
+        if (!$merged) {
+            $times[] = array($start, $end);
+        }
+
+        return $times;
+    }
+
+    /**
+     * @param TestStepResult $testStepResult The test results of this step
+     * @return array Array with the long task information for each request in the step
+     */
+    private function getLongTaskData($testStepResult)
+    {
+        $run = $testStepResult->getRunNumber();
+        $cached = $testStepResult->isCachedRun();
+        $step = $testStepResult->getStepNumber();
+
+        $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached, $step);
+        $timingsFile = $localPaths->devtoolsScriptTimingFile();
+
+        $long_tasks = null;
+        if (isset($timingsFile) && strlen($timingsFile) && gz_is_file($timingsFile)) {
+            $timings = json_decode(gz_file_get_contents($timingsFile), true);
+            if (
+                isset($timings) &&
+                is_array($timings) &&
+                isset($timings['main_thread']) &&
+                isset($timings[$timings['main_thread']]) &&
+                is_array($timings[$timings['main_thread']])
+            ) {
+                foreach ($timings[$timings['main_thread']] as $url => $events) {
+                    foreach ($events as $timings) {
+                        foreach ($timings as $task) {
+                            if (isset($task) && is_array($task) && count($task) >= 2) {
+                                $start = $task[0];
+                                $end = $task[1];
+                                if ($end - $start > 50) {
+                                    if (!isset($long_tasks[$url])) {
+                                        $long_tasks[$url] = array();
+                                    }
+                                    $long_tasks[$url] = $this->MergeBlockingTime($long_tasks[$url], $start, $end);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // now that we have a neat merged list of long tasks, we need to get a total of the blocking time
+        foreach ($long_tasks as $url => $tasks) {
+            //grab duration
+            $duration = 0;
+            foreach ($tasks as $task) {
+                $duration += $task[1] - $task[0];
+            }
+            $long_tasks[$url]['blockingTime'] = $duration;
+        }
+        return $long_tasks;
+    }
+
+    /**
+     * @param TestStepResult $testStepResult The test results of this step
+     * @param UrlGenerator $urlGenerator For video frame URL generation for this tep
+     * @param TestPaths $nameOnlyPaths To get the name of the video dir for this step
+     * @return array Array with the additional information about this step
+     */
     private function getAdditionalInfoArray($testStepResult, $urlGenerator, $nameOnlyPaths)
     {
         $ret = array();
@@ -365,15 +450,30 @@ class JsonResultGenerator
         }
 
         $requests = $testStepResult->getRequests();
+
         $ret['domains'] = $testStepResult->getDomainBreakdown();
         $ret['breakdown'] = $testStepResult->getMimeTypeBreakdown();
 
-      // add requests
+        // add requests
         if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
+
+            $longTasks = $this->getLongTaskData($testStepResult);
+
+            //now we have our long tasks, by URL, so let's merge into
+
+            // Only allocate the long tasks to the first occurence of a given URL
+            $used = array();
+            foreach ($requests as &$request) {
+                if (isset($request['full_url']) && isset($longTasks[$request['full_url']]) && !isset($used[$request['full_url']])) {
+                    $used[$request['full_url']] = true;
+                    $request['blockingTime'] = $longTasks[$request['full_url']]['blockingTime'];
+                }
+            }
+
             $ret['requests'] = $requests;
         }
 
-      // Check to see if we're adding the console log
+        // Check to see if we're adding the console log
         if (!$this->hasInfoFlag(self::WITHOUT_CONSOLE)) {
             $console_log = $testStepResult->getConsoleLog();
             if (isset($console_log)) {
