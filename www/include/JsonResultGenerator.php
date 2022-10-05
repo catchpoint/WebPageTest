@@ -470,11 +470,6 @@ class JsonResultGenerator
                 }
             }
 
-            echo "<pre>";
-            print_r($requests);
-            echo "</pre>";
-            die();
-
             $ret['requests'] = $requests;
         }
 
