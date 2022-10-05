@@ -5,7 +5,7 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
-// only allow download of relay tests
+// only allow download from other servers that know the shared secret
 $ok = false;
 if (isset($_REQUEST['test']) && isset($_REQUEST['s']) && GetServerSecret() == $_REQUEST['s']) {
     $testInfo = GetTestInfo($_REQUEST['test']);

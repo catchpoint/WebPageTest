@@ -77,7 +77,7 @@ function ArchiveTest($id, $delete = false)
 
     $ret = false;
     if (
-        strpos($id, '.') === false &&                           // make sure it isn't a relay test
+        strpos($id, '.') === false &&                           // make sure it isn't a legacy relay test
         ($capture_server ||                                     // CP Capture server
         GetSetting('archive_dir') ||           // local mount
         GetSetting('archive_url') ||           // Archive server (simple PUT, HEAD, GET)

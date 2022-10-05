@@ -179,24 +179,17 @@ function GetAllTesters($include_sensitive = true)
         $group = &$loc[$loc['locations'][$i]];
         $j = 1;
         while (isset($group[$j])) {
-            if (
-                isset($loc[$group[$j]]['relayServer']) && strlen($loc[$group[$j]]['relayServer']) &&
-                isset($loc[$group[$j]]['relayLocation']) && strlen($loc[$group[$j]]['relayLocation'])
-            ) {
-                $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
-            } else {
-                $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
-                if (isset($loc[$group[$j]]['label'])) {
-                    $label = $loc[$group[$j]]['label'];
-                    $index = strpos($label, ' - ');
-                    if ($index > 0) {
-                        $label = substr($label, 0, $index);
-                    }
-                    $locations[$loc[$group[$j]]['location']]['label'] = $label;
+            $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
+            if (isset($loc[$group[$j]]['label'])) {
+                $label = $loc[$group[$j]]['label'];
+                $index = strpos($label, ' - ');
+                if ($index > 0) {
+                    $label = substr($label, 0, $index);
                 }
-                if (isset($loc[$group[$j]]['scheduler_node'])) {
-                    $locations[$loc[$group[$j]]['location']]['node'] = $loc[$group[$j]]['scheduler_node'];
-                }
+                $locations[$loc[$group[$j]]['location']]['label'] = $label;
+            }
+            if (isset($loc[$group[$j]]['scheduler_node'])) {
+                $locations[$loc[$group[$j]]['location']]['node'] = $loc[$group[$j]]['scheduler_node'];
             }
 
             $j++;
@@ -206,46 +199,4 @@ function GetAllTesters($include_sensitive = true)
     }
 
     return $locations;
-}
-
-/**
-* Get the tester information for a remote location
-*/
-function GetRemoteTesters($server, $remote_location)
-{
-    $testers = array();
-    global $remote_cache;
-
-    $server_hash = md5($server);
-
-    if (isset($_REQUEST['relay']) && $_REQUEST['relay']) {
-      // see if we need to populate the cache from the remote server
-        if (!isset($remote_cache[$server_hash])) {
-            $xml = http_fetch("$server/getTesters.php?hidden=1");
-            if ($xml) {
-                $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
-                if (is_array($remote) && isset($remote['data']['location'])) {
-                    $cache_entry = array();
-                    foreach ($remote['data']['location'] as &$location) {
-                        if (isset($location['testers']['tester'])) {
-                            $parts = explode(':', $location['id']);
-                            $id = $parts[0];
-                            if (isset($location['testers']['tester'][0])) {
-                                $cache_entry[$id] = array('elapsed' => $location['elapsed'], 'testers' => $location['testers']['tester']);
-                            } else {
-                                $cache_entry[$id] = array('elapsed' => $location['elapsed'], 'testers' => array($location['testers']['tester']));
-                            }
-                        }
-                    }
-                    $remote_cache[$server_hash] = $cache_entry;
-                }
-            }
-        }
-
-        if (isset($remote_cache[$server_hash][$remote_location])) {
-            $testers = $remote_cache[$server_hash][$remote_location];
-        }
-    }
-
-    return $testers;
 }

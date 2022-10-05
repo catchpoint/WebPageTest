@@ -179,7 +179,7 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
             if (!$frames['visualComplete'] && $frame['progress'] == 100) {
                 $frames['visualComplete'] = $time;
             }
-            // fix up the frame paths in case we have a cached version referencing a relay path
+            // fix up the frame paths in case we have a cached version referencing an incorrect path
             if (isset($frame['path'])) {
                 $frame['path'] = $base_path . '/' . basename($frame['path']);
             }
