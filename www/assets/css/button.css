@@ -18,11 +18,9 @@
   width: auto;
   background-color: #fff;
   cursor: pointer;
-  display: inline-block;
   text-decoration: none;
   color: #111;
   font-size: 1rem;
-  display: block;
   margin-bottom: 15px;
   display: flex;
   height: 50px;
