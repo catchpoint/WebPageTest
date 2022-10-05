@@ -35,7 +35,7 @@ if (isset($lcp)) {
                     $lcpSource = $srcmatches[1][0];
                 }
             } elseif (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
-                $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
+                $lcpSource = isset($lcp['element']['src']) ? $lcp['element']['src'] : $lcp['element']['currentSrc'];
                 $lcpFullSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                 // get actual source attribute if we can.
                 $srcAttrVal = preg_match_all('/src\=\"([^"]+)/i', $lcp['element']['outerHTML'], $srcmatches);
