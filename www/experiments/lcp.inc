@@ -63,7 +63,7 @@ if (isset($lcp)) {
                 "explabel" => array($lcpSource)
             ];
             // priority Hints only help for foreground images
-            if (!$isBG && !$isVideo && isset($lcp['element']['fetchPriority']) && $lcp['element']['fetchPriority'] != 'high') {
+            if (!$isBG && !$isVideo && !(isset($lcp['element']['fetchPriority']) && $lcp['element']['fetchPriority'] == 'high')) {
                 $expsToAdd[] = (object) [
                     "id" => '011',
                     'title' => 'Add Priority Hint',
