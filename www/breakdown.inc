@@ -6,8 +6,6 @@
 require_once('object_detail.inc');
 require_once('contentColors.inc');
 
-define('BREAKDOWN_CACHE_VERSION', 4);
-
 /**
 * Aggregate the individual requests by mime type
 *

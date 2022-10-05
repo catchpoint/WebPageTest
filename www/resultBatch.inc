@@ -14,7 +14,6 @@ $csv = false;
 $json = false;
 if (array_key_exists('f', $_REQUEST)) {
     if ($_REQUEST['f'] == 'csv') {
-        //define('RESTORE_DATA_ONLY', true);
         $csv = true;
         $json_response = array();
     } elseif ($_REQUEST['f'] == 'json') {

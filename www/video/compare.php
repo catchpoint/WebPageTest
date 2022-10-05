@@ -379,7 +379,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     background: #296ee1;
                 }
                 <?php
-                if (defined('EMBED')) {
+                if (EMBED) {
                     ?>
                 #location {display: none;}
                 #bottom {display: none;}
@@ -679,11 +679,6 @@ function ScreenShotTable()
                 $end = $test['video']['end'];
             }
         }
-
-        // if (!defined('EMBED')) {
-        //     echo '<br>';
-        // }
-
         echo '<table id="videoContainer"><tr>';
 
 
@@ -709,7 +704,7 @@ function ScreenShotTable()
             // Print the index outside of the link tag
             echo $test['index'] . ': ';
 
-            if (!defined('EMBED')) {
+            if (!EMBED) {
                 echo " <span id=\"label_{$test['id']}\">" . WrapableString(htmlspecialchars($test['name'])) . "</span>";
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
@@ -722,7 +717,7 @@ function ScreenShotTable()
             }
             echo '</a>';
 
-            if (!defined('EMBED')) {
+            if (EMBED) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
                 $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
                 echo "<a class=\"video_runlabel_backlink\" href=\"$href\">Test Run Details</a>";
@@ -1018,7 +1013,7 @@ function ScreenShotTable()
 
         <div class="compare_contain_wrap">
 
-        <?php if (!defined('EMBED')) {
+        <?php if (!EMBED) {
             // display the waterfall if there is only one test
             $end_seconds = $filmstrip_end_time / 1000;
             if (count($tests) == 1) {

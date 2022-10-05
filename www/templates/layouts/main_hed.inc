@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../include/TestResults.php';
 require_once __DIR__ . '/../../include/TestRunResults.php';
 
 //If we're looking at a test result, include the extra header section and sub-menu
-if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED')) {
+if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !EMBED) {
     // make sure the test is actually complete
     if (isset($test['test']['completeTime'])) {
         if (!isset($testResults) || !isset($testInfo)) {

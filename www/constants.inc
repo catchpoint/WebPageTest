@@ -24,3 +24,8 @@ define('VER_JS_ACCOUNT', @md5_file(ASSETS_PATH . '/js/account.js'));          //
 define('VER_JS_ESTIMATE_TAXES', @md5_file(ASSETS_PATH . '/js/estimate-taxes.js'));
 define('VER_JS_COUNTRY_LIST', @md5_file(ASSETS_PATH . '/js/country-list/country-list.js'));
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
+
+define('BREAKDOWN_CACHE_VERSION', 4);
+define('VIDEO_CODE_VERSION', 20);
+
+define('EMBED', isset($_REQUEST['embed']));
