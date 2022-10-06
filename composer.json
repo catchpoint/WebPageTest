@@ -2,7 +2,8 @@
   "autoload": {
     "psr-4": {
       "WebPageTest\\": "www/src/"
-    }
+    },
+    "files": ["www/constants.inc"]
   },
   "require-dev": {
     "phpunit/phpunit": "^9",
