@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -456,7 +457,6 @@ class JsonResultGenerator
 
         // add requests
         if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
-
             $longTasks = $this->getLongTaskData($testStepResult);
 
             //now we have our long tasks, by URL, so let's merge into
