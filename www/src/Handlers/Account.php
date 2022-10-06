@@ -15,7 +15,8 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\Template;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubPreview;
+use WebPageTest\Plan;
 
 class Account
 {
@@ -619,7 +620,7 @@ class Account
      * } $body
      * @return WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse|array $totals
      */
-    public static function previewCost(RequestContext $request_context, object $body): SubscriptionPreview
+    public static function previewCost(RequestContext $request_context, object $body): SubPreview
     {
         $plan = $body->plan;
         $address = new ChargifyAddressInput([
@@ -630,7 +631,11 @@ class Account
             "zipcode" => $body->zipcode
         ]);
 
-        return $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
+        if ($address->getCountry() == "US") {
+            return $request_context->getClient()->getChargifySubscriptionPreview($plan, $address);
+        } else {
+            return self::getNonUSSubscriptionPreview($request_context, $plan);
+        }
     }
 
     /**
@@ -761,7 +766,12 @@ class Account
                 $sub_id = $customer->getSubscriptionId();
                 $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
                 $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
-                $preview = $request_context->getClient()->getChargifySubscriptionPreview($newPlan->getId(), $addr);
+
+                if ($addr->getCountry() == "US") {
+                    $preview = $request_context->getClient()->getChargifySubscriptionPreview($newPlan->getId(), $addr);
+                } else {
+                    $preview = self::getNonUSSubscriptionPreview($request_context, $newPlan->getId());
+                }
                 $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
@@ -785,7 +795,13 @@ class Account
                         $sub_id = $customer->getSubscriptionId();
                         $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
-                        $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $addr);
+                        $plan_id = $plan->getId();
+
+                        if ($addr->getCountry() == "US") {
+                            $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan_id, $addr);
+                        } else {
+                            $preview = self::getNonUSSubscriptionPreview($request_context, $plan_id);
+                        }
                         $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                         $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
@@ -815,5 +831,30 @@ class Account
         }
 
         exit();
+    }
+
+    private static function getNonUSSubscriptionPreview(RequestContext $request_context, string $plan_id): SubPreview
+    {
+        $plans = $request_context->getClient()->getWptPlans();
+        $plan = null;
+        foreach ($plans as $p) {
+            if (strtolower($p->getId()) == strtolower($plan_id)) {
+                $plan = $p;
+                break;
+            }
+        }
+        if (is_a($plan, Plan::class)) {
+            return new SubPreview([
+            "total_in_cents" => (int)$plan->getPrice(),
+            "sub_total_in_cents" => (int)$plan->getPrice(),
+            "tax_in_cents" => 0
+            ]);
+        } else {
+            return new SubPreview([
+            "total_in_cents" => 0,
+            "sub_total_in_cents" => 0,
+            "tax_in_cents" => 0
+            ]);
+        }
     }
 }
