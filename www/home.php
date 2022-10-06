@@ -656,6 +656,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         </label>
                                                         <textarea class="large" id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
                                                     </li>
+                                                    <li>
+                                                        <input type="checkbox" name="injectScriptAllFrames" id="injectScriptAllFrames" class="checkbox" style="float: left;width: auto;">
+                                                        <label for="injectScriptAllFrames" class="auto_width">Inject script into all frames and run before any page scripts run (Chrome-only)</label>
+                                                    </li>
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
