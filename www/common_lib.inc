@@ -10,8 +10,6 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 require_once(__DIR__ . '/archive.inc');
 require_once(__DIR__ . '/util.inc');
 
-define('VIDEO_CODE_VERSION', 20);
-
 require_once(__DIR__ . '/logging.inc');
 use WebPageTest\Util;
 use WebPageTest\Util\Cache;

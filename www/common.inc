@@ -57,6 +57,15 @@ require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
 
+// constants that require common_lib nand cannot be in constants.inc
+if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
+    define('FRIENDLY_URLS', true);
+    define('VER_TIMELINE', '28/');       // version of the timeline javascript
+} else {
+    define('FRIENDLY_URLS', false);
+    define('VER_TIMELINE', '');       // Leave the timeline version empty
+}
+
 // Create global request context for future use
 $request_context = new RequestContext($_REQUEST, $_SERVER);
 
@@ -167,14 +176,6 @@ if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"])) {
     $_SERVER["REMOTE_ADDR"] = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
 }
 
-if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
-    define('FRIENDLY_URLS', true);
-    define('VER_TIMELINE', '28/');       // version of the timeline javascript
-} else {
-    define('FRIENDLY_URLS', false);
-    define('VER_TIMELINE', '');       // Leave the timeline version empty
-}
-
 $privateInstall = true;
 if (
     array_key_exists('HTTP_HOST', $_SERVER) &&
@@ -212,9 +213,7 @@ if (!is_dir($tempDir)) {
 }
 $tempDir = realpath($tempDir) . '/';
 
-if (isset($_REQUEST['embed'])) {
-    define('EMBED', true);
-} elseif (isset($_REQUEST['bare'])) {
+if (!EMBED && isset($_REQUEST['bare'])) {
     $noanalytics = true;
 }
 $is_ssl = isSslConnection();

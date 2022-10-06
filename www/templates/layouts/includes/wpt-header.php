@@ -93,7 +93,7 @@ if ($id) {
                         </details>
                     </li>
 
-                    <?php if ($supportsAuth && !defined('EMBED')) : ?>
+                    <?php if ($supportsAuth && !EMBED) : ?>
                         <?= addTab('Pricing', '/signup'); ?>
                     <?php endif; ?>
 
@@ -138,7 +138,7 @@ if ($id) {
 
                     <?php
 
-                    if ($supportsAuth && !defined('EMBED')) {
+                    if ($supportsAuth && !EMBED) {
                         if ($supportsCPAuth) {
                             $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
                             ?>
