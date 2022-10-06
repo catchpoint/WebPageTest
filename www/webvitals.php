@@ -33,8 +33,7 @@ $profiles = parse_ini_file($profile_file, true);
 <html lang="en-us">
     <head>
         <title>WebPageTest - Website Performance and Optimization Test</title>
-        <?php $gaTemplate = 'Main';
-        include('head.inc');?>
+        <?php include('head.inc');?>
         <style>
 
 

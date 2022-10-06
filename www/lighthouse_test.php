@@ -32,8 +32,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 <html lang="en-us">
     <head>
         <title>WebPageTest - Lighthouse Test</title>
-        <?php $gaTemplate = 'Main';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
         <style>
         #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>

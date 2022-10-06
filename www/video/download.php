@@ -17,8 +17,7 @@ if (ValidateTestId($id) && is_file($file)) {
 <html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
-        <?php $gaTemplate = 'Video Download Error';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
         <style>
             div.content
             {

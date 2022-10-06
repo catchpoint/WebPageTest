@@ -28,8 +28,7 @@ $userImages = true;
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <script>document.documentElement.classList.add('has-js');</script>
 
-    <?php $gaTemplate = 'Page Images';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
   </head>
   <body id="page-images" class="result">
       <?php
@@ -41,15 +40,15 @@ $userImages = true;
 <div class="results_main_contain">
         <div class="results_main">
 
-        
+
 
 
            <div class="results_and_command">
-            
 
-            
 
-            
+
+
+
            <div class="results_header">
                 <h2>Page Images</h2>
                 <p>The following requests were images.</p>

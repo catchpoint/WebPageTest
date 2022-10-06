@@ -27,8 +27,7 @@ if (is_file($profile_file)) {
 <html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
-        <?php $gaTemplate = 'Visual Test';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="home feature-pro">
        <?php
@@ -49,7 +48,7 @@ if (is_file($profile_file)) {
                 <?php
                 $currNav = "Visual Comparison";
                 include("testTypesNav.php");
-                ?>  
+                ?>
                 <div id="visual_comparison" class="test_box">
                     <div class="test-box-lede test_main_config">
                       <div class="test_presets">
@@ -88,7 +87,7 @@ if (is_file($profile_file)) {
                             </div>
                         </div>
                         <button class="addBtn" onclick="return AddUrl();">Add URL</button>
-                        
+
                         <ul class="input_fields">
                         <?php
                         if (isset($profiles) && is_array($profiles) && count($profiles)) {
@@ -111,15 +110,15 @@ if (is_file($profile_file)) {
                             echo '</ul>';
                         }
                         ?>
-                        
+
 
 
                       </div>
                       <div>
                         <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
                     </div>
-                       
-                    
+
+
                     </div>
                     <p class="footnote">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
                         If you would like to test with different settings, submit your tests individually from the

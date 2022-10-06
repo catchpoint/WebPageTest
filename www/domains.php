@@ -43,8 +43,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         <title><?php echo $page_title; ?> - WebPageTest Domain Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Domain Breakdown';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="result">
             <?php

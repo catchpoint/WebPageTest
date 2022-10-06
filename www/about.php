@@ -17,8 +17,7 @@ $page_description = "More information about WebPageTest website speed testing an
     <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
     <meta name="author" content="Patrick Meenan">
 
-    <?php $gaTemplate = 'About';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
 </head>
 
 <body>

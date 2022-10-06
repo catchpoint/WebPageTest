@@ -63,8 +63,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         document.documentElement.classList.add('has-js');
     </script>
 
-    <?php $gaTemplate = 'Details';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
 </head>
 
 <body class="result result-details">

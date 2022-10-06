@@ -113,7 +113,6 @@ if ($json) {
             </noscript>
             <?php
         }
-        $gaTemplate = 'Bulk Result';
         include('head.inc');
         ?>
         <style>
