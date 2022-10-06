@@ -8,7 +8,6 @@ require_once('page_data.inc');
 $page_keywords = array('image','comparison','WebPageTest','Website Speed Test');
 $page_description = "Visual comparison of multiple website screenshots.";
 $title = 'WebPageTest screenshot diff';
-$gaTemplate = 'Screenshot Diff';
 
 $refPath = GetTestPath($_REQUEST['ref']);
 $refData = loadAllPageData($refPath);

@@ -19,9 +19,8 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Content Breakdown';
-        include('head.inc'); ?>
-       
+        <?php include('head.inc'); ?>
+
     </head>
     <body class="result">
             <?php
@@ -118,8 +117,8 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
             <div id="result" class="results_body">
               <h3 class="hed_sub">Processing Breakdown</h3>
 
-          
-          
+
+
           <div class="breakdownFrame">
             <div class="breakdownFrame_item">
               <div id="pieGroups" ></div>
@@ -136,7 +135,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
           <p>All of the main-thread activity including idle (waiting for resources usually) <?php
                       echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
             ?>.</p>
-          
+
 
           <div class="breakdownFrame">
           <div class="breakdownFrame_item">
@@ -151,7 +150,7 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
           </div>
 
 
-            
+
         </div>
         <?php include('footer.inc'); ?>
         </div></div></div>

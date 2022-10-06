@@ -7,7 +7,6 @@
                 <script>document.documentElement.classList.add('has-js');</script>
 
         <?php
-            $gaTemplate = 'Traceroute Result';
             $page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Traceroute result.";
             include('head.inc');
@@ -27,18 +26,18 @@
 
 
         <div class="results_and_command">
-       
+
                 <div class="results_header">
                     <h2>Traceroute Test Results</h2>
                     <p>Here's how this site performed in this tracerout test. </p>
                 </div>
 
         </div>
-            
-            
+
+
             <div id="result" class="results_body">
                 <h3 class="hed_sub">Individual Runs</h3>
-                
+
                 <?php
                 for ($run = 1; $run <= $test['test']['runs']; $run++) {
                     echo "<h4>Run $run</h4>";
@@ -47,7 +46,7 @@
                     echo '</div>';
                 }
                 ?>
-                
+
             </div>
             <?php include('footer.inc'); ?>
         </div>

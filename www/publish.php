@@ -32,8 +32,7 @@ $page_description = "Publish test results to WebPageTest.";
 <html lang="en-us">
     <head>
         <title>WebPageTest - Publish</title>
-        <?php $gaTemplate = 'Publish';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body>
         <div class="page">

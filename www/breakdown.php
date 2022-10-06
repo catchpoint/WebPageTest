@@ -31,8 +31,7 @@ if (!$testInfo->isFirstViewOnly()) {
         <title><?php echo $page_title; ?> - WebPageTest Content Breakdown</title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Content Breakdown';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="result">
             <?php

@@ -11,8 +11,7 @@ $page_description = "Website speed test blocked.";
 <html lang="en-us">
     <head>
         <title>WebPageTest - Access Denied</title>
-        <?php $gaTemplate = 'Blocked';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body>
       <?php

@@ -211,7 +211,6 @@ if ($xml) {
         ?>
         <?php
         if (!$embed) {
-            $gaTemplate = 'Video';
             include('head.inc');
         }
         if (isset($videoUrl)) {
@@ -312,7 +311,7 @@ if ($xml) {
 
             <div>
                 <h1>Video of page loading process</h1>
-                
+
             </div>
 
             <div class="box">
