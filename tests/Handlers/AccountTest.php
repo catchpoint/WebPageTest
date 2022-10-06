@@ -36,6 +36,7 @@ define('VER_ACCOUNT_CSS', "account.css");
 define('VER_JS_ACCOUNT', "account.js");
 define('VER_JS_ESTIMATE_TAXES', "estimate-taxes.js");
 define('FRIENDLY_URLS', true);
+define('EMBED', false);
 
 final class AccountTest extends TestCase
 {
