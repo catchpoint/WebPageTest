@@ -11,6 +11,8 @@ use WebPageTest\Handlers\Account;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\RequestContext;
 use WebPageTest\User;
+use WebPageTest\Plan;
+use WebPageTest\PlanList;
 use WebPageTest\BannerMessageManager;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 
@@ -576,6 +578,44 @@ final class AccountTest extends TestCase
         $req->setClient($client);
 
         Account::previewCost($req, $body);
+    }
+
+    public function testPreviewCostForeignAddress(): void
+    {
+        $address = new ChargifyAddressInput([
+            'city' => 'London',
+            'country' => 'GB',
+            'state' => 'LND',
+            'street_address' => '123 Main St',
+            'zipcode' => '12345-1234'
+        ]);
+
+        $body = new stdClass();
+        $body->plan = 'mp1';
+        $body->city = $address->getCity();
+        $body->country = $address->getCountry();
+        $body->state = $address->getState();
+        $body->street_address = $address->getStreetAddress();
+        $body->zipcode = $address->getZipcode();
+
+        $req = new RequestContext([]);
+        $options = [
+          "id" => "MP1",
+          "priceInCents" => 1874,
+          "name" => "monthly 1200 runs",
+          "billingFrequency" => 1,
+          "runs" => 1200
+        ];
+        $plan = new Plan($options);
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getWptPlans')
+            ->willReturn(new PlanList($plan));
+
+        $req->setClient($client);
+
+        $preview = Account::previewCost($req, $body);
+        $this->assertEquals($options['priceInCents'], $preview->getTotalInCents());
     }
 
     public function testResendEmailVerification(): void
