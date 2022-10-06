@@ -52,7 +52,6 @@ if (Util::getSetting('cp_auth')) {
 }
 
 // Load local deps
-require_once(__DIR__ . '/constants.inc');
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
