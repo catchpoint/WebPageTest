@@ -687,7 +687,7 @@ class Account
         $contact_info = $request_context->getClient()->getUserContactInfo($user_id);
         $first_name = $contact_info['firstName'];
         $last_name = $contact_info['lastName'];
-        $company_name = $contact_info['companyName'];
+        $company_name = $contact_info['companyName'] ?? "";
 
 
         $contact_info = [
