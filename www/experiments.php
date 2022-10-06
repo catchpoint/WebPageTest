@@ -66,7 +66,7 @@ $page_description = "Website performance test result$testLabel.";
         <meta http-equiv="refresh" content="30" />
         </noscript>
         <?php } ?>
-        <?php $gaTemplate = 'Test Result';
+        <?php
         $useScreenshot = true;
         $socialTitle = "WebPageTest Opportunities & Experiments";
         $socialDesc = "Check out these opportunities for improvement identified by WebPageTest";

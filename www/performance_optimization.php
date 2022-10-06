@@ -24,8 +24,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
         <title><?php echo "$page_title - WebPageTest Optimization Check Results"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Optimization Check';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="result">
             <?php

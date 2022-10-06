@@ -37,8 +37,7 @@ $page_description = "Web Vitals details$testLabel";
         <title><?php echo "$page_title - Web Vitals Details"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Vitals';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="result">
             <?php

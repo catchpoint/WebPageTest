@@ -97,8 +97,7 @@ $common_label = implode(" ", $common_labels);
     </script>
     <meta http-equiv="charset" content="iso-8859-1">
     <meta name="author" content="Patrick Meenan">
-    <?php $gaTemplate = 'Graph';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
     <style>
         .chartStats {
             clear: both;

@@ -25,8 +25,7 @@ $userImages = true;
 <html lang="en-us">
     <head>
         <title><?php echo $page_title; ?> - WebPageTest Screenshots</title>
-        <?php $gaTemplate = 'Screenshot';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
         <style>
         img.center {
             display:block;

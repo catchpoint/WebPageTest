@@ -70,8 +70,7 @@ $page_description = "Website performance test result$testLabel.";
          $socialTitle = "WebPageTest Performance Test Results";
          $socialDesc = "Check out these web performance test results on WebPageTest.org: ";
         ?>
-        <?php $gaTemplate = 'Test Result';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
 
     </head>
     <body class="result result-summary <?php if ($req_screenshot) {
@@ -177,7 +176,7 @@ $page_description = "Website performance test result$testLabel.";
                           $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
                       if ($testResults->countRuns() > 1) {
-                          echo '<em>(Based on Median Run by: 
+                          echo '<em>(Based on Median Run by:
                           <details><summary>' . $friendlyMedianMetric . '</summary>';
                           echo "<ul>";
 

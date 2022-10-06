@@ -13,8 +13,7 @@ $page_description = "Page Not Found.";
         <title>WebPageTest - Page Not Found</title>
         <meta http-equiv="charset" content="iso-8859-1">
 
-        <?php $gaTemplate = '404';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body>
             <?php

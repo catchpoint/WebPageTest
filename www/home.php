@@ -99,7 +99,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 <head>
     <title>WebPageTest - Website Performance and Optimization Test</title>
     <?php
-    $gaTemplate = 'Main';
     $useScreenshot = true;
     require_once __DIR__ . '/head.inc';
     ?>

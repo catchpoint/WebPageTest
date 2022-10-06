@@ -25,8 +25,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
 <head>
     <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
-    <?php $gaTemplate = 'Custom Waterfall';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
 </head>
 
 <body id="custom-waterfall">
