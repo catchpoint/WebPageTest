@@ -212,24 +212,6 @@ class TestInfo
     }
 
   /**
-   * @param string[] $keywords Keywords to check the info for
-   * @return True if the TestInfo matches the keywords, false otherwise
-   */
-    public function isAdultSite($keywords)
-    {
-        $url = $this->getUrl();
-        if (!$url) {
-            return false;
-        }
-        foreach ($keywords as $keyword) {
-            if (stripos($url, $keyword) !== false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-  /**
    * @return bool True if the test is marked as an test_error, false otherwise
    */
     public function isTestError()

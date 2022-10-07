@@ -313,29 +313,6 @@ class TestStepResult
     }
 
   /**
-   * @param string[] $keywords Keywords to use for the check
-   * @return bool True if the checked site is an adult site, false otherwise
-   */
-    public function isAdultSite($keywords)
-    {
-        if ($this->testInfo->isAdultSite($keywords)) {
-            return true;
-        }
-        foreach ($keywords as $keyword) {
-            if (!empty($this->rawData["adult_site"])) {
-                return true;
-            }
-            if (!empty($this->rawData["URL"]) && stripos($this->rawData["URL"], $keyword) !== false) {
-                return true;
-            }
-            if (!empty($this->rawData["title"]) && stripos($this->rawData["title"], $keyword) !== false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-  /**
    * @return bool True if the step has a breakdown timeline, false otherwise
    */
     public function hasBreakdownTimeline()
