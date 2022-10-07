@@ -3382,7 +3382,7 @@ function ValidateCommandLine($cmd, &$error)
         $flags = explode(' ', $cmd);
         if ($flags && is_array($flags) && count($flags)) {
             foreach ($flags as $flag) {
-                if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_< "]+)|((data-reduction-proxy-http-proxies|data-reduction-proxy-config-url|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on|oauth2-refresh-token|unsafely-treat-insecure-origin-as-secure|user-data-dir)=[a-zA-Z0-9\-\.\+=,_:\/"%]+))$/', $flag)) {
+                if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_< "]+)|((data-reduction-proxy-http-proxies|data-reduction-proxy-config-url|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on|oauth2-refresh-token|unsafely-treat-insecure-origin-as-secure|user-data-dir|ignore-certificate-errors-spki-list)=[a-zA-Z0-9\-\.\+=,_:\/"%]+))$/', $flag)) {
                     $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
                 }
             }
