@@ -1,7 +1,7 @@
 <?php
 
 if (!isset($noanalytics)) {
-    require_once __DIR__ . '/templates/layouts/google-tag-manager.inc';
+    require_once WWW_PATH . '/templates/layouts/google-tag-manager.inc';
 } ?>
 
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -111,11 +111,11 @@ echo "\n</style>\n";
 // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo "<script>";
-    require_once __DIR__ . '/assets/js/catchpoint-rum.js';
+    require_once WWW_PATH . '/assets/js/catchpoint-rum.js';
     echo "</script>";
 }
 
 if (isset($test_is_private) && !$test_is_private) {
-    include __DIR__ . '/include/social_meta.php';
+    include INCLUDES_PATH . '/include/social_meta.php';
 }
 ?>

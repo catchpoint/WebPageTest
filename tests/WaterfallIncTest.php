@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/..' . '/www/waterfall.inc';
+require_once INCLUDES_PATH . '/waterfall.inc';
 
 use PHPUnit\Framework\TestCase;
 

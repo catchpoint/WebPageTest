@@ -10,15 +10,15 @@ final class TemplateTest extends TestCase
     public function testConstructorSetsDefaults(): void
     {
         $dir = realpath(WWW_PATH . '/templates');
-        $layout = realpath(__DIR__ . '/../www/templates/layouts/default.php');
+        $layout = realpath(WWW_PATH . '/templates/layouts/default.php');
         $tpl = new Template();
         $this->assertEquals($dir, $tpl->getDir());
         $this->assertEquals($layout, $tpl->getLayout());
     }
     public function testConstructorSetsValues(): void
     {
-        $dir = realpath(__DIR__ . '/../www/templates/errors');
-        $layout = realpath(__DIR__ . '/../www/templates/layouts/default.php');
+        $dir = realpath(WWW_PATH . '/templates/errors');
+        $layout = realpath(WWW_PATH . '/templates/layouts/default.php');
         $tpl = new Template('errors');
         $this->assertEquals($dir, $tpl->getDir());
         $this->assertEquals($layout, $tpl->getLayout());
@@ -27,13 +27,13 @@ final class TemplateTest extends TestCase
     {
         $tpl = new Template();
         $tpl->setLayout('../../../tests/fixtures/layout-1');
-        $layout = realpath(__DIR__ . '/fixtures/layout-1.php');
+        $layout = realpath(TESTS_PATH . '/fixtures/layout-1.php');
         $this->assertEquals($tpl->getLayout(), $layout);
     }
 
     public function testRenderReturnsRenderedString(): void
     {
-        $dir = realpath(__DIR__ . '/fixtures');
+        $dir = realpath(TESTS_PATH . '/fixtures');
         $tpl = new Template('../../tests/fixtures');
         $tpl->setLayout('../../../tests/fixtures/layout-1');
         $this->assertEquals($dir, $tpl->getDir());

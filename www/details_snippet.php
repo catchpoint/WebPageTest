@@ -5,8 +5,8 @@
 // found in the LICENSE.md file.
 
 require 'common.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestStepResult.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestStepResult.php';
 
 
 global $testPath, $run, $cached, $step;  // set in common.inc. This is for IDE to know what exists
@@ -23,47 +23,47 @@ if (!$stepResult->isValid()) {
 
 switch ($requestedSnippet) {
     case "waterfall":
-        require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
 
         $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $stepResult);
         echo $waterfallSnippet->create();
         break;
 
     case "connection":
-        require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
 
         $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $stepResult);
         echo $waterfallSnippet->create();
         break;
 
     case "requestDetails":#
-        require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/RequestDetailsHtmlSnippet.php';
 
         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $stepResult, $useLinks);
         echo $requestDetailsSnippet->create();
         break;
 
     case "requestHeaders":
-        require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/RequestHeadersHtmlSnippet.php';
 
         $requestHeadersSnippet = new RequestHeadersHtmlSnippet($stepResult, $useLinks);
         echo $requestHeadersSnippet->create();
         break;
 
     case "mimetypeBreakdown":
-        require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/MimetypeBreakdownHtmlSnippet.php';
         $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $stepResult);
         echo $snippetRv->create();
         break;
 
     case "domainBreakdown":
-        require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/DomainBreakdownHtmlSnippet.php';
         $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $stepResult);
         echo $snippetRv->create();
         break;
 
     case "performanceOptimization":
-        require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
+        require_once INCLUDES_PATH . '/include/PerformanceOptimizationHtmlSnippet.php';
         $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $stepResult);
         echo $snippet->create();
         break;

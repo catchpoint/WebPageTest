@@ -6,13 +6,13 @@
 
 use WebPageTest\Util;
 
-require_once __DIR__ . '/page_data.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestResults.php';
-require_once __DIR__ . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 if (!isset($noanalytics)) {
-    require_once __DIR__ . '/templates/layouts/google-tag-manager-noscript.inc';
+    require_once WWW_PATH . '/templates/layouts/google-tag-manager-noscript.inc';
 }
 
 if (isset($testPath)) {
@@ -58,7 +58,7 @@ if (!EMBED) {
         echo '<div class="alert-banner">' . $alert . '</div>';
     }
 
-    require_once __DIR__ . '/templates/layouts/includes/wpt-header.php';
+    require_once WWW_PATH . '/templates/layouts/includes/wpt-header.php';
     ?>
 
     <?php
@@ -90,7 +90,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $firstRunResults = $testResults->getRunResult(1, false);
 
         echo '<div class="results_header_contain">';
-        require_once(__DIR__ . '/cta-banner.inc');
+        require_once(INCLUDES_PATH . '/cta-banner.inc');
 
         echo '<div id="header_container">';
 
@@ -177,7 +177,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
         $browser = $testResults->getBrowser();
             //check to make sure we have a browser icon
-        if (isset($browser) && file_exists(__DIR__ . '/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
+        if (isset($browser) && file_exists(WWW_PATH . '/assets/images/test_icons/' . strtolower($browser->getName()) . '.svg')) {
             //exists so let's use it
             $browserIcon = true;
         } else {
@@ -248,7 +248,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $experimentData = $metaInfo['experiment'];
                     echo "<p class=\"meta_exp_applied_hed\">Experiment Info:</p>";
                     echo '<ul class="meta_exp_applied_list">';
-                    include __DIR__ . '/experiments/list_applied.inc';
+                    include INCLUDES_PATH . '/experiments/list_applied.inc';
                     echo '</ul>';
                     echo "<p>Related Links: <a href=\"" . $controlTestHref . "\">Original (Control Run)</a>, <a href=\"" . $experimentOriginalTestHref . "\">Original Test</a></p><ul>";
                 }
@@ -326,7 +326,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             </script>
             <?php
         } else {
-            require_once __DIR__ . '/screen_shot_embed.php';
+            require_once WWW_PATH . '/screen_shot_embed.php';
         }
 
         echo '</div></div></div>';

@@ -4,8 +4,8 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-$rbIcon = imagecreatefrompng(__DIR__ . '/assets/images/render-block-icon.png');
-$nsIcon = imagecreatefrompng(__DIR__ . '/assets/images/not-secure-icon.png');
+$rbIcon = imagecreatefrompng(WWW_PATH . '/assets/images/render-block-icon.png');
+$nsIcon = imagecreatefrompng(WWW_PATH . '/assets/images/not-secure-icon.png');
 
 /**
 * Draw label next to a request like "10 ms (404)".

@@ -4,14 +4,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
-require_once('object_detail.inc');
-require_once('page_data.inc');
-require_once('waterfall.inc');
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestRunResults.php';
-require_once __DIR__ . '/include/RunResultHtmlTable.php';
-require_once __DIR__ . '/include/UserTimingHtmlTable.php';
-require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
+require_once INCLUDES_PATH . '/object_detail.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/waterfall.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
+require_once INCLUDES_PATH . '/include/UserTimingHtmlTable.php';
+require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
 
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);

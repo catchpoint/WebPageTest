@@ -4,12 +4,12 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
-require_once('object_detail.inc');
-require_once('page_data.inc');
-require_once('draw.inc');
-require_once('contentColors.inc');
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/object_detail.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/draw.inc';
+require_once INCLUDES_PATH . '/contentColors.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 // not functional; just to declare what to expect from common.inc
 global $testPath, $run, $cached, $step, $id, $url, $test;
@@ -159,7 +159,7 @@ function get_short_path($path)
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-    
+
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
       google.charts.load('current', {packages:["orgchart"]});
