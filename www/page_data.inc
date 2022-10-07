@@ -319,7 +319,7 @@ function loadPageStepData($localPaths, $testInfo = null)
                     $count = 0;
                     $cls = 0;
                     $fraction = 0;
-						
+
                     // Count the number of LayoutShifts before first paint
                     if (isset($ret['chromeUserTiming.TotalLayoutShift']) && isset($ret['chromeUserTiming.firstPaint'])) {
                         foreach ($ret['LayoutShifts'] as $shift) {
