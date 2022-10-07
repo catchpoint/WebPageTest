@@ -19,9 +19,10 @@
                     <label class="dropdown">
                         <input type="checkbox" class="dd-input" id="test">
                         <div class="dd-button">
-                            Cancel Subscription
+                            Update Subscription
                         </div>
                         <ul class="dd-menu">
+                            <li><a href="/account/update_plan">Update Subscription</a></li>
                             <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
                         </ul>
                     </label>
