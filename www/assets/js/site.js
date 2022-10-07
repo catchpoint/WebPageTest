@@ -85,7 +85,6 @@ function wptLogout(redirectUrl) {
       if (ui.tab.id === "ui-tab-script") {
         initCodeField("enter_script");
       }
-
     });
 
     // Truncatable

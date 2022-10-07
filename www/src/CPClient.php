@@ -384,7 +384,13 @@ class CPClient
                         'planRenewalDate',
                         'billingFrequency',
                         'wptPlanName',
-                        'nextWptPlanId'
+                        'nextWptPlanId',
+                        'creditCardBillingAddress',
+                        'creditCardBillingAddress2',
+                        'creditCardBillingCity',
+                        'creditCardBillingState',
+                        'creditCardBillingZip',
+                        'creditCardBillingCountry'
                     ])
             ]);
 
@@ -748,7 +754,13 @@ class CPClient
                 'planRenewalDate',
                 'billingFrequency',
                 'wptPlanName',
-                'nextWptPlanId'
+                'nextWptPlanId',
+                'creditCardBillingAddress',
+                'creditCardBillingAddress2',
+                'creditCardBillingCity',
+                'creditCardBillingState',
+                'creditCardBillingZip',
+                'creditCardBillingCountry'
             ]);
         $response = $this->graphql_client->runQuery($gql, true);
         $data = $response->getData()['wptCustomer'];
@@ -978,34 +990,5 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         return $results->getData()[$mutation_name];
-    }
-
-    public function getBillingAddress(string $subscription_id): ChargifyInvoiceAddressType
-    {
-        $gql = (new Query('invoice'))
-            ->setVariables([
-                new Variable('subscriptionId', 'String', true)
-            ])
-            ->setArguments([
-                'subscriptionId' => '$subscriptionId'
-            ])
-            ->setSelectionSet([
-                (new Query('shippingAddress'))
-                    ->setSelectionSet([
-                        'street',
-                        'line2',
-                        'city',
-                        'state',
-                        'zip',
-                        'country'
-                    ])
-            ]);
-
-        $variables = [
-            'subscriptionId' => $subscription_id
-        ];
-
-        $results = $this->graphql_client->runQuery($gql, true, $variables);
-        return new ChargifyInvoiceAddressType($results->getData()['invoice']['shippingAddress']);
     }
 }
