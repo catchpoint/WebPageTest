@@ -1083,7 +1083,7 @@ function LoadLocations()
     FilterLocations($locations, $includePaid);
 
     // strip out any sensitive information
-    foreach ($locations as $index => &$loc) {
+    foreach ($locations as &$loc) {
         // count the number of tests at each location
         if (isset($loc['scheduler_node'])) {
             $queues = GetQueueLengths($loc['location']);

@@ -290,7 +290,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
 
             echo '<video id="player" playsinline loop ' . $autoplay . ' muted="" preload="auto" poster="/video/poster.php?tests=' . $tests[0]['id'] . ',' . $tests[1]['id'] . '&amp;bg=eeeeee&amp;&text=141E33&amp;frameNum=' . $vcTime . '">
-                    <source src="/video/video.php?tests=' . $tests[0]['id'] . ',' . $tests[1]['id'] . '&amp;applyGrey=0&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
+                    <source src="/video/video.php?tests=' . $tests[0]['id'] . ',' . $tests[1]['id'] . '&amp;bg=eeeeee&amp;&text=141E33&amp;end=visual" type="video/mp4">
                 </video>
                 <button class="play" id="playbtn">Play/Pause Video</button>';
             ?>

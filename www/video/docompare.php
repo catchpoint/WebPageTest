@@ -151,7 +151,6 @@ function DisplayError()
     <body>
             <?php
             $tab = null;
-            $headerType = 'video';
             include 'header.inc';
             ?>
 

@@ -396,7 +396,6 @@ function InsertChart($metric, $label)
     global $median_metric;
     global $pagesData;
     global $testsInfo;
-    global $testsId;
     global $testsLabel;
     global $median_value;
     global $median_run;

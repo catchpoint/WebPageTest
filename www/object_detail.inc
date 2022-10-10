@@ -589,23 +589,6 @@ function GetBasePage(&$requests)
 }
 
 /**
-* Build the list of dependencies for each request
-*
-* @param mixed $requests
-*/
-function BuildRequestDependencies(&$requests)
-{
-    foreach ($requests as &$request) {
-        $request['loads'] = array();
-        RequestLoads($request['number'], $requests, $request['loads']);
-        $request['loaded_by'] = array();
-        RequestLoadedBy($request['number'], $requests, $request['loaded_by']);
-    }
-
-    return $dependencies;
-}
-
-/**
 * Figure out all of the resources loaded by the given requests
 *
 * @param mixed $index

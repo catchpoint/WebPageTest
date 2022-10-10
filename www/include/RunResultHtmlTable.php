@@ -450,14 +450,6 @@ class RunResultHtmlTable
         return '<' . $tag . ' ' . $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
     }
 
-    private function _bodyHeadCell($id, $innerHtml, $classNames = null)
-    {
-        $attributes = '';
-        $attributes .= $id ? 'id="' . $id . '" ' : '';
-        $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
-        return '<td ' . $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
-    }
-
     private function _countLeftEnabledColumns()
     {
         $enabled = 0;

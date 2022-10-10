@@ -110,7 +110,7 @@ class MyDOMDocument extends DOMDocument
         // get our attributes if we have any
         $arAttributes = array();
         if ($oDomNode->hasAttributes()) {
-            foreach ($oDomNode->attributes as $sAttrName => $oAttrNode) {
+            foreach ($oDomNode->attributes as $oAttrNode) {
                 // retain namespace prefixes
                 $arAttributes["@{$oAttrNode->nodeName}"] = $oAttrNode->nodeValue;
             }

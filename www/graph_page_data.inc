@@ -6,10 +6,6 @@
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/page_data.inc');
 
-function GetQuantiles(&$data)
-{
-}
-
 function GetNumeric($value)
 {
     if (preg_match('/^[0-9]+$/', $value)) {

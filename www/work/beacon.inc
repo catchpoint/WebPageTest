@@ -6,7 +6,7 @@
 /**
 * Send the test result beacon (to Show Slow instance)
 */
-function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
+function SendBeacon($beaconUrl, $id, &$testInfo, &$pageData)
 {
     if (!$testInfo['private']) {
         $medianMetric = isset($testInfo['medianMetric']) ? $testInfo['medianMetric'] : GetSetting('medianMetric', 'loadTime');
