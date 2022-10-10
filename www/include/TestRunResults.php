@@ -190,23 +190,6 @@ class TestRunResults
     }
 
   /**
-   * @param string[] $keywords Keywords to use for the check
-   * @return bool True if the checked site is an adult site, false otherwise
-   */
-    public function isAdultSite($keywords)
-    {
-        if ($this->testInfo->isAdultSite($keywords)) {
-            return true;
-        }
-        foreach ($this->stepResults as $step) {
-            if ($step->isAdultSite($keywords)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-  /**
    * @param string $metric The metric to compute the average of all steps
    * @return float|null The average metric for all steps having it set or null if not set in any step
    */
