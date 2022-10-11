@@ -14,7 +14,7 @@ $ok = false;
 
 if (is_dir($dir)) {
     $file = "$dir/video.zip";
-    BuildVideoScript($dir);
+    BuildVideoScript($testPath, $dir);
     ZipVideo($dir);
 
     if (is_file($file)) {

@@ -53,7 +53,7 @@ function BuildVideoScripts($testPath)
         while ($file = readdir($dir)) {
             $path = $testPath  . "/$file";
             if (is_dir($path) && !strncmp($file, 'video_', 6)) {
-                BuildVideoScript($path);
+                BuildVideoScript($testPath, $path);
             }
         }
 
@@ -66,12 +66,15 @@ function BuildVideoScripts($testPath)
 *
 * @param mixed $videoDir
 */
-function BuildVideoScript($videoDir)
+function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $startOffset = null)
 {
-    // figure out the frame range and actual file names
+  // figure out the frame range and actual file names
+    $start = null;
     $end = null;
     $frames = array();
-    $endTime = 0;
+    if ($endTime) {
+        $endTime = (int)(($endTime + 99) / 100);
+    }
 
     if (loadVideo($videoDir, $frames_ms) && count($frames_ms)) {
       // get 10fps frame timings for now - eventually add support for rendering 60fps video

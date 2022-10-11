@@ -743,12 +743,17 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
         $path = $test['frames'][$frame_ms]['path'];
     }
 
+    $need_grey = false;
+    $applyGrey = isset($_REQUEST['applyGrey']) && $_REQUEST['applyGrey'] === 0 ? false : true;
     if (!isset($test['done']) && $frameTime > $test['end']) {
+        if ($applyGrey) {
+            $need_grey = true;
+        }
         $test['done'] = true;
     }
 
     // see if we actually need to draw anything
-    if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path)) {
+    if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path || $need_grey)) {
         $test['lastFrame'] = $path;
         if (strtolower(substr($path, -4)) == '.png') {
             $thumb = imagecreatefrompng("./$path");
@@ -756,6 +761,9 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
             $thumb = imagecreatefromjpeg("./$path");
         }
         if ($thumb) {
+            if ($need_grey) {
+                imagefilter($thumb, IMG_FILTER_GRAYSCALE);
+            }
             // Scale and center the thumbnail aspect-correct in the area reserved for it
             $rect = $test['thumbRect'];
             $thumb_w = imagesx($thumb);

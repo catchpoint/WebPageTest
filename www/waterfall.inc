@@ -1956,7 +1956,9 @@ function GetAverageSliceValue($slices, $start, $end)
             $start_value = floatval($slices[$start_key]);
             $end_value = floatval($slices[$end_key]);
             $end_weight = floatval($start - $start_bucket) / 0.1;
-            $avg = $start_value + $end_weight * $end_value;
+            $distance_from_start = 0;
+            $start_weight = 1.0 - $distance_from_start;
+            $avg = $start_weight * $start_value + $end_weight * $end_value;
         }
     }
 
