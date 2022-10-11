@@ -3,6 +3,10 @@
     // LCP info!
     $category = "Quick";
     $events = $testStepResult->getMetric('largestPaints');
+    $lcpType = $testStepResult->getMetric('LargestContentfulPaintType');
+    $lcpNodeType = $testStepResult->getMetric('LargestContentfulPaintNodeType');
+    $lcpImageURL = $testStepResult->getMetric('LargestContentfulPaintImageURL');
+
     $lcp = null;
 if (isset($events) && is_array($events)) {
     // Find the actual LCP event
@@ -43,6 +47,8 @@ if (isset($lcp)) {
                     $lcpSource = $srcmatches[1][0];
                 }
             }
+
+            // old bg check, which may still capture bg images from old test data
             if (isset($lcp['element']['background-image'])) {
                 preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
                 if ($matches) {
@@ -52,6 +58,12 @@ if (isset($lcp)) {
                 }
             }
 
+            // new bg check - still doesn't find bg images set via inline style
+            if (isset($lcpType) && $lcpType === "background-image" && isset($lcpImageURL)) {
+                $lcpSource = $lcpImageURL;
+                $lcpFullSource = $lcpImageURL;
+                $isBG = true;
+            }
 
             $expsToAdd = array();
             $expsToAdd[] = (object) [

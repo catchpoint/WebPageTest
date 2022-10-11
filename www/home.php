@@ -413,18 +413,18 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
                                     <div id="test_subbox-container">
                                         <ul class="ui-tabs-nav ui-tabs-nav-advanced">
-                                            <li><a href="#test-settings">Test Settings</a></li>
-                                            <li><a href="#advanced-settings" id="tab-advanced">Advanced</a></li>
-                                            <li><a href="#advanced-chrome">Chromium</a></li>
+                                            <li><a href="#test-settings" id="ui-tab-settings">Test Settings</a></li>
+                                            <li><a href="#advanced-settings" id="ui-tab-advanced">Advanced</a></li>
+                                            <li><a href="#advanced-chrome" id="ui-tab-chromium">Chromium</a></li>
                                             <?php if (!GetSetting('no_basic_auth_ui') || isset($_GET['auth'])) { ?>
-                                                <li><a href="#auth">Auth</a></li>
+                                                <li><a href="#auth" id="ui-tab-auth">Auth</a></li>
                                             <?php } ?>
-                                            <li><a href="#script">Script</a></li>
-                                            <li><a href="#block">Block</a></li>
-                                            <li><a href="#spof">SPOF</a></li>
-                                            <li><a href="#custom-metrics">Custom</a></li>
+                                            <li><a href="#script" id="ui-tab-script">Script</a></li>
+                                            <li><a href="#block" id="ui-tab-block">Block</a></li>
+                                            <li><a href="#spof" id="ui-tab-spof">SPOF</a></li>
+                                            <li><a href="#custom-metrics" id="ui-tab-custom-metrics">Custom</a></li>
                                             <?php if (ShowBulk()) { ?>
-                                                <li><a href="#bulk">Bulk Testing</a></li>
+                                                <li><a href="#bulk" id="ui-tab-bulk">Bulk Testing</a></li>
                                             <?php } ?>
                                         </ul>
                                         <div id="test-settings" class="test_subbox">
@@ -945,16 +945,16 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
                                             <div>
                                                 <p>
-                                                    <label for="custom_metrics" class="full_width">Custom Metrics:</label>
+                                                    <label for="custom" class="full_width">Custom Metrics:</label>
                                                     <small>
                                                         Type in or read <label for="custom_metrics_file" class="linklike">from a text file</label>
                                                     </small>
                                                     <input type="file" id="custom_metrics_file" accept="text/*" class="a11y-hidden">
                                                     <script>
-                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('custom_metrics_file', 'custom_metrics'));
+                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('custom_metrics_file', 'custom'));
                                                     </script>
                                                 </p>
-                                                <textarea name="custom" class="large" id="custom_metrics" cols="0" rows="0"></textarea>
+                                                <textarea name="custom" class="large" id="custom" cols="0" rows="0"></textarea>
                                             </div>
                                             <div class="notification-container">
                                                 <div class="notification">

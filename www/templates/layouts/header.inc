@@ -20,17 +20,6 @@ if (isset($testPath)) {
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
 }
-if (isset($testResults)) {
-    $adultKeywords = array();
-    if (is_file('../../settings/adult.txt')) {
-        $adultKeywords = file('../../settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    }
-    $isAdult = $testResults->isAdultSite($adultKeywords);
-    if ($isAdult) {
-        define('ADULT_SITE', true);
-        $adult_site = true;
-    }
-}
 
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
 if (
@@ -55,7 +44,7 @@ if (
 // If $tab is null, make it an empty string for strcasecmp
 $tab ??= "";
 
-if (defined('EMBED')) {
+if (EMBED) {
   // You don't need a header
     return;
 }

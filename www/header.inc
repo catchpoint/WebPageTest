@@ -19,17 +19,6 @@ if (isset($testPath)) {
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
 }
-if (isset($testResults)) {
-    $adultKeywords = array();
-    if (is_file('./settings/adult.txt')) {
-        $adultKeywords = file('./settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    }
-    $isAdult = $testResults->isAdultSite($adultKeywords);
-    if ($isAdult) {
-        define('ADULT_SITE', true);
-        $adult_site = true;
-    }
-}
 
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
 if (
@@ -55,7 +44,7 @@ if (!isset($experiment)) {
     $experiment = false;
 }
 
-if (!defined('EMBED')) {
+if (!EMBED) {
     ?>
     <?php
     $alert = Util::getSetting('alert');
@@ -80,7 +69,7 @@ if (!defined('EMBED')) {
 
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
-if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !defined('EMBED')) {
+if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !EMBED) {
     // make sure the test is actually complete and the second check can be applied to non-compare pages
     if (isset($test['test']['completeTime']) || (!isset($tests) && file_exists("$testPath/test.complete") )) {
         if (!isset($testResults) || !isset($testInfo)) {

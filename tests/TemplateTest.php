@@ -9,7 +9,7 @@ final class TemplateTest extends TestCase
 {
     public function testConstructorSetsDefaults(): void
     {
-        $dir = realpath(__DIR__ . '/../www/templates');
+        $dir = realpath(WWW_PATH . '/templates');
         $layout = realpath(__DIR__ . '/../www/templates/layouts/default.php');
         $tpl = new Template();
         $this->assertEquals($dir, $tpl->getDir());
