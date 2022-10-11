@@ -405,7 +405,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
             } elseif (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                 $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                 echo "<tr><th align='left'>Src</th><td>{$lcpSource}</td></tr>";
-            } elseif (isset($lcp['url']) && strlen($lcp['url'])) {
+            } elseif (!empty($lcp['url'])) {
                 $lcpSource = $lcp['url'];
                 echo "<tr><th align='left'>Url</th><td>{$lcpSource}</td></tr>";
             }
