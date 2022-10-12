@@ -6610,23 +6610,6 @@ table.details {
   line-height: 1.3em;
 }
 
-table.glossary {
-  text-align: left;
-  border-collapse: collapse;
-}
-
-table.glossary td,
-table.glossary th {
-  border: 1px solid #999;
-  padding: 0.5em 1em;
-  text-align: left;
-  border-collapse: collapse;
-}
-
-table.glossary th {
-  text-align: center;
-}
-
 /* from breakdown php */
 
 div.tableRequests table {
@@ -8692,4 +8675,13 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
   width: 20px;
   margin-right: 5px;
   content: "";
+}
+
+.glossary dt {
+  font-weight: bold;
+  padding: 10px 0;
+}
+
+.glossary li {
+  padding: 3px 0;
 }
