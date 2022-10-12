@@ -764,7 +764,7 @@ class Account
                 $results['oldPlan'] = $oldPlan;
                 $results['newPlan'] = $newPlan;
                 $sub_id = $customer->getSubscriptionId();
-                $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
+                $billing_address = $customer->getAddress();
                 $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
 
                 if ($addr->getCountry() == "US") {
@@ -793,7 +793,7 @@ class Account
                     if ($is_paid) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                         $sub_id = $customer->getSubscriptionId();
-                        $billing_address = $request_context->getClient()->getBillingAddress($sub_id);
+                        $billing_address = $customer->getAddress();
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
                         $plan_id = $plan->getId();
 
