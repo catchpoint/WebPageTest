@@ -52,7 +52,7 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
                 unset($frame);
 
                 $rect = $test['labelRect'];
-                $pos = CenterText($im, $x + $textMargin, $textTop + $textMargin, $w - 2 * $textMargin, $textHeight - 2 * $textMargin, $fontSize, $test['label']);
+                $pos = CenterText($x + $textMargin, $textTop + $textMargin, $w - 2 * $textMargin, $textHeight - 2 * $textMargin, $fontSize, $test['label']);
                 if (isset($pos)) {
                     imagettftext($im, $fontSize, 0, $pos['x'], $pos['y'], $textColor, $labelFont, $test['label']);
                 }
@@ -182,7 +182,7 @@ function GetFontSize($width, $height, $text)
     return $size;
 }
 
-function CenterText($im, $x, $y, $w, $h, $size, $text)
+function CenterText($x, $y, $w, $h, $size, $text)
 {
     global $labelFont;
     $ret = null;

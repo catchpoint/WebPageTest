@@ -224,8 +224,6 @@ if (isset($max_frame_size) && $max_frame_size < $thumbSize) {
 function LoadTestData()
 {
     global $tests;
-    global $admin;
-    global $supportsAuth;
     global $user;
     global $supports60fps;
     global $interval;

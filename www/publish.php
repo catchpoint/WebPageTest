@@ -95,10 +95,10 @@ function PublishResult()
     global $testPath;
     global $pub;
     global $noheaders;
-    $result;
+    $result = null;
 
     // build the list of files to zip
-    $files;
+    $files = [];
     $testPath = realpath($testPath);
     $dir = opendir($testPath);
     while ($file = readdir($dir)) {
@@ -121,7 +121,6 @@ function PublishResult()
                 if ($file != 'publish.zip') {
                     $filePath = "$testPath/$file";
                     if (is_file($filePath)) {
-                        $count++;
                         $zip->addFile($filePath, $file);
                     } elseif ($file != '.' && $file != '..' && is_dir($filePath)) {
                         $subFiles = scandir($filePath);

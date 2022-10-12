@@ -9,7 +9,7 @@
  *
  * @return array An array with security headers list and a total score or empty array
  */
-function getSecurityHeadersInfo($testInfo, $testRunResults)
+function getSecurityHeadersInfo($testRunResults)
 {
     $testResults = $testRunResults->getstepResult(1);
     if ($testResults) {
@@ -25,7 +25,7 @@ function getSecurityHeadersInfo($testInfo, $testRunResults)
  *
  * @return boolean A array of vulnerabilities count detected by their severity
  */
-function getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults)
+function getSecurityVulnerabilitiesBySeverity($testRunResults)
 {
     $testResults = $testRunResults->getstepResult(1);
     $severityDetected = null;
@@ -48,7 +48,7 @@ function getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults)
  */
 function getSecurityGrade($testInfo, $testRunResults, $includeVulnerabilities = true)
 {
-    $securityHeadersData = getSecurityHeadersInfo($testInfo, $testRunResults);
+    $securityHeadersData = getSecurityHeadersInfo($testRunResults);
     $securityHeadersScore = null;
 
     $gradeResult = array();
@@ -62,7 +62,7 @@ function getSecurityGrade($testInfo, $testRunResults, $includeVulnerabilities = 
         $overallScore = $securityHeadersScore;
     } else {
         $scoreFactorDown = 0;
-        $securityVulns = getSecurityVulnerabilitiesBySeverity($testInfo, $testRunResults);
+        $securityVulns = getSecurityVulnerabilitiesBySeverity($testRunResults);
         if (!isset($securityVulns)) {
             return null;
         }

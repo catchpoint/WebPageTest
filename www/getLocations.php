@@ -17,7 +17,7 @@ $locations = LoadLocations($includePaid);
 
 // get the backlog for each location
 foreach ($locations as $id => &$location) {
-    $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
+    $location['PendingTests'] = GetBacklog($location['location']);
 
   // calculate the ratio of pending tests to agents
     if (isset($location['PendingTests']['Total'])) {
@@ -273,11 +273,9 @@ function LoadLocations($isPaid = false)
 }
 
 /**
-* Get the backlog for the given directory
-*
-* @param mixed $dir
+* Get the backlog for the given location
 */
-function GetBacklog($dir, $locationId)
+function GetBacklog($locationId)
 {
     global $request_context;
     $ui_priority = $request_context->getUser()->getUserPriority();

@@ -19,9 +19,7 @@ function DrawRequestTimeLabelBackground(
     $y2,
     $min_x,
     $max_x,
-    $font,
     $font_width,
-    $font_color,
     $bg_color
 ) {
     $label = $request['all_ms'] . ' ms';

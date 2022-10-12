@@ -241,18 +241,11 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                 div.content
                 {
                     text-align:center;
-                    <?php
-                        //echo "background: #$bgcolor;\n";
-                        //echo "color: #$color;\n"
-                    ?>
                     font-family: arial,sans-serif
                 }
                 .pagelink,
                 .pagelinks a
                 {
-                    <?php
-                        //echo "color: #$color;\n"
-                    ?>
                     word-wrap: break-word;
                     text-decoration: none;
 
@@ -320,15 +313,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     margin-right:auto;
                     clear: both;
                 }
-                #advanced
-                {
-                    <?php
-                        //echo "background: #$bgcolor;\n";
-                        //echo "color: #$color;\n"
-                    ?>
-                    /* font-family: arial,sans-serif;
-                    padding: 20px; */
-                }
+
                 #advanced td
                 {
                     padding: 2px 10px;
@@ -425,7 +410,6 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     $subtab = 'Filmstrip';
                 }
 
-                //$headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
 
                 include __DIR__ . '/../header.inc';
@@ -651,13 +635,6 @@ function ScreenShotTable()
     global $tests;
     global $thumbSize;
     global $interval;
-    global $maxCompare;
-    global $color;
-    global $bgcolor;
-    global $supports60fps;
-    global $location;
-
-    $has_layout_shifts = false;
 
     $show_shifts = false;
     if (isset($_REQUEST['highlightCLS']) && $_REQUEST['highlightCLS']) {
@@ -725,7 +702,6 @@ function ScreenShotTable()
             echo "</span></td></tr>";
 
 
-            $aft = (int)$test['aft'] / 100;
             $hasStepResult = isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult");
             $lcp = null;
             if (isset($test['stepResult']) && is_a($test['stepResult'], "TestStepResult")) {
@@ -1133,7 +1109,6 @@ function WrapableString($in)
 function DisplayGraphs()
 {
     global $tests;
-    global $filmstrip_end_frame;
     require_once('breakdown.inc');
     $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font','video', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
