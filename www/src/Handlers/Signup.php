@@ -9,7 +9,6 @@ use WebPageTest\Util;
 use WebPageTest\Template;
 use WebPageTest\ValidatorPatterns;
 use Respect\Validation\Rules;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as Preview;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\BraintreeBillingAddressInput as BillingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
@@ -19,7 +18,6 @@ use WebPageTest\CPGraphQlTypes\CustomerInput;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
 use WebPageTest\Exception\ClientException;
-use WebPageTest\Plan;
 
 class Signup
 {
@@ -287,11 +285,7 @@ class Signup
             $auth_token = $request_context->getSignupClient()->getAuthToken();
             $request_context->getSignupClient()->authenticate($auth_token->access_token);
 
-            if ($chargify_address->getCountry() == 'US') {
-                $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
-            } else {
-                $total = self::getNonUSSubscriptionPreview($request_context, $plan);
-            }
+            $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
 
             $_SESSION['signup-street-address'] = $body->street_address;
             $_SESSION['signup-city'] = $body->city;
@@ -491,30 +485,5 @@ class Signup
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/signup/2";
         return $redirect_uri;
-    }
-
-    private static function getNonUSSubscriptionPreview(RequestContext $request_context, string $plan_id): Preview
-    {
-        $plans = $request_context->getSignupClient()->getWptPlans();
-        $plan = null;
-        foreach ($plans as $p) {
-            if (strtolower($p->getId()) == strtolower($plan_id)) {
-                $plan = $p;
-                break;
-            }
-        }
-        if (is_a($plan, Plan::class)) {
-            return new Preview([
-            "total_in_cents" => (int)$plan->getPrice(),
-            "sub_total_in_cents" => (int)$plan->getPrice(),
-            "tax_in_cents" => 0
-            ]);
-        } else {
-            return new Preview([
-            "total_in_cents" => 0,
-            "sub_total_in_cents" => 0,
-            "tax_in_cents" => 0
-            ]);
-        }
     }
 }
