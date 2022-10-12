@@ -53,7 +53,6 @@ function ArchiveFilterLargeFile($file)
 */
 function ArchiveTest($id, $delete = false)
 {
-    global $api_keys;
     $isSaaSTest = (stripos($id, '_saas_') !== false);
     // Short-circuit tests that are already archived
     $testPath = realpath('./' . GetTestPath($id));

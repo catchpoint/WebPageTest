@@ -12,7 +12,6 @@ require_once(__DIR__ . '/../devtools.inc.php');
 function GetVisualProgress($testPath, $run, $cached, $startOffset = null)
 {
     // TODO: in the long run this function might get redundant as the version below is more flexible
-    $frames = null;
     $testPath = $testPath[0] == '.' || $testPath[0] == "/" ? $testPath : "./$testPath";
     $localPaths = new TestPaths($testPath, $run, $cached);
     return GetVisualProgressForStep($localPaths, $startOffset);
@@ -137,9 +136,7 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
                 isset($first_file) && strlen($first_file) &&
                 isset($last_file) && strlen($last_file) && count($frames['frames'])
             ) {
-                $calculated = false;
                 if (isset($visual_progress) && count($visual_progress)) {
-                    $calculated = true;
                     foreach ($frames['frames'] as $time => &$frame) {
                         $file = pathinfo($frame['file'], PATHINFO_FILENAME);
                         if (isset($file) && isset($visual_progress[$file])) {
@@ -147,8 +144,6 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
                             if ($frame['progress'] == 100 && !array_key_exists('complete', $frames)) {
                                 $frames['complete'] = $time;
                             }
-                        } else {
-                            $calculated = false;
                         }
                     }
                 }
@@ -305,7 +300,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
     $channels = isset($histogram) ? array_keys($histogram) : array();
     $channelCount = count($channels);
     if ($channelCount > 0) {
-        foreach ($channels as $index => $channel) {
+        foreach ($channels as $channel) {
             $total = 0;
             $matched = 0;
             $buckets = count($histogram[$channel]);
@@ -372,8 +367,6 @@ function CalculateSpeedIndex(&$frames)
  */
 function RGB_TO_HSV(&$R, &$G, &$B)
 {
-    $HSL = array();
-
     $var_R = ($R / 255);
     $var_G = ($G / 255);
     $var_B = ($B / 255);

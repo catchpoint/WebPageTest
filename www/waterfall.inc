@@ -1023,9 +1023,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                             $label_y2,
                             $data_x,
                             $width - 1,
-                            $font,
                             $font_width,
-                            $black,
                             $bg_color
                         );
                     }
@@ -1547,7 +1545,7 @@ function GetBars(
         $state_y1 += intval(($bar_height - $state_height) / 2);
         $state_y2 = $state_y1 + $state_height - 1;
     }
-    $state_keys = array('dns', 'connect', 'ssl');
+
     // TODO(slamm): tweak minimum width of bars.
     //  (!$is_mime && !$is_thumbnail) ? each bar at least 1px
     //   ($is_mime && !$is_thumbnail) ? each bar group at least 1px
@@ -1958,6 +1956,7 @@ function GetAverageSliceValue($slices, $start, $end)
             $start_value = floatval($slices[$start_key]);
             $end_value = floatval($slices[$end_key]);
             $end_weight = floatval($start - $start_bucket) / 0.1;
+            $distance_from_start = 0;
             $start_weight = 1.0 - $distance_from_start;
             $avg = $start_weight * $start_value + $end_weight * $end_value;
         }

@@ -65,7 +65,6 @@ function loadAllPageData($testPath)
  */
 function loadPageRunData($testPath, $run, $cached, $testInfo = null)
 {
-    $ret = null;
     $localPaths = new TestPaths($testPath, $run, $cached);
     return loadPageStepData($localPaths, $testInfo);
 }
@@ -638,7 +637,7 @@ function loadPageData($file)
     $lines = gz_file($file);
     if ($lines) {
         // loop through each line in the file until we get a data record
-        foreach ($lines as $linenum => $line) {
+        foreach ($lines as $line) {
             $parseLine = str_replace("\t", "\t ", $line);
             $fields = explode("\t", $parseLine);
             if (count($fields) > 34 && trim($fields[0]) != 'Date') {
@@ -999,7 +998,7 @@ function PageDataStandardDeviation($pageData, $metric, $cached)
     $ret = null;
     $values = array();
     if (count($pageData)) {
-        foreach ($pageData as $run => $data) {
+        foreach ($pageData as $data) {
             if (
                 array_key_exists($cached, $data) &&
                 array_key_exists($metric, $data[$cached]) &&

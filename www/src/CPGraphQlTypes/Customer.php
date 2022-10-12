@@ -29,6 +29,7 @@ class Customer
     private ?int $remaining_runs;
     private ?int $billing_frequency;
     private ?DateTime $plan_renewal_date;
+    private ?ChargifyInvoiceAddressType $address;
 
     public function __construct(array $options)
     {
@@ -69,6 +70,24 @@ class Customer
         $this->plan_renewal_date = isset($options['planRenewalDate']) ?
             new DateTime($options['nextBillingDate']) : null;
         $this->next_wpt_plan_id = $options['nextWptPlanId'] ?? null;
+        $this->address = null;
+        if (
+            isset($options['creditCardBillingCountry']) &&
+            isset($options['creditCardBillingZip']) &&
+            isset($options['creditCardBillingState']) &&
+            isset($options['creditCardBillingCity']) &&
+            isset($options['creditCardBillingAddress'])
+        ) {
+            $address_data = [
+              'street' => $options['creditCardBillingAddress'],
+              'city' => $options['creditCardBillingCity'],
+              'state' => $options['creditCardBillingState'],
+              'zip' => $options['creditCardBillingZip'],
+              'country' => $options['creditCardBillingCountry']
+            ];
+            $address_data['line2'] = $options['creditCardBillingAddress2'] ?? null;
+            $this->address = new ChargifyInvoiceAddressType($address_data);
+        }
     }
 
     public function getCustomerId(): string
@@ -174,5 +193,10 @@ class Customer
     public function getNextPlanStartDate(): ?DateTime
     {
         return isset($this->plan_renewal_date) ? $this->plan_renewal_date : $this->billing_period_end_date;
+    }
+
+    public function getAddress(): ?ChargifyInvoiceAddressType
+    {
+        return $this->address;
     }
 }

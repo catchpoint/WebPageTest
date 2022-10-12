@@ -263,7 +263,6 @@ function GetJob()
     global $pc;
     global $ec2;
     global $tester;
-    global $recover;
     global $dnsServers;
     global $screenwidth;
     global $screenheight;
@@ -426,7 +425,6 @@ function GetJob()
 function GetUpdate()
 {
     global $location;
-    global $tester;
     $ret = false;
 
   // see if the client sent a version number
@@ -476,7 +474,6 @@ function GetReboot()
     global $location;
     global $pc;
     global $ec2;
-    global $tester;
     $reboot = false;
     $name = @strlen($ec2) ? $ec2 : $pc;
     if (isset($name) && strlen($name) && isset($location) && strlen($location)) {

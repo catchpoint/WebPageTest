@@ -417,7 +417,6 @@ function DisplayTest($id, $url, $label, $complete)
 */
 function CheckTests(&$tests, &$dirty)
 {
-    global $location;
     $allComplete = true;
     $completed = 0;
     $checked = 0;

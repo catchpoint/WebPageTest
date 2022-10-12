@@ -63,7 +63,7 @@ if (array_key_exists('test', $_REQUEST)) {
                 $pageData = loadAllPageData($testPath);
             }
             include('./work/beacon.inc');
-            SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
+            SendBeacon($beaconUrl, $id, $testInfo, $pageData);
         }
         logTestMsg($id, "Test post-processing complete");
     }

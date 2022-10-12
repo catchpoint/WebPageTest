@@ -32,7 +32,6 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
         $white = GetColor($im, 255, 255, 255);
         $black = GetColor($im, 0, 0, 0);
         $grey = GetColor($im, 240, 240, 240);
-        $dkGrey = GetColor($im, 192, 192, 192);
         $error = GetColor($im, 255, 0, 0);
         $warning = GetColor($im, 255, 255, 0);
 
@@ -130,7 +129,6 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             foreach ($standards as $index => $standard) {
                 $val = $request[$index];
                 if (isset($val)) {
-                    $icon;
                     if ($val == 0) {
                         $icon = &$errorIcon;
                     } elseif ($val > 0 && $val < 100) {
