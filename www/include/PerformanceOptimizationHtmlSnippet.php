@@ -9,29 +9,21 @@ class PerformanceOptimizationHtmlSnippet
 {
     private $testInfo;
     private $stepResult;
-    private $adsFile;
 
-  /**
-   * PerformanceOptimizationHtmlSnippet constructor.
-   * @param TestInfo $testInfo
-   * @param TestStepResult $stepResult
-   */
+    /**
+     * PerformanceOptimizationHtmlSnippet constructor.
+     * @param TestInfo $testInfo
+     * @param TestStepResult $stepResult
+     */
     public function __construct($testInfo, $stepResult)
     {
         $this->testInfo = $testInfo;
         $this->stepResult = $stepResult;
-        $this->adsFile = null;
-    }
-
-    public function setAdsFile($filename)
-    {
-        $this->adsFile = $filename;
     }
 
     public function create()
     {
         $out = $this->_createChecklistSnippet();
-        $out .= $this->_createAdsSnippet();
         $out .= $this->_createDetailSnippet();
         return $out;
     }
@@ -45,18 +37,6 @@ class PerformanceOptimizationHtmlSnippet
         $out .= "<h4>Full Optimization Checklist</h4>\n";
         $out .= "<div class=\"overflow-container\"><img alt=\"Optimization Checklist\" src=\"$imageUrl\" id=\"checklist_step$stepNum\"></div>\n";
         $out .= "<br></div>";
-        return $out;
-    }
-
-    private function _createAdsSnippet()
-    {
-        if (!$this->adsFile || !file_exists($this->adsFile)) {
-            return "";
-        }
-        ob_start();
-        include $this->adsFile;
-        $out = "<br>" . ob_get_contents() . "<br>";
-        ob_end_clean();
         return $out;
     }
 
