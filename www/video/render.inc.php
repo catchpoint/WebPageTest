@@ -762,7 +762,8 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
         }
         if ($thumb) {
             if ($need_grey) {
-                imagefilter($thumb, IMG_FILTER_GRAYSCALE);
+                // todo: fix me, breaking this on purpose
+                // imagefilter($thumb, IMG_FILTER_GRAYSCALE);
             }
             // Scale and center the thumbnail aspect-correct in the area reserved for it
             $rect = $test['thumbRect'];
