@@ -1277,7 +1277,7 @@ function RestoreTest($id)
     global $userIsBot;
     global $DISABLE_RESTORE;
     $isSaaSTest = (stripos($id, '_saas_') !== false);
-    $saas_capture_prefix = 'D';
+    $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
 
     $ret = false;
     if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {

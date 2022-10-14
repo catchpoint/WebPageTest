@@ -54,7 +54,7 @@ function ArchiveFilterLargeFile($file)
 function ArchiveTest($id, $delete = false)
 {
     $isSaaSTest = (stripos($id, '_saas_') !== false);
-    $saas_capture_prefix = 'D';
+    $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
 
     // Short-circuit tests that are already archived
     $testPath = realpath('./' . GetTestPath($id));
@@ -427,7 +427,7 @@ function VerifyArchive($id)
 {
     $valid = true;
     $isSaaSTest = (stripos($id, '_saas_') !== false);
-    $saas_capture_prefix = 'D';
+    $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
 
     // Get the capture server settings if configured and the test ID specifies a capture server
     $capture_server = null;
