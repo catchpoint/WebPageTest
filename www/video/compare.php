@@ -693,7 +693,7 @@ function ScreenShotTable()
             }
             echo '</a>';
 
-            if (EMBED) {
+            if (!EMBED) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
                 $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];
                 echo "<a class=\"video_runlabel_backlink\" href=\"$href\">Test Run Details</a>";
