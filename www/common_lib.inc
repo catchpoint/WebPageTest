@@ -1276,6 +1276,9 @@ function RestoreTest($id)
 {
     global $userIsBot;
     global $DISABLE_RESTORE;
+    $isSaaSTest = (stripos($id, '_saas_') !== false);
+    $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
+
     $ret = false;
     if (!$DISABLE_RESTORE && !$userIsBot && ValidateTestId($id)) {
         $testPath = './' . GetTestPath($id);
@@ -1289,6 +1292,11 @@ function RestoreTest($id)
                 $capture_server = GetSetting("cp_capture_$capture_prefix");
                 $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
             }
+        }
+
+        if ($isSaaSTest) {
+            $capture_server = GetSetting("cp_capture_$saas_capture_prefix");
+            $capture_salt = GetSetting("cp_capture_salt_$saas_capture_prefix");
         }
 
       // Only trigger a restore if the test doesn't exist
