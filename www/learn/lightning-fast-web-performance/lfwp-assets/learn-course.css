@@ -114,15 +114,10 @@ body.learn #main {
 .learn_feature_hed_contain .pill {
   background: #efd36e;
   border-radius: 6.25em;
-  padding: 0.6875em 1.4375em;
   line-height: 1em;
   text-decoration: none;
-  color: #fff;
   margin: 1rem 0 0 0em;
-  display: inline-block;
-  padding: 1.2em 2em;
   font-weight: 700;
-  color: #ffffff;
   border: 1px solid #fff;
   padding: 1em 1.3em;
   display: block;
@@ -234,7 +229,6 @@ body.learn #main {
 }
 
 .learn_feature_hed_visual p {
-  max-width: 100%;
   height: auto;
   display: flex;
   align-content: flex-end;
@@ -775,11 +769,8 @@ video {
   border-radius: 3em;
   font-size: calc(0.9em + 0.3vw);
   font-weight: 600;
-  /* max-width: 8em; */
   flex: 1 0 10em;
-  background: #31639d;
   text-decoration: none;
-  color: #fff;
   border: 2px solid #584d32;
   cursor: pointer;
   padding: 1.1em;
@@ -1001,11 +992,6 @@ div.chapter_extra .experiment_description_go a {
     margin-left: auto;
     margin-right: auto;
   }
-  .curric ul,
-  .see-ahead-vids,
-  .whatyoulllearn ul {
-    /* display: flex; */
-  }
   .see-ahead-vids figure {
     flex: 1 0 29%;
     padding-top: 20%;
@@ -1013,9 +999,6 @@ div.chapter_extra .experiment_description_go a {
   .curric li em {
     float: right;
   }
-}
-
-.curric ul {
 }
 
 .whatyoulllearn li {

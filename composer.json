@@ -2,7 +2,8 @@
   "autoload": {
     "psr-4": {
       "WebPageTest\\": "www/src/"
-    }
+    },
+    "files": ["www/constants.inc"]
   },
   "require-dev": {
     "phpunit/phpunit": "^9",
@@ -13,12 +14,12 @@
     "format:prettier": "npx prettier@2.7.1 --write 'www/**/*.css' 'www/**/*.js'",
     "format": "composer format:php && composer format:prettier",
     "lint:css": "npx stylelint@14.9.1 'www/**/*.css'",
-    "lint": "phpcs --standard=PSR12 www/src www/cpauth www/common",
+    "lint:php": "phpcs --standard=PSR12 www/src www/cpauth www/common",
+    "lint": "composer lint:php && composer lint:css",
     "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
     "test": "phpunit --configuration tests/phpunit.xml"
   },
   "require": {
-    "braintree/braintree_php": "^6.8",
     "gmostafa/php-graphql-client": "^1.13",
     "google/apiclient": "^2.12.1",
     "guzzlehttp/guzzle": "^7.4",

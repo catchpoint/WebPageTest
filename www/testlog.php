@@ -122,8 +122,7 @@ if ($csv) {
 
     <head>
         <title>WebPageTest - Test Log</title>
-        <?php $gaTemplate = 'Test Log';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
 
     <body class="history">

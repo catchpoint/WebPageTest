@@ -14,7 +14,9 @@ use GraphQL\Query;
 use GraphQL\Mutation;
 use GraphQL\Variable;
 use WebPageTest\Plan;
-use WebPageTest\Customer;
+use WebPageTest\CPGraphQlTypes\CPSignupInput;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 
 class CPSignupClient
 {
@@ -80,14 +82,13 @@ class CPSignupClient
         return new SignupToken($data);
     }
 
-    public function signup(array $options, ?Customer $customer = null): array
+    public function signup(array $options): array
     {
         $first_name = $options['first_name'] ?? null;
         $last_name = $options['last_name'] ?? null;
         $company = $options['company'] ?? null;
         $email = $options['email'] ?? null;
         $password = $options['password'] ?? null;
-        $customer = $customer ?? null;
 
         if (is_null($first_name) || is_null($last_name) || is_null($email) || is_null($password)) {
             throw new BaseException('first_name, last_name, email, and password are all required');
@@ -116,10 +117,6 @@ class CPSignupClient
         'password' => $password
         ];
 
-        if (!is_null($customer)) {
-            $wpt_account['customer'] = $customer->toArray();
-        }
-
         $variables_array = array('wptAccount' => $wpt_account);
 
         try {
@@ -130,33 +127,104 @@ class CPSignupClient
         }
     }
 
-    /**
-     * return Plan[]
-     */
-    public function getWptPlans(): array
+    public function signupWithChargify(CPSignupInput $wpt_account): array
     {
-        $gql = (new Query('wptPlans'))
-          ->setSelectionSet([
-            'id',
-            'name',
-            'price',
-            'billingFrequency',
-            'billingDayOfMonth',
-            'currencyIsoCode',
-            'numberOfBillingCycles',
-            'trialDuration',
-            'trialPeriod',
-            (new Query('discount'))
-              ->setSelectionSet([
-                'amount',
-                'numberOfBillingCycles'
-              ])
-          ]);
+        $gql = (new Mutation('wptAccountCreate'))
+        ->setVariables([
+            new Variable('wptAccount', 'WptSignupInputType', true)
+        ])
+        ->setArguments([
+            'wptAccount' => '$wptAccount'
+        ])
+        ->setSelectionSet([
+            'firstName',
+            'lastName',
+            'company',
+            'email',
+            'loginVerificationId'
+        ]);
+
+        $variables_array = array('wptAccount' => $wpt_account->toArray());
+
+        try {
+            $results = $this->graphql_client->runQuery($gql, true, $variables_array);
+            return $results->getData()['wptAccountCreate'];
+        } catch (QueryError $e) {
+            throw new \WebPageTest\Exception\ClientException($e->getMessage());
+        }
+    }
+
+    public function getWptPlans(): PlanList
+    {
+        $gql = (new Query('wptPlan'))
+            ->setSelectionSet([
+                'name',
+                'priceInCents',
+                'description',
+                'interval',
+                'monthlyTestRuns'
+            ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        return array_map(function ($data): Plan {
-            return new Plan($data);
-        }, $results->getData()['wptPlans']);
+        $plans = array_map(function ($data): Plan {
+            $options = [
+                'id' => $data['name'],
+                'name' => $data['description'],
+                'priceInCents' => $data['priceInCents'],
+                'billingFrequency' => $data['interval'],
+                'runs' => $data['monthlyTestRuns']
+            ];
+
+            return new Plan($options);
+        }, $results->getData()['wptPlan'] ?? []);
+
+        $plans = array_filter($plans, function (Plan $plan) {
+          /** This is a bit of a hack for now. These are our approved plans for new
+           * customers to be able to use. We will better handle this from the backend
+           * */
+            return strtolower($plan->getId()) == 'ap5' ||
+                 strtolower($plan->getId()) == 'ap6' ||
+                 strtolower($plan->getId()) == 'ap7' ||
+                 strtolower($plan->getId()) == 'ap8' ||
+                 strtolower($plan->getId()) == 'mp5' ||
+                 strtolower($plan->getId()) == 'mp6' ||
+                 strtolower($plan->getId()) == 'mp7' ||
+                 strtolower($plan->getId()) == 'mp8';
+        });
+
+        return new PlanList(...$plans);
+    }
+
+    public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
+    {
+        $gql = (new Query('wptSubscriptionPreview'))
+            ->setVariables([
+                new Variable('wptPlanHandle', 'String', true),
+                new Variable('shippingAddress', 'ChargifyAddressInputType', true)
+            ])
+            ->setArguments([
+                'wptPlanHandle' => '$wptPlanHandle',
+                'shippingAddress' => '$shippingAddress'
+            ])
+            ->setSelectionSet([
+                'totalInCents',
+                'subTotalInCents',
+                'taxInCents'
+            ]);
+
+        $variables = [
+            'wptPlanHandle' => $plan,
+            'shippingAddress' => $shipping_address->toArray()
+        ];
+
+        $response = $this->graphql_client->runQuery($gql, true, $variables);
+        $data = $response->getData()['wptSubscriptionPreview'];
+
+        return new SubscriptionPreview([
+          "total_in_cents" => $data['totalInCents'],
+          "sub_total_in_cents" => $data['subTotalInCents'],
+          "tax_in_cents" => $data['taxInCents']
+        ]);
     }
 
     private function makeRequest(string $method, string $url, array $headers, array $body): array

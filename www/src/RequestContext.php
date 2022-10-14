@@ -7,6 +7,8 @@ namespace WebPageTest;
 use WebPageTest\User;
 use WebPageTest\CPClient;
 use WebPageTest\CPSignupClient;
+use WebPageTest\Util;
+use WebPageTest\BannerMessageManager;
 
 class RequestContext
 {
@@ -18,13 +20,16 @@ class RequestContext
     private string $url_protocol;
     private string $request_method;
     private string $request_uri;
+    private string $host;
+    private ?BannerMessageManager $banner_message_manager;
 
-    public function __construct(array $global_request, array $server = [])
+    public function __construct(array $global_request, array $server = [], array $options = [])
     {
         $this->raw = $global_request;
         $this->user = null;
         $this->client = null;
         $this->signup_client = null;
+        $this->banner_message_manager = null;
 
         $https = isset($server['HTTPS']) && $server['HTTPS'] == 'on';
         $httpssl = isset($server['HTTP_SSL']) && $server['HTTP_SSL'] == 'On';
@@ -34,6 +39,8 @@ class RequestContext
         $this->url_protocol = $this->ssl_connection ? 'https' : 'http';
         $this->request_method = isset($server['REQUEST_METHOD']) ? strtoupper($server['REQUEST_METHOD']) : '';
         $this->request_uri = $server['REQUEST_URI'] ?? '/';
+
+        $this->host = $options['host'] ?? Util::getSetting('host', "");
     }
 
     public function getRaw(): array
@@ -77,6 +84,18 @@ class RequestContext
         }
     }
 
+    public function getBannerMessageManager(): ?BannerMessageManager
+    {
+        return $this->banner_message_manager;
+    }
+
+    public function setBannerMessageManager(?BannerMessageManager $manager): void
+    {
+        if (isset($manager)) {
+            $this->banner_message_manager = $manager;
+        }
+    }
+
     public function isSslConnection(): bool
     {
         return $this->ssl_connection;
@@ -95,5 +114,10 @@ class RequestContext
     public function getRequestUri(): string
     {
         return $this->request_uri;
+    }
+
+    public function getHost(): string
+    {
+        return $this->host;
     }
 }

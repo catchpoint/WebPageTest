@@ -1,5 +1,5 @@
-<div class="card api-consumers">
-    <h3>API Consumers</h3>
+<div class="box card api-consumers">
+    <h2>API Consumers</h2>
     <div class="create-key-container">
         <div class="create-delete-button-container">
             <button type="button" class="new-api-key" data-toggle="open" data-targetid="create-api-key-toggle-area">New Api Key</button>
@@ -18,7 +18,7 @@
     </div>
     <div class="info">
         <form method='POST' action='/account'>
-            <table class="sortable">
+            <table class="sortable responsive-vertical-table selectable-table">
                 <caption>
                     <span class="sr-only">API Consumers table, column headers with buttons are sortable.</span>
                 </caption>
@@ -26,25 +26,25 @@
                     <tr>
                         <th class="no-sort select-all-box"><label class="sr-only" for="select-all-api-keys">Select all api keys</label><input type="checkbox" name="select-all-api-keys" data-apikeybox="select-all" /></th>
                         <th aria-sort="ascending">
-                            <button>
+                            <button type="button">
                                 Name
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 API Key
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 Create Date
                                 <span aria-hidden="true"></span>
                             </button>
                         </th>
                         <th>
-                            <button>
+                            <button type="button">
                                 Last Updated
                                 <span aria-hidden="true"></span>
                             </button>
@@ -52,21 +52,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($wptApiKey as $row) : ?>
+                    <?php foreach ($api_keys as $key) : ?>
                         <tr>
-                            <td>
-                                <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $row['id'] ?>' />
+                            <td data-th="Select">
+                                <input type='checkbox' data-apikeybox="individual" name='api-key-id[]' value='<?= $key->getId() ?>' />
                             </td>
-                            <td><?= $row['name'] ?></td>
-                            <td class="hidden-content">
+                            <td data-th="Name"><?= $key->getName() ?></td>
+                            <td data-th="API key" class="hidden-content">
                                 <button type="button" class="view-button">View</button>
                                 <span class="hidden-area closed">
-                                    <span class="api-key"><?= $row['apiKey'] ?></span>
+                                    <span class="api-key"><?= $key->getApiKey() ?></span>
                                     <button type="button" class="hide-button"><span class="sr-only">Close</span></button>
                             </td>
                             </span>
-                            <td><?= date_format(date_create($row['createDate']), 'M d Y H:i:s e') ?></td>
-                            <td><?= date_format(date_create($row['changeDate']), 'M d Y H:i:s e') ?></td>
+                            <td data-th="Created"><?= date_format($key->getCreateDate(), 'M d Y H:i:s e') ?></td>
+                            <td data-th="Updated"><?= date_format($key->getChangeDate(), 'M d Y H:i:s e') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

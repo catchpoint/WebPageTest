@@ -193,28 +193,6 @@ maxNavigateCount=20
 ;crux_api_key=xxxxx
 ;crux_agent_api_keys=xxxxx,yyyyyy,zzzzz
 
-
-;tsview time-series database
-;tsviewdb=http://<server:port>/src/v1/
-
-
-; Publish test results to a StatsD backend
-; for trend visualization.
-;
-; statsdHost - StatsD hostname.
-; statsdPort - StatsD port number (default: 8125).
-; statsdPrefix - Graphite key prefix (default: '').
-; statsdPattern - Set to a valid regexp pattern to send only matching tests labels.
-; statsdCleanPattern - Set to 1 to exclude pattern from label (default: 0).
-; statsdMedianOnly - Set to 1 to send only median tests to StatsD. (default: 0).
-;
-;statsdHost=127.0.0.1
-;statsdPort=8125
-;statsdPrefix=webpagetest
-;statsdPattern=^cron_
-;statsdCleanPattern=0
-;statsdMedianOnly=0
-
 ; Default URL to ping when the test is complete
 ;ping_back_url=http://pingbackurl.com
 

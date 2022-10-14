@@ -25,6 +25,7 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         '3109cb1a231dcd04bee1f9f620d46975' => __DIR__ . '/..' . '/paragonie/sodium_compat/autoload.php',
         '2df68f9e79c919e2d88506611769ed2e' => __DIR__ . '/..' . '/respect/stringifier/src/stringify.php',
         'a8d3953fd9959404dd22d3dfcd0a79f0' => __DIR__ . '/..' . '/google/apiclient/src/aliases.php',
+        'e8024c3c59881b17d41eb68625bef457' => __DIR__ . '/../..' . '/www/constants.inc',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -105,10 +106,6 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         'C' => 
         array (
             'Carbon\\' => 7,
-        ),
-        'B' => 
-        array (
-            'Braintree\\' => 10,
         ),
     );
 
@@ -285,10 +282,6 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         'Carbon\\' => 
         array (
             0 => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon',
-        ),
-        'Braintree\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/braintree/braintree_php/lib/Braintree',
         ),
     );
 
@@ -652,6 +645,7 @@ class ComposerStaticInit9c12fec4b6151122c0ac4f5652ab47b7
         'PHPUnit\\Util\\PHP\\DefaultPhpProcess' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/PHP/DefaultPhpProcess.php',
         'PHPUnit\\Util\\PHP\\WindowsPhpProcess' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/PHP/WindowsPhpProcess.php',
         'PHPUnit\\Util\\Printer' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Printer.php',
+        'PHPUnit\\Util\\Reflection' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Reflection.php',
         'PHPUnit\\Util\\RegularExpression' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/RegularExpression.php',
         'PHPUnit\\Util\\Test' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Test.php',
         'PHPUnit\\Util\\TestDox\\CliTestDoxPrinter' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/TestDox/CliTestDoxPrinter.php',

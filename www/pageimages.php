@@ -28,8 +28,7 @@ $userImages = true;
     <title>WebPageTest Page Images<?php echo $testLabel; ?></title>
     <script>document.documentElement.classList.add('has-js');</script>
 
-    <?php $gaTemplate = 'Page Images';
-    include('head.inc'); ?>
+    <?php include('head.inc'); ?>
   </head>
   <body id="page-images" class="result">
       <?php
@@ -41,15 +40,15 @@ $userImages = true;
 <div class="results_main_contain">
         <div class="results_main">
 
-        
+
 
 
            <div class="results_and_command">
-            
 
-            
 
-            
+
+
+
            <div class="results_header">
                 <h2>Page Images</h2>
                 <p>The following requests were images.</p>
@@ -100,8 +99,6 @@ $userImages = true;
                         } else {
                             echo "Progressive (Renders blurry to sharp): {$request['jpeg_scan_count']} scans";
                         }
-                        $analyze_url = 'jpeginfo/jpeginfo.php?url=' . urlencode($reqUrl);
-                        echo " - <a href=\"$analyze_url\">Analyze JPEG</a><br>";
                     }
                     if (stristr($request['contentType'], 'svg') !== false) {
                         echo "<img width=100 height=100 src=\"$reqUrl\">";

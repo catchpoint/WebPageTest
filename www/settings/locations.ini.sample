@@ -13,11 +13,6 @@ default=Test_loc
 label=Test Location
 group=Desktop
 
-[Public_Dulles]
-1=WPT_Dulles
-label="WebPageTest.org - Dulles, VA"
-group=Public
-
 ;
 ; These are the browser-specific configurations which match those
 ; defined in the top-level locations.  Each one of these MUST match the location
@@ -27,21 +22,3 @@ group=Public
 [Test]
 browser=Chrome,Firefox
 label="Test Location"
-
-;
-; This is an example of a "remote" configuration where tests can be proxied to a remote
-; WebPageTest instance.  The test will be run by the remote server, but the results
-; will be downloaded to the local server and deleted from the remote agent
-;
-; Each desired location from the remote server needs to be configured
-; individually on the local configuration (location names do not need to match)
-;
-; To use the public webpagetest.org instance you will need an API key: https://www.webpagetest.org/getkey.php
-;
-
-[WPT_Dulles]
-browser=Chrome,Firefox
-label="WebPageTest.org Dulles, VA - IE8"
-relayServer="https://www.webpagetest.org/"
-relayKey=<your API key>
-relayLocation=Dulles

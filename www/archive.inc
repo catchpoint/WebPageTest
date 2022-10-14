@@ -53,7 +53,6 @@ function ArchiveFilterLargeFile($file)
 */
 function ArchiveTest($id, $delete = false)
 {
-    global $api_keys;
     $isSaaSTest = (stripos($id, '_saas_') !== false);
     $saas_capture_prefix = 'D';
 
@@ -84,7 +83,7 @@ function ArchiveTest($id, $delete = false)
 
     $ret = false;
     if (
-        strpos($id, '.') === false &&                           // make sure it isn't a relay test
+        strpos($id, '.') === false &&                           // make sure it isn't a legacy relay test
         ($capture_server ||                                     // CP Capture server
         GetSetting('archive_dir') ||           // local mount
         GetSetting('archive_url') ||           // Archive server (simple PUT, HEAD, GET)

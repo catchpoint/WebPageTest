@@ -32,12 +32,16 @@ There are separate lines of development under different licenses (pull requests 
 
 ### Code style
 
-WebPageTest uses PSR12 coding conventions for PHP and Prettier defaults for JavaScript and CSS.
-Before you send a pull request please make sure to run: `composer format`.
+WebPageTest uses PSR12 coding conventions for PHP linting and formatting.
+For JavaScript and CSS formatting we use Prettier with its default configuration.
+Additionally we use Stylelint for CSS linting.
+
+Before you send a pull request please make sure to run: `composer lint && composer format`.
 
 Alternatively you can run
-`composer format:php` if you only touched PHP code
-`composer format:prettier` if you only touched CSS or JavaScript code
+
+ - `composer lint:php && composer format:php` if you only touched PHP code, or
+ - `composer lint:css && composer format:prettier` if you only touched CSS or JavaScript code
 
 ### VSCode integration
 

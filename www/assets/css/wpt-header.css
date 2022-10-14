@@ -37,7 +37,6 @@ wpt-header a {
 
 wpt-header .wptheader_logo {
   flex: 1 1 75%;
-  display: block;
   height: 5rem;
   max-height: 5rem;
   display: flex;
@@ -150,13 +149,6 @@ wpt-header .wptheader_nav li.wptheader-current > summary {
   background: #101623;
 }
 
-wpt-header .wptheader_nav li > a:focus,
-wpt-header .wptheader_nav li > a:header,
-wpt-header .wptheader_nav li summary:focus,
-wpt-header .wptheader_nav li summary:header {
-  background: #fff;
-}
-
 wpt-header .wptheader_nav_menu_content {
   padding: 0 1.5rem 1rem;
   background: #fff;
@@ -165,7 +157,6 @@ wpt-header .wptheader_nav_menu_content {
 
 wpt-header .wptheader_acct {
   display: flex;
-  padding-left: 2rem;
   margin: 1rem;
   padding: 2rem 1rem 2rem 2rem;
   background: url(/assets/images/icon-user.svg) left 50% no-repeat;
@@ -173,7 +164,6 @@ wpt-header .wptheader_acct {
 
 wpt-header .wptheader_acct a,
 wpt-header .wptheader_acct button {
-  padding: 0;
   background: none;
   color: #fff;
   font-size: 1em;
@@ -320,21 +310,8 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     background: #fff;
     color: #1e4078;
   }
-  wpt-header header {
-    flex-flow: row nowrap;
-    height: auto;
-    overflow: visible;
-    align-content: center;
-    justify-content: space-between;
-  }
   wpt-header .wptheader_menu[open] .wptheader_menubtn {
     display: none !important;
-  }
-  wpt-header .wptheader_logo {
-    flex: 1 1 20%;
-    height: auto;
-    max-height: none;
-    padding: 0;
   }
   wpt-header .wptheader_logo img {
     max-width: none;
@@ -392,6 +369,10 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     border-bottom: 4px solid #5dbbe8;
   }
   wpt-header header {
+    flex-flow: row nowrap;
+    overflow: visible;
+    align-content: center;
+    justify-content: space-between;
     padding: 0 2vw;
     border: 0;
     max-width: 1400px;
@@ -399,6 +380,10 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     height: 6rem;
   }
   wpt-header .wptheader_logo {
+    flex: 1 1 20%;
+    height: auto;
+    max-height: none;
+    padding: 0;
     background: none;
     padding-left: 3vw;
   }
@@ -408,8 +393,6 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
   }
   wpt-header .wptheader_nav li > a,
   wpt-header .wptheader_nav li summary {
-    font-size: 1rem;
-    border: none;
     font-size: 1rem;
     border: none;
     display: flex;

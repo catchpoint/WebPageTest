@@ -29,7 +29,7 @@ $data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
 $pageData = loadAllPageData($testPath);
 $isMultistep = $testRunResults->countSteps() > 1;
 
-$page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
+$page_keywords = array('Performance Test', 'Details', 'WebPageTest', 'Website Speed Test', 'Page Speed');
 $page_description = "Website performance test details$testLabel";
 
 function createForm($formName, $btnText, $id, $owner, $secret)
@@ -56,31 +56,34 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title><?php echo "$page_title - WebPageTest Details"; ?></title>
-        <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Details';
-        include('head.inc'); ?>
-    </head>
-    <body class="result result-details">
-            <?php
-            $tab = 'Test Result';
-            $subtab = 'Details';
-            include 'header.inc';
+<head>
+    <title><?php echo "$page_title - WebPageTest Details"; ?></title>
+    <script>
+        document.documentElement.classList.add('has-js');
+    </script>
 
-            ?>
+    <?php include('head.inc'); ?>
+</head>
 
-<div class="results_main_contain">
+<body class="result result-details">
+    <?php
+    $tab = 'Test Result';
+    $subtab = 'Details';
+    include 'header.inc';
+
+    ?>
+
+    <div class="results_main_contain">
         <div class="results_main">
 
 
-        <div class="results_and_command">
+            <div class="results_and_command">
 
-           <div class="results_header">
-                <h2>Requests Details</h2>
-                <p>Use this page to explore the metric timings and request waterfall for any run of your test.</p>
-            </div>
+                <div class="results_header">
+                    <h2>Requests Details</h2>
+                    <p>Use this page to explore the metric timings and request waterfall for any run of your test.</p>
+                </div>
 
 
             </div>
@@ -88,61 +91,61 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
             <div id="result" class="results_body">
 
-                  <?php
-                    echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ( $cached ? ', Repeat View' : '' ) . ')</em></h3>';
+                <?php
+                echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ($cached ? ', Repeat View' : '') . ')</em></h3>';
 
-                    $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
-                    if ($testResults->countRuns() > 1 || $hasRepeats) {
-                        $runs = $testResults->countRuns() + 1;
+                $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
+                if ($testResults->countRuns() > 1 || $hasRepeats) {
+                    $runs = $testResults->countRuns() + 1;
 
-                        $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
-                        $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
+                    $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
+                    $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
-                        echo '<p>View run details: ';
-                        for ($i = 1; $i < $runs; $i++) {
-                            $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false);
+                    echo '<p>View run details: ';
+                    for ($i = 1; $i < $runs; $i++) {
+                        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $i, false);
 
-                            $link = $menuUrlGenerator->resultPage("details", $endParams);
-                            if ($hasRepeats) {
-                                $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true);
-                                $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);
-                            }
-
-                            echo "<a href=\"$link\"" . ( $run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
-                            if ($linkCACHED) {
-                                echo " <a href=\"$linkCACHED\"" . ( $run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
-                                ;
-                            }
-
-                            if ($i + 1 < $runs) {
-                                echo ", ";
-                            }
+                        $link = $menuUrlGenerator->resultPage("details", $endParams);
+                        if ($hasRepeats) {
+                            $menuUrlGeneratorCached = UrlGenerator::create($useFriendlyUrls, "", $id, $i, true);
+                            $linkCACHED = $menuUrlGeneratorCached->resultPage("details", $endParams);
                         }
-                        echo '</p>';
+
+                        echo "<a href=\"$link\"" . ($run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
+                        if ($linkCACHED) {
+                            echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
+                            ;
+                        }
+
+                        if ($i + 1 < $runs) {
+                            echo ", ";
+                        }
                     }
-                    ?>
+                    echo '</p>';
+                }
+                ?>
 
 
                 <?php
                 $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
                 $htmlTable->disableColumns(array(
-                  RunResultHtmlTable::COL_RESULT
+                    RunResultHtmlTable::COL_RESULT
                 ));
-                  $htmlTable->enableColumns(array(
+                $htmlTable->enableColumns(array(
                     RunResultHtmlTable::COL_DOC_COMPLETE,
                     RunResultHtmlTable::COL_DOC_REQUESTS,
                     RunResultHtmlTable::COL_DOC_BYTES,
                     RunResultHtmlTable::COL_FULLYLOADED,
                     RunResultHtmlTable::COL_REQUESTS
-                  ));
-                  echo $htmlTable->create(true);
-                    ?>
+                ));
+                echo $htmlTable->create(true);
+                ?>
                 <?php
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create(true);
 
 
-            // Full custom metrics (formerly in custommetrics.php)
+                // Full custom metrics (formerly in custommetrics.php)
 
                 if (
                     isset($pageData) &&
@@ -211,17 +214,17 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 ?>
 
                 <div>
-                <h3 class="hed_sub" name="waterfall_view">Waterfall View</h3>
-                <?php
-                if ($isMultistep) {
-                    echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
-                } else {
-                    $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-                    echo $waterfallSnippet->create();
-                }
-                ?>
+                    <h3 class="hed_sub" name="waterfall_view">Waterfall View</h3>
+                    <?php
+                    if ($isMultistep) {
+                        echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
+                    } else {
+                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                        echo $waterfallSnippet->create();
+                    }
+                    ?>
 
-                <h3 class="hed_sub" name="connection_view">Connection View</h3>
+                    <h3 class="hed_sub" name="connection_view">Connection View</h3>
                     <?php
                     if ($isMultistep) {
                         echo $accordionHelper->createAccordion("connection_view", "connection");
@@ -245,7 +248,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
 
                 <?php
-                    echo '';
+                echo '';
                 if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS'])) {
                     echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
                 }
@@ -265,91 +268,110 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 }
                 ?>
             </div>
-                </div>
-
         </div>
-        <?php include('footer.inc'); ?>
 
-                  </div>
-                  </div>
+    </div>
+    <?php include('footer.inc'); ?>
 
-        <div id="requestBlockingSettings" class="inactive">
-              <?php
-                if (
-                    !$headless && gz_is_file("$testPath/testinfo.json")
-                        && !array_key_exists('published', $test['testinfo'])
-                        && ($isOwner || !$test['testinfo']['sensitive'])
-                        && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
-                ) {
-                    // load the secret key (if there is one)
-                    $secret = GetServerSecret();
-                    if (!isset($secret)) {
-                        $secret = '';
-                    }
-                        createForm('requestBlockingForm', 'Run with Blocked', $id, $owner, $secret);
-                }
-                ?>
-              </div>
+    </div>
+    </div>
+
+    <div id="requestBlockingSettings" class="inactive">
         <?php
-        if ($isMultistep) {
-            echo '<script src="/assets/js/jk-navigation.js"></script>';
-            echo '<script src="/assets/js/accordion.js"></script>';
-            $testId = $testInfo->getId();
-            $testRun = $testRunResults->getRunNumber();
-            echo '<script>';
-            echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
-            echo '</script>';
+        if (
+            !$headless && gz_is_file("$testPath/testinfo.json")
+            && !array_key_exists('published', $test['testinfo'])
+            && ($isOwner || !$test['testinfo']['sensitive'])
+            && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
+        ) {
+            // load the secret key (if there is one)
+            $secret = GetServerSecret();
+            if (!isset($secret)) {
+                $secret = '';
+            }
+            createForm('requestBlockingForm', 'Run with Blocked', $id, $owner, $secret);
         }
         ?>
-        <script>
+    </div>
+    <?php
+    if ($isMultistep) {
+        echo '<script src="/assets/js/jk-navigation.js"></script>';
+        echo '<script src="/assets/js/accordion.js"></script>';
+        $testId = $testInfo->getId();
+        $testRun = $testRunResults->getRunNumber();
+        echo '<script>';
+        echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+        echo '</script>';
+    }
+    ?>
+    <script>
         function expandRequest(targetNode) {
-          if (targetNode.length) {
-            var div_to_expand = $('#' + targetNode.attr('data-target-id'));
+            if (targetNode.length) {
+                var div_to_expand = $('#' + targetNode.attr('data-target-id'));
 
-            if (div_to_expand.is(":visible")) {
-                div_to_expand.hide();
-                targetNode.removeAttr("data-expanded");
-                //targetNode.html('+' + targetNode.html().substring(1));
-            } else {
-                div_to_expand.show();
-                targetNode.attr("data-expanded", "true");
-                //targetNode.html('-' + targetNode.html().substring(1));
+                if (div_to_expand.is(":visible")) {
+                    div_to_expand.hide();
+                    targetNode.removeAttr("data-expanded");
+                    //targetNode.html('+' + targetNode.html().substring(1));
+                } else {
+                    div_to_expand.show();
+                    targetNode.attr("data-expanded", "true");
+                    //targetNode.html('-' + targetNode.html().substring(1));
+                }
             }
-          }
         }
 
         function initDetailsTable(targetNode) {
-             $(targetNode).find(".tableDetails").tablesorter({
-                headers: { 3: { sorter:'currency' } ,
-                    4: { sorter:'currency' } ,
-                    5: { sorter:'currency' } ,
-                    6: { sorter:'currency' } ,
-                    7: { sorter:'currency' } ,
-                    8: { sorter:'currency' } ,
-                    9: { sorter:'currency' } ,
-                    10: { sorter:'currency' }
+            $(targetNode).find(".tableDetails").tablesorter({
+                headers: {
+                    3: {
+                        sorter: 'currency'
+                    },
+                    4: {
+                        sorter: 'currency'
+                    },
+                    5: {
+                        sorter: 'currency'
+                    },
+                    6: {
+                        sorter: 'currency'
+                    },
+                    7: {
+                        sorter: 'currency'
+                    },
+                    8: {
+                        sorter: 'currency'
+                    },
+                    9: {
+                        sorter: 'currency'
+                    },
+                    10: {
+                        sorter: 'currency'
+                    }
                 }
             });
         }
 
         function initHeaderRequestExpander(targetNode) {
-            $(targetNode).find('.a_request').click(function () {
+            $(targetNode).find('.a_request').click(function() {
                 expandRequest($(this));
             });
         }
 
         function expandAll(step) {
-          var expandAllNode = $("#step" + step + "_all");
-          var expandText = expandAllNode.html();
-          var doShow = expandText.substring(0, 1) == "+";
-          expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
-          $("#header_details_step" + step + " .header_details").each(function(index) {
-            $(this).toggle(doShow);
-          });
+            var expandAllNode = $("#step" + step + "_all");
+            var expandText = expandAllNode.html();
+            var doShow = expandText.substring(0, 1) == "+";
+            expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
+            $("#header_details_step" + step + " .header_details").each(function(index) {
+                $(this).toggle(doShow);
+            });
         }
 
         function scrollTo(node) {
-            $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
+            $('html, body').animate({
+                scrollTop: node.offset().top + 'px'
+            }, 'fast');
         }
 
         function handleRequestHash() {
@@ -363,28 +385,28 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 stepNum = 1;
                 doExpandAll = true;
             }
-           if (stepNum <= 0) {
-           return;
-           }
+            if (stepNum <= 0) {
+                return;
+            }
             var expand = function() {
                 var scrollToNode = $(window.location.hash);
                 if (doExpandAll) {
                     scrollToNode = $("#step" + stepNum + "_all");
                     expandAll(stepNum);
                 } else {
-                  if (scrollToNode.length > 0) {
-                    expandRequest(scrollToNode);
-                  }
+                    if (scrollToNode.length > 0) {
+                        expandRequest(scrollToNode);
+                    }
 
                 }
                 if (scrollToNode.length > 0) {
-                  scrollTo(scrollToNode);
+                    scrollTo(scrollToNode);
                 }
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
                 <?php if ($isMultistep) { ?>
-                accordionHandler.toggleAccordion(slide_opener, true, expand);
+                    accordionHandler.toggleAccordion(slide_opener, true, expand);
                 <?php } ?>
             } else {
                 expand();
@@ -397,7 +419,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 var defaultAccordion = $("#waterfall_view_step1");
                 if (defaultAccordion.length) {
                     <?php if ($isMultistep) { ?>
-                    accordionHandler.toggleAccordion(defaultAccordion);
+                        accordionHandler.toggleAccordion(defaultAccordion);
                     <?php } ?>
                 }
                 return;
@@ -406,9 +428,9 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 hash.startsWith("#connection_view_step") ||
                 hash.startsWith("#request_details_step") ||
                 hash.startsWith("#request_headers_step")) {
-              <?php if ($isMultistep) { ?>
-              accordionHandler.handleHash();
-              <?php } ?>
+                <?php if ($isMultistep) { ?>
+                    accordionHandler.handleHash();
+                <?php } ?>
             }
             handleRequestHash();
         }
@@ -420,7 +442,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
             initDetailsTable($(document));
             initHeaderRequestExpander($(document));
             <?php if ($isMultistep) { ?>
-              accordionHandler.connect();
+                accordionHandler.connect();
             <?php } ?>
             handleHash();
         });
@@ -429,7 +451,8 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         <?php
         include "assets/js/waterfall.js";
         ?>
-        </script>
+    </script>
 
-    </body>
+</body>
+
 </html>

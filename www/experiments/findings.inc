@@ -31,9 +31,8 @@ if ($experiment) {
         array("TotalBlockingTime", "Total Blocking Time", "s", null, false),
         array("visualComplete", "Visual Complete", "s", null, true),
         array("fullyLoaded", "Fully Loaded", "s", null, true),
-        array("BytesIn", "Total Bytes", "kb", array("Lighter", "Heavier"), false)
+        array("bytesIn", "Page Weight", "KB", array("Lighter", "Heavier"), false)
     );
-
 
     // see if there's a notable diff in TTFB first, which is usually unrelated to the experiment
     // offer a link and query string to ignore ttfb in some metrics
@@ -62,6 +61,9 @@ if ($experiment) {
                         $thisDiff = $controlMetric - $experimentMetric;
 
                         $thisDiff = floatval(removeLeadingZero(round($thisDiff, 3)));
+                        if ($metric[0] === "bytesIn") {
+                            $thisDiff = round($thisDiff / 1024);
+                        }
                         if (abs($thisDiff) > 0) {
                             echo '<th align="center" valign="middle">' . $metric[1] . '</th>';
                         }
@@ -92,6 +94,12 @@ if ($experiment) {
                         $thisDiff = floatval(removeLeadingZero(round($thisDiff, 3)));
                         $experimentMetric = floatval(removeLeadingZero(round($experimentMetric, 3)));
                         $controlMetric = floatval(removeLeadingZero(round($controlMetric, 3)));
+
+                        if ($metric[0] === "bytesIn") {
+                            $experimentMetric = round($experimentMetric / 1024, 0);
+                            $controlMetric = round($controlMetric / 1024, 0);
+                            $thisDiff = round($thisDiff / 1024);
+                        }
 
                         $change = '<span class="metric_change"><em>' . ($thisDiff >= 0 ? $changeTerms[0] : $changeTerms[1]) . '</em></span>';
 

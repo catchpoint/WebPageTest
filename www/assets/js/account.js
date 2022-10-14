@@ -138,7 +138,6 @@
 
     bindEvents() {
       var self = this;
-
       // close btn click
       this.closeBtn.addEventListener("click", (event) => self.close());
 
@@ -546,6 +545,7 @@
           document.querySelector(`#${modal}`).open();
         });
       });
+
       document
         .querySelectorAll(".fg-modal .cancel-button button")
         .forEach((el) => {
@@ -554,6 +554,7 @@
             modal.close();
           });
         });
+
       document
         .querySelectorAll(".fg-modal .cancel-subscription-button button")
         .forEach((el) => {
@@ -588,8 +589,46 @@
 
       attachListenerToBillingFrequencySelector();
       handleRunUpdate();
+
+      document
+        .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
+        .forEach((s) => {
+          s.addEventListener("change", (e) => {
+            document.selectPlan.submit();
+          });
+        });
     });
   } else {
+    // upgrade plan selector
+    var updatePlan = document.getElementById("pro-plan-selector");
+    if (updatePlan) {
+      updatePlan.addEventListener("change", (e) => {
+        if (e.target.value === "annual") {
+          document
+            .querySelectorAll(".wpt-plan-set.annual-plans")[0]
+            .classList.remove("hidden");
+          document
+            .querySelectorAll(".wpt-plan-set.monthly-plans")[0]
+            .classList.add("hidden");
+        } else {
+          document
+            .querySelectorAll(".wpt-plan-set.annual-plans")[0]
+            .classList.add("hidden");
+          document
+            .querySelectorAll(".wpt-plan-set.monthly-plans")[0]
+            .classList.remove("hidden");
+        }
+      });
+    }
+
+    var cancelSub = document.getElementById("cancel-subscription");
+    if (cancelSub) {
+      cancelSub.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.querySelector("#subscription-plan-modal").open();
+      });
+    }
+
     document.querySelectorAll(".edit-button button").forEach((el) => {
       el.addEventListener("click", (e) => {
         const card = e.target.closest("[data-modal]");
@@ -597,6 +636,7 @@
         document.querySelector(`#${modal}`).open();
       });
     });
+
     document
       .querySelectorAll(".fg-modal .cancel-button button")
       .forEach((el) => {
@@ -605,6 +645,7 @@
           modal.close();
         });
       });
+
     document
       .querySelectorAll(".fg-modal .cancel-subscription-button button")
       .forEach((el) => {
@@ -614,6 +655,32 @@
           document.querySelector("#subscription-plan-modal-confirm").open();
         });
       });
+
+    // add pulse to submit button on click for any forms with this class
+    var fancyForm = document.querySelectorAll(".form__pulse-wait");
+    fancyForm.forEach((el) => {
+      el.addEventListener("submit", (e) => {
+        var submitButtons = e.target.querySelectorAll(".pill-button span");
+        for (const button of submitButtons) {
+          button.innerHTML = "";
+          button.classList.add("dot-pulse");
+          button.classList.add("dot-pulse__dark");
+        }
+      });
+    });
+    document
+      .querySelectorAll('#wpt-account-upgrade-choose input[name="plan"]')
+      .forEach((el) => {
+        el.addEventListener("change", (e) => {
+          const buttons = document.querySelectorAll(".pill-button span");
+          for (const button of buttons) {
+            button.innerHTML = "";
+            button.classList.add("dot-pulse");
+          }
+          document.selectPlan.submit();
+        });
+      });
+
     var sortableTables = document.querySelectorAll("table.sortable");
     for (var i = 0; i < sortableTables.length; i++) {
       new SortableTable(sortableTables[i]);

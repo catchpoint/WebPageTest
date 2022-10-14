@@ -21,10 +21,8 @@ function BuildRenderTests()
     if (strlen($_REQUEST['end'])) {
         $endTime = trim($_REQUEST['end']);
     }
-    $videoIdExtra = "";
     $bgColor = isset($_REQUEST['bg']) ? htmlspecialchars($_REQUEST['bg']) : '000000';
     $textColor = isset($_REQUEST['text']) ? htmlspecialchars($_REQUEST['text']) : 'ffffff';
-    $applyGrey = isset($_REQUEST['applyGrey']) && $_REQUEST['applyGrey'] === 0 ? false : true;
     $compTests = explode(',', $_REQUEST['tests']);
     foreach ($compTests as $t) {
         $parts = explode('-', $t);
@@ -91,14 +89,6 @@ function BuildRenderTests()
             $test['path'] = GetTestPath($test['id']);
             $info = GetTestInfo($test['id']);
             if ($info) {
-                if (
-                    array_key_exists('discard', $info) &&
-                    $info['discard'] >= 1 &&
-                    array_key_exists('priority', $info) &&
-                    $info['priority'] >= 1
-                ) {
-                    $defaultInterval = 100;
-                }
                 $test['url'] = $info['url'];
                 $test_median_metric = GetSetting('medianMetric', 'loadTime');
                 if (isset($info['medianMetric'])) {
@@ -160,10 +150,6 @@ function BuildRenderTests()
             }
             $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
             $test['videoPath'] = $localPaths->videoDir();
-
-            if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded']) {
-                $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
-            }
 
             if (!isset($label) || !strlen($label)) {
                 if ($info && isset($info['label'])) {
@@ -707,7 +693,7 @@ function DrawLabels($tests, $renderInfo, $im)
                 $rect = $test['labelRect'];
                 $bgColor = ($index % 2) ? $renderInfo["bgEvenText"] : $renderInfo["bgOddText"];
                 imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $bgColor);
-                $pos = CenterText($renderInfo, $im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $renderInfo["labelFont"], null, $test['labelRect']['align']);
+                $pos = CenterText($renderInfo, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $renderInfo["labelFont"], null, $test['labelRect']['align']);
                 if (isset($pos)) {
                     imagettftext($im, $font_size, 0, $pos['x'], $pos['y'], $renderInfo["textColor"], $renderInfo["labelFont"], $test['label']);
                 }
@@ -758,6 +744,7 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
     }
 
     $need_grey = false;
+    $applyGrey = isset($_REQUEST['applyGrey']) && $_REQUEST['applyGrey'] === 0 ? false : true;
     if (!isset($test['done']) && $frameTime > $test['end']) {
         if ($applyGrey) {
             $need_grey = true;
@@ -775,7 +762,8 @@ function DrawTest(&$test, $renderInfo, $frameTime, $im)
         }
         if ($thumb) {
             if ($need_grey) {
-                imagefilter($thumb, IMG_FILTER_GRAYSCALE);
+                // todo: fix me, breaking this on purpose
+                // imagefilter($thumb, IMG_FILTER_GRAYSCALE);
             }
             // Scale and center the thumbnail aspect-correct in the area reserved for it
             $rect = $test['thumbRect'];
@@ -826,10 +814,10 @@ function DrawFrameTime(&$test, $renderInfo, $frameTime, $im, $rect)
     }
     if (!isset($test['periodRect'])) {
         $test['periodRect'] = array();
-        $pos = CenterText($renderInfo, $im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, "000.00$suffix", $renderInfo["timeFont"], $ascent, $rect['align']);
+        $pos = CenterText($renderInfo, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, "000.00$suffix", $renderInfo["timeFont"], $ascent, $rect['align']);
         $test['periodRect']['y'] = $pos['y'];
         $posText = $rect['align'] == 'right' ? ".00$suffix" : '.';
-        $pos = CenterText($renderInfo, $im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $posText, $renderInfo["timeFont"], $ascent, $rect['align']);
+        $pos = CenterText($renderInfo, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $posText, $renderInfo["timeFont"], $ascent, $rect['align']);
         $test['periodRect']['x'] = $pos['x'];
         $box = imagettfbbox($font_size, 0, $renderInfo["timeFont"], '.');
         $test['periodRect']['width'] = abs($box[4] - $box[0]);
@@ -861,7 +849,7 @@ function DrawFrameTime(&$test, $renderInfo, $frameTime, $im, $rect)
         imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $bgColor);
 
         if (isset($test['endText'])) {
-            $pos = CenterText($renderInfo, $im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['endText'], $renderInfo["timeFont"], $ascent, $rect['align']);
+            $pos = CenterText($renderInfo, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['endText'], $renderInfo["timeFont"], $ascent, $rect['align']);
             if (isset($pos)) {
                 imagettftext($im, $font_size, 0, $pos['x'], $pos['y'], $renderInfo["textColor"], $renderInfo["timeFont"], $test['endText']);
             }
@@ -914,7 +902,7 @@ function GetFontSize($renderInfo, $width, $height, $text, $font)
     return $size;
 }
 
-function CenterText($renderInfo, $im, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $align)
+function CenterText($renderInfo, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $align)
 {
     $ret = null;
     if (!$size) {

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace WebPageTest;
+
 use PHPUnit\Framework\TestCase;
 use WebPageTest\Util;
 use WebPageTest\Util\Cache;
@@ -10,7 +12,7 @@ final class UtilTest extends TestCase
 {
     public function testConstructorThrows(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(\Exception::class);
         $util = new Util();
     }
 

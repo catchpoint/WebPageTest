@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../../../common.inc';
-
 use WebPageTest\Util;
 
 function addTab($tabName, $tabUrl, $addClass = '')
@@ -43,7 +41,7 @@ if ($id) {
     $resultUrl = "/results.php?test=$id";
     if (array_key_exists('end', $_REQUEST)) {
         $resultUrl .= "&end={$_REQUEST['end']}";
-    } elseif (FRIENDLY_URLS) {
+    } elseif (constant('FRIENDLY_URLS')) {
         $resultUrl = "/result/$id/";
     }
 }
@@ -95,7 +93,7 @@ if ($id) {
                         </details>
                     </li>
 
-                    <?php if ($supportsAuth && !defined('EMBED')) : ?>
+                    <?php if ($supportsAuth && !EMBED) : ?>
                         <?= addTab('Pricing', '/signup'); ?>
                     <?php endif; ?>
 
@@ -140,7 +138,7 @@ if ($id) {
 
                     <?php
 
-                    if ($supportsAuth && !defined('EMBED')) {
+                    if ($supportsAuth && !EMBED) {
                         if ($supportsCPAuth) {
                             $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
                             ?>

@@ -39,14 +39,14 @@ if (isset($lcp)) {
 
 echo ' <details class="box details_panel">
             <summary class="details_panel_hed"><span><i class="icon_plus"></i> <span>Adjust Filmstrip Settings</span></span></summary>
-             
+
             <div class="details_panel_content">';
 
 
         // START TIMELINE OPTIONS
-if (!defined('EMBED')) {
+if (!EMBED) {
     ?>
-       
+
             <form name="layout" method="get" action="/video/compare.php">
             <?php
             echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
@@ -193,7 +193,7 @@ if (!defined('EMBED')) {
                     echo '<div class="compare_video_form"><label for="slow"><input type="checkbox" id="slow" name="slow" value="1"> Slow Motion</label>';
                     echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"View Video\"></div>";
                     echo "</form>"; ?>
-       
+
 
         <div id="advanced" style="display:none;">
             <h3>Advanced Visual Comparison Configuration</h3>
@@ -211,7 +211,7 @@ if (!defined('EMBED')) {
             </tbody>
             </table>
             </div>
-            
+
             <p>You can also customize the background and text color by passing HTML color values to <b>bg</b> and <b>text</b> query parameters.</p>
             <p>Examples:</p>
             <ul>
@@ -232,4 +232,3 @@ if (!defined('EMBED')) {
 
 
     echo '</div></details>'; ?>
-                    

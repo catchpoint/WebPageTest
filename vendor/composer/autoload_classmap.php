@@ -348,6 +348,7 @@ return array(
     'PHPUnit\\Util\\PHP\\DefaultPhpProcess' => $vendorDir . '/phpunit/phpunit/src/Util/PHP/DefaultPhpProcess.php',
     'PHPUnit\\Util\\PHP\\WindowsPhpProcess' => $vendorDir . '/phpunit/phpunit/src/Util/PHP/WindowsPhpProcess.php',
     'PHPUnit\\Util\\Printer' => $vendorDir . '/phpunit/phpunit/src/Util/Printer.php',
+    'PHPUnit\\Util\\Reflection' => $vendorDir . '/phpunit/phpunit/src/Util/Reflection.php',
     'PHPUnit\\Util\\RegularExpression' => $vendorDir . '/phpunit/phpunit/src/Util/RegularExpression.php',
     'PHPUnit\\Util\\Test' => $vendorDir . '/phpunit/phpunit/src/Util/Test.php',
     'PHPUnit\\Util\\TestDox\\CliTestDoxPrinter' => $vendorDir . '/phpunit/phpunit/src/Util/TestDox/CliTestDoxPrinter.php',

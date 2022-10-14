@@ -24,12 +24,14 @@ if (Util::getSetting('cp_auth')) {
     unset($_SESSION['client_error']);
 
     set_exception_handler(function ($e) {
-        if (Util::getSetting('environment') == "dev") {
-            echo "<pre>";
+        // Developer envs just get a print out
+        if (Util::getSetting('environment') == 'dev') {
+            echo '<pre>';
             var_dump($e);
-            echo "</pre>";
+            echo '</pre>';
             exit();
         }
+
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
@@ -53,6 +55,15 @@ if (Util::getSetting('cp_auth')) {
 require_once(__DIR__ . '/common_lib.inc');
 require_once(__DIR__ . '/plugins.php.inc');
 require_once(__DIR__ . '/util.inc');
+
+// constants that require common_lib nand cannot be in constants.inc
+if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
+    define('FRIENDLY_URLS', true);
+    define('VER_TIMELINE', '28/');       // version of the timeline javascript
+} else {
+    define('FRIENDLY_URLS', false);
+    define('VER_TIMELINE', '');       // Leave the timeline version empty
+}
 
 // Create global request context for future use
 $request_context = new RequestContext($_REQUEST, $_SERVER);
@@ -124,7 +135,7 @@ if (GetSetting('host', '') != 'www.webpagetest.org') {
     header('X-Robots-Tag: noindex');
 }
 
-// set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
+// set up a global curl context that can be used for keep-alive connections
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
     if ($CURL_CONTEXT !== false) {
@@ -164,14 +175,6 @@ if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"])) {
     $_SERVER["REMOTE_ADDR"] = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
 }
 
-if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
-    define('FRIENDLY_URLS', true);
-    define('VER_TIMELINE', '28/');       // version of the timeline javascript
-} else {
-    define('FRIENDLY_URLS', false);
-    define('VER_TIMELINE', '');       // Leave the timeline version empty
-}
-
 $privateInstall = true;
 if (
     array_key_exists('HTTP_HOST', $_SERVER) &&
@@ -195,19 +198,6 @@ if (!$privateInstall) {
     }
 }
 
-// constants
-define('VER_WEBPAGETEST', '21.07');   // webpagetest version
-define('VER_CSS', @md5_file(__DIR__ . '/assets/css/pagestyle2.css'));          // version of the sitewide css file
-define('VER_HEADER_CSS', @md5_file(__DIR__ . '/assets/css/wpt-header.css')); // version of the header css file
-define('VER_ACCOUNT_CSS', @md5_file(__DIR__ . '/assets/css/account.css')); // version of the account css file
-define('VER_PRICE_CHANGER_JS', @md5_file(__DIR__ . '/assets/js/signup-price-changer.js'));
-define('VER_FAQ_JS', @md5_file(__DIR__ . '/assets/js/accessible-faq.js'));
-define('VER_BUTTON_CSS', @md5_file(__DIR__ . '/assets/css/button.css'));   // version of the button css file
-define('VER_JS', @md5_file(__DIR__ . '/assets/js/site.js'));                 // version of the sitewide javascript file
-define('VER_JS_TEST', @md5_file(__DIR__ . '/assets/js/test.js'));            // version of the javascript specific to the test pages
-define('VER_JS_RUNNING', @md5_file(__DIR__ . '/assets/js/running.js'));          // version of the javascript specific to the test running status page
-define('VER_JS_ACCOUNT', @md5_file(__DIR__ . '/assets/js/account.js'));          // version of the javascript specific to the test running status page
-define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
 // To find code that fails to check that a time
 // is unknown, change this constant to a large
 // negative number.
@@ -222,13 +212,7 @@ if (!is_dir($tempDir)) {
 }
 $tempDir = realpath($tempDir) . '/';
 
-if (isset($_REQUEST['embed'])) {
-    define('EMBED', true);
-    define('BARE_UI', true);
-    define('NAV_NO_SHARE', true);
-} elseif (isset($_REQUEST['bare'])) {
-    define('BARE_UI', true);
-    define('NAV_NO_SHARE', true);
+if (!EMBED && isset($_REQUEST['bare'])) {
     $noanalytics = true;
 }
 $is_ssl = isSslConnection();
@@ -341,6 +325,7 @@ if ($supportsCPAuth) {
     require_once __DIR__ . '/common/AttachClient.php';
     require_once __DIR__ . '/common/AttachUser.php';
     require_once __DIR__ . '/common/AttachSignupClient.php';
+    require_once __DIR__ . '/common/AttachBannerMessageManager.php';
     require_once __DIR__ . '/common/CheckCSRF.php';
 }
 
@@ -350,16 +335,12 @@ if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test
     $id = $_REQUEST['test'];
 }
 
-$median_metric = GetSetting('medianMetric') ? GetSetting('medianMetric') : 'loadTime';
+$median_metric = Util::getSetting('medianMetric', null) ?? 'loadTime';
 $testLabel = '';
 $page_title = 'WebPageTest Test';
 $test_is_private = false;
 
 if (strlen($id)) {
-    if (isset($_REQUEST['rkey']) && @strlen($_REQUEST['rkey'])) {
-        // We are serving a relay request, so munge the id accordingly.
-        $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
-    }
     if (!$userIsBot) {
         RestoreTest($id);   // restore the test if it is archived (and deleted)
     }

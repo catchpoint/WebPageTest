@@ -21,8 +21,7 @@ $page_description = "More information about WebPageTest website speed testing an
         <style>
         #logo {float:right;}
         </style>
-        <?php $gaTemplate = 'About';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body>
         <div class="page">

@@ -37,8 +37,7 @@ $page_description = "Web Vitals details$testLabel";
         <title><?php echo "$page_title - Web Vitals Details"; ?></title>
         <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php $gaTemplate = 'Vitals';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="result">
             <?php
@@ -276,7 +275,6 @@ function InsertWebVitalsHTML_LCP($stepResult)
 {
     global $testInfo;
     global $lcp_request;
-    global $testRunResults;
     $thumbSize = 320;
     if ($stepResult) {
         $events = $stepResult->getMetric('largestPaints');
@@ -406,6 +404,9 @@ function InsertWebVitalsHTML_LCP($stepResult)
             } elseif (isset($lcp['element']['src']) || isset($lcp['element']['currentSrc'])) {
                 $lcpSource = isset($lcp['element']['currentSrc']) ? $lcp['element']['currentSrc'] : $lcp['element']['src'];
                 echo "<tr><th align='left'>Src</th><td>{$lcpSource}</td></tr>";
+            } elseif (!empty($lcp['url'])) {
+                $lcpSource = $lcp['url'];
+                echo "<tr><th align='left'>Url</th><td>{$lcpSource}</td></tr>";
             }
             if (isset($lcp['element']['background-image'])) {
                 echo "<tr><th align='left'>Background Image</th><td>{$lcp['element']['background-image']}</td></tr>";
@@ -483,7 +484,6 @@ function InsertWebVitalsHTML_LCP($stepResult)
 
 function InsertWebVitalsHTML_CLS($stepResult)
 {
-    global $testRunResults;
     $cls = null;
     $windows = array();
     if ($stepResult) {
@@ -577,7 +577,6 @@ function GenerateOverlayRects($shift, $viewport, $before)
 
 function InsertWebVitalsHTML_CLSWindow($window, $stepResult, $video_frames)
 {
-    global $testInfo;
     $thumbSize = 500;
 
     echo "<div class='cls-window'>";
@@ -716,7 +715,6 @@ function MergeBlockingTime(&$times, $start, $end)
 
 function InsertWebVitalsHTML_TBT($stepResult)
 {
-    global $testRunResults;
     global $testInfo;
     if ($stepResult) {
         $tbt = $stepResult->getMetric('TotalBlockingTime');
@@ -760,7 +758,6 @@ function InsertWebVitalsHTML_TBT($stepResult)
                 $requests_list = null;
                 $maxTime = 0;
                 // Trimmed waterfall
-                $label = $stepResult->readableIdentifier($testInfo->getUrl());
                 $requests = $stepResult->getRequestsWithInfo(true, true);
                 $raw_requests = $requests->getRequests();
                 if (isset($raw_requests)) {

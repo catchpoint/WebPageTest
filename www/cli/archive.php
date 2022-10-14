@@ -62,10 +62,7 @@ if (
     GetSetting('archive_url') ||
     GetSetting('archive_s3_server')
 ) {
-    CheckRelay();
-    CheckOldDir('./results/old');
-
-  // Archive the actual tests
+    // Archive the actual tests
     $years = scandir('./results');
     foreach ($years as $year) {
         $yearDir = "./results/$year";
@@ -144,109 +141,6 @@ function DeleteArchivedFiles($dir)
                 }
             }
         }
-    }
-}
-
-/**
-* Clean up the relay directory of old tests
-*
-*/
-function CheckRelay()
-{
-    global $is_cli;
-    $dirs = scandir('./results/relay');
-    $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/common/keys.ini';
-    }
-    if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/server/keys.ini';
-    }
-    $keys = parse_ini_file($keys_file);
-    foreach ($dirs as $key) {
-        if ($key != '.' && $key != '..') {
-            $keydir = "./results/relay/$key";
-            if (is_dir($keydir)) {
-                if (array_key_exists($key, $keys)) {
-                    if ($is_cli) {
-                        echo "\rChecking relay tests for $key";
-                    }
-                    $years = scandir($keydir);
-                    foreach ($years as $year) {
-                        if ($year != '.' && $year != '..') {
-                            $yearDir = "$keydir/$year";
-                            if (is_numeric($year)) {
-                                if (ElapsedDays($year, '01', '01') < 10) {
-                                    $months = scandir($yearDir);
-                                    foreach ($months as $month) {
-                                        if ($month != '.' && $month != '..') {
-                                            $monthDir = "$yearDir/$month";
-                                            if (is_numeric($month)) {
-                                                if (ElapsedDays($year, $month, '01') < 10) {
-                                                    $days = scandir($monthDir);
-                                                    foreach ($days as $day) {
-                                                        if ($day != '.' && $day != '..') {
-                                                            $dayDir = "$monthDir/$day";
-                                                            if (!is_numeric($day)) {
-                                                                      delTree($dayDir);
-                                                            }
-                                                            @rmdir($dayDir);
-                                                        }
-                                                    }
-                                                } else {
-                                      // More than 10 days old
-                                                    delTree($monthDir);
-                                                }
-                                            } else {
-                                            // Not Numeric
-                                                delTree($monthDir);
-                                            }
-                                            @rmdir($monthDir);
-                                        }
-                                    }
-                                } else {
-                              // More than 10 days old
-                                    delTree($yearDir);
-                                }
-                            } else {
-                          // Not Numeric
-                                delTree($yearDir);
-                            }
-                            @rmdir($yearDir);
-                        }
-                    }
-                } else {
-                  // Invalid key
-                    delTree($keydir);
-                }
-                @rmdir($keydir);
-            } else {
-                unlink($keydir);
-            }
-        }
-    }
-}
-
-/**
-* Recursively scan the old directory for tests
-*
-* @param mixed $path
-*/
-function CheckOldDir($path)
-{
-    if (is_dir($path)) {
-        $oldDirs = scandir($path);
-        foreach ($oldDirs as $oldDir) {
-            if ($oldDir != '.' && $oldDir != '..') {
-                // see if it is a test or a higher-level directory
-                if (is_file("$path/$oldDir/testinfo.ini")) {
-                    CheckTest("$path/$oldDir", $oldDir, 1000, false);
-                } else {
-                    CheckOldDir("$path/$oldDir");
-                }
-            }
-        }
-        @rmdir($path);
     }
 }
 

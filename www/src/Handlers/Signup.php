@@ -10,11 +10,13 @@ use WebPageTest\Template;
 use WebPageTest\ValidatorPatterns;
 use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
-use Braintree\Gateway as BraintreeGateway;
+use WebPageTest\CPGraphQlTypes\BraintreeBillingAddressInput as BillingAddress;
+use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
+use WebPageTest\CPGraphQlTypes\ChargifySubscription;
+use WebPageTest\CPGraphQlTypes\CPSignupInput;
+use WebPageTest\CPGraphQlTypes\CustomerInput;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
-use WebPageTest\BillingAddress;
-use WebPageTest\Customer;
 use WebPageTest\Exception\ClientException;
 
 class Signup
@@ -31,25 +33,10 @@ class Signup
 
         try {
             $wpt_plans = $request_context->getSignupClient()->getWptPlans();
-            $annual_plans = array();
-            $monthly_plans = array();
-            usort($wpt_plans, function ($a, $b) {
-                if ($a->getPrice() == $b->getPrice()) {
-                    return 0;
-                }
-                return ($a->getPrice() < $b->getPrice()) ? -1 : 1;
-            });
-            foreach ($wpt_plans as $plan) {
-                if ($plan->getBillingFrequency() == "Monthly") {
-                    $monthly_plans[] = $plan;
-                } else {
-                    $annual_plans[] = $plan;
-                }
-            }
-            $vars['annual_plans'] = $annual_plans;
-            $vars['monthly_plans'] = $monthly_plans;
+            $vars['annual_plans'] = $wpt_plans->getAnnualPlans();
+            $vars['monthly_plans'] = $wpt_plans->getMonthlyPlans();
         } catch (RequestException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 401 || $e->getCode() == 400) {
                 // get auth token again and retry!
                 unset($_SESSION['signup-auth-token']);
                 $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
@@ -93,6 +80,12 @@ class Signup
             $vars['annual_price'] = $plan->getAnnualPrice();
             $vars['other_annual'] = $plan->getOtherAnnual();
             $vars['billing_frequency'] = $plan->getBillingFrequency();
+
+            if (!$vars['is_plan_free']) {
+                $vars['state_list'] = Util::getChargifyUSStateList();
+                $vars['country_list'] = Util::getChargifyCountryList();
+                $vars['country_list_json_blob'] = Util::getCountryJsonBlob();
+            }
         }
         $vars['contact_info_pattern'] = ValidatorPatterns::getContactInfo();
         $vars['password_pattern'] = ValidatorPatterns::getPassword();
@@ -133,27 +126,29 @@ class Signup
             $vars['billing_frequency'] = $plan->getBillingFrequency();
         }
 
-        $gateway = new BraintreeGateway([
-            'environment' => Util::getSetting('bt_environment'),
-            'merchantId' => Util::getSetting('bt_merchant_id'),
-            'publicKey' => Util::getSetting('bt_api_key_public'),
-            'privateKey' => Util::getSetting('bt_api_key_private')
-        ]);
-        $client_token = $gateway->clientToken()->generate();
-        $vars['bt_client_token'] = $client_token;
+        $vars['ch_client_token'] = Util::getSetting('ch_key_public');
+        $vars['ch_site'] = Util::getSetting('ch_site');
 
-
-        $vars['street_address'] = $_SESSION['signup-street-address'];
-        $vars['city'] = $_SESSION['signup-city'];
-        $vars['state'] = $_SESSION['signup-state'];
-        $vars['zipcode'] = $_SESSION['signup-zipcode'];
         $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";
         $vars['last_name'] = isset($_SESSION['signup-last-name']) ? htmlentities($_SESSION['signup-last-name']) : "";
         $vars['company_name'] = htmlentities($_SESSION['signup-company-name']);
         $vars['email'] = htmlentities($_SESSION['signup-email']);
         $vars['password'] = htmlentities($_SESSION['signup-password']);
-        $vars['country_list'] = Util::getCountryList();
-        $vars['state_list'] = Util::getStateList();
+
+        $vars['street_address'] = htmlentities($_SESSION['signup-street-address']);
+        $vars['city'] = htmlentities($_SESSION['signup-city']);
+        $vars['state_code'] = htmlentities($_SESSION['signup-state-code']);
+        $vars['country_code'] = htmlentities($_SESSION['signup-country-code']);
+        $vars['zipcode'] = htmlentities($_SESSION['signup-zipcode']);
+
+        $signup_total_in_cents = $_SESSION['signup-total-in-cents'];
+        $estimated_tax_in_cents = $_SESSION['signup-tax-in-cents'];
+
+        $vars['total_including_tax'] = number_format(($signup_total_in_cents / 100), 2, ".", ",");
+        $vars['estimated_tax'] = number_format(($estimated_tax_in_cents / 100), 2, ".", ",");
+
+        $vars['country_list'] = Util::getChargifyCountryList();
+        $vars['state_list'] = Util::getChargifyUSStateList();
 
         return $tpl->render('step-3', $vars);
     }
@@ -219,6 +214,11 @@ class Signup
         $first_name = $_POST["first-name"];
         $last_name = $_POST["last-name"];
         $company_name = $_POST["company-name"] ?? null;
+        $street_address = $_POST["street-address"] ?? null;
+        $city = $_POST["city"] ?? null;
+        $state_code = $_POST["state"] ?? null;
+        $country_code = $_POST["country"] ?? null;
+        $zipcode = $_POST["zipcode"] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
@@ -234,11 +234,29 @@ class Signup
             throw new ClientException(implode(', ', $message));
         }
 
+        if ($plan != "free") {
+            if (
+                is_null($street_address) ||
+                is_null($city) ||
+                is_null($state_code) ||
+                is_null($country_code) ||
+                is_null($zipcode)
+            ) {
+                throw new ClientException("All billing address fields must be filled for a paid plan", "/signup/2");
+            }
+        }
+
         $vars->email = $email;
         $vars->password = $password;
         $vars->first_name = $first_name;
         $vars->last_name = $last_name;
         $vars->company_name = $company_name;
+        $vars->street_address = $street_address;
+        $vars->city = $city;
+        $vars->state_code = $state_code;
+        $vars->country_code = $country_code;
+        $vars->zipcode = $zipcode;
+
         $vars->plan = $plan;
 
         return $vars;
@@ -252,6 +270,59 @@ class Signup
         $_SESSION['signup-company-name'] = $body->company_name;
         $_SESSION['signup-email'] = $body->email;
         $_SESSION['signup-password'] = $body->password;
+
+        $chargify_address = new ChargifyAddressInput([
+          "street_address" => $body->street_address,
+          "city" => $body->city,
+          "state" => $body->state_code,
+          "country" => $body->country_code,
+          "zipcode" => $body->zipcode
+        ]);
+
+        $plan = $body->plan;
+
+        try {
+            $auth_token = $request_context->getSignupClient()->getAuthToken();
+            $request_context->getSignupClient()->authenticate($auth_token->access_token);
+
+            $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
+
+            $_SESSION['signup-street-address'] = $body->street_address;
+            $_SESSION['signup-city'] = $body->city;
+            $_SESSION['signup-state-code'] = $body->state_code;
+            $_SESSION['signup-country-code'] = $body->country_code;
+            $_SESSION['signup-zipcode'] = $body->zipcode;
+
+            $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
+            $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
+            $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
+        } catch (\Exception $e) {
+            if ($e->getCode() != 401) {
+                throw new ClientException($e->getMessage(), '/signup/2');
+                exit();
+            }
+
+            // Auth issue, retry
+            try {
+                $auth_token = $request_context->getSignupClient()->getAuthToken();
+                $request_context->getSignupClient()->authenticate($auth_token->access_token);
+
+                $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
+
+                $_SESSION['signup-street-address'] = $body->street_address;
+                $_SESSION['signup-city'] = $body->city;
+                $_SESSION['signup-state-code'] = $body->state_code;
+                $_SESSION['signup-country-code'] = $body->country_code;
+                $_SESSION['signup-zipcode'] = $body->zipcode;
+
+                $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
+                $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
+                $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
+            } catch (\Exception $e) {
+                throw new ClientException($e->getMessage(), '/signup/2');
+                exit();
+            }
+        }
 
         $host = Util::getSetting('host');
         setcookie('signup-plan', $body->plan, time() + (5 * 60), "/", $host);
@@ -318,7 +389,7 @@ class Signup
         $country = $_POST['country'];
         $zipcode = $_POST['zipcode'];
 
-        $vars->plan = $plan;
+        $vars->plan = strtolower($plan);
         $vars->nonce = $nonce;
         $vars->street_address = $street_address;
         $vars->city = $city;
@@ -337,7 +408,7 @@ class Signup
     public static function postStepThree(RequestContext $request_context, object $body): string
     {
         // build query items
-        $billing_address_model = new BillingAddress([
+        $billing_address = new BillingAddress([
             'street_address' => $body->street_address,
             'city' => $body->city,
             'state' => $body->state,
@@ -345,21 +416,37 @@ class Signup
             'zipcode' => $body->zipcode
         ]);
 
-        $customer = new Customer([
-            'payment_method_nonce' => $body->nonce,
-            'billing_address_model' => $billing_address_model,
-            'subscription_plan_id' => $body->plan
+        $chargify_address = new ChargifyAddressInput([
+            'street_address' => $body->street_address,
+            'city' => $body->city,
+            'state' => $body->state,
+            'country' => $body->country,
+            'zipcode' => $body->zipcode
         ]);
 
-        // handle signup
-        try {
-            $data = $request_context->getSignupClient()->signup(array(
+        $customer = new CustomerInput([
+          "payment_method_nonce" => $body->nonce,
+          "subscription_plan_id" => $body->plan
+        ], $billing_address);
+
+        $subscription = new ChargifySubscription([
+          "plan_handle" => $body->plan,
+          "payment_token" => $body->nonce
+        ], $chargify_address);
+
+        $options = [
                 'first_name' => $body->first_name,
                 'last_name' => $body->last_name,
                 'company' => $body->company,
                 'email' => $body->email,
                 'password' => $body->password,
-            ), $customer);
+        ];
+
+        $cp_signup_input = new CPSignupInput($options, $customer, $subscription);
+
+        // handle signup
+        try {
+            $data = $request_context->getSignupClient()->signupWithChargify($cp_signup_input);
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
@@ -369,15 +456,10 @@ class Signup
                     $auth_token = $request_context->getSignupClient()->getAuthToken();
                     $request_context->getSignupClient()->authenticate($auth_token->access_token);
 
-                    $data = $request_context->getSignupClient()->signup(array(
-                        'first_name' => $body->first_name,
-                        'last_name' => $body->last_name,
-                        'company' => $body->company,
-                        'email' => $body->email,
-                        'password' => $body->password
-                    ), $customer);
+                    $data = $request_context->getSignupClient()->signupWithChargify($cp_signup_input);
 
                     $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+
                     return $redirect_uri;
                     exit();
                 } catch (\Exception $e) {

@@ -22,8 +22,7 @@ $page_description = "WebPageTest Terms of Service.";
         <style>
         #logo {float:right;}
         </style>
-        <?php $gaTemplate = 'Terms';
-        include('head.inc'); ?>
+        <?php include('head.inc'); ?>
     </head>
     <body class="common">
             <?php

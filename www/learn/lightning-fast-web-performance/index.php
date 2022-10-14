@@ -4,7 +4,9 @@
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
     <?php
-        $gaTemplate = 'Main';
+
+        require_once __DIR__ . '/../../common.inc';
+
         $socialTitle = 'Lightning-Fast Web Performance Online Course from WebPageTest';
         $useScreenshot = true;
         require_once __DIR__ . '/../../head.inc';
@@ -13,7 +15,7 @@
 </head>
 
 <body class="learn">
-    
+
     <?php
      $tab = 'Resources';
      require_once __DIR__ . '/../../templates/layouts/includes/wpt-header.php';
@@ -22,10 +24,10 @@
 
      $loginLink = <<<EOT
 
-	 <p>To view the rest of videos in this course, you'll need a WebPageTest account. <strong>It's free!</strong></p> 
+	 <p>To view the rest of videos in this course, you'll need a WebPageTest account. <strong>It's free!</strong></p>
 	 <div class="experiment_description_go">
 	 <a href="/signup?redirect_uri=/learn/lightning-fast-web-performance" style="background: #0e70b9;min-width: auto;margin-right: .5em;"><span style="color: #fff !important;">Sign Up</span> </a>
-	 <em style="margin-right: .5em;">or...</em> 
+	 <em style="margin-right: .5em;">or...</em>
 	 <a href="/login?redirect_uri=/learn/lightning-fast-web-performance" style="min-width: auto;"><span>Log In</span> </a>
 	 </div>
 EOT;
@@ -44,17 +46,17 @@ EOT;
 
 <div class="learn_feature">
     <div class="learn_feature_hed_contain">
-            
-                
+
+
                 <div class="learn_feature_hed learn_feature_hed-pro">
                     <div class="learn_feature_hed_text">
                         <h1 class="attention"><span class="learn_feature_hed_text_leadin">Lightning-Fast </span> Web Performance</h1>
                         <p><b class="flag">Online Course</b>Learn to analyze site performance, fix issues, monitor for regressions, and deliver fast, responsive designs from the start.</p>
                     </div>
                     <div class="learn_feature_hed_visual">
-                        <p><img src="/learn/lightning-fast-web-performance/lfwp-assets/lfwp-profile-sj.png" alt="Profile Picture of Scott"> 
-                        <span>An online lecture course <em>led by Scott Jehl, WebPageTest</em> 
-                            <a href="#toc" class="pill">Free! Start Now</a>     
+                        <p><img src="/learn/lightning-fast-web-performance/lfwp-assets/lfwp-profile-sj.png" alt="Profile Picture of Scott">
+                        <span>An online lecture course <em>led by Scott Jehl, WebPageTest</em>
+                            <a href="#toc" class="pill">Free! Start Now</a>
                         </span>
                     </p>
                     </div>
@@ -62,7 +64,7 @@ EOT;
 
     </div>
 
-    
+
 </div>
 
 
@@ -90,7 +92,7 @@ EOT;
 
 <section class="fullerinfo">
                 <div class="fullerinfo_contain">
-                    
+
                     <div class="topicscovered">
                         <h2>Topics Covered</h2>
                         <ul>
@@ -112,17 +114,17 @@ EOT;
                             <li>Making existing sites faster and more resilient</li>
                         </ul>
                     </div>
-                    
+
                 </div>
             </section>
-            
+
 
 
 <section class="see-ahead">
                 <h2>See what you'll get</h2>
                 <p>These clips are taken from various points throughout the lecture series and illustrate the style of presentation you can expect to see throughout.</p>
                 <div class="see-ahead-vids">
-                    
+
                     <figure>
                     <iframe src="https://player.vimeo.com/video/740436486?h=25de43764b&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="3-preview"></iframe>
                         <figcaption><p>...from 3. Metrics</p></figcaption>
@@ -152,11 +154,11 @@ EOT;
 
                     <div class="start_cta">
                         <p>Start watching the course and see. <strong>It's free!</strong></p>
-                        <a href="#toc" class="pill">Start Now</a>       
+                        <a href="#toc" class="pill">Start Now</a>
                     </div>
             </section>
-            
-            
+
+
 
             <section class="curric" >
                 <h2 id="toc">Start The Course!</h2>
@@ -175,13 +177,13 @@ EOT;
                                 <h3>Additional Section Content</h3>
                                 <ul>
                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/1-welcome.pdf">PDF slides/links</a></li>
-                                
+
                                 </ul>
                             </div>
                             </div>
                         </details>
                     </li>
-                    
+
                     <li><details><summary><span><?php echo $lockedIcon; ?>Why Performance Matters <em>(15:47 mins)</em></span></summary>
                     <div class="chapter_inner">
                             <div class="video">
@@ -191,14 +193,14 @@ EOT;
                                         <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/9ab9d1c4-5e4e-4bba-b390-1c2ce8904378.gif?ClientID=vimeo-core-prod&Date=1660752279&Signature=51c7238bc6a43a724eb9b64f0d8827ccbbe59979" alt="GIF screenshot of video first frames">
                                     <?php } ?>
                                 </div>
-                                
+
                                 <div class="chapter_extra">
                                     <p>An top-down look at how performance impacts user experience and other concerns on the web today.</p>
                                 <?php if ($experiments_logged_in) { ?>
                                     <h3>Additional Section Content</h3>
                                     <ul>
                                     <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/2-why-performance-matters.pdf">PDF slides/links</a></li>
-                                    
+
                                     </ul>
                                 <?php } else {
                                         echo $loginLink;
@@ -215,14 +217,14 @@ EOT;
                                         <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/f2fbfd36-8900-4ba4-9f74-586cedc937fb.gif?ClientID=vimeo-core-prod&Date=1660752303&Signature=0c1df0449f06fdda03d6172e01f8d755ff7b652e" alt="GIF screenshot of video first frames">
                                     <?php } ?>
                                 </div>
-                                
+
                                 <div class="chapter_extra">
                                     <p>A tour of the common metrics that performance tools and web developers use to measure and compare webpage performance and usability.</p>
                                 <?php if ($experiments_logged_in) { ?>
                                     <h3>Additional Section Content</h3>
                                     <ul>
                                     <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/3-metrics-.pdf">PDF slides/links</a></li>
-                                    
+
                                     </ul>
                                 <?php } else {
                                         echo $loginLink;
@@ -239,14 +241,14 @@ EOT;
                                         <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/9ef091ae-3f78-4d7f-b61a-b7c4f97dcca9.gif?ClientID=vimeo-core-prod&Date=1660752323&Signature=5156cf71be3ddf381a4e73c83c506aa6d7b2ccfd" alt="GIF screenshot of video first frames">
                                     <?php } ?>
                                 </div>
-                                
+
                                 <div class="chapter_extra">
                                     <p>A deep dive into the process of using popular performance tools to find and diagnose issues with webpage performance.</p>
                                 <?php if ($experiments_logged_in) { ?>
                                     <h3>Additional Section Content</h3>
                                     <ul>
                                     <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/4-identifying-problems.pdf">PDF slides/links</a></li>
-                                    
+
                                     </ul>
                                 <?php } else {
                                         echo $loginLink;
@@ -265,14 +267,14 @@ EOT;
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/62e1ab07-6dbf-483d-81b4-c4b17aae4552.gif?ClientID=vimeo-core-prod&Date=1660752258&Signature=0cfa01357e7976006c4f328401dae70714a5bccf" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>Optimizing files is one of the easiest and most impactful ways to improve your site's ability to perform.</p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.1-making-things-faster-optimizing-files.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -289,7 +291,7 @@ EOT;
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/38536d20-5105-4af6-9c3e-fd5a565648ae.gif?ClientID=vimeo-core-prod&Date=1660752361&Signature=2c05446e542e4c2470174b8aa2073af7a3db2f35" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                             <p>Learn about the fundamentals of initial page delivery and what can cause it to be slow.</p>
 
@@ -297,7 +299,7 @@ EOT;
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.2-making-things-faster-first-byte.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -314,14 +316,14 @@ EOT;
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/7c9649dc-7953-4e13-b93c-f3ca07583f0d.gif?ClientID=vimeo-core-prod&Date=1660752480&Signature=a8d12f5ab0035f53d2e60ad3ddb2f616c638ee52" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>Explore the bottlenecks between initial bytes and initial page rendering and how to streamline them.</p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.3-making-things-faster-first-paints.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -334,19 +336,19 @@ EOT;
                                         <div class="video">
                                                 <?php if ($experiments_logged_in) { ?>
                                                     <iframe src="https://player.vimeo.com/video/740185219?h=90642daa31&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="5.4 - making things faster - meaningful paint"></iframe>
-                                                
+
                                                 <?php } else { ?>
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/aef9d16e-8bb6-40a3-86f4-caeca8dca32a.gif?ClientID=vimeo-core-prod&Date=1660752562&Signature=28c1085f4d6ca8b04f37dec67a0f654f8f542daa" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>A look at the conditions that contribute to large contentful paints and how to speed them up.</p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.4-making-things-faster-meaningful-paint.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -363,14 +365,14 @@ EOT;
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/0623f5bc-422d-419c-8ff9-3bd2a18068fa.gif?ClientID=vimeo-core-prod&Date=1660752774&Signature=e6e0c91b196ab1f8bdac61329bc91f990d609598" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>A look at the delays between when a page looks usable and actually responds to user interaction and how to mitigate them. </p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.5-making-things-faster-getting-interactive.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -382,19 +384,19 @@ EOT;
                                     <div class="chapter_inner">
                                         <div class="video">
                                                 <?php if ($experiments_logged_in) { ?>
-                                                    <iframe src="https://player.vimeo.com/video/740359110?h=0992b94d4b&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="5.6 - making things faster- returning visits"></iframe>                                         
+                                                    <iframe src="https://player.vimeo.com/video/740359110?h=0992b94d4b&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="5.6 - making things faster- returning visits"></iframe>
                                                 <?php } else { ?>
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/647c92d4-5719-4838-abd1-ffe28e45a5a9.gif?ClientID=vimeo-core-prod&Date=1660752661&Signature=d3accb62c5aac89cf63b18e698b4908132b6e710" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>Good performance considers the holistic user experience, and many optimizations can make recurring visits faster and more resilient. </p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/5.6-making-things-faster-returning-visits.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -413,14 +415,14 @@ EOT;
                                                     <img src="https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/8560ae23-74f1-46c5-ac93-86032268b575.gif?ClientID=vimeo-core-prod&Date=1660752692&Signature=04e0bac0c8bb4ad1ef551f167fa99c4c6cf68772" alt="GIF screenshot of video first frames">
                                                 <?php } ?>
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
                                                 <p>A look back through all that we've covered.</p>
                                             <?php if ($experiments_logged_in) { ?>
                                                 <h3>Additional Section Content</h3>
                                                 <ul>
                                                 <li><a href="/learn/lightning-fast-web-performance/lfwp-assets/6-wrapping-up.pdf">PDF slides/links</a></li>
-                                                
+
                                                 </ul>
                                             <?php } else {
                                                     echo $loginLink;
@@ -438,15 +440,15 @@ EOT;
                                         <div class="video video-cert">
                                                 <img src="<?=$CertimgURL?>" loading="lazy" alt="Certificate image acknowledging completion">
                                             </div>
-                                            
+
                                             <div class="chapter_extra">
-                                            
+
                                                 <h3>Your Certificate</h3>
                                                 <p>Congratulations on completing the course. Use this certificate to share your achievement!</p>
                                                 <ul>
-                                                <li><a href="<?=$CertimgURL?>" download>Download Image</a></li> 
+                                                <li><a href="<?=$CertimgURL?>" download>Download Image</a></li>
                                                 </ul>
-                                                
+
                                             </div>
                                     </div>
                         </details></li>
@@ -454,7 +456,7 @@ EOT;
 
                 </ol>
             </section>
-            
+
             <section class="about">
                 <h3>About Your Host</h3>
                 <p>Scott Jehl, author of <a href="https://abookapart.com/products/responsible-responsive-design"> Responsible Responsive Design</a></p>
@@ -488,7 +490,7 @@ EOT;
             (function(){
                 var intro = document.querySelector(".video video");
                 var playbtn = document.querySelector(".play");
-                
+
                 function activate(){
                     intro.controls = true;
                     document.body.classList.add("playing");
@@ -498,7 +500,7 @@ EOT;
                     intro.pause();
                     document.body.classList.remove("playing");
                 }
-                
+
                 intro.addEventListener( "play", function(e){
                     activate();
                     playbtn.classList.add("active");
@@ -519,7 +521,7 @@ EOT;
                         intro.pause();
                     }
                 });
-                
+
                 document.body.addEventListener("mousedown",function( e ){
                     if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){
                         e.preventDefault();

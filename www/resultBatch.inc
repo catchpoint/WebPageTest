@@ -9,14 +9,11 @@ require_once('./video/visualProgress.inc.php');
 //error_reporting(E_ALL);
 
 set_time_limit(3600);
-if (!defined('BARE_UI')) {
-    define('BARE_UI', true);
-}
+
 $csv = false;
 $json = false;
 if (array_key_exists('f', $_REQUEST)) {
     if ($_REQUEST['f'] == 'csv') {
-        //define('RESTORE_DATA_ONLY', true);
         $csv = true;
         $json_response = array();
     } elseif ($_REQUEST['f'] == 'json') {
@@ -115,7 +112,6 @@ if ($json) {
             </noscript>
             <?php
         }
-        $gaTemplate = 'Bulk Result';
         include('head.inc');
         ?>
         <style>
@@ -421,7 +417,6 @@ function DisplayTest($id, $url, $label, $complete)
 */
 function CheckTests(&$tests, &$dirty)
 {
-    global $location;
     $allComplete = true;
     $completed = 0;
     $checked = 0;

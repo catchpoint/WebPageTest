@@ -5,8 +5,6 @@ declare(strict_types=1);
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once __DIR__ . '/../../common.inc';
-
 use WebPageTest\Util;
 
 require_once __DIR__ . '/../../page_data.inc';
@@ -21,17 +19,6 @@ if (!isset($noanalytics)) {
 if (isset($testPath)) {
     $testInfo = TestInfo::fromFiles($testPath);
     $testResults = TestResults::fromFiles($testInfo);
-}
-if (isset($testResults)) {
-    $adultKeywords = array();
-    if (is_file('../../settings/adult.txt')) {
-        $adultKeywords = file('../../settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    }
-    $isAdult = $testResults->isAdultSite($adultKeywords);
-    if ($isAdult) {
-        define('ADULT_SITE', true);
-        $adult_site = true;
-    }
 }
 
 // For users that aren't logged in, include details about the test so it can be stored in indexdb for local history support
@@ -57,7 +44,7 @@ if (
 // If $tab is null, make it an empty string for strcasecmp
 $tab ??= "";
 
-if (defined('EMBED')) {
+if (EMBED) {
   // You don't need a header
     return;
 }
