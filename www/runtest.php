@@ -1754,11 +1754,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
     if (strlen($test['url']) || $test['batch']) {
         if (
             isset($experimentURL) && (stripos($test['url'], $experimentURL) !== false)
-            && (!$admin && !$experimentsPaid)
+            && (!($admin || $experiments_paid))
         ) {
             $error = "Experiments are only available for WebPageTest Pro subscribers.";
         } else {
-            $maxruns = (int)GetSetting('maxruns', 0);
+            $maxruns = (int)Util::getSetting('maxruns', 0);
             if (isset($_COOKIE['maxruns']) && $_COOKIE['maxruns']) {
                 $maxruns = (int)$_COOKIE['maxruns'];
             } elseif (isset($_REQUEST['maxruns']) && $_REQUEST['maxruns']) {
@@ -1768,7 +1768,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $maxruns = 10;
             }
 
-            if (!GetSetting('fullSizeVideoOn')) {
+            if (!Util::getSetting('fullSizeVideoOn')) {
                 //overwrite the Full Size Video flag with 0 if feature disabled in the settings
                 $test['fullsizevideo'] = 0;
             }
@@ -2032,7 +2032,7 @@ function ValidateScript(&$script, &$error)
                 //check if experiment URL is being used
                 if (
                     stripos($tokens[2], $experimentURL) !== false
-                    && (!$admin && !$experimentsPaid)
+                    && (!($admin || $experiments_paid))
                 ) {
                     $error = "Experiments are only available for WebPageTest Pro subscribers.";
                 }
@@ -2044,7 +2044,7 @@ function ValidateScript(&$script, &$error)
 
         $test['navigateCount'] = $navigateCount;
 
-        $maxNavigateCount = GetSetting("maxNavigateCount");
+        $maxNavigateCount = Util::getSetting("maxNavigateCount");
         if (!$maxNavigateCount) {
             $maxNavigateCount = 20;
         }
