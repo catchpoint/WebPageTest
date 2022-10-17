@@ -76,9 +76,10 @@ function PruneCruxCache()
     }
 }
 // returns a string of the Real User Measurement title for results.php if CrUX has collectionPeriod
-function RealUserMeasurementCruxTitle($pageData){
-    if(
-        isset($pageData['CrUX']['collectionPeriod']) && 
+function RealUserMeasurementCruxTitle($pageData)
+{
+    if (
+        isset($pageData['CrUX']['collectionPeriod']) &&
         isset($pageData['CrUX']['collectionPeriod']['firstDate']) &&
         isset($pageData['CrUX']['collectionPeriod']['lastDate'])
     ) {
@@ -90,8 +91,8 @@ function RealUserMeasurementCruxTitle($pageData){
         return sprintf('<h3 class="hed_sub"> 
                             Real User Measurements 
                             <em>(Collected anonymously by Chrome browser via Chrome User Experience Report, between %s and %s)</em>
-                        </h3>',$startDate, $endDate);
-    }else{
+                        </h3>', $startDate, $endDate);
+    } else {
         return '<h3 class="hed_sub"> 
                     Real User Measurements 
                     <em>(Collected anonymously by Chrome browser via Chrome User Experience Report)</em>
