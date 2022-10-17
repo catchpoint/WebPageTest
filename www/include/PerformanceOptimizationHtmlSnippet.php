@@ -43,9 +43,14 @@ class PerformanceOptimizationHtmlSnippet
         $imageUrl = $urlGenerator->optimizationChecklistImage();
         $out = "<div>\n";
         $out .= "<h4>Full Optimization Checklist</h4>\n";
+        $out .= $this->_createChecklistTableSnippet();
         $out .= "<div class=\"overflow-container\"><img alt=\"Optimization Checklist\" src=\"$imageUrl\" id=\"checklist_step$stepNum\"></div>\n";
         $out .= "<br></div>";
         return $out;
+    }
+
+    private function _createChecklistTableSnippet() {
+        return view('snippets.optimizationchecklist', []);
     }
 
     private function _createAdsSnippet()
