@@ -3285,7 +3285,7 @@ header .pro-flag {
   display: block;
   align-self: flex-end;
   position: relative;
-  top: -0.05em;
+  top: 0.05em;
 }
 
 .home_feature_main {
