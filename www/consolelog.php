@@ -1,5 +1,5 @@
 <?php
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 
 // this output buffer hack avoids a bit of circularity
 // on one hand we want the contents of header.inc
