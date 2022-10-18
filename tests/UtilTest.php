@@ -18,14 +18,14 @@ final class UtilTest extends TestCase
 
     public function testGetSetting(): void
     {
-        $override_settings_file = __DIR__ . '/fixtures/settings.ini';
+        $override_settings_file = TESTS_PATH . '/fixtures/settings.ini';
         $value = Util::getSetting('product', false, $override_settings_file);
         $this->assertEquals('WebPagetest', $value);
     }
 
     public function testGetSettingWithNullDefault(): void
     {
-        $override_settings_file = __DIR__ . '/fixtures/settings.ini';
+        $override_settings_file = TESTS_PATH . '/fixtures/settings.ini';
         $value = Util::getSetting('product', null, $override_settings_file);
         $this->assertEquals('WebPagetest', $value);
     }

@@ -75,6 +75,30 @@ function PruneCruxCache()
         }
     }
 }
+// returns a string of the Real User Measurement title for results.php if CrUX has collectionPeriod
+function RealUserMeasurementCruxTitle($pageData)
+{
+    if (
+        isset($pageData['CrUX']['collectionPeriod']) &&
+        isset($pageData['CrUX']['collectionPeriod']['firstDate']) &&
+        isset($pageData['CrUX']['collectionPeriod']['lastDate'])
+    ) {
+        $firstDate = $pageData['CrUX']['collectionPeriod']['firstDate'];
+        $lastDate = $pageData['CrUX']['collectionPeriod']['lastDate'];
+        $startDate = date('F j\, Y', mktime(0, 0, 0, $firstDate['month'], $firstDate['day'], $firstDate['year']));
+        $endDate = date('F j\, Y', mktime(0, 0, 0, $lastDate['month'], $lastDate['day'], $lastDate['year']));
+        // Example: Real User Measurements (Collected anonymously by Chrome browser via Chrome User Experience Report, between October 15, 2022 and September 18, 2022)
+        return sprintf('<h3 class="hed_sub"> 
+                            Real User Measurements 
+                            <em>(Collected anonymously by Chrome browser via Chrome User Experience Report, between %s and %s)</em>
+                        </h3>', $startDate, $endDate);
+    } else {
+        return '<h3 class="hed_sub"> 
+                    Real User Measurements 
+                    <em>(Collected anonymously by Chrome browser via Chrome User Experience Report)</em>
+                </h3>';
+    }
+}
 
 function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels = true, $includeMetricName = true)
 {
@@ -108,7 +132,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             $cruxStyles = true;
         }
         echo '<div class="crux">';
-        echo '<h3 class="hed_sub">Real User Measurements <em>(Collected anonymously by Chrome browser via Chrome User Experience Report.)</em></h3>';
+        echo RealUserMeasurementCruxTitle($pageData);
         echo '<div class="crux_legends"><strong>WPT\'s Metrics for comparison:</strong>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> ';

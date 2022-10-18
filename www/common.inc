@@ -5,7 +5,7 @@
 // found in the LICENSE.md file.
 
 // Load app and composer-based dependencies
-require_once(__DIR__ . '/../vendor/autoload.php');
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use WebPageTest\Util;
 use WebPageTest\User;
@@ -52,11 +52,11 @@ if (Util::getSetting('cp_auth')) {
 }
 
 // Load local deps
-require_once(__DIR__ . '/common_lib.inc');
-require_once(__DIR__ . '/plugins.php.inc');
-require_once(__DIR__ . '/util.inc');
+require_once INCLUDES_PATH . '/common_lib.inc';
+require_once INCLUDES_PATH . '/plugins.php.inc';
+require_once INCLUDES_PATH . '/util.inc';
 
-// constants that require common_lib nand cannot be in constants.inc
+// constants that require common_lib and cannot be in constants.inc
 if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')) {
     define('FRIENDLY_URLS', true);
     define('VER_TIMELINE', '28/');       // version of the timeline javascript
@@ -120,7 +120,7 @@ extract($_POST, EXTR_SKIP | EXTR_PREFIX_ALL | EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP | EXTR_PREFIX_ALL | EXTR_REFS, 'req');
 
 // load dev settings
-$dev_settings = __DIR__ . '/dev.php';
+$dev_settings = WWW_PATH . '/dev.php';
 if (file_exists($dev_settings)) {
     require_once $dev_settings;
 }
@@ -322,11 +322,11 @@ if ($supportsSaml && !$supportsCPAuth) {
  * Load app specific middleware
  */
 if ($supportsCPAuth) {
-    require_once __DIR__ . '/common/AttachClient.php';
-    require_once __DIR__ . '/common/AttachUser.php';
-    require_once __DIR__ . '/common/AttachSignupClient.php';
-    require_once __DIR__ . '/common/AttachBannerMessageManager.php';
-    require_once __DIR__ . '/common/CheckCSRF.php';
+    require_once INCLUDES_PATH . '/common/AttachClient.php';
+    require_once INCLUDES_PATH . '/common/AttachUser.php';
+    require_once INCLUDES_PATH . '/common/AttachSignupClient.php';
+    require_once INCLUDES_PATH . '/common/AttachBannerMessageManager.php';
+    require_once INCLUDES_PATH . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data
@@ -457,7 +457,7 @@ if (strlen($id)) {
             if ($metaInfo['experiment'] && $metaInfo['experiment']['control'] === false) {
                 $experiment = true;
 
-                require_once __DIR__ . '/include/UrlGenerator.php';
+                require_once INCLUDES_PATH . '/include/UrlGenerator.php';
 
                 $experimentOriginalTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['source_id'], 0, 0);
                 $experimentOriginalTestHref = $experimentOriginalTestUrlGenerator->resultSummary();
@@ -495,8 +495,8 @@ if (array_key_exists('medianMetric', $_REQUEST)) {
     $median_metric = htmlspecialchars($_REQUEST['medianMetric']);
 }
 
-if (is_file('./settings/custom_common.inc.php')) {
-    include('./settings/custom_common.inc.php');
+if (is_file(SETTINGS_PATH . '/custom_common.inc.php')) {
+    include(SETTINGS_PATH . '/custom_common.inc.php');
 }
 
-require_once __DIR__ . '/experiments/user_access.inc';
+require_once INCLUDES_PATH . '/experiments/user_access.inc';

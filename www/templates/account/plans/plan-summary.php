@@ -3,6 +3,7 @@
     <?php require_once __DIR__ . '/includes/subhed.php'; ?>
     <?php require_once __DIR__ . '/includes/billing-address-form.php'; ?>
     <!-- main form -->
+    <div id="notification-banner-container"></div>
     <form id="wpt-account-upgrade" method="post" action="/account">
         <!-- payment -->
         <div class="box card-section">
@@ -72,6 +73,12 @@
                 button.disabled = false;
                 button.removeAttribute('disabled');
                 button.innerText = 'Upgrade Plan';
+
+                const upgradeError = new CustomEvent("cc-upgrade-error", {
+                  bubbles: true,
+                  detail: err.errors
+                });
+                event.target.dispatchEvent(upgradeError);
                 console.log('token ERROR - err: ', err);
             }
         );
@@ -97,6 +104,17 @@
             const submitButton = form.querySelector('button[type=submit]');
             submitButton.disabled = false;
             submitButton.removeAttribute('disabled');
+        });
+    })();
+</script>
+<script>
+    (() => {
+        document.addEventListener('cc-upgrade-error', e => {
+            const el = document.createElement('div');
+            el.classList.add('notification-banner', 'notification-banner__error');
+            el.innerText = e.detail;
+            document.querySelector('#notification-banner-container').appendChild(el);
+
         });
     })();
 </script>

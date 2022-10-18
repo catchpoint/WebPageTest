@@ -8,7 +8,7 @@ ob_start();
 define('NOBANNER', true); // otherwise Twitch banner shows 2x
 $tab = 'Test Result';
 $subtab = 'Console Log';
-include_once 'header.inc';
+include_once INCLUDES_PATH . '/header.inc';
 $results_header = ob_get_contents();
 ob_end_clean();
 

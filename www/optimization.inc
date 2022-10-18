@@ -6,13 +6,13 @@
 require_once __DIR__ . '/include/TestPaths.php';
 
 /**
-* Re-format the optimization report to make it prettier
-*
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @return string The optimization report
-*/
+ * Re-format the optimization report to make it prettier
+ *
+ * @param mixed $testPath
+ * @param mixed $run
+ * @param mixed $cached
+ * @return string The optimization report
+ */
 function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
     $localPaths = new TestPaths(GetTestPath($id), $run, $cached, 1);
@@ -70,10 +70,10 @@ function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportKeepAlive(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -106,10 +106,10 @@ function ReportKeepAlive(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportTransferCompression(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -162,10 +162,10 @@ function ReportTransferCompression(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportImageCompression(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -272,10 +272,10 @@ function ReportProgressiveJpeg(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportCache(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -330,10 +330,10 @@ function ReportCache(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportCombine(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -367,10 +367,10 @@ function ReportCombine(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportCDN(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -413,10 +413,10 @@ function ReportCDN(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportMinify(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -469,10 +469,10 @@ function ReportMinify(&$pageData, &$requests, $step)
 }
 
 /**
-*
-*
-* @param mixed $requests
-*/
+ *
+ *
+ * @param mixed $requests
+ */
 function ReportCookies(&$pageData, &$requests, $step)
 {
     $out = "";
@@ -504,95 +504,3 @@ function ReportCookies(&$pageData, &$requests, $step)
     $out .= "</ol>\n";
     return $out;
 }
-
-/**
-* Display a glossary for the optimization results
-*/
-function dumpOptimizationGlossary()
-{
-    ?>
-
-    <h4>Glossary:</h4>
-    <div class="scrollableTable">
-    <table class="pretty details" >
-
-        <tr><th class="nowrap" rowspan=2 colspan=1>First Byte Time</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >Time to First Byte for the page (back-end processing + redirects)</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >The target time is the time needed for the DNS, socket and SSL negotiations + 100ms.  A single letter grade will be deducted for every 100ms beyond the target.</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=2 colspan=1>Keep-Alive</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All objects that are from a domain that serves more than one object for the page (i.e. if only a single object is served from a given domain it will not be checked)</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >The response header contains a "keep-alive" directive or the same socket was used for more than one object from the given host</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=2 colspan=1>GZIP Text</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All objects with a mime type of "text/*" or "*javascript*"</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Transfer-encoding is checked to see if it is gzip.  If it is not then the file is compressed and the percentage of compression
-            is the result (so a page that can save 30% of the size of it's text by compressing would yield a 70% test result)</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th rowspan=2 colspan=1>Compress Images</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >JPEG Images</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
-            The overall score is the percentage of image bytes that can be saved by re-compressing the images.
-            </td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th rowspan=2 colspan=1>Use Progressive JPEGs</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All JPEG Images</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Each JPEG image is checked and the resulting score is the percentage of JPEG bytes that were served as progressive images relative to the total JPEG bytes.</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=2 colspan=1>Cache Static</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >Any non-html object with a mime type of "text/*", "*javascript*" or "image/*" that does not
-                explicitly have an Expires header of 0 or -1, a cache-control header of "private",
-                "no-store" or "no-cache" or a pragma header of "no-cache"</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >
-                An "Expires" header is present (and is not 0 or -1) or a "cache-control: max-age" directive is present and set for an hour or greater. If the expiration is set for less 7 days you will get a warning. If the expiration is set for less than 1 hour you will get a failure. This only applies to max-age currently.
-            </td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=2 colspan=1>Use A CDN</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All static non-html content (css, js and images)</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN. The current list of known CDN's is <a href="https://github.com/WPO-Foundation/wptagent/blob/master/internal/optimization_checks.py#L48">here</a></td>
-        </tr>
-    </table>
-    </div>
-    <?php
-}
-?>

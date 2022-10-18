@@ -5,11 +5,11 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestPaths.php';
-require_once __DIR__ . '/include/TestRunResults.php';
-require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
-require_once __DIR__ . '/include/AccordionHtmlHelper.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/include/DomainBreakdownHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Domains','WebPageTest','Website Speed Test');
 $page_description = "Website domain breakdown$testLabel";
