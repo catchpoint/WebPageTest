@@ -225,7 +225,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 }
 
                 //connectivity
-                echo '<span class="test_presets_tag">' . $connectivity . '</span>';
+                echo '<span class="test_presets_tag"><img src="/assets/images/test_icons/signal.svg" alt="">' . $connectivity . '</span>';
                 //location
                 echo '<span class="test_presets_tag">';
 
