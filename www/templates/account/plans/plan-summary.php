@@ -46,7 +46,7 @@
     </form>
 </div>
 
-
+<script src="/assets/js/braintree-error-parser.js"></script>
 <script>
     var hiddenNonceInput = document.querySelector('#hidden-nonce-input');
     var form = document.querySelector("#wpt-account-upgrade");
@@ -76,7 +76,7 @@
 
                 const upgradeError = new CustomEvent("cc-upgrade-error", {
                   bubbles: true,
-                  detail: err.errors
+                  detail: BraintreeErrorParser.parse(err.errors)
                 });
                 event.target.dispatchEvent(upgradeError);
                 console.log('token ERROR - err: ', err);
@@ -112,7 +112,7 @@
         document.addEventListener('cc-upgrade-error', e => {
             const el = document.createElement('div');
             el.classList.add('notification-banner', 'notification-banner__error');
-            el.innerText = e.detail;
+            el.innerHTML = `<h4>Billing Error: ${e.detail.text}</h4><p>${e.detail.implication}</p>`;
             document.querySelector('#notification-banner-container').appendChild(el);
 
         });
