@@ -4158,13 +4158,15 @@ h2.light {
   padding: 0 2rem;
 }
 
-table.history {
+table.history,
+table.checklist {
   border-collapse: collapse;
   font-size: 0.875em;
   margin: 0;
 }
 
-table.history.pretty {
+table.history.pretty,
+table.checklist.pretty {
   margin: 0;
   min-width: 100%;
 }
@@ -4194,11 +4196,18 @@ table.history tbody th {
 }
 
 .history th,
-.history td {
+.history td,
+table.checklist th,
+table.checklist td {
   white-space: nowrap;
+  border: 1px solid #ddd;
+  padding: 0.4rem 1rem;
+}
+
+.history th,
+.history td {
   text-align: left;
   padding: 1rem;
-  border: 1px solid #ddd;
 }
 
 .history th.date,
@@ -8494,4 +8503,15 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 
 .glossary li {
   padding: 3px 0;
+}
+.table-cell-even {
+  background: whitesmoke;
+}
+
+.table-cell-warning {
+  background: yellow;
+}
+
+.table-cell-error {
+  background: red;
 }
