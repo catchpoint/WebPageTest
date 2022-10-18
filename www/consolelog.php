@@ -1,5 +1,8 @@
 <?php
 
+include 'common.inc';
+set_time_limit(30); // Prevent the consolelogs page from running out of control.
+
 // this output buffer hack avoids a bit of circularity
 // on one hand we want the contents of header.inc
 // on the other we want to get access to TestRunResults prior to that
