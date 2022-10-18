@@ -6,7 +6,14 @@ A multi-container Docker image for Webpagetest development.
 - Second docker container is php:7.4-fpm-alpine container called "Dockerfile-PHP"
 - Third Docker container is Ubuntu container called "Dockerfile-wptagent"
 
+## Platforms
+Recommended Platforms:
+Windows: Untested, but should work.
+Macintosh: Tested.
+Linux: Tested.
+WSL2: Failed.
 
+The reason for failure on WSL2 is because WSL2 does not have the network interface to be able to Traffic Shape, Which is needed for WPT Agent.
 ## Running A Local Webpagetest Server with Wptagent
 
 Clone the project
@@ -27,7 +34,7 @@ Building / Running Image
 
 Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container. !IMPORTANT! Traffic-Shapping will not work with Docker image of WPTagent. Instead goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)".
 
-## Running a Standalone Agent with the Server
+## Running a Standalone Agent with the Server (Recommended)
 Since the Webpagetest container is packaged with an agent, we first need to stop that agent from running on "docker-compose up". The most elegant way is to just comment out the agent portion of the docker-compose.yml.
 
 ```docker-compose.yml
@@ -69,7 +76,14 @@ Looking for more information setting up? Check Out
  - `https://www.robinosborne.co.uk/2021/12/22/automate-your-webpagetest-private-instance-with-terraform-2021-edition/`
 
 
+## Other Setting
 
+### Crux
+![Alt text](assests/crux.png?raw=true "Index.png")
+
+Crux or Real User Measurements can be enable through 
+`docker/local/wptconfig/settings.ini` adding
+`crux_api_key=[API_KEY]` to the settings.
 
 
 ## Debugging
@@ -151,8 +165,7 @@ Please note pathMappings goes as follows (Docker location:/.../.../Webpagetest (
   ``` 
 
 ### localhost/install/ Filesystem checks all failed
-  Php doesn't have permission to read/write. The Fix is to change Php user:group permissions to be the same
-  as the user:group external to the container
+  Php doesn't have permission to read/write. The Fix is to change Php user:group permissions to be the same as the user:group external to the container: most prevalent on linux/mac os
   ```bash
   #Inside your Linux Terminal or WSL
   id -u #Grab the user Id
@@ -169,8 +182,13 @@ Please note pathMappings goes as follows (Docker location:/.../.../Webpagetest (
         - GID=${GID:-1000} # change this with your group id
     user: "1000:1000" # userId:groupID Change these values as well
   ```
+  If the problem still persists, another method is to change the permissions of webpagetest folder to match "1000:1000". Inside of webpagetest directory you can change the permissions with a command like.
+  ```cmd
+  sudo chown -R 1000:1000 ./*
+  ```
+  
+  
   More information about the problem
   https://aschmelyun.com/blog/fixing-permissions-issues-with-docker-compose-and-php/
 
 
-    
