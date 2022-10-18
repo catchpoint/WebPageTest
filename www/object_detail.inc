@@ -3,8 +3,8 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once __DIR__ . '/devtools.inc.php';
-require_once __DIR__ . '/include/UrlGenerator.php';
+require_once INCLUDES_PATH . '/devtools.inc.php';
+require_once INCLUDES_PATH . '/include/UrlGenerator.php';
 
 /**
 * Load the object data file.

@@ -7,7 +7,7 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
     header("HTTP/1.0 304 Not Modified");
 } else {
     include 'common.inc';
-    $labelFont = __DIR__ . '/video/font/sourcesanspro-semibold.ttf';
+    $labelFont = WWW_PATH . '/video/font/sourcesanspro-semibold.ttf';
     $tests = ParseTests();
     if ($tests) {
         $width = 0;

@@ -5,8 +5,9 @@
 // found in the LICENSE.md file.
 
 include 'common.inc';
-require_once('page_data.inc');
-require_once('testStatus.inc');
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/testStatus.inc';
+
 set_time_limit(3600);
 
 $use_median_run = false;

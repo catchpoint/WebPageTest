@@ -6,11 +6,10 @@
 
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
+require_once INCLUDES_PATH . '/archive.inc';
+require_once INCLUDES_PATH . '/util.inc';
+require_once INCLUDES_PATH . '/logging.inc';
 
-require_once(__DIR__ . '/archive.inc');
-require_once(__DIR__ . '/util.inc');
-
-require_once(__DIR__ . '/logging.inc');
 use WebPageTest\Util;
 use WebPageTest\Util\Cache;
 
@@ -137,16 +136,16 @@ function GetLocationFallbacks($location)
 function LoadLocationsIni()
 {
     $ec2_allow = GetSetting('ec2_allow');
-    $locations_file = __DIR__ . '/settings/locations.ini';
-    if (file_exists(__DIR__ . '/settings/common/locations.ini')) {
-        $locations_file = __DIR__ . '/settings/common/locations.ini';
+    $locations_file = SETTINGS_PATH . '/locations.ini';
+    if (file_exists(SETTINGS_PATH . '/common/locations.ini')) {
+        $locations_file = SETTINGS_PATH . '/common/locations.ini';
     }
-    if (file_exists(__DIR__ . '/settings/server/locations.ini')) {
-        $locations_file = __DIR__ . '/settings/server/locations.ini';
+    if (file_exists(SETTINGS_PATH . '/server/locations.ini')) {
+        $locations_file = SETTINGS_PATH . '/server/locations.ini';
     }
     $locations = parse_ini_file($locations_file, true);
     if (GetSetting('ec2_locations')) {
-        $ec2 = parse_ini_file(__DIR__ . '/settings/ec2_locations.ini', true);
+        $ec2 = parse_ini_file(SETTINGS_PATH . '/ec2_locations.ini', true);
         if ($ec2 && is_array($ec2) && isset($ec2['locations'])) {
             if ($locations && is_array($locations) && isset($locations['locations'])) {
                 // Merge the top-level locations
@@ -598,8 +597,8 @@ function LoadMobileDevices()
     if (isset($MOBILE_DEVICES)) {
         return $MOBILE_DEVICES;
     }
-    if (is_file(__DIR__ . '/settings/mobile_devices.ini')) {
-        $MOBILE_DEVICES = parse_ini_file(__DIR__ . '/settings/mobile_devices.ini', true);
+    if (is_file(SETTINGS_PATH . '/mobile_devices.ini')) {
+        $MOBILE_DEVICES = parse_ini_file(SETTINGS_PATH . '/mobile_devices.ini', true);
         return $MOBILE_DEVICES;
     }
 }
@@ -1564,7 +1563,7 @@ function GetDailyTestNum()
         $lock = Lock("TestNum");
         if ($lock) {
             if (!$num) {
-                $filename = __DIR__ . '/dat/testnum.dat';
+                $filename = WWW_PATH . '/dat/testnum.dat';
                 $testData = array('day' => $day, 'num' => 0);
                 $newData = json_decode(file_get_contents($filename), true);
                 if (
@@ -2234,7 +2233,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
     }
 
     $location = array();
-    $dir = __DIR__ . "/tmp/testers-$locationId";
+    $dir = TEMP_DIR . "/testers-$locationId";
     if (is_dir($dir)) {
         $now = time();
         $elapsed_time = null;
@@ -2361,7 +2360,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
 */
 function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null)
 {
-    $dir = __DIR__ . "/tmp/testers-$location";
+    $dir = TEMP_DIR . "/testers-$location";
     $tester_file = $dir . '/' . sha1($tester) . '.json';
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
@@ -2458,7 +2457,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300)
 {
     global $RemainingLocks;
     $lock = null;
-    $tmpdir =  __DIR__ . '/tmp';
+    $tmpdir =  TEMP_DIR;
     if (strlen($name)) {
         if (!is_dir($tmpdir)) {
             mkdir($tmpdir, 0777, true);
@@ -3761,12 +3760,12 @@ function GetServerKey()
         $key = null;
     }
     if (!isset($key)) {
-        $keys_file = __DIR__ . '/settings/keys.ini';
-        if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
-            $keys_file = __DIR__ . '/settings/common/keys.ini';
+        $keys_file = SETTINGS_PATH . '/keys.ini';
+        if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
+            $keys_file = SETTINGS_PATH . '/common/keys.ini';
         }
-        if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
-            $keys_file = __DIR__ . '/settings/server/keys.ini';
+        if (file_exists(SETTINGS_PATH . '/server/keys.ini')) {
+            $keys_file = SETTINGS_PATH . '/server/keys.ini';
         }
         $keys = parse_ini_file($keys_file, true);
         if (isset($keys) && isset($keys['server']['key'])) {
@@ -3953,14 +3952,14 @@ function GenerateTestID($private = false, $locationShard = null)
     }
     $today = new DateTime("now", new DateTimeZone('UTC'));
     $testId = $today->format('ymd_') . $id;
-    $path = __DIR__ . '/' . GetTestPath($testId);
+    $path = WWW_PATH . '/' . GetTestPath($testId);
 
   // make absolutely CERTAIN that this test ID doesn't already exist
     while (is_dir($path)) {
         // fall back to random ID's
         $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
         $testId = $today->format('ymd_') . $id;
-        $path = __DIR__ . '/' . GetTestPath($testId);
+        $path = WWW_PATH . '/' . GetTestPath($testId);
     }
 
     return $testId;
@@ -3985,7 +3984,7 @@ function AddIniLine(&$ini, $key, $value)
 function ProcessUploadedTest($id)
 {
     if (ValidateTestId($id)) {
-        $testPath = __DIR__ . '/' . GetTestPath($id);
+        $testPath = WWW_PATH . '/' . GetTestPath($id);
         if (gz_is_file("$testPath/job.json")) {
             $job = json_decode(gz_file_get_contents("$testPath/job.json"), true);
             $test = $job;

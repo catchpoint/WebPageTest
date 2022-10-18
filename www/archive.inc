@@ -3,9 +3,9 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once(__DIR__ . '/testStatus.inc');
-require_once(__DIR__ . '/logging.inc');
-require_once(__DIR__ . '/common_lib.inc');
+require_once INCLUDES_PATH . '/testStatus.inc';
+require_once INCLUDES_PATH . '/logging.inc';
+require_once INCLUDES_PATH . '/common_lib.inc';
 /**
 * See if the file should be skipped when archiving (usually just cache files)
 *

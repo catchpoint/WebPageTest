@@ -4,7 +4,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 $DevToolsCacheVersion = '1.7';
-require_once __DIR__ . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
 
 /**
 * Load the timeline data for the given test run (from a timeline file or a raw dev tools dump)
@@ -1613,7 +1613,7 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0)
 function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0)
 {
     if (!$endTime) {
-        require_once(__DIR__ . '/page_data.inc');
+        require_once(INCLUDES_PATH . '/page_data.inc');
         $pageData =  loadPageStepData($localPaths);
         if (isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
             $endTime = $pageData['fullyLoaded'];

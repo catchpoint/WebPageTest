@@ -4,23 +4,23 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
-require_once('object_detail.inc');
-require_once('page_data.inc');
-require_once('waterfall.inc');
+require_once INCLUDES_PATH . '/object_detail.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/waterfall.inc';
 
 // Prevent the details page from running out of control.
 set_time_limit(30);
 
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestResults.php';
-require_once __DIR__ . '/include/TestRunResults.php';
-require_once __DIR__ . '/include/RunResultHtmlTable.php';
-require_once __DIR__ . '/include/UserTimingHtmlTable.php';
-require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
-require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
-require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
-require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
-require_once __DIR__ . '/include/AccordionHtmlHelper.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
+require_once INCLUDES_PATH . '/include/UserTimingHtmlTable.php';
+require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/RequestDetailsHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/RequestHeadersHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/AccordionHtmlHelper.php';
 
 $testInfo = TestInfo::fromFiles($testPath);
 $testResults = TestResults::fromFiles($testInfo);
@@ -178,7 +178,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
                 if (isset($testRunResults)) {
                     echo '<div class="cruxembed">';
-                    require_once(__DIR__ . '/include/CrUX.php');
+                    require_once(INCLUDES_PATH . '/include/CrUX.php');
                     if ($cached) {
                         InsertCruxHTML(null, $testRunResults);
                     } else {
