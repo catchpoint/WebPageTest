@@ -33,6 +33,8 @@ services:
         - GID=${GID:-1000}
     # user: "1000:1000"
     # privileged: true
+    extra_hosts: # Needed for xdebug 
+      - "host.docker.internal:host-gateway"
     expose:
       - 9000
     volumes:
