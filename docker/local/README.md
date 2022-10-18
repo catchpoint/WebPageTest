@@ -8,13 +8,13 @@ A multi-container Docker image for Webpagetest development.
 
 ## Platforms
 Recommended Platforms:
-Windows: Untested, but should work.
-Macintosh: Tested.
-Linux: Tested.
-WSL2: Failed.
+- Windows: Untested, but should work.
+- Macintosh: Tested.
+- Linux: Tested.
+- WSL2: Failed.
 
 The reason for failure on WSL2 is because WSL2 does not have the network interface to be able to Traffic Shape, Which is needed for WPT Agent.
-## Running A Local Webpagetest Server with Wptagent
+## Running A Local Webpagetest Server with Wptagent(Recommended)
 
 Clone the project
 
@@ -29,17 +29,19 @@ Go to the project directory
 Building / Running Image
 
 ```bash
-  docker-compose up
+  sudo docker-compose up
 ```
 
-Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container. !IMPORTANT! Traffic-Shapping will not work with Docker image of WPTagent. Instead goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)".
+Start Any Web Browser and navigate to "localhost" to see the Webpagetest homepage. To check if webpagetest is working correctly please go down to "Webpagetest Installation Check". Another resource down below is a setup guide to "Debugging PHP with XDebug on VScode" with this docker container. !IMPORTANT! Traffic-Shapping will work with the Docker image of WPTagent on certain platforms.
 
-## Running a Standalone Agent with the Server (Recommended)
+## Running a Standalone Agent with the Server
 Since the Webpagetest container is packaged with an agent, we first need to stop that agent from running on "docker-compose up". The most elegant way is to just comment out the agent portion of the docker-compose.yml.
 
 ```docker-compose.yml
   #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
   agent:
+    cap_add:
+      - NET_ADMIN
     build:
       context: .
       dockerfile: docker/local/Dockerfile-wptagent
@@ -130,8 +132,14 @@ Please note pathMappings goes as follows (Docker location:/.../.../Webpagetest (
 ## Unexpected problems installing
 
 ### Running Web Tests Results in "Bad" Results
-  One of the most common reasons for "Bad" results is Traffic-shapping. Traffic-Shappiing will not work with Docker-container. To disable the defaulted traffic-shapping you have to goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)"
+  One of the most common reasons for "Bad" results is Traffic-shapping. Traffic-Shappiing will not work with certain platforms. To disable the defaulted traffic-shapping you have to goto "Advanced Configuration" -> "Chromium" -> Enable "Use Chrome dev tools traffic-shaping (not recommended)"
   ![Alt text](assests/xdebug.png?raw=true "traffic-shape.png")
+
+  If you are on a Tested platform and want traffic-shapping make sure you are running with sudo privileges on the docker compose.
+
+  ```cmd
+  sudo docker-compose up
+  ```
   
 
 ### Another Process is using localhost port 80

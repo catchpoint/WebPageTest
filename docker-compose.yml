@@ -31,7 +31,7 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
-    user: "1000:1000"
+    # user: "1000:1000"
     # privileged: true
     expose:
       - 9000
@@ -54,6 +54,8 @@ services:
 
   #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
   agent:
+    cap_add: #### Allows traffic shapping
+      - NET_ADMIN
     build:
       context: .
       dockerfile: docker/local/Dockerfile-wptagent
