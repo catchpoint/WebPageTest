@@ -18,7 +18,6 @@ $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
 // template
-require_once WWW_PATH . '/resources/view.php';
 echo view('pages.consolelog', [
     'test_results_view' => true,
     'body_class' => 'result',

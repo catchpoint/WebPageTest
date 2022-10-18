@@ -102,7 +102,6 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
     ];
     /*
     // uncomment for Blade
-    require_once __DIR__ . '/resources/view.php';
     echo view('pages.testhistory', $vars);
     exit();
     */
