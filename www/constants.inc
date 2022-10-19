@@ -7,6 +7,10 @@
 define('APP_ROOT', realpath(__DIR__ . '/../'));
 define('WWW_PATH', realpath(APP_ROOT . '/www/'));
 define('ASSETS_PATH', realpath(WWW_PATH . '/assets/'));
+define('TESTS_PATH', realpath(APP_ROOT . '/tests/'));
+define('INCLUDES_PATH', WWW_PATH); // same as www for now
+define('SETTINGS_PATH', realpath(WWW_PATH . '/settings/'));
+define('TEMP_DIR', realpath(WWW_PATH . '/tmp/'));
 
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_TYPOGRAPHY_CSS', @md5_file(ASSETS_PATH . '/css/typography.css'));          // version of the typography css file

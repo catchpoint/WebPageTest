@@ -10,13 +10,13 @@ require_once __DIR__ . '/common.inc';
 
 use WebPageTest\Util;
 
-require_once __DIR__ . '/optimization_detail.inc.php';
-require_once __DIR__ . '/breakdown.inc';
-require_once __DIR__ . '/testStatus.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestResults.php';
-require_once __DIR__ . '/include/RunResultHtmlTable.php';
-require_once __DIR__ . '/include/TestResultsHtmlTables.php';
+require_once INCLUDES_PATH . '/optimization_detail.inc.php';
+require_once INCLUDES_PATH . '/breakdown.inc';
+require_once INCLUDES_PATH . '/testStatus.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
+require_once INCLUDES_PATH . '/include/TestResultsHtmlTables.php';
 
 // if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
 if ($experiment && isset($experimentOriginalExperimentsHref)) {
@@ -79,7 +79,7 @@ $page_description = "Website performance test result$testLabel.";
             <?php
             $tab = 'Test Result';
             $subtab = 'Opportunities & Experiments';
-            require_once __DIR__ . '/header.inc';
+            require_once INCLUDES_PATH . '/header.inc';
             ?>
             <div class="results_main_contain">
             <div class="results_main">
@@ -130,12 +130,12 @@ $page_description = "Website performance test result$testLabel.";
                     $requests = $testStepResult->getRequests();
 
 
-                    include __DIR__ . '/experiments/common.inc';
+                    include INCLUDES_PATH . '/experiments/common.inc';
 
-                    include __DIR__ . '/experiments/summary.inc';
+                    include INCLUDES_PATH . '/experiments/summary.inc';
                 if ($experiment) {
                     $moreExperimentsLink = false;
-                    include __DIR__ . '/experiments/meta.inc';
+                    include INCLUDES_PATH . '/experiments/meta.inc';
                 }
                 ?>
 

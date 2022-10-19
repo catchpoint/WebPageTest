@@ -26,17 +26,9 @@ function setcookie($name, $value, $expiration, $path, $domain)
 function error_log($str)
 {
 }
-define('VER_TYPOGRAPHY_CSS', "foo.css");
-define('VER_LAYOUT_CSS', "layout.css");
-define('VER_CSS', "site.css");
-define('VER_HEADER_CSS', "header.css");
-define('VER_JS', "site.js");
-define('VER_BUTTON_CSS', "button.css");
-define('VER_ACCOUNT_CSS', "account.css");
-define('VER_JS_ACCOUNT', "account.js");
-define('VER_JS_ESTIMATE_TAXES', "estimate-taxes.js");
+
 define('FRIENDLY_URLS', true);
-define('EMBED', false);
+
 
 final class AccountTest extends TestCase
 {

@@ -41,16 +41,16 @@ if (
 }
 
 require_once('common.inc');
-require_once('page_data.inc');
-require_once('testStatus.inc');
-require_once('video/visualProgress.inc.php');
-require_once('breakdown.inc');
-require_once('devtools.inc.php');
-require_once('archive.inc');
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/testStatus.inc';
+require_once INCLUDES_PATH . '/video/visualProgress.inc.php';
+require_once INCLUDES_PATH . '/breakdown.inc';
+require_once INCLUDES_PATH . '/devtools.inc.php';
+require_once INCLUDES_PATH . '/archive.inc';
 
-require_once __DIR__ . '/include/JsonResultGenerator.php';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/JsonResultGenerator.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
 
 if (isset($test['test']['batch']) && $test['test']['batch']) {
     $_REQUEST['f'] = 'json';

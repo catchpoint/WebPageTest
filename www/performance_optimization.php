@@ -123,9 +123,10 @@ $isMultistep = $testRunResults->countSteps() > 1;
             }
             ?>
 
+            <h3 class="hed_sub">Glossary</h3>
             <?php
-                echo '<h3 class="hed_sub">Optimization Details</h3>';
-                dumpOptimizationGlossary();
+                require_once __DIR__ . '/resources/view.php';
+                echo view('snippets.glossary', []);
             ?>
 
         </div>

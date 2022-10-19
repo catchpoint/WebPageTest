@@ -26,56 +26,59 @@ class App extends Container
     }
 }
 
-// Configuration
-$pathsToTemplates = [__DIR__ . '/views'];
-$pathToCompiledTemplates = __DIR__ . '/compiled';
-
-// Dependencies
-$container = App::getInstance();
-$container->instance(Application::class, $container);
-
-$filesystem = new Filesystem();
-$eventDispatcher = new Dispatcher($container);
-
-// Create View Factory capable of rendering PHP and Blade templates
-$viewResolver = new EngineResolver();
-$bladeCompiler = new BladeCompiler($filesystem, $pathToCompiledTemplates);
-
-$viewResolver->register('blade', function () use ($bladeCompiler) {
-    return new CompilerEngine($bladeCompiler);
-});
-
-$viewResolver->register('php', function () use ($filesystem) {
-    return new PhpEngine($filesystem);
-});
-
-$viewFinder = new FileViewFinder($filesystem, $pathsToTemplates);
-$viewFactory = new Factory($viewResolver, $viewFinder, $eventDispatcher);
-$viewFactory->setContainer($container);
-Facade::setFacadeApplication($container);
-$container->instance(\Illuminate\Contracts\View\Factory::class, $viewFactory);
-$container->alias(
-    \Illuminate\Contracts\View\Factory::class,
-    (new class extends View {
-        public static function getFacadeAccessor()
-        {
-            return parent::getFacadeAccessor();
-        }
-    })::getFacadeAccessor()
-);
-$container->instance(BladeCompiler::class, $bladeCompiler);
-$container->alias(
-    BladeCompiler::class,
-    (new class extends Blade {
-        public static function getFacadeAccessor()
-        {
-            return parent::getFacadeAccessor();
-        }
-    })::getFacadeAccessor()
-);
-
 function view($tmpl, $vars)
 {
-    global $viewFactory;
+    static $viewFactory;
+    if (is_null($viewFactory)) {
+        // Configuration
+        $pathsToTemplates = [realpath(__DIR__ . '/views')];
+        $pathToCompiledTemplates = realpath(__DIR__ . '/compiled');
+
+        // Dependencies
+        $container = App::getInstance();
+        $container->instance(Application::class, $container);
+
+        $filesystem = new Filesystem();
+        $eventDispatcher = new Dispatcher($container);
+
+        // Create View Factory capable of rendering PHP and Blade templates
+        $viewResolver = new EngineResolver();
+        $bladeCompiler = new BladeCompiler($filesystem, $pathToCompiledTemplates);
+
+        $viewResolver->register('blade', function () use ($bladeCompiler) {
+            return new CompilerEngine($bladeCompiler);
+        });
+
+        $viewResolver->register('php', function () use ($filesystem) {
+            return new PhpEngine($filesystem);
+        });
+
+        $viewFinder = new FileViewFinder($filesystem, $pathsToTemplates);
+        $viewFactory = new Factory($viewResolver, $viewFinder, $eventDispatcher);
+        $viewFactory->setContainer($container);
+        Facade::setFacadeApplication($container);
+        $container->instance(\Illuminate\Contracts\View\Factory::class, $viewFactory);
+        $container->alias(
+            \Illuminate\Contracts\View\Factory::class,
+            (new class extends View
+            {
+                public static function getFacadeAccessor()
+                {
+                    return parent::getFacadeAccessor();
+                }
+            })::getFacadeAccessor()
+        );
+        $container->instance(BladeCompiler::class, $bladeCompiler);
+        $container->alias(
+            BladeCompiler::class,
+            (new class extends Blade
+            {
+                public static function getFacadeAccessor()
+                {
+                    return parent::getFacadeAccessor();
+                }
+            })::getFacadeAccessor()
+        );
+    }
     return $viewFactory->make($tmpl, $vars)->render();
 }

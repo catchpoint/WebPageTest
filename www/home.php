@@ -41,23 +41,23 @@ if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a website URL...';
-$profile_file = __DIR__ . '/settings/profiles.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles.ini')) {
-    $profile_file = __DIR__ . '/settings/common/profiles.ini';
+$profile_file = SETTINGS_PATH . '/profiles.ini';
+if (file_exists(SETTINGS_PATH . '/common/profiles.ini')) {
+    $profile_file = SETTINGS_PATH . '/common/profiles.ini';
 }
-if (file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-    $profile_file = __DIR__ . '/settings/server/profiles.ini';
+if (file_exists(SETTINGS_PATH . '/server/profiles.ini')) {
+    $profile_file = SETTINGS_PATH . '/server/profiles.ini';
 }
 $profiles = parse_ini_file($profile_file, true);
-$connectivity_file = './settings/connectivity.ini.sample';
-if (file_exists('./settings/connectivity.ini')) {
-    $connectivity_file = './settings/connectivity.ini';
+$connectivity_file = SETTINGS_PATH . '/connectivity.ini.sample';
+if (file_exists(SETTINGS_PATH . '/connectivity.ini')) {
+    $connectivity_file = SETTINGS_PATH . '/connectivity.ini';
 }
-if (file_exists('./settings/common/connectivity.ini')) {
-    $connectivity_file = './settings/common/connectivity.ini';
+if (file_exists(SETTINGS_PATH . '/common/connectivity.ini')) {
+    $connectivity_file = SETTINGS_PATH . '/common/connectivity.ini';
 }
-if (file_exists('./settings/server/connectivity.ini')) {
-    $connectivity_file = './settings/server/connectivity.ini';
+if (file_exists(SETTINGS_PATH . '/server/connectivity.ini')) {
+    $connectivity_file = SETTINGS_PATH . '/server/connectivity.ini';
 }
 $connectivity = parse_ini_file($connectivity_file, true);
 $mobile_devices = LoadMobileDevices();
@@ -100,7 +100,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     <title>WebPageTest - Website Performance and Optimization Test</title>
     <?php
     $useScreenshot = true;
-    require_once __DIR__ . '/head.inc';
+    require_once INCLUDES_PATH . '/head.inc';
     ?>
 </head>
 
@@ -1027,7 +1027,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
             <div class="home_content_contain">
                 <div class="home_content">
                     <?php
-                    include(__DIR__ . '/include/home-subsections.inc');
+                    include(INCLUDES_PATH . '/include/home-subsections.inc');
                     ?>
                 </div>
                 <!--home_content_contain-->

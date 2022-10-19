@@ -21,7 +21,9 @@ use WebPageTest\Exception\ClientException;
     ) {
         if ($request_method == 'POST') {
             $csrf_token = $_POST['csrf_token'];
-            if ($csrf_token !== $_SESSION['csrf_token']) {
+            $session_token = $_SESSION['csrf_token'];
+            if ($csrf_token !== $session_token) {
+                unset($_SESSION['csrf_token']);
                 throw new ClientException("Invalid CSRF Token", $request->getRequestUri());
             }
         }

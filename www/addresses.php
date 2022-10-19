@@ -6,12 +6,12 @@
 include 'common.inc';
 
 if (isset($_REQUEST['k'])) {
-    $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/common/keys.ini';
+    $keys_file = SETTINGS_PATH . '/keys.ini';
+    if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
+        $keys_file = SETTINGS_PATH . '/common/keys.ini';
     }
-    if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/server/keys.ini';
+    if (file_exists(SETTINGS_PATH . '/server/keys.ini')) {
+        $keys_file = SETTINGS_PATH . '/server/keys.ini';
     }
     $keys = parse_ini_file($keys_file, true);
     if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {

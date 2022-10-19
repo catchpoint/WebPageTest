@@ -18,8 +18,8 @@ if ($userIsBot) {
     exit;
 }
 
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/har/HttpArchiveGenerator.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/har/HttpArchiveGenerator.php';
 
 $options = array();
 if (isset($_REQUEST['bodies'])) {
