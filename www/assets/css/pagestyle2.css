@@ -8504,6 +8504,7 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 .glossary li {
   padding: 3px 0;
 }
+
 .table-cell-even {
   background: whitesmoke;
 }
@@ -8515,3 +8516,4 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 .table-cell-error {
   background: red;
 }
+
