@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/common.inc';
 
 // this output buffer hack avoids a bit of circularity

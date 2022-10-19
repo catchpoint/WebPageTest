@@ -41,7 +41,8 @@ class PerformanceOptimizationHtmlSnippet
         return $out;
     }
 
-    private function _createChecklistTableSnippet() {
+    private function _createChecklistTableSnippet()
+    {
         return view('snippets.optimizationchecklist', []);
     }
 
