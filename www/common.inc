@@ -326,7 +326,7 @@ if ($supportsCPAuth) {
     require_once INCLUDES_PATH . '/common/AttachUser.php';
     require_once INCLUDES_PATH . '/common/AttachSignupClient.php';
     require_once INCLUDES_PATH . '/common/AttachBannerMessageManager.php';
-    require_once INCLUDES_PATH . '/common/CheckCSRF.php';
+//    require_once INCLUDES_PATH . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data

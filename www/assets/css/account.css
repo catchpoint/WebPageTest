@@ -2359,3 +2359,7 @@ form:invalid button[type="submit"] {
   justify-content: space-between;
   align-items: stretch;
 }
+
+.signup-flow-layout .notification-banner__error {
+  color: rgb(14, 30, 56);
+}
