@@ -2,6 +2,7 @@
     <div class="content">
         <h1>Payment Details</h1>
         <form method="POST" action="/signup" id="wpt-signup-paid-account">
+            <div id="notification-banner-container"></div>
             <?php include __DIR__ . '/../includes/chargify-payment-form.php'; ?>
             <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
             <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />
@@ -29,6 +30,9 @@
 
 <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
 
+
+<script src="/assets/js/braintree-error-parser.js"></script>
+
 <script>
 (() => {
     let hiddenNonceInput = document.querySelector('#hidden-nonce-input');
@@ -51,9 +55,24 @@
               button.disabled = false;
               button.removeAttribute('disabled');
               button.innerText = 'Sign Up';
-              form.setCustomValidity('There was an error with your payment. Please try again or try a different card.');
+              const signupError = new CustomEvent("cc-signup-error", {
+                bubbles: true,
+                detail: BraintreeErrorParser.parse(err.errors)
+              });
+              event.target.dispatchEvent(signupError);
           }
       );
     });
 })();
+</script>
+<script>
+    (() => {
+        document.addEventListener('cc-signup-error', e => {
+            const el = document.createElement('div');
+            el.classList.add('notification-banner', 'notification-banner__error');
+            el.innerHTML = `<h4>Billing Error: ${e.detail.text}</h4><p>${e.detail.implication}</p>`;
+            document.querySelector('#notification-banner-container').appendChild(el);
+
+        });
+    })();
 </script>
