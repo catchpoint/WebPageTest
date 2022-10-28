@@ -2043,8 +2043,9 @@ footer ul {
 .experiments_bottlenecks > ol > li > details > summary {
   padding-left: 2.7em;
   list-style-position: outside;
-  margin-left: 1em;
+  margin-left: 1.4em;
   position: relative;
+  font-size: 1.1rem;
 }
 
 .experiments_bottlenecks > ol > li > details > summary::marker {
