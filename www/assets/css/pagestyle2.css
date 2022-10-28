@@ -2161,6 +2161,17 @@ footer ul {
   }
 }
 
+@media (max-width: 50em){
+ .grade_header,
+ .experiments_foot {
+   margin-right: -1.5rem;
+   margin-left: -1.5rem;
+ }
+ .form_clip > .experiments_foot {
+   border-radius: 0;
+ }
+}
+
 .testinfo_meta {
   border-right: 1px solid #e9e9e9;
 }
