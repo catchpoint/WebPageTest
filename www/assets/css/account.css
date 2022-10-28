@@ -1444,6 +1444,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   width: 100%;
   border-radius: 10px;
   margin-bottom: 15px;
+  margin-top: 3em;
 }
 .comparison-table .h2 {
   font-size: 1.7rem;
