@@ -668,6 +668,9 @@ h3.grade_heading {
   background-size: 0.6em auto;
   transform: rotate(-90deg);
 }
+summary.grade_header::-webkit-details-marker{
+  display: none;
+}
 
 details[open] #Custom h3.grade_heading:before {
   transform: rotate(0deg);
