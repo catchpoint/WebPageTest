@@ -3,7 +3,7 @@
         <div class="home_feature_containslides">
             <?php
 
-            if ($experiments_paid && $experiments_logged_in) {
+            if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
                 ?>
                 <div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
                     <div class="home_feature_hed_text">

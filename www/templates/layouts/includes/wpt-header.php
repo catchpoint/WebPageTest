@@ -79,7 +79,7 @@ if ($id) {
                                 </div>
                                 <div class="wptheader_nav_menu_section">
                                     <?php
-                                    if (!$experiments_paid) {
+                                    if (!(!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() )) {
                                         ?>
                                         <p class="wptheader_nav_cta">
                                             <span>Ready to go <strong>Pro?</strong></span>
@@ -145,7 +145,7 @@ if ($id) {
                             <?php if ($is_logged_in) : ?>
                                 <li><a href='/account'>
                                         <?php
-                                        if ($experiments_paid) {
+                                        if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
                                             echo '<em class="pro-flag">Pro</em> ';
                                         }
                                         ?>

@@ -668,6 +668,9 @@ h3.grade_heading {
   background-size: 0.6em auto;
   transform: rotate(-90deg);
 }
+summary.grade_header::-webkit-details-marker{
+  display: none;
+}
 
 details[open] #Custom h3.grade_heading:before {
   transform: rotate(0deg);
@@ -682,6 +685,12 @@ p.grade_summary {
   font-weight: 500;
   min-height: none;
   padding-left: 2.5rem;
+}
+
+@media (max-width: 50em){
+ .experiments_grades p.grade_summary {
+   font-size: 1rem;
+ }
 }
 
 .grade_heading span {
@@ -703,8 +712,8 @@ p.grade_summary {
 #Custom .grade_heading + p {
   background: url(/assets/images/src/icon_science_bubbling.svg) left 50%
     no-repeat;
-  background-size: auto 2rem !important;
-  background-position: left center !important;
+  background-size: auto 1.5rem !important;
+  background-position: left top !important;
 }
 
 .experiments_grades .grade_heading + p strong {
@@ -1200,6 +1209,11 @@ h4.experiments_list_hed-recs {
   background: #2a3c64;
   border-right: 0;
   border-left: 0;
+}
+@media (max-width: 60em){
+  .experiments_foot {
+    display: block;
+  }
 }
 
 .experiments_foot-stick {
@@ -2035,8 +2049,9 @@ footer ul {
 .experiments_bottlenecks > ol > li > details > summary {
   padding-left: 2.7em;
   list-style-position: outside;
-  margin-left: 1em;
+  margin-left: 1.4em;
   position: relative;
+  font-size: 1.1rem;
 }
 
 .experiments_bottlenecks > ol > li > details > summary::marker {
@@ -2144,6 +2159,17 @@ footer ul {
   .experiments_details_body {
     padding-left: 2rem;
   }
+}
+
+@media (max-width: 50em){
+ .grade_header,
+ .experiments_foot {
+   margin-right: -1.5rem;
+   margin-left: -1.5rem;
+ }
+ .form_clip > .experiments_foot {
+   border-radius: 0;
+ }
 }
 
 .testinfo_meta {
