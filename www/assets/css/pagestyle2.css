@@ -703,8 +703,8 @@ p.grade_summary {
 #Custom .grade_heading + p {
   background: url(/assets/images/src/icon_science_bubbling.svg) left 50%
     no-repeat;
-  background-size: auto 2rem !important;
-  background-position: left center !important;
+  background-size: auto 1.5rem !important;
+  background-position: left top !important;
 }
 
 .experiments_grades .grade_heading + p strong {
