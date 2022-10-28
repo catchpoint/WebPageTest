@@ -1204,6 +1204,11 @@ h4.experiments_list_hed-recs {
   border-right: 0;
   border-left: 0;
 }
+@media (max-width: 60em){
+  .experiments_foot {
+    display: block;
+  }
+}
 
 .experiments_foot-stick {
   position: sticky;
