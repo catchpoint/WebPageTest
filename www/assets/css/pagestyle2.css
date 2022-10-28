@@ -687,6 +687,12 @@ p.grade_summary {
   padding-left: 2.5rem;
 }
 
+@media (max-width: 50em){
+ .experiments_grades p.grade_summary {
+   font-size: 1rem;
+ }
+}
+
 .grade_heading span {
   font-weight: 500;
 }
