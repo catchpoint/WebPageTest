@@ -17,6 +17,7 @@ use WebPageTest\Plan;
 use WebPageTest\CPGraphQlTypes\CPSignupInput;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
+use WebPageTest\Util;
 
 class CPSignupClient
 {
@@ -178,18 +179,19 @@ class CPSignupClient
             return new Plan($options);
         }, $results->getData()['wptPlan'] ?? []);
 
-        $plans = array_filter($plans, function (Plan $plan) {
-          /** This is a bit of a hack for now. These are our approved plans for new
-           * customers to be able to use. We will better handle this from the backend
-           * */
-            return strtolower($plan->getId()) == 'ap5' ||
-                 strtolower($plan->getId()) == 'ap6' ||
-                 strtolower($plan->getId()) == 'ap7' ||
-                 strtolower($plan->getId()) == 'ap8' ||
-                 strtolower($plan->getId()) == 'mp5' ||
-                 strtolower($plan->getId()) == 'mp6' ||
-                 strtolower($plan->getId()) == 'mp7' ||
-                 strtolower($plan->getId()) == 'mp8';
+        /** This is a bit of a hack for now. These are our approved plans for new
+         * customers to be able to use. We will better handle this from the backend
+         *
+         */
+        $active_current_sellable_plans = array_filter(
+            explode(',', Util::getSetting('active_current_sellable_plans', '')),
+            function ($str) {
+                return strlen($str);
+            }
+        ) ?: ['ap5', 'ap6', 'ap7', 'ap8', 'mp5', 'mp6', 'mp7', 'mp8'];
+
+        $plans = array_filter($plans, function (Plan $plan) use ($active_current_sellable_plans): bool {
+            return in_array(strtolower($plan->getId()), $active_current_sellable_plans);
         });
 
         return new PlanList(...$plans);

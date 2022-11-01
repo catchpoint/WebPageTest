@@ -668,7 +668,7 @@ h3.grade_heading {
   background-size: 0.6em auto;
   transform: rotate(-90deg);
 }
-summary.grade_header::-webkit-details-marker{
+summary.grade_header::-webkit-details-marker {
   display: none;
 }
 
@@ -687,10 +687,10 @@ p.grade_summary {
   padding-left: 2.5rem;
 }
 
-@media (max-width: 50em){
- .experiments_grades p.grade_summary {
-   font-size: 1rem;
- }
+@media (max-width: 50em) {
+  .experiments_grades p.grade_summary {
+    font-size: 1rem;
+  }
 }
 
 .grade_heading span {
@@ -1210,7 +1210,7 @@ h4.experiments_list_hed-recs {
   border-right: 0;
   border-left: 0;
 }
-@media (max-width: 60em){
+@media (max-width: 60em) {
   .experiments_foot {
     display: block;
   }
@@ -2161,15 +2161,15 @@ footer ul {
   }
 }
 
-@media (max-width: 50em){
- .grade_header,
- .experiments_foot {
-   margin-right: -1.5rem;
-   margin-left: -1.5rem;
- }
- .form_clip > .experiments_foot {
-   border-radius: 0;
- }
+@media (max-width: 50em) {
+  .grade_header,
+  .experiments_foot {
+    margin-right: -1.5rem;
+    margin-left: -1.5rem;
+  }
+  .form_clip > .experiments_foot {
+    border-radius: 0;
+  }
 }
 
 .testinfo_meta {
