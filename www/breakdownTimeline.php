@@ -5,6 +5,7 @@
 
 include 'common.inc';
 
+
 //region HEADER 
 ob_start();
 define('NOBANNER', true); // otherwise Twitch banner shows 2x
@@ -100,6 +101,7 @@ if (isset($processing)) {
 //endregion
 
 //region template
+require_once __DIR__ . '/resources/view.php';
 echo view('pages.breakdownTimeline', [
     'test_results_view' => true,
     'body_class' => 'result',
