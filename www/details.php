@@ -158,19 +158,19 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     count($pageData[$run][$cached]['custom'])
                 ) {
                     echo '<details class="details_custommetrics"><summary>Custom Metrics Data</summary>';
-                    echo '<div class="scrollableTable"><table class="pretty details">';
+                    echo '<dl class="glossary">';
                     foreach ($pageData[$run][$cached]['custom'] as $metric) {
                         if (array_key_exists($metric, $pageData[$run][$cached])) {
-                            echo '<tr><th>' . htmlspecialchars($metric) . '</th><td>';
+                            echo '<dt>' . htmlspecialchars($metric) . '</dt><dd class="scrollableLine">';
                             $val = $pageData[$run][$cached][$metric];
                             if (!is_string($val) && !is_numeric($val)) {
                                 $val = json_encode($val);
                             }
                             echo htmlspecialchars($val);
-                            echo '</td></tr>';
+                            echo '</dd>';
                         }
                     }
-                    echo '</table></details>';
+                    echo '</dl></details>';
                 }
 
 

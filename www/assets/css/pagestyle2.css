@@ -8542,3 +8542,9 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 .table-cell-error {
   background: red;
 }
+
+.scrollableLine {
+  overflow: scroll;
+  height: 2em;
+  white-space: nowrap;
+}
