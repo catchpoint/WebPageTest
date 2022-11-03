@@ -18,6 +18,8 @@ $fileHandler = new FileHandler();
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
+$socialDesc = 'Console.log output of the page being tested';
+
 // template
 echo view('pages.consolelog', [
     'test_results_view' => true,
