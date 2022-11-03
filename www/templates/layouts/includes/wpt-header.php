@@ -79,7 +79,9 @@ if ($id) {
                                 </div>
                                 <div class="wptheader_nav_menu_section">
                                     <?php
-                                    if (!(!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() )) {
+                                    $user_exists = !is_null($request_context) && !is_null($request_context->getUser());
+                                    $is_paid_user = $user_exists && $request_context->getUser()->isPaid();
+                                    if (!$is_paid_user) {
                                         ?>
                                         <p class="wptheader_nav_cta">
                                             <span>Ready to go <strong>Pro?</strong></span>

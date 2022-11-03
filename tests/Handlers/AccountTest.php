@@ -599,66 +599,66 @@ final class AccountTest extends TestCase
         Account::resendEmailVerification($req);
     }
 
-    /** These tests are frail, going to comment to ship and then address why they fail **/
-//    public function testGetAccountPageDefaultFree(): void
-//    {
-//        $page = "";
-//
-//        $req = new RequestContext([]);
-//        $user = new User();
-//        $user->setUserId(12345);
-//        $req->setUser($user);
-//
-//        $client = $this->createMock(CPClient::class);
-//        $client->expects($this->once())
-//            ->method('getFullWptPlanSet');
-//        $client->expects($this->once())
-//            ->method('getUserContactInfo')
-//            ->with(12345)
-//            ->willReturn([
-//                'firstName' => "Goober",
-//                'lastName' => "Goob",
-//                'companyName' => ""
-//            ]);
-//        $req->setClient($client);
-//
-//        $bmm = $this->createMock(BannerMessageManager::class);
-//        $bmm->expects($this->once())
-//            ->method('get')
-//            ->willReturn([]);
-//        $req->setBannerMessageManager($bmm);
-//
-//        Account::getAccountPage($req, $page);
-//    }
-//
-//    public function testGetAccountPageDefaultFreeCompanyNull(): void
-//    {
-//        $page = "";
-//
-//        $req = new RequestContext([]);
-//        $user = new User();
-//        $user->setUserId(12345);
-//        $req->setUser($user);
-//
-//        $client = $this->createMock(CPClient::class);
-//        $client->expects($this->once())
-//            ->method('getFullWptPlanSet');
-//        $client->expects($this->once())
-//            ->method('getUserContactInfo')
-//            ->with(12345)
-//            ->willReturn([
-//                'firstName' => "Goober",
-//                'lastName' => "Goob",
-//                'companyName' => null
-//            ]);
-//        $req->setClient($client);
-//
-//        $bmm = $this->createMock(BannerMessageManager::class);
-//        $bmm->expects($this->once())
-//            ->method('get')
-//            ->willReturn([]);
-//        $req->setBannerMessageManager($bmm);
-//
-//        Account::getAccountPage($req, $page);
-//    }
+    public function testGetAccountPageDefaultFree(): void
+    {
+        $page = "";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getFullWptPlanSet');
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => ""
+            ]);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        $_GLOBALS['request_context'] = $req;
+        Account::getAccountPage($req, $page);
+    }
+
+    public function testGetAccountPageDefaultFreeCompanyNull(): void
+    {
+        $page = "";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getFullWptPlanSet');
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => null
+            ]);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        Account::getAccountPage($req, $page);
+    }
 }
