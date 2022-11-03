@@ -42,7 +42,6 @@
 @endsection
 
 @section('content')
-<?php $even = false; ?>
 <div id="test_results-container">
     <div id="test-1" class="test_results">
         <div class="test_results-content">
@@ -68,8 +67,7 @@
                                 </thead>
                                 <tbody>
                                 @foreach ($log as &$log_entry)
-                                <?php $even = !$even ?>
-                                <tr @if ($even) class="even" @endif>
+                                <tr @if ($loop->even) class="even" @endif>
                                     <td width="50" class="source">{{ $log_entry['source'] }} </td>
                                     <td width="50" class="level">{{ $log_entry['level'] }} </td>
                                     <td class="message">
