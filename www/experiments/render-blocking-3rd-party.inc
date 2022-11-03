@@ -5,7 +5,7 @@ $requests = $testStepResult->getRequests();
 $blocking3pReqs = array();
 $blocking3pHosts = array();
 $potentiallyBlocking3pReqs = array();
-$potentiallyB3pHosts = array();
+$potentiallyBlocking3pHosts = array();
 $possibleRenderBlockers = $testStepResult->getMetric('possibly-render-blocking-reqs');
 $blockingIndicator = false;
 
