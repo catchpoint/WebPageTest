@@ -398,6 +398,14 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
                 $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
             }
+            
+            if (isset($firstRunResults)) {
+                $lighthouse = $firstRunResults->getLighthouseScore();
+                $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
+                if (isset($lighthouse)) {
+                    $tabs['Lighthouse Report'] = $urlGeneratorFirstRun->resultPage("lighthouse");
+                }
+            }
 
 
 
@@ -411,23 +419,6 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         $current = ' class="current"';
                     }
                     echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
-                }
-            }
-
-            if (isset($firstRunResults)) {
-                $lighthouse = $firstRunResults->getLighthouseScore();
-                $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
-
-                if (isset($lighthouse)) {
-                    $lighthouseURL = $urlGeneratorFirstRun->resultPage("lighthouse");
-                    $lhClass = 'poor';
-                    if ($lighthouse >= 90) {
-                        $lhClass = 'good';
-                    } elseif ($lighthouse >= 50) {
-                        $lhClass = 'ok';
-                    }
-
-                    echo "<li><a href=\"" . $lighthouseURL . "\" title=\"Lighthouse Report (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Lighthouse Report: <span class=\"lh-flag " . $lhClass . "\">" . $lighthouse . "</span><img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
                 }
             }
 
