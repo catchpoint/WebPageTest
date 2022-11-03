@@ -15,6 +15,9 @@
     global $client_error;
     global $test_is_private;
     global $noanalytics;
+    global $socialDesc;
+    global $useScreenshot;
+    global $socialTitle;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     $body_class = $body_class ? ' class=' . $body_class : '';
