@@ -54,6 +54,28 @@ if (isset($testPath) && is_dir($testPath)) {
             return '<'.$element .' class="lh_score lh_score_grade-'. $grade .' ' .$classattr .'"><span class="lh_score_cat">'. $title . '</span> <span class="lh_score_number"><svg class="lh-gauge" viewBox="0 0 120 120"> <circle class="lh-gauge-base" r="56" cx="60" cy="60" stroke-width="8"></circle> <circle class="lh-gauge-arc" r="56" cx="60" cy="60" stroke-width="8" style="transform: rotate(-87.9537deg); stroke-dasharray: 281.005, 351.858;"></circle> </svg>'. $score .'</span></'.$element.'>';
         }
 
+        function formatAuditDetails($deets){
+           
+            //$ret = json_encode($deets);
+            $ret = '';
+            if( $deets->type === "opportunity" ){
+                if( $deets->headings ){
+                    $ret .= '<table class="pretty"><tr>';
+                    foreach( $deets->headings as $heading){
+                        $ret .= '<th>' . $heading->label . '</th>';
+                    }
+                    $ret .= '</tr></table>';
+                    foreach( $deets->items as $item){
+                        if( $item->node){
+                            //$ret .= '<td>' . $item->node-> . '</d>';
+                        }
+                    }
+                    //$ret .= '</tr>';
+                }
+            }
+            return $ret;
+        }
+
         function getCategoryAudits( $category, $results ){
             $ret = '';
             if( $category->title === "Performance"){
@@ -100,14 +122,11 @@ if (isset($testPath) && is_dir($testPath)) {
                     if( isset($audit->displayValue) ){
                         $ret .= '<p>'. md($audit->displayValue) .'</p>';
                     }
-                    // if( isset($audit->details) && isset($audit->details->items) && sizeof($audit->details->items) ){
-                    //     $ret .= '<ul>';
-
-                    //     foreach($audit->details->items as $detailItem ){
-                    //         $ret .= '<li>'. md($audit->displayValue) .'</li>';
-                    //     }
-                    //     $ret .= '</ul>';
-                    // }
+                    if( isset($audit->details) && isset($audit->details->items) && sizeof($audit->details->items) ){
+                        
+                        $ret .= formatAuditDetails($audit->details);
+                        
+                    }
 
                     $ret .= '</div></details>';
                 }
