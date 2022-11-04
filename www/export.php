@@ -47,12 +47,7 @@ if (!strlen($filename)) {
 }
 $filename .= ".$id.har";
 header('Content-type: application/json');
-
-if(isset($_REQUEST['raw']) && $_REQUEST['raw']){
-    $options['raw'] = $_REQUEST['raw'];
-}else{
-    header("Content-disposition: attachment; filename=$filename");
-}
+header("Content-disposition: attachment; filename=$filename");
 
 // see if we need to wrap it in a JSONP callback
 if (isset($_REQUEST['callback']) && strlen($_REQUEST['callback'])) {
