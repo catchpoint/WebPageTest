@@ -5,7 +5,7 @@
     <?php
         require_once __DIR__ . '/../../common.inc';
         $useScreenshot = true;
-        require_once __DIR__ . '/../../head.inc';
+        require_once INCLUDES_PATH . '/head.inc';
     ?>
     <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css">
 </head>

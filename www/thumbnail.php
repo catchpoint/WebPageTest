@@ -8,8 +8,8 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
     header("HTTP/1.0 304 Not Modified");
 } else {
     include __DIR__ . '/common.inc';
-    require_once __DIR__ . '/include/TestInfo.php';
-    require_once __DIR__ . '/include/TestStepResult.php';
+    require_once INCLUDES_PATH . '/include/TestInfo.php';
+    require_once INCLUDES_PATH . '/include/TestStepResult.php';
 
     global $testPath, $run, $cached, $step; // from common.inc
 
@@ -121,7 +121,7 @@ function tbnDrawWaterfall($testStepResult, &$img)
     global $test;
     global $step;
 
-    require_once __DIR__ . '/waterfall.inc';
+    require_once INCLUDES_PATH . '/waterfall.inc';
     $requests = $testStepResult->getRequests();
     $localPaths = $testStepResult->createTestPaths();
     AddRequestScriptTimings($requests, $localPaths->devtoolsScriptTimingFile());
@@ -166,7 +166,7 @@ function tbnDrawChecklist($testStepResult, &$img)
 {
     global $url;
 
-    require_once __DIR__ . '/optimizationChecklist.inc';
+    require_once INCLUDES_PATH . '/optimizationChecklist.inc';
 
     $requests = $testStepResult->getRequests();
     $img = drawChecklist($testStepResult->readableIdentifier($url), $requests, $testStepResult->getRawResults());

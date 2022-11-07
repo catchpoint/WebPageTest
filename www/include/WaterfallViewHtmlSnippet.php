@@ -4,7 +4,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/../waterfall.inc';
+require_once INCLUDES_PATH . '/waterfall.inc';
 
 class WaterfallViewHtmlSnippet
 {

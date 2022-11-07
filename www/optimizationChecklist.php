@@ -5,9 +5,9 @@
 // found in the LICENSE.md file.
 header("Content-type: image/png");
 include __DIR__ . '/common.inc';
-require_once __DIR__ . '/optimizationChecklist.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestStepResult.php';
+require_once INCLUDES_PATH . '/optimizationChecklist.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestStepResult.php';
 
 // not functional, but to declare what to expect from common.inc
 global $testPath, $run, $cached, $step, $id, $url, $test;

@@ -4,11 +4,11 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/FileHandler.php';
-require_once __DIR__ . '/../devtools.inc.php';
-require_once __DIR__ . '/../common_lib.inc';
-require_once __DIR__ . '/../breakdown.inc';
-require_once __DIR__ . '/../video/visualProgress.inc.php';
+require_once INCLUDES_PATH . '/include/FileHandler.php';
+require_once INCLUDES_PATH . '/devtools.inc.php';
+require_once INCLUDES_PATH . '/common_lib.inc';
+require_once INCLUDES_PATH . '/breakdown.inc';
+require_once INCLUDES_PATH . '/video/visualProgress.inc.php';
 
 class TestStepResult
 {

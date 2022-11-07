@@ -4,7 +4,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/../common_lib.inc'; // TODO: remove if we don't use GetTestInfo anymore
+require_once INCLUDES_PATH . '/common_lib.inc'; // TODO: remove if we don't use GetTestInfo anymore
 
 class TestInfo
 {

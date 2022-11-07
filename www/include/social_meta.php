@@ -1,8 +1,8 @@
 <?php
 
-    require_once __DIR__ . '/../common_lib.inc';
-    require_once __DIR__ . '/../common.inc';
-    require_once __DIR__ . '/social_meta_vars.inc';
+    require_once INCLUDES_PATH . '/common_lib.inc';
+    require_once INCLUDES_PATH . '/common.inc';
+    require_once INCLUDES_PATH . '/social_meta_vars.inc';
 
     global $socialImage;
     global $socialTitle;

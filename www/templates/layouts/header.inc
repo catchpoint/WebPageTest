@@ -7,10 +7,10 @@ declare(strict_types=1);
 // found in the LICENSE.md file.
 use WebPageTest\Util;
 
-require_once __DIR__ . '/../../page_data.inc';
-require_once __DIR__ . '/../../include/TestInfo.php';
-require_once __DIR__ . '/../../include/TestResults.php';
-require_once __DIR__ . '/../../include/TestRunResults.php';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 if (!isset($noanalytics)) {
     require_once __DIR__ . '/google-tag-manager-noscript.inc';

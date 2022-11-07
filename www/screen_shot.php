@@ -4,14 +4,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include __DIR__ . '/common.inc';
-require_once __DIR__ . '/video.inc';
-require_once __DIR__ . '/page_data.inc';
-require_once __DIR__ . '/devtools.inc.php';
-require_once __DIR__ . '/include/FileHandler.php';
-require_once __DIR__ . '/include/TestPaths.php';
-require_once __DIR__ . '/include/UrlGenerator.php';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/video.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/devtools.inc.php';
+require_once INCLUDES_PATH . '/include/FileHandler.php';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/include/UrlGenerator.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 $fileHandler = new FileHandler();
 $testInfo = TestInfo::fromFiles($testPath);

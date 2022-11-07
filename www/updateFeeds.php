@@ -10,12 +10,12 @@
 */
 function UpdateFeeds()
 {
-    $feed_file = __DIR__ . '/settings/feeds.inc';
-    if (file_exists(__DIR__ . '/settings/common/feeds.inc')) {
-        $feed_file = __DIR__ . '/settings/common/feeds.inc';
+    $feed_file = SETTINGS_PATH . '/feeds.inc';
+    if (file_exists(SETTINGS_PATH . '/common/feeds.inc')) {
+        $feed_file = SETTINGS_PATH . '/common/feeds.inc';
     }
-    if (file_exists(__DIR__ . '/settings/server/feeds.inc')) {
-        $feed_file = __DIR__ . '/settings/server/feeds.inc';
+    if (file_exists(SETTINGS_PATH . '/server/feeds.inc')) {
+        $feed_file = SETTINGS_PATH . '/server/feeds.inc';
     }
     if (file_exists($feed_file)) {
         if (!is_dir('./tmp')) {

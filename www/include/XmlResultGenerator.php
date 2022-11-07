@@ -4,11 +4,11 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/TestPaths.php';
-require_once __DIR__ . '/UrlGenerator.php';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/include/UrlGenerator.php';
 
 // TODO: get rid of this in the long run (for xml_entities)
-require_once __DIR__ . '/../common_lib.inc';
+require_once INCLUDES_PATH . '/common_lib.inc';
 
 class XmlResultGenerator
 {

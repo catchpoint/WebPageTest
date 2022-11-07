@@ -4,10 +4,10 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/../../page_data.inc';
-require_once __DIR__ . '/../../include/TestInfo.php';
-require_once __DIR__ . '/../../include/TestResults.php';
-require_once __DIR__ . '/../../include/TestRunResults.php';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 //If we're looking at a test result, include the extra header section and sub-menu
 if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader) && !EMBED) {
@@ -275,7 +275,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
             }
         }
 
-        require_once(__DIR__ . '/../../security_checks.php');
+        require_once(INCLUDES_PATH . '/security_checks.php');
         $securityGrade = getSecurityGrade($testInfo, $testRunResults, $securityScoreIncludesVulnerabilities);
         if (isset($securityGrade)) {
             $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
@@ -283,7 +283,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
     }
 
     if ($testRunResults->isOptimizationChecked()) {
-        require_once(__DIR__ . '/../../optimization_detail.inc.php');
+        require_once(INCLUDES_PATH . '/optimization_detail.inc.php');
 
         $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
         if (!isset($infoArray['view']) || ($infoArray['view'] != 'simple' && $infoArray['view'] != 'pss')) {

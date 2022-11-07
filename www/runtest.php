@@ -6,12 +6,12 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 // see if we are loading the test settings from a profile
-$profile_file = __DIR__ . '/settings/profiles.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles.ini')) {
-    $profile_file = __DIR__ . '/settings/common/profiles.ini';
+$profile_file = SETTINGS_PATH . '/profiles.ini';
+if (file_exists(SETTINGS_PATH . '/common/profiles.ini')) {
+    $profile_file = SETTINGS_PATH . '/common/profiles.ini';
 }
-if (file_exists(__DIR__ . '/settings/server/profiles.ini')) {
-    $profile_file = __DIR__ . '/settings/server/profiles.ini';
+if (file_exists(SETTINGS_PATH . '/server/profiles.ini')) {
+    $profile_file = SETTINGS_PATH . '/server/profiles.ini';
 }
 // Note: here we're looking for a simpleadvanced flag to be marked as simple before using this profile, or if it's not there at all.
 if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQUEST['simpleadvanced'] === 'simple') && is_file($profile_file)) {
@@ -25,12 +25,12 @@ if (isset($_REQUEST['profile']) && (!isset($_REQUEST['simpleadvanced']) || $_REQ
         }
     }
 }
-$wvprofile_file = __DIR__ . '/settings/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini')) {
-    $wvprofile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
+$wvprofile_file = SETTINGS_PATH . '/profiles_webvitals.ini';
+if (file_exists(SETTINGS_PATH . '/common/profiles_webvitals.ini')) {
+    $wvprofile_file = SETTINGS_PATH . '/common/profiles_webvitals.ini';
 }
-if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
-    $wvprofile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+if (file_exists(SETTINGS_PATH . '/server/profiles_webvitals.ini')) {
+    $wvprofile_file = SETTINGS_PATH . '/server/profiles_webvitals.ini';
 }
 if (isset($_REQUEST['webvital_profile']) && is_file($wvprofile_file)) {
     $profiles = parse_ini_file($wvprofile_file, true);
@@ -51,8 +51,8 @@ use WebPageTest\Template;
 use WebPageTest\RateLimiter;
 use WebPageTest\Util\IniReader;
 
-require_once('./ec2/ec2.inc.php');
-require_once(__DIR__ . '/include/CrUX.php');
+require_once(INCLUDES_PATH . '/ec2/ec2.inc.php');
+require_once(INCLUDES_PATH . '/include/CrUX.php');
 
 $experimentURL = Util::getSetting('experimentURL', null);
 $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;
@@ -74,12 +74,12 @@ $includePaid = $isPaid || $admin;
 $server_secret = Util::getServerSecret();
 $api_keys = null;
 if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
-    $keys_file = __DIR__ . '/settings/keys.ini';
-    if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/common/keys.ini';
+    $keys_file = SETTINGS_PATH . '/keys.ini';
+    if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
+        $keys_file = SETTINGS_PATH . '/common/keys.ini';
     }
-    if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
-        $keys_file = __DIR__ . '/settings/server/keys.ini';
+    if (file_exists(SETTINGS_PATH . '/server/keys.ini')) {
+        $keys_file = SETTINGS_PATH . '/server/keys.ini';
     }
     $api_keys = parse_ini_file($keys_file, true);
 }
@@ -1590,12 +1590,12 @@ function ValidateKey(&$test, &$error, $key = null)
                 return;
             }
 
-            $keys_file = __DIR__ . '/settings/keys.ini';
-            if (file_exists(__DIR__ . '/settings/common/keys.ini')) {
-                $keys_file = __DIR__ . '/settings/common/keys.ini';
+            $keys_file = SETTINGS_PATH . '/keys.ini';
+            if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
+                $keys_file = SETTINGS_PATH . '/common/keys.ini';
             }
-            if (file_exists(__DIR__ . '/settings/server/keys.ini')) {
-                $keys_file = __DIR__ . '/settings/server/keys.ini';
+            if (file_exists(SETTINGS_PATH . '/server/keys.ini')) {
+                $keys_file = SETTINGS_PATH . '/server/keys.ini';
             }
             $keys = parse_ini_file($keys_file, true);
 

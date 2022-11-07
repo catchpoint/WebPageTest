@@ -14,7 +14,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 <footer>
     <ul>
-<?php if (is_file(__DIR__ . '/../../settings/common/terms.inc') || is_file(__DIR__ . '/../../settings/server/terms.inc') || is_file(__DIR__ . '/../../settings/terms.inc')) : ?>
+<?php if (is_file(SETTINGS_PATH . '/common/terms.inc') || is_file(SETTINGS_PATH . '/server/terms.inc') || is_file(SETTINGS_PATH . '/settings/terms.inc')) : ?>
         <li><a href="/terms">Terms of Service</a></li>
 <?php endif; ?>
 
@@ -33,7 +33,7 @@ if (!isset($site_js_loaded) || !$site_js_loaded) {
 }
 if (
     !array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
-    is_file(__DIR__ . '/../../assets/js/experiment.js')
+    is_file(ASSETS_PATH . '/js/experiment.js')
 ) {
     $headers = $_SERVER;
     preg_match_all(
@@ -46,19 +46,19 @@ if (
     echo "<script>\n";
     echo "wptJSVer = '" . constant('VER_JS') . "';\n";
     echo "wptBrowser = '$browser';\n";
-    require_once(__DIR__ . '/../../assets/js/experiment.js');
+    require_once(ASSETS_PATH . '/js/experiment.js');
     echo "</script>\n";
     //echo "<script src=\"{$GLOBALS['cdnPath']}/assets/js/experiment.js?v=" . VER_JS . "\"></script>\n";
 }
 
 ?>
 <?php
-if (file_exists(__DIR__ . '/../../settings/server/customfooter.inc.php')) {
-    require(__DIR__ . '/../../settings/server/customfooter.inc.php');
-} elseif (file_exists(__DIR__ . '/../../settings/common/customfooter.inc.php')) {
-    require(__DIR__ . '/../../settings/common/customfooter.inc.php');
-} elseif (file_exists(__DIR__ . '/../../settings/customfooter.inc.php')) {
-    require(__DIR__ . '/../../settings/customfooter.inc.php');
+if (file_exists(SETTINGS_PATH . '/server/customfooter.inc.php')) {
+    require(SETTINGS_PATH . '/server/customfooter.inc.php');
+} elseif (file_exists(SETTINGS_PATH . '/common/customfooter.inc.php')) {
+    require(SETTINGS_PATH . '/common/customfooter.inc.php');
+} elseif (file_exists(SETTINGS_PATH . '/customfooter.inc.php')) {
+    require(SETTINGS_PATH . '/customfooter.inc.php');
 }
 ?>
 

@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once __DIR__ . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
 
 /**
  * Re-format the optimization report to make it prettier
@@ -53,7 +53,7 @@ function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $tes
  */
 function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
 {
-    require_once __DIR__ . '/optimization_detail.inc.php';
+    require_once INCLUDES_PATH . '/optimization_detail.inc.php';
     $ttfb = (int) $pageData["TTFB"];
     $latency = isset($testinfoArray['latency']) ? $testinfoArray['latency'] : null;
     $score = gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
