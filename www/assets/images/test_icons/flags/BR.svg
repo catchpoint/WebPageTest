@@ -1,13 +1,1 @@
-<svg width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-<mask id="mask0_3_190" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="21" height="15">
-<path d="M19 0H2C0.89543 0 0 0.89543 0 2V13C0 14.1046 0.89543 15 2 15H19C20.1046 15 21 14.1046 21 13V2C21 0.89543 20.1046 0 19 0Z" fill="white"/>
-</mask>
-<g mask="url(#mask0_3_190)">
-<path d="M19 0H2C0.89543 0 0 0.89543 0 2V13C0 14.1046 0.89543 15 2 15H19C20.1046 15 21 14.1046 21 13V2C21 0.89543 20.1046 0 19 0Z" fill="#009C34"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M10.5 2L18 7.5L10.5 13L3 7.5" fill="#F8E23D"/>
-<path d="M10.5 11C12.433 11 14 9.433 14 7.5C14 5.567 12.433 4 10.5 4C8.567 4 7 5.567 7 7.5C7 9.433 8.567 11 10.5 11Z" fill="#002478"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M9 9V10H10V9H9ZM11 9V10H12V9H11Z" fill="#91A1C3"/>
-<path d="M8 6C8 6 10.264 6.4 11.896 7.098L14 8" stroke="#C9D0E0"/>
-<path d="M19 0.5H2C1.17157 0.5 0.5 1.17157 0.5 2V13C0.5 13.8284 1.17157 14.5 2 14.5H19C19.8284 14.5 20.5 13.8284 20.5 13V2C20.5 1.17157 19.8284 0.5 19 0.5Z" stroke="black" stroke-opacity="0.1"/>
-</g>
-</svg>
+<svg fill="none" height="15" viewBox="0 0 21 15" width="21" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><mask id="a" height="15" maskUnits="userSpaceOnUse" width="21" x="0" y="0"><path d="m19 0h-17c-1.10457 0-2 .89543-2 2v11c0 1.1046.89543 2 2 2h17c1.1046 0 2-.8954 2-2v-11c0-1.10457-.8954-2-2-2z" fill="#fff"/></mask><g mask="url(#a)"><path d="m19 0h-17c-1.10457 0-2 .89543-2 2v11c0 1.1046.89543 2 2 2h17c1.1046 0 2-.8954 2-2v-11c0-1.10457-.8954-2-2-2z" fill="#009c34"/><path clip-rule="evenodd" d="m10.5 2 7.5 5.5-7.5 5.5-7.5-5.5" fill="#f8e23d" fill-rule="evenodd"/><path d="m10.5 11c1.933 0 3.5-1.567 3.5-3.5s-1.567-3.5-3.5-3.5-3.5 1.567-3.5 3.5 1.567 3.5 3.5 3.5z" fill="#002478"/><path clip-rule="evenodd" d="m9 9v1h1v-1zm2 0v1h1v-1z" fill="#91a1c3" fill-rule="evenodd"/><path d="m8 6s2.264.4 3.896 1.098l2.104.902" stroke="#c9d0e0"/><path d="m19 .5h-17c-.82843 0-1.5.67157-1.5 1.5v11c0 .8284.67157 1.5 1.5 1.5h17c.8284 0 1.5-.6716 1.5-1.5v-11c0-.82843-.6716-1.5-1.5-1.5z" stroke="#000" stroke-opacity=".1"/></g></svg>
