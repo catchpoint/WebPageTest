@@ -8718,28 +8718,110 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
   }
   .grade_heading.lh_score .lh_score_cat {
     flex: 1 1 calc(100% - 5rem);
-    font-weight: 900
+    font-weight: 900;
+    color: #2a3b64;
   }
   
   .results_main-lh span.units {
     text-transform: uppercase;
   }
-  .results_main-lh .scrollableTable {
-    border: 1px solid #eee;
-      border-radius: 0.5em;
-      padding: 0 2em 1em;
-      box-sizing: border-box;
-      background: #fefefe;
-  }
+
   .results_main-lh h4 {
     margin: 1em 0 0;
+    border-bottom: 1px solid #eee;
   }
+
   .results_main-lh summary p {
     display: inline;
+  }
+  .results_main-lh summary em p {
+    font-weight: normal;
   }
   .results_main-lh p:empty {
     display: none;
   }
+  .results_main-lh p p {
+    display: inline;
+  }
+  .lh-relevantmetrics {
+   
+  }
+  .lh-relevantmetrics strong {
+    color: #555;
+    font-weight: 500;
+  }
+  .lh-relevantmetric {
+    padding: 0.3em .5em;
+    font-size: .7em;
+    text-transform: uppercase;
+    background-color: #555;
+    color: #fff;
+    font-weight: normal;
+    display: inline-block;
+    border-radius: 0.3em;
+    align-self: center;
+    margin-right: 0.5em;
+    line-height: 1;
+  }
   details.metrics_shown p a {
     color: #fff;
+  }
+
+  .lh-filter_map {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 2em 0 0;
+    align-items: center
+  }
+   a.lh-maplink {
+    display: inline-block;
+    border-radius: 2em;
+    padding: .5em 1em;
+
+    border: 1px solid #2a3b64;
+    color: #2a3b64;
+    font-size: .8em;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  a.lh-maplink:hover,
+  a.lh-maplink:focus {
+    background-color: #2a3b64;
+    color: #fff;
+    border-color: transparent;
+  }
+  p.lh-filteraudits {
+    display: flex;
+    gap: .5em;
+    margin: 0;
+  }
+  .lh-filteraudits a {
+    text-transform: uppercase;
+  }
+  .lh-filteraudits a[aria-current] {
+    text-decoration: none;
+    color: #222;
+    font-weight: 700;
+  }
+  .results_main-lh table.lh-details {
+    width: 100%;
+    display:table;
+    font-size: .9em;
+    
+  }
+  .results_main-lh table.lh-details th,
+  .results_main-lh table.lh-details td {
+      padding: .5em;
+  }
+  .results_main-lh table.lh-details th {
+    padding: 1em .5em;
+    border-top: 1px solid #eee;
+  }
+  .results_main-lh table.lh-details th:last-child,
+  .results_main-lh table.lh-details td:last-child {
+    text-align: right;
+  }
+  .results_main-lh table.lh-details tr:nth-child(odd) td{
+    background: #fafafa;
   }
