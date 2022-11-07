@@ -220,7 +220,6 @@ class TestResultsHtmlTables
             $out .=  $stepResult->isCachedRun() ? "Repeat View" : "First View";
         }
         $out .=  $this->_getResultLabel($stepResult);
-        $out .=  $this->_getDynatraceLinks($stepResult);
         $out .=  $this->_getCaptureLinks($stepResult);
         $out .=  $this->_getTimelineLinks($stepResult);
         $out .=  $this->_getTraceLinks($stepResult);
@@ -370,24 +369,6 @@ class TestResultsHtmlTables
             $keylogUrl = $urlGenerator->getGZip($filenamePaths->keylogFile());
             $out .= "<br>(<a href=\"$keylogUrl\" title=\"TLS key log file\">TLS Key Log</a>)";
         }
-        return $out;
-    }
-
-  /**
-   * @param TestStepResult $stepResult
-   * @return string Markup with links
-   */
-    private function _getDynatraceLinks($stepResult)
-    {
-        $dynatracePath = $stepResult->createTestPaths()->dynatraceFile();
-        if (!is_file($dynatracePath)) {
-            return "";
-        }
-        $out = "<br><br><div><a href=\"/$dynatracePath\" title=\"Download dynaTrace Session\">\n";
-        $out .= "<img src=\"{$GLOBALS['cdnPath']}/assets/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\">\n";
-        $out .= "</a></div><br>\n";
-        $out .= "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\">\n";
-        $out .= "<img src=\"{$GLOBALS['cdnPath']}/assets/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>\n";
         return $out;
     }
 
