@@ -476,6 +476,7 @@ class Account
         $body->state = $post['state'];
         $body->country = $post['country'];
         $body->zipcode = $post['zipcode'];
+
         return $body;
     }
     // Change a user's payment method
