@@ -66,6 +66,21 @@ if (isset($testPath) && is_dir($testPath)) {
                     // }
                     // $ret .= '</tr></table>';
                     $ret .= '<table class="lh-table lh-details pretty"><thead><tr><th class="lh-table-column--text"><div class="lh-text">Example Col</div></th><th class="lh-table-column--numeric"><div class="lh-text">Example Col</div></th><th class="lh-table-column--bytes"><div class="lh-text">Example Col</div></th></tr></thead><tbody><tr class="lh-row--even"><td class="lh-table-column--text"><div class="lh-text">Total</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">38</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="1,761,739&nbsp;bytes">1,720.4&nbsp;KiB</div></td></tr><tr class="lh-row--odd"><td class="lh-table-column--text"><div class="lh-text">Script</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">11</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="826,914&nbsp;bytes">807.5&nbsp;KiB</div></td></tr><tr class="lh-row--even"><td class="lh-table-column--text"><div class="lh-text">Other</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">11</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="607,994&nbsp;bytes">593.7&nbsp;KiB</div></td></tr><tr class="lh-row--odd"><td class="lh-table-column--text"><div class="lh-text">Document</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">2</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="178,986&nbsp;bytes">174.8&nbsp;KiB</div></td></tr><tr class="lh-row--even"><td class="lh-table-column--text"><div class="lh-text">Image</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">10</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="115,876&nbsp;bytes">113.2&nbsp;KiB</div></td></tr><tr class="lh-row--odd"><td class="lh-table-column--text"><div class="lh-text">Font</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">2</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="29,913&nbsp;bytes">29.2&nbsp;KiB</div></td></tr><tr class="lh-row--even"><td class="lh-table-column--text"><div class="lh-text">Stylesheet</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">2</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="2,056&nbsp;bytes">2.0&nbsp;KiB</div></td></tr><tr class="lh-row--odd"><td class="lh-table-column--text"><div class="lh-text">Media</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">0</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="0&nbsp;bytes">0.0&nbsp;KiB</div></td></tr><tr class="lh-row--even"><td class="lh-table-column--text"><div class="lh-text">Third-party</div></td><td class="lh-table-column--numeric"><div class="lh-numeric">24</div></td><td class="lh-table-column--bytes"><div class="lh-text" title="937,473&nbsp;bytes">915.5&nbsp;KiB</div></td></tr></tbody></table>';
+                    $ret .= '<p class="lh-chain_hed"><strong>Maximum critical path latency: 3,920 ms</strong></p>
+                    <ol class="lh-chain">
+                        <li>Initial Navigation
+                            <ol>
+                                <li><a href="..">/flights</a> <em>(www.google.com)</em>
+                                    <ol>
+                                    <li><a href="..">…v14/4UabrENHs….woff2</a> <em>(fonts.gstatic.com) - 1,310 ms, 14.98 KiB</em></li>
+                                    <li><a href="..">…v14/4UabrENHs….woff2</a> <em>(fonts.gstatic.com) - 1,310 ms, 14.98 KiB</em></li>
+                                    <li><a href="..">…v14/4UabrENHs….woff2</a> <em>(fonts.gstatic.com) - 1,310 ms, 14.98 KiB</em></li>
+                                    <li><a href="..">…v14/4UabrENHs….woff2</a> <em>(fonts.gstatic.com) - 1,310 ms, 14.98 KiB</em></li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>';
                     foreach( $deets->items as $item){
                         if( $item->node){
                             //$ret .= '<td>' . $item->node-> . '</d>';
