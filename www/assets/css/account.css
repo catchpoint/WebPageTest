@@ -159,37 +159,22 @@ body.theme-b {
 .edit-button button {
   position: relative;
   padding: 8px;
+  padding-left: 24px;
   cursor: pointer;
   appearance: none;
   border: 0;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M15 2L3 14L2 18L6 17L18 5L15 2ZM15 3.41L16.59 5L14.65 6.94L13.06 5.35L15 3.41ZM5.49 16.1L3.37 16.63L3.9 14.51L5.36 13.06L6.95 14.65L5.49 16.1ZM7.65 13.94L6.06 12.35L12.35 6.06L13.94 7.65L7.65 13.94Z' fill='%23006AD4'/%3E%3C/svg%3E");
-  background-position: 50%;
+  background-position: 0;
+  background-repeat: no-repeat;
 }
 
 .edit-button button span {
-  clip: rect(1px, 1px, 1px, 1px);
-  clip-path: inset(50%);
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
+  color: rgb(43, 148, 255);
+  font-size: 1rem;
 }
 
-.subscription-plan strong {
-  font-weight: normal;
-}
-
-.subscription-plan strong::after {
+.subscription-plan .subscription-plan-details strong::after {
   content: ":";
-}
-
-.subscription-plan .cancel span {
-  padding: 0px 10px;
-  border-radius: 2px;
-  background-color: rgb(237, 47, 47);
-  color: rgb(255, 255, 255);
 }
 
 .billing-history {
@@ -2331,7 +2316,7 @@ form:invalid button[type="submit"] {
   background-color: #e8f1ff;
   padding: 1em 2em;
   display: block;
-  margin: 0 -2em -2em;
+  margin: 0 -1em -2em;
 }
 .status__info::before,
 .info-notice::before {
@@ -2364,3 +2349,36 @@ form:invalid button[type="submit"] {
 .signup-flow-layout .notification-banner__error {
   color: rgb(14, 30, 56);
 }
+
+/** Chargify form **/
+.signup-card-container {
+  border: 1px solid #334870;
+  border-radius: 8px;
+  max-width: 34rem;
+}
+
+.signup-card-hed,
+.signup-card-body {
+  padding: 0 24px;
+}
+
+.signup-card-hed {
+  border-bottom: 1px solid #334870;
+}
+
+.signup-card-hed h4 {
+  font-weight: 400;
+  margin: 0;
+}
+
+#cc_cardholder_first_name iframe,
+#cc_cardholder_last_name iframe {
+  width: 235px !important;
+}
+
+#cc_year iframe,
+#cc_month iframe,
+#cc_cvv iframe {
+  width: 158px !important;
+}
+/** END Chargify form **/

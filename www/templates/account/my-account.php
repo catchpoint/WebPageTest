@@ -66,7 +66,7 @@
                 </div>
                 <div class="card-section">
                     <div class="edit-button">
-                        <button><span>Edit</span></button>
+                        <button><span>Edit Contact Info</span></button>
                     </div>
                 </div>
             </div>
@@ -80,12 +80,14 @@
                 </div>
                 <div class="card-section">
                     <div class="edit-button">
-                        <button><span>Edit</span></button>
+                        <button><span>Edit Password</span></button>
                     </div>
                 </div>
             </div>
 
-            <?php require_once __DIR__ . '/includes/subscription-plan.php'; ?>
+            <div class="box card subscription-plan">
+              <?php require_once __DIR__ . '/includes/subscription-plan.php'; ?>
+            </div>
         </div>
 
 
