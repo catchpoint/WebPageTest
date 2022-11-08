@@ -8825,3 +8825,27 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
   .results_main-lh table.lh-details tr:nth-child(odd) td{
     background: #fafafa;
   }
+  .lh-chain ol {
+    margin: 1em 0;
+    font-size: .9em;
+  }
+  .lh-chain ol ol {
+    margin: 1em 0 0 1em;
+    font-size: 1em;
+  }
+  .lh-chain li {
+    position: relative;
+    overflow: visible;
+    padding-left: 1em;
+    list-style: none;
+  }
+  .lh-chain li li:before {
+    content: "";
+    position: absolute;
+    height: .6em;
+    width: 1em;
+    left: -.5em;
+    border-left: 2px solid #aaa;
+    border-bottom: 2px solid  #aaa;
+    top: 0;
+  }
