@@ -29,14 +29,14 @@
 </div>
 <script src="https://js.chargify.com/latest/chargify.js"></script>
 <script>
-    (() => {
+    document.addEventListener('DOMContentLoaded', () => {
         var chargify = new Chargify();
         var textColor = document.querySelectorAll('.my-account-page').length > 0 ? '#111111' : '#ffffff';
         chargify.load({
             publicKey: "<?= $ch_client_token ?>",
             type: 'card',
             serverHost: "<?= $ch_site ?>", //'https://acme.chargify.com'
-            hideCardImage: true,
+            hideCardImage: false,
             optionalLabel: ' ',
             requiredLabel: '*',
             style: {
@@ -121,37 +121,5 @@
         });
 
         window.chargify = chargify;
-    })();
+    });
 </script>
-
-<style>
-    .signup-card-container {
-        border: 1px solid #334870;
-        border-radius: 8px;
-    }
-
-    .signup-card-hed,
-    .signup-card-body {
-        padding: 0 24px;
-    }
-
-    .signup-card-hed {
-        border-bottom: 1px solid #334870;
-    }
-
-    .signup-card-hed h4 {
-        font-weight: 400;
-        margin: 0;
-    }
-
-    #cc_cardholder_first_name iframe,
-    #cc_cardholder_last_name iframe {
-        width: 235px !important;
-    }
-
-    #cc_year iframe,
-    #cc_month iframe,
-    #cc_cvv iframe {
-        width: 158px !important;
-    }
-</style>

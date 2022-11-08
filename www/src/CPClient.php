@@ -19,7 +19,6 @@ use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\CPGraphQlTypes\ApiKey;
 use WebPageTest\CPGraphQlTypes\ApiKeyList;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
-use WebPageTest\CPGraphQlTypes\ChargifyInvoiceAddressType;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\CPGraphQlTypes\EnterpriseCustomer;
@@ -989,5 +988,23 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         return $results->getData()[$mutation_name];
+    }
+
+    public function updatePaymentMethod(string $token): bool
+    {
+        $gql = (new Mutation('wptUpdateSubscriptionPayment'))
+        ->setVariables([
+          new Variable('paymentToken', 'String', true)
+        ])
+        ->setArguments([
+          'paymentToken' => '$paymentToken'
+        ]);
+
+        $variables = [
+        'paymentToken' => $token
+        ];
+
+        $results = $this->graphql_client->runQuery($gql, true, $variables);
+        return $results->getData()['wptUpdateSubscriptionPayment'];
     }
 }
