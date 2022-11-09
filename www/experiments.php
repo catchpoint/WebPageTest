@@ -559,19 +559,13 @@ $page_description = "Website performance test result$testLabel.";
             var pairs = priorState.split("&");
 
                 pairs.forEach(pair => {
-                    var keyval = pair.split("=");
-                    if( keyval[0]){
-                        keyval[0] = decodeURIComponent(keyval[0]);
-                    }
-                    if( keyval[1]){
-                        keyval[1] = decodeURIComponent(keyval[1]);
-                    }
+                    let keyval = pair.split("=").map(decodeURIComponent);
                     if( keyval[0] !== 'runs' ){
-                        var input = form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']");
-                        if( input.length ){
-                            input.forEach(inpt => {
-                                    if( inpt.value === keyval[1] ){
-                                        inpt.checked = true;
+                        var checks = form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']");
+                        if( checks.length ){
+                            checks.forEach(input => {
+                                    if( input.value === keyval[1] ){
+                                        input.checked = true;
                                     }
                             });
                         }
@@ -615,7 +609,7 @@ $page_description = "Website performance test result$testLabel.";
     }
 
     form.addEventListener("change", saveExperimentFormState );
-    form.addEventListener("change", saveExperimentFormState );
+    form.addEventListener("submit", saveExperimentFormState );
 
 
 
@@ -691,7 +685,6 @@ $page_description = "Website performance test result$testLabel.";
     // try and restore state at load
     refreshExperimentFormState();
     updateCount();
-    form.addEventListener("change", updateCount );
     form.addEventListener("input", updateCount );
     form.addEventListener("submit", updateCount );
 
