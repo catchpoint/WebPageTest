@@ -376,12 +376,12 @@ async function SelectRequest(step, request) {
     if (r["headers"] !== undefined) {
       if (r.headers["request"] !== undefined) {
         for (i = 0; i < r.headers.request.length; i++) {
-          requestHeaders += htmlEncode(r.headers.request[i]) + "<br>";
+          requestHeaders += htmlEncode(r.headers.request[i]) + "\n";
         }
       }
       if (r.headers["response"] !== undefined) {
         for (i = 0; i < r.headers.response.length; i++) {
-          responseHeaders += htmlEncode(r.headers.response[i]) + "<br>";
+          responseHeaders += htmlEncode(r.headers.response[i]) + "\n";
         }
       }
     }
@@ -433,8 +433,8 @@ async function SelectRequest(step, request) {
     }
   }
   $("#request-details-" + stepLabel).html(details);
-  $("#request-headers-" + stepLabel).html(requestHeaders);
-  $("#response-headers-" + stepLabel).html(responseHeaders);
+  $("#request-headers-code-" + stepLabel).text(requestHeaders);
+  $("#response-headers-code-" + stepLabel).text(responseHeaders);
   if (document.getElementById("urlEntry")) {
     //only do requestBlocking if on a page where we can resubmit the test
     $("#blocking-" + stepLabel).html(blocking + "</ul>");
@@ -449,8 +449,8 @@ async function SelectRequest(step, request) {
 
   $("#request-raw-details-json-" + stepLabel).text(json);
   const Prism = await loadPrism();
-  Prism.highlightElement(
-    document.querySelector("#request-raw-details-json-" + stepLabel)
+  Prism.highlightAllUnder(
+    document.querySelector("#dialog-contents-" + stepLabel)
   );
 
   $("#request-dialog-" + stepLabel).jqmShow();

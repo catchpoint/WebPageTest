@@ -305,6 +305,9 @@ async function loadPrism() {
   if (window.Prism) {
     return window.Prism;
   }
+  window.Prism = window.Prism || {};
+  window.Prism.manual = true;
+
   const ss = document.createElement("link");
   ss.rel = "stylesheet";
   ss.type = "text/css";
