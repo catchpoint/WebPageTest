@@ -8542,3 +8542,7 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 .table-cell-error {
   background: red;
 }
+/* Prism.js overwrite */
+pre[class*=language-] {
+  background: none !important;
+}

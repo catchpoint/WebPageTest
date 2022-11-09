@@ -89,7 +89,7 @@ function htmlEncode(value) {
   }
 }
 
-function SelectRequest(step, request) {
+async function SelectRequest(step, request) {
   InitRequestDialog(step);
   var stepLabel = "step" + step;
   $("#request-dialog-" + stepLabel).css(
@@ -448,6 +448,9 @@ function SelectRequest(step, request) {
   }
 
   $("#request-raw-details-json-" + stepLabel).text(json);
+  const Prism = await loadPrism();
+  Prism.highlightElement(document.querySelector("#request-raw-details-json-" + stepLabel));
+
   $("#request-dialog-" + stepLabel).jqmShow();
 
   // highlight the selected request

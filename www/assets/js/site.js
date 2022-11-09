@@ -300,3 +300,18 @@ async function initCodeField(source, language = "js") {
   codeArea.onUpdate((code) => (hidden.value = code));
   window.codeFlasks[source] = codeArea;
 }
+
+async function loadPrism() {
+  if (window.Prism) {
+    return window.Prism;
+  }
+  const ss = document.createElement('link');
+  ss.rel = 'stylesheet';
+  ss.type = 'text/css';
+  ss.href = '/assets/css/vendor/prism.css';
+  document.head.appendChild(ss);
+
+  // todo: find a Prism distro that is a proper module
+  await import("/assets/js/prism.js");
+  return window.Prism;
+}
