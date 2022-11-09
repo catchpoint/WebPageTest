@@ -305,10 +305,10 @@ async function loadPrism() {
   if (window.Prism) {
     return window.Prism;
   }
-  const ss = document.createElement('link');
-  ss.rel = 'stylesheet';
-  ss.type = 'text/css';
-  ss.href = '/assets/css/vendor/prism.css';
+  const ss = document.createElement("link");
+  ss.rel = "stylesheet";
+  ss.type = "text/css";
+  ss.href = "/assets/css/vendor/prism.css";
   document.head.appendChild(ss);
 
   // todo: find a Prism distro that is a proper module

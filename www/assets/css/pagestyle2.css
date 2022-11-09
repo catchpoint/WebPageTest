@@ -8543,6 +8543,6 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
   background: red;
 }
 /* Prism.js overwrite */
-pre[class*=language-] {
+pre[class*="language-"] {
   background: none !important;
 }
