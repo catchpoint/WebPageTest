@@ -1260,8 +1260,14 @@ h4.experiments_list_hed-recs {
 .experiments_foot details div p.experiments_jump {
   color: #333;
   font-size: 1rem;
+  margin-bottom: .5em;
 }
+.experiments_foot details div p.experiments_jump i {
+  display: block;
+  font-weight: 300;
+  font-size: .8em;
 
+}
 .experiments_foot details ol {
   max-height: 70vh;
   overflow: auto;
@@ -1271,10 +1277,14 @@ h4.experiments_list_hed-recs {
 }
 
 .experiments_foot details ol li {
-  padding: 0.4em 1em;
+  padding: 0.6em 0;
+  font-size: .8em;
+  border-bottom: 1px solid #eee;
   list-style-position: inside;
 }
-
+.experiments_foot details ol li:last-child {
+  border: 0;
+}
 .experiments_foot details ol:after {
   border-top: 0.6em solid rgb(250 250 250);
   border-right: 0.6em solid transparent;
@@ -1302,6 +1312,34 @@ h4.experiments_list_hed-recs {
   width: auto;
   min-width: auto;
   text-align: left;
+  font-size: 1em;
+}
+.experiments_foot details ol button.experiment_sort {
+  border: 1px solid #ccc;
+  background: #ddd;
+  border-radius: 2em;
+  padding: 0.3em 1em 0.3em 0.6em;
+  text-decoration: none;
+  color: #2a3b64;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9em;
+  margin-left: 0.5em;
+  font-weight: 700;
+  float: right;
+}
+.experiments_foot details ol button.experiment_sort:hover,
+.experiments_foot details ol button.experiment_sort:focus {
+  background: #fff;
+}
+.experiments_foot details ol button.experiment_sort:before {
+  content: "";
+  border-bottom: 6px solid #2a3b64;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+  display: inline-block;
 }
 
 .experiments_create {
