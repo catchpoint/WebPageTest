@@ -300,3 +300,21 @@ async function initCodeField(source, language = "js") {
   codeArea.onUpdate((code) => (hidden.value = code));
   window.codeFlasks[source] = codeArea;
 }
+
+async function loadPrism() {
+  if (window.Prism) {
+    return window.Prism;
+  }
+  window.Prism = window.Prism || {};
+  window.Prism.manual = true;
+
+  const ss = document.createElement("link");
+  ss.rel = "stylesheet";
+  ss.type = "text/css";
+  ss.href = "/assets/css/vendor/prism.css";
+  document.head.appendChild(ss);
+
+  // todo: find a Prism distro that is a proper module
+  await import("/assets/js/prism.js");
+  return window.Prism;
+}
