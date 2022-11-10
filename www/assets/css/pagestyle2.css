@@ -7408,9 +7408,15 @@ div.jqmDialog {
   }
 }
 
-div.jqmDialog pre {
+div.jqmDialog pre,
+.jqmDialog .response-body {
   font-size: medium;
   line-height: 1.25em;
+}
+
+.jqmDialog .response-body {
+  font-family: monospace;
+  white-space: pre;
 }
 
 div.jqmdTC {
