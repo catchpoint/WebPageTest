@@ -611,7 +611,19 @@ $page_description = "Website performance test result$testLabel.";
     form.addEventListener("change", saveExperimentFormState );
     form.addEventListener("submit", saveExperimentFormState );
 
+    // append inputs to end of form on submit to impact post order
+    function sortExperimentOrder(){
+        var appliedOrder = document.querySelectorAll('.exps-active li');
+        appliedOrder.forEach(li => {
+            var associatedInput = form.querySelector( "[name=\"" + li.getAttribute('data-input-name') + "\"][value=\"" + li.getAttribute('data-input-value') + "\"]" );
+            if(associatedInput){
+                form.append(associatedInput);
+                console.log(associatedInput);
+            }
+        });
+    }
 
+    form.addEventListener("submit", sortExperimentOrder );
 
     var expsActive;
     function updateCount(){
@@ -635,18 +647,25 @@ $page_description = "Website performance test result$testLabel.";
             expsActiveInfo.innerHTML = '<summary><strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.</summary>';
 
             let expsActiveLinksContain = document.createElement('div');
-            expsActiveLinksContain.innerHTML = '<p class="experiments_jump">Scroll to:</p>';
+            expsActiveLinksContain.innerHTML = '<p class="experiments_jump">Experiments apply in this order: <i>(Order matters! Some experiments will override others.)</i></p>';
             let expsActiveLinks = document.createElement('ol');
             
             expsActive.forEach(exp => {
                 let newLi = document.createElement('li');
+                newLi.setAttribute("data-input-name", exp.getAttribute('name'));
+                newLi.setAttribute("data-input-value", exp.getAttribute('value'));
                 let expDesc = exp.closest(".experiment_description");
-                newLi.innerHTML = '<button type="button">'+ expDesc.querySelector('h5').innerText +'</button>';
+                newLi.innerHTML = '<button type="button" class="experiment_scroll">'+ expDesc.querySelector('h5').innerText +'</button><button type="button" class="experiment_sort">Sort</button>';
                 expsActiveLinks.append(newLi);
-                newLi.addEventListener("click", () => {
+                newLi.querySelector('button.experiment_scroll').addEventListener("click", () => {
                     expDesc.scrollIntoView({behavior: 'smooth'});
                 });
-                
+                newLi.querySelector('button.experiment_sort').addEventListener("click", () => {
+                    var prevLi = newLi.previousElementSibling;
+                    if(prevLi){
+                        prevLi.before(newLi);
+                    }
+                });
             });
 
             expsActiveLinksContain.append(expsActiveLinks);
