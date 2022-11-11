@@ -6225,16 +6225,6 @@ div.overflow-container,
   background-attachment: local, local, scroll, scroll;
 }
 
-.scrollableTable table,
-.results-filmstrip-container img,
-div:not(.compare_contain_wrap) > div.waterfall-container img,
-div.overflow-container > *,
-.breakdownFrame_item > div > *,
-.experiment_opportunities-resolved ol > *,
-.experiments_details_desc > ul li {
-  mix-blend-mode: multiply;
-}
-
 .scrollableTable th,
 .scrollableTable td {
   min-width: 3.5rem;
