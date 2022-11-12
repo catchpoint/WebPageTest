@@ -3,14 +3,14 @@
 @section('style')
 <style>
 del {
-	text-decoration: none;
-	color: #b30000;
-	background: #fadad7;
+    text-decoration: none;
+    color: #b30000;
+    background: #fadad7;
 }
 ins {
-	background: #eaf2c2;
-	color: #406619;
-	text-decoration: none;
+    background: #eaf2c2;
+    color: #406619;
+    text-decoration: none;
 }
 #delivered, #rendered {
     display: none;
