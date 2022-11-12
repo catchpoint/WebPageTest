@@ -1,5 +1,6 @@
 www/chrome
 www/assets/css/vendor
+www/assets/js/vendor
 www/assets/js/catchpoint-rum.js
 www/assets/js/dygraph-combined.js
 www/assets/js/codeflask.module.js
