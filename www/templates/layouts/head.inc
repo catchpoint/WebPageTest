@@ -117,7 +117,7 @@ echo "\n</style>\n";
 // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo '<script>';
-    require_once __DIR__ . '/../../assets/js/catchpoint-rum.js';
+    require_once __DIR__ . '/../../assets/js/vendor/catchpoint-rum.js';
     echo '</script>';
 }
 
