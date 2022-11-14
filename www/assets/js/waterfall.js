@@ -90,17 +90,17 @@ function htmlEncode(value) {
 }
 
 function contentTypeToPrismLang(type) {
-  if (type.includes('javascript')) {
-    return 'js';
+  if (type.includes("javascript")) {
+    return "js";
   }
-  if (type.includes('json')) {
-    return 'js';
+  if (type.includes("json")) {
+    return "js";
   }
-  if (type.includes('css')) {
-    return 'css';
+  if (type.includes("css")) {
+    return "css";
   }
-  if (type.includes('html')) {
-    return 'html';
+  if (type.includes("html")) {
+    return "html";
   }
   return null;
 }
@@ -419,20 +419,22 @@ async function SelectRequest(step, request) {
                   wptBodyRequest.responseText
                 );
               } else {
-                const container = document.getElementById("response-body-" + stepLabel);
-                container.innerHTML = '';
-                const pre = document.createElement('pre');
-                const code = document.createElement('code');
+                const container = document.getElementById(
+                  "response-body-" + stepLabel
+                );
+                container.innerHTML = "";
+                const pre = document.createElement("pre");
+                const code = document.createElement("code");
                 code.className = "language-" + lang;
                 code.textContent = wptBodyRequest.responseText;
                 pre.appendChild(code);
                 container.appendChild(pre);
                 const Prism = await loadPrism();
-                if ('highlightElement' in Prism) { // avoids a race condition
+                if ("highlightElement" in Prism) {
+                  // avoids a race condition
                   Prism.highlightElement(code);
                 }
               }
-
             } else {
               $("#response-body-" + stepLabel).text("");
             }
