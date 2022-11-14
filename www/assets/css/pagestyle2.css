@@ -592,7 +592,6 @@ span.lh-flag.poor {
 @media (max-width: 87.5em) {
   .results_body {
     padding: 0;
-    border-radius: 0;
     box-shadow: none;
     margin: 0 0 !important;
   }
