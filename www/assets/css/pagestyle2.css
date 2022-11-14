@@ -582,7 +582,6 @@ span.lh-flag.poor {
 
 .results_body {
   padding: 0 3em;
-  border-radius: 1rem;
   box-shadow: 0 0 4px #ddd;
   margin: 1em -3rem !important;
   background-clip: padding-box;
