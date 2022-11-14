@@ -933,13 +933,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     document.addEventListener('DOMContentLoaded', () => initFileReader('spof_hosts_file', 'spof_hosts'));
                                                 </script>
                                             </p>
-                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0">
-                                                <?php
-                                                if (array_key_exists('spof', $_REQUEST)) {
-                                                    echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                                }
-                                                ?>
-                                            </textarea>
+                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
+                                            if (array_key_exists('spof', $_REQUEST)) {
+                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                            }
+                                            ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
