@@ -393,6 +393,8 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
             $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
             $tabs['Console Log'] = $menuUrlGenerator->resultPage("consolelog", $endParams);
+            $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
+
             if ($gradedRunResults->hasBreakdownTimeline()) {
             // currently only supported by standard urls
                 $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));

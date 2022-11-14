@@ -28,6 +28,7 @@ ins {
         <div class="results_and_command">
             <div class="results_header">
                 <h2>HTML Diff</h2>
+                <p>A diff between the HTML delivered over the network and the generated HTML</p>
             </div>
         </div>
         @if ($error_message)
@@ -46,16 +47,16 @@ ins {
             <pre id="delivered">{{$delivered_html}}</pre>
             <pre id="rendered">{{$rendered_html}}</pre>
         </div>
-        <script src="/assets/js/vendor/diff.min.js"></script>
+        <script src="/assets/js/vendor/diff-5.1.0.min.js"></script>
         <script type="module">
             async function diff() {
                 let before = document.getElementById('delivered').innerText;
                 let after = document.getElementById('rendered').innerText;
                 if (document.getElementById('prettier').checked) {
-                    await import("/assets/js/vendor/prettier-standalone.min.js");
-                    await import("/assets/js/vendor/prettier-parser-html.min.js");
-                    await import("/assets/js/vendor/prettier-parser-babel.min.js");
-                    await import("/assets/js/vendor/prettier-parser-postcss.min.js");
+                    await import("/assets/js/vendor/prettier-standalone-2.7.1.min.js");
+                    await import("/assets/js/vendor/prettier-parser-html-2.7.1.min.js");
+                    await import("/assets/js/vendor/prettier-parser-babel-2.7.1.min.js");
+                    await import("/assets/js/vendor/prettier-parser-postcss-2.7.1.min.js");
                     const opts = {
                         parser: "html",
                         plugins: prettierPlugins,

@@ -8,7 +8,7 @@ require_once __DIR__ . '/common.inc';
 ob_start();
 define('NOBANNER', true); // otherwise Twitch banner shows 2x
 $tab = 'Test Result';
-$subtab = 'HTML diff';
+$subtab = 'HTML Diff';
 include_once INCLUDES_PATH . '/header.inc';
 $results_header = ob_get_contents();
 ob_end_clean();
