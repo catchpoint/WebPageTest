@@ -281,7 +281,9 @@ async function initCodeField(source, language = "js") {
     return; // already initialized
   }
   // load Flask
-  const { default: CodeFlask } = await import("/assets/js/codeflask.module.js");
+  const { default: CodeFlask } = await import(
+    "/assets/js/vendor/codeflask-1.4.1.module.js"
+  );
   const originalTextarea = document.getElementById(source);
   // editor container
   const codeEl = document.createElement("div");
@@ -311,10 +313,10 @@ async function loadPrism() {
   const ss = document.createElement("link");
   ss.rel = "stylesheet";
   ss.type = "text/css";
-  ss.href = "/assets/css/vendor/prism.css";
+  ss.href = "/assets/css/vendor/prism-1.29.0.css";
   document.head.appendChild(ss);
 
   // todo: find a Prism distro that is a proper module
-  await import("/assets/js/prism.js");
+  await import("/assets/js/vendor/prism-1.29.0.js");
   return window.Prism;
 }
