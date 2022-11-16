@@ -46,7 +46,6 @@ $page_description = "Chrome main-thread processing breakdown$testLabel";
                                'TimerFire' => 'Scripting',
                                'TimerInstall' => 'Scripting',
                                'TimerRemove' => 'Scripting',
-                               'v8.compile' => 'Scripting',
                                'XHRLoad' => 'Loading',
                                'XHRLoad' => 'Scripting',
                                'XHRReadyStateChange' => 'Scripting',
