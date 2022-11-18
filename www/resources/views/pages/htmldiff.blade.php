@@ -14,11 +14,11 @@
         text-decoration: none;
     }
 
-    a.del {
+    #diff-result a.del {
         color: #b30000;
     }
 
-    a.ins {
+    #diff-result a.ins {
         color: #406619;
     }
 
@@ -32,9 +32,14 @@
         font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace;
         margin: 0;
     }
-    pre a {
+    #diff-result td a {
         text-decoration: none;
         color: #888;
+        margin: 0 4px;
+    }
+
+    #result {
+        overflow-x: auto;
     }
 
 </style>
@@ -60,7 +65,7 @@
         </label>
         <div id="result" class="results_body @if ($error_message) error-banner @endif">
             <div class="overflow-container">
-                <pre id="diff-result"></pre>
+                <div id="diff-result"></div>
             </div>
             <pre id="delivered">{{$delivered_html}}</pre>
             <pre id="rendered">{{$rendered_html}}</pre>
