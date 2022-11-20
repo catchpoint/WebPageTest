@@ -32,6 +32,7 @@
         font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace;
         margin: 0;
     }
+
     #diff-result td a {
         text-decoration: none;
         color: #888;
@@ -41,7 +42,6 @@
     #result {
         overflow-x: auto;
     }
-
 </style>
 @endsection
 
@@ -95,7 +95,7 @@
                 let removedLineCount = 0;
                 let pretty_href = document.getElementById('prettier').checked ? '_pretty' : '';
                 for (let i = 0; i < diff.length; i++) {
-                    diff[i].value.split('\n').forEach(value => {
+                    diff[i].value.trimEnd().split('\n').forEach(value => {
                         let row = document.createElement('tr');
                         let td, node;
                         if (diff[i].removed) {
