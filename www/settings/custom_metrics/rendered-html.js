@@ -9,5 +9,4 @@ let styles = document.querySelectorAll("style").forEach((style) => {
   }
   style.textContent = "/* inner styles set by WPT to match CSSOM */" + thisText;
 });
-
 return document.documentElement.outerHTML;
