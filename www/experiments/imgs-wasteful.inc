@@ -33,7 +33,7 @@ if (count($imgsTooLarge)) {
     }
     
     $rwdImagesDesc = "The broadly-supported <code>picture</code> element and/or the <code>srcset</code> and <code>sizes</code> attributes allow you to offer different file sizes to download for a given image depending on a variety of conditions. <a href=\"https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images\">Read more about Responsive Images on MDN </a>.";
-    
+    $tooLargeImgsDesc = "When images are much larger than they appear in the page, they can increase page weight without noticeably improving quality.";
     $experimentsToAdd =  array(
         (object) [
             'title' => 'Consider implementing responsive image techniques',
@@ -57,7 +57,7 @@ if (count($imgsTooLarge)) {
 
     $assessment[$category]["opportunities"][] = array(
         "title" =>  "Images are larger than necessary for display",
-        "desc" => "When images are much larger than they appear in the page, they can increase page weight without noticeably improving quality.",
+        "desc" => $tooLargeImgsDesc,
         "examples" => array_unique($tooLargeList),
         "experiments" => $experimentsToAdd,
         "good" => false,
@@ -66,7 +66,7 @@ if (count($imgsTooLarge)) {
 } else {
     $assessment[$category]["opportunities"][] = array(
         "title" => "Images are sized appropriately for display",
-        "desc" => "When images are much larger than they appear in the page, they can increase page weight without noticeably improving quality.",
+        "desc" => $tooLargeImgsDesc,
         "examples" => array(),
         "good" => true
     );
