@@ -2,6 +2,7 @@
 
 $category = "Quick";
 $imgsTooLarge = $testStepResult->getMetric('imgs-too-large');
+$imgResizeURL = Util::getSetting('imgResizeURL', null);
 
 function fullURL($url)
 {
@@ -30,27 +31,42 @@ if (count($imgsTooLarge)) {
         array_push($tooLargeList, $thisListItem);
         array_push($experimentSwapList, $thisSwapItem);
     }
-
-    $assessment[$category]["opportunities"][] = array(
-        "title" =>  "Images are larger than necessary for display",
-        "desc" => "When images are much larger than they appear in the page, they increase download size without noticeably improving quality.",
-        "examples" => array_unique($tooLargeList),
-        "experiments" =>  array(
+    
+    $rwdImagesDesc = "The broadly-supported <code>picture</code> element and/or the <code>srcset</code> and <code>sizes</code> attributes allow you to offer different file sizes to download for a given image depending on a variety of conditions. <a href=\"https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images\">Read more about Responsive Images on MDN </a>.";
+    
+    $experimentsToAdd =  array(
+        (object) [
+            'title' => 'Consider implementing responsive image techniques',
+            "desc" => $rwdImgsDesc,
+            "expvar" => 'swap',
+            "expval" => array_unique($experimentSwapList)
+        ]
+    );
+        
+    if($imgResizeURL){
+        $experimentsToAdd = array(
             (object) [
                 "id" => '054',
                 'title' => 'See potential impact of using responsive images',
-                "desc" => "The broadly-supported <code>picture</code> element and/or the <code>srcset</code> and <code>sizes</code> attributes allow you to offer different file sizes to download for a given image depending on a variety of conditions. <a href=\"https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images\">Read more about Responsive Images on MDN </a>. This experiment replaces the image files at the sources below with images that are sized for display server-side.",
+                "desc" => "$rwdImagesDesc This experiment replaces the image files at the sources below with images that are sized for display server-side.",
                 "expvar" => 'swap',
                 "expval" => array_unique($experimentSwapList)
             ]
-        ),
+        );
+    }
+
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  "Images are larger than necessary for display",
+        "desc" => "When images are much larger than they appear in the page, they can increase page weight without noticeably improving quality.",
+        "examples" => array_unique($tooLargeList),
+        "experiments" => $experimentsToAdd,
         "good" => false,
         "hideassets" => true
     );
 } else {
     $assessment[$category]["opportunities"][] = array(
         "title" => "Images are sized appropriately for display",
-        "desc" => "When images are much larger than they appear in the page, they increase download size without noticeably improving quality.",
+        "desc" => "When images are much larger than they appear in the page, they can increase page weight without noticeably improving quality.",
         "examples" => array(),
         "good" => true
     );
