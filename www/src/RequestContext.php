@@ -9,6 +9,7 @@ use WebPageTest\CPClient;
 use WebPageTest\CPSignupClient;
 use WebPageTest\Util;
 use WebPageTest\BannerMessageManager;
+use WebPageTest\Environment;
 
 class RequestContext
 {
@@ -22,6 +23,8 @@ class RequestContext
     private string $request_uri;
     private string $host;
     private ?BannerMessageManager $banner_message_manager;
+    // Should use an enum, TODO
+    private string $environment;
 
     public function __construct(array $global_request, array $server = [], array $options = [])
     {
@@ -41,6 +44,8 @@ class RequestContext
         $this->request_uri = $server['REQUEST_URI'] ?? '/';
 
         $this->host = $options['host'] ?? Util::getSetting('host', "");
+
+        $this->environment = Environment::$Production;
     }
 
     public function getRaw(): array
@@ -52,7 +57,6 @@ class RequestContext
     {
         return $this->user;
     }
-
     public function setUser(?User $user): void
     {
         if (isset($user)) {
@@ -119,5 +123,29 @@ class RequestContext
     public function getHost(): string
     {
         return $this->host;
+    }
+
+    public function setEnvironment(?string $env = ''): void
+    {
+      // This should really be a match, but we're on 7.4
+        switch ($env) {
+            case 'development':
+                $this->environment = Environment::$Development;
+                break;
+            case 'qa':
+                $this->environment = Environment::$QA;
+                break;
+            case 'production':
+                $this->environment = Environment::$Production;
+                break;
+            default:
+                $this->environment = Environment::$Production;
+                break;
+        }
+    }
+
+    public function getEnvironment(): string
+    {
+        return $this->environment;
     }
 }
