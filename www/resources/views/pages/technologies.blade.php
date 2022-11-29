@@ -2,8 +2,50 @@
 
 @section('style')
 <style>
-.tech-icon {
-    max-width: 32px;
+#result ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1px;
+    margin: 3em 0 2em -1em;
+    padding: 0;
+    overflow: hidden;
+}
+#result li {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin: 0;
+    padding: 1em;
+    color: #2a3c64;
+    outline: 1px solid #eee;
+    background:#fff;
+}
+#result li img {
+    display: inline-block;
+    margin-right: .2em;
+    width: auto;
+    height: 1.3em;
+    max-width: none;
+    background: #fff;
+    border: 1px solid #2a3c643d;
+    padding: .3em;
+    border-radius: .3em;
+    vertical-align: middle;
+}
+#result li > * {
+    font-size: .7em;
+    font-weight: 500;
+}
+#result dt {
+    float: left;
+    clear: left;
+    font-weight: 700;
+    margin-right: .5em;
+}
+#result dd {
+    display: block;
+    padding-bottom: .5em;
+    margin: 0;
+    color: #333;
 }
 </style>
 @endsection
@@ -28,8 +70,7 @@
             <li>
                 @if ($tech['icon'])
                     <img
-                        onerror="this.width = 0; this.height= 0; this.onerror = null"
-                        class="tech-icon"
+                        onerror="this.style.display = 'none'; this.onerror = null"
                         src="/assets/images/wappalyzer-icons/{{$tech['icon']}}"
                     >
                 @endif
