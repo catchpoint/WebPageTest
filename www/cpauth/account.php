@@ -71,6 +71,12 @@ if ($request_method === 'POST') {
         header('Content-type: application/json');
         echo $response_body;
         exit();
+    } elseif ($type == "canceled-account-signup") {
+        $body = AccountHandler::validateCanceledAccountSignup($_POST);
+        $redirect_uri = AccountHandler::canceledAccountSignup($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "cancel-subscription") {
         $redirect_uri = AccountHandler::cancelSubscription($request_context);
         header("Location: {$redirect_uri}");
