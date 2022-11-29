@@ -111,7 +111,7 @@ echo "\n</style>\n";
 // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo "<script>";
-    require_once WWW_PATH . '/assets/js/catchpoint-rum.js';
+    require_once WWW_PATH . '/assets/js/vendor/catchpoint-rum.js';
     echo "</script>";
 }
 
