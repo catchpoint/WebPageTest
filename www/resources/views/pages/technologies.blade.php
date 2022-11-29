@@ -61,7 +61,7 @@
                     @endif
                     Detected Technologies
                 </h2>
-                <p>Data about the technologied used on the page, as detected by <a href="https://www.wappalyzer.com/">Wappalyzer</a>.</p>
+                <p>Data about the technologies used on the page, as detected by <a href="https://www.wappalyzer.com/">Wappalyzer</a>.</p>
             </div>
         </div>
         @if ($error_message)
