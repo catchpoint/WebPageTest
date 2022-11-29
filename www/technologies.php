@@ -31,5 +31,6 @@ echo view('pages.technologies', [
     'body_class' => 'result',
     'results_header' => $results_header,
     'detected' => $detected,
+    'count' => count($detected),
     'error_message' =>  $error_message,
 ]);
