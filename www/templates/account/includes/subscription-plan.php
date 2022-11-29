@@ -50,9 +50,6 @@
         <div class="card-section-subhed card-section-subhed__grid">
             <span class="plan-name">Starter<span class="status">Active</span></span>
 
-            <div class="account-cta">
-                <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
-            </div>
         </div>
         <ul class="subscription-plan-details">
             <li><strong>Runs per month</strong> <?= $monthly_runs ?></li>
@@ -61,20 +58,28 @@
         </ul>
     <?php endif; ?>
 </div>
+<?php if ($is_paid && !$is_canceled && !$is_wpt_enterprise) : ?>
 <div class="card-section">
-    <?php if (!$is_canceled && !$is_wpt_enterprise) : ?>
-        <div class="account-cta">
-            <label class="dropdown">
-                <input type="checkbox" class="dd-input" id="test">
-                <div class="dd-button">
-                    Update Subscription
-                </div>
-                <ul class="dd-menu">
-                    <li><a href="/account/update_plan">Update Subscription</a></li>
-                    <li><a href="/account/update_payment_method">Edit Billing Info</a></li>
-                    <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
-                </ul>
-            </label>
-        </div>
-    <?php endif; ?>
+    <div class="account-cta">
+        <label class="dropdown">
+            <input type="checkbox" class="dd-input" id="test">
+            <div class="dd-button">
+                Update Subscription
+            </div>
+            <ul class="dd-menu">
+                <li><a href="/account/update_plan">Update Subscription</a></li>
+                <?php if (!$is_canceled) : ?>
+                <li><a href="/account/update_payment_method">Edit Billing Info</a></li>
+                <li><a href="#" id="cancel-subscription">Cancel Subscription</a> </li>
+                <?php endif; ?>
+            </ul>
+        </label>
+    </div>
 </div>
+<?php else : ?>
+<div class="card-section">
+    <div class="account-cta">
+        <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+    </div>
+</div>
+<?php endif; ?>

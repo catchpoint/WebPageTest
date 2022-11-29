@@ -296,7 +296,8 @@ final class CPClientTest extends TestCase
                 "remainingRuns": 300,
                 "monthlyRuns": 3000,
                 "subscriptionId": "518235",
-                "planRenewalDate": "2125-12-25"
+                "planRenewalDate": "2125-12-25",
+                "status": "ACTIVE"
               }
             }
             }');

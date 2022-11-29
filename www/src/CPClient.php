@@ -206,7 +206,8 @@ class CPClient
                         'monthlyRuns',
                         'subscriptionId',
                         'planRenewalDate',
-                        'nextBillingDate'
+                        'nextBillingDate',
+                        'status'
                     ])
             ]);
 
@@ -228,7 +229,8 @@ class CPClient
             $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
             $user->setUserId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
-            $user->setPaid($data['userIdentity']['activeContact']['isWptPaidUser']);
+            $user->setPaidClient($data['userIdentity']['activeContact']['isWptPaidUser']);
+            $user->setPaymentStatus($data['wptCustomer']['status']);
             $user->setVerified($data['userIdentity']['activeContact']['isWptAccountVerified']);
             $user->setFirstName($data['userIdentity']['activeContact']['firstName']);
             $user->setLastName($data['userIdentity']['activeContact']['lastName']);

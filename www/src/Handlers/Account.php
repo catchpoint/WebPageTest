@@ -19,6 +19,50 @@ use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as Subscripti
 
 class Account
 {
+    /* Validate the form for a canceled account signing up again
+     *
+     * #[ValidationMethod]
+     * #[Route(Http::POST, '/account', 'canceled-account-signup')]
+     *
+     *  @param array{plan: string} $post_body
+     *  @return object{plan: string} $vars
+     */
+    public static function validateCanceledAccountSignup(array $post_body): object
+    {
+        $body = new stdClass();
+        $body->token = $post_body['nonce'];
+        $body->is_upgrade = !empty($post_body['is-upgrade']);
+        $body->subscription_id = $post_body['subscription-id'];
+        $body->plan = $post_body['plan'];
+
+        return $body;
+    }
+
+    public static function canceledAccountSignup(RequestContext $request_context, object $body): string
+    {
+        $up = $request_context->getClient()->updatePaymentMethod($body->token);
+        $new = $up && $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
+
+        if ($new) {
+            $success_message = [
+              'type' => 'success',
+              'text' => 'Your plan has been successfully updated!'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
+        } else {
+            $error_message = [
+              'type' => 'error',
+              'text' => 'Your plan was not updated successfully. Please try again or contact customer service.'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+        }
+
+        $protocol = $request_context->getUrlProtocol();
+        $host = $request_context->getHost();
+        $redirect_uri = "{$protocol}://{$host}/account";
+        return $redirect_uri;
+    }
+
     /* Validate that a plan is selected
      *
      * #[ValidationMethod]
@@ -339,7 +383,7 @@ class Account
         return $body;
     }
 
-    // Existing free user subscribes to a paid account
+    // Existing free/canceled/expired user subscribes to a paid account
     //
     // #[HandlerMethod]
     // #[Route(Http::POST, '/account', 'account-signup')]
@@ -357,6 +401,7 @@ class Account
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+
             $successMessage = array(
                 'type' => 'success',
                 'text' => 'Your plan has been successfully updated! '
@@ -777,6 +822,8 @@ class Account
         $error_message = $_SESSION['client-error'] ?? null;
 
         $is_paid = $request_context->getUser()->isPaid();
+        $is_canceled = $request_context->getUser()->isCanceled();
+        $is_expired = $request_context->getUser()->isExpired();
         $is_verified = $request_context->getUser()->isVerified();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
         $user_id = $request_context->getUser()->getUserId();
@@ -798,6 +845,8 @@ class Account
         $contact_info = [
             'layout_theme' => 'b',
             'is_paid' => $is_paid,
+            'is_canceled' => $is_canceled,
+            'is_expired' => $is_expired,
             'is_verified' => $is_verified,
             'is_wpt_enterprise' => $is_wpt_enterprise,
             'first_name' => htmlspecialchars($first_name),
@@ -811,6 +860,7 @@ class Account
         $country_list = Util::getChargifyCountryList();
         $state_list = Util::getChargifyUSStateList();
 
+
         if ($is_paid) {
             $acct_info = $is_wpt_enterprise
                 ? $request_context->getClient()->getPaidEnterpriseAccountPageInfo()
@@ -823,7 +873,6 @@ class Account
                 'wptCustomer' => $customer,
                 'transactionHistory' => $sub_id ? $request_context->getClient()->getTransactionHistory($sub_id) : null,
                 'status' => $customer->getStatus(),
-                'is_canceled' => $customer->isCanceled(),
                 'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
                 'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
                 'masked_cc' => $customer->getMaskedCreditCard(),
@@ -839,7 +888,6 @@ class Account
         $all_plans = $plan_set->getAllPlans();
 
         $results = array_merge($contact_info, $billing_info);
-        $results['is_canceled'] ??= false;
         $results['run_renewal_date'] = $run_renewal_date;
         $results['remaining_runs'] = $remaining_runs;
         $results['monthly_runs'] = $monthly_runs;
@@ -886,9 +934,8 @@ class Account
                 if (isset($planCookie) && $planCookie) {
                     $plan = Util::getPlanFromArray($planCookie, $all_plans);
                     $results['plan'] = $plan;
-                    if ($is_paid) {
+                    if ($is_paid && !$is_canceled) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
-                        $sub_id = $customer->getSubscriptionId();
                         $billing_address = $customer->getAddress();
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
                         $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $addr);
@@ -898,6 +945,15 @@ class Account
                         $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
                         $results['renewaldate'] = $customer->getNextPlanStartDate();
                         return $tpl->render('plans/plan-summary-upgrade', $results);
+                    } elseif ($is_canceled) {
+                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                        $results['is_canceled'] = $is_canceled;
+
+                        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+                        $results['ch_site'] = Util::getSetting('ch_site');
+                        $results['is_upgrade'] = $plan->isUpgrade($oldPlan);
+                        $results['subscription_id'] = $customer->getSubscriptionId();
+                        return $tpl->render('plans/plan-summary', $results);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
@@ -923,7 +979,7 @@ class Account
                 return $tpl->render('billing/update-payment-confirm-address', $results);
               break;
             default:
-                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$customer->isCanceled());
+                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$is_canceled);
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
                 if (isset($next_plan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);
