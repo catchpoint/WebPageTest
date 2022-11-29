@@ -55,7 +55,12 @@
     <div class="results_main">
         <div class="results_and_command">
             <div class="results_header">
-                <h2>Detected technologies</h2>
+                <h2>
+                    @if ($count > 1)
+                        {{ $count }}
+                    @endif
+                    Detected Technologies
+                </h2>
                 <p>Data about the technologied used on the page, as detected by <a href="https://www.wappalyzer.com/">Wappalyzer</a>.</p>
             </div>
         </div>
@@ -76,8 +81,10 @@
                 @endif
                 {{ $name }}
                 <dl>
-                    <dt>Description</dt>
-                    <dd>{{ $tech['description'] }}</dd>
+                    @if ($tech['description'])
+                        <dt>Description</dt>
+                        <dd>{{ $tech['description'] }}</dd>
+                    @endif
                     @if ($tech['version'])
                         <dt>Version</dt>
                         <dd>{{ $tech['version'] }}</dd>
