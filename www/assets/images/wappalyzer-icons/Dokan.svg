@@ -1,0 +1,69 @@
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>Group 3</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="0.0445997572%" y1="50.0116542%" x2="99.9853373%" y2="50.0116542%" id="linearGradient-1">
+            <stop stop-color="#007BC3" offset="0%"></stop>
+            <stop stop-color="#0275B9" offset="22%"></stop>
+            <stop stop-color="#0966A0" offset="60%"></stop>
+            <stop stop-color="#12517D" offset="100%"></stop>
+        </linearGradient>
+        <radialGradient cx="28.143663%" cy="33.6822531%" fx="28.143663%" fy="33.6822531%" r="55.67092%" gradientTransform="translate(0.281437,0.336823),scale(1.000000,0.819938),translate(-0.281437,-0.336823)" id="radialGradient-2">
+            <stop stop-color="#B7D433" offset="0%"></stop>
+            <stop stop-color="#B1D234" offset="12%"></stop>
+            <stop stop-color="#A0CC37" offset="29%"></stop>
+            <stop stop-color="#85C23C" offset="47%"></stop>
+            <stop stop-color="#5FB543" offset="67%"></stop>
+            <stop stop-color="#3EA949" offset="82%"></stop>
+            <stop stop-color="#49A64B" offset="100%"></stop>
+        </radialGradient>
+        <linearGradient x1="-0.00988692577%" y1="50.0105263%" x2="99.9817866%" y2="50.0105263%" id="linearGradient-3">
+            <stop stop-color="#338947" offset="0%"></stop>
+            <stop stop-color="#1A622A" offset="41%"></stop>
+            <stop stop-color="#074414" offset="79%"></stop>
+            <stop stop-color="#00390C" offset="100%"></stop>
+        </linearGradient>
+        <radialGradient cx="69.7447431%" cy="60.414232%" fx="69.7447431%" fy="60.414232%" r="51.4848685%" gradientTransform="translate(0.697447,0.604142),scale(0.906734,1.000000),translate(-0.697447,-0.604142)" id="radialGradient-4">
+            <stop stop-color="#FFC60B" offset="0%"></stop>
+            <stop stop-color="#FCBC0E" offset="15%"></stop>
+            <stop stop-color="#F5A315" offset="39%"></stop>
+            <stop stop-color="#E97921" offset="70%"></stop>
+            <stop stop-color="#E05A2A" offset="90%"></stop>
+            <stop stop-color="#DD5330" offset="100%"></stop>
+        </radialGradient>
+        <linearGradient x1="87.0590784%" y1="27.7911996%" x2="36.6109431%" y2="57.1735575%" id="linearGradient-5">
+            <stop stop-color="#CA2022" offset="0%"></stop>
+            <stop stop-color="#C7371F" offset="58%"></stop>
+            <stop stop-color="#C6421D" offset="100%"></stop>
+        </linearGradient>
+        <radialGradient cx="69.3935148%" cy="32.9767722%" fx="69.3935148%" fy="32.9767722%" r="50.8912811%" gradientTransform="translate(0.693935,0.329768),scale(0.959792,1.000000),translate(-0.693935,-0.329768)" id="radialGradient-6">
+            <stop stop-color="#C7EAFB" offset="0%"></stop>
+            <stop stop-color="#BDE5FA" offset="11%"></stop>
+            <stop stop-color="#A4D9F7" offset="29%"></stop>
+            <stop stop-color="#79C5F2" offset="52%"></stop>
+            <stop stop-color="#40AAEB" offset="80%"></stop>
+            <stop stop-color="#1093E5" offset="100%"></stop>
+        </radialGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Home-Page-Design-for-Dokan" transform="translate(-388.000000, -33.000000)" fill-rule="nonzero">
+            <g id="Heading" transform="translate(-543.000000, 0.000000)">
+                <g id="Menu" transform="translate(931.000000, 28.000000)">
+                    <g id="Menu-Color">
+                        <g id="Group-3" transform="translate(0.000000, 5.000000)">
+                            <g id="Logo-icon">
+                                <path d="M6.25668449,8.5985 C6.25668449,8.5985 5.27486631,2.80977778 10.8032086,2.11216667 C10.8032086,2.11216667 15.4074866,1.48705556 17.1304813,7.08244444 C17.128877,7.08888889 10.2144385,7.58188889 6.25668449,8.5985 Z" id="Shape" fill="url(#linearGradient-1)"></path>
+                                <path d="M17.128877,7.08888889 C17.128877,7.08888889 1.98930481,7.48844444 0.670588235,12.3217778 C0.670588235,12.3217778 -2.62139037,18.937 7.50962567,27.6273333 C7.50962567,27.6273333 12.0192513,30.3742778 15.4122995,26.6091111 C15.4122995,26.6091111 9.58716578,20.9122222 7.66203209,17.3001111 C7.66203209,17.3001111 12.928877,11.7240556 17.7930481,9.38311111 C17.6382237,8.60049977 17.4159981,7.83287377 17.128877,7.08888889 Z" id="Shape" fill="url(#radialGradient-2)"></path>
+                                <path d="M7.61229947,17.3838889 C7.61229947,17.3838889 3.50855615,21.6565556 6.92887701,25.4732778 C6.92887701,25.4732778 10.2721925,28.7551111 14.3759358,25.9308333 C14.3743316,25.9388889 9.51176471,20.2081667 7.61229947,17.3838889 Z" id="Shape" fill="url(#linearGradient-3)"></path>
+                                <path d="M9.5631016,15.4521667 C9.5631016,15.4521667 16.8818182,20.0035556 21.1379679,19.9020556 C23.1330177,16.3980428 24.5206822,12.579059 25.2417112,8.60816667 C25.2417112,8.60816667 30.1042781,10.1355 29.9534759,15.4247778 C29.9534759,15.4247778 30.5117647,19.4960556 25.4951872,25.5989444 C25.4951872,25.5989444 22.2016043,29.4656111 18.9096257,28.8050556 C18.9096257,28.8050556 12.4764706,25.8277222 7.61390374,17.3838889 C8.22693035,16.7036666 8.87769786,16.0587336 9.5631016,15.4521667 Z" id="Shape" fill="url(#radialGradient-4)"></path>
+                                <path d="M25.0893048,9.90511111 C25.0893048,9.90511111 29.197861,11.5838889 28.8128342,15.7888889 C28.8128342,15.7888889 27.9513369,21.5502222 21.1122995,20.1002222 C21.1122995,20.0921667 24.2534759,13.1096111 25.0893048,9.90511111 Z" id="Shape" fill="url(#linearGradient-5)"></path>
+                                <path d="M4.8657754,9.03833333 C4.8657754,9.03833333 3.71069519,3.36883333 9.03048128,1.12777778 C9.03048128,1.12777778 10.5513369,0.212666667 16.4262032,0.161111111 C16.4262032,0.161111111 22.9620321,-0.0934444444 25.1903743,4.12766667 C25.1903743,4.12766667 27.2663102,8.87238889 21.1122995,20.0905556 L20.4032086,19.952 C20.4032086,19.952 19.9026738,19.8617778 18.4780749,19.5202222 C18.4780749,19.5202222 19.0106952,8.75961111 16.0090909,4.9445 C16.0090909,4.9445 13.9235294,1.47255556 10.0058824,2.27488889 C10.0058824,2.27488889 5.69197861,3.56377778 6.2631016,8.5985 C6.25668449,8.5985 6.08181818,8.66938889 4.8657754,9.03833333 Z" id="Shape" fill="url(#radialGradient-6)"></path>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

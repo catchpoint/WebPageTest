@@ -1,0 +1,7 @@
+<svg enable-background="new 0 0 72.7 72.7" viewBox="0 0 72.7 72.7" xmlns="http://www.w3.org/2000/svg">
+	<style>
+	    @media (prefers-color-scheme: dark) {
+	      path{fill:#fff;}
+	    }
+	</style>
+	<path clip-rule="evenodd" d="m36.4.9c20.1 0 36.4 15.9 36.4 35.5s-16.4 35.5-36.4 35.5-36.4-15.9-36.4-35.5 16.3-35.5 36.4-35.5zm16 19.1h-21.8v38.4l21-28.8h-6.3z" fill="#4672ff" fill-rule="evenodd"/></svg>
