@@ -27,7 +27,7 @@ if (count($imgsTooLarge)) {
             $srcToUse .= $img["src"];
         }
         $thisListItem = $srcToUse . " (Display: " . $img["displayWidth"] . "px wide, File: " . $img["naturalWidth"] . "px wide)";
-        $thisSwapItem = encodeURIComponent($srcToUse) . "|" . encodeURIComponent("$imgResizeURL/w_" . $img["displayWidth"] . "/" . fullURL($srcToUse));
+        $thisSwapItem = encodeURIComponent($srcToUse) . "|" . encodeURIComponent("$imgResizeURL?width=" . $img["displayWidth"] . "&url=" . fullURL($srcToUse));
         array_push($tooLargeList, $thisListItem);
         array_push($experimentSwapList, $thisSwapItem);
     }
