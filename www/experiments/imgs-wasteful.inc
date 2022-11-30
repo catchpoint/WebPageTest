@@ -7,7 +7,7 @@ $imgResizeURL = Util::getSetting('imgResizeURL', null);
 function fullURL($url)
 {
     global $requests;
-    if (preg_match('/^(https?\:\/\/)/', $url)) {
+    if (parse_url($url, PHP_URL_SCHEME)) {
         return $url;
     } else {
         return $requests[0]['url'] . $url;
