@@ -40,7 +40,7 @@ $assessment[$category]["opportunities"][] = array(
             'id' => '026',
             'title' => 'Find/Replace Text',
             "desc" => '<p>This experiment will find and replace occurrences of text in the page, with the option of using regular expressions, capturing parentheses, and flags as well</p>',
-            "expvar" => 'swap',
+            "expvar" => 'findreplace',
             "expfields" => array(
                 (object) [
                     'label' => 'find',
