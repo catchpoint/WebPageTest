@@ -1313,6 +1313,7 @@ h4.experiments_list_hed-recs {
   min-width: auto;
   text-align: left;
   font-size: 1em;
+  max-width: 70%;
 }
 .experiments_foot details ol button.experiment_sort {
   border: 1px solid #ccc;
