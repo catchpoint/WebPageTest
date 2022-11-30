@@ -662,11 +662,19 @@ if (!isset($test)) {
         $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
     }
 
+    if ($test['bodies']) {
+        $test['customMetrics'] = array();
+        $code = file_get_contents(ASSETS_PATH . '/js/conditional_metrics/generated-html.js');
+        $test['customMetrics']['generated-html'] = $code;
+    }
+
     // see if there are any custom metrics to extract
     if (is_dir('./settings/custom_metrics')) {
         $files = glob('./settings/custom_metrics/*.js');
         if ($files !== false && is_array($files) && count($files)) {
-            $test['customMetrics'] = array();
+            if (!isset($test['customMetrics'])) {
+                $test['customMetrics'] = array();
+            }
             foreach ($files as $file) {
                 $name = basename($file, '.js');
                 $code = file_get_contents($file);
