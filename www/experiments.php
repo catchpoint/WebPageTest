@@ -607,11 +607,71 @@ $page_description = "Website performance test result$testLabel.";
         
         localStorage.setItem("experimentForm", formString);
     }
-
+    
     form.addEventListener("change", saveExperimentFormState );
+    form.addEventListener("submit", sortExperimentOrder );
     form.addEventListener("submit", saveExperimentFormState );
+    window.addEventListener("beforeunload", unSortExperimentOrder );
 
+    // append inputs to end of form on submit to impact post order
+    function sortExperimentOrder(e){
+        let appliedOrder = document.querySelectorAll('.exps-active li');
+        let sortedElemsContainer = document.createElement('div');
+        sortedElemsContainer.className = "temp-sorted-inputs";
+        form.append(sortedElemsContainer);
+        appliedOrder.forEach(li => {
+            let associatedInput = form.querySelector( "[name=\"" + li.getAttribute('data-input-name') + "\"][value=\"" + li.getAttribute('data-input-value') + "\"]" );
+            if(associatedInput){
+                // append an identical input to the end of the form in the order these list items arrive
+                sortedElemsContainer.append(associatedInput.cloneNode(true));
+                // disable the actual input for submission
+                associatedInput.disabled = true;
+            }
+        });
+    }
+    // before the submit goes out, we undo the sorted inputs
+    function unSortExperimentOrder(){
+        document.querySelector(".temp-sorted-inputs")
+        let sortedInputs = document.querySelectorAll("input[type=checkbox][name='recipes[]'][disabled]");
+        sortedInputs.forEach(input => {
+            input.disabled = false;
+        });
+    }
 
+    // this attempts to sort the order if it's saved, onload
+    function refreshExperimentOrder(){
+        let priorState = localStorage.getItem("experimentOrder");
+        if(priorState){
+            priorState = JSON.parse(priorState);
+        }
+        let currentTestID = '<?php if (isset($id)) {
+            echo "$id";
+        } ?>';
+        if(currentTestID && priorState && priorState && priorState[0] === currentTestID){
+            priorState.reverse();
+            for(var i = 0; i < priorState.length-1; i++){
+                let sortableLi = document.querySelector(".exps-active ol li[data-input-name='"+ priorState[i][0] +"'][data-input-value='"+ priorState[i][1] +"']");
+                if(sortableLi){
+                    sortableLi.parentElement.prepend(sortableLi);
+                }
+            }
+        }
+    }
+
+    function saveExperimentOrder(){
+        let appliedOrder = document.querySelectorAll('.exps-active li');
+        let currentTestID = '<?php if (isset($id)) {
+            echo "$id";
+        } ?>';
+        if( currentTestID ){
+            let orderObj = [currentTestID];
+            appliedOrder.forEach(li => {
+                orderObj.push( [ li.getAttribute('data-input-name'), li.getAttribute('data-input-value') ]);
+            });
+            localStorage.setItem("experimentOrder", JSON.stringify(orderObj));
+        }
+    }
+    
 
     var expsActive;
     function updateCount(){
@@ -635,18 +695,26 @@ $page_description = "Website performance test result$testLabel.";
             expsActiveInfo.innerHTML = '<summary><strong>' + expsActive.length + '</strong> experiment'+ (expsActive.length>1?'s':'') +' selected.</summary>';
 
             let expsActiveLinksContain = document.createElement('div');
-            expsActiveLinksContain.innerHTML = '<p class="experiments_jump">Scroll to:</p>';
+            expsActiveLinksContain.innerHTML = '<p class="experiments_jump">Experiments apply in this order: <i>(Order matters! Some experiments will override others.)</i></p>';
             let expsActiveLinks = document.createElement('ol');
             
             expsActive.forEach(exp => {
                 let newLi = document.createElement('li');
+                newLi.setAttribute("data-input-name", exp.getAttribute('name'));
+                newLi.setAttribute("data-input-value", exp.getAttribute('value'));
                 let expDesc = exp.closest(".experiment_description");
-                newLi.innerHTML = '<button type="button">'+ expDesc.querySelector('h5').innerText +'</button>';
+                newLi.innerHTML = '<button type="button" class="experiment_scroll">'+ expDesc.querySelector('h5').innerText +'</button><button type="button" class="experiment_sort">Sort</button>';
                 expsActiveLinks.append(newLi);
-                newLi.addEventListener("click", () => {
+                newLi.querySelector('button.experiment_scroll').addEventListener("click", () => {
                     expDesc.scrollIntoView({behavior: 'smooth'});
                 });
-                
+                newLi.querySelector('button.experiment_sort').addEventListener("click", () => {
+                    var prevLi = newLi.previousElementSibling;
+                    if(prevLi){
+                        prevLi.before(newLi);
+                    }
+                    saveExperimentOrder();
+                });
             });
 
             expsActiveLinksContain.append(expsActiveLinks);
@@ -685,8 +753,9 @@ $page_description = "Website performance test result$testLabel.";
     // try and restore state at load
     refreshExperimentFormState();
     updateCount();
+    refreshExperimentOrder();
     form.addEventListener("input", updateCount );
-    form.addEventListener("submit", updateCount );
+    form.addEventListener("input", refreshExperimentOrder );
 
     // add add buttons
     document.querySelectorAll(".experiment_pair_value-add:last-child").forEach(pair => {
