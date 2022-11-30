@@ -999,7 +999,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 if ($recipeSansId === "findreplace") {
                                     // findreplace is used in the form to submit the pieces for a swap experiment.
                                     // we don't need that term from here. we'll build the swap.
-                                    $recipeSansId === "swap"
+                                    $recipeSansId === "swap";
                                     if ($ingredients[0]) {
                                         $ingredients[0] = rawurlencode($ingredients[0]);
                                     }
