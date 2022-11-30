@@ -1341,6 +1341,9 @@ h4.experiments_list_hed-recs {
   margin-right: 0.3rem;
   display: inline-block;
 }
+.experiments_foot details ol li:first-child button.experiment_sort {
+  display: none; 
+}
 
 .experiments_create {
   margin-bottom: -8rem;
