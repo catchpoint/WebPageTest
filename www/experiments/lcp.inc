@@ -23,9 +23,10 @@ if (isset($lcp)) {
     if ($lcp['time'] > 2500) {
         $isBG = false;
         $isVideo = false;
-
+        $hasHighFetchPriority = false;
         if (isset($lcp['element']['outerHTML'])) {
             $lcpHTML = '<code class="language-html">' . htmlentities($lcp['element']['outerHTML']) . '</code>';
+            $hasHighFetchPriority = preg_match('/fetchpriority\="?high"?/i', $lcp['element']['outerHTML']) === 1;
         }
 
         if (isset($lcp['type']) && $lcp['type'] === "image") {
@@ -74,8 +75,9 @@ if (isset($lcp)) {
                 "expval" => array($lcpSource . "|as_image"),
                 "explabel" => array($lcpSource)
             ];
+            
             // priority Hints only help for foreground images
-            if (!$isBG && !$isVideo && !(isset($lcp['element']['fetchPriority']) && $lcp['element']['fetchPriority'] == 'high')) {
+            if (!$isBG && !$isVideo && !$hasHighFetchPriority) {
                 $expsToAdd[] = (object) [
                     "id" => '011',
                     'title' => 'Add Priority Hint',
