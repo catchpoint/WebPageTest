@@ -77,7 +77,8 @@ if (isset($lcp)) {
             ];
             
             // priority Hints only help for foreground images
-            if (!$isBG && !$isVideo && !$hasHighFetchPriority) {
+            $suggest_priority_hints = !$isBG && !$isVideo && !$hasHighFetchPriority;
+            if ($suggest_priority_hints) {
                 $expsToAdd[] = (object) [
                     "id" => '011',
                     'title' => 'Add Priority Hint',
