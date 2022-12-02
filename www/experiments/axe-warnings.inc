@@ -32,7 +32,7 @@ if (isset($axe)) {
 
         $recs = array();
         foreach ($violations as $v) {
-            $thisRec = '<h6 class="recommendation_level-' . $v['impact'] . '"><span>' . $v['impact'] . '</span> ' . htmlentities($v['help']) .  ' <a href=\"' . $v['helpUrl'] . '\">More info</a></h6>';
+            $thisRec = '<h6 class="recommendation_level-' . $v['impact'] . '"><span>' . $v['impact'] . '</span> ' . htmlentities($v['help']) .  ' <a href="' . $v['helpUrl'] . '">More info</a></h6>';
             if ($v["nodes"] && count($v["nodes"])) {
                 //print_r($v["nodes"])
                 if (count($v["nodes"]) > 6) {
