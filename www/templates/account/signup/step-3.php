@@ -13,7 +13,7 @@
             <input type="hidden" name="last-name" value="<?= $last_name ?>" />
             <input type="hidden" id="hidden-nonce-input" name="nonce" />
             <input type="hidden" name="email" value="<?= $email ?>" />
-            <input type="hidden" name="company" value="<?= $company_name ?>" />
+            <input type="hidden" name="company-name" value="<?= $company_name ?>" />
             <input type="hidden" name="password" value="<?= $password ?>" />
             <input type="hidden" name="plan" value="<?= $plan ?>" />
             <input type="hidden" name="step" value="3" />
