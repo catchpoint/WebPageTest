@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 300 300">
+    <defs>
+        <style>.cls1{fill:#007f65;}</style>
+        <style>.cls2{fill:#252525;}</style>
+    </defs>
+    <polygon class="cls1" points="11.3 132.38 83.58 6.89 228.6 6.89 118.61 132.4 11.3 132.38"/>
+    <polygon class="cls1" points="228.61 257.83 84.14 258.2 11.3 132.38 175.31 165.1 228.61 257.83"/>
+    <polygon class="cls1" points="228.19 6.66 301.12 132.24 228.61 257.83 174.91 99.82 228.19 6.66"/>
+</svg>

@@ -975,7 +975,6 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                     ) {
                         $error = "Attempt to use unauthorized experiments feature.";
                     } else {
-                        $recipeScript .= $recipeSansId;
                         $experimentSpof = array();
                         $experimentBlock = array();
                         $experimentOverrideHost = array();
@@ -997,8 +996,10 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 if ($recipeSansId === "setinitialurl") {
                                     $experimentRunURL = $ingredients;
                                 }
-                                if ($recipeSansId === "swap") {
-                                    $experimentSwap = $ingredients;
+                                if ($recipeSansId === "findreplace") {
+                                    // findreplace is used in the form to submit the pieces for a swap experiment.
+                                    // we don't need that term from here. we'll build the swap.
+                                    $recipeSansId === "swap";
                                     if ($ingredients[0]) {
                                         $ingredients[0] = rawurlencode($ingredients[0]);
                                     }
@@ -1020,7 +1021,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                             ) {
                                 $ingredients = rawurlencode($ingredients);
                             }
-                            $recipeScript .= ":=" . $ingredients;
+                            $recipeScript .= "$recipeSansId:=" . $ingredients;
                         }
                         $recipeScript .= ";";
                     }

@@ -48,7 +48,6 @@ class UserTimingHtmlTable
 
     private function _createHead()
     {
-        $borderClass = $this->hasUserTiming ? ' class="border"' : '';
         $out = "<tr>\n";
         if ($this->isMultistep) {
             $out .= "<th>Step</th>";
@@ -61,7 +60,7 @@ class UserTimingHtmlTable
             }
         }
         if ($this->hasNavTiming) {
-            $out .= "<th$borderClass>";
+            $out .= "<th>";
             if ($this->hasDomInteractive) {
                 $out .= "<a href=\"https://w3c.github.io/navigation-timing/#processing-model\">domInteractive</a></th><th>";
             }
@@ -83,7 +82,6 @@ class UserTimingHtmlTable
 
     private function _createRow($stepResult, $stepUserTiming)
     {
-        $borderClass = $this->hasUserTiming ? ' class="border"' : '';
         $out = "<tr>\n";
         if ($this->isMultistep) {
             $out .= "<td>" . FitText($stepResult->readableIdentifier(), 30) . "</td>";
@@ -96,7 +94,7 @@ class UserTimingHtmlTable
             }
         }
         if ($this->hasNavTiming) {
-            $out .= "<td$borderClass>";
+            $out .= "<td>";
             if ($this->hasDomInteractive) {
                 $out .= $this->_getTimeMetric($stepResult, "domInteractive") . '</td><td>';
             }

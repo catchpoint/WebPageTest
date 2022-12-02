@@ -1,0 +1,20 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_3262_203)">
+<g clip-path="url(#clip1_3262_203)">
+<path d="M13.36 31.84C5.76 30.48 0 23.92 0 16C0 7.2 7.2 0 16 0C24.8 0 32 7.2 32 16C32 23.92 26.24 30.48 18.64 31.84L17.76 31.12H14.24L13.36 31.84Z" fill="url(#paint0_linear_3262_203)"/>
+<path d="M22.2399 20.48L22.9599 16H18.7199V12.88C18.7199 11.6 19.1999 10.64 21.1199 10.64H23.1999V6.55999C22.0799 6.39999 20.7999 6.23999 19.6799 6.23999C15.9999 6.23999 13.4399 8.47999 13.4399 12.48V16H9.43994V20.48H13.4399V31.76C14.3199 31.92 15.1999 32 16.0799 32C16.9599 32 17.8399 31.92 18.7199 31.76V20.48H22.2399Z" fill="white"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_3262_203" x1="16.0008" y1="30.8871" x2="16.0008" y2="-0.00589422" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0062E0"/>
+<stop offset="1" stop-color="#19AFFF"/>
+</linearGradient>
+<clipPath id="clip0_3262_203">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_3262_203">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>
