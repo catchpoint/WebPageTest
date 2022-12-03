@@ -26,4 +26,5 @@ return array(
     'a8d3953fd9959404dd22d3dfcd0a79f0' => $vendorDir . '/google/apiclient/src/aliases.php',
     'e8024c3c59881b17d41eb68625bef457' => $baseDir . '/www/constants.inc',
     '1d073db855be7053325707610ef9987e' => $baseDir . '/www/resources/view.php',
+    '0ce117787b13cb6e0d598114eddadbac' => $baseDir . '/www/resources/helpers.php',
 );
