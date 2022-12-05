@@ -1260,13 +1260,12 @@ h4.experiments_list_hed-recs {
 .experiments_foot details div p.experiments_jump {
   color: #333;
   font-size: 1rem;
-  margin-bottom: .5em;
+  margin-bottom: 0.5em;
 }
 .experiments_foot details div p.experiments_jump i {
   display: block;
   font-weight: 300;
-  font-size: .8em;
-
+  font-size: 0.8em;
 }
 .experiments_foot details ol {
   max-height: 70vh;
@@ -1278,7 +1277,7 @@ h4.experiments_list_hed-recs {
 
 .experiments_foot details ol li {
   padding: 0.6em 0;
-  font-size: .8em;
+  font-size: 0.8em;
   border-bottom: 1px solid #eee;
   list-style-position: inside;
 }
@@ -1343,7 +1342,7 @@ h4.experiments_list_hed-recs {
   display: inline-block;
 }
 .experiments_foot details ol li:first-child button.experiment_sort {
-  display: none; 
+  display: none;
 }
 
 .experiments_create {
