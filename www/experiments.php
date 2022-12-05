@@ -646,7 +646,7 @@ $page_description = "Website performance test result$testLabel.";
         }
         let currentTestID = '<?php if (isset($id)) {
             echo "$id";
-        } ?>';
+                             } ?>';
         if(currentTestID && priorState && priorState && priorState[0] === currentTestID){
             priorState.reverse();
             for(var i = 0; i < priorState.length-1; i++){
@@ -662,7 +662,7 @@ $page_description = "Website performance test result$testLabel.";
         let appliedOrder = document.querySelectorAll('.exps-active li');
         let currentTestID = '<?php if (isset($id)) {
             echo "$id";
-        } ?>';
+                             } ?>';
         if( currentTestID ){
             let orderObj = [currentTestID];
             appliedOrder.forEach(li => {
