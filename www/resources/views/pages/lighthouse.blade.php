@@ -106,6 +106,31 @@ function gradeScoreCSSClass($score)
                         </div>
                         <div class="experiments_bottlenecks">
                             @if ($category->title === 'Performance')
+                            <h4 class="hed_sub hed_sub-lighthouse">Lighthouse Metrics</h4>
+                            <details class="metrics_shown">
+                                <summary>Values are estimated and may vary.</summary>
+                                <p><span>The <a rel="noopener" target="_blank" href="https://web.dev/performance-scoring/?utm_source=lighthouse&amp;utm_medium=wpt">performance score is calculated</a> directly from these metrics.</span>
+                                <a class="lh-calclink" target="_blank" href="https://googlechrome.github.io/lighthouse/scorecalc/">See calculator.</a></p>
+                            </details>
+                            
+                            <div class="scrollableTable">
+                                <table id="tableResults" class="pretty">
+                                    <tbody>
+                                        <tr class="metric_labels">
+                                        @foreach($metrics as $metric)
+                                        <th> {{ $metric->title }} </th>
+                                        @endforeach
+                                        </tr>
+                                        <tr>
+                                        @foreach($metrics as $metric)
+                                        <td class="{{ $metric->grade }}">{{ $metric->value }}<span class="units">{{ $metric->units }}</span></td>
+                                        @endforeach
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+
                             <h4>Filmstrip</h4>
                             <div class="overflow-container lh_filmstrip">
                             @foreach ($thumbnails as $thumb)

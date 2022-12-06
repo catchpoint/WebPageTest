@@ -58,6 +58,42 @@ if ($lhResults) {
     }
 }
 
+
+
+
+    $metricKeys = array(
+        'first-contentful-paint',
+        'speed-index',
+        'largest-contentful-paint',
+        'interactive',
+        'total-blocking-time',
+        'cumulative-layout-shift'
+    );
+
+    $metrics = array();
+    foreach($metricKeys as $metric){
+        $thisMetric = $lhResults->audits->{$metric};
+        $metricSplit = preg_split("@[\s+　]@u", trim($thisMetric->displayValue));
+        
+        $grade = '';
+        if( $thisMetric->score ){
+            $grade = "good";
+            if($thisMetric->score < 0.9 ){
+                $grade = "ok";
+            } else if( $thisMetric->score < 0.5){
+                $grade = "poor";
+            }
+        }
+
+
+        array_push($metrics, (object) [
+            'title' => $lhResults->audits->{$metric}->title,
+            'grade' => $grade,
+            'value' => $metricSplit[0],
+            'units' => isset($metricSplit[1]) ? $metricSplit[1] : ''
+        ]);
+    }
+
 $screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
@@ -85,6 +121,7 @@ echo view('pages.lighthouse', [
     'body_class' => 'result',
     'results' => $lhResults,
     'audits' => $audits,
+    'metrics' => $metrics,
     'screenshot' => $screenshot,
     'thumbnails' => $thumbnails,
 ]);
