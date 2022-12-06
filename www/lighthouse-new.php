@@ -62,7 +62,6 @@ $screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
 
-
 $thumbnails = [];
 if ($lhResults->audits->{'screenshot-thumbnails'}) {
     foreach ($lhResults->audits->{'screenshot-thumbnails'}->details->items as $th) {

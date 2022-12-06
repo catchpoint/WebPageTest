@@ -68,12 +68,7 @@ function gradeScoreCSSClass($score)
                     You can run it against any web page, public or requiring authentication.
                     It has audits for performance, accessibility, progressive web apps, SEO and more.
                 </p>
-                @if ($screenshot)
-                    <img src="{{ $screenshot }}">
-                @endif
-                @foreach ($thumbnails as $thumb)
-                    <img src="{{ $thumb }}">
-                @endforeach
+                
             </div>
             <div class="opportunities_summary">
                 <nav class="results_lh_nav">
@@ -110,6 +105,14 @@ function gradeScoreCSSClass($score)
                             </h3>
                         </div>
                         <div class="experiments_bottlenecks">
+                            @if ($category->title === 'Performance')
+                            <h4>Thumbnails</h4>
+                            <div class="overflow-container lh_filmstrip">
+                            @foreach ($thumbnails as $thumb)
+                            <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
+                            @endforeach
+                            </div
+                            @endif
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>

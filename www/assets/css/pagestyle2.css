@@ -8732,7 +8732,7 @@ pre[class*="language-"] {
   }
 }
 
-.results_main-lh ul.results_lh_nav {
+.results_main-lh nav.results_lh_nav {
   display: flex;
   flex: 1 0 100%;
   gap: 1em;
@@ -8841,6 +8841,25 @@ pre[class*="language-"] {
 
 details.metrics_shown p a {
   color: #fff;
+}
+
+.lh_filmstrip {
+  display: flex;
+  justify-content: space-between;
+  grid-template-columns: repeat(auto-fit, 60px);
+  padding: 1em 1em 1em 0;
+  gap: 1em;
+}
+.lh_filmstrip_item {
+  text-align: right;
+  position: relative;
+  flex: 1 1 100px;
+}
+.lh_filmstrip_item img {
+  max-height: 130px;
+  width: auto;
+  border-width: 1px;
+  margin: 0;
 }
 
 .lh-filter_map {
