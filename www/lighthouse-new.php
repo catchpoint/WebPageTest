@@ -5,15 +5,10 @@
 
 include __DIR__ . '/common.inc';
 
-//region HEADER
-ob_start();
-define('NOBANNER', true); // otherwise Twitch banner shows 2x
-$tab = 'Test Result';
-$subtab = 'Lighthouse Report';
-include_once 'header.inc';
-$results_header = ob_get_contents();
-ob_end_clean();
-//endregion
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
 $lhResults = null;
 if (isset($testPath) && is_dir($testPath)) {
@@ -74,6 +69,16 @@ if ($lhResults->audits->{'screenshot-thumbnails'}) {
         $thumbnails[] = $th->data;
     }
 }
+
+//region HEADER
+ob_start();
+define('NOBANNER', true); // otherwise Twitch banner shows 2x
+$tab = 'Test Result';
+$subtab = 'Lighthouse Report';
+include_once 'header.inc';
+$results_header = ob_get_contents();
+ob_end_clean();
+//endregion
 
 echo view('pages.lighthouse', [
     'test_results_view' => true,
