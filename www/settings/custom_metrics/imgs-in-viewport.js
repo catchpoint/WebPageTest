@@ -1,27 +1,28 @@
 var imgsInViewport = [];
 var allImgs = document.querySelectorAll("img");
-for (var i = 0; i < allImgs.length; i++) {
-  var boundingClientRect = allImgs[i].getBoundingClientRect();
-  //getBoundingClientRect returns 0 if the image is hidden (display none or parent display none)
-  //display none isn't enough (only catches if that image is display non, not parent)
-  //so we check offsetParent, but also position fixed (in everyone but ff, position fix makes offsetParent null)
-  let isVisible =
-    window.getComputedStyle(allImgs[i]).display != "none" &&
-    (allImgs[i].offsetParent != null ||
-      window.getComputedStyle(allImgs[i]).position == "fixed");
-  if (boundingClientRect.top < window.innerHeight && isVisible) {
-    imgsInViewport.push({
-      src: allImgs[i].getAttribute("src"),
-      html: allImgs[i].outerHTML,
-      currentSrc: allImgs[i].currentSrc,
-      srcSet: allImgs[i].getAttribute("srcset"),
-      sizes: allImgs[i].getAttribute("sizes"),
-      priority: allImgs[i].getAttribute("priority"),
-      loading: allImgs[i].getAttribute("loading"),
-      naturalWidth: allImgs[i].naturalWidth,
-      naturalHeight: allImgs[i].naturalHeight,
+const observer = new IntersectionObserver(
+    (entries, observer) => { 
+      entries.forEach(entry => {
+        if( entry.isIntersecting ){
+          imgsInViewport.push({
+            src: entry.target.getAttribute("src"),
+            html: entry.target.outerHTML,
+            currentSrc: entry.target.currentSrc,
+            srcSet: entry.target.getAttribute("srcset"),
+            sizes: entry.target.getAttribute("sizes"),
+            priority: entry.target.getAttribute("priority"),
+            loading: entry.target.getAttribute("loading"),
+            naturalWidth: entry.target.naturalWidth,
+            naturalHeight: entry.target.naturalHeight,
+          });
+        }
+        observer.unobserve(entry.target);
+      });
     });
-  }
+
+for (var i = 0; i < allImgs.length; i++) {
+  observer.observe(allImgs[i]);
 }
 
+await new Promise(r => setTimeout(r, 2000));
 return imgsInViewport;
