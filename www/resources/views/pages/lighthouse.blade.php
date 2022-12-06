@@ -69,8 +69,13 @@ function gradeScoreCSSClass($score)
                     It has audits for performance, accessibility, progressive web apps, SEO and more.
                 </p>
                 
+                
             </div>
-            <div class="opportunities_summary">
+            <div class="opps_note">
+                <p><strong>Note!</strong> Lighthouse tests run only in Chrome and provide a unique complementary analysis alongside the many different browsers, devices, and locations WebPageTest offers. <a href="/?url={{ $test_url }}">Test this Site Further!</a></p>
+            </div>
+        </div>
+        <div class="opportunities_summary">
                 <nav class="results_lh_nav">
                     @foreach ($results->categories as $category)
                     <a href="#{{ $category->title}}" class="lh_score lh_score_grade-{{ gradeFromScore($category->score) }}">
@@ -86,7 +91,6 @@ function gradeScoreCSSClass($score)
                     @endforeach
                 </nav>
             </div>
-        </div>
         <div id="result" class="experiments_grades results_body">
             <div id="average">
                 <div class='experiments_grades results_body'>
@@ -137,7 +141,20 @@ function gradeScoreCSSClass($score)
                             <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
                             @endforeach
                             </div>
+                            <div class="lh-filter_map">
+                                <a href="#" class="lh-maplink">View Tree Map</a>
+                                <p class="lh-filteraudits">Show audits relevant to metrics:
+                                @foreach($metric_filters as $filter)
+                                <a href="&filterby={{ $filter->label }}" 
+                                @if ($filter->active)
+                                aria-current="page"
+                                @endif 
+                                >{{ $filter->label }}</a>
+                                @endforeach
+                            </p>
+                            </div>
                             @endif
+                            
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>

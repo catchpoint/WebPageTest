@@ -8723,12 +8723,39 @@ pre[class*="language-"] {
 }
 
 .results_main-lh .results_and_command {
-  gap: 1em;
-  width: 70%;
+  gap: 3rem;
+  display: flex;
+}
+.opps_note {
+  flex: 1 0 25%;
+  margin: 5.5rem 0 2rem;
+  padding: 1.5rem 1.5rem 1rem;
+  background: #eff8ff;
+  border-radius: 0.7em
+}
+.opps_note p {
+  color: #2a3b64;
+  line-height: 1.5;
+}
+.opps_note p a {
+  color: #fff;
+  background: #1071ba;
+  border-radius: 1em;
+  text-decoration: none;
+  padding: 0.2em 0.8em 0.3em;
+  font-weight: 500;
+  font-size: .8em;
+  display: inline-block;
+}
 }
 @media (max-width: 60em){
   .results_main-lh .results_and_command {
     width: auto;
+    gap: 0;
+  }
+  .opps_note {
+    margin: 0 -1.5rem 1rem;
+    
   }
 }
 

@@ -9,7 +9,7 @@ require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
-
+$testInfo = GetTestInfo($id);
 $lhResults = null;
 if (isset($testPath) && is_dir($testPath)) {
     $file = 'lighthouse.json.gz';
@@ -94,6 +94,30 @@ if ($lhResults) {
         ]);
     }
 
+    $metricFilters = array(
+        (object) [
+            'label' => 'all'
+        ],
+        (object) [
+            'label' => 'fcp'
+        ],
+        (object) [
+            'label' => 'lcp'
+        ],
+        (object) [
+            'label' => 'tbt'
+        ],
+        (object) [
+            'label' => 'cls'
+        ]
+    );
+    $activeMetric = $_REQUEST['filterby'];
+    foreach($metricFilters as $filter){
+        if( !isset($activeMetric) && $filter->label === 'all' || $activeMetric && $activeMetric === $filter->label ){
+            $filter->active = true;
+        }
+    }
+
 $screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
@@ -104,6 +128,8 @@ if ($lhResults->audits->{'screenshot-thumbnails'}) {
         $thumbnails[] = $th->data;
     }
 }
+
+$url = $testInfo['url'];
 
 //region HEADER
 ob_start();
@@ -119,9 +145,11 @@ echo view('pages.lighthouse', [
     'test_results_view' => true,
     'results_header' => $results_header,
     'body_class' => 'result',
+    'test_url' => $url,
     'results' => $lhResults,
     'audits' => $audits,
     'metrics' => $metrics,
+    'metric_filters' => $metricFilters,
     'screenshot' => $screenshot,
     'thumbnails' => $thumbnails,
 ]);
