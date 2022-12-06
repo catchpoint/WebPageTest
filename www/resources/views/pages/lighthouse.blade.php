@@ -106,7 +106,7 @@ function gradeScoreCSSClass($score)
                         </div>
                         <div class="experiments_bottlenecks">
                             @if ($category->title === 'Performance')
-                            <h4>Thumbnails</h4>
+                            <h4>Filmstrip</h4>
                             <div class="overflow-container lh_filmstrip">
                             @foreach ($thumbnails as $thumb)
                             <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
