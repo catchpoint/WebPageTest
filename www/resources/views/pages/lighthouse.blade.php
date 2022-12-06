@@ -71,6 +71,9 @@ function gradeScoreCSSClass($score)
                 @if ($screenshot)
                     <img src="{{ $screenshot }}">
                 @endif
+                @foreach ($thumbnails as $thumb)
+                    <img src="{{ $thumb }}">
+                @endforeach
             </div>
             <div class="opportunities_summary">
                 <nav class="results_lh_nav">

@@ -67,6 +67,14 @@ $screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
 
+
+$thumbnails = [];
+if ($lhResults->audits->{'screenshot-thumbnails'}) {
+    foreach ($lhResults->audits->{'screenshot-thumbnails'}->details->items as $th) {
+        $thumbnails[] = $th->data;
+    }
+}
+
 echo view('pages.lighthouse', [
     'test_results_view' => true,
     'results_header' => $results_header,
@@ -74,4 +82,5 @@ echo view('pages.lighthouse', [
     'results' => $lhResults,
     'audits' => $audits,
     'screenshot' => $screenshot,
+    'thumbnails' => $thumbnails,
 ]);
