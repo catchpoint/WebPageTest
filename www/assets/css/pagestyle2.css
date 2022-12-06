@@ -2182,6 +2182,8 @@ footer ul {
   .grade_header {
     display: block;
     padding-top: 1rem;
+    min-height: auto;
+    padding-left: 1.5rem;
   }
 
   .grade_header .grade_heading {
@@ -5289,7 +5291,7 @@ label.test_preset_profile {
 
   .cta-banner a {
     display: block;
-    max-width: 7em;
+    max-width: 14em;
     margin: 0.5em auto 0;
     font-size: 0.9em;
   }
@@ -8724,6 +8726,11 @@ pre[class*="language-"] {
   gap: 1em;
   width: 70%;
 }
+@media (max-width: 60em){
+  .results_main-lh .results_and_command {
+    width: auto;
+  }
+}
 
 .results_main-lh ul.results_lh_nav {
   display: flex;
@@ -8734,13 +8741,17 @@ pre[class*="language-"] {
 
 .results_lh_nav a {
   flex: 1 1 auto;
-  justify-content: center;
+  display:flex;
+  flex-flow: row;
   align-items: center;
   font-weight: 700;
-  gap: 0.5em;
   font-size: 1.1em;
-  flex-flow: row;
   padding-right: 2em;
+  max-width: 10em;
+  margin: 0;
+  justify-content: flex-start;
+  gap: .5em;
+  white-space: nowrap;
 }
 
 .results_lh_nav a:hover .lh_score_cat,
