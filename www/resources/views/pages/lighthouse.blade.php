@@ -68,9 +68,12 @@ function gradeScoreCSSClass($score)
                     You can run it against any web page, public or requiring authentication.
                     It has audits for performance, accessibility, progressive web apps, SEO and more.
                 </p>
+                @if ($screenshot)
+                    <img src="{{ $screenshot }}">
+                @endif
             </div>
             <div class="opportunities_summary">
-                <ul class="results_lh_nav">
+                <nav class="results_lh_nav">
                     @foreach ($results->categories as $category)
                     <a href="#{{ $category->title}}" class="lh_score lh_score_grade-{{ gradeFromScore($category->score) }}">
                         <span class="lh_score_cat">{{ $category->title }}</span>
@@ -83,7 +86,7 @@ function gradeScoreCSSClass($score)
                         </span>
                     </a>
                     @endforeach
-                </ul>
+                </nav>
             </div>
         </div>
         <div id="result" class="experiments_grades results_body">

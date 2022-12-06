@@ -63,10 +63,15 @@ if ($lhResults) {
     }
 }
 
+$screenshot = $lhResults->audits->{'final-screenshot'}
+    ? $lhResults->audits->{'final-screenshot'}->details->data
+    : null;
+
 echo view('pages.lighthouse', [
     'test_results_view' => true,
     'results_header' => $results_header,
     'body_class' => 'result',
     'results' => $lhResults,
     'audits' => $audits,
+    'screenshot' => $screenshot,
 ]);
