@@ -111,7 +111,7 @@ function gradeScoreCSSClass($score)
                             @foreach ($thumbnails as $thumb)
                             <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
                             @endforeach
-                            </div
+                            </div>
                             @endif
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
