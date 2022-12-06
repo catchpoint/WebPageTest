@@ -68,7 +68,7 @@ function gradeScoreCSSClass($score)
                     You can run it against any web page, public or requiring authentication.
                     It has audits for performance, accessibility, progressive web apps, SEO and more.
                 </p>
-                
+
             </div>
             <div class="opportunities_summary">
                 <nav class="results_lh_nav">
@@ -110,33 +110,36 @@ function gradeScoreCSSClass($score)
                             <details class="metrics_shown">
                                 <summary>Values are estimated and may vary.</summary>
                                 <p><span>The <a rel="noopener" target="_blank" href="https://web.dev/performance-scoring/?utm_source=lighthouse&amp;utm_medium=wpt">performance score is calculated</a> directly from these metrics.</span>
-                                <a class="lh-calclink" target="_blank" href="https://googlechrome.github.io/lighthouse/scorecalc/">See calculator.</a></p>
+                                    <a class="lh-calclink" target="_blank" href="https://googlechrome.github.io/lighthouse/scorecalc/">See calculator.</a>
+                                </p>
                             </details>
-                            
+
                             <div class="scrollableTable">
                                 <table id="tableResults" class="pretty">
                                     <tbody>
                                         <tr class="metric_labels">
-                                        @foreach($metrics as $metric)
-                                        <th> {{ $metric->title }} </th>
-                                        @endforeach
+                                            @foreach($metrics as $metric)
+                                            <th> {{ $metric->title }} </th>
+                                            @endforeach
                                         </tr>
                                         <tr>
-                                        @foreach($metrics as $metric)
-                                        <td class="{{ $metric->grade }}">{{ $metric->value }}<span class="units">{{ $metric->units }}</span></td>
-                                        @endforeach
+                                            @foreach($metrics as $metric)
+                                            <td class="{{ $metric->grade }}">{{ $metric->value }}<span class="units">{{ $metric->units }}</span></td>
+                                            @endforeach
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
 
+                            @if (count($thumbnails))
+                                <h4>Filmstrip</h4>
+                                <div class="overflow-container lh_filmstrip">
+                                    @foreach ($thumbnails as $thumb)
+                                    <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
+                                    @endforeach
+                                </div>
+                            @endif
 
-                            <h4>Filmstrip</h4>
-                            <div class="overflow-container lh_filmstrip">
-                            @foreach ($thumbnails as $thumb)
-                            <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
-                            @endforeach
-                            </div>
                             @endif
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
