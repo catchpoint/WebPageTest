@@ -17,10 +17,19 @@
     global $noanalytics;
     global $socialDesc;
     global $useScreenshot;
+    global $socialImage;
     global $socialTitle;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
-    $body_class = $body_class ? ' class=' . $body_class : '';
+    if ($_REQUEST['screenshot']){
+        if($body_class){
+            $body_class .= " screenshot";
+        } else {
+            $body_class = "screenshot";
+        }
+    }
+    
+    $body_class = $body_class ? ' class="' . $body_class .'"' : '';
 
     ?>
     <title>{{ $page_title ?? 'WebPageTest' }}</title>
@@ -28,7 +37,7 @@
     @yield('style')
 </head>
 
-<body {{$body_class }}>
+<body {!!$body_class !!}>
     <?php require_once __DIR__ . '/../../templates/layouts/header.inc'; ?>
     <div id="main">
         <?php require_once __DIR__ . '/../../templates/layouts/main_hed.inc'; ?>

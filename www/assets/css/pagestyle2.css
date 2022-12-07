@@ -8246,7 +8246,14 @@ body.screenshot header details,
 body.screenshot .play,
 body.screenshot .metric_experiment,
 body.screenshot .metric_control,
-body.screenshot footer img {
+body.screenshot footer img,
+body.screenshot .opps_note,
+body.screenshot .experiment_opportunities,
+body.screenshot .grade_header-lighthouse,
+body.screenshot .hed_sub-lighthouse,
+body.screenshot .results_main-lh .grade_header-lighthouse:not(:first-of-type),
+body.screenshot .results_main-lh .experiments_bottlenecks ~ *,
+body.screenshot .results_main-lh .scrollableTable ~ * {
   display: none !important;
 }
 
@@ -8355,9 +8362,24 @@ body.screenshot .header_screenshots img {
   width: auto !important;
 }
 
-body.screenshot .experiment_opportunities {
-  display: none;
+
+
+body.screenshot .results_main-lh nav.results_lh_nav {
+  margin: 2rem 0 0;
+  max-width: 80%;
 }
+body.screenshot .results_main-lh nav.results_lh_nav a {
+  padding-right: 0;
+  justify-content: center;
+}
+body.screenshot .results_main-lh .scrollableTable {
+  border-top: 1px solid #ddd;
+
+}
+body.screenshot .results_main-lh .experiments_bottlenecks {
+  margin-bottom: 0;
+}
+
 
 .linklike {
   cursor: pointer;

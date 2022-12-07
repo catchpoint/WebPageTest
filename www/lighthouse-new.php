@@ -5,11 +5,12 @@
 
 include __DIR__ . '/common.inc';
 
+
 require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
-$testInfo = GetTestInfo($id);
+
 $lhResults = null;
 if (isset($testPath) && is_dir($testPath)) {
     $file = 'lighthouse.json.gz';
@@ -19,6 +20,12 @@ if (isset($testPath) && is_dir($testPath)) {
     }
 }
 
+$testInfo = GetTestInfo($id);
+$url = $testInfo['url'];
+$useScreenshot = true;
+$socialTitle = "Lighthouse Report for $url";
+$socialDesc = "View this Lighthouse Report on WebPageTest.org";
+global $socialImage;
 $audits = [];
 if ($lhResults) {
     foreach ($lhResults->categories as $category) {
@@ -125,8 +132,6 @@ if ($lhResults->audits->{'screenshot-thumbnails'}) {
         $thumbnails[] = $th->data;
     }
 }
-
-$url = $testInfo['url'];
 
 //region HEADER
 ob_start();

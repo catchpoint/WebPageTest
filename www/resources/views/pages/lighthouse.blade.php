@@ -72,7 +72,7 @@ function gradeScoreCSSClass($score)
                 
             </div>
             <div class="opps_note">
-                <p><strong>Note!</strong> Lighthouse tests run only in Chrome and provide a unique complementary analysis alongside the many different browsers, devices, and locations WebPageTest offers. <a href="/?url={{ $test_url }}">Test this Site Further!</a></p>
+                <p><strong>Note!</strong> Lighthouse tests run <em>only</em> in Chrome and provide a unique complementary analysis alongside the many different browsers, devices, and locations WebPageTest offers. <a href="/?url={{ $test_url }}">Test this Site Further!</a></p>
 
             </div>
         </div>
