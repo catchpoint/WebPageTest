@@ -10,14 +10,19 @@
 
                       $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                       $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
-
-                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View JSON</a></li>";
+                  
+                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON</a></li>";
                   if (is_file("$testPath/test.log")) {
                       echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
                   }
                   if (is_file("$testPath/lighthouse.log.gz")) {
                       echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\">View Lighthouse Log</a></li>";
                   }
+                  if (is_file("$testPath/lighthouse.html.gz")) {
+                    echo "<li><a href=\"/lighthouse.php?test=$id&f=lh-viewer\">View Standard Lighthouse View</a></li>";
+                    echo "<li><a href=\"/lighthouse.php?test=$id&f=json\">View Lighthouse JSON</a></li>";
+                }
+                  
                       $publish = GetSetting('publishTo');
                   if ($publish && GetSetting('host') != 'www.webpagetest.org') {
                       echo "<li><a href=\"/publish.php?test=$id\">Publish to $publish</a></li>";
