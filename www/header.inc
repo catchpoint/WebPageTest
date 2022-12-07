@@ -362,50 +362,50 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
             $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
-
+            $tabs = array();
             $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $gradeRun, !empty($cached));
             $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
-
-            $tabs = array( 'Performance Summary' => $menuUrlGenerator->resultSummary($endParams));
-
-
-            if ($experiment) {
-                $tabs['Opportunities & Experiments'] = $experimentOriginalExperimentsHref;
-                $tabs['Experiment Results & Filmstrip'] = $experimentResultsHref;
-            } else {
-                $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);
-                $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
-            }
-            $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
-
             $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
+            $lhOnly = isset($test['test']['type']) && @$test['test']['type'] == 'lighthouse';
+
+            if (!$lhOnly) {
+                $tabs['Performance Summary'] = $menuUrlGenerator->resultSummary($endParams);
+
+                if ($experiment) {
+                    $tabs['Opportunities & Experiments'] = $experimentOriginalExperimentsHref;
+                    $tabs['Experiment Results & Filmstrip'] = $experimentResultsHref;
+                } else {
+                    $tabs['Opportunities & Experiments'] = $menuUrlGenerator->resultPage("experiments", $endParams);
+                    $tabs['Filmstrip'] = $menuUrlGenerator->filmstripView("filmstrip", $endParams);
+                }
+                $tabs['Details'] = $menuUrlGenerator->resultPage("details", $endParams);
+
+                if ($gradedRunResults->hasWebVitals()) {
+                    $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
+                }
 
 
-            if ($gradedRunResults->hasWebVitals()) {
-                $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
-            }
+                if ($gradedRunResults->isOptimizationChecked()) {
+                    $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+                }
 
+                $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
+                $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
+                $tabs['Console Log'] = $menuUrlGenerator->resultPage("consolelog", $endParams);
+                $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
 
-            if ($gradedRunResults->isOptimizationChecked()) {
-                $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
-            }
-
-            $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
-            $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
-            $tabs['Console Log'] = $menuUrlGenerator->resultPage("consolelog", $endParams);
-            $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
-
-            if ($gradedRunResults->hasBreakdownTimeline()) {
-            // currently only supported by standard urls
-                $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
-                $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
+                if ($gradedRunResults->hasBreakdownTimeline()) {
+                // currently only supported by standard urls
+                    $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
+                    $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
+                }
             }
             
             if (isset($firstRunResults)) {
-                $lighthouse = $firstRunResults->getLighthouseScore();
                 $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
-                if (isset($lighthouse)) {
-                    $tabs['Lighthouse Report'] = $urlGeneratorFirstRun->resultPage("lighthouse");
+                $lhURL = $urlGeneratorFirstRun->resultPage("lighthouse");
+                if (isset($lhURL)) {
+                    $tabs['Lighthouse Report'] = $lhURL;
                 }
             }
 
@@ -422,7 +422,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
 
             // Add the "Image Analysis" link
-            if (isset($id) && strlen($id)) {
+            if (!$lhOnly && isset($id) && strlen($id)) {
                 $tabUrl = GetSetting('image_analysis');
                 if ($tabUrl) {
                     $tabUrl = str_replace('{test id}', $id, $tabUrl);
@@ -431,7 +431,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
 
             // Add the "Request Map" link
-            if (isset($id) && strlen($id)) {
+            if (!$lhOnly && isset($id) && strlen($id)) {
                 $tabUrl = GetSetting('request_map');
                 if ($tabUrl) {
                     $tabUrl = str_replace('{test id}', $id, $tabUrl);
@@ -440,33 +440,36 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
 
             // one dollar sign for every 500KB
-            $dollars = "";
-            $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
-            for ($i = 1; $i <= 5; $i++) {
-                $dollars .= $i <= $dollarcount ? '$' : '-';
-            }
-            if (!$id) {
-                $id = $testInfo->getId();
-            }
-            echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-            "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
+            if( !$lhOnly ){
+                $dollars = "";
+                $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
+                for ($i = 1; $i <= 5; $i++) {
+                    $dollars .= $i <= $dollarcount ? '$' : '-';
+                }
+                if (!$id) {
+                    $id = $testInfo->getId();
+                }
+                echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
+                "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
 
-            if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
-                // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
-                $securityScoreIncludesVulnerabilities = true;
-                if ($gradeRunResults) {
-                    $detected = $gradeRunResults->getStepResult(1)->getRawResults()['detected'];
-                    if (isset($detected) && isset($detected['CMS'])) {
-                        if (stripos($detected['CMS'], "WordPress") >= 0) {
-                            $securityScoreIncludesVulnerabilities = false;
+            
+                if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+                    // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
+                    $securityScoreIncludesVulnerabilities = true;
+                    if ($gradeRunResults) {
+                        $detected = $gradeRunResults->getStepResult(1)->getRawResults()['detected'];
+                        if (isset($detected) && isset($detected['CMS'])) {
+                            if (stripos($detected['CMS'], "WordPress") >= 0) {
+                                $securityScoreIncludesVulnerabilities = false;
+                            }
                         }
                     }
-                }
-                require_once('security_checks.php');
-                $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
+                    require_once('security_checks.php');
+                    $securityGrade = getSecurityGrade($testInfo, $gradeRunResults, $securityScoreIncludesVulnerabilities);
 
-                $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
-                echo "<li><a href=\"$snykUrl\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
+                    $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
+                    echo "<li><a href=\"$snykUrl\" title=\"(external) - Opens Snyk in a new window.\">Security Score: <span class=\"lh-flag\">" . $securityGrade['grade'] . "</span><img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
+                }
             }
 
 
