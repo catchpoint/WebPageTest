@@ -139,9 +139,15 @@ define('NOBANNER', true); // otherwise Twitch banner shows 2x
 $tab = 'Test Result';
 $subtab = 'Lighthouse Report';
 include_once 'header.inc';
+global $lhOnly;
 $results_header = ob_get_contents();
 ob_end_clean();
 //endregion
+
+if( !$lhOnly ){
+    $experimentOptsUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, 0, 0);
+    $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
+}
 
 echo view('pages.lighthouse', [
     'test_results_view' => true,
@@ -151,6 +157,8 @@ echo view('pages.lighthouse', [
     'results' => $lhResults,
     'audits' => $audits,
     'metrics' => $metrics,
+    'lh_only' => $lhOnly,
+    'opps_url' => $experimentOptsHref,
     'metric_filters' => $metricFilters,
     'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,

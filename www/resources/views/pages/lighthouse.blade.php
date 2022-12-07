@@ -136,6 +136,22 @@ function gradeScoreCSSClass($score)
                                 </table>
                             </div>
 
+                            <div class="opps_note opps_note-links">
+                                <p><strong>Aiming to improve?</strong>
+                                @if ($lh_only)
+                                <a href="/?url={{ $test_url }}">Run a full test</a> and then
+                                @endif
+                                check out our 
+                                @if ($lh_only)
+                                <strong>Opportunities & Experiments</strong>
+                                @else
+                                <a href="{{ $opps_url }}">Opportunities & Experiments</a>
+                                @endif
+                                 for suggestions and run No-Code Experiments to see how changes impact this site! 
+                            </p>
+
+                            </div>
+
                             @if (count($thumbnails))
                                 <h4>Filmstrip</h4>
                                 <div class="overflow-container lh_filmstrip">

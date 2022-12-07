@@ -8755,12 +8755,16 @@ pre[class*="language-"] {
   background: #eff8ff;
   border-radius: 0.7em
 }
+.opps_note-links {
+  margin: 1em 0;
+  background: #fafafa;
+}
 .opps_note p {
   color: #2a3b64;
   line-height: 1.6;
   margin: 0 0 .5em 0;
 }
-.opps_note p a {
+.opps_note:not(.opps_note-links) p a {
   background-color: #fbe076;
   border: 1px solid #e2d088;
   color: #333;
