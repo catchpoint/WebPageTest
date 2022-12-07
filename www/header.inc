@@ -10,7 +10,7 @@ require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
-
+require_once INCLUDES_PATH . '/include/social_meta_vars.inc';
 if (!isset($noanalytics)) {
     require_once WWW_PATH . '/templates/layouts/google-tag-manager-noscript.inc';
 }
@@ -253,8 +253,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     echo "<p>Related Links: <a href=\"" . $controlTestHref . "\">Original (Control Run)</a>, <a href=\"" . $experimentOriginalTestHref . "\">Original Test</a></p><ul>";
                 }
                 echo '</div></details>';
-
-                if (isset($socialImage)) {
+                if (isset($socialImage) && isset($useScreenshot) && $useScreenshot === true) {
                     echo "<details class=\"test_presets_more test_presets_more-share\"><summary><span class=\"test_presets_tag\">Share</span></summary>
                         <div class=\"details_contain\">
                             <ul>
@@ -475,7 +474,6 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
             echo '</ul></nav></div>';
-
 
             include("testinfo_command-bar.inc");
 

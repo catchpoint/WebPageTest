@@ -25,7 +25,8 @@ $url = $testInfo['url'];
 $useScreenshot = true;
 $socialTitle = "Lighthouse Report for $url";
 $socialDesc = "View this Lighthouse Report on WebPageTest.org";
-global $socialImage;
+$page_title = "WebPageTest: Lighthouse Report for $url";
+
 $audits = [];
 if ($lhResults) {
     foreach ($lhResults->categories as $category) {
@@ -158,6 +159,7 @@ echo view('pages.lighthouse', [
     'audits' => $audits,
     'metrics' => $metrics,
     'lh_only' => $lhOnly,
+    'page_title' => $page_title,
     'opps_url' => $experimentOptsHref,
     'metric_filters' => $metricFilters,
     'lighthouse_screenshot' => $lighthouse_screenshot,

@@ -17,8 +17,8 @@
     global $noanalytics;
     global $socialDesc;
     global $useScreenshot;
-    global $socialImage;
     global $socialTitle;
+    
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     if ($_REQUEST['screenshot']){
