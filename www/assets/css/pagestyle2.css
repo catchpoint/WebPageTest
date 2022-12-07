@@ -8796,9 +8796,10 @@ pre[class*="language-"] {
   flex-flow: row wrap;
 }
 
-@media (min-width: 80em) {
+@media (min-width: 70em) {
   .results_main-lh nav.results_lh_nav {
     justify-content: space-between;
+    max-width: 65%;
   }
 }
 
