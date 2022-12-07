@@ -59,7 +59,7 @@ if ($lhResults) {
         $passed = array_unique($auditsPassed, SORT_REGULAR);
 
         $audits[$category->title] = [
-            'opprtunities' => $opportunities,
+            'opportunities' => $opportunities,
             'diagnostics' => $diagnostics,
             'passed' => $passed,
         ];

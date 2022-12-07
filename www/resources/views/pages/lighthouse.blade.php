@@ -174,6 +174,23 @@ function gradeScoreCSSClass($score)
                             </p>
                             </div>
                             @endif
+
+                            @if (count($audits[$category->title]['opportunities']))
+                            <h4>Opportunities ({{ count($audits[$category->title]['opportunities']) }})</h4>
+                            <ol>
+                                @foreach ($audits[$category->title]['opportunities'] as $audit)
+                                <li class="experiments_details-bad lh_audit_mode-{{ $audit->scoreDisplayMode }}">
+                                    <details open>
+                                        <summary>{!! md($audit->title) !!}</summary>
+                                        <div class="experiments_details_body">
+                                            <div class="experiments_details_desc">
+                                                <p>{!! md($audit->description) !!}</p>
+                                            </div>
+                                    </details>
+                                </li>
+                                @endforeach
+                            </ol>
+                            @endif
                             
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
