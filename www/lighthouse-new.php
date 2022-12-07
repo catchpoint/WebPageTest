@@ -122,7 +122,7 @@ foreach ($metricKeys as $metric) {
         }
     }
 
-$screenshot = $lhResults->audits->{'final-screenshot'}
+$lighthouse_screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
 
@@ -152,6 +152,6 @@ echo view('pages.lighthouse', [
     'audits' => $audits,
     'metrics' => $metrics,
     'metric_filters' => $metricFilters,
-    'screenshot' => $screenshot,
+    'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,
 ]);

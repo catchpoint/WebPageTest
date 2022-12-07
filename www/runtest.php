@@ -291,7 +291,7 @@ if (!isset($test)) {
         $test['lighthouse'] = $req_lighthouse;
     }
     $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
-    $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
+    $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] === "0" ? 0 : 1;
     $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
     if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig'])) {
         $test['lighthouseConfig'] = $_REQUEST['lighthouseConfig'];
