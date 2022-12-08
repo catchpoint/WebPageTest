@@ -24,8 +24,8 @@
 @endif
 
 @if ($audit->details->type === "table" || $audit->details->type === "opportunity")
-<?php 
-$thesekeys = array(); 
+<?php
+$thesekeys = array();
 ?>
 <div class="scrollableTable">
 <table class="lh-details">
@@ -33,12 +33,12 @@ $thesekeys = array();
         @foreach ($audit->details->headings as $heading)
         <?php $hedText = isset($heading->text) ? $heading->text : $heading->label; ?>
         @if ($hedText)
-        <?php array_push($thesekeys, $heading->key); ?> 
-        <th class="{{ $heading->$key }}">{{ $hedText }} </th>
+        <?php array_push($thesekeys, $heading->key); ?>
+        <th class="{{ $heading->key }}">{{ $hedText }} </th>
         @endif
         @endforeach
     </tr></thead>
-    <body>
+    <tbody>
         @foreach ($audit->details->items as $item)
         <tr>
         @foreach ($thesekeys as $key)
@@ -46,7 +46,7 @@ $thesekeys = array();
         @endforeach
         </tr>
         @endforeach
-    </body>
+    </tbody>
 </table>
 </div>
 @endif
