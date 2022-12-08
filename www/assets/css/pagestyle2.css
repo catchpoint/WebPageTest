@@ -9017,24 +9017,31 @@ p.lh-filteraudits {
   background: #fafafa;
 }
 
-.lh-chain ol {
+.lh-chain {
   margin: 1em 0;
   font-size: 0.9em;
-}
-
-.lh-chain ol ol {
   margin: 1em 0 0 1em;
   font-size: 1em;
+  padding: 0;
 }
-
+.lh-chain ol {
+  padding: 0 0 .5em 1rem;
+}
 .lh-chain li {
   position: relative;
   overflow: visible;
   padding-left: 1em;
+  padding-bottom: .3em;
   list-style: none;
+  padding-right: 0;
+}
+.lh-chain li >span {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #ddd;
 }
 
-.lh-chain li li:before {
+.lh-chain li:before {
   content: "";
   position: absolute;
   height: 0.6em;
