@@ -9001,16 +9001,22 @@ p.lh-filteraudits {
 .results_main-lh table.lh-details th,
 .results_main-lh table.lh-details td {
   padding: 0.5em;
+  text-align: left;
 }
 
 .results_main-lh table.lh-details th {
   padding: 1em 0.5em;
   border-top: 1px solid #eee;
+  white-space: nowrap
 }
 
 .results_main-lh table.lh-details th:last-child,
 .results_main-lh table.lh-details td:last-child {
   text-align: right;
+}
+.results_main-lh table.lh-details th:first-child,
+.results_main-lh table.lh-details td:first-child {
+  text-align: left;
 }
 
 .results_main-lh table.lh-details tr:nth-child(odd) td {
