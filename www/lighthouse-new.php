@@ -47,8 +47,8 @@ if ($lhResults) {
         }
         $auditIds = array_unique($auditIds);
 
-        foreach ($auditIds as $id) {
-            $relevantAudit = $lhResults->audits->{$id};
+        foreach ($auditIds as $auditid) {
+            $relevantAudit = $lhResults->audits->{$auditid};
             $auditHasDetails = isset($relevantAudit->details);
             $score = $relevantAudit->score;
             $scoreMode = $relevantAudit->scoreDisplayMode;
