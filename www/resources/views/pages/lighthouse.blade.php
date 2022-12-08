@@ -162,7 +162,7 @@ function gradeFromScore($score)
                             <h4>Opportunities ({{ count($audits[$category->title]['opportunities']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['opportunities'] as $audit)
-                                <li class="experiments_details-bad lh_audit_mode-{{ $audit->scoreDisplayMode }}">
+                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
                                     <details open>
                                         <summary>{!! md($audit->title) !!}</summary>
                                         <div class="experiments_details_body">
@@ -179,7 +179,7 @@ function gradeFromScore($score)
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['diagnostics'] as $audit)
-                                <li class="experiments_details-bad lh_audit_mode-{{ $audit->scoreDisplayMode }}">
+                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
                                     <details open>
                                         <summary>{!! md($audit->title) !!}</summary>
                                         <div class="experiments_details_body">
@@ -196,7 +196,7 @@ function gradeFromScore($score)
                             <h4>Passed Audits ({{ count($audits[$category->title]['passed']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['passed'] as $audit)
-                                <li class="experiments_details-good lh_audit_mode-{{ $audit->scoreDisplayMode }}">
+                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
                                     <details>
                                         <summary>{!! md($audit->title) !!}</summary>
                                         <div class="experiments_details_body">

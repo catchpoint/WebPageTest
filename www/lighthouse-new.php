@@ -53,14 +53,19 @@ if ($lhResults) {
             $score = $relevantAudit->score;
             $scoreMode = $relevantAudit->scoreDisplayMode;
             $passed = $scoreMode !== 'informative';
+            $scoreDesc = "pass";
 
             if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
                 $passed = false;
+                $scoreDesc = "average";
+                if( $scoreMode === 'numeric' && $score < 0.5 ){
+                    $scoreDesc = "fail";
+                }
             }
-
+            $relevantAudit->scoreDescription = $scoreDesc;
             if ($passed) {
                 array_push($auditsPassed, $relevantAudit);
-            } else if ($auditHasDetails && $scoreMode !== 'error' && $scoreMode !== 'notApplicable') {
+            } else if ($auditHasDetails && $scoreMode !== 'error' ) {
                 if ($relevantAudit->details->type === 'opportunity') {
                     array_push($opportunities, $relevantAudit);
                 } else {

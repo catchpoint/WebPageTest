@@ -8970,6 +8970,28 @@ p.lh-filteraudits {
   color: #222;
   font-weight: 700;
 }
+.experiments_bottlenecks > ol > li.lh_audit-pass > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_check.svg) ;
+
+}
+.experiments_bottlenecks > ol > li.lh_audit-average > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_warn.svg) ;
+  background-color: transparent;
+}
+.experiments_bottlenecks > ol > li.lh_audit-fail > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_alert.svg) ;
+  background-color: #d26122;
+}
+.experiments_bottlenecks > ol > li.lh_audit-informative > details > summary:before {
+  background-image: url(/assets/images/src/icon_info_circle.svg) ;
+  background-color: transparent;
+  border: 1px solid  #396fc2;
+}
+.experiments_bottlenecks > ol > li.lh_audit-notApplicable > details > summary:before {
+  background-image: none;
+  background-color: #ccc;
+} 
+
 
 .results_main-lh table.lh-details {
   width: 100%;
