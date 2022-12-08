@@ -13,16 +13,6 @@ function gradeFromScore($score)
     }
     return $grade;
 }
-
-function gradeScoreCSSClass($score)
-{
-    if ($score < 0.9) {
-        return "ok";
-    } else if ($score < 0.5) {
-        return "poor";
-    }
-    return "good";
-}
 ?>
 
 @section('content')
@@ -68,8 +58,6 @@ function gradeScoreCSSClass($score)
                     You can run it against any web page, public or requiring authentication.
                     It has audits for performance, accessibility, progressive web apps, SEO and more.
                 </p>
-                
-                
             </div>
             <div class="opps_note">
                 <p><strong>Did you know?</strong> Lighthouse runs in Chrome and provides a great complementary analysis alongside the many browsers, devices, and locations WebPageTest offers. To see how this site performs in more environments: <a href="/?url={{ $test_url }}">Start a new test</a></p>
@@ -77,21 +65,21 @@ function gradeScoreCSSClass($score)
             </div>
         </div>
         <div class="opportunities_summary">
-                <nav class="results_lh_nav">
-                    @foreach ($results->categories as $category)
-                    <a href="#{{ $category->title}}" class="lh_score lh_score_grade-{{ gradeFromScore($category->score) }}">
-                        <span class="lh_score_cat">{{ $category->title }}</span>
-                        <span class="lh_score_number">
-                            <svg class="lh-gauge" viewBox="0 0 120 120">
-                                <circle class="lh-gauge-base" r="56" cx="60" cy="60" stroke-width="8"></circle>
-                                <circle class="lh-gauge-arc" r="56" cx="60" cy="60" stroke-width="8" style="transform: rotate(-87.9537deg); stroke-dasharray: {{ $category->score * 360 }}, 351.858;"></circle>
-                            </svg>
-                            {{ round(100 * $category->score) }}
-                        </span>
-                    </a>
-                    @endforeach
-                </nav>
-            </div>
+            <nav class="results_lh_nav">
+                @foreach ($results->categories as $category)
+                <a href="#{{ $category->title}}" class="lh_score lh_score_grade-{{ gradeFromScore($category->score) }}">
+                    <span class="lh_score_cat">{{ $category->title }}</span>
+                    <span class="lh_score_number">
+                        <svg class="lh-gauge" viewBox="0 0 120 120">
+                            <circle class="lh-gauge-base" r="56" cx="60" cy="60" stroke-width="8"></circle>
+                            <circle class="lh-gauge-arc" r="56" cx="60" cy="60" stroke-width="8" style="transform: rotate(-87.9537deg); stroke-dasharray: {{ $category->score * 360 }}, 351.858;"></circle>
+                        </svg>
+                        {{ round(100 * $category->score) }}
+                    </span>
+                </a>
+                @endforeach
+            </nav>
+        </div>
         <div id="result" class="experiments_grades results_body">
             <div id="average">
                 <div class='experiments_grades results_body'>
@@ -138,40 +126,35 @@ function gradeScoreCSSClass($score)
 
                             <div class="opps_note opps_note-links">
                                 <p><strong>Aiming to improve?</strong>
-                                @if ($lh_only)
-                                <a href="/?url={{ $test_url }}">Run a full test</a> and then
-                                @endif
-                                check out our 
-                                @if ($lh_only)
-                                <strong>Opportunities & Experiments</strong>
-                                @else
-                                <a href="{{ $opps_url }}">Opportunities & Experiments</a>
-                                @endif
-                                 for suggestions and run No-Code Experiments to see how changes impact this site! 
-                            </p>
-
+                                    @if ($lh_only)
+                                    <a href="/?url={{ $test_url }}">Run a full test</a> and then
+                                    @endif
+                                    check out our
+                                    @if ($lh_only)
+                                    <strong>Opportunities & Experiments</strong>
+                                    @else
+                                    <a href="{{ $opps_url }}">Opportunities & Experiments</a>
+                                    @endif
+                                    for suggestions and run No-Code Experiments to see how changes impact this site!
+                                </p>
                             </div>
 
                             @if (count($thumbnails))
-                                <h4>Filmstrip</h4>
-                                <div class="overflow-container lh_filmstrip">
-                                    @foreach ($thumbnails as $thumb)
-                                    <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
-                                    @endforeach
-                                </div>
+                            <h4>Filmstrip</h4>
+                            <div class="overflow-container lh_filmstrip">
+                                @foreach ($thumbnails as $thumb)
+                                <div class="lh_filmstrip_item"><img src="{{ $thumb }}"></div>
+                                @endforeach
+                            </div>
                             @endif
 
                             <div class="lh-filter_map">
                                 <a href="#" class="lh-maplink">View Tree Map</a>
                                 <p class="lh-filteraudits">Show audits relevant to metrics:
-                                @foreach($metric_filters as $filter)
-                                <a href="&filterby={{ $filter->label }}" 
-                                @if ($filter->active)
-                                aria-current="page"
-                                @endif 
-                                >{{ $filter->label }}</a>
-                                @endforeach
-                            </p>
+                                    @foreach($metric_filters as $filter => $active)
+                                    <a href="&filterby={{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
+                                    @endforeach
+                                </p>
                             </div>
                             @endif
 
@@ -191,7 +174,7 @@ function gradeScoreCSSClass($score)
                                 @endforeach
                             </ol>
                             @endif
-                            
+
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>

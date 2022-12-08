@@ -33,15 +33,29 @@ if ($lhResults) {
         $opportunities = [];
         $diagnostics = [];
         $auditsPassed = [];
+
+        $auditIds = [];
         foreach ($category->auditRefs as $auditRef) {
-            $relevantAudit = $lhResults->audits->{$auditRef->id};
+            if ($auditRef->relevantAudits) {
+                foreach ($auditRef->relevantAudits as $ref) {
+                    $auditIds[] = $ref;
+                }
+            }
+            if (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
+                $auditIds[] = $auditRef->id;
+            }
+        }
+        $auditIds = array_unique($auditIds);
+
+        foreach ($auditIds as $id) {
+            $relevantAudit = $lhResults->audits->{$id};
             $auditHasDetails = isset($relevantAudit->details);
-            $passed = false;
             $score = $relevantAudit->score;
             $scoreMode = $relevantAudit->scoreDisplayMode;
+            $passed = $scoreMode !== 'informative';
 
-            if ($score !== null && ($scoreMode === 'binary' && $score === 1 ||  $scoreMode === 'numeric' && $score > 0.9)) {
-                $passed = true;
+            if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
+                $passed = false;
             }
 
             if ($passed) {
@@ -66,16 +80,16 @@ if ($lhResults) {
     }
 }
 
-$metricKeys = array(
+$metricKeys = [
     'first-contentful-paint',
     'speed-index',
     'largest-contentful-paint',
     'interactive',
     'total-blocking-time',
     'cumulative-layout-shift'
-);
+];
 
-$metrics = array();
+$metrics = [];
 foreach ($metricKeys as $metric) {
     $thisMetric = $lhResults->audits->{$metric};
     $metricSplit = preg_split("@[\s+　]@u", trim($thisMetric->displayValue));
@@ -99,29 +113,14 @@ foreach ($metricKeys as $metric) {
     ]);
 }
 
-    $metricFilters = array(
-        (object) [
-            'label' => 'all'
-        ],
-        (object) [
-            'label' => 'fcp'
-        ],
-        (object) [
-            'label' => 'lcp'
-        ],
-        (object) [
-            'label' => 'tbt'
-        ],
-        (object) [
-            'label' => 'cls'
-        ]
-    );
-    $activeMetric = $_REQUEST['filterby'];
-    foreach($metricFilters as $filter){
-        if( !isset($activeMetric) && $filter->label === 'all' || $activeMetric && $activeMetric === $filter->label ){
-            $filter->active = true;
-        }
-    }
+$filterby = @$_REQUEST['filterby'] ?? 'all';
+$metricFilters = [
+    'all' => $filterby == 'all',
+    'fcp' => $filterby == 'fcp',
+    'lcp' => $filterby == 'lcp',
+    'tbt' => $filterby == 'tbt',
+    'cls' => $filterby == 'cls',
+];
 
 $lighthouse_screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
@@ -145,7 +144,7 @@ $results_header = ob_get_contents();
 ob_end_clean();
 //endregion
 
-if( !$lhOnly ){
+if (!$lhOnly) {
     $experimentOptsUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, 0, 0);
     $experimentOptsHref = $experimentOptsUrlGenerator->resultPage("experiments");
 }
