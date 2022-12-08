@@ -9039,6 +9039,9 @@ p.lh-filteraudits {
   display: flex;
   justify-content: space-between;
   border-bottom: 1px dotted #ddd;
+  overflow-wrap: anywhere;
+  gap: 1em;
+  
 }
 
 .lh-chain li:before {

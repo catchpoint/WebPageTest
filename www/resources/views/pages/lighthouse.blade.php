@@ -186,7 +186,6 @@ function gradeFromScore($score)
                                             <div class="experiments_details_desc">
                                                 <p>{!! md($audit->description) !!}</p>
                                                 @if ($audit->details)
-                                                    @include('partials.nestedol', $audit)
                                                     <ol class="lh-chain">
                                                     @if ($audit->details->type === "criticalrequestchain")
                                                         @foreach ($audit->details->chains as $chain)
