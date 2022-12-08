@@ -168,6 +168,9 @@ function gradeFromScore($score)
                                         <div class="experiments_details_body">
                                             <div class="experiments_details_desc">
                                                 <p>{!! md($audit->description) !!}</p>
+                                                @if ($audit->details)
+                                                @include('partials.details')
+                                                @endif
                                             </div>
                                     </details>
                                 </li>
