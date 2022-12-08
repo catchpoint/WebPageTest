@@ -8771,7 +8771,6 @@ pre[class*="language-"] {
   border-radius: 1em;
   text-decoration: none;
   padding: 0.1em 0.7em 0.2em;
-  font-weight: 500;
   font-size: .9em;
   display: inline-block;
   font-weight: bold;
@@ -8785,7 +8784,7 @@ pre[class*="language-"] {
   }
   .opps_note {
     margin: 0 -1.5rem 1rem;
-    
+
   }
 }
 
@@ -8990,7 +8989,7 @@ p.lh-filteraudits {
 .experiments_bottlenecks > ol > li.lh_audit-notApplicable > details > summary:before {
   background-image: none;
   background-color: #ccc;
-} 
+}
 
 
 .results_main-lh table.lh-details {
