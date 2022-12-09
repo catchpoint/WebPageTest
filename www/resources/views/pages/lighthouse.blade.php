@@ -154,7 +154,7 @@ function gradeFromScore($score)
                                     <?php 
                                     $thisURL = $_SERVER[REQUEST_URI];
                                     $filterQ = "&filterbymetric=";
-                                    if( strpos( $_SERVER[REQUEST_URI], $filterQ ) ){
+                                    if( strpos( $thisURL, $filterQ ) ){
                                         $thisURL = str_replace($filterQ . $filterbymetric , '', $thisURL);
                                     }
                                     ?>
