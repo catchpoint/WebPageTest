@@ -17,8 +17,10 @@ $thesekeys = array();
         <?php array_push($thesekeys, $heading->key); ?>
         <th class="{{ $heading->key }}">
             {{ $hedText }}
-            @if ($heading->valueType && $heading->valueType !== 'url')
+            @if ($heading->valueType && in_array($heading->valueType, ['bytes', 'timespanMs']))
             ({{ $heading->valueType === 'timespanMs' ? 'ms' : $heading->valueType}})
+            @elseif ($heading->itemType && in_array($heading->itemType, ['bytes', 'ms']))
+            ({{ $heading->itemType }})
             @endif
         </th>
         @endif
