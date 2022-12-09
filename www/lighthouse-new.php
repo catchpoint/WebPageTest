@@ -39,17 +39,6 @@ $metricFilters = [
 $audits = [];
 if ($lhResults) {
 
-    // $lhResults->categoryGroups['passed'] = [
-    //     'title' => "Passing Audits",
-    //     'description' => 'No notes.'
-    // ];
-
-    // $lhResults->categoryGroups['notApplicable'] = [
-    //         'title' => "Non-Applicable Audits",
-    //         'description' => 'Ignore.'
-    //     ];
-
-
     foreach ($lhResults->categories as $category) {
         $categoryGroups = [];
         $categoryGroups['passed'] = [];
