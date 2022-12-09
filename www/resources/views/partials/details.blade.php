@@ -15,7 +15,12 @@ $thesekeys = array();
         <?php $hedText = isset($heading->text) ? $heading->text : $heading->label; ?>
         @if ($hedText)
         <?php array_push($thesekeys, $heading->key); ?>
-        <th class="{{ $heading->key }}">{{ $hedText }} </th>
+        <th class="{{ $heading->key }}">
+            {{ $hedText }}
+            @if ($heading->valueType && $heading->valueType !== 'url')
+            ({{ $heading->valueType === 'timespanMs' ? 'ms' : $heading->valueType}})
+            @endif
+        </th>
         @endif
         @endforeach
     </tr></thead>
@@ -26,7 +31,9 @@ $thesekeys = array();
             @if ($item->$key->type === "node")
                 <td><b>{{ $item->$key->selector }}</b> {{ $item->$key->explanation }}</td>
             @else
-            <td>{{ $item->$key }}</td>
+            <td>
+                {{ is_numeric($item->$key) ? round($item->$key) : $item->$key }}
+            </td>
             @endif
         @endforeach
         </tr>
