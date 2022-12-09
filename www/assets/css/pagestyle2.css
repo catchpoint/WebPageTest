@@ -9008,13 +9008,17 @@ p.lh-filteraudits {
   margin: 0 0 1em 0;
   border-radius: .4em;
   background: #eee;
- 
+
 }
 
 .results_main-lh table.lh-details th,
 .results_main-lh table.lh-details td {
   padding: 0.5em;
   text-align: left;
+}
+
+.results_main-lh table.lh-details td.numeric {
+  text-align: right;
 }
 
 .results_main-lh table.lh-details th {

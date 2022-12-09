@@ -32,9 +32,13 @@ $thesekeys = array();
         @foreach ($thesekeys as $key)
             @if ($item->$key->type === "node")
                 <td><b>{{ $item->$key->selector }}</b> {{ $item->$key->explanation }}</td>
+            @elseif (is_numeric($item->$key))
+            <td class="numeric">
+                {{ round($item->$key) }}
+            </td>
             @else
             <td>
-                {{ is_numeric($item->$key) ? round($item->$key) : $item->$key }}
+                {{ $item->$key }}
             </td>
             @endif
         @endforeach
