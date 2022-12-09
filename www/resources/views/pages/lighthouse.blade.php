@@ -165,7 +165,20 @@ function gradeFromScore($score)
                             </div>
                             @endif
 
-                            @if (count($audits[$category->title]['opportunities']))
+                            
+                            @foreach ($results->categoryGroups as $catGroupKey => $categoryGroup)
+                                @if (count($audits[$category->id][$catGroupKey]))
+                                    <h4>{{ $categoryGroup->title }} ({{ count($audits[$category->id][$catGroupKey]) }})</h4>
+                                    <ol>
+                                        <?php $detailsclosed = false; ?>
+                                        @foreach ($audits[$category->id][$catGroupKey] as $audit)
+                                            @include('partials.audititem')
+                                        @endforeach
+                                    </ol>
+                                 @endif
+                            @endforeach
+<!-- 
+                            @if (count($audits[$category->id]['diagnostics']))
                             <h4>Opportunities ({{ count($audits[$category->title]['opportunities']) }})</h4>
                             <ol>
                                 <?php $detailsclosed = false; ?>
@@ -185,15 +198,15 @@ function gradeFromScore($score)
                             </ol>
                             @endif
 
-                            @if (count($audits[$category->title]['passed']))
-                            <h4>Passed Audits ({{ count($audits[$category->title]['passed']) }})</h4>
+                            @if (count($audits[$category->id]['passed']))
+                            <h4>Passed Audits ({{ count($audits[$category->id]['passed']) }})</h4>
                             <ol>
                                 <?php $detailsclosed = true; ?>
-                                @foreach ($audits[$category->title]['passed'] as $audit)
+                                @foreach ($audits[$category->id]['passed'] as $audit)
                                 @include('partials.audititem')
                                 @endforeach
                             </ol>
-                            @endif
+                            @endif -->
                         </div>
                         @endforeach
                     </div>

@@ -38,10 +38,23 @@ $metricFilters = [
 
 $audits = [];
 if ($lhResults) {
+
+    // $lhResults->categoryGroups['passed'] = [
+    //     'title' => "Passing Audits",
+    //     'description' => 'No notes.'
+    // ];
+
+    // $lhResults->categoryGroups['notApplicable'] = [
+    //         'title' => "Non-Applicable Audits",
+    //         'description' => 'Ignore.'
+    //     ];
+
+
     foreach ($lhResults->categories as $category) {
-        $opportunities = [];
-        $diagnostics = [];
-        $auditsPassed = [];
+        $categoryGroups = [];
+        $categoryGroups['passed'] = [];
+        $categoryGroups['notApplicable'] = [];
+        
         $categoryaudits = [];
         
         foreach ($category->auditRefs as $auditRef) {
@@ -65,6 +78,7 @@ if ($lhResults) {
                 $score = $categoryaudit->score;
                 $scoreMode = $categoryaudit->scoreDisplayMode;
                 $passed = $scoreMode !== 'informative';
+                $notApplicable = $scoreMode === "notApplicable";
                 $scoreDesc = "pass";
                 
                 if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
@@ -75,26 +89,24 @@ if ($lhResults) {
                     }
                 }
                 $categoryaudit->scoreDescription = $scoreDesc;
+
                 if ($passed) {
-                    array_push($auditsPassed, $categoryaudit);
-                } else if ($auditHasDetails && $scoreMode !== 'error' ) {
-                    if ($categoryaudit->details->type === 'opportunity') {
-                        array_push($opportunities, $categoryaudit);
-                    } else {
-                        array_push($diagnostics, $categoryaudit);
+                    $categoryGroups['passed'][] = $categoryaudit;
+                } else if ($notApplicable){
+                    $categoryGroups['notApplicable'][] = $categoryaudit;
+                } else if ( $scoreMode !== 'error' ) {
+                    if(!$categoryGroups[$auditRef->group]){
+                        $categoryGroups[$auditRef->group] = [];
                     }
+                    $categoryGroups[$auditRef->group][] = $categoryaudit;
                 }
             }
         }
-        $opportunities = array_unique($opportunities, SORT_REGULAR);
-        $diagnostics = array_unique($diagnostics, SORT_REGULAR);
-        $passed = array_unique($auditsPassed, SORT_REGULAR);
+        foreach($categoryGroups as $catgroupkey => $categoryGroup){
+            $categoryGroups[$catgroupkey] = array_unique($categoryGroup, SORT_REGULAR);
+        }
 
-        $audits[$category->title] = [
-            'opportunities' => $opportunities,
-            'diagnostics' => $diagnostics,
-            'passed' => $passed,
-        ];
+        $audits[$category->id] = $categoryGroups;
     }
 }
 
