@@ -3,7 +3,6 @@
     @each('partials.requestchain', $audit->details->chains, 'chain')
 </ol>
 @endif
-
 @if ($audit->details->type === "table" || $audit->details->type === "opportunity")
 <?php
 $thesekeys = array();
@@ -49,4 +48,17 @@ $thesekeys = array();
     </tbody>
 </table>
 </div>
+@endif
+
+
+@if ($audit->details->type === "debugdata" )
+@foreach ($audit->details->items as $item)
+@if (count($item->failures))
+<ul>
+@foreach ($item->failures as $failure)
+    <li><b>Failure:</b> {{ $failure }}</li>
+@endforeach
+</ul>
+@endif
+@endforeach
 @endif
