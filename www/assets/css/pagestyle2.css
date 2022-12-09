@@ -9040,6 +9040,9 @@ p.lh-filteraudits {
 .results_main-lh table.lh-details tr:nth-child(odd) td {
   background: #fafafa;
 }
+.results_main-lh table.lh-details td b {
+  display: block;
+}
 
 .lh-chain,
 .experiments_details_body ol.lh-chain {
