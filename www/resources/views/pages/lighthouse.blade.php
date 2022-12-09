@@ -151,8 +151,8 @@ function gradeFromScore($score)
                             <div class="lh-filter_map">
                                 <p class="lh-filteraudits">Show audits relevant to metrics:
                                     @foreach($metric_filters as $filter => $active)
-                                    <?php 
-                                    $thisURL = $_SERVER[REQUEST_URI];
+                                    <?php
+                                    $thisURL = $_SERVER['REQUEST_URI'];
                                     $filterQ = "&filterbymetric=";
                                     if( strpos( $thisURL, $filterQ ) ){
                                         $thisURL = str_replace($filterQ . $filterbymetric , '', $thisURL);
@@ -161,7 +161,7 @@ function gradeFromScore($score)
                                     <a href="{{ $thisURL }}{{ $filterQ }}{{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
                                     @endforeach
                                 </p>
-                                <a href="#" class="lh-maplink">View Tree Map</a>
+                                <a href="https://googlechrome.github.io/lighthouse/treemap/?gzip=1#{{ $treemap }}" target="_blank" class="lh-maplink">View Tree Map</a>
                             </div>
                             @endif
 

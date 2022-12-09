@@ -36,26 +36,39 @@ $metricFilters = [
     'CLS' => $filterbymetric === 'CLS',
 ];
 
-$audits = [];
+$treemap = [
+    'lhr' => [
+        'requestedUrl' => $url,
+        'audits' => [
+            'script-treemap-data' => [
+                'details' => $lhResults->audits->{'script-treemap-data'}->details
+            ],
+        ],
+        'configSettings' => [
+            'locale' => "en-US"
+        ]
+    ]
+];
+
 if ($lhResults) {
     foreach ($lhResults->categories as $category) {
         $opportunities = [];
         $diagnostics = [];
         $auditsPassed = [];
         $categoryaudits = [];
-        
+
         foreach ($category->auditRefs as $auditRef) {
             $filterAuditOut = false;
-            if($category->title === "Performance" && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym ){
+            if ($category->title === "Performance" && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym) {
                 $filterAuditOut = true;
             }
 
-            if( !$filterAuditOut ){
+            if (!$filterAuditOut) {
                 if ($auditRef->relevantAudits) {
                     foreach ($auditRef->relevantAudits as $ref) {
                         $categoryaudits[] = $lhResults->audits->{$ref};
                     }
-                } else if(!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])){
+                } else if (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
                     $categoryaudits[] = $lhResults->audits->{$auditRef->id};
                 }
             }
@@ -66,18 +79,18 @@ if ($lhResults) {
                 $scoreMode = $categoryaudit->scoreDisplayMode;
                 $passed = $scoreMode !== 'informative';
                 $scoreDesc = "pass";
-                
+
                 if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
                     $passed = false;
                     $scoreDesc = "average";
-                    if( $scoreMode === 'numeric' && $score < 0.5 ){
+                    if ($scoreMode === 'numeric' && $score < 0.5) {
                         $scoreDesc = "fail";
                     }
                 }
                 $categoryaudit->scoreDescription = $scoreDesc;
                 if ($passed) {
                     array_push($auditsPassed, $categoryaudit);
-                } else if ($auditHasDetails && $scoreMode !== 'error' ) {
+                } else if ($auditHasDetails && $scoreMode !== 'error') {
                     if ($categoryaudit->details->type === 'opportunity') {
                         array_push($opportunities, $categoryaudit);
                     } else {
@@ -173,4 +186,5 @@ echo view('pages.lighthouse', [
     'filterbymetric' => $filterbymetric,
     'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,
+    'treemap' => base64_encode(gzencode(json_encode($treemap))),
 ]);
