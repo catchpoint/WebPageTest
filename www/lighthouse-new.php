@@ -27,49 +27,62 @@ $socialTitle = "Lighthouse Report for $url";
 $socialDesc = "View this Lighthouse Report on WebPageTest.org";
 $page_title = "WebPageTest: Lighthouse Report for $url";
 
+$filterbymetric = @$_REQUEST['filterbymetric'] ?? 'ALL';
+$metricFilters = [
+    'ALL' => $filterbymetric === 'ALL',
+    'FCP' => $filterbymetric === 'FCP',
+    'LCP' => $filterbymetric === 'LCP',
+    'TBT' => $filterbymetric === 'TBT',
+    'CLS' => $filterbymetric === 'CLS',
+];
+
 $audits = [];
 if ($lhResults) {
     foreach ($lhResults->categories as $category) {
         $opportunities = [];
         $diagnostics = [];
         $auditsPassed = [];
-
-        $auditIds = [];
+        $categoryaudits = [];
+        
         foreach ($category->auditRefs as $auditRef) {
-            if ($auditRef->relevantAudits) {
-                foreach ($auditRef->relevantAudits as $ref) {
-                    $auditIds[] = $ref;
+            $filterAuditOut = false;
+            if($category->title === "Performance" && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym ){
+                $filterAuditOut = true;
+            }
+
+            if( !$filterAuditOut ){
+                if ($auditRef->relevantAudits) {
+                    foreach ($auditRef->relevantAudits as $ref) {
+                        $categoryaudits[] = $lhResults->audits->{$ref};
+                    }
+                } else{
+                    $categoryaudits[] = $lhResults->audits->{$auditRef->id};
                 }
             }
-            if (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
-                $auditIds[] = $auditRef->id;
-            }
-        }
-        $auditIds = array_unique($auditIds);
 
-        foreach ($auditIds as $auditid) {
-            $relevantAudit = $lhResults->audits->{$auditid};
-            $auditHasDetails = isset($relevantAudit->details);
-            $score = $relevantAudit->score;
-            $scoreMode = $relevantAudit->scoreDisplayMode;
-            $passed = $scoreMode !== 'informative';
-            $scoreDesc = "pass";
-
-            if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
-                $passed = false;
-                $scoreDesc = "average";
-                if( $scoreMode === 'numeric' && $score < 0.5 ){
-                    $scoreDesc = "fail";
+            foreach ($categoryaudits as $categoryaudit) {
+                $auditHasDetails = isset($categoryaudit->details);
+                $score = $categoryaudit->score;
+                $scoreMode = $categoryaudit->scoreDisplayMode;
+                $passed = $scoreMode !== 'informative';
+                $scoreDesc = "pass";
+                
+                if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
+                    $passed = false;
+                    $scoreDesc = "average";
+                    if( $scoreMode === 'numeric' && $score < 0.5 ){
+                        $scoreDesc = "fail";
+                    }
                 }
-            }
-            $relevantAudit->scoreDescription = $scoreDesc;
-            if ($passed) {
-                array_push($auditsPassed, $relevantAudit);
-            } else if ($auditHasDetails && $scoreMode !== 'error' ) {
-                if ($relevantAudit->details->type === 'opportunity') {
-                    array_push($opportunities, $relevantAudit);
-                } else {
-                    array_push($diagnostics, $relevantAudit);
+                $categoryaudit->scoreDescription = $scoreDesc;
+                if ($passed) {
+                    array_push($auditsPassed, $categoryaudit);
+                } else if ($auditHasDetails && $scoreMode !== 'error' ) {
+                    if ($categoryaudit->details->type === 'opportunity') {
+                        array_push($opportunities, $categoryaudit);
+                    } else {
+                        array_push($diagnostics, $categoryaudit);
+                    }
                 }
             }
         }
@@ -118,15 +131,6 @@ foreach ($metricKeys as $metric) {
     ]);
 }
 
-$filterby = @$_REQUEST['filterby'] ?? 'all';
-$metricFilters = [
-    'all' => $filterby == 'all',
-    'fcp' => $filterby == 'fcp',
-    'lcp' => $filterby == 'lcp',
-    'tbt' => $filterby == 'tbt',
-    'cls' => $filterby == 'cls',
-];
-
 $lighthouse_screenshot = $lhResults->audits->{'final-screenshot'}
     ? $lhResults->audits->{'final-screenshot'}->details->data
     : null;
@@ -166,6 +170,7 @@ echo view('pages.lighthouse', [
     'page_title' => $page_title,
     'opps_url' => $experimentOptsHref,
     'metric_filters' => $metricFilters,
+    'filterbymetric' => $filterbymetric,
     'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,
 ]);

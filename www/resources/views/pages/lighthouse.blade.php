@@ -149,12 +149,12 @@ function gradeFromScore($score)
                             @endif
 
                             <div class="lh-filter_map">
-                                <a href="#" class="lh-maplink">View Tree Map</a>
                                 <p class="lh-filteraudits">Show audits relevant to metrics:
                                     @foreach($metric_filters as $filter => $active)
-                                    <a href="&filterby={{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
+                                    <a href="{{ $_SERVER[REQUEST_URI] }}&filterbymetric={{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
                                     @endforeach
                                 </p>
+                                <a href="#" class="lh-maplink">View Tree Map</a>
                             </div>
                             @endif
 
@@ -162,18 +162,7 @@ function gradeFromScore($score)
                             <h4>Opportunities ({{ count($audits[$category->title]['opportunities']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['opportunities'] as $audit)
-                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
-                                    <details open>
-                                        <summary>{!! md($audit->title) !!}</summary>
-                                        <div class="experiments_details_body">
-                                            <div class="experiments_details_desc">
-                                                <p>{!! md($audit->description) !!}</p>
-                                                @if ($audit->details)
-                                                @include('partials.details')
-                                                @endif
-                                            </div>
-                                    </details>
-                                </li>
+                                @include('partials.audititem')
                                 @endforeach
                             </ol>
                             @endif
@@ -182,18 +171,7 @@ function gradeFromScore($score)
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['diagnostics'] as $audit)
-                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
-                                    <details open>
-                                        <summary>{!! md($audit->title) !!}</summary>
-                                        <div class="experiments_details_body">
-                                            <div class="experiments_details_desc">
-                                                <p>{!! md($audit->description) !!}</p>
-                                                @if ($audit->details)
-                                                @include('partials.details')
-                                                @endif
-                                            </div>
-                                    </details>
-                                </li>
+                                @include('partials.audititem')
                                 @endforeach
                             </ol>
                             @endif
@@ -202,15 +180,7 @@ function gradeFromScore($score)
                             <h4>Passed Audits ({{ count($audits[$category->title]['passed']) }})</h4>
                             <ol>
                                 @foreach ($audits[$category->title]['passed'] as $audit)
-                                <li class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
-                                    <details>
-                                        <summary>{!! md($audit->title) !!}</summary>
-                                        <div class="experiments_details_body">
-                                            <div class="experiments_details_desc">
-                                                <p>{!! md($audit->description) !!}</p>
-                                            </div>
-                                    </details>
-                                </li>
+                                @include('partials.audititem')
                                 @endforeach
                             </ol>
                             @endif
