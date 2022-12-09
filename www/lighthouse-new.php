@@ -55,7 +55,7 @@ if ($lhResults) {
                     foreach ($auditRef->relevantAudits as $ref) {
                         $categoryaudits[] = $lhResults->audits->{$ref};
                     }
-                } else{
+                } else if(!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])){
                     $categoryaudits[] = $lhResults->audits->{$auditRef->id};
                 }
             }
