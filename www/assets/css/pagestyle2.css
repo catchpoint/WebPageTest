@@ -9040,6 +9040,9 @@ p.lh-filteraudits {
 .results_main-lh table.lh-details tr:nth-child(odd) td {
   background: #fafafa;
 }
+.results_main-lh table.lh-details td b {
+  display: block;
+}
 
 .lh-chain,
 .experiments_details_body ol.lh-chain {
@@ -9069,9 +9072,6 @@ p.lh-filteraudits {
   overflow-wrap: anywhere;
   gap: 1em;
   padding-bottom: .5em;
-}
-.lh-chain li li:last-child >span {
-border: 0;
 }
 
 .lh-chain li:before {

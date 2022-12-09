@@ -23,7 +23,11 @@ $thesekeys = array();
         @foreach ($audit->details->items as $item)
         <tr>
         @foreach ($thesekeys as $key)
+            @if ($item->$key->type === "node")
+                <td><b>{{ $item->$key->selector }}</b> {{ $item->$key->explanation }}</td>
+            @else
             <td>{{ $item->$key }}</td>
+            @endif
         @endforeach
         </tr>
         @endforeach
