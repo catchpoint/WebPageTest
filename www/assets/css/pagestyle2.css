@@ -9073,9 +9073,6 @@ p.lh-filteraudits {
   gap: 1em;
   padding-bottom: .5em;
 }
-.lh-chain li li:last-child >span {
-border: 0;
-}
 
 .lh-chain li:before {
   content: "";
