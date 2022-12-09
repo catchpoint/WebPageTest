@@ -168,6 +168,7 @@ function gradeFromScore($score)
                             @if (count($audits[$category->title]['opportunities']))
                             <h4>Opportunities ({{ count($audits[$category->title]['opportunities']) }})</h4>
                             <ol>
+                                <?php $detailsclosed = false; ?>
                                 @foreach ($audits[$category->title]['opportunities'] as $audit)
                                 @include('partials.audititem')
                                 @endforeach
@@ -177,6 +178,7 @@ function gradeFromScore($score)
                             @if (count($audits[$category->title]['diagnostics']))
                             <h4>Diagnostics ({{ count($audits[$category->title]['diagnostics']) }})</h4>
                             <ol>
+                                <?php $detailsclosed = false; ?>
                                 @foreach ($audits[$category->title]['diagnostics'] as $audit)
                                 @include('partials.audititem')
                                 @endforeach
@@ -186,6 +188,7 @@ function gradeFromScore($score)
                             @if (count($audits[$category->title]['passed']))
                             <h4>Passed Audits ({{ count($audits[$category->title]['passed']) }})</h4>
                             <ol>
+                                <?php $detailsclosed = true; ?>
                                 @foreach ($audits[$category->title]['passed'] as $audit)
                                 @include('partials.audititem')
                                 @endforeach
