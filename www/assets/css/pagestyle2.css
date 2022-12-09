@@ -8958,15 +8958,24 @@ p.lh-filteraudits {
   display: flex;
   gap: 0.5em;
   margin: 0;
+  align-items: center;
 }
 
 .lh-filteraudits a {
   text-transform: uppercase;
+  border: 1px solid transparent;
+  padding: .1em 0;
 }
-
+.lh-filteraudits a:not([aria-current]):hover,
+.lh-filteraudits a:not([aria-current]):focus {
+  color: #2a3b64;
+}
 .lh-filteraudits a[aria-current] {
-  text-decoration: none;
-  color: #222;
+  text-decoration-color: transparent;
+  color: #2a3b64;
+  border-radius: .4em;
+  padding: .1em .6em;
+  border-color: #2a3b64;
   font-weight: 700;
 }
 .experiments_bottlenecks > ol > li.lh_audit-pass > details > summary:before {
