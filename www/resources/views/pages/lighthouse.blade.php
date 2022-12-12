@@ -53,10 +53,13 @@ function gradeFromScore($score)
                     Lighthouse Report
                 </h2>
                 <p>
-                    WebPageTest offers Lighthouse test runs alongside its suite of tools.
+                    
                     Lighthouse is an open-source, automated tool for improving the quality of web pages.
-                    You can run it against any web page, public or requiring authentication.
-                    It has audits for performance, accessibility, progressive web apps, SEO and more.
+                    You can run it against any web page, public or requiring authentication. Category scores 
+                    summarize their contained audits   
+                    (<span class="lh_score_grade-fail">0-49</span>
+                    <span class="lh_score_grade-average">50-89</span>
+                    <span class="lh_score_grade-pass">90-100</span>).
                 </p>
             </div>
             <div class="opps_note">

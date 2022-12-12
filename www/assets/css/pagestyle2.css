@@ -8801,6 +8801,19 @@ pre[class*="language-"] {
   }
 }
 
+.results_header p span.lh_score_grade-fail {
+  color: red;
+  font-size: .8em
+}
+.results_header p span.lh_score_grade-average {
+  color: #ffab33;
+  font-size: .8em
+}
+.results_header p span.lh_score_grade-pass {
+  color: #008f11;
+  font-size: .8em
+}
+
 .results_main-lh nav.results_lh_nav {
   display: flex;
   flex: 1 0 100%;
