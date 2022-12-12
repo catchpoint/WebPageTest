@@ -271,6 +271,23 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                                                        <script>
+                                                            // show or hide simple lighthouse field depending on whether chrome test is running
+                                                            let simplePresets = document.querySelector('.test_presets_easy');
+                                                            let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            function enableDisableLHSimple(){
+                                                              let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
+                                                                  lhSimpleFields.style.display = "block";
+                                                                  checkedPreset.disabled = false;
+                                                              } else {
+                                                                  lhSimpleFields.style.display = "none";
+                                                                  checkedPreset.disabled = true;
+                                                              }
+                                                            }
+                                                            enableDisableLHSimple();
+                                                            simplePresets.addEventListener("click", enableDisableLHSimple );
+                                                        </script>
                                                     </div>
                                                     <?php if ($is_paid) : ?>
                                                         <div class="fieldrow">

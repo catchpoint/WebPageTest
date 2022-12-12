@@ -75,7 +75,7 @@ if (isset($lcp)) {
                 "expval" => array($lcpSource . "|as_image"),
                 "explabel" => array($lcpSource)
             ];
-            
+
             // priority Hints only help for foreground images
             $suggest_priority_hints = !$isBG && !$isVideo && !$hasHighFetchPriority;
             if ($suggest_priority_hints) {

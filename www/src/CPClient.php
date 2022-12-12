@@ -374,7 +374,6 @@ class CPClient
                         'maskedCreditCard',
                         'creditCardType',
                         'nextBillingDate',
-                        'billingPeriodEndDate',
                         'numberOfBillingCycles',
                         'ccExpirationDate',
                         'ccImageUrl',

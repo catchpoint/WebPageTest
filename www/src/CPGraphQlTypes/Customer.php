@@ -11,7 +11,7 @@ class Customer
     private string $customer_id;
     private string $subscription_id;
     private string $wpt_plan_id;
-    private DateTime $billing_period_end_date;
+    private ?DateTime $billing_period_end_date;
     private float $subscription_price;
     private string $formatted_subscription_price;
     private string $status;
@@ -37,7 +37,6 @@ class Customer
             !(isset($options['customerId']) &&
                 isset($options['subscriptionId']) &&
                 isset($options['wptPlanId']) &&
-                isset($options['billingPeriodEndDate']) &&
                 isset($options['subscriptionPrice']) &&
                 isset($options['status']) &&
                 isset($options['wptPlanName']) &&
@@ -50,7 +49,8 @@ class Customer
         $this->customer_id = $options['customerId'];
         $this->subscription_id = $options['subscriptionId'];
         $this->wpt_plan_id = $options['wptPlanId'];
-        $this->billing_period_end_date = new DateTime($options['billingPeriodEndDate']);
+        $this->billing_period_end_date = isset($options['billingPeriodEndDate']) ?
+          new DateTime($options['billingPeriodEndDate']) : null;
         $this->subscription_price = $options['subscriptionPrice'];
         $this->formatted_subscription_price = number_format(($options['subscriptionPrice'] / 100), 2, '.', ',');
         $this->status = $options['status'];
@@ -125,7 +125,7 @@ class Customer
         return $this->next_wpt_plan_id;
     }
 
-    public function getBillingPeriodEndDate(): DateTime
+    public function getBillingPeriodEndDate(): ?DateTime
     {
         return $this->billing_period_end_date;
     }
