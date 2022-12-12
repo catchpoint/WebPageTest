@@ -1894,7 +1894,7 @@ footer ul {
 }
 
 .opportunities_summary a:last-child {
-  border-left: 0;
+  border-left-width: 0;
 }
 
 .opportunities_summary_hed {
@@ -8761,8 +8761,9 @@ pre[class*="language-"] {
 }
 .opps_note p {
   color: #2a3b64;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0 0 .5em 0;
+  font-size: .9em;
 }
 .opps_note:not(.opps_note-links) p a {
   background-color: #fbe076;
@@ -8791,30 +8792,37 @@ pre[class*="language-"] {
 .results_main-lh nav.results_lh_nav {
   display: flex;
   flex: 1 0 100%;
-  gap: 1em;
+  gap: .5em;
   flex-flow: row wrap;
 }
 
 @media (min-width: 70em) {
   .results_main-lh nav.results_lh_nav {
-    justify-content: space-between;
-    max-width: 65%;
+    justify-content: flex-start;
+    /* max-width: 65%; */
   }
 }
 
 .results_lh_nav a {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   display:flex;
   flex-flow: row;
   align-items: center;
   font-weight: 700;
   font-size: 1.1em;
   padding-right: 2em;
-  max-width: 10em;
+  /* max-width: 10em; */
   margin: 0;
-  justify-content: flex-start;
+  justify-content: center;
   gap: .5em;
   white-space: nowrap;
+  border: 1px solid #e8e8e8;
+  padding: .5em 1em;
+  border-radius: .5em;
+  background: #fff;
+}
+.opportunities_summary .results_lh_nav a:last-child {
+  border-width: 1px;
 }
 
 .results_lh_nav a:hover .lh_score_cat,
@@ -8867,6 +8875,8 @@ pre[class*="language-"] {
 .results_main-lh h4 {
   margin: 1em 0 0;
   border-bottom: 1px solid #eee;
+  font-size: 1.1em;
+  color: #444;
 }
 
 .results_main-lh summary p {
