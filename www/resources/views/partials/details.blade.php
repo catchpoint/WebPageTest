@@ -3,7 +3,7 @@
     @each('partials.requestchain', $audit->details->chains, 'chain')
 </ol>
 @endif
-@if ($audit->details->type === "table" || $audit->details->type === "opportunity")
+@if (count($audit->details->headings) && ($audit->details->type === "table" || $audit->details->type === "opportunity") )
 <?php
 $thesekeys = array();
 ?>

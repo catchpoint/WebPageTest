@@ -8999,7 +8999,9 @@ p.lh-filteraudits {
   background-image: none;
   background-color: #ccc;
 }
-
+.results_main-lh .experiments_details_body {
+  padding-bottom: 0;
+}
 
 .results_main-lh table.lh-details {
   width: 100%;
