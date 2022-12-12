@@ -9,6 +9,7 @@
         </div>
     </div>
     <h1>Edit Billing Information</h1>
+    <div id="notification-banner-container"></div>
     <form action="/account" method="post" id="wpt-update-payment-method">
         <div class="plan-billing-container card box">
             <div class="billing-container">
@@ -64,7 +65,7 @@
               function error(err) {
                   button.disabled = false;
                   button.removeAttribute('disabled');
-                  button.innerText = 'Sign Up';
+                  button.innerText = 'Update Billing Information';
                   const signupError = new CustomEvent("cc-update-payment-error", {
                     bubbles: true,
                     detail: BraintreeErrorParser.parse(err.errors)
