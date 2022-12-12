@@ -8898,6 +8898,9 @@ pre[class*="language-"] {
   display: flex;
   justify-content: space-between;
 }
+.summary_text > p {
+  margin: 0;
+}
 .summary_text > p + p {
   font-weight: 300;
   font-size: 1rem;
