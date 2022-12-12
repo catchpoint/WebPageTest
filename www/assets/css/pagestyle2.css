@@ -6264,6 +6264,7 @@ div.overflow-container,
   background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
   background-position: 0 0, 100%, 0 0, 100%;
   background-attachment: local, local, scroll, scroll;
+  transform: translateZ(0);
 }
 
 .scrollableTable table,
