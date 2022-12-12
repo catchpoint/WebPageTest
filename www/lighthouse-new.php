@@ -141,6 +141,8 @@ $metricKeys = [
     'cumulative-layout-shift'
 ];
 
+
+
 $metrics = [];
 foreach ($metricKeys as $metric) {
     $thisMetric = $lhResults->audits->{$metric};
