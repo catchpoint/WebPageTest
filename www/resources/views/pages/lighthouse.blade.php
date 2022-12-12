@@ -167,7 +167,7 @@ function gradeFromScore($score)
 
                             @foreach ($audits[$category->id] as $cat_id => $cat_audits)
                                 @if (count($cat_audits))
-                                    <h4>{{$cat_id}} {{ $categoryTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
+                                    <h4>{{ $categoryTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
                                     <ol>
                                         <?php $detailsclosed = true; ?>
                                         @foreach ($cat_audits as $audit)
