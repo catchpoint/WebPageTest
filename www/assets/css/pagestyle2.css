@@ -8869,9 +8869,7 @@ pre[class*="language-"] {
 .results_main-lh .experiments_bottlenecks {
   position: relative;
 }
-.results_main-lh .experiments_bottlenecks:last-child {
-  padding-bottom: 3em;
-}
+
 .results_main-lh details.metrics_shown {
   top: 1em;
   right: 0;

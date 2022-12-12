@@ -116,16 +116,27 @@ if ($lhResults) {
             $categoryGroups[$catgroupkey] = array_unique($categoryGroup, SORT_REGULAR);
         }
 
+        // move passed and notApp to the end
+        foreach(['passed','notApplicable'] as $sortCat){
+            if( $categoryGroups[$sortCat] ){
+                $tempPassed = $categoryGroups[$sortCat];
+                unset($categoryGroups[$sortCat]);
+                $categoryGroups[$sortCat] = $tempPassed;
+    
+            }
+        }
+        
+
         $audits[$category->id] = $categoryGroups;
     }
 
     // a dictionary of category IDs => titles
     // soma hardcoded, some from the report
     $categoryTitles = [
-        'passed' => 'Passed Audits',
-        'notApplicable' => 'Not Applicable',
         'opportunities' => 'Opportunities',
         'diagnostics' => 'Diagnostics',
+        'passed' => 'Passed Audits',
+        'notApplicable' => 'Not Applicable',
     ];
     foreach ($lhResults->categoryGroups as $cat_id => $cat) {
         $categoryTitles[$cat_id] = $cat->title;
