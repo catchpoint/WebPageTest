@@ -165,30 +165,17 @@ function gradeFromScore($score)
                             </div>
                             @endif
 
-                            @foreach ($results->categoryGroups as $catGroupKey => $categoryGroup)
-                                @if (count($audits[$category->id][$catGroupKey]))
-                                    <h4>{{ $categoryGroup->title }} ({{ count($audits[$category->id][$catGroupKey]) }})</h4>
-                                    <ol>
-                                        <?php $detailsclosed = false; ?>
-                                        @foreach ($audits[$category->id][$catGroupKey] as $audit)
-                                            @include('partials.audititem')
-                                        @endforeach
-                                    </ol>
-                                 @endif
-                            @endforeach
-
-                            @foreach (['passed'] as $catGroupKey)
-                                @if (count($audits[$category->id][$catGroupKey]))
-                                    <h4>Passed Audits ({{ count($audits[$category->id][$catGroupKey]) }})</h4>
+                            @foreach ($audits[$category->id] as $cat_id => $cat_audits)
+                                @if (count($cat_audits))
+                                    <h4>{{$cat_id}} {{ $categoryTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
                                     <ol>
                                         <?php $detailsclosed = true; ?>
-                                        @foreach ($audits[$category->id][$catGroupKey] as $audit)
+                                        @foreach ($cat_audits as $audit)
                                             @include('partials.audititem')
                                         @endforeach
                                     </ol>
                                  @endif
                             @endforeach
-                        </div>
                         @endforeach
                     </div>
                 </div>

@@ -36,23 +36,26 @@ $metricFilters = [
     'CLS' => $filterbymetric === 'CLS',
 ];
 
-$treemap = [
-    'lhr' => [
-        'requestedUrl' => $url,
-        'audits' => [
-            'script-treemap-data' => [
-                'details' => $lhResults->audits->{'script-treemap-data'}->details
-            ],
-        ],
-        'configSettings' => [
-            'locale' => "en-US"
-        ]
-    ]
-];
+$audits = [];
 
 if ($lhResults) {
 
-    foreach ($lhResults->categories as $category) {
+    $treemap = [
+        'lhr' => [
+            'requestedUrl' => $url,
+            'audits' => [
+                'script-treemap-data' => [
+                    'details' => $lhResults->audits->{'script-treemap-data'}->details
+                ],
+            ],
+            'configSettings' => [
+                'locale' => "en-US"
+            ]
+        ]
+    ];
+
+    foreach ($lhResults->categories as $catid => $category) {
+        $isPerf = $catid === 'performance';
         $categoryGroups = [];
         $categoryGroups['passed'] = [];
         $categoryGroups['notApplicable'] = [];
@@ -61,7 +64,7 @@ if ($lhResults) {
 
         foreach ($category->auditRefs as $auditRef) {
             $filterAuditOut = false;
-            if ($category->title === "Performance" && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym) {
+            if ($isPerf && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym) {
                 $filterAuditOut = true;
             }
 
@@ -76,13 +79,11 @@ if ($lhResults) {
             }
 
             foreach ($categoryaudits as $categoryaudit) {
-                $auditHasDetails = isset($categoryaudit->details);
                 $score = $categoryaudit->score;
                 $scoreMode = $categoryaudit->scoreDisplayMode;
-                $passed = $scoreMode !== 'informative';
-                $notApplicable = $scoreMode === "notApplicable";
-                $scoreDesc = "pass";
 
+                $passed = $scoreMode !== 'informative'; // unless info, pass by default
+                $scoreDesc = "pass";
                 if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
                     $passed = false;
                     $scoreDesc = "average";
@@ -94,21 +95,40 @@ if ($lhResults) {
 
                 if ($passed) {
                     $categoryGroups['passed'][] = $categoryaudit;
-                } else if ($notApplicable){
+                } else if ($scoreMode === "notApplicable") {
                     $categoryGroups['notApplicable'][] = $categoryaudit;
-                } else if ( $scoreMode !== 'error' ) {
-                    if(!$categoryGroups[$auditRef->group]){
-                        $categoryGroups[$auditRef->group] = [];
+                } else if ($scoreMode !== 'error') {
+
+                    if ($isPerf) {
+                        $catname = $categoryaudit->details->type === 'opportunity' ? 'opportunities' : 'diagnostics';
+                    } else {
+                        $catname = $auditRef->group;
                     }
-                    $categoryGroups[$auditRef->group][] = $categoryaudit;
+
+                    if (!$categoryGroups[$catname]) {
+                        $categoryGroups[$catname] = [];
+                    }
+                    $categoryGroups[$catname][$categoryaudit->id] = $categoryaudit;
                 }
             }
         }
-        foreach($categoryGroups as $catgroupkey => $categoryGroup){
+        foreach ($categoryGroups as $catgroupkey => $categoryGroup) {
             $categoryGroups[$catgroupkey] = array_unique($categoryGroup, SORT_REGULAR);
         }
 
         $audits[$category->id] = $categoryGroups;
+    }
+
+    // a dictionary of category IDs => titles
+    // soma hardcoded, some from the report
+    $categoryTitles = [
+        'passed' => 'Passed Audits',
+        'notApplicable' => 'Not Applicable',
+        'opportunities' => 'Opportunities',
+        'diagnostics' => 'Diagnostics',
+    ];
+    foreach ($lhResults->categoryGroups as $cat_id => $cat) {
+        $categoryTitles[$cat_id] = $cat->title;
     }
 }
 
@@ -135,7 +155,6 @@ foreach ($metricKeys as $metric) {
             $grade = "poor";
         }
     }
-
 
     array_push($metrics, (object) [
         'title' => $lhResults->audits->{$metric}->title,
@@ -188,4 +207,5 @@ echo view('pages.lighthouse', [
     'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,
     'treemap' => base64_encode(gzencode(json_encode($treemap))),
+    'categoryTitles' => $categoryTitles,
 ]);
