@@ -8358,7 +8358,7 @@ body.screenshot .header_screenshots {
 }
 
 body.screenshot .header_screenshots img {
-  max-height: 250px !important;
+  max-height: 220px !important;
   max-width: 100% !important;
   width: auto !important;
 }
@@ -8764,6 +8764,11 @@ pre[class*="language-"] {
 .opps_note-links {
   margin: 1em 0;
   background: #fafafa;
+  background-image: url(/assets/images/src/icon_science_bubbling.svg);
+  background-size: auto 2rem;
+  padding-left: 2.6em;
+  background-position: left 0.5em top 45%;
+  background-repeat: no-repeat;
 }
 .opps_note p {
   color: #2a3b64;
