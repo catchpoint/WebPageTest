@@ -577,13 +577,26 @@ final class AccountTest extends TestCase
 
         $body = new stdClass();
         $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
+
+        $address = new ChargifyAddressInput([
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street_address' => '123 Main St',
+            'zipcode' => '12345-1234'
+        ]);
 
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
 
         $client = $this->createMock(CPClient::class);
         $client->expects($this->once())
             ->method('updatePaymentMethod')
-            ->with($body->token);
+            ->with($body->token, $address);
 
         $bmm = $this->createMock(BannerMessageManager::class);
         $bmm->expects($this->once())
@@ -606,6 +619,11 @@ final class AccountTest extends TestCase
 
         $body = new stdClass();
         $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
 
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
 

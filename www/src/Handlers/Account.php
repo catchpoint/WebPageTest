@@ -454,11 +454,27 @@ class Account
     public static function validateUpdatePaymentMethod(array $post): object
     {
         $body = new stdClass();
-        if (isset($post['nonce'])) {
-            $body->token = (string)$post['nonce'];
-        } else {
-            throw new ClientException('No payment token passed', '/account');
+
+        if (
+            !(isset($post['nonce']) &&
+                isset($post['street-address']) &&
+                isset($post['city']) &&
+                isset($post['state']) &&
+                isset($post['country']) &&
+                isset($post['zipcode'])
+            )
+        ) {
+            $msg = "Payment token, street address, city, state, country, and zipcode must all be filled";
+            throw new ClientException($msg, "/account");
         }
+
+        $body->token = (string)$post['nonce'];
+        $body->plan = $post['plan'];
+        $body->street_address = $post['street-address'];
+        $body->city = $post['city'];
+        $body->state = $post['state'];
+        $body->country = $post['country'];
+        $body->zipcode = $post['zipcode'];
         return $body;
     }
     // Change a user's payment method
@@ -469,7 +485,15 @@ class Account
     {
 
         try {
-            $request_context->getClient()->updatePaymentMethod($body->token);
+            $address = new ChargifyAddressInput([
+                "street_address" => $body->street_address,
+                "city" => $body->city,
+                "state" => $body->state,
+                "country" => $body->country,
+                "zipcode" => $body->zipcode
+            ]);
+
+            $request_context->getClient()->updatePaymentMethod($body->token, $address);
             $successMessage = array(
                 'type' => 'success',
                 'text' => 'Your payment method has successfully been updated!'

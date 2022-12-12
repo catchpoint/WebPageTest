@@ -990,18 +990,21 @@ class CPClient
         return $results->getData()[$mutation_name];
     }
 
-    public function updatePaymentMethod(string $token): bool
+    public function updatePaymentMethod(string $token, ShippingAddress $address): bool
     {
         $gql = (new Mutation('wptUpdateSubscriptionPayment'))
         ->setVariables([
-          new Variable('paymentToken', 'String', true)
+          new Variable('paymentToken', 'String', true),
+          new Variable('shippingAddress', 'ChargifyAddressInputType', true)
         ])
         ->setArguments([
-          'paymentToken' => '$paymentToken'
+          'paymentToken' => '$paymentToken',
+          'shippingAddress' => '$shippingAddress'
         ]);
 
         $variables = [
-        'paymentToken' => $token
+          'paymentToken' => $token,
+          'shippingAddress' => $address->toArray()
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
