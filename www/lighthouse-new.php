@@ -122,7 +122,6 @@ if ($lhResults) {
                 $tempPassed = $categoryGroups[$sortCat];
                 unset($categoryGroups[$sortCat]);
                 $categoryGroups[$sortCat] = $tempPassed;
-    
             }
         }
         
