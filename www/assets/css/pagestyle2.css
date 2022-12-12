@@ -8303,6 +8303,7 @@ body.screenshot .header_screenshots {
   margin-top: -10rem;
   z-index: 99999999;
   align-self: center;
+  justify-content: center;
 }
 
 body.screenshot #videoContainer img {
@@ -8357,20 +8358,25 @@ body.screenshot .header_screenshots {
 }
 
 body.screenshot .header_screenshots img {
-  max-height: 300px !important;
+  max-height: 250px !important;
   max-width: 100% !important;
   width: auto !important;
 }
 
-
+body.screenshot .results_main-lh .opportunities_summary {
+  padding: 0;
+}
 
 body.screenshot .results_main-lh nav.results_lh_nav {
-  margin: 2rem 0 0;
-  max-width: 70%;
+  margin: 1rem 0 0;
+  
 }
 body.screenshot .results_main-lh nav.results_lh_nav a {
   padding-right: 0;
-  justify-content: center;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  border: 0;
+  padding: 0;
 }
 body.screenshot .results_main-lh .scrollableTable {
   border-top: 1px solid #ddd;
@@ -8816,7 +8822,7 @@ pre[class*="language-"] {
   justify-content: center;
   gap: .5em;
   white-space: nowrap;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #eee;
   padding: .5em 1em;
   border-radius: .5em;
   background: #fff;
