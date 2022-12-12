@@ -136,6 +136,7 @@ if ($lhResults) {
         'diagnostics' => 'Diagnostics',
         'passed' => 'Passed Audits',
         'notApplicable' => 'Not Applicable',
+        '' => 'Other',
     ];
     foreach ($lhResults->categoryGroups as $cat_id => $cat) {
         $categoryTitles[$cat_id] = $cat->title;
