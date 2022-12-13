@@ -2,7 +2,7 @@
     <span>
         <span>
             @if (str_starts_with($chain->request->url, 'data:'))
-            {{substr($chain->request->url, 0, 300)}} ...
+            {{ substr($chain->request->url, 0, 300) }} ...
             @else
             {{ $chain->request->url }}
             @endif
