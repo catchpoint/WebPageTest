@@ -1,11 +1,17 @@
 <li>
     <span>
-        <span>{{ $chain->request->url }}</span>
+        <span>
+            @if (str_starts_with($chain->request->url, 'data:'))
+            {{substr($chain->request->url, 0, 300)}} ...
+            @else
+            {{ $chain->request->url }}
+            @endif
+        </span>
         <span>{{ round($chain->request->transferSize / 1024) }}kb</span>
     </span>
     @if ($chain->children)
-        <ol>
+    <ol>
         @each('partials.requestchain', $chain->children, 'chain')
-        </ol>
+    </ol>
     @endif
 </li>
