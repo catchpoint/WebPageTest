@@ -8870,6 +8870,10 @@ pre[class*="language-"] {
   position: relative;
 }
 
+.results_main-lh .results_body {
+  padding-bottom: 2rem;
+}
+
 .results_main-lh details.metrics_shown {
   top: 1em;
   right: 0;

@@ -85,7 +85,7 @@ function gradeFromScore($score)
         </div>
         <div id="result" class="experiments_grades results_body">
             <div id="average">
-                <div class='experiments_grades results_body'>
+                <div class='experiments_grades'>
                     <div class="form_clip">
                         @foreach ($results->categories as $category)
                         <div class="grade_header grade_header-lighthouse" id="{{ $category->title }}">
