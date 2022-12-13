@@ -184,11 +184,12 @@ foreach ($metricKeys as $metric) {
     $metricSplit = preg_split("@[\s+　]@u", trim($thisMetric->displayValue));
 
     $grade = '';
-    if ($thisMetric->score) {
+    if (isset($thisMetric->score)) {
         $grade = "good";
-        if ($thisMetric->score < 0.9) {
+        if (floatval($thisMetric->score) < 0.9) {
             $grade = "ok";
-        } else if ($thisMetric->score < 0.5) {
+        }
+        if (floatval($thisMetric->score) < 0.5) {
             $grade = "poor";
         }
     }
