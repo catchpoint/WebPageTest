@@ -135,7 +135,7 @@ if ($lhResults) {
                 if ($scoreMode === 'binary' && $score !== 1) {
                     $scoreDesc = "fail";
                 }
-                $groupaudit->relevantExperiment = $auditExperiments[ $auditid ];
+                $groupaudit->relevantExperiment = $auditExperiments[$auditid];
             }
             $groupaudit->scoreDescription = $scoreDesc;
 
@@ -175,6 +175,19 @@ if ($lhResults) {
             $audits[$catid] = $sortedAudits;
         }
     }
+}
+
+// sort opps by ms
+if (isset($audits['performance']['opportunities'])) {
+    uasort(
+        $audits['performance']['opportunities'],
+        function ($a, $b) {
+            if ($a->details->overallSavingsMs === $b->details->overallSavingsMs) {
+                return 0;
+            }
+            return ($a->details->overallSavingsMs < $b->details->overallSavingsMs) ? 1 : -1;
+        }
+    );
 }
 
 $metricKeys = [
