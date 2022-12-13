@@ -4694,8 +4694,8 @@ form[name="filterLog"] .history_filter input[type="text"] {
     display: block;
   }
 
-  .input_fields label,
-  .input_fields .label {
+  [for=advanced] + div .input_fields label, 
+  [for=advanced] + div .input_fields .label {
     width: 28%;
   }
 
