@@ -8844,6 +8844,7 @@ pre[class*="language-"] {
   border-radius: 0.5em;
   background: #fff;
 }
+
 .opportunities_summary .results_lh_nav a:last-child {
   border-width: 1px;
 }
@@ -9176,4 +9177,49 @@ p.lh-filteraudits {
 }
 .lh-details-failure p {
   margin: 0
+}
+
+@media (max-width: 50em){
+  .results_main-lh nav.results_lh_nav {
+    display: block;
+  }
+  .results_lh_nav a {
+    flex: 1;
+    display: block;
+    margin-bottom: .4em;
+  }
+  .results_main-lh details.metrics_shown {
+    margin: 0 0 1em 0;
+  }
+  .opps_note-links {
+    background-position: top .7em left .5em;
+  }
+  .lh-filter_map {
+    display: block;
+  }
+  .results_main-lh .lh-filteraudits,
+  .lh-filteraudits > span {
+    display: block;
+    
+  }
+  .results_main-lh  .lh-filteraudits {
+    margin-bottom: 1em;
+  }
+  .lh-filteraudits > span {
+    width: 100%;
+  }
+  .lh-filteraudits a {
+    display: inline-block;
+  }
+  .summary_text,
+  .summary_text div,
+  .summary_text div p {
+    display: block;
+  }
+  .summary_text div p {
+    margin: 0 0 .2em;
+  }
+  .summary_text div a {
+    margin: .5em 0;
+  }
 }
