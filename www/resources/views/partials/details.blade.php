@@ -39,6 +39,14 @@ $thesekeys = array();
                 <td class="numeric">
                     {{ round($item->$key) }}
                 </td>
+                @elseif ($key === "sourceLocation")
+                <td>
+                    <ul>
+                        <li>URL: {{ $item->$key->url }}</li>
+                        <li>Line: {{ $item->$key->line }}</li>
+                        <li>Column: {{ $item->$key->column }}</li>
+                    </ul>
+                </td>
                 @else
                 <td>
                     {{ $item->$key }}
