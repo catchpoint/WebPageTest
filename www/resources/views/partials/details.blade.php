@@ -47,6 +47,18 @@ $thesekeys = array();
                         <li>Column: {{ $item->$key->column }}</li>
                     </ul>
                 </td>
+                @elseif ($item->$key->type === "link")
+                <td>
+                    @if ($item->$key->url)
+                    <a href="{{ $item->$key->url }}">{{ $item->$key->text }}</a>
+                    @else
+                    {{ $item->$key->text }}
+                    @endif
+                </td>
+                @elseif ($item->$key->type === "code")
+                <td>
+                    {{ $item->$key->value }}
+                </td>
                 @else
                 <td>
                     {{ $item->$key }}
