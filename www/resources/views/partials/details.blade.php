@@ -56,9 +56,10 @@ $thesekeys = array();
 @if ($audit->details->type === "debugdata" )
 @foreach ($audit->details->items as $item)
 @if (count($item->failures))
-<ul>
+<b>Failures:</b>
+<ul class="lh-details-failure">
     @foreach ($item->failures as $failure)
-    <li><b>Failure:</b> {{ $failure }}</li>
+    <li>{!! md($failure) !!}</li>
     @endforeach
 </ul>
 @endif

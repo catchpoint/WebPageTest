@@ -9170,3 +9170,6 @@ p.lh-filteraudits {
 .lh-chain li > span span:last-child {
   white-space: nowrap;
 }
+.lh-details-failure p {
+  margin: 0
+}
