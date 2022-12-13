@@ -122,10 +122,13 @@ if ($lhResults) {
 
             $passed = $scoreMode !== 'informative'; // unless info, pass by default
             $scoreDesc = "pass";
-            if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
+            if (($scoreMode === 'binary' && $score !== 1) || ($scoreMode === 'numeric' && $score < 0.9)) {
                 $passed = false;
                 $scoreDesc = "average";
                 if ($scoreMode === 'numeric' && $score < 0.5) {
+                    $scoreDesc = "fail";
+                }
+                if ($scoreMode === 'binary' && $score !== 1) {
                     $scoreDesc = "fail";
                 }
             }
