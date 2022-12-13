@@ -201,6 +201,25 @@ if (isset($audits['performance']['opportunities'])) {
     );
 }
 
+// sort diagnostics by ms
+if (isset($audits['performance']['diagnostics'])) {
+    uasort(
+        $audits['performance']['diagnostics'],
+        function ($a, $b) {
+            if ($a->scoreDescription === $b->scoreDescription) {
+                return 0;
+            }
+            if ($a->scoreDescription === 'fail') {
+                return -1;
+            }
+            if ($b->scoreDescription === 'fail') {
+                return 1;
+            }
+
+        }
+    );
+}
+
 $metricKeys = [
     'first-contentful-paint',
     'speed-index',
