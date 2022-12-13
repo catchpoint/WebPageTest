@@ -36,6 +36,10 @@ $metricFilters = [
 ];
 
 // these are figured out and passed to the template
+$auditExperiments = [
+    "offscreen-images" => "014"
+];
+
 $audits = [];
 $groupTitles = null;
 
@@ -128,6 +132,7 @@ if ($lhResults) {
                 if ($scoreMode === 'numeric' && $score < 0.5) {
                     $scoreDesc = "fail";
                 }
+                $groupaudit->relevantExperiment = $auditExperiments[ $auditid ];
             }
             $groupaudit->scoreDescription = $scoreDesc;
 

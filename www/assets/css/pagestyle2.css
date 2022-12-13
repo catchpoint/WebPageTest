@@ -8907,13 +8907,40 @@ pre[class*="language-"] {
 .summary_text {
   display: flex;
   justify-content: space-between;
+
 }
-.summary_text > p {
+.summary_text p {
   margin: 0;
 }
 .summary_text > p + p {
   font-weight: 300;
   font-size: 1rem;
+}
+.summary_text > div {
+  display: flex;
+  align-items: flex-start
+}
+.summary_text > div {
+  gap: .5em;
+}
+
+.lh_experimentlink {
+  font-size: .7em;
+  font-weight: 700;
+  border-radius: 2em;
+  padding: 0.3em 1em 0.3em 2.5em;
+  background: #f9fff7 url(/assets/images/src/icon_science_bubbling.svg) left 0.5em top 40% no-repeat;
+  display: inline-block;
+  text-decoration: none;
+  color: #2c7014;
+  border: 1px solid #4e8f37;
+  background-size: 2em auto;
+  margin-top: -0.3em;
+}
+.lh_experimentlink em {
+  font-style: normal;
+  color: #333;
+  font-weight: 500;
 }
 
 .results_main-lh summary em p {
