@@ -18,7 +18,8 @@
     global $socialDesc;
     global $useScreenshot;
     global $socialTitle;
-    
+    global $socialImage;
+    global $pageURI;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     if ($_REQUEST['screenshot']){
@@ -28,7 +29,7 @@
             $body_class = "screenshot";
         }
     }
-    
+
     $body_class = $body_class ? ' class="' . $body_class .'"' : '';
 
     ?>
