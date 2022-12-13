@@ -8987,6 +8987,7 @@ details.metrics_shown p a {
   grid-template-columns: repeat(auto-fit, 60px);
   padding: 1em 1em 1em 0;
   gap: 1em;
+  overflow: auto;
 }
 .lh_filmstrip_item {
   text-align: right;
