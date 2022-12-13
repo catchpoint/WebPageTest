@@ -39,7 +39,7 @@ $thesekeys = array();
                 <td class="numeric">
                     {{ round($item->$key) }}
                 </td>
-                @elseif ($key === "sourceLocation")
+                @elseif ($item->$key->type === "source-location")
                 <td>
                     <ul>
                         <li>URL: {{ $item->$key->url }}</li>
