@@ -14,7 +14,12 @@
         </summary>
         <div class="experiments_details_body">
             <div class="experiments_details_desc">
+                @if ($audit->id === 'use-landmarks')
+                <p>{!! e(substr($audit->description, 0, strpos($audit->description, '['))) !!}</p>
+                @else
                 <p>{!! md($audit->description) !!}</p>
+                @endif
+
                 @if ($audit->details)
                 @include('partials.details')
                 @endif
