@@ -2098,13 +2098,18 @@ footer ul {
   font-size: 1.1rem;
 }
 
-.experiments_bottlenecks > ol > li > details > summary::marker {
+.experiments_bottlenecks > ol > li > details > summary::marker,
+.experiments_bottlenecks > ol > li > details > summary::-webkit-details-marker {
   position: absolute;
   left: 0;
   display: block;
   margin: 0;
 }
+.experiments_bottlenecks > ol > li > details > summary::-webkit-details-marker {
+  left: -.8em;
+  top: .4em;
 
+}
 .experiments_bottlenecks > ol > li > details > summary:before {
   position: absolute;
   left: 0;
