@@ -62,7 +62,7 @@
     <?php endif; ?>
 </div>
 <div class="card-section">
-    <?php if (!$is_canceled && !$is_wpt_enterprise) : ?>
+    <?php if ($is_paid && !$is_canceled && !$is_wpt_enterprise) : ?>
         <div class="account-cta">
             <label class="dropdown">
                 <input type="checkbox" class="dd-input" id="test">

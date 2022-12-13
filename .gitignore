@@ -117,6 +117,7 @@ tests/*.cache
 www/beanstalk.php
 .vscode/*
 */.vscode/*
+vendor/bin/.phpunit.result.cache
 
 # developer settings
 www/dev.php
