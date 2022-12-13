@@ -185,7 +185,6 @@ if (navigator.clipboard) {
                             @if (count($cat_audits))
                             <h4>{{ $groupTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
                             <ol>
-                                <?php $detailsclosed = true; ?>
                                 @foreach ($cat_audits as $audit)
                                 @include('partials.audititem')
                                 @endforeach

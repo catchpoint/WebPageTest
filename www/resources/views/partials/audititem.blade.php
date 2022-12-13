@@ -1,5 +1,5 @@
 <li data-audit-id="{{ $audit->id }}" class="experiments_details lh_audit-{{ $audit->scoreDisplayMode }} lh_audit-{{ $audit->scoreDescription }}">
-    <details @if (!$detailsclosed) open @endif>
+    <details>
         <summary>
             <div class="summary_text">
                 <div>{!! md($audit->title) !!}@if($audit->relevantExperiment) @include('partials.auditExperiment') @endif</div>
