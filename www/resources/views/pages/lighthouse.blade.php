@@ -152,7 +152,7 @@ function gradeFromScore($score)
                             @endif
 
                             <div class="lh-filter_map">
-                                <p class="lh-filteraudits">Show audits relevant to metrics:
+                                <p class="lh-filteraudits"><span>Show audits relevant to metrics:</span>
                                     @foreach($metric_filters as $filter => $active)
                                     <?php
                                     $thisURL = $_SERVER['REQUEST_URI'];
