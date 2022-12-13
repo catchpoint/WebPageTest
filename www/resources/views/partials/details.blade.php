@@ -32,7 +32,9 @@ $thesekeys = array();
             <tr>
                 @foreach ($thesekeys as $key)
                 @if ($item->$key->type === "node")
-                <td><b>{{ $item->$key->selector }}</b>
+                <td><b class="lh-selector">
+                    {{ $item->$key->selector }}
+                </b>
                     {!! nl2br(e($item->$key->explanation)) !!}
                 </td>
                 @elseif (is_numeric($item->$key))

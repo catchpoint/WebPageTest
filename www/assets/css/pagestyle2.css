@@ -4699,7 +4699,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
     display: block;
   }
 
-  [for=advanced] + div .input_fields label, 
+  [for=advanced] + div .input_fields label,
   [for=advanced] + div .input_fields .label {
     width: 28%;
   }
@@ -9183,6 +9183,9 @@ p.lh-filteraudits {
 .lh-details-failure p {
   margin: 0
 }
+.lh-selector {
+  cursor: pointer;
+}
 
 @media (max-width: 50em){
   .results_main-lh nav.results_lh_nav {
@@ -9205,7 +9208,7 @@ p.lh-filteraudits {
   .results_main-lh .lh-filteraudits,
   .lh-filteraudits > span {
     display: block;
-    
+
   }
   .results_main-lh  .lh-filteraudits {
     margin-bottom: 1em;

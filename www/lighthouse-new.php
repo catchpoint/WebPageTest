@@ -1,4 +1,5 @@
 <?php
+
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
@@ -55,7 +56,6 @@ $audits = [];
 $groupTitles = null;
 
 if ($lhResults) {
-
     // Group titles:
     // a bag of group IDs => titles
     // some are hardcoded, some come from the report
@@ -116,7 +116,7 @@ if ($lhResults) {
                     foreach ($auditRef->relevantAudits as $ref) {
                         $audit_ids[] = $ref;
                     }
-                } else if (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
+                } elseif (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
                     $audit_ids[] = $auditRef->id;
                 }
             }
@@ -130,7 +130,6 @@ if ($lhResults) {
         $groupedAudits = [];
 
         foreach ($audit_ids as $auditid) {
-
             $groupaudit = $lhResults->audits->{$auditid};
             $score = $groupaudit->score;
             $scoreMode = $groupaudit->scoreDisplayMode;
@@ -156,10 +155,10 @@ if ($lhResults) {
             if (!$isPerf && $scoreMode === 'manual') {
                 // nothing manual in perf!
                 $groupedAudits[$scoreMode][] = $groupaudit;
-            } else if (!$isPerf && !$isPWA && $scoreMode === 'notApplicable') {
+            } elseif (!$isPerf && !$isPWA && $scoreMode === 'notApplicable') {
                 // everyting is applicable
                 $groupedAudits[$scoreMode][] = $groupaudit;
-            } else if ($passed && !$isPWA) {
+            } elseif ($passed && !$isPWA) {
                 // in PWA passed means PWA-optimized
                 $groupedAudits['passed'][] = $groupaudit;
             } else {
@@ -215,7 +214,6 @@ if (isset($audits['performance']['diagnostics'])) {
             if ($b->scoreDescription === 'fail') {
                 return 1;
             }
-
         }
     );
 }

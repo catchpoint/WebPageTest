@@ -16,6 +16,19 @@ function gradeFromScore($score)
 ?>
 
 @section('content')
+<script>
+if (navigator.clipboard) {
+    function copySelector(selector) {
+        navigator.clipboard.writeText(`document.querySelectorAll('${selector}')`);
+    }
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.lh-selector').forEach(el => {
+            el.title = "Click to copy a querySelectorAll() snippet";
+            el.addEventListener('click', () => copySelector(el.innerText));
+        });
+    });
+}
+</script>
 <div class="results_main_contain">
     <div class="results_main results_main-lh">
         <div class="results_and_command">
