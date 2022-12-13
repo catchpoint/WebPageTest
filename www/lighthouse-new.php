@@ -130,22 +130,29 @@ if ($lhResults) {
                 }
             }
             $groupaudit->scoreDescription = $scoreDesc;
+
+            // put each audit in the right group based on a generic lookup, but observing:
+            //  - PWA and perf quirks
+            //  - the concept of a Passed Audits group
             if (!$isPerf && $scoreMode === 'manual') {
+                // nothing manual in perf!
                 $groupedAudits[$scoreMode][] = $groupaudit;
             } else if (!$isPerf && !$isPWA && $scoreMode === 'notApplicable') {
+                // everyting is applicable
                 $groupedAudits[$scoreMode][] = $groupaudit;
             } else if ($passed && !$isPWA) {
+                // in PWA passed means PWA-optimized
                 $groupedAudits['passed'][] = $groupaudit;
             } else {
                 if ($isPerf) {
-                    $catname = $groupaudit->details->type === 'opportunity' ? 'opportunities' : 'diagnostics';
+                    $grpname = $groupaudit->details->type === 'opportunity' ? 'opportunities' : 'diagnostics';
                 } else {
-                    $catname = $auditToGroupLookup[$auditid];
+                    $grpname = $auditToGroupLookup[$auditid];
                 }
-                if (!$groupedAudits[$catname]) {
-                    $groupedAudits[$catname] = [];
+                if (!$groupedAudits[$grpname]) {
+                    $groupedAudits[$grpname] = [];
                 }
-                $groupedAudits[$catname][$groupaudit->id] = $groupaudit;
+                $groupedAudits[$grpname][$groupaudit->id] = $groupaudit;
             }
 
             // sort based on the keys found in $groupTitles
