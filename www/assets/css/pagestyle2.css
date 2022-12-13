@@ -8370,10 +8370,8 @@ body.screenshot .results_main-lh .opportunities_summary {
 
 body.screenshot .results_main-lh nav.results_lh_nav {
   margin: 1rem 0 0;
-  
 }
 body.screenshot .results_main-lh nav.results_lh_nav a {
-  padding-right: 0;
   justify-content: flex-start;
   flex: 1 1 auto;
   border: 0;
@@ -8381,12 +8379,10 @@ body.screenshot .results_main-lh nav.results_lh_nav a {
 }
 body.screenshot .results_main-lh .scrollableTable {
   border-top: 1px solid #ddd;
-
 }
 body.screenshot .results_main-lh .experiments_bottlenecks {
   margin-bottom: 0;
 }
-
 
 .linklike {
   cursor: pointer;
@@ -8759,9 +8755,9 @@ pre[class*="language-"] {
 .opps_note {
   flex: 1 0 25%;
   margin: 6rem 0 2rem;
-  padding: 1rem 1.5rem .5rem;
+  padding: 1rem 1.5rem 0.5rem;
   background: #eff8ff;
-  border-radius: 0.7em
+  border-radius: 0.7em;
 }
 .opps_note-links {
   margin: 1em 0;
@@ -8775,8 +8771,8 @@ pre[class*="language-"] {
 .opps_note p {
   color: #2a3b64;
   line-height: 1.7;
-  margin: 0 0 .5em 0;
-  font-size: .9em;
+  margin: 0 0 0.5em 0;
+  font-size: 0.9em;
 }
 .opps_note:not(.opps_note-links) p a {
   background-color: #fbe076;
@@ -8785,40 +8781,39 @@ pre[class*="language-"] {
   border-radius: 1em;
   text-decoration: none;
   padding: 0.1em 0.7em 0.2em;
-  font-size: .9em;
+  font-size: 0.9em;
   display: inline-block;
   font-weight: bold;
   text-transform: capitalize;
 }
 
-@media (max-width: 60em){
+@media (max-width: 60em) {
   .results_main-lh .results_and_command {
     width: auto;
     gap: 0;
   }
   .opps_note {
     margin: 0 -1.5rem 1rem;
-
   }
 }
 
 .results_header p span.lh_score_grade-fail {
   color: red;
-  font-size: .8em
+  font-size: 0.8em;
 }
 .results_header p span.lh_score_grade-average {
   color: #ffab33;
-  font-size: .8em
+  font-size: 0.8em;
 }
 .results_header p span.lh_score_grade-pass {
   color: #008f11;
-  font-size: .8em
+  font-size: 0.8em;
 }
 
 .results_main-lh nav.results_lh_nav {
   display: flex;
   flex: 1 0 100%;
-  gap: .5em;
+  gap: 0.5em;
   flex-flow: row wrap;
 }
 
@@ -8831,20 +8826,19 @@ pre[class*="language-"] {
 
 .results_lh_nav a {
   flex: 0 1 auto;
-  display:flex;
+  display: flex;
   flex-flow: row;
   align-items: center;
   font-weight: 700;
   font-size: 1.1em;
-  padding-right: 2em;
   /* max-width: 10em; */
   margin: 0;
   justify-content: center;
-  gap: .5em;
+  gap: 0.5em;
   white-space: nowrap;
   border: 1px solid #eee;
-  padding: .5em 1em;
-  border-radius: .5em;
+  padding: 0.5em 1em;
+  border-radius: 0.5em;
   background: #fff;
 }
 .opportunities_summary .results_lh_nav a:last-child {
@@ -8920,7 +8914,6 @@ pre[class*="language-"] {
 .summary_text > p + p {
   font-weight: 300;
   font-size: 1rem;
-  
 }
 
 .results_main-lh summary em p {
@@ -9014,7 +9007,7 @@ p.lh-filteraudits {
 .lh-filteraudits a {
   text-transform: uppercase;
   border: 1px solid transparent;
-  padding: .1em 0;
+  padding: 0.1em 0;
 }
 .lh-filteraudits a:not([aria-current]):hover,
 .lh-filteraudits a:not([aria-current]):focus {
@@ -9023,29 +9016,37 @@ p.lh-filteraudits {
 .lh-filteraudits a[aria-current] {
   text-decoration-color: transparent;
   color: #2a3b64;
-  border-radius: .4em;
-  padding: .1em .6em;
+  border-radius: 0.4em;
+  padding: 0.1em 0.6em;
   border-color: #2a3b64;
   font-weight: 700;
 }
 .experiments_bottlenecks > ol > li.lh_audit-pass > details > summary:before {
-  background-image: url(/assets/images/src/icon_grading_check.svg) ;
-
+  background-image: url(/assets/images/src/icon_grading_check.svg);
 }
 .experiments_bottlenecks > ol > li.lh_audit-average > details > summary:before {
-  background-image: url(/assets/images/src/icon_grading_warn.svg) ;
+  background-image: url(/assets/images/src/icon_grading_warn.svg);
   background-color: transparent;
 }
 .experiments_bottlenecks > ol > li.lh_audit-fail > details > summary:before {
-  background-image: url(/assets/images/src/icon_grading_alert.svg) ;
+  background-image: url(/assets/images/src/icon_grading_alert.svg);
   background-color: #d26122;
 }
-.experiments_bottlenecks > ol > li.lh_audit-informative > details > summary:before {
-  background-image: url(/assets/images/src/icon_info_circle.svg) ;
+.experiments_bottlenecks
+  > ol
+  > li.lh_audit-informative
+  > details
+  > summary:before {
+  background-image: url(/assets/images/src/icon_info_circle.svg);
   background-color: transparent;
-  border: 1px solid  #396fc2;
+  border: 1px solid #396fc2;
 }
-.experiments_bottlenecks > ol > li.lh_audit-notApplicable > details > summary:before {
+.experiments_bottlenecks
+  > ol
+  > li.lh_audit-notApplicable
+  > details
+  > summary:before,
+.experiments_bottlenecks > ol > li.lh_audit-manual > details > summary:before {
   background-image: none;
   background-color: #ccc;
 }
@@ -9058,9 +9059,8 @@ p.lh-filteraudits {
   display: table;
   font-size: 0.9em;
   margin: 0 0 1em 0;
-  border-radius: .4em;
+  border-radius: 0.4em;
   background: #eee;
-
 }
 
 .results_main-lh table.lh-details th,
@@ -9078,10 +9078,10 @@ p.lh-filteraudits {
   white-space: nowrap;
 }
 .results_main-lh table.lh-details th:first-child {
-  border-top-left-radius: .4em;
+  border-top-left-radius: 0.4em;
 }
 .results_main-lh table.lh-details th:last-child {
-  border-top-right-radius: .4em;
+  border-top-right-radius: 0.4em;
 }
 
 .results_main-lh table.lh-details th:last-child,
@@ -9105,29 +9105,29 @@ p.lh-filteraudits {
   font-size: 0.9em;
   margin: 0 0 1em 0;
   border: 1px solid #eee;
-  border-radius: .4em;
+  border-radius: 0.4em;
   background: #fafafa;
   padding: 2em 2em 0;
 }
 .lh-chain ol {
-  padding: 0 0 .5em 1rem;
+  padding: 0 0 0.5em 1rem;
   font-size: 1em;
 }
 .lh-chain li {
   position: relative;
   overflow: visible;
   padding-left: 1em;
-  padding-bottom: .3em;
+  padding-bottom: 0.3em;
   list-style: none;
   padding-right: 0;
 }
-.lh-chain li >span {
+.lh-chain li > span {
   display: flex;
   justify-content: space-between;
   border-bottom: 1px dotted #ddd;
   overflow-wrap: anywhere;
   gap: 1em;
-  padding-bottom: .5em;
+  padding-bottom: 0.5em;
 }
 
 .lh-chain li:before {
@@ -9140,6 +9140,6 @@ p.lh-filteraudits {
   border-bottom: 2px solid #aaa;
   top: 0;
 }
-.lh-chain li >span span:last-child {
+.lh-chain li > span span:last-child {
   white-space: nowrap;
 }
