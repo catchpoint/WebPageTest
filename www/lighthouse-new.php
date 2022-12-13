@@ -37,7 +37,18 @@ $metricFilters = [
 
 // these are figured out and passed to the template
 $auditExperiments = [
-    "offscreen-images" => "014"
+    "offscreen-images" => "014",
+    "font-display" => "018",
+    "third-party-summary" => "050",
+    "total-byte-weight" => "050",
+    "layout-shift-elements" => "012",
+    "render-blocking-resources" => "001",
+    "viewport" => "009",
+    "preload-lcp-image" => "010",
+    "unsized-images" => "012",
+    "lcp-lazy-loaded" => "013",
+    "meta-viewport" => "009"
+
 ];
 
 $audits = [];

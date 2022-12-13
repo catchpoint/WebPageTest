@@ -883,6 +883,9 @@ h4.experiments_list_hed-recs {
   background: #fafafa;
   gap: 2rem;
 }
+.experiments_list > li:target {
+  background: #f8f7e0;
+}
 
 .experiment_description code {
   font-size: 1.2em;
