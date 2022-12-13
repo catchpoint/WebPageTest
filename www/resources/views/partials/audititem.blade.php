@@ -5,7 +5,7 @@
                 <div>{!! md($audit->title) !!}@if($audit->relevantExperiment) @include('partials.auditExperiment') @endif</div>
                 @if ($audit->displayValue)
                     @if (isset($audit->details->overallSavingsMs) && $audit->details->overallSavingsMs > 0)
-                    Estimated savings {{ round($audit->details->overallSavingsMs / 1000, 2) }} s
+                    <p>Estimated savings {{ round($audit->details->overallSavingsMs / 1000, 2) }} s</p>
                     @else
                     {!! md($audit->displayValue) !!}
                     @endif

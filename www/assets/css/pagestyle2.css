@@ -8915,7 +8915,7 @@ pre[class*="language-"] {
 .summary_text p {
   margin: 0;
 }
-.summary_text > p + p {
+.summary_text > p {
   font-weight: 300;
   font-size: 1rem;
 }
