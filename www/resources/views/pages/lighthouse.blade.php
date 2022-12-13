@@ -53,10 +53,10 @@ function gradeFromScore($score)
                     Lighthouse Report
                 </h2>
                 <p>
-                    
+
                     Lighthouse is an open-source, automated tool for improving the quality of web pages.
-                    You can run it against any web page, public or requiring authentication. Category scores 
-                    summarize their contained audits   
+                    You can run it against any web page, public or requiring authentication. Category scores
+                    summarize their contained audits
                     (<span class="lh_score_grade-fail">0-49</span>
                     <span class="lh_score_grade-average">50-89</span>
                     <span class="lh_score_grade-pass">90-100</span>).
@@ -157,8 +157,8 @@ function gradeFromScore($score)
                                     <?php
                                     $thisURL = $_SERVER['REQUEST_URI'];
                                     $filterQ = "&filterbymetric=";
-                                    if( strpos( $thisURL, $filterQ ) ){
-                                        $thisURL = str_replace($filterQ . $filterbymetric , '', $thisURL);
+                                    if (strpos($thisURL, $filterQ)) {
+                                        $thisURL = str_replace($filterQ . $filterbymetric, '', $thisURL);
                                     }
                                     ?>
                                     <a href="{{ $thisURL }}{{ $filterQ }}{{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
@@ -169,24 +169,25 @@ function gradeFromScore($score)
                             @endif
 
                             @foreach ($audits[$category->id] as $cat_id => $cat_audits)
-                                @if (count($cat_audits))
-                                    <h4>{{ $categoryTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
-                                    <ol>
-                                        <?php $detailsclosed = true; ?>
-                                        @foreach ($cat_audits as $audit)
-                                            @include('partials.audititem')
-                                        @endforeach
-                                    </ol>
-                                 @endif
+                            @if (count($cat_audits))
+                            <h4>{{ $groupTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
+                            <ol>
+                                <?php $detailsclosed = true; ?>
+                                @foreach ($cat_audits as $audit)
+                                @include('partials.audititem')
+                                @endforeach
+                            </ol>
+                            @endif
                             @endforeach
+
+                        </div>
                         @endforeach
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
+
 </div>
-
-
 @endsection

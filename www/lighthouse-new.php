@@ -5,7 +5,6 @@
 
 include __DIR__ . '/common.inc';
 
-
 require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
@@ -36,10 +35,31 @@ $metricFilters = [
     'CLS' => $filterbymetric === 'CLS',
 ];
 
+// these are figured out and passed to the template
 $audits = [];
+$groupTitles = null;
 
 if ($lhResults) {
 
+    // Group titles:
+    // a bag of group IDs => titles
+    // some are hardcoded, some come from the report
+    // The order matters as it's used for sorting too:
+    // 1/ opportunities first, diagnostics second
+    // 2/ anything found in the report
+    // 3/ end with manual checks, passed audits and N/A
+    $groupTitles = [
+        'opportunities' => 'Opportunities',
+        'diagnostics' => 'Diagnostics',
+    ];
+    foreach ($lhResults->categoryGroups as $cat_id => $cat) {
+        $groupTitles[$cat_id] = $cat->title;
+    }
+    $groupTitles['manual'] = 'Additional Items to Check Manually';
+    $groupTitles['passed'] = 'Passed Audits';
+    $groupTitles['notApplicable'] = 'Not Applicable';
+
+    // Treemap data
     $treemap = [
         'lhr' => [
             'requestedUrl' => $url,
@@ -54,92 +74,91 @@ if ($lhResults) {
         ]
     ];
 
+    // audit id => group id
+    // e.g. aria-valid-attr => a11y-aria
+    $auditToGroupLookup = [];
+
+    // the big loop of categories to put everything in
+    // the correct order in $audits
     foreach ($lhResults->categories as $catid => $category) {
+        // these 2 are special:
+        // perf has diagnostics and opportunities
+        // pwa treats "passed" and n/a as "optimized"
         $isPerf = $catid === 'performance';
-        $categoryGroups = [];
-        $categoryGroups['passed'] = [];
-        $categoryGroups['notApplicable'] = [];
+        $isPWA = $catid === 'pwa';
 
-        $categoryaudits = [];
-
+        // collection of all audits, meaning explicit + "relevant"
+        $audit_ids = [];
         foreach ($category->auditRefs as $auditRef) {
             $filterAuditOut = false;
             if ($isPerf && $filterbymetric !== "ALL" && $filterbymetric !== $auditRef->acronym) {
                 $filterAuditOut = true;
             }
-
             if (!$filterAuditOut) {
+                // A category can have its own audits, but also
+                // an audit can bring in additional "relevant" audits
                 if ($auditRef->relevantAudits) {
                     foreach ($auditRef->relevantAudits as $ref) {
-                        $categoryaudits[] = $lhResults->audits->{$ref};
+                        $audit_ids[] = $ref;
                     }
                 } else if (!in_array($auditRef->group, ['metrics', 'hidden', 'budgets'])) {
-                    $categoryaudits[] = $lhResults->audits->{$auditRef->id};
+                    $audit_ids[] = $auditRef->id;
+                }
+            }
+            $auditToGroupLookup[$auditRef->id] = $auditRef->group;
+        }
+        $audit_ids = array_values(array_unique($audit_ids));
+
+        // Now that we know all the audit IDs we want to show
+        // put them in relevant groups
+        // where "group" is e.g. "Passed Audits" or "Contrast"
+        $groupedAudits = [];
+
+        foreach ($audit_ids as $auditid) {
+
+            $groupaudit = $lhResults->audits->{$auditid};
+            $score = $groupaudit->score;
+            $scoreMode = $groupaudit->scoreDisplayMode;
+
+            $passed = $scoreMode !== 'informative'; // unless info, pass by default
+            $scoreDesc = "pass";
+            if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
+                $passed = false;
+                $scoreDesc = "average";
+                if ($scoreMode === 'numeric' && $score < 0.5) {
+                    $scoreDesc = "fail";
+                }
+            }
+            $groupaudit->scoreDescription = $scoreDesc;
+            if (!$isPerf && $scoreMode === 'manual') {
+                $groupedAudits[$scoreMode][] = $groupaudit;
+            } else if (!$isPerf && !$isPWA && $scoreMode === 'notApplicable') {
+                $groupedAudits[$scoreMode][] = $groupaudit;
+            } else if ($passed && !$isPWA) {
+                $groupedAudits['passed'][] = $groupaudit;
+            } else {
+                if ($isPerf) {
+                    $catname = $groupaudit->details->type === 'opportunity' ? 'opportunities' : 'diagnostics';
+                } else {
+                    $catname = $auditToGroupLookup[$auditid];
+                }
+                if (!$groupedAudits[$catname]) {
+                    $groupedAudits[$catname] = [];
+                }
+                $groupedAudits[$catname][$groupaudit->id] = $groupaudit;
+            }
+
+            // sort based on the keys found in $groupTitles
+            $sortedAudits = [];
+            foreach (array_keys($groupTitles) as $key) {
+                if (array_key_exists($key, $groupedAudits)) {
+                    $sortedAudits[$key] = $groupedAudits[$key];
                 }
             }
 
-            foreach ($categoryaudits as $categoryaudit) {
-                $score = $categoryaudit->score;
-                $scoreMode = $categoryaudit->scoreDisplayMode;
-
-                $passed = $scoreMode !== 'informative'; // unless info, pass by default
-                $scoreDesc = "pass";
-                if ($score !== null && ($scoreMode === 'binary' && $score !== 1 ||  $scoreMode === 'numeric' && $score < 0.9)) {
-                    $passed = false;
-                    $scoreDesc = "average";
-                    if ($scoreMode === 'numeric' && $score < 0.5) {
-                        $scoreDesc = "fail";
-                    }
-                }
-                $categoryaudit->scoreDescription = $scoreDesc;
-
-                if ($passed) {
-                    $categoryGroups['passed'][] = $categoryaudit;
-                } else if ($scoreMode === "notApplicable") {
-                    $categoryGroups['notApplicable'][] = $categoryaudit;
-                } else if ($scoreMode !== 'error') {
-
-                    if ($isPerf) {
-                        $catname = $categoryaudit->details->type === 'opportunity' ? 'opportunities' : 'diagnostics';
-                    } else {
-                        $catname = $auditRef->group;
-                    }
-
-                    if (!$categoryGroups[$catname]) {
-                        $categoryGroups[$catname] = [];
-                    }
-                    $categoryGroups[$catname][$categoryaudit->id] = $categoryaudit;
-                }
-            }
+            // all done, push to $audits
+            $audits[$catid] = $sortedAudits;
         }
-        foreach ($categoryGroups as $catgroupkey => $categoryGroup) {
-            $categoryGroups[$catgroupkey] = array_unique($categoryGroup, SORT_REGULAR);
-        }
-
-        // move passed and notApp to the end
-        foreach(['passed','notApplicable'] as $sortCat){
-            if( $categoryGroups[$sortCat] ){
-                $tempPassed = $categoryGroups[$sortCat];
-                unset($categoryGroups[$sortCat]);
-                $categoryGroups[$sortCat] = $tempPassed;
-            }
-        }
-        
-
-        $audits[$category->id] = $categoryGroups;
-    }
-
-    // a dictionary of category IDs => titles
-    // soma hardcoded, some from the report
-    $categoryTitles = [
-        'opportunities' => 'Opportunities',
-        'diagnostics' => 'Diagnostics',
-        'passed' => 'Passed Audits',
-        'notApplicable' => 'Not Applicable',
-        '' => 'Other',
-    ];
-    foreach ($lhResults->categoryGroups as $cat_id => $cat) {
-        $categoryTitles[$cat_id] = $cat->title;
     }
 }
 
@@ -151,8 +170,6 @@ $metricKeys = [
     'total-blocking-time',
     'cumulative-layout-shift'
 ];
-
-
 
 $metrics = [];
 foreach ($metricKeys as $metric) {
@@ -220,5 +237,5 @@ echo view('pages.lighthouse', [
     'lighthouse_screenshot' => $lighthouse_screenshot,
     'thumbnails' => $thumbnails,
     'treemap' => base64_encode(gzencode(json_encode($treemap))),
-    'categoryTitles' => $categoryTitles,
+    'groupTitles' => $groupTitles,
 ]);
