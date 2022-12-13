@@ -4,6 +4,11 @@
     require_once __DIR__ . '/../common.inc';
     require_once __DIR__ . '/social_meta_vars.inc';
 
+    global $socialImage;
+    global $socialTitle;
+    global $pageURI;
+    global $socialDesc;
+
     ?>
 
 <meta property="og:title" content="<?php echo $socialTitle; ?>">
