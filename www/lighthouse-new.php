@@ -200,7 +200,7 @@ if (isset($audits['performance']['opportunities'])) {
     );
 }
 
-// sort diagnostics by ms
+// sort diagnostics to put the fails first
 if (isset($audits['performance']['diagnostics'])) {
     uasort(
         $audits['performance']['diagnostics'],
