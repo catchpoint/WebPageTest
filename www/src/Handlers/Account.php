@@ -792,7 +792,7 @@ class Account
      * GET for the account page
      *
      * @param WebPageTest\RequestContext $request_context
-     * @param string $page the specific account route being accessed
+     * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
      * @return string $contents the contents of the page
      */

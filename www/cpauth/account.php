@@ -37,7 +37,7 @@ if ($request_method !== 'POST' && $request_method !== 'GET') {
 }
 
 if ($request_method === 'POST') {
-    $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
+    $type = filter_input(INPUT_POST, 'type', FILTER_UNSAFE_RAW);
 
     if ($type == 'contact-info') {
         $body = AccountHandler::validateChangeContactInfo($_POST);
@@ -138,7 +138,7 @@ if ($request_method === 'POST') {
     exit();
 }
 
-$page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+$page = (string) filter_input(INPUT_GET, 'page', FILTER_UNSAFE_RAW);
 $contents = AccountHandler::getAccountPage($request_context, $page);
 echo $contents;
 exit();
