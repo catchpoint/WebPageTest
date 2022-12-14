@@ -251,7 +251,7 @@ $page_description = "Website performance test result$testLabel.";
                                 }
 
                                 $out .= <<<EOT
-                                    <li class="experiment_description">
+                                    <li class="experiment_description" id="experiment-{$exp->id}">
                                     <div class="experiment_description_text">
                                     <h5>{$exp->title}</h5>
                                     {$exp->desc}
