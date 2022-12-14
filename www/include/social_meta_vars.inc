@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../common.inc';
 
@@ -14,5 +15,3 @@ $socialDesc = isset($socialDesc) ? $socialDesc : "View this on WebPageTest.org..
 $emailSubject = "View this on WebPageTest!";
 $tweetURI =  'https://twitter.com/intent/tweet?text=' . urlencode($socialDesc) . '&url=' . urlencode($pageURI) . '&via=realwebpagetest';
 $emailURI = 'mailto:?subject=' . rawurlencode(htmlspecialchars_decode($emailSubject)) . '&body=' . rawurlencode(htmlspecialchars_decode($socialDesc)) . '  %0D%0A ' . urlencode($pageURI);
-
-?>

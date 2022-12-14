@@ -9,7 +9,7 @@
     global $pageURI;
     global $socialDesc;
 
-    ?>
+?>
 
 <meta property="og:title" content="<?php echo $socialTitle; ?>">
 <meta property="og:type" content="article" />

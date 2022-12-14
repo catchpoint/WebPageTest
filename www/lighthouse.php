@@ -32,8 +32,7 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
             }
             if (is_file($filePath)) {
                 // if &f=lh-viewer is in the url, we'll show the lighthouse viewer html as it exports
-                if( isset($_REQUEST['f']) && $_REQUEST['f'] == 'lh-viewer' ){
-
+                if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'lh-viewer') {
                     $ok = true;
 
                     // Cache for a year
@@ -41,7 +40,7 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
                     header('Cache-Control: public,max-age=31536000', true);
                     header('Content-type: text/html');
                     $lighthouseTrace = "$testPath/lighthouse_trace.json";
-                    if (gz_is_file($lighthouseTrace) ) {
+                    if (gz_is_file($lighthouseTrace)) {
                     // Add the HTML to view/download the trace and timelines to the raw html
                         $html = gz_file_get_contents($filePath);
                         $insert = '<div style="text-align: center; line-height: 2em;"><span>';

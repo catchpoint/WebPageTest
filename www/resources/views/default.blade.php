@@ -22,15 +22,15 @@
     global $pageURI;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
-    if ($_REQUEST['screenshot']){
-        if($body_class){
+    if ($_REQUEST['screenshot']) {
+        if ($body_class) {
             $body_class .= " screenshot";
         } else {
             $body_class = "screenshot";
         }
     }
 
-    $body_class = $body_class ? ' class="' . $body_class .'"' : '';
+    $body_class = $body_class ? ' class="' . $body_class . '"' : '';
 
     ?>
     <title>{{ $page_title ?? 'WebPageTest' }}</title>

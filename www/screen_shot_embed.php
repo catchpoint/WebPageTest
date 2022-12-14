@@ -22,7 +22,7 @@ $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(
 
 $screenShotUrl = null;
 // check for LH screenshot first
-if(isset($lighthouse_screenshot)){
+if (isset($lighthouse_screenshot)) {
     $screenShotUrl = $lighthouse_screenshot;
 } elseif ($fileHandler->fileExists($localPaths->screenShotPngFile())) {
     $screenShotUrl = $urlPaths->screenShotPngFile();

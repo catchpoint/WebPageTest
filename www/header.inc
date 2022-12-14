@@ -399,7 +399,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
                 }
             }
-            
+
             if (isset($firstRunResults)) {
                 $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
                 $lhURL = $urlGeneratorFirstRun->resultPage("lighthouse");
@@ -439,7 +439,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             }
 
             // one dollar sign for every 500KB
-            if( !$lhOnly ){
+            if (!$lhOnly) {
                 $dollars = "";
                 $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
                 for ($i = 1; $i <= 5; $i++) {
@@ -451,7 +451,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
                 "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
 
-            
+
                 if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
                     // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
                     $securityScoreIncludesVulnerabilities = true;
