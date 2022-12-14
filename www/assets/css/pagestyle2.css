@@ -4699,7 +4699,7 @@ form[name="filterLog"] .history_filter input[type="text"] {
     display: block;
   }
 
-  [for=advanced] + div .input_fields label,
+  [for=advanced] + div .input_fields label, 
   [for=advanced] + div .input_fields .label {
     width: 28%;
   }
@@ -8222,9 +8222,9 @@ body.screenshot a {
 }
 
 body.screenshot .results_header h2 {
-  opacity: 0;
-  margin: 0;
-  padding: 0;
+  opacity: 0; 
+  margin: 0; 
+  padding: 0; 
   height: 1rem;
 }
 
@@ -8262,8 +8262,25 @@ body.screenshot .grade_header-lighthouse,
 body.screenshot .hed_sub-lighthouse,
 body.screenshot .results_main-lh .grade_header-lighthouse:not(:first-of-type),
 body.screenshot .results_main-lh .experiments_bottlenecks ~ *,
-body.screenshot .results_main-lh .scrollableTable ~ * {
+body.screenshot .results_main-lh .scrollableTable ~ *,
+body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header p{
   display: none !important;
+}
+
+body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header{
+  display: block !important;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+}
+
+body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header h2 {
+display: flex !important;
+  opacity: 1;
+  height: auto;
+  padding: 0 0 .5rem;
+  margin: 0 0 ;
+  font-size: 1.8em;
 }
 
 body.screenshot header {
@@ -9183,9 +9200,6 @@ p.lh-filteraudits {
 .lh-details-failure p {
   margin: 0
 }
-.lh-selector {
-  cursor: pointer;
-}
 
 @media (max-width: 50em){
   .results_main-lh nav.results_lh_nav {
@@ -9208,7 +9222,7 @@ p.lh-filteraudits {
   .results_main-lh .lh-filteraudits,
   .lh-filteraudits > span {
     display: block;
-
+    
   }
   .results_main-lh  .lh-filteraudits {
     margin-bottom: 1em;
