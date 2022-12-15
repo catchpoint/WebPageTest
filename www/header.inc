@@ -393,7 +393,11 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
             $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
             $tabs['Console Log'] = $menuUrlGenerator->resultPage("consolelog", $endParams);
-            $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
+
+            if ($firstRunResults->getStepResult(1)->getMetric('generated-html')) {
+                $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
+            }
+
             $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
 
             if ($gradedRunResults->hasBreakdownTimeline()) {
