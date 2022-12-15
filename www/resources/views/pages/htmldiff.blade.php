@@ -51,9 +51,8 @@
         color: red;
         font-size: larger;
     }
-    .results_body {
-        border: none;
-        box-shadow: none;
+    #diff-result {
+        padding: 24px 0;
     }
 </style>
 @endsection
