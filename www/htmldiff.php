@@ -21,7 +21,7 @@ $pageData = loadAllPageData($testPath);
 
 $error_message = null;
 $delivered_html = null;
-$rendered_html = @$pageData[$run][$cached]['rendered-html'];
+$rendered_html = @$pageData[$run][$cached]['generated-html'];
 
 if (!$rendered_html) {
     $error_message = 'Rendered HTML not available, please run the test again';
