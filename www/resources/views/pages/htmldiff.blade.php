@@ -42,6 +42,19 @@
     #result {
         overflow-x: auto;
     }
+
+    #prettier {
+        margin-bottom: 24px;
+    }
+
+    #diff-result .error {
+        color: red;
+        font-size: larger;
+    }
+    .results_body {
+        border: none;
+        box-shadow: none;
+    }
 </style>
 @endsection
 
@@ -51,7 +64,7 @@
         <div class="results_and_command">
             <div class="results_header">
                 <h2>HTML Diff</h2>
-                <p>A diff between the HTML delivered over the network and the generated HTML</p>
+                <p>A diff between the HTML delivered over the network (red lines) and the generated HTML (green lines)</p>
             </div>
         </div>
         @if ($error_message)
@@ -61,11 +74,11 @@
         @else
         <label>
             <input type="checkbox" id="prettier">
-            Run Prettier before the diff
+            Prettify HTML before the diff
         </label>
         <div id="result" class="results_body @if ($error_message) error-banner @endif">
             <div class="overflow-container">
-                <div id="diff-result"></div>
+                <div id="diff-result">Loading the diff...</div>
             </div>
             <pre id="delivered">{{$delivered_html}}</pre>
             <pre id="rendered">{{$rendered_html}}</pre>
@@ -74,9 +87,12 @@
         <script type="module">
             let locateHash = false;
             async function diff() {
+                const resultEl = document.getElementById('diff-result');
+                resultEl.innerHTML = '';
                 let before = document.getElementById('delivered').innerText;
                 let after = document.getElementById('rendered').innerText;
                 if (document.getElementById('prettier').checked) {
+                    resultEl.innerHTML = 'Pretifying...';
                     await import("/assets/js/vendor/prettier-standalone-2.7.1.min.js");
                     await import("/assets/js/vendor/prettier-parser-html-2.7.1.min.js");
                     await import("/assets/js/vendor/prettier-parser-babel-2.7.1.min.js");
@@ -85,7 +101,22 @@
                         parser: "html",
                         plugins: prettierPlugins,
                     };
-                    before = prettier.format(before, opts);
+                    try {
+                        before = prettier.format(before, opts);
+                    } catch (e) {
+                        const escapedMessage = e.message
+                            .replaceAll('&', '&amp;')
+                            .replaceAll('<', '&lt;')
+                            .replaceAll('>', '&gt;')
+                            .replaceAll('"', '&quot;')
+                            .replaceAll("'", '&#039;');
+                        resultEl.innerHTML = `
+                            <p class="error">The prettifier returned an error while parsing the delievered HTML</p>
+                            <p>${e.name}</p>
+                            <pre>${escapedMessage}</pre>`;
+                        return;
+                    }
+                    
                     after = prettier.format(after, opts);
                 }
 
@@ -138,8 +169,8 @@
                         table.appendChild(row);
                     });
                 }
-                document.getElementById('diff-result').innerHTML = '';
-                document.getElementById('diff-result').appendChild(table);
+                resultEl.innerHTML = '';
+                resultEl.appendChild(table);
                 if (locateHash) {
                     location = location.hash;
                     locateHash = false;
