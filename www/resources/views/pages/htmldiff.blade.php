@@ -89,6 +89,7 @@
         </div>
         <script type="module">
             // setup inline web worker
+            // more info: https://calendar.perfplanet.com/2022/get-off-the-main-thread-with-an-inline-web-worker-an-example/
             function diffWorkerImplementation() {
                 importScripts(location.origin + '/assets/js/vendor/diff-5.1.0.min.js');
                 onmessage = (e) => {
@@ -131,7 +132,7 @@
                             .replaceAll('"', '&quot;')
                             .replaceAll("'", '&#039;');
                         resultEl.innerHTML = `
-                            <p class="error">The prettifier returned an error while parsing the delievered HTML</p>
+                            <p class="error">The prettifier returned an error while parsing the delivered HTML</p>
                             <p>${e.name}</p>
                             <pre>${escapedMessage}</pre>`;
                         return;
