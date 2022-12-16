@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/common.inc';
+$testInfo = GetTestInfo($id);
+
 
 // this output buffer hack avoids a bit of circularity
 // on one hand we want the contents of header.inc
@@ -9,6 +11,10 @@ ob_start();
 define('NOBANNER', true); // otherwise Twitch banner shows 2x
 $tab = 'Test Result';
 $subtab = 'HTML Diff';
+$useScreenshot = true;
+$socialTitle = "HTML Diff for " . $testInfo['url'];
+$socialDesc = "View this HTML Diff (delivered vs rendreder HTML) on WebPageTest.org";
+$page_title = "WebPageTest: HTML Diff for " . $testInfo['url'];
 include_once INCLUDES_PATH . '/header.inc';
 $results_header = ob_get_contents();
 ob_end_clean();
@@ -62,4 +68,5 @@ echo view('pages.htmldiff', [
     'rendered_html' => $rendered_html,
     'delivered_html' => $delivered_html,
     'error_message' =>  $error_message,
+    'page_title' => $page_title,
 ]);
