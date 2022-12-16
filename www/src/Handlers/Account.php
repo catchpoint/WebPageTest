@@ -935,11 +935,11 @@ class Account
                 }
             case 'update_payment_method':
                 if (!$is_paid) {
-                  $host = $request_context->getHost();
-                  $protocol = $request_context->getUrlProtocol();
-                  $redirect_uri = "{$protocol}://{$host}/account";
-                  header("Location: {$redirect_uri}");
-                  exit();
+                    $host = $request_context->getHost();
+                    $protocol = $request_context->getUrlProtocol();
+                    $redirect_uri = "{$protocol}://{$host}/account";
+                    header("Location: {$redirect_uri}");
+                    exit();
                 }
                 $results['plan'] = $customer->getWptPlanId();
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
