@@ -51,8 +51,13 @@
         color: red;
         font-size: larger;
     }
+
     #diff-result {
         padding: 24px 0;
+    }
+
+    .results_header p {
+        max-width: none;
     }
 </style>
 @endsection
@@ -82,8 +87,24 @@
             <pre id="delivered">{{$delivered_html}}</pre>
             <pre id="rendered">{{$rendered_html}}</pre>
         </div>
-        <script src="/assets/js/vendor/diff-5.1.0.min.js"></script>
         <script type="module">
+            // setup inline web worker
+            function diffWorkerImplementation() {
+                importScripts(location.origin + '/assets/js/vendor/diff-5.1.0.min.js');
+                onmessage = (e) => {
+                    postMessage(Diff.diffLines(e.data.before, e.data.after));
+                };
+            }
+            const diffWorker = new Worker(
+                URL.createObjectURL(
+                    new Blob(
+                        [`(${diffWorkerImplementation.toString()})()`], 
+                        {type: 'text/javascript'}
+                    )
+                )
+            );
+            // done setting up the inline web worker
+
             let locateHash = false;
             async function diff() {
                 const resultEl = document.getElementById('diff-result');
@@ -91,7 +112,7 @@
                 let before = document.getElementById('delivered').innerText;
                 let after = document.getElementById('rendered').innerText;
                 if (document.getElementById('prettier').checked) {
-                    resultEl.innerHTML = 'Pretifying...';
+                    resultEl.innerHTML = 'Prettifying...';
                     await import("/assets/js/vendor/prettier-standalone-2.7.1.min.js");
                     await import("/assets/js/vendor/prettier-parser-html-2.7.1.min.js");
                     await import("/assets/js/vendor/prettier-parser-babel-2.7.1.min.js");
@@ -115,65 +136,73 @@
                             <pre>${escapedMessage}</pre>`;
                         return;
                     }
-                    
                     after = prettier.format(after, opts);
                 }
 
-                const diff = Diff.diffLines(before, after);
-                const table = document.createElement('table');
-                let addedLineCount = 0;
-                let removedLineCount = 0;
-                let pretty_href = document.getElementById('prettier').checked ? '_pretty' : '';
-                for (let i = 0; i < diff.length; i++) {
-                    diff[i].value.trimEnd().split('\n').forEach(value => {
-                        let row = document.createElement('tr');
-                        let td, node;
-                        if (diff[i].removed) {
-                            removedLineCount++;
+                resultEl.innerHTML = 'Diffing...';
+                
+                diffWorker.postMessage({
+                    before,
+                    after,
+                });
+                diffWorker.onmessage = (msg) => {
+                    const diff = msg.data;
+                    const table = document.createElement('table');
+                    let addedLineCount = 0;
+                    let removedLineCount = 0;
+                    let pretty_href = document.getElementById('prettier').checked ? '_pretty' : '';
+                    for (let i = 0; i < diff.length; i++) {
+                        diff[i].value.trimEnd().split('\n').forEach(value => {
+                            let row = document.createElement('tr');
+                            let td, node;
+                            if (diff[i].removed) {
+                                removedLineCount++;
+                                td = document.createElement('td');
+                                td.innerHTML = `<a class="del" name="removed_${removedLineCount}${pretty_href}" href="#removed_${removedLineCount}${pretty_href}">${removedLineCount}</a>`;
+                                row.appendChild(td);
+                                td = document.createElement('td');
+                                td.appendChild(document.createTextNode(''));
+                                row.appendChild(td);
+                                node = document.createElement('del');
+                                node.appendChild(document.createTextNode(value));
+                            } else if (diff[i].added) {
+                                addedLineCount++;
+                                td = document.createElement('td');
+                                td.appendChild(document.createTextNode(''));
+                                row.appendChild(td);
+                                td = document.createElement('td');
+                                td.innerHTML = `<a class="ins" name="added_${addedLineCount}${pretty_href}" href="#added_${addedLineCount}${pretty_href}">${addedLineCount}</a>`;
+                                row.appendChild(td);
+                                node = document.createElement('ins');
+                                node.appendChild(document.createTextNode(value));
+                            } else {
+                                addedLineCount++;
+                                removedLineCount++;
+                                td = document.createElement('td');
+                                td.innerHTML = `<a name="removed_${removedLineCount}${pretty_href}" href="#removed_${removedLineCount}${pretty_href}">${removedLineCount}</a>`;
+                                row.appendChild(td);
+                                td = document.createElement('td');
+                                td.innerHTML = `<a name="added_${addedLineCount}${pretty_href}" href="#added_${addedLineCount}${pretty_href}">${addedLineCount}</a>`;
+                                row.appendChild(td);
+                                node = document.createTextNode(value);
+                            }
                             td = document.createElement('td');
-                            td.innerHTML = `<a class="del" name="removed_${removedLineCount}${pretty_href}" href="#removed_${removedLineCount}${pretty_href}">${removedLineCount}</a>`;
+                            td.setAttribute('class', 'left');
+                            let pre = document.createElement('pre');
+                            pre.appendChild(node);
+                            td.appendChild(pre);
                             row.appendChild(td);
-                            td = document.createElement('td');
-                            td.appendChild(document.createTextNode(''));
-                            row.appendChild(td);
-                            node = document.createElement('del');
-                            node.appendChild(document.createTextNode(value));
-                        } else if (diff[i].added) {
-                            addedLineCount++;
-                            td = document.createElement('td');
-                            td.appendChild(document.createTextNode(''));
-                            row.appendChild(td);
-                            td = document.createElement('td');
-                            td.innerHTML = `<a class="ins" name="added_${addedLineCount}${pretty_href}" href="#added_${addedLineCount}${pretty_href}">${addedLineCount}</a>`;
-                            row.appendChild(td);
-                            node = document.createElement('ins');
-                            node.appendChild(document.createTextNode(value));
-                        } else {
-                            addedLineCount++;
-                            removedLineCount++;
-                            td = document.createElement('td');
-                            td.innerHTML = `<a name="removed_${removedLineCount}${pretty_href}" href="#removed_${removedLineCount}${pretty_href}">${removedLineCount}</a>`;
-                            row.appendChild(td);
-                            td = document.createElement('td');
-                            td.innerHTML = `<a name="added_${addedLineCount}${pretty_href}" href="#added_${addedLineCount}${pretty_href}">${addedLineCount}</a>`;
-                            row.appendChild(td);
-                            node = document.createTextNode(value);
-                        }
-                        td = document.createElement('td');
-                        td.setAttribute('class', 'left');
-                        let pre = document.createElement('pre');
-                        pre.appendChild(node);
-                        td.appendChild(pre);
-                        row.appendChild(td);
-                        table.appendChild(row);
-                    });
-                }
-                resultEl.innerHTML = '';
-                resultEl.appendChild(table);
-                if (locateHash) {
-                    location = location.hash;
-                    locateHash = false;
-                }
+                            table.appendChild(row);
+                        });
+                    }
+                    resultEl.innerHTML = '';
+                    resultEl.appendChild(table);
+                    if (locateHash) {
+                        location = location.hash;
+                        locateHash = false;
+                    }
+                };
+
             }
 
             document.getElementById('prettier').addEventListener('change', diff);
