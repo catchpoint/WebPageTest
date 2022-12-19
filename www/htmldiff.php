@@ -11,7 +11,7 @@ ob_start();
 define('NOBANNER', true); // otherwise Twitch banner shows 2x
 $tab = 'Test Result';
 $subtab = 'HTML Diff';
-$useScreenshot = true;
+$useScreenshot = false;
 $socialTitle = "HTML Diff for " . $testInfo['url'];
 $socialDesc = "View this HTML Diff (delivered vs rendreder HTML) on WebPageTest.org";
 $page_title = "WebPageTest: HTML Diff for " . $testInfo['url'];
