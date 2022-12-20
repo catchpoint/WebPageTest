@@ -5,7 +5,7 @@
             <li>Edit Billing Information</li>
         </ul>
         <div class="contact-support-button">
-            <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+          <a href="<?= $support_link ?>"><span>Contact Support</span></a>
         </div>
     </div>
     <h1>Edit Billing Information</h1>

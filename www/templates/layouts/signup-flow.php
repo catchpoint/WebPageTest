@@ -12,6 +12,7 @@
     global $supportsAuth;
     global $supportsSaml;
     global $client_error;
+    global $support_link;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     ?>

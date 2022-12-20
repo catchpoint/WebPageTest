@@ -16,6 +16,7 @@
     global $page_description;
     global $cdnPath;
     global $experiments_paid;
+    global $support_link;
 
 
     $page_title ??= 'WebPageTest';
