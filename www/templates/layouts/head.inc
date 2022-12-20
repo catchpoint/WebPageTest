@@ -16,7 +16,6 @@
 <?php if (isset($page_description) && strlen($page_description)) : ?>
     <meta name="description" content="<?= $page_description ?>" />
 <?php endif; ?>
-<meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 

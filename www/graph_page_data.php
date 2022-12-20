@@ -96,7 +96,6 @@ $common_label = implode(" ", $common_labels);
         document.documentElement.classList.add('has-js');
     </script>
     <meta http-equiv="charset" content="iso-8859-1">
-    <meta name="author" content="Patrick Meenan">
     <?php include('head.inc'); ?>
     <style>
         .chartStats {
