@@ -19,6 +19,8 @@ if (Util::getSetting('php_sessions')) {
     session_start();
 }
 
+$support_link = Util::getSetting('support_link', 'https://support.catchpoint.com');
+
 $client_error = null;
 if (Util::getSetting('cp_auth')) {
     $client_error = $_SESSION['client_error'] ?? null;

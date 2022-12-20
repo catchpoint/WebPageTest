@@ -22,7 +22,7 @@
         <h1>My Account</h1>
         <?php if ($is_paid) : ?>
             <div class="contact-support-button">
-                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+              <a href="<?= $support_link ?>"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
     </div>
