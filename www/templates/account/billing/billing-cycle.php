@@ -7,7 +7,7 @@
         <h1>Update Billing Cycle</h1>
         <?php if ($is_paid) : ?>
             <div class="contact-support-button">
-                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+                <a href="https://support.catchpoint.com"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
     </div>
