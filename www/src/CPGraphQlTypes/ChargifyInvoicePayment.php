@@ -24,8 +24,8 @@ class ChargifyInvoicePayment
         $this->transaction_id = $options['transactionId'];
         $this->transaction_time = new DateTime($options['transactionTime']);
         $this->memo = $options['memo'];
-        $this->original_amount = $options['originalAmount'];
-        $this->applied_amount = $options['appliedAmount'];
+        $this->original_amount = number_format(floatval($options['originalAmount']), 2);
+        $this->applied_amount = number_format(floatval($options['appliedAmount']), 2);
         $this->prepayment = $options['prepayment'];
         $this->gateway_transaction_id = $options['gatewayTransactionId'];
         $this->payment_method = new ChargifyInvoicePaymentMethodType($options['paymentMethod']);

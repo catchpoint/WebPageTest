@@ -2106,9 +2106,8 @@ footer ul {
   margin: 0;
 }
 .experiments_bottlenecks > ol > li > details > summary::-webkit-details-marker {
-  left: -.8em;
-  top: .4em;
-
+  left: -0.8em;
+  top: 0.4em;
 }
 .experiments_bottlenecks > ol > li > details > summary:before {
   position: absolute;
@@ -4699,8 +4698,8 @@ form[name="filterLog"] .history_filter input[type="text"] {
     display: block;
   }
 
-  [for=advanced] + div .input_fields label, 
-  [for=advanced] + div .input_fields .label {
+  [for="advanced"] + div .input_fields label,
+  [for="advanced"] + div .input_fields .label {
     width: 28%;
   }
 
@@ -8222,9 +8221,9 @@ body.screenshot a {
 }
 
 body.screenshot .results_header h2 {
-  opacity: 0; 
-  margin: 0; 
-  padding: 0; 
+  opacity: 0;
+  margin: 0;
+  padding: 0;
   height: 1rem;
 }
 
@@ -8263,23 +8262,31 @@ body.screenshot .hed_sub-lighthouse,
 body.screenshot .results_main-lh .grade_header-lighthouse:not(:first-of-type),
 body.screenshot .results_main-lh .experiments_bottlenecks ~ *,
 body.screenshot .results_main-lh .scrollableTable ~ *,
-body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header p{
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header
+  p {
   display: none !important;
 }
 
-body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header{
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header {
   display: block !important;
   padding: 0;
   margin: 0;
   min-height: 0;
 }
 
-body.screenshot.result:not(.compare-experiment) .results_main-lh .results_header h2 {
-display: flex !important;
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header
+  h2 {
+  display: flex !important;
   opacity: 1;
   height: auto;
-  padding: 0 0 .5rem;
-  margin: 0 0 ;
+  padding: 0 0 0.5rem;
+  margin: 0 0;
   font-size: 1.8em;
 }
 
@@ -8933,7 +8940,6 @@ pre[class*="language-"] {
 .summary_text {
   display: flex;
   justify-content: space-between;
-
 }
 .summary_text p {
   margin: 0;
@@ -8944,18 +8950,19 @@ pre[class*="language-"] {
 }
 .summary_text > div {
   display: flex;
-  align-items: flex-start
+  align-items: flex-start;
 }
 .summary_text > div {
-  gap: .5em;
+  gap: 0.5em;
 }
 
 .lh_experimentlink {
-  font-size: .7em;
+  font-size: 0.7em;
   font-weight: 700;
   border-radius: 2em;
   padding: 0.3em 1em 0.3em 2.5em;
-  background: #f9fff7 url(/assets/images/src/icon_science_bubbling.svg) left 0.5em top 40% no-repeat;
+  background: #f9fff7 url(/assets/images/src/icon_science_bubbling.svg) left
+    0.5em top 40% no-repeat;
   display: inline-block;
   text-decoration: none;
   color: #2c7014;
@@ -9198,23 +9205,23 @@ p.lh-filteraudits {
   white-space: nowrap;
 }
 .lh-details-failure p {
-  margin: 0
+  margin: 0;
 }
 
-@media (max-width: 50em){
+@media (max-width: 50em) {
   .results_main-lh nav.results_lh_nav {
     display: block;
   }
   .results_lh_nav a {
     flex: 1;
     display: block;
-    margin-bottom: .4em;
+    margin-bottom: 0.4em;
   }
   .results_main-lh details.metrics_shown {
     margin: 0 0 1em 0;
   }
   .opps_note-links {
-    background-position: top .7em left .5em;
+    background-position: top 0.7em left 0.5em;
   }
   .lh-filter_map {
     display: block;
@@ -9222,9 +9229,8 @@ p.lh-filteraudits {
   .results_main-lh .lh-filteraudits,
   .lh-filteraudits > span {
     display: block;
-    
   }
-  .results_main-lh  .lh-filteraudits {
+  .results_main-lh .lh-filteraudits {
     margin-bottom: 1em;
   }
   .lh-filteraudits > span {
@@ -9239,9 +9245,9 @@ p.lh-filteraudits {
     display: block;
   }
   .summary_text div p {
-    margin: 0 0 .2em;
+    margin: 0 0 0.2em;
   }
   .summary_text div a {
-    margin: .5em 0;
+    margin: 0.5em 0;
   }
 }

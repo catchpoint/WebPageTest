@@ -571,6 +571,82 @@ final class AccountTest extends TestCase
         Account::previewCost($req, $body);
     }
 
+    public function testUpdatePaymentMethod(): void
+    {
+        $nonce = bin2hex(random_bytes(10));
+
+        $body = new stdClass();
+        $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
+
+        $address = new ChargifyAddressInput([
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street_address' => '123 Main St',
+            'zipcode' => '12345-1234'
+        ]);
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('updatePaymentMethod')
+            ->with($body->token, $address);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'success',
+                'text' => 'Your payment method has successfully been updated!'
+            ]);
+
+        $req->setClient($client);
+        $req->setBannerMessageManager($bmm);
+
+        $url = Account::updatePaymentMethod($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
+    public function testUpdatePaymentMethodError(): void
+    {
+        $nonce = bin2hex(random_bytes(10));
+
+        $body = new stdClass();
+        $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('updatePaymentMethod')
+            ->willThrowException(new \Exception('BAD'));
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'error',
+                'text' => "There was an error updating your payment method. Please try again or contact customer service."
+            ]);
+
+        $req->setClient($client);
+        $req->setBannerMessageManager($bmm);
+
+        $url = Account::updatePaymentMethod($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
     public function testResendEmailVerification(): void
     {
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);

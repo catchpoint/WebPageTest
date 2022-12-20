@@ -2,7 +2,7 @@
 // except it includes doctype and
 // rewrites CSS only conditionally
 const clonedDoc = document.cloneNode(true);
-const clonedStyles = clonedDoc.querySelectorAll("style")
+const clonedStyles = clonedDoc.querySelectorAll("style");
 let styles = document.querySelectorAll("style").forEach((style, idx) => {
   let generatedCSS = "";
   for (let i in style.sheet.cssRules) {
