@@ -16,7 +16,6 @@ if (strlen($page_description)) {
     echo "<meta name=\"description\" content=\"$page_description\">\n";
 }
 ?>
-<meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 

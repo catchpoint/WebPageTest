@@ -18,7 +18,6 @@ if (!$privateInstall && !$admin) {
         <title>WebPageTest - Install Check</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="description" content="Installation check for WebPageTest">
-        <meta name="author" content="Patrick Meenan">
         <meta name="robots" content="noindex,nofollow" />
         <style>
         body {
