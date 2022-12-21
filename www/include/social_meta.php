@@ -12,7 +12,7 @@
 ?>
 
 <meta property="og:title" content="<?php echo $socialTitle; ?>">
-<meta property="og:type" content="article" />
+<meta property="og:type" content="article">
 <meta property="og:image" content="<?php echo $socialImage; ?>">
 <meta property="og:url" content="<?php echo $pageURI; ?>">
 <meta name="twitter:card" content="summary_large_image">
