@@ -20,6 +20,7 @@
     global $socialTitle;
     global $socialImage;
     global $pageURI;
+    global $support_link;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     if ($_REQUEST['screenshot']) {

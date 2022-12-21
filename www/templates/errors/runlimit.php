@@ -1,3 +1,8 @@
+<?php
+
+global $support_link;
+?>
+
 <div id="main">
     <main>
         <h1>Oops!</h1>

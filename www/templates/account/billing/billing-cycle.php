@@ -1,3 +1,6 @@
+<?php
+global $support_link;
+?>
 <div class="my-account-page page_content">
     <ul class="breadcrumbs">
         <li><a href="/account#payments-invoices">Payment & Invoices</a></li>

@@ -444,6 +444,7 @@ class Account
         $results['renewaldate'] = $body->renewaldate;
         $results['ch_client_token'] = Util::getSetting('ch_key_public');
         $results['ch_site'] = Util::getSetting('ch_site');
+        $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
         return $tpl->render('billing/update-payment', $results);
     }
 
@@ -875,6 +876,8 @@ class Account
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
         $results['plans'] = $current_plans;
         $results['messages'] = $request_context->getBannerMessageManager()->get();
+        $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
+
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
@@ -896,6 +899,7 @@ class Account
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
+
                 return $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
@@ -950,6 +954,8 @@ class Account
                 $results['state_code'] = $billing_address->getState();
                 $results['country_code'] = $billing_address->getCountry();
                 $results['zipcode'] = $billing_address->getZip();
+
+                $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
 
                 return $tpl->render('billing/update-payment-confirm-address', $results);
               break;

@@ -1,3 +1,6 @@
+<?php
+global $support_link;
+?>
 <!-- VERIFIED EMAIL NOTICE ---->
 <?php if (!$is_verified) : ?>
     <div class="resend-email-verification-container">
