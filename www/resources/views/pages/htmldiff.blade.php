@@ -2,13 +2,13 @@
 
 @section('style')
 <style>
-    del {
+    del, .del {
         text-decoration: none;
         color: #b30000;
         background: #fadad7;
     }
 
-    ins {
+    ins, .ins {
         background: #eaf2c2;
         color: #406619;
         text-decoration: none;
@@ -68,7 +68,8 @@
         <div class="results_and_command">
             <div class="results_header">
                 <h2>HTML Diff</h2>
-                <p>A diff between the HTML delivered over the network (red lines) and the generated HTML (green lines)</p>
+                <p>A diff between the HTML delivered over the network <span class="del">(red lines)</span>
+                and the generated HTML <span class="ins">(green lines)</a>.</p>
             </div>
         </div>
         @if ($error_message)
@@ -99,7 +100,7 @@
             const diffWorker = new Worker(
                 URL.createObjectURL(
                     new Blob(
-                        [`(${diffWorkerImplementation.toString()})()`], 
+                        [`(${diffWorkerImplementation.toString()})()`],
                         {type: 'text/javascript'}
                     )
                 )
@@ -141,7 +142,7 @@
                 }
 
                 resultEl.innerHTML = 'Diffing...';
-                
+
                 diffWorker.postMessage({
                     before,
                     after,
