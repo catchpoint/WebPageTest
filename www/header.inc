@@ -366,6 +366,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
             $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
             $lhOnly = isset($test['test']['type']) && @$test['test']['type'] == 'lighthouse';
+            $hasLH = isset($testPath) && is_file("$testPath/lighthouse.log.gz");
 
             if (!$lhOnly) {
                 $tabs['Performance Summary'] = $menuUrlGenerator->resultSummary($endParams);
@@ -403,7 +404,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 }
             }
 
-            if (isset($firstRunResults)) {
+            if (isset($firstRunResults) && $hasLH) {
                 $urlGeneratorFirstRun = UrlGenerator::create(false, "", $id, 1, false);
                 $lhURL = $urlGeneratorFirstRun->resultPage("lighthouse");
                 if (isset($lhURL)) {
