@@ -167,13 +167,13 @@ if (navigator.clipboard) {
                                 <p class="lh-filteraudits"><span>Show audits relevant to metrics:</span>
                                     @foreach($metric_filters as $filter => $active)
                                     <?php
-                                    $thisURL = $_SERVER['REQUEST_URI'];
-                                    $filterQ = "&filterbymetric=";
-                                    if (strpos($thisURL, $filterQ)) {
-                                        $thisURL = str_replace($filterQ . $filterbymetric, '', $thisURL);
-                                    }
+                                    $thisurl = parse_url($_SERVER['REQUEST_URI']);
+                                    parse_str($thisurl['query'], $q);
+                                    $params = ['filterbymetric' => $filter];
+                                    foreach ( $params as $k => $v ) $q[$k] = $v;
+                                    $new_url = $thisurl['path'] . '?' . http_build_query($q);
                                     ?>
-                                    <a href="{{ $thisURL }}{{ $filterQ }}{{ $filter }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
+                                    <a href="{{ $new_url }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
                                     @endforeach
                                 </p>
                                 <a href="https://googlechrome.github.io/lighthouse/treemap/?gzip=1#{{ $treemap }}" target="_blank" class="lh-maplink">View Tree Map</a>
