@@ -3497,7 +3497,7 @@ function loggedOutLoginForm()
     $ret = <<<HTML
 <ul class="testerror_login">
     <li><a href="/login">Login</a></li>
-    <li><a class='pill' href='/signup'>Sign-up</a></li>
+    <li><a class="pill" href="/signup">Sign-up</a></li>
 </ul>
 HTML;
 

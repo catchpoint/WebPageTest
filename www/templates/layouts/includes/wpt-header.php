@@ -30,9 +30,9 @@ function addTab($tabName, $tabUrl, $addClass = '')
             $opens = ' (opens in a new tab)';
         }
         if ($opens != '') {
-            return "<li><a $class title=\"$tabName$opens\" href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
+            return "<li><a$class title=\"$tabName$opens\" href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
         } else {
-            return "<li><a $class href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
+            return "<li><a$class href=\"$tabUrl\"$target><span>$tabName</span></a></li>";
         }
     }
 }
@@ -50,7 +50,7 @@ if ($id) {
 <wpt-header>
     <header>
         <a class="wptheader_logo" href="/">
-            <img src="/assets/images/wpt-logo.svg" alt="WebPageTest by Catchpoint: Home" />
+            <img src="/assets/images/wpt-logo.svg" alt="WebPageTest by Catchpoint: Home">
         </a>
         <details class="wptheader_menu">
             <summary class="wptheader_menubtn">Menu:</summary>
@@ -101,8 +101,8 @@ if ($id) {
 
                     <li class="wptheader_nav_menu">
                         <details>
-                        <summary <?php if (isset($tab) && !strcasecmp('Resources', $tab)) {
-                            echo 'class="wptheader-current"';
+                        <summary<?php if (isset($tab) && !strcasecmp('Resources', $tab)) {
+                            echo ' class="wptheader-current"';
                                  } ?>><span>Resources</span></summary>
                             <div class="wptheader_nav_menu_content">
                                 <div class="wptheader_nav_menu_section">
@@ -160,7 +160,7 @@ if ($id) {
                                 </li>
                             <?php else : ?>
                                 <li><a href="/login">Login</a></li>
-                                <li><a href='/signup'>Sign-up</a></li>
+                                <li><a href="/signup">Sign-up</a></li>
                             <?php endif; //$is_logged_in
                             ?>
                             <?php
