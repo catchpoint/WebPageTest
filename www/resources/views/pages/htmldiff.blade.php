@@ -2,13 +2,15 @@
 
 @section('style')
 <style>
-    del, .del {
+    del,
+    .del {
         text-decoration: none;
         color: #b30000;
         background: #fadad7;
     }
 
-    ins, .ins {
+    ins,
+    .ins {
         background: #eaf2c2;
         color: #406619;
         text-decoration: none;
@@ -59,6 +61,16 @@
     .results_header p {
         max-width: none;
     }
+
+    .placeholder-row {
+        font-size: x-large;
+        background: aliceblue;
+        cursor: pointer;
+    }
+
+    .placeholder-row td {
+        padding: 4px;
+    }
 </style>
 @endsection
 
@@ -69,7 +81,7 @@
             <div class="results_header">
                 <h2>HTML Diff</h2>
                 <p>A diff between the HTML delivered over the network <span class="del">(red lines)</span>
-                and the generated HTML <span class="ins">(green lines)</a>.</p>
+                    and the generated HTML <span class="ins">(green lines)</a>.</p>
             </div>
         </div>
         @if ($error_message)
@@ -100,12 +112,18 @@
             const diffWorker = new Worker(
                 URL.createObjectURL(
                     new Blob(
-                        [`(${diffWorkerImplementation.toString()})()`],
-                        {type: 'text/javascript'}
+                        [`(${diffWorkerImplementation.toString()})()`], {
+                            type: 'text/javascript'
+                        }
                     )
                 )
             );
             // done setting up the inline web worker
+
+            function showAll() {
+                document.querySelectorAll('#diff-result tr').forEach(r => r.classList.remove('hidden'));
+                document.querySelectorAll('#diff-result .placeholder-row').forEach(r => r.classList.add('hidden'));
+            }
 
             let locateHash = false;
             async function diff() {
@@ -152,12 +170,29 @@
                     const table = document.createElement('table');
                     let addedLineCount = 0;
                     let removedLineCount = 0;
+                    let totalLineCount = 0;
                     let pretty_href = document.getElementById('prettier').checked ? '_pretty' : '';
+                    const showLines = [];
+                    for (let i = 0; i < diff.length; i++) {
+                        diff[i].value.trimEnd().split('\n').forEach(_ => {
+                            totalLineCount++;
+                            if (diff[i].removed) {
+                                showLines.push(totalLineCount - 1, totalLineCount - 2, totalLineCount - 3);
+                            }
+                            if (diff[i].added) {
+                                showLines.push(totalLineCount + 1, totalLineCount + 2, totalLineCount + 3);
+                            }
+                        });
+                    }
+                    totalLineCount = 0;
+                    let hiddenPlaceholderShown = false;
                     for (let i = 0; i < diff.length; i++) {
                         diff[i].value.trimEnd().split('\n').forEach(value => {
+                            totalLineCount++;
                             let row = document.createElement('tr');
                             let td, node;
                             if (diff[i].removed) {
+                                hiddenPlaceholderShown = false;
                                 removedLineCount++;
                                 td = document.createElement('td');
                                 td.innerHTML = `<a class="del" name="removed_${removedLineCount}${pretty_href}" href="#removed_${removedLineCount}${pretty_href}">${removedLineCount}</a>`;
@@ -168,6 +203,7 @@
                                 node = document.createElement('del');
                                 node.appendChild(document.createTextNode(value));
                             } else if (diff[i].added) {
+                                hiddenPlaceholderShown = false;
                                 addedLineCount++;
                                 td = document.createElement('td');
                                 td.appendChild(document.createTextNode(''));
@@ -187,6 +223,21 @@
                                 td.innerHTML = `<a name="added_${addedLineCount}${pretty_href}" href="#added_${addedLineCount}${pretty_href}">${addedLineCount}</a>`;
                                 row.appendChild(td);
                                 node = document.createTextNode(value);
+                                if (!showLines.includes(totalLineCount)) {
+                                    row.setAttribute('class', 'hidden');
+                                    if (!hiddenPlaceholderShown) {
+                                        hiddenPlaceholderShown = true;
+                                        let placeholderRow = document.createElement('tr');
+                                        placeholderRow.setAttribute('class', 'placeholder-row');
+                                        let placeholderCell = document.createElement('td');
+                                        placeholderCell.colSpan = 3;
+                                        placeholderCell.innerHTML = '&vellip;';
+                                        placeholderRow.onclick = showAll;
+                                        placeholderRow.title = 'Click to expand all hidden lines';
+                                        placeholderRow.appendChild(placeholderCell);
+                                        table.appendChild(placeholderRow);
+                                    }
+                                }
                             }
                             td = document.createElement('td');
                             td.setAttribute('class', 'left');
