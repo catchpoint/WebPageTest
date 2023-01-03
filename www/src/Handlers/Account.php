@@ -946,14 +946,25 @@ class Account
                     exit();
                 }
                 $results['plan'] = $customer->getWptPlanId();
-                $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
+                $results['renewaldate'] = !is_null($customer->getNextPlanStartDate())
+                    ? $customer->getNextPlanStartDate()->format('m/d/Y')
+                    : null;
 
                 $billing_address = $customer->getAddress();
-                $results['street_address'] = !is_null($billing_address) ? $billing_address->getStreet() : "";
-                $results['city'] = !is_null($billing_address) ? $billing_address->getCity() : "";
-                $results['state_code'] = !is_null($billing_address) ? $billing_address->getState() : "";
-                $results['country_code'] = !is_null($billing_address) ? $billing_address->getCountry() : "";
-                $results['zipcode'] = !is_null($billing_address) ? $billing_address->getZip() : "";
+
+                if (is_null($billing_address)) {
+                    $results['street_address'] = "";
+                    $results['city'] = "";
+                    $results['state_code'] = "";
+                    $results['country_code'] = "";
+                    $results['zipcode'] = "";
+                } else {
+                    $results['street_address'] = $billing_address->getStreet();
+                    $results['city'] = $billing_address->getCity();
+                    $results['state_code'] = $billing_address->getState();
+                    $results['country_code'] = $billing_address->getCountry();
+                    $results['zipcode'] = $billing_address->getZip();
+                }
 
                 $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
 

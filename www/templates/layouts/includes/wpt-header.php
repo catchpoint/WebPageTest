@@ -103,7 +103,7 @@ if ($id) {
                         <details>
                         <summary<?php if (isset($tab) && !strcasecmp('Resources', $tab)) {
                             echo ' class="wptheader-current"';
-                                 } ?>><span>Resources</span></summary>
+                                } ?>><span>Resources</span></summary>
                             <div class="wptheader_nav_menu_content">
                                 <div class="wptheader_nav_menu_section">
                                     <ul>

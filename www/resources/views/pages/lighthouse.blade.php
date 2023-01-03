@@ -170,7 +170,9 @@ if (navigator.clipboard) {
                                     $thisurl = parse_url($_SERVER['REQUEST_URI']);
                                     parse_str($thisurl['query'], $q);
                                     $params = ['filterbymetric' => $filter];
-                                    foreach ( $params as $k => $v ) $q[$k] = $v;
+                                    foreach ($params as $k => $v) {
+                                        $q[$k] = $v;
+                                    }
                                     $new_url = $thisurl['path'] . '?' . http_build_query($q);
                                     ?>
                                     <a href="{{ $new_url }}" @if ($active) aria-current="page" @endif>{{ $filter }}</a>
