@@ -63,13 +63,18 @@
     }
 
     .placeholder-row {
-        font-size: x-large;
         background: aliceblue;
-        cursor: pointer;
     }
 
-    .placeholder-row td {
-        padding: 4px;
+    .placeholder-row button {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        border: 0;
+        text-align: left;
+        padding: 8px;
+        font-style: italic;
+        cursor: pointer;
     }
 </style>
 @endsection
@@ -227,13 +232,14 @@
                                     row.setAttribute('class', 'hidden');
                                     if (!hiddenPlaceholderShown) {
                                         hiddenPlaceholderShown = true;
-                                        let placeholderRow = document.createElement('tr');
+                                        const placeholderRow = document.createElement('tr');
                                         placeholderRow.setAttribute('class', 'placeholder-row');
-                                        let placeholderCell = document.createElement('td');
+                                        const placeholderCell = document.createElement('td');
                                         placeholderCell.colSpan = 3;
-                                        placeholderCell.innerHTML = '&vellip;';
-                                        placeholderRow.onclick = showAll;
-                                        placeholderRow.title = 'Click to expand all hidden lines';
+                                        const button = document.createElement('button');
+                                        button.innerHTML = 'Hidden lines containing no differences. (click to expand)';
+                                        button.onclick = showAll;
+                                        placeholderCell.appendChild(button);
                                         placeholderRow.appendChild(placeholderCell);
                                         table.appendChild(placeholderRow);
                                     }
