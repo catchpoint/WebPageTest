@@ -810,6 +810,7 @@ body.theme-b {
   display: inline-block;
   padding: 0.7em 2.2em;
   color: #111;
+  font-size: 1em;
 }
 
 .signup-flow-layout .form-input button[type="submit"]:disabled,
