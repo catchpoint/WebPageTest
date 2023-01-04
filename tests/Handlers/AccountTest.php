@@ -13,6 +13,9 @@ use WebPageTest\RequestContext;
 use WebPageTest\User;
 use WebPageTest\BannerMessageManager;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
+use WebPageTest\CPGraphQlTypes\Customer;
+use WebPageTest\CPGraphQlTypes\ApiKeyList;
+use WebPageTest\PaidPageInfo;
 
 /**
  * These are std lib functions in php that are called in this
@@ -727,6 +730,50 @@ final class AccountTest extends TestCase
                 'lastName' => "Goob",
                 'companyName' => null
             ]);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        Account::getAccountPage($req, $page);
+    }
+
+    public function testGetUpdatePaymentMethodAddressPage(): void
+    {
+        $page = "update_payment_method";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setPaid(true);
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => null
+            ]);
+        $customer = new Customer([
+            'customerId' => '',
+            'subscriptionId' => '',
+            'wptPlanId' => '',
+            'subscriptionPrice' => 10.00,
+            'status' => '',
+            'wptPlanName' => '',
+            'monthlyRuns' => 8
+        ]);
+        $wpt_api_key_list = new ApiKeyList();
+        $paid_page_info = new PaidPageInfo($customer, $wpt_api_key_list);
+        $client->expects($this->once())
+            ->method('getPaidAccountPageInfo')
+            ->willReturn($paid_page_info);
         $req->setClient($client);
 
         $bmm = $this->createMock(BannerMessageManager::class);
