@@ -741,9 +741,6 @@ class Util
         $runcount = max(1, $runs);
         $multiplier = $fvonly ? 1 : 2;
         $total_runs = $runcount * $multiplier;
-        if (!$testtype == 'lighthouse' && $lighthouse == 1) {
-            $total_runs++;
-        }
         return $total_runs;
     }
 
