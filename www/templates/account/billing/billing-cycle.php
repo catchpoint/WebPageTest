@@ -1,3 +1,6 @@
+<?php
+global $support_link;
+?>
 <div class="my-account-page page_content">
     <ul class="breadcrumbs">
         <li><a href="/account#payments-invoices">Payment & Invoices</a></li>
@@ -7,7 +10,7 @@
         <h1>Update Billing Cycle</h1>
         <?php if ($is_paid) : ?>
             <div class="contact-support-button">
-                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+              <a href="<?= $support_link ?>"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
     </div>

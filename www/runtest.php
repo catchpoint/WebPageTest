@@ -291,7 +291,7 @@ if (!isset($test)) {
         $test['lighthouse'] = $req_lighthouse;
     }
     $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
-    $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
+    $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] === "0" ? 0 : 1;
     $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
     if (isset($_REQUEST['lighthouseConfig']) && strlen($_REQUEST['lighthouseConfig'])) {
         $test['lighthouseConfig'] = $_REQUEST['lighthouseConfig'];
@@ -662,11 +662,19 @@ if (!isset($test)) {
         $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
     }
 
+    if ($test['bodies']) {
+        $test['customMetrics'] = array();
+        $code = file_get_contents(ASSETS_PATH . '/js/conditional_metrics/generated-html.js');
+        $test['customMetrics']['generated-html'] = $code;
+    }
+
     // see if there are any custom metrics to extract
     if (is_dir('./settings/custom_metrics')) {
         $files = glob('./settings/custom_metrics/*.js');
         if ($files !== false && is_array($files) && count($files)) {
-            $test['customMetrics'] = array();
+            if (!isset($test['customMetrics'])) {
+                $test['customMetrics'] = array();
+            }
             foreach ($files as $file) {
                 $name = basename($file, '.js');
                 $code = file_get_contents($file);
@@ -975,7 +983,6 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                     ) {
                         $error = "Attempt to use unauthorized experiments feature.";
                     } else {
-                        $recipeScript .= $recipeSansId;
                         $experimentSpof = array();
                         $experimentBlock = array();
                         $experimentOverrideHost = array();
@@ -997,8 +1004,10 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 if ($recipeSansId === "setinitialurl") {
                                     $experimentRunURL = $ingredients;
                                 }
-                                if ($recipeSansId === "swap") {
-                                    $experimentSwap = $ingredients;
+                                if ($recipeSansId === "findreplace") {
+                                    // findreplace is used in the form to submit the pieces for a swap experiment.
+                                    // we don't need that term from here. we'll build the swap.
+                                    $recipeSansId === "swap";
                                     if ($ingredients[0]) {
                                         $ingredients[0] = rawurlencode($ingredients[0]);
                                     }
@@ -1020,7 +1029,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                             ) {
                                 $ingredients = rawurlencode($ingredients);
                             }
-                            $recipeScript .= ":=" . $ingredients;
+                            $recipeScript .= "$recipeSansId:=" . $ingredients;
                         }
                         $recipeScript .= ";";
                     }
@@ -3382,7 +3391,7 @@ function ValidateCommandLine($cmd, &$error)
         $flags = explode(' ', $cmd);
         if ($flags && is_array($flags) && count($flags)) {
             foreach ($flags as $flag) {
-                if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_< "]+)|((data-reduction-proxy-http-proxies|data-reduction-proxy-config-url|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on|oauth2-refresh-token|unsafely-treat-insecure-origin-as-secure|user-data-dir|ignore-certificate-errors-spki-list)=[a-zA-Z0-9\-\.\+=,_:\/"%]+))$/', $flag)) {
+                if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_< "]+)|((data-reduction-proxy-http-proxies|data-reduction-proxy-config-url|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on|oauth2-refresh-token|unsafely-treat-insecure-origin-as-secure|user-data-dir|ignore-certificate-errors-spki-list|enable-features)=[a-zA-Z0-9\-\.\+=,_:\/"%]+))$/', $flag)) {
                     $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
                 }
             }
@@ -3488,7 +3497,7 @@ function loggedOutLoginForm()
     $ret = <<<HTML
 <ul class="testerror_login">
     <li><a href="/login">Login</a></li>
-    <li><a class='pill' href='/signup'>Sign-up</a></li>
+    <li><a class="pill" href="/signup">Sign-up</a></li>
 </ul>
 HTML;
 

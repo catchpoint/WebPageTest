@@ -11,7 +11,7 @@ class EnterpriseCustomer
     private string $wpt_plan_id;
     private string $status;
     private int $monthly_runs;
-    private DateTime $billing_period_end_date;
+    private ?DateTime $billing_period_end_date;
     private ?int $remaining_runs;
     private ?DateTime $plan_renewal_date;
 
@@ -19,7 +19,6 @@ class EnterpriseCustomer
     {
         if (
             !(isset($options['wptPlanId']) &&
-                isset($options['billingPeriodEndDate']) &&
                 isset($options['status']) &&
                 isset($options['monthlyRuns'])
             )
@@ -28,7 +27,9 @@ class EnterpriseCustomer
         }
 
         $this->wpt_plan_id = $options['wptPlanId'];
-        $this->billing_period_end_date = new DateTime($options['billingPeriodEndDate']);
+        $this->billing_period_end_date = $options['billingPeriodEndDate']
+            ? new DateTime($options['billingPeriodEndDate'])
+            : null;
         $this->status = $options['status'];
         $this->monthly_runs = $options['monthlyRuns'];
         $this->remaining_runs = $options['remainingRuns'] ?? null;
@@ -71,7 +72,7 @@ class EnterpriseCustomer
         return $this->next_wpt_plan_id;
     }
 
-    public function getBillingPeriodEndDate(): DateTime
+    public function getBillingPeriodEndDate(): ?DateTime
     {
         return $this->billing_period_end_date;
     }

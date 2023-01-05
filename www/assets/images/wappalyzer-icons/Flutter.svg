@@ -1,0 +1,23 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<path d="M29.9786 13.0955H7.19478V30.8561H29.9786V13.0955Z" fill="url(#pattern0)"/>
+<path d="M26.955 14.5728H17.2404L8.74146 23.0738L13.5977 27.93L26.955 14.5728Z" fill="#54C5F8"/>
+<path d="M6.31283 20.6447L1.45454 15.7864L17.2409 0H26.9555L6.31283 20.6447Z" fill="#54C5F8"/>
+<path d="M13.5982 27.9301L17.2409 31.5728H26.9554L18.4545 23.0739L13.5982 27.9301Z" fill="#01579B"/>
+<path d="M13.5982 27.9301L20.8025 25.4361L18.4545 23.0739L13.5982 27.9301Z" fill="url(#paint0_linear_1829_34)"/>
+<path d="M13.5975 18.215L8.74109 23.0713L13.5975 27.9278L18.4539 23.0713L13.5975 18.215Z" fill="#29B6F6"/>
+<path d="M26.9555 14.5728L18.4565 23.0718L26.9555 31.5728H17.2409L13.5983 27.9301L8.73993 23.0718L17.2409 14.5728H26.9555ZM17.2409 0L1.45454 15.7864L6.31283 20.6447L26.9555 0H17.2409Z" fill="url(#paint1_radial_1829_34)"/>
+<defs>
+<pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1">
+<use xlink:href="#image0_1829_34"/>
+</pattern>
+<linearGradient id="paint0_linear_1829_34" x1="15.0143" y1="28.8679" x2="18.6321" y2="25.2501" gradientUnits="userSpaceOnUse">
+<stop stop-color="#1A237E" stop-opacity="0.4"/>
+<stop offset="1" stop-color="#1A237E" stop-opacity="0"/>
+</linearGradient>
+<radialGradient id="paint1_radial_1829_34" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(2.1721 2.15269) scale(38.6275)">
+<stop stop-color="white" stop-opacity="0.1"/>
+<stop offset="1" stop-color="white" stop-opacity="0"/>
+</radialGradient>
+<image id="image0_1829_34" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAABkCAYAAABO6zhfAAAACXBIWXMAAAx0AAAMdAH/P3aRAAAA"/>
+</defs>
+</svg>

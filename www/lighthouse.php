@@ -31,32 +31,38 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
                 $filePath = "$testPath/$file";
             }
             if (is_file($filePath)) {
-                $ok = true;
+                // if &f=lh-viewer is in the url, we'll show the lighthouse viewer html as it exports
+                if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'lh-viewer') {
+                    $ok = true;
 
-              // Cache for a year
-                header('Last-Modified: ' . gmdate('r'));
-                header('Cache-Control: public,max-age=31536000', true);
-                header('Content-type: text/html');
-                $lighthouseTrace = "$testPath/lighthouse_trace.json";
-                if (gz_is_file($lighthouseTrace)) {
-                  // Add the HTML to view/download the trace and timelines to the raw html
-                    $html = gz_file_get_contents($filePath);
-                    $insert = '<div style="text-align: center; line-height: 2em;"><span>';
-                    $insert .= "<p>Timeline from test: <a href=\"/getTimeline.php?test=$id&run=lighthouse\">Download</a> or <a href=\"/chrome/timeline.php?test=$id&run=lighthouse\" target=\"_blank\" rel=\"noopener\">View</a> &nbsp; -  &nbsp; ";
-                    $trace_url = urlencode(getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . "/getgzip.php?test=$id&file=lighthouse_trace.json");
-                    $insert .= "Trace from test: <a href=\"/getgzip.php?test=$id&file=lighthouse_trace.json\">Download</a> or <a href=\"/chrome/perfetto/index.html#!/viewer?url=$trace_url\" target=\"_blank\" rel=\"noopener\">View</a></p>";
-                    $insert .= "</span>";
-                    $insert .= '</div>';
-                    $insert_pos = strpos($html, '</footer>');
-                    if ($insert_pos !== false) {
-                        echo substr($html, 0, $insert_pos);
-                        echo $insert;
-                        echo substr($html, $insert_pos);
+                    // Cache for a year
+                    header('Last-Modified: ' . gmdate('r'));
+                    header('Cache-Control: public,max-age=31536000', true);
+                    header('Content-type: text/html');
+                    $lighthouseTrace = "$testPath/lighthouse_trace.json";
+                    if (gz_is_file($lighthouseTrace)) {
+                    // Add the HTML to view/download the trace and timelines to the raw html
+                        $html = gz_file_get_contents($filePath);
+                        $insert = '<div style="text-align: center; line-height: 2em;"><span>';
+                        $insert .= "<p>Timeline from test: <a href=\"/getTimeline.php?test=$id&run=lighthouse\">Download</a> or <a href=\"/chrome/timeline.php?test=$id&run=lighthouse\" target=\"_blank\" rel=\"noopener\">View</a> &nbsp; -  &nbsp; ";
+                        $trace_url = urlencode(getUrlProtocol() . '://' . $_SERVER['HTTP_HOST'] . "/getgzip.php?test=$id&file=lighthouse_trace.json");
+                        $insert .= "Trace from test: <a href=\"/getgzip.php?test=$id&file=lighthouse_trace.json\">Download</a> or <a href=\"/chrome/perfetto/index.html#!/viewer?url=$trace_url\" target=\"_blank\" rel=\"noopener\">View</a></p>";
+                        $insert .= "</span>";
+                        $insert .= '</div>';
+                        $insert_pos = strpos($html, '</footer>');
+                        if ($insert_pos !== false) {
+                            echo substr($html, 0, $insert_pos);
+                            echo $insert;
+                            echo substr($html, $insert_pos);
+                        } else {
+                            echo $html;
+                        }
                     } else {
-                        echo $html;
+                        gz_readfile_chunked($filePath);
                     }
                 } else {
-                    gz_readfile_chunked($filePath);
+                    // show new template
+                    require_once 'lighthouse-new.php';
                 }
             } else {
                 $info = GetTestInfo($testPath);

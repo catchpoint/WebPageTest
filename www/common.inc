@@ -12,11 +12,14 @@ use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\ForbiddenException;
+use WebPageTest\Environment;
 
 if (Util::getSetting('php_sessions')) {
     // Start session handling for this request
     session_start();
 }
+
+$support_link = Util::getSetting('support_link', 'https://support.catchpoint.com');
 
 $client_error = null;
 if (Util::getSetting('cp_auth')) {
@@ -25,7 +28,7 @@ if (Util::getSetting('cp_auth')) {
 
     set_exception_handler(function ($e) {
         // Developer envs just get a print out
-        if (Util::getSetting('environment') == 'dev') {
+        if (Util::getSetting('environment') == Environment::$Development) {
             echo '<pre>';
             var_dump($e);
             echo '</pre>';
@@ -67,6 +70,7 @@ if (GetSetting('friendly_urls') || (array_key_exists('HTTP_MOD_REWRITE', $_SERVE
 
 // Create global request context for future use
 $request_context = new RequestContext($_REQUEST, $_SERVER);
+$request_context->setEnvironment(Util::getSetting('environment', 'production'));
 
 // Disable caching by default
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0", true);

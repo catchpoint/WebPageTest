@@ -883,6 +883,9 @@ h4.experiments_list_hed-recs {
   background: #fafafa;
   gap: 2rem;
 }
+.experiments_list > li:target {
+  background: #f8f7e0;
+}
 
 .experiment_description code {
   font-size: 1.2em;
@@ -1260,8 +1263,13 @@ h4.experiments_list_hed-recs {
 .experiments_foot details div p.experiments_jump {
   color: #333;
   font-size: 1rem;
+  margin-bottom: 0.5em;
 }
-
+.experiments_foot details div p.experiments_jump i {
+  display: block;
+  font-weight: 300;
+  font-size: 0.8em;
+}
 .experiments_foot details ol {
   max-height: 70vh;
   overflow: auto;
@@ -1271,10 +1279,14 @@ h4.experiments_list_hed-recs {
 }
 
 .experiments_foot details ol li {
-  padding: 0.4em 1em;
+  padding: 0.6em 0;
+  font-size: 0.8em;
+  border-bottom: 1px solid #eee;
   list-style-position: inside;
 }
-
+.experiments_foot details ol li:last-child {
+  border: 0;
+}
 .experiments_foot details ol:after {
   border-top: 0.6em solid rgb(250 250 250);
   border-right: 0.6em solid transparent;
@@ -1302,6 +1314,38 @@ h4.experiments_list_hed-recs {
   width: auto;
   min-width: auto;
   text-align: left;
+  font-size: 1em;
+  max-width: 70%;
+}
+.experiments_foot details ol button.experiment_sort {
+  border: 1px solid #ccc;
+  background: #ddd;
+  border-radius: 2em;
+  padding: 0.3em 1em 0.3em 0.6em;
+  text-decoration: none;
+  color: #2a3b64;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9em;
+  margin-left: 0.5em;
+  font-weight: 700;
+  float: right;
+}
+.experiments_foot details ol button.experiment_sort:hover,
+.experiments_foot details ol button.experiment_sort:focus {
+  background: #fff;
+}
+.experiments_foot details ol button.experiment_sort:before {
+  content: "";
+  border-bottom: 6px solid #2a3b64;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+  display: inline-block;
+}
+.experiments_foot details ol li:first-child button.experiment_sort {
+  display: none;
 }
 
 .experiments_create {
@@ -1853,7 +1897,7 @@ footer ul {
 }
 
 .opportunities_summary a:last-child {
-  border-left: 0;
+  border-left-width: 0;
 }
 
 .opportunities_summary_hed {
@@ -2054,13 +2098,17 @@ footer ul {
   font-size: 1.1rem;
 }
 
-.experiments_bottlenecks > ol > li > details > summary::marker {
+.experiments_bottlenecks > ol > li > details > summary::marker,
+.experiments_bottlenecks > ol > li > details > summary::-webkit-details-marker {
   position: absolute;
   left: 0;
   display: block;
   margin: 0;
 }
-
+.experiments_bottlenecks > ol > li > details > summary::-webkit-details-marker {
+  left: -0.8em;
+  top: 0.4em;
+}
 .experiments_bottlenecks > ol > li > details > summary:before {
   position: absolute;
   left: 0;
@@ -2141,6 +2189,8 @@ footer ul {
   .grade_header {
     display: block;
     padding-top: 1rem;
+    min-height: auto;
+    padding-left: 1.5rem;
   }
 
   .grade_header .grade_heading {
@@ -4648,9 +4698,13 @@ form[name="filterLog"] .history_filter input[type="text"] {
     display: block;
   }
 
-  .input_fields label,
-  .input_fields .label {
+  div .input_fields label,
+  div .input_fields .label {
     width: 28%;
+  }
+  [for="simple"] + div .input_fields label,
+  [for="simple"] + div .input_fields .label {
+    width: 100%;
   }
 
   .input_fields .label {
@@ -5248,7 +5302,7 @@ label.test_preset_profile {
 
   .cta-banner a {
     display: block;
-    max-width: 7em;
+    max-width: 14em;
     margin: 0.5em auto 0;
     font-size: 0.9em;
   }
@@ -6223,6 +6277,7 @@ div.overflow-container,
   background-size: 50px 100%, 50px 100%, 10px 100%, 10px 100%;
   background-position: 0 0, 100%, 0 0, 100%;
   background-attachment: local, local, scroll, scroll;
+  transform: translateZ(0);
 }
 
 .scrollableTable table,
@@ -7408,9 +7463,15 @@ div.jqmDialog {
   }
 }
 
-div.jqmDialog pre {
+div.jqmDialog pre,
+.jqmDialog .response-body {
   font-size: medium;
   line-height: 1.25em;
+}
+
+.jqmDialog .response-body {
+  font-family: monospace;
+  white-space: pre;
 }
 
 div.jqmdTC {
@@ -8197,8 +8258,40 @@ body.screenshot header details,
 body.screenshot .play,
 body.screenshot .metric_experiment,
 body.screenshot .metric_control,
-body.screenshot footer img {
+body.screenshot footer img,
+body.screenshot .opps_note,
+body.screenshot .experiment_opportunities,
+body.screenshot .grade_header-lighthouse,
+body.screenshot .hed_sub-lighthouse,
+body.screenshot .results_main-lh .grade_header-lighthouse:not(:first-of-type),
+body.screenshot .results_main-lh .experiments_bottlenecks ~ *,
+body.screenshot .results_main-lh .scrollableTable ~ *,
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header
+  p {
   display: none !important;
+}
+
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header {
+  display: block !important;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+}
+
+body.screenshot.result:not(.compare-experiment)
+  .results_main-lh
+  .results_header
+  h2 {
+  display: flex !important;
+  opacity: 1;
+  height: auto;
+  padding: 0 0 0.5rem;
+  margin: 0 0;
+  font-size: 1.8em;
 }
 
 body.screenshot header {
@@ -8247,6 +8340,7 @@ body.screenshot .header_screenshots {
   margin-top: -10rem;
   z-index: 99999999;
   align-self: center;
+  justify-content: center;
 }
 
 body.screenshot #videoContainer img {
@@ -8301,13 +8395,29 @@ body.screenshot .header_screenshots {
 }
 
 body.screenshot .header_screenshots img {
-  max-height: 300px !important;
+  max-height: 220px !important;
   max-width: 100% !important;
   width: auto !important;
 }
 
-body.screenshot .experiment_opportunities {
-  display: none;
+body.screenshot .results_main-lh .opportunities_summary {
+  padding: 0;
+}
+
+body.screenshot .results_main-lh nav.results_lh_nav {
+  margin: 1rem 0 0;
+}
+body.screenshot .results_main-lh nav.results_lh_nav a {
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  border: 0;
+  padding: 0;
+}
+body.screenshot .results_main-lh .scrollableTable {
+  border-top: 1px solid #ddd;
+}
+body.screenshot .results_main-lh .experiments_bottlenecks {
+  margin-bottom: 0;
 }
 
 .linklike {
@@ -8547,4 +8657,608 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
   overflow: scroll;
   height: 2em;
   white-space: nowrap;
+}
+
+/* Prism.js overwrite */
+pre[class*="language-"] {
+  background: none !important;
+}
+
+/* lighthouse variations for experiments layout */
+.lh-logo {
+  display: flex;
+  align-items: center;
+}
+
+.lh-logo svg {
+  flex: 0 0 1.2em;
+}
+
+.lh_score .lh_score_number {
+  font-weight: normal;
+  font-family: "Roboto Mono", "Menlo", "dejavu sans mono", "Consolas",
+    "Lucida Console", monospace;
+  width: 1.1em;
+  height: 1.1em;
+  line-height: 1.1em;
+  display: inline-flex;
+  text-align: center;
+  font-size: 1em;
+  border-radius: 100%;
+  padding: 0.6em;
+  align-content: center;
+  justify-content: center;
+  position: relative;
+}
+
+.lh_score_number svg {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: transform;
+  transform: rotate(0deg);
+  width: 100%;
+}
+
+.lh-gauge {
+  stroke-linecap: round;
+}
+
+.lh-gauge-arc {
+  fill: none;
+  transform-origin: 50% 50%;
+  animation: load-gauge 1s ease forwards;
+  animation-delay: 250ms;
+}
+
+.lh-gauge-base {
+  opacity: 0.1;
+}
+
+/* Gauge */
+/* Context-specific colors */
+:root {
+  /* Palette using Material Design Colors
+     * https://www.materialui.co/colors */
+  --color-amber-50: #fff8e1;
+  --color-blue-200: #90caf9;
+  --color-blue-900: #0d47a1;
+  --color-blue-A700: #2962ff;
+  --color-blue-primary: #06f;
+  --color-cyan-500: #00bcd4;
+  --color-gray-100: #f5f5f5;
+  --color-gray-300: #cfcfcf;
+  --color-gray-200: #e0e0e0;
+  --color-gray-400: #bdbdbd;
+  --color-gray-50: #fafafa;
+  --color-gray-500: #9e9e9e;
+  --color-gray-600: #757575;
+  --color-gray-700: #616161;
+  --color-gray-800: #424242;
+  --color-gray-900: #212121;
+  --color-gray: #000000;
+  --color-green-700: #080;
+  --color-green: #0c6;
+  --color-lime-400: #d3e156;
+  --color-orange-50: #fff3e0;
+  --color-orange-700: #c33300;
+  --color-orange: #fa3;
+  --color-red-700: #c00;
+  --color-red: #f33;
+  --color-teal-600: #00897b;
+  --color-white: #ffffff;
+  --color-average-secondary: var(--color-orange-700);
+  --color-average: var(--color-orange);
+  --color-fail-secondary: var(--color-red-700);
+  --color-fail: var(--color-red);
+  --color-hover: var(--color-gray-50);
+  --color-informative: var(--color-blue-900);
+  --color-pass-secondary: var(--color-green-700);
+  --color-pass: var(--color-green);
+  --color-not-applicable: var(--color-gray-600);
+}
+
+.lh_score.lh_score_grade-a {
+  color: var(--color-pass-secondary);
+  fill: var(--color-pass);
+  stroke: var(--color-pass);
+}
+
+.lh_score.lh_score_grade-c {
+  color: var(--color-average-secondary);
+  fill: var(--color-average);
+  stroke: var(--color-average);
+}
+
+.lh_score.lh_score_grade-f {
+  color: var(--color-fail-secondary);
+  fill: var(--color-fail);
+  stroke: var(--color-fail);
+}
+
+.lh-gauge__wrapper--not-applicable {
+  color: var(--color-not-applicable);
+  fill: var(--color-not-applicable);
+  stroke: var(--color-not-applicable);
+}
+
+.results_main-lh .opportunities_summary {
+  min-width: 100%;
+  margin-bottom: 1em;
+  display: block;
+}
+
+.results_main-lh .results_and_command {
+  gap: 3rem;
+  display: flex;
+}
+.opps_note {
+  flex: 1 0 25%;
+  margin: 6rem 0 2rem;
+  padding: 1rem 1.5rem 0.5rem;
+  background: #eff8ff;
+  border-radius: 0.7em;
+}
+.opps_note-links {
+  margin: 1em 0;
+  background: #fafafa;
+  background-image: url(/assets/images/src/icon_science_bubbling.svg);
+  background-size: auto 2rem;
+  padding-left: 2.6em;
+  background-position: left 0.5em top 45%;
+  background-repeat: no-repeat;
+}
+.opps_note p {
+  color: #2a3b64;
+  line-height: 1.7;
+  margin: 0 0 0.5em 0;
+  font-size: 0.9em;
+}
+.opps_note:not(.opps_note-links) p a {
+  background-color: #fbe076;
+  border: 1px solid #e2d088;
+  color: #333;
+  border-radius: 1em;
+  text-decoration: none;
+  padding: 0.1em 0.7em 0.2em;
+  font-size: 0.9em;
+  display: inline-block;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+@media (max-width: 60em) {
+  .results_main-lh .results_and_command {
+    width: auto;
+    gap: 0;
+  }
+  .opps_note {
+    margin: 0 -1.5rem 1rem;
+  }
+}
+
+.results_header p span.lh_score_grade-fail {
+  color: red;
+  font-size: 0.8em;
+}
+.results_header p span.lh_score_grade-average {
+  color: #ffab33;
+  font-size: 0.8em;
+}
+.results_header p span.lh_score_grade-pass {
+  color: #008f11;
+  font-size: 0.8em;
+}
+
+.results_main-lh nav.results_lh_nav {
+  display: flex;
+  flex: 1 0 100%;
+  gap: 0.5em;
+  flex-flow: row wrap;
+}
+
+@media (min-width: 70em) {
+  .results_main-lh nav.results_lh_nav {
+    justify-content: flex-start;
+    /* max-width: 65%; */
+  }
+}
+
+.results_lh_nav a {
+  flex: 0 1 auto;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.1em;
+  /* max-width: 10em; */
+  margin: 0;
+  justify-content: center;
+  gap: 0.5em;
+  white-space: nowrap;
+  border: 1px solid #eee;
+  padding: 0.5em 1em;
+  border-radius: 0.5em;
+  background: #fff;
+}
+
+.opportunities_summary .results_lh_nav a:last-child {
+  border-width: 1px;
+}
+
+.results_lh_nav a:hover .lh_score_cat,
+.results_lh_nav a:focus .lh_score_cat {
+  text-decoration: underline;
+}
+
+.results_lh_nav a:hover .lh_score_number,
+.results_lh_nav a:focus .lh_score_number {
+  text-decoration: none;
+  box-shadow: 0 0 3px #aaa;
+}
+
+.results_lh_nav span.lh_score_cat {
+  color: #2a3b64;
+}
+
+.results_main-lh .experiments_bottlenecks {
+  position: relative;
+}
+
+.results_main-lh .results_body {
+  padding-bottom: 2rem;
+}
+
+.results_main-lh details.metrics_shown {
+  top: 1em;
+  right: 0;
+}
+
+.grade_heading.lh_score {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.grade_heading.lh_score .lh_score_number {
+  font-size: 0.7em;
+}
+
+.grade_heading.lh_score .lh_score_cat {
+  flex: 1 1 calc(100% - 5rem);
+  font-weight: 900;
+  color: #2a3b64;
+}
+
+.results_main-lh span.units {
+  text-transform: uppercase;
+}
+
+.results_main-lh h4 {
+  margin: 1em 0 0;
+  border-bottom: 1px solid #eee;
+  font-size: 1.1em;
+  color: #444;
+}
+
+.results_main-lh summary p {
+  display: inline;
+}
+.summary_text {
+  display: flex;
+  justify-content: space-between;
+}
+.summary_text p {
+  margin: 0;
+}
+.summary_text > p {
+  font-weight: 300;
+  font-size: 1rem;
+}
+.summary_text > div {
+  display: flex;
+  align-items: flex-start;
+}
+.summary_text > div {
+  gap: 0.5em;
+}
+
+.lh_experimentlink {
+  font-size: 0.7em;
+  font-weight: 700;
+  border-radius: 2em;
+  padding: 0.3em 1em 0.3em 2.5em;
+  background: #f9fff7 url(/assets/images/src/icon_science_bubbling.svg) left
+    0.5em top 40% no-repeat;
+  display: inline-block;
+  text-decoration: none;
+  color: #2c7014;
+  border: 1px solid #4e8f37;
+  background-size: 2em auto;
+  margin-top: -0.3em;
+}
+.lh_experimentlink em {
+  font-style: normal;
+  color: #333;
+  font-weight: 500;
+}
+
+.results_main-lh summary em p {
+  font-weight: normal;
+}
+
+.results_main-lh p:empty {
+  display: none;
+}
+
+.results_main-lh p p {
+  display: inline;
+}
+
+.lh-relevantmetrics strong {
+  color: #555;
+  font-weight: 500;
+}
+
+.lh-relevantmetric {
+  padding: 0.3em 0.5em;
+  font-size: 0.7em;
+  text-transform: uppercase;
+  background-color: #555;
+  color: #fff;
+  font-weight: normal;
+  display: inline-block;
+  border-radius: 0.3em;
+  align-self: center;
+  margin-right: 0.5em;
+  line-height: 1;
+}
+
+details.metrics_shown p a {
+  color: #fff;
+}
+
+.lh_filmstrip {
+  display: flex;
+  justify-content: space-between;
+  grid-template-columns: repeat(auto-fit, 60px);
+  padding: 1em 1em 1em 0;
+  gap: 1em;
+  overflow: auto;
+}
+.lh_filmstrip_item {
+  text-align: right;
+  position: relative;
+  flex: 1 1 100px;
+}
+.lh_filmstrip_item img {
+  max-height: 130px;
+  width: auto;
+  border-width: 1px;
+  margin: 0;
+}
+
+.lh-filter_map {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 2em 0 0;
+  align-items: center;
+}
+
+a.lh-maplink {
+  display: inline-block;
+  border-radius: 2em;
+  padding: 0.5em 1em;
+
+  border: 1px solid #2a3b64;
+  color: #2a3b64;
+  font-size: 0.8em;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a.lh-maplink:hover,
+a.lh-maplink:focus {
+  background-color: #2a3b64;
+  color: #fff;
+  border-color: transparent;
+}
+
+p.lh-filteraudits {
+  display: flex;
+  gap: 0.5em;
+  margin: 0;
+  align-items: center;
+}
+
+.lh-filteraudits a {
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  padding: 0.1em 0;
+}
+.lh-filteraudits a:not([aria-current]):hover,
+.lh-filteraudits a:not([aria-current]):focus {
+  color: #2a3b64;
+}
+.lh-filteraudits a[aria-current] {
+  text-decoration-color: transparent;
+  color: #2a3b64;
+  border-radius: 0.4em;
+  padding: 0.1em 0.6em;
+  border-color: #2a3b64;
+  font-weight: 700;
+}
+.experiments_bottlenecks > ol > li.lh_audit-pass > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_check.svg);
+}
+.experiments_bottlenecks > ol > li.lh_audit-average > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_warn.svg);
+  background-color: transparent;
+}
+.experiments_bottlenecks > ol > li.lh_audit-fail > details > summary:before {
+  background-image: url(/assets/images/src/icon_grading_alert.svg);
+  background-color: #d26122;
+}
+.experiments_bottlenecks
+  > ol
+  > li.lh_audit-informative
+  > details
+  > summary:before {
+  background-image: url(/assets/images/src/icon_info_circle.svg);
+  background-color: transparent;
+  border: 1px solid #396fc2;
+}
+.experiments_bottlenecks
+  > ol
+  > li.lh_audit-notApplicable
+  > details
+  > summary:before,
+.experiments_bottlenecks > ol > li.lh_audit-manual > details > summary:before {
+  background-image: none;
+  background-color: #ccc;
+}
+.results_main-lh .experiments_details_body {
+  padding-bottom: 0;
+}
+
+.results_main-lh table.lh-details {
+  width: 100%;
+  display: table;
+  font-size: 0.9em;
+  margin: 0 0 1em 0;
+  border-radius: 0.4em;
+  background: #eee;
+}
+
+.results_main-lh table.lh-details th,
+.results_main-lh table.lh-details td {
+  padding: 0.5em;
+  text-align: left;
+}
+
+.results_main-lh table.lh-details td.numeric {
+  text-align: right;
+}
+
+.results_main-lh table.lh-details th {
+  padding: 1em 0.5em;
+  white-space: nowrap;
+}
+.results_main-lh table.lh-details th:first-child {
+  border-top-left-radius: 0.4em;
+}
+.results_main-lh table.lh-details th:last-child {
+  border-top-right-radius: 0.4em;
+}
+
+.results_main-lh table.lh-details th:last-child,
+.results_main-lh table.lh-details td:last-child {
+  text-align: right;
+}
+.results_main-lh table.lh-details th:first-child,
+.results_main-lh table.lh-details td:first-child {
+  text-align: left;
+}
+
+.results_main-lh table.lh-details tr:nth-child(odd) td {
+  background: #fafafa;
+}
+.results_main-lh table.lh-details td b {
+  display: block;
+}
+
+.lh-chain,
+.experiments_details_body ol.lh-chain {
+  font-size: 0.9em;
+  margin: 0 0 1em 0;
+  border: 1px solid #eee;
+  border-radius: 0.4em;
+  background: #fafafa;
+  padding: 2em 2em 0;
+}
+.lh-chain ol {
+  padding: 0 0 0.5em 1rem;
+  font-size: 1em;
+}
+.lh-chain li {
+  position: relative;
+  overflow: visible;
+  padding-left: 1em;
+  padding-bottom: 0.3em;
+  list-style: none;
+  padding-right: 0;
+}
+.lh-chain li > span {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #ddd;
+  overflow-wrap: anywhere;
+  gap: 1em;
+  padding-bottom: 0.5em;
+}
+
+.lh-chain li:before {
+  content: "";
+  position: absolute;
+  height: 0.6em;
+  width: 1em;
+  left: -0.5em;
+  border-left: 2px solid #aaa;
+  border-bottom: 2px solid #aaa;
+  top: 0;
+}
+.lh-chain li > span span:last-child {
+  white-space: nowrap;
+}
+.lh-details-failure p {
+  margin: 0;
+}
+
+@media (max-width: 50em) {
+  .results_main-lh nav.results_lh_nav {
+    display: block;
+  }
+  .results_lh_nav a {
+    flex: 1;
+    display: block;
+    margin-bottom: 0.4em;
+  }
+  .results_main-lh details.metrics_shown {
+    margin: 0 0 1em 0;
+  }
+  .opps_note-links {
+    background-position: top 0.7em left 0.5em;
+  }
+  .lh-filter_map {
+    display: block;
+  }
+  .results_main-lh .lh-filteraudits,
+  .lh-filteraudits > span {
+    display: block;
+  }
+  .results_main-lh .lh-filteraudits {
+    margin-bottom: 1em;
+  }
+  .lh-filteraudits > span {
+    width: 100%;
+  }
+  .lh-filteraudits a {
+    display: inline-block;
+  }
+  .summary_text,
+  .summary_text div,
+  .summary_text div p {
+    display: block;
+  }
+  .summary_text div p {
+    margin: 0 0 0.2em;
+  }
+  .summary_text div a {
+    margin: 0.5em 0;
+  }
 }

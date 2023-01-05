@@ -16,7 +16,6 @@ if (strlen($page_description)) {
     echo "<meta name=\"description\" content=\"$page_description\">\n";
 }
 ?>
-<meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -63,10 +62,10 @@ if (file_exists('./settings/server/customhead.inc.php')) {
     include('./settings/customhead.inc.php');
 }
 ?>
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/typography.css?v=" . constant('VER_TYPOGRAPHY_CSS') ?>" />
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/layout.css?v=" . constant('VER_LAYOUT_CSS') ?>" />
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/pagestyle2.css?v=" . constant('VER_CSS') ?>" />
-<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>" />
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/typography.css?v=" . constant('VER_TYPOGRAPHY_CSS') ?>">
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/layout.css?v=" . constant('VER_LAYOUT_CSS') ?>">
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/pagestyle2.css?v=" . constant('VER_CSS') ?>">
+<link rel="stylesheet" href="<?= "{$GLOBALS['cdnPath']}/assets/css/wpt-header.css?v=" . constant('VER_HEADER_CSS') ?>">
 <script src="<?= "{$GLOBALS['cdnPath']}/assets/js/wpt-header.js?v=" . constant('VER_JS') ?>" defer></script>
 
 
@@ -111,7 +110,7 @@ echo "\n</style>\n";
 // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo "<script>";
-    require_once WWW_PATH . '/assets/js/catchpoint-rum.js';
+    require_once WWW_PATH . '/assets/js/vendor/catchpoint-rum.js';
     echo "</script>";
 }
 

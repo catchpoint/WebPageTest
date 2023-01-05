@@ -123,7 +123,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                 ?>
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
-                    <input type="hidden" name="lighthouseScreenshots" value="0">
+                    <input type="hidden" name="lighthouseScreenshots" value="1">
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -271,6 +271,23 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                                                        <script>
+                                                            // show or hide simple lighthouse field depending on whether chrome test is running
+                                                            let simplePresets = document.querySelector('.test_presets_easy');
+                                                            let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            function enableDisableLHSimple(){
+                                                              let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
+                                                                  lhSimpleFields.style.display = "block";
+                                                                  checkedPreset.disabled = false;
+                                                              } else {
+                                                                  lhSimpleFields.style.display = "none";
+                                                                  checkedPreset.disabled = true;
+                                                              }
+                                                            }
+                                                            enableDisableLHSimple();
+                                                            simplePresets.addEventListener("click", enableDisableLHSimple );
+                                                        </script>
                                                     </div>
                                                     <?php if ($is_paid) : ?>
                                                         <div class="fieldrow">
@@ -666,7 +683,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                             <ul class="input_fields">
                                                 <li>
                                                     <label for="lighthouse-advanced" class="auto_width">
-                                                        <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
+                                                        <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                                     </label>
                                                 </li>
                                                 <li><label for="mobile">
@@ -933,13 +950,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     document.addEventListener('DOMContentLoaded', () => initFileReader('spof_hosts_file', 'spof_hosts'));
                                                 </script>
                                             </p>
-                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0">
-                                                <?php
-                                                if (array_key_exists('spof', $_REQUEST)) {
-                                                    echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                                }
-                                                ?>
-                                            </textarea>
+                                            <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
+                                            if (array_key_exists('spof', $_REQUEST)) {
+                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                            }
+                                            ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">

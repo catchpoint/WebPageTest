@@ -281,7 +281,9 @@ async function initCodeField(source, language = "js") {
     return; // already initialized
   }
   // load Flask
-  const { default: CodeFlask } = await import("/assets/js/codeflask.module.js");
+  const { default: CodeFlask } = await import(
+    "/assets/js/vendor/codeflask-1.4.1.module.js"
+  );
   const originalTextarea = document.getElementById(source);
   // editor container
   const codeEl = document.createElement("div");
@@ -299,4 +301,22 @@ async function initCodeField(source, language = "js") {
   });
   codeArea.onUpdate((code) => (hidden.value = code));
   window.codeFlasks[source] = codeArea;
+}
+
+async function loadPrism() {
+  if (window.Prism) {
+    return window.Prism;
+  }
+  window.Prism = window.Prism || {};
+  window.Prism.manual = true;
+
+  const ss = document.createElement("link");
+  ss.rel = "stylesheet";
+  ss.type = "text/css";
+  ss.href = "/assets/css/vendor/prism-1.29.0.css";
+  document.head.appendChild(ss);
+
+  // todo: find a Prism distro that is a proper module
+  await import("/assets/js/vendor/prism-1.29.0.js");
+  return window.Prism;
 }

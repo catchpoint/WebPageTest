@@ -20,8 +20,10 @@ If your instance runs, but you’re having issues configuring agents, navigate t
 WebPageTest uses [PHPUnit](https://phpunit.de) for unit tests. To set up and run the unit tests:
 
 1. Install [Composer](https://getcomposer.org)
-2. Run `composer install`
-3. Run `composer test`
+2. Install [apcu](https://www.php.net/manual/en/book.apcu.php)
+3. Add the line `apc.enable_cli='on'` to your php.ini
+4. Run `composer install`
+5. Run `composer test`
 
 ## Contributing
 

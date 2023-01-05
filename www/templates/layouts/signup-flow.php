@@ -12,12 +12,13 @@
     global $supportsAuth;
     global $supportsSaml;
     global $client_error;
+    global $support_link;
 
     $page_title = $page_title ? $page_title : 'WebPageTest';
     ?>
     <title><?php echo $page_title; ?></title>
     <?php require_once __DIR__ . '/head.inc'; ?>
-    <link href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet" />
+    <link href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet">
     <script defer src="/assets/js/address-state.js?v=<?= constant('VER_JS_ACCOUNT') ?>"></script>
 </head>
 
@@ -36,7 +37,7 @@
     <wpt-header>
         <header>
             <a class="wptheader_logo" href="/">
-                <img src="/assets/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint" />
+                <img src="/assets/images/wpt-logo.svg" alt="WebPageTest, by Catchpoint">
             </a>
             <?php if ($is_plan_free) : ?>
                 <ol class="free-plan">

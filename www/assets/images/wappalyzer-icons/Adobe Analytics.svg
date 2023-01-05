@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generator: Adobe Illustrator 21.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Brush" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 240 235" style="enable-background:new 0 0 240 235;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:url(#SVGID_1_);}
+	.st1{fill:#E2D8FF;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#9F7FFF;}
+</style>
+<radialGradient id="SVGID_1_" cx="97.7105" cy="81.6193" r="143.7928" gradientTransform="matrix(1.0909 0 0 1.093 -10.9091 -10.9302)" gradientUnits="userSpaceOnUse">
+	<stop offset="0" style="stop-color:#33284E"/>
+	<stop offset="0.7669" style="stop-color:#130732"/>
+</radialGradient>
+<rect x="0" class="st0" width="240" height="235"/>
+<path class="st1" d="M97,118h-9.5v62.4c2.9,1.5,6.4,2.7,9.5,3.8V118z M114.5,114v73.6c1.3,0.1,3.3,0.7,4.6,0.7c1.7,0,3.2,0,4.9-0.1  V114H114.5z M169,166.2c3.4-3.6,6.9-7.9,9.5-12.1v-47.6H169V166.2z M64.9,122l21.9-25.3l20.8,7.8l44.5-31.9l22.4,21.2l11.3-9  l-1.7-3.7l-9.4,7.9l-22.1-20.6l-45.2,32.3l-21-8.1l-23.4,26.4l-14.6,3.4v3.4L64.9,122z M69.5,137H60v18.4c2.6,4,6.1,7.8,9.5,11.2  V137z M151.5,95H142v88.9c3.1-1.1,6.6-2.4,9.5-4V95z"/>
+<path class="st2" d="M16.8,117c0,57,46.2,103.2,103.2,103.2S223.2,174,223.2,117S177,13.8,120,13.8S16.8,60,16.8,117z M27.4,117  c0-51.2,41.5-92.7,92.6-92.7s92.6,41.5,92.6,92.7s-41.5,92.7-92.6,92.7S27.4,168.2,27.4,117z"/>
+</svg>

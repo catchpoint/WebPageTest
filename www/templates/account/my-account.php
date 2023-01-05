@@ -1,3 +1,6 @@
+<?php
+global $support_link;
+?>
 <!-- VERIFIED EMAIL NOTICE ---->
 <?php if (!$is_verified) : ?>
     <div class="resend-email-verification-container">
@@ -22,7 +25,7 @@
         <h1>My Account</h1>
         <?php if ($is_paid) : ?>
             <div class="contact-support-button">
-                <a href="https://support.webpagetest.org"><span>Contact Support</span></a>
+              <a href="<?= $support_link ?>"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
     </div>
@@ -66,7 +69,7 @@
                 </div>
                 <div class="card-section">
                     <div class="edit-button">
-                        <button><span>Edit</span></button>
+                        <button><span>Edit Contact Info</span></button>
                     </div>
                 </div>
             </div>
@@ -80,12 +83,14 @@
                 </div>
                 <div class="card-section">
                     <div class="edit-button">
-                        <button><span>Edit</span></button>
+                        <button><span>Edit Password</span></button>
                     </div>
                 </div>
             </div>
 
-            <?php require_once __DIR__ . '/includes/subscription-plan.php'; ?>
+            <div class="box card subscription-plan">
+              <?php require_once __DIR__ . '/includes/subscription-plan.php'; ?>
+            </div>
         </div>
 
 

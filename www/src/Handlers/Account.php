@@ -377,13 +377,143 @@ class Account
         }
     }
 
-    // TODO: change user's credit card
+    // Part 1 of changing a payment method
+    // Validate their address
     //
-    // #[NotImplemented]
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'update-payment-method-confirm-billing')]
+    public static function validateUpdatePaymentMethodConfirmBilling(array $post): object
+    {
+        $body = new stdClass();
+
+        if (
+            !(isset($post['plan']) &&
+                isset($post['street-address']) &&
+                isset($post['city']) &&
+                isset($post['state']) &&
+                isset($post['country']) &&
+                isset($post['zipcode'])
+            )
+        ) {
+            $msg = "Plan, street address, city, state, country, and zipcode must all be filled";
+            throw new ClientException($msg, "/account");
+        }
+
+        $body->plan = $post['plan'];
+        $body->street_address = $post['street-address'];
+        $body->city = $post['city'];
+        $body->state = $post['state'];
+        $body->country = $post['country'];
+        $body->zipcode = $post['zipcode'];
+        $body->renewaldate = $post['renewaldate'] ?? null;
+
+        return $body;
+    }
+
+    // Part 1 of changing a payment method
+    // Validate their address, check for plan price
+    //
+    // #[HandlerMethod]
+    // #[Route(Http::POST, '/account', 'update-payment-method-confirm-billing')]
+    public static function updatePaymentMethodConfirmBilling(RequestContext $request_context, object $body): string
+    {
+        $results = [];
+        $tpl = new Template('account');
+        $tpl->setLayout('account');
+
+        $address = new ChargifyAddressInput([
+        'street_address' => $body->street_address,
+        'city' => $body->city,
+        'state' => $body->state,
+        'country' => $body->country,
+        'zipcode' => $body->zipcode
+        ]);
+
+        $preview = $request_context->getClient()->getChargifySubscriptionPreview($body->plan, $address);
+
+        $results['street_address'] = $body->street_address;
+        $results['city'] = $body->city;
+        $results['state'] = $body->state;
+        $results['country'] = $body->country;
+        $results['zipcode'] = $body->zipcode;
+
+        $results['subtotal'] = number_format($preview->getSubTotalInCents() / 100, 2);
+        $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
+        $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
+
+        $results['renewaldate'] = $body->renewaldate;
+        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+        $results['ch_site'] = Util::getSetting('ch_site');
+        $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
+        return $tpl->render('billing/update-payment', $results);
+    }
+
+    // Validate changing a user's payment method
+    //
+    // #[ValidatorMethod]
+    // #[Route(Http::POST, '/account', 'update-payment-method')]
+    public static function validateUpdatePaymentMethod(array $post): object
+    {
+        $body = new stdClass();
+
+        if (
+            !(isset($post['nonce']) &&
+                isset($post['street-address']) &&
+                isset($post['city']) &&
+                isset($post['state']) &&
+                isset($post['country']) &&
+                isset($post['zipcode'])
+            )
+        ) {
+            $msg = "Payment token, street address, city, state, country, and zipcode must all be filled";
+            throw new ClientException($msg, "/account");
+        }
+
+        $body->token = (string)$post['nonce'];
+        $body->plan = $post['plan'];
+        $body->street_address = $post['street-address'];
+        $body->city = $post['city'];
+        $body->state = $post['state'];
+        $body->country = $post['country'];
+        $body->zipcode = $post['zipcode'];
+        return $body;
+    }
+    // Change a user's payment method
+    //
     // #[HandlerMethod]
     // #[Route(Http::POST, '/account', 'update-payment-method')]
-    public static function updatePaymentMethod(RequestContext $request_context): void
+    public static function updatePaymentMethod(RequestContext $request_context, object $body): string
     {
+
+        try {
+            $address = new ChargifyAddressInput([
+                "street_address" => $body->street_address,
+                "city" => $body->city,
+                "state" => $body->state,
+                "country" => $body->country,
+                "zipcode" => $body->zipcode
+            ]);
+
+            $request_context->getClient()->updatePaymentMethod($body->token, $address);
+            $successMessage = array(
+                'type' => 'success',
+                'text' => 'Your payment method has successfully been updated!'
+            );
+            $request_context->getBannerMessageManager()->put('form', $successMessage);
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            $message = "There was an error updating your payment method. Please try again or contact customer service.";
+            $errorMessage = array(
+                'type' => 'error',
+                'text' => $message
+            );
+            $request_context->getBannerMessageManager()->put('form', $errorMessage);
+        }
+
+        $host = $request_context->getHost();
+        $protocol = $request_context->getUrlProtocol();
+        return "{$protocol}://{$host}/account";
+        exit();
     }
 
     // Cancel a paid subscription
@@ -663,7 +793,7 @@ class Account
      * GET for the account page
      *
      * @param WebPageTest\RequestContext $request_context
-     * @param string $page the specific account route being accessed
+     * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
      * @return string $contents the contents of the page
      */
@@ -734,6 +864,7 @@ class Account
         $all_plans = $plan_set->getAllPlans();
 
         $results = array_merge($contact_info, $billing_info);
+        $results['is_canceled'] ??= false;
         $results['run_renewal_date'] = $run_renewal_date;
         $results['remaining_runs'] = $remaining_runs;
         $results['monthly_runs'] = $monthly_runs;
@@ -745,6 +876,8 @@ class Account
         $results['country_list_json_blob'] = Util::getCountryJsonBlob();
         $results['plans'] = $current_plans;
         $results['messages'] = $request_context->getBannerMessageManager()->get();
+        $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
+
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
             unset($_SESSION['client-error']);
@@ -766,6 +899,7 @@ class Account
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
+
                 return $tpl->render('billing/billing-cycle', $results);
                 break;
             case 'update_plan':
@@ -803,6 +937,39 @@ class Account
                     return $tpl->render('plans/upgrade-plan', $results);
                     break;
                 }
+            case 'update_payment_method':
+                if (!$is_paid) {
+                    $host = $request_context->getHost();
+                    $protocol = $request_context->getUrlProtocol();
+                    $redirect_uri = "{$protocol}://{$host}/account";
+                    header("Location: {$redirect_uri}");
+                    exit();
+                }
+                $results['plan'] = $customer->getWptPlanId();
+                $results['renewaldate'] = !is_null($customer->getNextPlanStartDate())
+                    ? $customer->getNextPlanStartDate()->format('m/d/Y')
+                    : null;
+
+                $billing_address = $customer->getAddress();
+
+                if (is_null($billing_address)) {
+                    $results['street_address'] = "";
+                    $results['city'] = "";
+                    $results['state_code'] = "";
+                    $results['country_code'] = "";
+                    $results['zipcode'] = "";
+                } else {
+                    $results['street_address'] = $billing_address->getStreet();
+                    $results['city'] = $billing_address->getCity();
+                    $results['state_code'] = $billing_address->getState();
+                    $results['country_code'] = $billing_address->getCountry();
+                    $results['zipcode'] = $billing_address->getZip();
+                }
+
+                $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
+
+                return $tpl->render('billing/update-payment-confirm-address', $results);
+              break;
             default:
                 $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$customer->isCanceled());
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;

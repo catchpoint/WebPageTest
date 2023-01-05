@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs><style>.cls-6{stroke:#222;fill:#3fc4ff}</style></defs>
+  <rect x=".5" y=".5" width="63" height="63" rx="4" style="stroke:#222;fill:#fff"/>
+  <ellipse cx="10.941" cy="5.471" rx="1.705" ry="1.71" style="fill:#2979ff"/>
+  <ellipse cx="5.251" cy="5.471" rx="1.705" ry="1.71" style="fill:#3740ff"/>
+  <ellipse cx="16.637" cy="5.471" rx="1.705" ry="1.71" style="fill:#3fc4ff"/>
+  <path d="M.651 47.574h62.7M.651 55.5h62.7m-55.39 7.315V48.024m8.1 14.791V48.024m7.924 14.791V48.024m7.592 14.791V48.024m8.094 14.791V48.024m7.76 14.791V48.024m8.094 14.791V48.024" style="stroke-linecap:square;fill:none;stroke:#222"/>
+  <ellipse class="cls-6" cx="47.431" cy="55.674" rx="1.768" ry="1.773"/>
+  <ellipse cx="31.577" cy="55.674" rx="1.768" ry="1.773" style="fill:#2979ff;stroke:#222"/>
+  <path d="M11.428 26.56h6.358l3.1-5.7 2.922 13.165 3.748-6.58 3.51 6.58 3.268-12.785 4.637 12.789L43.9 21.335l2.906 5.225h6.1" style="stroke:#3fc4ff;stroke-linecap:round;stroke-linejoin:round;stroke-width:3px;fill:none"/>
+  <ellipse class="cls-6" cx="16.061" cy="55.674" rx="1.768" ry="1.773"/>
+</svg>

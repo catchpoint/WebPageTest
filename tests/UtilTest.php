@@ -55,7 +55,7 @@ final class UtilTest extends TestCase
         $lighthouse = 1;
         $testtype = '';
         $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
-        $this->assertEquals(2, $total_runs);
+        $this->assertEquals(1, $total_runs);
     }
     public function testGetRunCountRepeatView(): void
     {
@@ -73,7 +73,7 @@ final class UtilTest extends TestCase
         $lighthouse = 1;
         $testtype = '';
         $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
-        $this->assertEquals(3, $total_runs);
+        $this->assertEquals(2, $total_runs);
     }
     public function testGetRunCountLighthouseTest(): void
     {

@@ -37,7 +37,7 @@ if ($request_method !== 'POST' && $request_method !== 'GET') {
 }
 
 if ($request_method === 'POST') {
-    $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_STRING);
+    $type = filter_input(INPUT_POST, 'type', FILTER_UNSAFE_RAW);
 
     if ($type == 'contact-info') {
         $body = AccountHandler::validateChangeContactInfo($_POST);
@@ -75,9 +75,17 @@ if ($request_method === 'POST') {
         $redirect_uri = AccountHandler::cancelSubscription($request_context);
         header("Location: {$redirect_uri}");
         exit();
-    } elseif ($type == "update-payment-method") {
-        throw new ClientException('There was an error.', '/account');
-        // AccountHandler::updatePaymentMethod($request_context);
+    } elseif ($type == 'update-payment-method-confirm-billing') {
+        $body = AccountHandler::validateUpdatePaymentMethodConfirmBilling($_POST);
+        $contents = AccountHandler::updatePaymentMethodConfirmBilling($request_context, $body);
+        echo $contents;
+        exit();
+    } elseif ($type == 'update-payment-method') {
+        $body = AccountHandler::validateUpdatePaymentMethod($_POST);
+        $redirect_uri = AccountHandler::updatePaymentMethod($request_context, $body);
+
+        header("Location: {$redirect_uri}");
+        exit();
     } elseif ($type == "create-api-key") {
         $body = AccountHandler::validateCreateApiKey($_POST);
         $redirect_uri = AccountHandler::createApiKey($request_context, $body);
@@ -130,7 +138,7 @@ if ($request_method === 'POST') {
     exit();
 }
 
-$page = (string) filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+$page = (string) filter_input(INPUT_GET, 'page', FILTER_UNSAFE_RAW);
 $contents = AccountHandler::getAccountPage($request_context, $page);
 echo $contents;
 exit();

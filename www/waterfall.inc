@@ -1753,9 +1753,9 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         <div class="jqmdBC">
             <div id="dialog-contents$stepSuffix" class="jqmdMSG">
                 <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
-                <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
-                <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
-                <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre id="request-raw-details-json$stepSuffix"></pre></div>
+                <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"><pre><code class="language-http" id="request-headers-code$stepSuffix"></code></pre></div>
+                <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"><pre><code class="language-http" id="response-headers-code$stepSuffix"></code></pre></div>
+                <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre><code class="language-js" id="request-raw-details-json$stepSuffix"></code></pre></div>
                 <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
                 <div id="blocking$stepSuffix" class="dialog-tab-content request-blocking"></div>
             </div>

@@ -195,6 +195,9 @@ if (!EMBED) {
                     echo "</form>"; ?>
 
 
+        <?php
+            $exampleId = (!empty($tests[0])) ? $tests[0]['id'] : '110606_MJ_RZEY';
+        ?>
         <div id="advanced" style="display:none;">
             <h3>Advanced Visual Comparison Configuration</h3>
             <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
@@ -203,11 +206,11 @@ if (!EMBED) {
             <div class="scrollableTable">
             <table class="pretty">
                 <tbody>
-                <tr><th>Custom label</th><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
-                <tr><th>Specific run</th><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
-                <tr><th>Repeat view</th><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
-                <tr><th>Specific step</th><td>-s:3</td><td>110606_MJ_RZEY-s:3</td></tr>
-                <tr><th>Specific End Time</th><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
+                <tr><th>Custom label</th><td>-l:&lt;label&gt;</td><td><?php echo $exampleId; ?>-l:Original</td></tr>
+                <tr><th>Specific run</th><td>-r:&lt;run&gt;</td><td><?php echo $exampleId; ?>-r:3</td></tr>
+                <tr><th>Repeat view</th><td>-c:1</td><td><?php echo $exampleId; ?>-c:1</td></tr>
+                <tr><th>Specific step</th><td>-s:3</td><td><?php echo $exampleId; ?>-s:3</td></tr>
+                <tr><th>Specific End Time</th><td>-e:&lt;seconds&gt;</td><td><?php echo $exampleId; ?>-e:1.1</td></tr>
             </tbody>
             </table>
             </div>
@@ -216,13 +219,13 @@ if (!EMBED) {
             <p>Examples:</p>
             <ul>
             <li><b>Customizing labels:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
+            https://www.webpagetest.org/video/compare.php?tests=<?php echo $exampleId; ?>-l:Original,<?php echo $exampleId; ?>-l:No+JS</li>
             <li><b>Compare First vs. Repeat view:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            https://www.webpagetest.org/video/compare.php?tests=<?php echo $exampleId; ?>,<?php echo $exampleId; ?>-c:1</li>
             <li><b>Second step of first run vs. Second step of second run:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-r:1-s:2,110606_MJ_RZEY-r:2-s:2</li>
+            https://www.webpagetest.org/video/compare.php?tests=<?php echo $exampleId; ?>-r:1-s:2,<?php echo $exampleId; ?>-r:2-s:2</li>
             <li><b>White background with black text:</b>
-            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
+            https://www.webpagetest.org/video/compare.php?tests=<?php echo $exampleId; ?>,<?php echo $exampleId; ?>-c:1&bg=ffffff&text=000000</li>
             </ul>
             <input id="advanced-ok" type=button class="simplemodal-close pill" value="OK">
         </div>

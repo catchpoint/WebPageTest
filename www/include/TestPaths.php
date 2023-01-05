@@ -359,14 +359,6 @@ class TestPaths
     }
 
   /**
-   * @return string Path for dynatrace file
-   */
-    public function dynatraceFile()
-    {
-        return $this->testRoot . $this->underscoreIdentifier() . "_dynaTrace.dtas";
-    }
-
-  /**
    * @return string Path for lighthouse JSON file
    */
     public function cruxJsonFile()

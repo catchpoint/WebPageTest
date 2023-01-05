@@ -183,7 +183,7 @@ $page_description = "Website performance test result$testLabel.";
                           $url = strtok($_SERVER["REQUEST_URI"], '?');
                           foreach ($medianMetrics as $key => $value) {
                               if ($pageData[$run][$cached][$key]) {
-                                  echo "<li><a href='" . $url . "?medianMetric=" . $key . "'>" . $value . "</a></li>";
+                                  echo "<li><a href='" . $url . "?test=$id&medianMetric=" . $key . "'>" . $value . "</a></li>";
                               }
                           }
                           echo "</ul>";

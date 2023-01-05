@@ -13,6 +13,9 @@ use WebPageTest\RequestContext;
 use WebPageTest\User;
 use WebPageTest\BannerMessageManager;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
+use WebPageTest\CPGraphQlTypes\Customer;
+use WebPageTest\CPGraphQlTypes\ApiKeyList;
+use WebPageTest\PaidPageInfo;
 
 /**
  * These are std lib functions in php that are called in this
@@ -571,6 +574,82 @@ final class AccountTest extends TestCase
         Account::previewCost($req, $body);
     }
 
+    public function testUpdatePaymentMethod(): void
+    {
+        $nonce = bin2hex(random_bytes(10));
+
+        $body = new stdClass();
+        $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
+
+        $address = new ChargifyAddressInput([
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street_address' => '123 Main St',
+            'zipcode' => '12345-1234'
+        ]);
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('updatePaymentMethod')
+            ->with($body->token, $address);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'success',
+                'text' => 'Your payment method has successfully been updated!'
+            ]);
+
+        $req->setClient($client);
+        $req->setBannerMessageManager($bmm);
+
+        $url = Account::updatePaymentMethod($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
+    public function testUpdatePaymentMethodError(): void
+    {
+        $nonce = bin2hex(random_bytes(10));
+
+        $body = new stdClass();
+        $body->token = $nonce;
+        $body->city = 'New York';
+        $body->country = 'US';
+        $body->state = 'NY';
+        $body->street_address = '123 Main St';
+        $body->zipcode = '12345-1234';
+
+        $req = new RequestContext([], [], ['host' => '127.0.0.2']);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('updatePaymentMethod')
+            ->willThrowException(new \Exception('BAD'));
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('put')
+            ->with('form', [
+                'type' => 'error',
+                'text' => "There was an error updating your payment method. Please try again or contact customer service."
+            ]);
+
+        $req->setClient($client);
+        $req->setBannerMessageManager($bmm);
+
+        $url = Account::updatePaymentMethod($req, $body);
+        $this->assertEquals('http://127.0.0.2/account', $url);
+    }
+
     public function testResendEmailVerification(): void
     {
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
@@ -599,66 +678,110 @@ final class AccountTest extends TestCase
         Account::resendEmailVerification($req);
     }
 
-    /** These tests are frail, going to comment to ship and then address why they fail **/
-//    public function testGetAccountPageDefaultFree(): void
-//    {
-//        $page = "";
-//
-//        $req = new RequestContext([]);
-//        $user = new User();
-//        $user->setUserId(12345);
-//        $req->setUser($user);
-//
-//        $client = $this->createMock(CPClient::class);
-//        $client->expects($this->once())
-//            ->method('getFullWptPlanSet');
-//        $client->expects($this->once())
-//            ->method('getUserContactInfo')
-//            ->with(12345)
-//            ->willReturn([
-//                'firstName' => "Goober",
-//                'lastName' => "Goob",
-//                'companyName' => ""
-//            ]);
-//        $req->setClient($client);
-//
-//        $bmm = $this->createMock(BannerMessageManager::class);
-//        $bmm->expects($this->once())
-//            ->method('get')
-//            ->willReturn([]);
-//        $req->setBannerMessageManager($bmm);
-//
-//        Account::getAccountPage($req, $page);
-//    }
-//
-//    public function testGetAccountPageDefaultFreeCompanyNull(): void
-//    {
-//        $page = "";
-//
-//        $req = new RequestContext([]);
-//        $user = new User();
-//        $user->setUserId(12345);
-//        $req->setUser($user);
-//
-//        $client = $this->createMock(CPClient::class);
-//        $client->expects($this->once())
-//            ->method('getFullWptPlanSet');
-//        $client->expects($this->once())
-//            ->method('getUserContactInfo')
-//            ->with(12345)
-//            ->willReturn([
-//                'firstName' => "Goober",
-//                'lastName' => "Goob",
-//                'companyName' => null
-//            ]);
-//        $req->setClient($client);
-//
-//        $bmm = $this->createMock(BannerMessageManager::class);
-//        $bmm->expects($this->once())
-//            ->method('get')
-//            ->willReturn([]);
-//        $req->setBannerMessageManager($bmm);
-//
-//        Account::getAccountPage($req, $page);
-//    }
+    public function testGetAccountPageDefaultFree(): void
+    {
+        $page = "";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getFullWptPlanSet');
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => ""
+            ]);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        $_GLOBALS['request_context'] = $req;
+        Account::getAccountPage($req, $page);
+    }
+
+    public function testGetAccountPageDefaultFreeCompanyNull(): void
+    {
+        $page = "";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getFullWptPlanSet');
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => null
+            ]);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        Account::getAccountPage($req, $page);
+    }
+
+    public function testGetUpdatePaymentMethodAddressPage(): void
+    {
+        $page = "update_payment_method";
+
+        $req = new RequestContext([]);
+        $user = new User();
+        $user->setPaid(true);
+        $user->setUserId(12345);
+        $req->setUser($user);
+
+        $client = $this->createMock(CPClient::class);
+        $client->expects($this->once())
+            ->method('getUserContactInfo')
+            ->with(12345)
+            ->willReturn([
+                'firstName' => "Goober",
+                'lastName' => "Goob",
+                'companyName' => null
+            ]);
+        $customer = new Customer([
+            'customerId' => '',
+            'subscriptionId' => '',
+            'wptPlanId' => '',
+            'subscriptionPrice' => 10.00,
+            'status' => '',
+            'wptPlanName' => '',
+            'monthlyRuns' => 8
+        ]);
+        $wpt_api_key_list = new ApiKeyList();
+        $paid_page_info = new PaidPageInfo($customer, $wpt_api_key_list);
+        $client->expects($this->once())
+            ->method('getPaidAccountPageInfo')
+            ->willReturn($paid_page_info);
+        $req->setClient($client);
+
+        $bmm = $this->createMock(BannerMessageManager::class);
+        $bmm->expects($this->once())
+            ->method('get')
+            ->willReturn([]);
+        $req->setBannerMessageManager($bmm);
+
+        Account::getAccountPage($req, $page);
+    }
 }

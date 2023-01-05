@@ -2,7 +2,7 @@
     <h3 class="modal_title">Subscription Details</h3>
     <p>Active Plan: <?= $wptCustomer->getWptPlanName() ?></p>
     <p>Cancelling your Pro subscription will downgrade your account to a free Starter plan.</p>
-    <p>Please <a href="https://support.webpagetest.org">contact support</a> with for any upgrades or other changes to your plan.</p>
+    <p>Please <a href="<?= $support_link ?>">contact support</a> with for any upgrades or other changes to your plan.</p>
     <div class="cancel-subscription-button">
         <button class="pill-button red">Cancel Subscription</button>
     </div>
