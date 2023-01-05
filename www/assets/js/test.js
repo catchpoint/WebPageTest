@@ -1,8 +1,8 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-if (window["wptForgetSettings"]) var wptStorage = {};
-else var wptStorage = window.localStorage || {};
+
+let wptStorage = window.localStorage || {};
 
 function htmlEntities(str) {
   return String(str)
@@ -116,7 +116,6 @@ function ValidateInput(form, remainingRuns) {
 })(jQuery);
 
 function RestoreSettings() {
-  if (!window["wptForgetSettings"]) {
     if (wptStorage["testVideo"] != undefined)
       $("#videoCheck").prop("checked", wptStorage["testVideo"]);
     if (wptStorage["testTimeline"] != undefined)
@@ -125,14 +124,11 @@ function RestoreSettings() {
       $("#location").val(wptStorage["testLoc"]);
 
     LocationChanged();
-  }
 }
 
 function SaveSettings() {
-  if (!window["wptForgetSettings"]) {
     wptStorage["testVideo"] = $("#videoCheck").is(":checked");
     wptStorage["testTimeline"] = $("#timeline").is(":checked");
-  }
 }
 
 /*
