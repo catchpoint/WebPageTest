@@ -145,36 +145,13 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 echo $userTimingTable->create(true);
 
 
-                // Full custom metrics (formerly in custommetrics.php)
-
-                if (
-                    isset($pageData) &&
-                    is_array($pageData) &&
-                    array_key_exists($run, $pageData) &&
-                    is_array($pageData[$run]) &&
-                    array_key_exists($cached, $pageData[$run]) &&
-                    array_key_exists('custom', $pageData[$run][$cached]) &&
-                    is_array($pageData[$run][$cached]['custom']) &&
-                    count($pageData[$run][$cached]['custom'])
-                ) {
-                    echo '<details class="details_custommetrics"><summary>Custom Metrics Data</summary>';
-                    echo '<dl class="glossary">';
-                    foreach ($pageData[$run][$cached]['custom'] as $metric) {
-                        if (array_key_exists($metric, $pageData[$run][$cached])) {
-                            echo '<dt>' . htmlspecialchars($metric) . '</dt><dd class="scrollableLine">';
-                            $val = $pageData[$run][$cached][$metric];
-                            if (!is_string($val) && !is_numeric($val)) {
-                                $val = json_encode($val);
-                            }
-                            echo htmlspecialchars($val);
-                            echo '</dd>';
-                        }
-                    }
-                    echo '</dl></details>';
+                // Full custom metrics
+                $customPageData = @$pageData[$run][$cached]['custom'];
+                if (!empty($customPageData) && is_array($customPageData)) {
+                    echo view('snippets.custommetrics', [
+                        'data' => $pageData[$run][$cached],
+                    ]);
                 }
-
-
-
 
                 if (isset($testRunResults)) {
                     echo '<div class="cruxembed">';
