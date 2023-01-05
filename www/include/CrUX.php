@@ -88,13 +88,13 @@ function RealUserMeasurementCruxTitle($pageData)
         $startDate = date('F j\, Y', mktime(0, 0, 0, $firstDate['month'], $firstDate['day'], $firstDate['year']));
         $endDate = date('F j\, Y', mktime(0, 0, 0, $lastDate['month'], $lastDate['day'], $lastDate['year']));
         // Example: Real User Measurements (Collected anonymously by Chrome browser via Chrome User Experience Report, between October 15, 2022 and September 18, 2022)
-        return sprintf('<h3 class="hed_sub"> 
-                            Real User Measurements 
+        return sprintf('<h3 class="hed_sub">
+                            Real User Measurements
                             <em>(Collected anonymously by Chrome browser via Chrome User Experience Report, between %s and %s)</em>
                         </h3>', $startDate, $endDate);
     } else {
-        return '<h3 class="hed_sub"> 
-                    Real User Measurements 
+        return '<h3 class="hed_sub">
+                    Real User Measurements
                     <em>(Collected anonymously by Chrome browser via Chrome User Experience Report)</em>
                 </h3>';
     }
@@ -216,6 +216,7 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     }
     $goodPct = intval(round($histogram[0]['density'] * 100));
     $fairPct = intval(round($histogram[1]['density'] * 100));
+    $poorPct = intval(round($histogram[2]['density'] * 100));
     $poorStart = $goodPct + $fairPct;
     $poorPct = 100 - $poorStart;
     $goodText = '';
@@ -264,9 +265,9 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     $svg = <<<EOD
 <svg viewBox="0 0 $image_width 80" version='1.1' xmlns='http://www.w3.org/2000/svg'>
 <svg x='10' width='$width' y='30' height='25'>
-    <rect x='0' width='100%' height='100%' fill='#009316' />
-    <rect x='$goodPct%' width='100%' height='100%' fill='#ffa400' />
-    <rect x='$poorStart%' width='100%' height='100%' fill='#ff4e42' />
+    <rect x='0' width='100%' height='100%' fill='#009316'><title>$goodPct%</title></rect>
+    <rect x='$goodPct%' width='100%' height='100%' fill='#ffa400'><title>$fairPct%</title></rect>
+    <rect x='$poorStart%' width='100%' height='100%' fill='#ff4e42'><title>$poorPct%</title></rect>
     $goodText
     $fairText
     $poorText
