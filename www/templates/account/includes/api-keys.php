@@ -3,10 +3,10 @@
     <div class="create-key-container">
         <div class="create-delete-button-container">
             <button type="button" class="new-api-key" data-toggle="open" data-targetid="create-api-key-toggle-area">New Api Key</button>
-            <label for="delete-api-key-submit-input" class="delete-key disabled" data-apikeybox="delete-button" disabled>Delete</label>
+            <label for="delete-api-key-submit-input" class="delete-key disabled" data-apikeybox="delete-button" disabled data-apikey-form-submit="delete">Delete</label>
         </div>
         <div class="toggleable" id="create-api-key-toggle-area">
-            <form method="POST" action="/account">
+            <form method="POST" action="/account" class="apikey-control" data-apikey-form="create">
                 <label for="api-key-name" class="sr-only">API Key Name</label>
                 <input type="text" name="api-key-name" placeholder="Enter Application Name" required />
                 <button type="submit">Save</button>
@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="info">
-        <form method='POST' action='/account'>
+        <form method='POST' action='/account' class="apikey-control" data-apikey-form="delete">
             <table class="sortable responsive-vertical-table selectable-table">
                 <caption>
                     <span class="sr-only">API Consumers table, column headers with buttons are sortable.</span>

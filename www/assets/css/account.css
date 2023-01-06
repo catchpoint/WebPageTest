@@ -2383,3 +2383,12 @@ form:invalid button[type="submit"] {
   width: 158px !important;
 }
 /** END Chargify form **/
+
+/** ApiKeyForm **/
+.apikey-control button[aria-disabled=true],
+[data-apikey-form-submit][aria-disabled] {
+  opacity: 0.3;
+  pointer-events: none;
+  cursor: auto;
+}
+/** END APiKeyForm **/
