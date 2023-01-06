@@ -12,7 +12,7 @@
                       $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
                       echo "<li><a href='/jsonResult.php?test=$id&highlight=1'>View Test JSON</a></li>";
-                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON (raw)</a></li>";
+                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON (unformatted)</a></li>";
                   if (is_file("$testPath/test.log")) {
                       echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
                   }
