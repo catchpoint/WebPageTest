@@ -95,7 +95,13 @@ if (isset($test['test']['batch']) && $test['test']['batch']) {
         ArchiveApi($id);
     }
 
-    json_response($ret);
+    if (!empty($_REQUEST['highlight'])) {
+        echo view('jsonhighlight', [
+            'json' => json_encode($ret, JSON_PRETTY_PRINT),
+        ]);
+    } else {
+        json_response($ret);
+    }
 }
 
 function getRequestInfoFlags()

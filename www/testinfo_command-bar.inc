@@ -1,8 +1,8 @@
 <div class="test_meta_commands">
-                
+
                 <p class="results_nav_hed">Tools:</p>
-                
-               
+
+
                 <details>
                 <summary>Export</summary>
                   <ul class="testinfo_artifacts-list">
@@ -11,7 +11,8 @@
                       $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                       $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
-                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON</a></li>";
+                      echo "<li><a href='/jsonResult.php?test=$id&highlight=1'>View Test JSON</a></li>";
+                      echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON (raw)</a></li>";
                   if (is_file("$testPath/test.log")) {
                       echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
                   }
