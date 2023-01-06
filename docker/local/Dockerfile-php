@@ -82,7 +82,10 @@ FROM php:7.4-fpm-alpine
 ENV PATH=/opt/ffmpeg/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 
-RUN apk add --no-cache supervisor beanstalkd zip libzip python3 libtheora rtmpdump x264-dev x265-dev \
+RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories \
+    && echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+
+RUN apk add --no-cache rav1e-dev supervisor beanstalkd zip libzip python3 libtheora rtmpdump x264-dev x265-dev \
     libpng libjpeg imagemagick imagemagick-libs imagemagick-dev libass librtmp libvpx libwebp lame pcre \
     libogg libvorbis exiftool libjpeg-turbo-utils freetype zlib x264-libs x265 libzip opus bash libgomp \
     && apk add --no-cache --virtual .build-deps zlib-dev libpng-dev jpeg-dev freetype-dev \

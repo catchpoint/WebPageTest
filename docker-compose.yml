@@ -4,7 +4,7 @@ version: '3.6'
 services:
 
   web:
-    build: 
+    build:
       context: .
       dockerfile: docker/local/Dockerfile-nginx
     # privileged: true
@@ -25,15 +25,15 @@ services:
         target: /var/www/webpagetest/settings/keys.ini
 
   php:
-    build: 
+    build:
       context: .
       dockerfile: docker/local/Dockerfile-php
       args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
+        - UID=${UID:-1001}
+        - GID=${GID:-1001}
     # user: "1000:1000"
     # privileged: true
-    extra_hosts: # Needed for xdebug 
+    extra_hosts: # Needed for xdebug
       - "host.docker.internal:host-gateway"
     expose:
       - 9000
