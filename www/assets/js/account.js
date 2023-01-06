@@ -532,6 +532,30 @@
   window.DeleteApiKeyBoxSet = DeleteApiKeyBoxSet;
 })(window);
 
+((window) => {
+  class ApiKeyForm {
+    constructor(element) {
+      this.form = element;
+      const formType = element.getAttribute('data-apikey-form');
+      const submitButton = document.querySelector(`[data-apikey-form-submit=${formType}]`);
+      this.submit = submitButton ? submitButton : element.querySelector('[type=submit]');
+
+      this.form.addEventListener('submit', this.preventDoubleClick.bind(this));
+    }
+    preventDoubleClick(e) {
+      e.preventDefault();
+      this.submit.classList.add("disabled");
+      this.submit.setAttribute("disabled", "disabled");
+      this.submit.setAttribute("aria-disabled", "true");
+      this.submit.disabled = true;
+      this.submit.textContent = "Submitting...";
+      this.form.submit();
+    }
+  }
+
+  window.ApiKeyForm = ApiKeyForm;
+})(window);
+
 /**
  * Attach all the listeners
  */
@@ -701,6 +725,11 @@
     );
     for (var i = 0; i < deleteApiKeyBoxes.length; i++) {
       new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
+    }
+
+    const apiKeyForms = document.querySelectorAll('form[data-apikey-form]');
+    for (let i = 0; i < apiKeyForms.length; i++) {
+      new ApiKeyForm(apiKeyForms[i]);
     }
 
     attachListenerToBillingFrequencySelector();
