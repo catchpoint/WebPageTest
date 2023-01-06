@@ -777,7 +777,7 @@ $page_description = "Website performance test result$testLabel.";
         btn.innerText = "Expand All"; 
         section.append(btn);
         btn.addEventListener("click", () => { 
-            this.closest(".util_overflow_more").className.add("util_overflow_more-expanded");
+            btn.closest(".util_overflow_more").classList.add("util_overflow_more-expanded");
         });
     });
 
