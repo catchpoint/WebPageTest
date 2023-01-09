@@ -9179,10 +9179,6 @@ p.lh-filteraudits {
   display: block;
 }
 
-.results_main-lh .lh-subitem td:first-child {
-  padding-left: 30px;
-}
-
 .lh-chain,
 .experiments_details_body ol.lh-chain {
   font-size: 0.9em;
