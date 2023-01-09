@@ -8634,8 +8634,14 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 }
 
 .glossary dt {
-  font-weight: bold;
   padding: 10px 0;
+  font-weight: 300;
+  font-size: 0.8em;
+  text-transform: uppercase;
+}
+
+.glossary dd {
+  margin-left: 0;
 }
 
 .glossary li {
@@ -8653,6 +8659,13 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 .table-cell-error {
   background: red;
 }
+
+.scrollableLine {
+  overflow: scroll;
+  height: 2em;
+  white-space: nowrap;
+}
+
 /* Prism.js overwrite */
 pre[class*="language-"] {
   background: none !important;
