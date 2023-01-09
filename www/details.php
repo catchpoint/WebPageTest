@@ -148,7 +148,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 // Full custom metrics
                 $customPageData = @$pageData[$run][$cached]['custom'];
                 if (!empty($customPageData) && is_array($customPageData)) {
-                    echo view('snippets.custommetrics', [
+                    echo view('partials.custommetrics', [
                         'data' => $pageData[$run][$cached],
                     ]);
                 }

@@ -2,7 +2,12 @@
     <details>
         <summary>
             <div class="summary_text">
-                <div>{!! md($audit->title) !!}@if($audit->relevantExperiment) @include('partials.auditExperiment') @endif</div>
+                <div>
+                    {!! md($audit->title) !!}
+                    @if($audit->relevantExperiment)
+                        @include('partials.lighthouse.auditExperiment')
+                    @endif
+                </div>
                 @if ($audit->displayValue)
                     @if (isset($audit->details->overallSavingsMs) && $audit->details->overallSavingsMs > 0)
                     <p>Estimated savings {{ round($audit->details->overallSavingsMs / 1000, 2) }} s</p>
@@ -21,7 +26,7 @@
                 @endif
 
                 @if ($audit->details)
-                @include('partials.details')
+                @include('partials.lighthouse.details')
                 @endif
             </div>
     </details>

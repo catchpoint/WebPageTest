@@ -1,6 +1,6 @@
 @if ($audit->details->type === "criticalrequestchain")
 <ol class="lh-chain">
-    @each('partials.requestchain', $audit->details->chains, 'chain')
+    @each('partials.lighthouse.requestchain', $audit->details->chains, 'chain')
 </ol>
 @endif
 @if (count($audit->details->headings) && ($audit->details->type === "table" || $audit->details->type === "opportunity") )

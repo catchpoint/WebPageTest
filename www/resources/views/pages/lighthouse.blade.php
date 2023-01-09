@@ -68,7 +68,7 @@ if (navigator.clipboard) {
                 <p>
 
                     Lighthouse is an open-source, automated tool for improving the quality of web pages.
-                    You can run it against any web page, public or requiring authentication. Overall scoring color key: 
+                    You can run it against any web page, public or requiring authentication. Overall scoring color key:
                     (<span class="lh_score_grade-fail">0-49</span>
                     <span class="lh_score_grade-average">50-89</span>
                     <span class="lh_score_grade-pass">90-100</span>).
@@ -187,7 +187,7 @@ if (navigator.clipboard) {
                             <h4>{{ $groupTitles[$cat_id] }} ({{ count($cat_audits) }})</h4>
                             <ol>
                                 @foreach ($cat_audits as $audit)
-                                @include('partials.audititem')
+                                @include('partials.lighthouse.audititem')
                                 @endforeach
                             </ol>
                             @endif

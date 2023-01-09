@@ -97,7 +97,7 @@ class PerformanceOptimizationHtmlSnippet
             ];
         }
 
-        return view('snippets.optimizationchecklist', [
+        return view('partials.optimizationchecklist', [
             'headers' => $headers,
             'pageData' => $this->stepResult->getRawResults(),
             'rows' => $rows,
