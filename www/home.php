@@ -539,9 +539,6 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                                                                                                 } ?> value="1">First View Only</label>
                                                     </fieldset>
                                                 </li>
-                                                <li>
-                                                    <label for="videoCheck"><input type="checkbox" name="video" id="videoCheck" class="checkbox" checked=checked> Capture Video</label>
-                                                </li>
                                                 <?php if ($is_paid) : ?>
                                                     <li>
                                                         <label for="private-advanced"><input type="checkbox" name="private" id="private-advanced" class="checkbox"> Make Test Private</label>

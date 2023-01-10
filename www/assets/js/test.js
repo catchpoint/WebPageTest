@@ -116,8 +116,6 @@ function ValidateInput(form, remainingRuns) {
 })(jQuery);
 
 function RestoreSettings() {
-  if (wptStorage["testVideo"] != undefined)
-    $("#videoCheck").prop("checked", wptStorage["testVideo"]);
   if (wptStorage["testTimeline"] != undefined)
     $("#timeline").prop("checked", wptStorage["testTimeline"]);
   if (wptStorage["testLoc"] != undefined)
@@ -127,7 +125,6 @@ function RestoreSettings() {
 }
 
 function SaveSettings() {
-  wptStorage["testVideo"] = $("#videoCheck").is(":checked");
   wptStorage["testTimeline"] = $("#timeline").is(":checked");
 }
 
