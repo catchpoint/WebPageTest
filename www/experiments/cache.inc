@@ -7,11 +7,11 @@ if (isset($pageData['score_cache'])) {
     foreach ($requests as $index => &$request) {
         if (isset($request['score_cache']) && $request['score_cache'] >= 0 && $request['score_cache'] < 100) {
             $key = $request['cache_time'] . ' ' . $request['host'] . ' ' . $index;
-
+            
             if ($request['score_cache'] < 50) {
-                $value = 'FAILED - ';
+                $value = 'FAILED ';
             } else {
-                $value = 'WARNING - ';
+                $value = 'WARNING ';
             }
 
             $time = 'No max-age or expires';
@@ -31,7 +31,7 @@ if (isset($pageData['score_cache'])) {
             if ($request['is_secure']) {
                 $proto = 'https://';
             }
-            $value = "$time: " . $proto . $request['host'] . $request['url'];
+            $value .= "($time): " . $proto . $request['host'] . $request['url'];
             $needCache[$key] = $value;
         }
     }
@@ -39,18 +39,18 @@ if (isset($pageData['score_cache'])) {
     ksort($needCache);
 }
 
-
+$cacheOppDesc = "Cache settings can instruct browsers and intermediaries to store recent versions of a site's static files  (JavaScript, CSS, Images, fonts...) for reuse, reducing page weight and latency.";
 if (count($needCache) > 0) {
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  count($needCache) . " file" . (count($needCache) > 1 ? "s have" : " has") . " inadequate cache settings.",
-        "desc" =>  "Cache settings can instruct browsers and intermediaries to store recent versions of a site's files for reuse, reducing page weight and latency.",
+        "title" =>  count($needCache) . " static file" . (count($needCache) > 1 ? "s have" : " has") . " inadequate cache settings.",
+        "desc" =>  $cacheOppDesc,
         "examples" =>  $needCache,
         "good" =>  false
     );
 } else {
     $assessment[$category]["opportunities"][] = array(
-        "title" =>  'This site\'s files are configured for optimal caching.',
-        "desc" =>  "Cache settings can instruct browsers and intermediaries to store recent versions of a site's files for reuse, reducing page weight and latency.",
+        "title" =>  'This site\'s static files are configured for optimal caching.',
+        "desc" =>  $cacheOppDesc,
         "examples" =>  array(),
         "good" =>  true
     );
