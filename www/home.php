@@ -968,10 +968,15 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <label for="bulkurls" class="full_width">
                                                         List of URLs to test (one URL per line)...
                                                     </label>
+                                                    <small>
+                                                        Type in or read <label for="bulkurls_file" class="linklike">from a text file</label>
+                                                    </small>
+                                                    <input type="file" id="bulkurls_file" accept="text/*" class="a11y-hidden">
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('bulkurls_file', 'bulkurls'));
+                                                    </script>
                                                 </p>
                                                 <textarea class="large" name="bulkurls" id="bulkurls" cols="0" rows="0"></textarea><br>
-                                                <b>or</b><br>
-                                                upload list of URLs (one per line): <input type="file" name="bulkfile" size="40">
                                             </div>
                                         <?php } ?>
                                     </div>
@@ -1117,6 +1122,7 @@ function LoadLocations()
 // Determine if bulk testing should be shown
 function ShowBulk()
 {
+    return true;
     global $admin;
     global $USER_EMAIL;
     global $request_context;
