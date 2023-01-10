@@ -5,14 +5,14 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 
-require_once __DIR__ . '/optimization_detail.inc.php';
-require_once __DIR__ . '/breakdown.inc';
-require_once __DIR__ . '/testStatus.inc';
-require_once __DIR__ . '/common.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestResults.php';
-require_once __DIR__ . '/include/RunResultHtmlTable.php';
-require_once __DIR__ . '/include/TestResultsHtmlTables.php';
+require_once INCLUDES_PATH . '/optimization_detail.inc.php';
+require_once INCLUDES_PATH . '/breakdown.inc';
+require_once INCLUDES_PATH . '/testStatus.inc';
+require_once INCLUDES_PATH . '/common.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
+require_once INCLUDES_PATH . '/include/TestResultsHtmlTables.php';
 
 $breakdown = array();
 $testComplete = true;
@@ -131,8 +131,8 @@ $page_description = "Website performance test result$testLabel.";
                 </p>
 
                 <?php
-                include __DIR__ . '/experiments/common.inc';
-                include __DIR__ . '/experiments/summary.inc';
+                include INCLUDES_PATH . '/experiments/common.inc';
+                include INCLUDES_PATH . '/experiments/summary.inc';
 
                 ?>
                 </div>
@@ -272,7 +272,7 @@ $page_description = "Website performance test result$testLabel.";
             <?php
             if (isset($fvRunResults)) {
                 echo '<div class="cruxembed">';
-                require_once(__DIR__ . '/include/CrUX.php');
+                require_once(INCLUDES_PATH . '/include/CrUX.php');
                 InsertCruxHTML($fvRunResults, $rvRunResults, '');
                 echo '</div>';
             }
@@ -293,7 +293,7 @@ $page_description = "Website performance test result$testLabel.";
             ?>
             </div>
             </div>
-  <?php include(__DIR__ . '/cta-banner.inc'); ?>
+  <?php include(INCLUDES_PATH . '/cta-banner.inc'); ?>
               </div>
 
             <?php include('footer.inc'); ?>

@@ -10,7 +10,7 @@ class Util
 {
     private static array $SETTINGS = [];
     private const SETTINGS_KEY = 'settings';
-    private static string $settings_dir = __DIR__ . '/../settings';
+    private static string $settings_dir = SETTINGS_PATH;
 
     public function __construct()
     {
@@ -757,7 +757,7 @@ class Util
      */
     public static function getCountryJsonBlob(): string
     {
-        $file = file_get_contents(__DIR__ . '/../assets/js/country-list/country-list.json');
+        $file = file_get_contents(ASSETS_PATH . '/js/country-list/country-list.json');
 
         return $file;
     }

@@ -4,10 +4,10 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/../common_lib.inc';
-require_once __DIR__ . '/../object_detail.inc';
-require_once __DIR__ . '/../include/TestResults.php';
-require_once __DIR__ . '/../include/Browser.php';
+require_once INCLUDES_PATH . '/common_lib.inc';
+require_once INCLUDES_PATH . '/object_detail.inc';
+require_once INCLUDES_PATH . '/include/TestResults.php';
+require_once INCLUDES_PATH . '/include/Browser.php';
 
 /**
  * Creates HttpArchives from test data.

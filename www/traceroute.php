@@ -175,7 +175,7 @@ $page_description = "Test network path from multiple locations around the world 
             </form>
 
             <?php
-            include(__DIR__ . '/include/home-subsections.inc');
+            include(INCLUDES_PATH . '/include/home-subsections.inc');
             ?>
             <?php include('footer.inc'); ?>
             </div><!--home_content_contain-->

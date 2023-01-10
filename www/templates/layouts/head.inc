@@ -57,12 +57,12 @@
 </style>
 <?php
 
-if (file_exists(__DIR__ . '/../../settings/server/customhead.inc.php')) {
-    include(__DIR__ . '/../../settings/server/customhead.inc.php');
-} elseif (file_exists(__DIR__ . '/../../settings/common/customhead.inc.php')) {
-    include(__DIR__ . '/../../settings/common/customhead.inc.php');
-} elseif (file_exists(__DIR__ . '/../../settings/customhead.inc.php')) {
-    include(__DIR__ . '/../../settings/customhead.inc.php');
+if (file_exists(SETTINGS_PATH . '/server/customhead.inc.php')) {
+    include(SETTINGS_PATH . '/server/customhead.inc.php');
+} elseif (file_exists(SETTINGS_PATH . '/common/customhead.inc.php')) {
+    include(SETTINGS_PATH . '/common/customhead.inc.php');
+} elseif (file_exists(SETTINGS_PATH . '/customhead.inc.php')) {
+    include(SETTINGS_PATH . '/customhead.inc.php');
 }
 ?>
 
@@ -107,8 +107,8 @@ if ($privateInstall) {
 }
 
 // include a custom style if one exists
-if (is_file(__DIR__ . '/../../settings/custom.css')) {
-    include(__DIR__ . '/../../settings/custom.css');
+if (is_file(SETTINGS_PATH . '/custom.css')) {
+    include(SETTINGS_PATH . '/custom.css');
 }
 
 echo "\n</style>\n";
@@ -116,12 +116,12 @@ echo "\n</style>\n";
 // include the analytics code if it is appropriate
 if (!isset($noanalytics)) {
     echo '<script>';
-    require_once __DIR__ . '/../../assets/js/vendor/catchpoint-rum.js';
+    require_once ASSETS_PATH . '/js/vendor/catchpoint-rum.js';
     echo '</script>';
 }
 
 if (isset($test_is_private) && !$test_is_private) {
-    include __DIR__ . '/../../include/social_meta.php';
+    include INCLUDES_PATH . '/include/social_meta.php';
 }
 
 ?>

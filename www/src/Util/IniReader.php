@@ -8,7 +8,7 @@ class IniReader
 {
     public static function getExtensions(): array
     {
-        $file = __DIR__ . '/../../settings/extensions.ini';
+        $file = SETTINGS_PATH . '/extensions.ini';
         if (is_file($file)) {
             return parse_ini_file($file);
         }

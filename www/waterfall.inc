@@ -3,10 +3,10 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once __DIR__ . '/common_lib.inc';
-require_once __DIR__ . '/draw.inc';
-require_once __DIR__ . '/contentColors.inc';
-require_once __DIR__ . '/include/TestPaths.php';
+require_once INCLUDES_PATH . '/common_lib.inc';
+require_once INCLUDES_PATH . '/draw.inc';
+require_once INCLUDES_PATH . '/contentColors.inc';
+require_once INCLUDES_PATH . '/include/TestPaths.php';
 
 /**
  * Regroup requests into connection rows.

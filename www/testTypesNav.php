@@ -3,16 +3,16 @@
 $testTypes = array();
 // TODO comprehensive check
 if (
-    file_exists(__DIR__ . '/settings/profiles.ini') ||
-    file_exists(__DIR__ . '/settings/common/profiles.ini') ||
-    file_exists(__DIR__ . '/settings/server/profiles.ini')
+    file_exists(SETTINGS_PATH . '/profiles.ini') ||
+    file_exists(SETTINGS_PATH . '/common/profiles.ini') ||
+    file_exists(SETTINGS_PATH . '/server/profiles.ini')
 ) {
     $testTypes['Site Performance'] = '/';
 }
 if (
-    file_exists(__DIR__ . '/settings/profiles_webvitals.ini') ||
-        file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini') ||
-        file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')
+    file_exists(SETTINGS_PATH . '/profiles_webvitals.ini') ||
+        file_exists(SETTINGS_PATH . '/common/profiles_webvitals.ini') ||
+        file_exists(SETTINGS_PATH . '/server/profiles_webvitals.ini')
 ) {
             $testTypes['Core Web Vitals'] = '/webvitals';
 }
@@ -36,5 +36,5 @@ unset($testTypes[$currNav]);
             }
             ?>
         </ul>
-    </span> 
+    </span>
     <span>Test!</span></h2>

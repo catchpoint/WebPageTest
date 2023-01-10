@@ -5,11 +5,11 @@
 // found in the LICENSE.md file.
 header("Content-type: image/png");
 include 'common.inc';
-require_once __DIR__ . '/object_detail.inc';
-require_once __DIR__ . '/page_data.inc';
-require_once __DIR__ . '/waterfall.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestStepResult.php';
+require_once INCLUDES_PATH . '/object_detail.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/waterfall.inc';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestStepResult.php';
 
 // not functional, but to declare what to expect from common.inc
 global $testPath, $run, $cached, $step, $id, $url, $test;

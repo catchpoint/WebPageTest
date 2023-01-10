@@ -20,12 +20,12 @@ if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a Website URL';
-$profile_file = __DIR__ . '/settings/profiles_webvitals.ini';
-if (file_exists(__DIR__ . '/settings/common/profiles_webvitals.ini')) {
-    $profile_file = __DIR__ . '/settings/common/profiles_webvitals.ini';
+$profile_file = SETTINGS_PATH . '/profiles_webvitals.ini';
+if (file_exists(SETTINGS_PATH . '/common/profiles_webvitals.ini')) {
+    $profile_file = SETTINGS_PATH . '/common/profiles_webvitals.ini';
 }
-if (file_exists(__DIR__ . '/settings/server/profiles_webvitals.ini')) {
-    $profile_file = __DIR__ . '/settings/server/profiles_webvitals.ini';
+if (file_exists(SETTINGS_PATH . '/server/profiles_webvitals.ini')) {
+    $profile_file = SETTINGS_PATH . '/server/profiles_webvitals.ini';
 }
 $profiles = parse_ini_file($profile_file, true);
 ?>

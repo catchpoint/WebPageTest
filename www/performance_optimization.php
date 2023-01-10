@@ -4,11 +4,11 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include __DIR__ . '/common.inc';
-require_once __DIR__ . '/include/TestInfo.php';
-require_once __DIR__ . '/include/TestRunResults.php';
-require_once __DIR__ . '/optimization_detail.inc.php';
-require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
-require_once __DIR__ . '/include/AccordionHtmlHelper.php';
+require_once INCLUDES_PATH . '/include/TestInfo.php';
+require_once INCLUDES_PATH . '/include/TestRunResults.php';
+require_once INCLUDES_PATH . '/optimization_detail.inc.php';
+require_once INCLUDES_PATH . '/include/PerformanceOptimizationHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Optimization','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance optimization recommendations$testLabel.";
@@ -124,7 +124,6 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
             <h3 class="hed_sub">Glossary</h3>
             <?php
-                require_once __DIR__ . '/resources/view.php';
                 echo view('partials.glossary', []);
             ?>
 

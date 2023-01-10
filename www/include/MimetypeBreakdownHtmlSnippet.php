@@ -4,8 +4,8 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once __DIR__ . '/BreakdownHtmlSnippet.php';
-require_once __DIR__ . '/ConnectionViewHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/BreakdownHtmlSnippet.php';
+require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
 
 class MimetypeBreakdownHtmlSnippet extends BreakdownHtmlSnippet
 {

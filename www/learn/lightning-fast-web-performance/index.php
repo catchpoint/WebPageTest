@@ -9,7 +9,7 @@
 
         $socialTitle = 'Lightning-Fast Web Performance Online Course from WebPageTest';
         $useScreenshot = true;
-        require_once __DIR__ . '/../../head.inc';
+        require_once INCLUDES_PATH . '/head.inc';
     ?>
     <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css">
 </head>
@@ -18,7 +18,7 @@
 
     <?php
      $tab = 'Resources';
-     require_once __DIR__ . '/../../templates/layouts/includes/wpt-header.php';
+     require_once WWW_PATH . '/templates/layouts/includes/wpt-header.php';
 
 
 
@@ -483,7 +483,7 @@ EOT;
     </div>
     </div>
 
-    <?php require_once __DIR__ . '/../../footer.inc'; ?>
+    <?php require_once INCLUDES_PATH . '/footer.inc'; ?>
 
 </body>
 <script>
