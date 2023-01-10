@@ -125,7 +125,7 @@ $isMultistep = $testRunResults->countSteps() > 1;
             <h3 class="hed_sub">Glossary</h3>
             <?php
                 require_once __DIR__ . '/resources/view.php';
-                echo view('snippets.glossary', []);
+                echo view('partials.glossary', []);
             ?>
 
         </div>

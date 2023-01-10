@@ -11,7 +11,7 @@
     </span>
     @if ($chain->children)
     <ol>
-        @each('partials.requestchain', $chain->children, 'chain')
+        @each('partials.lighthouse.requestchain', $chain->children, 'chain')
     </ol>
     @endif
 </li>
