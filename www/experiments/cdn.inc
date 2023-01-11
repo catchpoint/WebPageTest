@@ -1,9 +1,9 @@
 <?php
 
 $category = "Quick";
-$pageData = $testStepResult->getRawResults();
+$rawResults = $testStepResult->getRawResults();
 $needCDN = array();
-if (isset($pageData['score_cdn']) ) {
+if (isset($rawResults['score_cdn']) ) {
     foreach ($requests as $index => &$request) {
         if (isset($request['score_cdn']) && $request['score_cdn'] >= 0 && $request['score_cdn'] < 100) {
             $key = $request['host'] . ' ' . $index;
@@ -13,7 +13,7 @@ if (isset($pageData['score_cdn']) ) {
             }
             $value = $proto . $request['host'] . $request['url'];
             $needCDN[$key] = $value;
-        } 
+        }
     }
     ksort($needCDN);
 }

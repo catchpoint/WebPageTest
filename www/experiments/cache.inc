@@ -1,13 +1,13 @@
 <?php
 
 $category = "Quick";
-$pageData = $testStepResult->getRawResults();
+$rawResults = $testStepResult->getRawResults();
 $needCache = array();
-if (isset($pageData['score_cache'])) {
+if (isset($rawResults['score_cache'])) {
     foreach ($requests as $index => &$request) {
         if (isset($request['score_cache']) && $request['score_cache'] >= 0 && $request['score_cache'] < 100) {
             $key = $request['cache_time'] . ' ' . $request['host'] . ' ' . $index;
-            
+
             if ($request['score_cache'] < 50) {
                 $value = 'FAILED ';
             } else {
