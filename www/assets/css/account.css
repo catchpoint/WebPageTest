@@ -2389,7 +2389,7 @@ form:invalid button[type="submit"] {
 /** END Chargify form **/
 
 /** ApiKeyForm **/
-.apikey-control button[aria-disabled=true],
+.apikey-control button[aria-disabled="true"],
 [data-apikey-form-submit][aria-disabled] {
   opacity: 0.3;
   pointer-events: none;

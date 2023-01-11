@@ -747,7 +747,8 @@ final class AccountTest extends TestCase
 
         $req = new RequestContext([]);
         $user = new User();
-        $user->setPaid(true);
+        $user->setPaidClient(true);
+        $user->setPaymentStatus('ACTIVE');
         $user->setUserId(12345);
         $req->setUser($user);
 
@@ -765,7 +766,7 @@ final class AccountTest extends TestCase
             'subscriptionId' => '',
             'wptPlanId' => '',
             'subscriptionPrice' => 10.00,
-            'status' => '',
+            'status' => 'ACTIVE',
             'wptPlanName' => '',
             'monthlyRuns' => 8
         ]);

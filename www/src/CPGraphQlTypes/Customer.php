@@ -139,7 +139,7 @@ class Customer
     }
     public function getStatus(): string
     {
-        return $this->status;
+        return $this->isCanceled() ? 'CANCELED' : $this->status;
     }
     public function getWptPlanName(): string
     {

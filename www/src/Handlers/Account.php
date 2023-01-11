@@ -6,6 +6,8 @@ namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
 use stdClass;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\ValidatorPatterns;
@@ -30,9 +32,38 @@ class Account
     public static function validateCanceledAccountSignup(array $post_body): object
     {
         $body = new stdClass();
-        $body->token = $post_body['nonce'];
         $body->is_upgrade = !empty($post_body['is-upgrade']);
-        $body->subscription_id = $post_body['subscription-id'];
+
+        $subscription_id = $post_body['subscription-id'] ?? "";
+        $nonce = $post_body['nonce'] ?? "";
+        $city = $post_body['city'] ?? "";
+        $country = $post_body['country'] ?? "";
+        $state = $post_body['state'] ?? "";
+        $street_address = $post_body['street-address'] ?? "";
+        $zipcode = $post_body['zipcode'] ?? "";
+
+        if (
+            empty($city) ||
+            empty($country) ||
+            empty($state) ||
+            empty($street_address) ||
+            empty($zipcode) ||
+            empty($nonce) ||
+            empty($subscription_id)
+        ) {
+            throw new ClientException("Please complete all required fields", "/account");
+        }
+
+        $body->subscription_id = $subscription_id;
+        $body->token = $nonce;
+        $body->address = new ChargifyAddressInput([
+          'city' => $city,
+          'country' => $country,
+          'state' => $state,
+          'street_address' => $street_address,
+          'zipcode' => $zipcode
+        ]);
+
         $body->plan = $post_body['plan'];
 
         return $body;
@@ -40,7 +71,7 @@ class Account
 
     public static function canceledAccountSignup(RequestContext $request_context, object $body): string
     {
-        $up = $request_context->getClient()->updatePaymentMethod($body->token);
+        $up = $request_context->getClient()->updatePaymentMethod($body->token, $body->address);
         $new = $up && $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
 
         if ($new) {
@@ -569,7 +600,7 @@ class Account
     public static function cancelSubscription(RequestContext $request_context): string
     {
 
-        $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
+        $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_UNSAFE_RAW);
 
         try {
             $request_context->getClient()->cancelWptSubscription($subscription_id);
@@ -607,7 +638,7 @@ class Account
         $vars = new stdClass();
 
         $name = $post_body['api-key-name'] ?? "";
-        $vars->name = filter_var($name, FILTER_SANITIZE_STRING);
+        $vars->name = filter_var($name, FILTER_UNSAFE_RAW);
 
         if (empty($vars->name)) {
             throw new ClientException('Valid name required for API key', '/account#api-consumers');
@@ -843,7 +874,7 @@ class Account
      *
      * @return string $contents the contents of the page
      */
-    public static function getAccountPage(RequestContext $request_context, string $page): string
+    public static function getAccountPage(RequestContext $request_context, string $page): Response
     {
         $error_message = $_SESSION['client-error'] ?? null;
 
@@ -949,14 +980,16 @@ class Account
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
 
-                return $tpl->render('billing/billing-cycle', $results);
+                $content = $tpl->render('billing/billing-cycle', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
             case 'update_plan':
                 if ($is_paid) {
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                     $results['oldPlan'] = $oldPlan;
                 }
-                return $tpl->render('plans/upgrade-plan', $results);
+                $content = $tpl->render('plans/upgrade-plan', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
@@ -973,7 +1006,9 @@ class Account
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                         $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
                         $results['renewaldate'] = $customer->getNextPlanStartDate();
-                        return $tpl->render('plans/plan-summary-upgrade', $results);
+
+                        $content = $tpl->render('plans/plan-summary-upgrade', $results);
+                        return new Response($content, Response::HTTP_OK);
                     } elseif ($is_canceled) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                         $results['is_canceled'] = $is_canceled;
@@ -982,16 +1017,21 @@ class Account
                         $results['ch_site'] = Util::getSetting('ch_site');
                         $results['is_upgrade'] = $plan->isUpgrade($oldPlan);
                         $results['subscription_id'] = $customer->getSubscriptionId();
-                        return $tpl->render('plans/plan-summary', $results);
+
+                        $content = $tpl->render('plans/plan-summary', $results);
+                        return new Response($content, Response::HTTP_OK);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
-                        return $tpl->render('plans/plan-summary', $results);
+
+                        $content = $tpl->render('plans/plan-summary', $results);
+                        return new Response($content, Response::HTTP_OK);
                     }
                     break;
                 } else {
                   //TODO redirect instead
-                    return $tpl->render('plans/upgrade-plan', $results);
+                    $content = $tpl->render('plans/upgrade-plan', $results);
+                    return new Response($content, Response::HTTP_OK);
                     break;
                 }
             case 'update_payment_method':
@@ -999,7 +1039,7 @@ class Account
                     $host = $request_context->getHost();
                     $protocol = $request_context->getUrlProtocol();
                     $redirect_uri = "{$protocol}://{$host}/account";
-                    header("Location: {$redirect_uri}");
+                    return new RedirectResponse($redirect_uri);
                     exit();
                 }
                 $results['plan'] = $customer->getWptPlanId();
@@ -1025,8 +1065,9 @@ class Account
 
                 $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
 
-                return $tpl->render('billing/update-payment-confirm-address', $results);
-              break;
+                $content = $tpl->render('billing/update-payment-confirm-address', $results);
+                return new Response($content, Response::HTTP_OK);
+                break;
             default:
                 $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$is_canceled);
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
@@ -1034,7 +1075,8 @@ class Account
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);
                 }
 
-                return $tpl->render('my-account', $results);
+                $content = $tpl->render('my-account', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
         }
 

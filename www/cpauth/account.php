@@ -145,6 +145,7 @@ if ($request_method === 'POST') {
 }
 
 $page = (string) filter_input(INPUT_GET, 'page', FILTER_UNSAFE_RAW);
-$contents = AccountHandler::getAccountPage($request_context, $page);
-echo $contents;
+$response = AccountHandler::getAccountPage($request_context, $page);
+$response->send();
+
 exit();
