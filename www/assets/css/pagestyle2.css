@@ -885,6 +885,7 @@ h4.experiments_list_hed-recs {
 }
 .experiments_list > li:target {
   background: #f8f7e0;
+  scroll-padding-top: 4rem;
 }
 
 .experiment_description code {
@@ -2209,6 +2210,18 @@ footer ul {
   .experiments_details_body {
     padding-left: 2rem;
   }
+}
+
+.experiment_description_go > label.experiment_pair_value textarea[data-fullscreenfocus=true]:focus {
+  position: fixed;
+  top: 10vh;
+  left: 10vw;
+  right: 10vw;
+  bottom: 10vh;
+  z-index: 999999;
+  box-shadow: 0 0 0 11vw rgba(0,0,0,.3);
+  height: 80vh;
+  width: 80vw;
 }
 
 @media (max-width: 50em) {
