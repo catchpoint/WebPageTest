@@ -30,45 +30,6 @@ function documentRelativePath($url, $path)
 if ($metaInfo) {
     $assessmentData = $metaInfo['experiment']['assessment'];
 }
-$assessment = array(
-    "Quick" => array(
-        "grade" => "",
-        "sentiment" => "",
-        "summary" => "",
-        "opportunities" => array(),
-        "num_recommended" => 0,
-        "num_experiments" => 0
-    ),
-    "Usable" => array(
-        "grade" => "",
-        "sentiment" => "",
-        "summary" => "",
-        "opportunities" => array(),
-        "num_recommended" => 0,
-        "num_experiments" => 0
-    ),
-    "Resilient" => array(
-        "grade" => "",
-        "sentiment" => "",
-        "summary" => "",
-        "opportunities" => array(),
-        "num_recommended" => 0,
-        "num_experiments" => 0
-    ),
-    "Custom" => array(
-        "grade" => "",
-        "sentiment" => "Advanced!",
-        "summary" => "",
-        "opportunities" => array(),
-        "num_recommended" => 0,
-        "num_experiments" => 0
-    )
-);
-
-
-
-
-
 
 // define $lcp for future experiments
 if (!$testStepResult && isset($tests)) {
@@ -113,38 +74,39 @@ function initiatedByRoot($request)
 }
 
 
+require_once EO_PATH . '/AssesmentRegistry.php';
+
 // quick
-include __DIR__ . '/slow-ttfb.inc';
-include __DIR__ . '/render-blocking-scripts.inc';
-include __DIR__ . '/render-blocking-css.inc';
-include __DIR__ . '/lcp.inc';
-include __DIR__ . '/imgs-lazy-loaded.inc';
-include __DIR__ . '/imgs-lazy-loadable.inc';
-include __DIR__ . '/font-rendering.inc';
-include __DIR__ . '/fonts-3rdparty.inc';
-include __DIR__ . '/unused-preloads.inc';
-include __DIR__ . '/cdn.inc';
-include __DIR__ . '/cache.inc';
-include __DIR__ . '/http-redirects.inc';
+require_once EO_PATH . '/slow-ttfb.inc';
+require_once EO_PATH . '/render-blocking-scripts.inc';
+require_once EO_PATH . '/render-blocking-css.inc';
+require_once EO_PATH . '/lcp.inc';
+require_once EO_PATH . '/imgs-lazy-loaded.inc';
+require_once EO_PATH . '/imgs-lazy-loadable.inc';
+require_once EO_PATH . '/font-rendering.inc';
+require_once EO_PATH . '/fonts-3rdparty.inc';
+require_once EO_PATH . '/unused-preloads.inc';
+require_once EO_PATH . '/cdn.inc';
+require_once EO_PATH . '/cache.inc';
+require_once EO_PATH . '/http-redirects.inc';
 
 // usable
-include __DIR__ . '/layout-shifts.inc';
-include __DIR__ . '/tbt.inc';
-include __DIR__ . '/meta-viewport.inc';
-include __DIR__ . '/axe-warnings.inc';
+require_once EO_PATH . '/layout-shifts.inc';
+require_once EO_PATH . '/tbt.inc';
+require_once EO_PATH . '/meta-viewport.inc';
+require_once EO_PATH . '/axe-warnings.inc';
 
 // resilient
-include __DIR__ . '/render-blocking-3rd-party.inc';
-include __DIR__ . '/security-jslibs.inc';
-include __DIR__ . '/insecure-requests.inc';
+require_once EO_PATH . '/render-blocking-3rd-party.inc';
+require_once EO_PATH . '/security-jslibs.inc';
+require_once EO_PATH . '/insecure-requests.inc';
 
 // all
-include __DIR__ . '/generated-content.inc';
+require_once EO_PATH . '/generated-content.inc';
 
-include __DIR__ . '/custom.inc';
+require_once EO_PATH . '/custom.inc';
 
-
-
+$assessment = AssesmentRegistry::getInstance()->getAll();
 
 // fill out high-level info in
 foreach ($assessment as $key => $cat) {
