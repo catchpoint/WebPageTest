@@ -1,5 +1,9 @@
 <?php
 
+
+
+$requests = $testStepResult->getRequests();
+
 $category = "Custom";
 $assessment[$category]["opportunities"][] = array(
     "title" =>  "Add HTML to document",
@@ -67,6 +71,26 @@ $assessment[$category]["opportunities"][] = array(
     "good" =>  null,
     "inputttext" => true
 );
+
+if( $requests[0]['body_url'] ){
+    $assessment[$category]["opportunities"][] = array(
+        "title" =>  "Edit Response HTML",
+        "desc" =>  "This experiment allows you to freely edit the text of the initial HTML response",
+        "examples" =>  array(),
+        "experiments" =>  array(
+            (object) [
+                'id' => '054',
+                'title' => 'Edit Response HTML',
+                "desc" => '<p>This experiment will replace the initial HTML with the submitted value as if it was served that way initially.</p>',
+                "expvar" => 'editresponsehtml',
+                'textinputvalue' => htmlentities(file_get_contents("https://www.webpagetest.org" . $requests[0]['body_url'])),
+                "fullscreenfocus" => true
+            ]
+        ),
+        "good" =>  null,
+        "inputttext" => true
+    );
+}
 
 
 $assessment[$category]["opportunities"][] = array(
