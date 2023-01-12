@@ -349,11 +349,13 @@ $page_description = "Website performance test result$testLabel.";
                                 } elseif ($exp->expvar && !$exp->expval && $textinput) {
                                     if ($experimentEnabled) {
                                         $placeholderEncodedVal = htmlentities('<script src="https://example.com/test.js"></script>');
+                                        $textinputvalue = $exp->textinputvalue ? $exp->textinputvalue : "";
+                                        $fullscreenfocus = $exp->fullscreenfocus ? "true" : "false";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
                                         <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
-                                        <label class="experiment_pair_value"><span>Value: </span><textarea name="{$expNum}-{$exp->expvar}[]" placeholder="{$placeholderEncodedVal}"></textarea></label>
+                                        <label class="experiment_pair_value"><span>Value: </span><textarea id="experiment-{$exp->id}-textarea" data-fullscreenfocus="{$fullscreenfocus}" name="{$expNum}-{$exp->expvar}[]">{$textinputvalue}</textarea></label>
 
                                         </div>
                                         EOT;
@@ -582,7 +584,7 @@ $page_description = "Website performance test result$testLabel.";
                                 }
                             }
                         }
-                        if( input && !(keyval[1] === 'on' && form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']")) ){
+                        if( input && !(keyval[1] === 'on' && form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']")) && keyval[1] !== "" ){
                             input.value = keyval[1];
                             input.setAttribute('data-hydrated', 'true');
                         }
