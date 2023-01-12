@@ -83,7 +83,7 @@ if( $requests[0]['body_url'] ){
                 'title' => 'Edit Response HTML',
                 "desc" => '<p>This experiment will replace the initial HTML with the submitted value as if it was served that way initially.</p>',
                 "expvar" => 'editresponsehtml',
-                'textinputvalue' => htmlentities(file_get_contents("https://next.webpagetest.org" . $requests[0]['body_url'])),
+                'textinputvalue' => htmlentities(file_get_contents("https://www.webpagetest.org" . $requests[0]['body_url'])),
                 "fullscreenfocus" => true
             ]
         ),
