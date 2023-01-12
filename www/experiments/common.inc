@@ -74,37 +74,37 @@ function initiatedByRoot($request)
 }
 
 
-require_once EO_PATH . '/AssesmentRegistry.php';
+require_once OE_PATH . '/AssesmentRegistry.php';
 
 // quick
-require_once EO_PATH . '/slow-ttfb.inc';
-require_once EO_PATH . '/render-blocking-scripts.inc';
-require_once EO_PATH . '/render-blocking-css.inc';
-require_once EO_PATH . '/lcp.inc';
-require_once EO_PATH . '/imgs-lazy-loaded.inc';
-require_once EO_PATH . '/imgs-lazy-loadable.inc';
-require_once EO_PATH . '/font-rendering.inc';
-require_once EO_PATH . '/fonts-3rdparty.inc';
-require_once EO_PATH . '/unused-preloads.inc';
-require_once EO_PATH . '/cdn.inc';
-require_once EO_PATH . '/cache.inc';
-require_once EO_PATH . '/http-redirects.inc';
+require_once OE_PATH . '/slow-ttfb.inc';
+require_once OE_PATH . '/render-blocking-scripts.inc';
+require_once OE_PATH . '/render-blocking-css.inc';
+require_once OE_PATH . '/lcp.inc';
+require_once OE_PATH . '/imgs-lazy-loaded.inc';
+require_once OE_PATH . '/imgs-lazy-loadable.inc';
+require_once OE_PATH . '/font-rendering.inc';
+require_once OE_PATH . '/fonts-3rdparty.inc';
+require_once OE_PATH . '/unused-preloads.inc';
+require_once OE_PATH . '/cdn.inc';
+require_once OE_PATH . '/cache.inc';
+require_once OE_PATH . '/http-redirects.inc';
 
 // usable
-require_once EO_PATH . '/layout-shifts.inc';
-require_once EO_PATH . '/tbt.inc';
-require_once EO_PATH . '/meta-viewport.inc';
-require_once EO_PATH . '/axe-warnings.inc';
+require_once OE_PATH . '/layout-shifts.inc';
+require_once OE_PATH . '/tbt.inc';
+require_once OE_PATH . '/meta-viewport.inc';
+require_once OE_PATH . '/axe-warnings.inc';
 
 // resilient
-require_once EO_PATH . '/render-blocking-3rd-party.inc';
-require_once EO_PATH . '/security-jslibs.inc';
-require_once EO_PATH . '/insecure-requests.inc';
+require_once OE_PATH . '/render-blocking-3rd-party.inc';
+require_once OE_PATH . '/security-jslibs.inc';
+require_once OE_PATH . '/insecure-requests.inc';
 
 // all
-require_once EO_PATH . '/generated-content.inc';
+require_once OE_PATH . '/generated-content.inc';
 
-require_once EO_PATH . '/custom.inc';
+require_once OE_PATH . '/custom.inc';
 
 $assessment = AssesmentRegistry::getInstance()->getAll();
 
