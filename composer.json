@@ -32,7 +32,7 @@
     "php": "^7.4.0||^8.0",
     "respect/validation": "^2.2",
     "league/commonmark": "^2.3",
-    "symfony/http-foundation": "^5.4"
+    "illuminate/http": "^8.83"
   },
   "extra": {
     "google/apiclient-services": [

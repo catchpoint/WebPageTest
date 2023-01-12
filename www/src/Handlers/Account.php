@@ -6,8 +6,11 @@ namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
 use stdClass;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+
+use Illuminate\Http\Response;
+use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\Cookie;
+
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\ValidatorPatterns;
@@ -69,7 +72,7 @@ class Account
         return $body;
     }
 
-    public static function canceledAccountSignup(RequestContext $request_context, object $body): string
+    public static function canceledAccountSignup(RequestContext $request_context, object $body): RedirectResponse
     {
         $up = $request_context->getClient()->updatePaymentMethod($body->token, $body->address);
         $new = $up && $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
@@ -91,7 +94,7 @@ class Account
         $protocol = $request_context->getUrlProtocol();
         $host = $request_context->getHost();
         $redirect_uri = "{$protocol}://{$host}/account";
-        return $redirect_uri;
+        return new RedirectResponse($redirect_uri);
     }
 
     /* Validate that a plan is selected
@@ -120,15 +123,21 @@ class Account
     *
     *  @param WebPageTest\RequestContext $request_context
     *  @param object{plan: string} $body
-    *  @return string $redirect_uri
+    *  @return Symfony\Component\HttpFoundation\Response
     */
-    public static function postPlanUpgrade(RequestContext $request_context, object $body): string
+    public static function postPlanUpgrade(RequestContext $request_context, object $body): RedirectResponse
     {
         $host = $request_context->getHost();
-        setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account/plan_summary";
-        return $redirect_uri;
+        $response = new RedirectResponse($redirect_uri);
+        $cookie = Cookie::create('upgrade-plan')
+            ->withValue($body->plan)
+            ->withExpires(time() + (5 * 60))
+            ->withPath("/")
+            ->withDomain($host);
+        $response->headers->setCookie($cookie);
+        return $response;
     }
 
     /* validate PostUpdatePlanSummary
@@ -156,9 +165,9 @@ class Account
      *
      *  @param WebPageTest\RequestContext $request_context
      *  @param object{plan: string, subscription_id: string, is_upgrade: bool, runs: int} $body
-     *  @return string $redirect_uri
+     *  @return Symfony\Component\HttpFoundation\RedirectResponse
      */
-    public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
+    public static function postUpdatePlanSummary(RequestContext $request_context, object $body): RedirectResponse
     {
         $host = $request_context->getHost();
         $protocol = $request_context->getUrlProtocol();
@@ -177,7 +186,7 @@ class Account
                 $_SESSION['new-run-count'] = $body->runs;
             }
 
-            return "{$protocol}://{$host}/account";
+            return new RedirectResponse("{$protocol}://{$host}/account");
         } catch (\Exception $e) {
             error_log($e->getMessage());
             $error_message = [
@@ -185,8 +194,7 @@ class Account
                 'text' => 'There was an error updating your plan. Please try again or contact customer service.'
             ];
             $request_context->getBannerMessageManager()->put('form', $error_message);
-
-            return "{$protocol}://{$host}/account";
+            return new RedirectResponse("{$protocol}://{$host}/account");
         }
     }
 
@@ -872,7 +880,7 @@ class Account
      * @param WebPageTest\RequestContext $request_context
      * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
-     * @return string $contents the contents of the page
+     * @return Symfony\Component\HttpFoundation\Response
      */
     public static function getAccountPage(RequestContext $request_context, string $page): Response
     {

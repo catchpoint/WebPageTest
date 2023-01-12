@@ -63,8 +63,9 @@ final class AccountTest extends TestCase
         ];
 
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
-        $url = Account::postPlanUpgrade($req, $post_body);
-        $this->assertEquals('http://127.0.0.2/account/plan_summary', $url);
+        $response = Account::postPlanUpgrade($req, $post_body);
+
+        $this->assertEquals('http://127.0.0.2/account/plan_summary', $response->getTargetUrl());
     }
 
     public function testValidatePostUpdatePlanSummary(): void
@@ -130,9 +131,9 @@ final class AccountTest extends TestCase
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
         $req->setClient($client); // intelephense gets mad about MockObject getting passed here
         $req->setBannerMessageManager($bmm); // intelephense gets mad about MockObject getting passed here
-        $url = Account::postUpdatePlanSummary($req, $body);
+        $response = Account::postUpdatePlanSummary($req, $body);
 
-        $this->assertEquals('http://127.0.0.2/account', $url);
+        $this->assertEquals('http://127.0.0.2/account', $response->getTargetUrl());
     }
 
     public function testPostUpdatePlanSummaryError(): void
@@ -165,9 +166,9 @@ final class AccountTest extends TestCase
         $req = new RequestContext([], [], ['host' => '127.0.0.2']);
         $req->setClient($client); // intelephense gets mad about MockObject getting passed here
         $req->setBannerMessageManager($bmm); // intelephense gets mad about MockObject getting passed here
-        $url = Account::postUpdatePlanSummary($req, $body);
+        $response = Account::postUpdatePlanSummary($req, $body);
 
-        $this->assertEquals('http://127.0.0.2/account', $url);
+        $this->assertEquals('http://127.0.0.2/account', $response->getTargetUrl());
     }
 
     public function testValidateChangeContactInfo(): void
