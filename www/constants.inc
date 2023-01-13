@@ -11,6 +11,7 @@ define('TESTS_PATH', realpath(APP_ROOT . '/tests/'));
 define('INCLUDES_PATH', WWW_PATH); // same as www for now
 define('SETTINGS_PATH', realpath(WWW_PATH . '/settings/'));
 define('TEMP_DIR', realpath(WWW_PATH . '/tmp/'));
+define('OE_PATH', realpath(WWW_PATH . '/experiments/'));
 
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_TYPOGRAPHY_CSS', @md5_file(ASSETS_PATH . '/css/typography.css'));          // version of the typography css file
