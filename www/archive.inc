@@ -279,6 +279,9 @@ function DownloadArchive($id, $testServer)
 */
 function RestoreArchive($id)
 {
+    $isSaaSTest = (stripos($id, '_saas_') !== false);
+    $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
+
     $ret = false;
     if (TestArchiveExpired($id)) {
         return false;
@@ -292,9 +295,9 @@ function RestoreArchive($id)
     $lock = LockTest($id);
     if (isset($lock)) {
         $testInfo = GetTestInfo($id);
+
         if (!$testInfo && strpos($id, '.') === false && GetSetting('archive_dir') != '/dev/null') {
             $testPath = './' . GetTestPath($id);
-
             // Get the capture server settings if configured and the test ID specifies a capture server
             $capture_server = null;
             $capture_salt = null;
@@ -305,6 +308,12 @@ function RestoreArchive($id)
                     $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
                 }
             }
+            //saas tests do not specifiy capture server in the URL, so we'll hardcode it
+            if ($isSaaSTest) {
+                $capture_server = GetSetting("cp_capture_$saas_capture_prefix");
+                $capture_salt = GetSetting("cp_capture_salt_$saas_capture_prefix");
+            }
+
             $url = '';
             // see if we have an HTTP path where the file is archived
             if (!$capture_server || !$capture_salt) {
