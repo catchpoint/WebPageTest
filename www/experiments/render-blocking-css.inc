@@ -69,5 +69,5 @@
         ];
     }
 
-    AssesmentRegistry::getInstance()->register(AssesmentRegistry::Quick, $opp);
+    AssessmentRegistry::getInstance()->register(AssessmentRegistry::Quick, $opp);
 })();

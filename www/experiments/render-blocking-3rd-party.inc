@@ -92,5 +92,5 @@
         ];
     }
 
-    AssesmentRegistry::getInstance()->register(AssesmentRegistry::Resilient, $opp);
+    AssessmentRegistry::getInstance()->register(AssessmentRegistry::Resilient, $opp);
 })();

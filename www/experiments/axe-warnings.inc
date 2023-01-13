@@ -77,6 +77,6 @@
             ];
         }
 
-        AssesmentRegistry::getInstance()->register(AssesmentRegistry::Usable, $opp);
+        AssessmentRegistry::getInstance()->register(AssessmentRegistry::Usable, $opp);
     }
 })();

@@ -74,7 +74,7 @@ function initiatedByRoot($request)
 }
 
 
-require_once OE_PATH . '/AssesmentRegistry.php';
+require_once OE_PATH . '/AssessmentRegistry.php';
 
 // quick
 require_once OE_PATH . '/slow-ttfb.inc';
@@ -106,7 +106,7 @@ require_once OE_PATH . '/generated-content.inc';
 
 require_once OE_PATH . '/custom.inc';
 
-$assessment = AssesmentRegistry::getInstance()->getAll();
+$assessment = AssessmentRegistry::getInstance()->getAll();
 
 // fill out high-level info in
 foreach ($assessment as $key => $cat) {

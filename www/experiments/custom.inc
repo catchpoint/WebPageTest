@@ -1,6 +1,6 @@
 <?php
 
-AssesmentRegistry::getInstance()->register(AssesmentRegistry::Custom, [
+AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Add HTML to document",
     "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding scripts, 3rd-party tags, or resource hints.",
     "examples" =>  array(),
@@ -28,7 +28,7 @@ AssesmentRegistry::getInstance()->register(AssesmentRegistry::Custom, [
     "inputttext" => true,
 ]);
 
-AssesmentRegistry::getInstance()->register(AssesmentRegistry::Custom, [
+AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Find and Replace Text",
     "desc" =>  "This experiment allows you to find and replace arbitrary text or html in a request.",
     "examples" =>  array(),
@@ -64,7 +64,7 @@ AssesmentRegistry::getInstance()->register(AssesmentRegistry::Custom, [
     "good" =>  null,
     "inputttext" => true
 ]);
-AssesmentRegistry::getInstance()->register(AssesmentRegistry::Custom, [
+AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Delivery Optimizations",
     "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. Note expected syntax examples when using.",
     "examples" =>  array(),

@@ -8,7 +8,7 @@
     global $initialHost;
     global $id;
 
-    $registry = AssesmentRegistry::getInstance();
+    $registry = AssessmentRegistry::getInstance();
 
     $genContentSize = $testStepResult->getMetric('generated-content-size');
     $genContentPercent = $testStepResult->getMetric('generated-content-percent');
@@ -32,7 +32,7 @@
         if ($genContentSize > .5 || $genContentPercent > 1) {
             $amtNote = "(" . $genContentSize . "kb larger, or " . $genContentPercent . "% of total HTML)";
 
-            $registry->register(AssesmentRegistry::Quick, array(
+            $registry->register(AssessmentRegistry::Quick, array(
                 "title" =>  'Final HTML (DOM) size is significantly larger than initially delivered HTML ' . $amtNote . '.',
                 "desc" =>  'Typically this is due to over-reliance on JavaScript for generating content, but increases can also happen as a result of browsers normalizing HTML structure as well. When critical HTML content is generated with JavaScript in the browser, several performance bottlenecks can arise:',
                 "examples" =>  array(
@@ -52,7 +52,7 @@
                 "hideassets" => true
             ));
 
-            $registry->register(AssesmentRegistry::Usable, array(
+            $registry->register(AssessmentRegistry::Usable, array(
                 "title" =>  'Final HTML (DOM) size is significantly larger than initially delivered HTML ' . $amtNote . '.',
                 "desc" =>  'Typically this is due to over-reliance on JavaScript for generating content, but increases can also happen as a result of browsers normalizing HTML structure as well. When critical HTML content is generated with JavaScript in the browser, it can increase the time it takes for content to be made accessible to assistive technology such as screen readers.',
                 "examples" =>  array(),
@@ -66,7 +66,7 @@
                 "hideassets" => true
             ));
 
-            $registry->register(AssesmentRegistry::Resilient, array(
+            $registry->register(AssessmentRegistry::Resilient, array(
                 "title" =>  'Final HTML (DOM) size is significantly larger than initially delivered HTML ' . $amtNote . '.',
                 "desc" =>  'Typically this is due to over-reliance on JavaScript for generating content, but increases can also happen as a result of browsers normalizing HTML structure as well. Common issues such as JavaScript errors and third-party network delays and outages can present potential single points of failure.',
                 "examples" =>  array(),
@@ -98,7 +98,7 @@
                 "hideassets" => false
             ));
         } else {
-            $registry->register(AssesmentRegistry::Quick, array(
+            $registry->register(AssessmentRegistry::Quick, array(
                 "title" =>  'Final HTML (DOM) size is not significantly larger than the initial HTML.',
                 "desc" =>  "When critical HTML content is generated with JavaScript in the browser, several performance bottlenecks can arise.",
                 "examples" =>  array(),
@@ -106,7 +106,7 @@
                 "good" =>  true
             ));
 
-            $registry->register(AssesmentRegistry::Usable, array(
+            $registry->register(AssessmentRegistry::Usable, array(
                 "title" =>  'Final HTML (DOM) size is not significantly larger than the initial HTML.',
                 "desc" =>  "When critical HTML content is generated with JavaScript in the browser, it can increase the time it takes for content to be made accessible to assistive technology such as screen readers.",
                 "examples" =>  array(),
@@ -114,7 +114,7 @@
                 "good" =>  true
             ));
 
-            $registry->register(AssesmentRegistry::Resilient, array(
+            $registry->register(AssessmentRegistry::Resilient, array(
                 "title" =>  'Final HTML (DOM) size is not significantly larger than the initial HTML.',
                 "desc" =>  "When final HTML (DOM) size is significantly larger than initial HTML, it can reflect an over-reliance on JavaScript for generating content. Common issues such as JavaScript errors and third-party network delays and outages can present potential single points of failure.",
                 "examples" =>  array(),

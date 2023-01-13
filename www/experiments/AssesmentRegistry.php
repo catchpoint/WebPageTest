@@ -1,6 +1,6 @@
 <?php
 
-class AssesmentRegistry {
+class AssessmentRegistry {
     private static $instance = null;
 
     const Quick = 'Quick';
@@ -46,7 +46,7 @@ class AssesmentRegistry {
     public static function getInstance()
     {
         if (self::$instance === null) {
-            self::$instance = new AssesmentRegistry();
+            self::$instance = new AssessmentRegistry();
         }
 
         return self::$instance;

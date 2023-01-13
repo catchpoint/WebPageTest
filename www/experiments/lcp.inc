@@ -93,7 +93,7 @@
                 }
 
 
-                AssesmentRegistry::getInstance()->register(AssesmentRegistry::Quick, [
+                AssessmentRegistry::getInstance()->register(AssessmentRegistry::Quick, [
                     "title" =>  "Largest Contentful Paint is high (over 2.5s).",
                     "desc" =>  "The element driving your LCP is a" . ($isBG ? " background" : "n")  . " image. Some optimizations can help that image fetch earlier.",
                     "examples" =>  array(
@@ -104,7 +104,7 @@
                 ]);
             } // LCP was high but wasn't due to an Image. TBD!
             else {
-                AssesmentRegistry::getInstance()->register(AssesmentRegistry::Quick, [
+                AssessmentRegistry::getInstance()->register(AssessmentRegistry::Quick, [
                     "title" =>  'Largest Contentful Paint is high (over 2.5s).',
                     "desc" =>  "The HTML driving your LCP is " . ($lcpHTML ? $lcpHTML : "text-related."),
                     "examples" =>  array(),
@@ -118,7 +118,7 @@
                 ]);
             }
         } else {
-            AssesmentRegistry::getInstance()->register(AssesmentRegistry::Quick, [
+            AssessmentRegistry::getInstance()->register(AssessmentRegistry::Quick, [
                 "title" =>  'Largest Contentful Paint time was under 2.5 seconds',
                 "desc" =>  "Great job. If LCP was higher, WebPageTest would look for ways to speed it up.",
                 "examples" =>  array(),
