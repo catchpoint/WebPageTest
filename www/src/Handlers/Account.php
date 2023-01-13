@@ -6,11 +6,9 @@ namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
 use stdClass;
-
 use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\Cookie;
-
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\ValidatorPatterns;
