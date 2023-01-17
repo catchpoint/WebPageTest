@@ -1847,6 +1847,10 @@ ul.bulleted-list {
   margin-left: 2rem;
 }
 
+.desc p{
+  max-width: 55em;
+}
+
 @media (max-width: 85em) {
   .plan-selector .runs {
     height: 45px;
