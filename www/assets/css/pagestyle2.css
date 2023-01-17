@@ -1710,7 +1710,7 @@ footer ul {
   font-size: 0.9em;
 }
 
-@media (min-width: 75em) {
+@media (min-width: 85em) {
   footer {
     align-items: center;
     padding-right: 0;
