@@ -119,8 +119,9 @@ class RunResultHtmlTable
 
     public function create($repeatMetricLabels = false)
     {
+        $out = '';
         if (!$repeatMetricLabels) {
-            $out = '<div class="scrollableTable">';
+            $out .= '<div class="scrollableTable">';
             $out .= '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
             $out .= '<thead>' . $this->_createHead() . '</thead>';
         }
@@ -427,7 +428,7 @@ class RunResultHtmlTable
    */
     private function getRequestEndParam($stepResult)
     {
-        if (!$stepResult->isCachedRun() && $stepResult->getRunNumber() == $this->firstViewMedianRun && array_key_exists('end', $_REQUEST)) {
+        if (!$stepResult->isCachedRun() && array_key_exists('end', $_REQUEST)) {
             return $_REQUEST['end'];
         }
         return null;

@@ -32,7 +32,7 @@ function GetConnectionRows(&$requests, $show_labels = true)
                     'start' => $request['all_start'],
                     'end' => $request['all_end'],
                     'requests' => array($request),
-                    'renderBlocking' => $request['renderBlocking']
+                    'renderBlocking' => idx($request, 'renderBlocking'),
                 );
             } else {
                 $host_connections[$host][$socket]['end'] = $request['all_end'];
@@ -120,7 +120,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true)
             'is_secure' => $request['is_secure'],
             'requests' => array($request),
             'contentType' => $request['contentType'],
-            'renderBlocking' => $request['renderBlocking']
+            'renderBlocking' => idx($request, 'renderBlocking'),
         );
 
         $last_request_number = $request['number'];
@@ -944,7 +944,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         // Draw the request labels.
         foreach ($rows as $row) {
             $is_secure = $row['is_secure'];
-            $contentType = $row['contentType'];
+            $contentType = idx($row, 'contentType');
             $request_label = $row['label'];
             $blocking = $row['renderBlocking'];
             $text_color = $black;
@@ -1318,7 +1318,6 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors)
             // This is a request view and not a connection view.
             $request = current($row['requests']);
             $code = $request['responseCode'];
-            $blocking = $request['renderBlocking'];
             if ($code != 401 && ($code >= 400 || ($code < 0 && !$is_page_loaded))) {
                 $row['bg_color'] = $bg_colors['error'];
             } elseif ($code >= 300) {
