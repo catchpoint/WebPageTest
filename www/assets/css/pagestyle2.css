@@ -588,6 +588,12 @@ span.lh-flag.poor {
   background-clip: padding-box;
   position: relative;
 }
+/* this pseudo lets the results body padding kick in, as overflow: hidden had done, which we do not want to use */
+.results_body:before {
+  content: "";
+  display: block;
+  height: 1px;
+}
 
 @media (max-width: 87.5em) {
   .results_body {
