@@ -19,12 +19,13 @@ $url = '';
 if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
-    $placeholder = 'Enter a website URL...';
+$placeholder = 'Enter a website URL...';
+$lighthouse = [];
 if (file_exists('./settings/server/lighthouse.ini')) {
     $lighthouse = parse_ini_file('./settings/server/lighthouse.ini', true);
 } elseif (file_exists('./settings/common/lighthouse.ini')) {
     $lighthouse = parse_ini_file('./settings/common/lighthouse.ini', true);
-} else {
+} elseif (file_exists('./settings/lighthouse.ini')) {
     $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
 }
 ?>
@@ -97,7 +98,7 @@ if (file_exists('./settings/server/lighthouse.ini')) {
                                 <label for="location">Test Location:</label>
                                   <select name="location" id="location" onchange="profileChanged()">
                                   <?php
-                                    if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['locations']) && count($lighthouse['locations'])) {
+                                    if (!empty($lighthouse['locations'])) {
                                         foreach ($lighthouse['locations'] as $id => $label) {
                                             $selected = '';
                                             if ($id === $_COOKIE['lhloc']) {
