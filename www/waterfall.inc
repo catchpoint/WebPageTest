@@ -32,7 +32,7 @@ function GetConnectionRows(&$requests, $show_labels = true)
                     'start' => $request['all_start'],
                     'end' => $request['all_end'],
                     'requests' => array($request),
-                    'renderBlocking' => idx($request, 'renderBlocking'),
+                    'renderBlocking' => $request['renderBlocking'] ?? false,
                 );
             } else {
                 $host_connections[$host][$socket]['end'] = $request['all_end'];
@@ -120,7 +120,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true)
             'is_secure' => $request['is_secure'],
             'requests' => array($request),
             'contentType' => $request['contentType'],
-            'renderBlocking' => idx($request, 'renderBlocking'),
+            'renderBlocking' => $request['renderBlocking'] ?? false,
         );
 
         $last_request_number = $request['number'];
@@ -944,7 +944,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         // Draw the request labels.
         foreach ($rows as $row) {
             $is_secure = $row['is_secure'];
-            $contentType = idx($row, 'contentType');
+            $contentType = $row['contentType'] ?? null;
             $request_label = $row['label'];
             $blocking = $row['renderBlocking'];
             $text_color = $black;
