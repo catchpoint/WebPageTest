@@ -140,13 +140,13 @@ foreach ($assessment as $key => $cat) {
         $summary = "This site ";
         $ttfbCheck = $testStepResult->getMetric('TTFB');
         if ($ttfbCheck > 2000) {
-            $summary .= " was very slow";
+            $summary .= "was very slow";
         } elseif ($ttfbCheck > 1000) {
             $summary .= "took little time";
         } else {
             $summary .= "was quick";
         }
-        $summary .= " to connect and deliver initial code. It began rendering content ";
+        $summary .= " to connect and deliver initial code. It began rendering content";
 
         $fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
         $fcpCheck = $fcpCheck / 1000;
@@ -184,13 +184,13 @@ foreach ($assessment as $key => $cat) {
 
         $tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
         if (isset($tbtCheck)) {
-            $summary .= "It took ";
+            (isset($cls)) ? $summary .= " It took" : $summary .= "took";
             if ($tbtCheck > 2) {
-                $summary .= " a long time ";
+                $summary .= " a long time";
             } elseif ($tbtCheck > 1) {
-                $summary .= " some time ";
+                $summary .= " some time";
             } else {
-                $summary .= " little time ";
+                $summary .= " little time";
             }
             $summary .= " to become interactive. ";
         }
@@ -217,21 +217,20 @@ foreach ($assessment as $key => $cat) {
             }
         }
     } elseif ($key === "Resilient") {
-        $summary = "This site ";
         // build sentiment
         $summary = "This site ";
         if (isset($blocking3pReqs)) {
             if (count($blocking3pReqs) > 2) {
                 $summary .= "had many";
             } elseif (count($blocking3pReqs) > 0) {
-                $summary .= "had ";
+                $summary .= "had";
             } else {
                 $summary .= "had zero";
             }
             $summary .= " render-blocking 3rd party requests.";
         }
         if ($jsLibsVulns) {
-            $summary .= "It had $numVulns security issues";
+            (isset($blocking3pReqs)) ? $summary .= " It had $numVulns security issues" : $summary .= "had $numVulns security issues";
             if ($num_high > 0) {
                 $summary .= ", $num_high high-priority";
             } elseif ($num_medium > 0) {
@@ -242,7 +241,7 @@ foreach ($assessment as $key => $cat) {
 
             $summary .= ".";
         } else {
-            $summary .= " It had no security issues detected.";
+            (isset($blocking3pReqs)) ? $summary .= " It had no security issues detected." : $summary .= "had no security issues detected.";
         }
         if (isset($genContentSize) && isset($genContentPercent)) {
             $genContentSize = floatval($genContentSize);
