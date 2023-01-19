@@ -23,7 +23,8 @@ class IniReader
      * @param bool $allowSample If true also look for e.g. "locations.ini.sample"
      * @return array|null Parsed ini or null
      */
-    public static function parse($filename, $processSections = false, $allowSample = false) {
+    public static function parse($filename, $processSections = false, $allowSample = false)
+    {
         $paths = [
             realpath(SETTINGS_PATH . '/server/' . $filename),
             realpath(SETTINGS_PATH . '/common/' . $filename),
