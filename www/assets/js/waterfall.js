@@ -24,7 +24,7 @@ function InitRequestDialog(step) {
   // initialize the pop-up dialog
   $("#request-dialog-" + stepLabel)
     .jqm({ overlay: 0, onHide: CloseRequestDialog })
-    .on('keydown', (e) => {
+    .on("keydown", (e) => {
       if (e.key === "Escape") {
         $("#request-dialog-" + stepLabel).jqmHide();
       }
