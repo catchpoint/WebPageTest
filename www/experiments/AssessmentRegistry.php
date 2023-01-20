@@ -1,6 +1,7 @@
 <?php
 
-class AssessmentRegistry {
+class AssessmentRegistry
+{
     private static $instance = null;
 
     const Quick = 'Quick';
@@ -52,13 +53,13 @@ class AssessmentRegistry {
         return self::$instance;
     }
 
-    public function register($category, $opportunity) {
+    public function register($category, $opportunity)
+    {
         $this->assessments[$category]['opportunities'][] = $opportunity;
     }
 
-    public function getAll() {
+    public function getAll()
+    {
         return $this->assessments;
     }
-
 }
-
