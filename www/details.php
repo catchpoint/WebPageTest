@@ -113,8 +113,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
                         echo "<a href=\"$link\"" . ($run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
                         if ($linkCACHED) {
-                            echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
-                            ;
+                            echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";;
                         }
 
                         if ($i + 1 < $runs) {
@@ -299,10 +298,23 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         }
 
         function initDetailsTable(targetNode) {
+            $.tablesorter.addParser({
+                id: 'priorities',
+                is: () => false,
+                format: (s) => {
+                    return s.toLowerCase()
+                        .replace(/highest/, 4)
+                        .replace(/high/, 3)
+                        .replace(/medium/, 2)
+                        .replace(/low/, 1)
+                        .replace(/lowest/, 0);
+                },
+                type: 'numeric'
+            });
             $(targetNode).find(".tableDetails").tablesorter({
                 headers: {
                     3: {
-                        sorter: 'currency'
+                        sorter: 'priorities'
                     },
                     4: {
                         sorter: 'currency'
@@ -323,6 +335,9 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                         sorter: 'currency'
                     },
                     10: {
+                        sorter: 'currency'
+                    },
+                    11: {
                         sorter: 'currency'
                     }
                 }

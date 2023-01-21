@@ -12,13 +12,13 @@ require_once INCLUDES_PATH . '/video/visualProgress.inc.php';
 
 class TestStepResult
 {
-  /**
-   * @var TestInfo
-   */
+    /**
+     * @var TestInfo
+     */
     private $testInfo;
-  /**
-   * @var FileHandler
-   */
+    /**
+     * @var FileHandler
+     */
     private $fileHandler;
     private $rawData;
     private $run;
@@ -28,7 +28,7 @@ class TestStepResult
 
     private function __construct($testInfo, &$pageData, $run, $cached, $step, $fileHandler = null)
     {
-      // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
+        // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
         $this->testInfo = $testInfo;
         $this->rawData = &$pageData;
         $this->run = intval($run);
@@ -38,103 +38,103 @@ class TestStepResult
         $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached, $this->step);
     }
 
-  /**
-   * Creates a TestResult instance from a pageResults array with all data about a run
-   * @param TestInfo $testInfo Related test information
-   * @param array $pageData The pageData array with test results
-   * @param int $run The run to return the data for
-   * @param bool $cached False for first view, true for repeat view
-   * @param int $step The step number
-   * @param FileHandler $fileHandler The FileHandler to use
-   * @return TestStepResult The created instance
-   */
+    /**
+     * Creates a TestResult instance from a pageResults array with all data about a run
+     * @param TestInfo $testInfo Related test information
+     * @param array $pageData The pageData array with test results
+     * @param int $run The run to return the data for
+     * @param bool $cached False for first view, true for repeat view
+     * @param int $step The step number
+     * @param FileHandler $fileHandler The FileHandler to use
+     * @return TestStepResult The created instance
+     */
     public static function fromPageData($testInfo, $pageData, $run, $cached, $step, $fileHandler = null)
     {
         return new self($testInfo, $pageData, $run, $cached, $step, $fileHandler);
     }
 
-  /**
-   * Creates a TestResult instance by loading the results from file system
-   * @param TestInfo $testInfo Related test information
-   * @param int $runNumber The run to return the data for, starting from 1
-   * @param bool $isCached False for first view, true for repeat view
-   * @param int $stepNumber The step number, starting from 1
-   * @param FileHandler $fileHandler The FileHandler to use
-   * @param array $options Options for the loadPageStepData
-   * @return TestStepResult|null The created instance on success, null otherwise
-   */
+    /**
+     * Creates a TestResult instance by loading the results from file system
+     * @param TestInfo $testInfo Related test information
+     * @param int $runNumber The run to return the data for, starting from 1
+     * @param bool $isCached False for first view, true for repeat view
+     * @param int $stepNumber The step number, starting from 1
+     * @param FileHandler $fileHandler The FileHandler to use
+     * @param array $options Options for the loadPageStepData
+     * @return TestStepResult|null The created instance on success, null otherwise
+     */
     public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null)
     {
-      // no support to use FileHandler so far
+        // no support to use FileHandler so far
         $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
         $pageData = loadPageStepData($localPaths, $testInfo->getInfoArray());
         return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber, $fileHandler);
     }
 
-  /**
-   * @return bool True if there is valid test-step result data, false otherwise.
-   */
+    /**
+     * @return bool True if there is valid test-step result data, false otherwise.
+     */
     public function isValid()
     {
         return !empty($this->rawData) && is_array($this->rawData) &&
-           ($this->getMetric("loadTime") || $this->getMetric("fullyLoaded"));
+            ($this->getMetric("loadTime") || $this->getMetric("fullyLoaded"));
     }
 
-  /**
-   * @param string $baseUrl The base URL to use for the UrlGenerator
-   * @param bool $friendly Optional. True for friendly URLs (default), false for standard URLs
-   * @return UrlGenerator The created URL generator for this step
-   */
+    /**
+     * @param string $baseUrl The base URL to use for the UrlGenerator
+     * @param bool $friendly Optional. True for friendly URLs (default), false for standard URLs
+     * @return UrlGenerator The created URL generator for this step
+     */
     public function createUrlGenerator($baseUrl, $friendly = true)
     {
         return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getId(), $this->run, $this->cached, $this->step);
     }
 
-  /**
-   * @param string $testRoot Optional. A different test root path. If null, it's set to the default test root for local paths.
-   * @return TestPaths The created TestPaths object for this step
-   */
+    /**
+     * @param string $testRoot Optional. A different test root path. If null, it's set to the default test root for local paths.
+     * @return TestPaths The created TestPaths object for this step
+     */
     public function createTestPaths($testRoot = null)
     {
         $testRoot = ($testRoot === null) ? $this->testInfo->getRootDirectory() : $testRoot;
         return new TestPaths($testRoot, $this->run, $this->cached, $this->step);
     }
 
-  /**
-   * @return int The run number
-   */
+    /**
+     * @return int The run number
+     */
     public function getRunNumber()
     {
         return $this->run;
     }
 
-  /**
-   * @return boolean False if first view, true if repeat view
-   */
+    /**
+     * @return boolean False if first view, true if repeat view
+     */
     public function isCachedRun()
     {
         return $this->cached;
     }
 
-  /**
-   * @return int The step number
-   */
+    /**
+     * @return int The step number
+     */
     public function getStepNumber()
     {
         return $this->step;
     }
 
-  /**
-   * @return array Raw result data
-   */
+    /**
+     * @return array Raw result data
+     */
     public function getRawResults()
     {
         return $this->rawData;
     }
 
-  /**
-   * @return bool True if the step is successful, false otherwise
-   */
+    /**
+     * @return bool True if the step is successful, false otherwise
+     */
     public function isSuccessful()
     {
         if (!isset($this->rawData["result"])) {
@@ -143,18 +143,18 @@ class TestStepResult
         return $this->rawData["result"] == 0 || $this->rawData["result"] == 99999;
     }
 
-  /**
-   * @return string The URL of this step
-   */
+    /**
+     * @return string The URL of this step
+     */
     public function getUrl()
     {
         return isset($this->rawData["URL"]) ? $this->rawData["URL"] : null;
     }
 
-  /**
-   * @var string $metric The metric to return
-   * @return mixed|null The metric value or null if not set
-   */
+    /**
+     * @var string $metric The metric to return
+     * @return mixed|null The metric value or null if not set
+     */
     public function getMetric($metric)
     {
         if (!isset($this->rawData[$metric])) {
@@ -163,9 +163,9 @@ class TestStepResult
         return $this->rawData[$metric];
     }
 
-  /**
-   * @return string The event name if set, or an empty string
-   */
+    /**
+     * @return string The event name if set, or an empty string
+     */
     public function getEventName()
     {
         if (!isset($this->rawData["eventName"])) {
@@ -174,18 +174,18 @@ class TestStepResult
         return $this->rawData["eventName"];
     }
 
-  /**
-   * @return bool True if a custom event name was set for this step, false otherwise
-   */
+    /**
+     * @return bool True if a custom event name was set for this step, false otherwise
+     */
     public function hasCustomEventName()
     {
         return (!empty($this->rawData["eventName"]) && $this->rawData["eventName"] != $this->standardEventName());
     }
 
-  /**
-   * @param string $default Optional. A default value if no custom event name or URL is set
-   * @return string A readable identifier for this step (Either custom event name, URL, $default, or "Step x")
-   */
+    /**
+     * @param string $default Optional. A default value if no custom event name or URL is set
+     * @return string A readable identifier for this step (Either custom event name, URL, $default, or "Step x")
+     */
     public function readableIdentifier($default = "")
     {
         $identifier = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
@@ -195,7 +195,7 @@ class TestStepResult
 
     public function getVisualProgress()
     {
-      // TODO: move implementation to this method
+        // TODO: move implementation to this method
         if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
             return array();
         }
@@ -210,7 +210,7 @@ class TestStepResult
 
     public function getRequests()
     {
-      // TODO: move implementation to this method
+        // TODO: move implementation to this method
         return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, true);
     }
 
@@ -248,7 +248,7 @@ class TestStepResult
             }
         }
 
-      // sort the array by reversed domain so the resources from a given domain are grouped
+        // sort the array by reversed domain so the resources from a given domain are grouped
         uksort($breakdown, function ($a, $b) {
             return strcmp(strrev($a), strrev($b));
         });
@@ -278,21 +278,21 @@ class TestStepResult
 
     public function getMimeTypeBreakdown()
     {
-      // TODO: move implementation to this method
+        // TODO: move implementation to this method
         $requests = null;
         return getBreakdownForStep($this->localPaths, $this->createUrlGenerator(""), $requests);
     }
 
     public function getConsoleLog()
     {
-      // TODO: move implementation to this method, or encapsulate in another object
+        // TODO: move implementation to this method, or encapsulate in another object
         return DevToolsGetConsoleLogForStep($this->localPaths);
     }
 
-  /**
-   * Gets the status messages for this run
-   * @return array An array with array("time" => <timestamp>, "message" => <the actual Message>) for each message, or null
-   */
+    /**
+     * Gets the status messages for this run
+     * @return array An array with array("time" => <timestamp>, "message" => <the actual Message>) for each message, or null
+     */
     public function getStatusMessages()
     {
         $statusFile = $this->localPaths->statusFile();
@@ -312,9 +312,9 @@ class TestStepResult
         return $statusMessages;
     }
 
-  /**
-   * @return bool True if the step has a breakdown timeline, false otherwise
-   */
+    /**
+     * @return bool True if the step has a breakdown timeline, false otherwise
+     */
     public function hasBreakdownTimeline()
     {
         $info = $this->testInfo->getInfoArray();
@@ -322,7 +322,7 @@ class TestStepResult
             return false;
         }
         return $this->fileHandler->gzFileExists($this->localPaths->devtoolsFile()) ||
-           $this->fileHandler->gzFileExists($this->localPaths->devtoolsTraceFile());
+            $this->fileHandler->gzFileExists($this->localPaths->devtoolsTraceFile());
     }
 
     private function getStartOffset()
@@ -359,5 +359,14 @@ class RequestsWithInfo
     public function hasSecureRequests()
     {
         return $this->secureRequests;
+    }
+
+    public function hasPriorities()
+    {
+        foreach ($this->requests as $r) {
+            if (!empty($r['priority'])) {
+                return true;
+            }
+        }
     }
 }
