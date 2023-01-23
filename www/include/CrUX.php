@@ -133,7 +133,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         }
         echo '<div class="crux">';
         echo RealUserMeasurementCruxTitle($pageData);
-        echo '<div class="crux_legends"><strong>WPT\'s Metrics for comparison:</strong>';
+        echo '<div class="crux_legends"><strong>Metrics from this run:</strong>';
         if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
             echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> ';
             if ($includeLabels) {
@@ -227,7 +227,7 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     $fairText = '';
     if ($fairPct >= 7) {
         $pos = $goodPct + ($fairPct / 2);
-        $fairText = "<text x='$pos%' y='16' text-anchor='middle' font-size='14' font-family='Open Sans, sans-serif' fill='black'>$fairPct%</text>";
+        $fairText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='black'>$fairPct%</text>";
     }
     $poorText = '';
     if ($poorPct >= 7) {
@@ -237,12 +237,13 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     $p75arrow = '';
     $p75text = '';
     $maxVal = max($p75, $fvValue, $rvValue);
+    $unit = $short === 'CLS' ? '' : ' ms';
     if (isset($p75)) {
         $pos = 5 + GetCruxValuePosition($p75, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
         $p75arrow = "<svg x='5' width='250' y='55' height='15'><polygon points='$start,10 $pos,0 $end,10' fill='$color'/></svg>";
-        $text = "p75 ($p75)";
+        $text = "p75 ($p75$unit)";
         $anchor = $pos < 90 ? 'start' : 'end';
         $textPos = $pos < 90 ? $pos + 12 : $pos - 5;
         $p75text = "<text x='$textPos' y='67' font-size='12' text-anchor='$anchor' font-family='Open Sans, sans-serif'>$text</text>";
@@ -252,14 +253,14 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
         $pos = 5 + GetCruxValuePosition($fvValue, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
-        $fvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#1a1a1a'/></svg>";
+        $fvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#1072ba'><title>$fvValue$unit</title></polygon></svg>";
     }
     $rvArrow = '';
     if (isset($rvValue)) {
         $pos = 5 + GetCruxValuePosition($rvValue, $maxVal, $histogram, $width, $color);
         $start = $pos - 5;
         $end = $pos + 5;
-        $rvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#737373'/></svg>";
+        $rvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#5dbbe8'><title>$rvValue$unit</title></polygon></svg>";
     }
     $image_width = $width + 20;
     $svg = <<<EOD
