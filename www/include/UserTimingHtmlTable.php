@@ -29,7 +29,6 @@ class UserTimingHtmlTable
         $this->hasNavTiming = $runResults->hasValidMetric("loadEventStart") ||
                           $runResults->hasValidMetric("domContentLoadedEventStart");
         $this->hasUserTiming = $this->_initUserTimings();
-        $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
         $this->isMultistep = $runResults->countSteps() > 1;
     }
 
@@ -61,11 +60,8 @@ class UserTimingHtmlTable
         }
         if ($this->hasNavTiming) {
             $out .= "<th>";
-            if ($this->hasDomInteractive) {
-                $out .= "<a href=\"https://w3c.github.io/navigation-timing/#processing-model\">domInteractive</a></th><th>";
-            }
-            $out .= "<a href=\"https://w3c.github.io/navigation-timing/#processing-model\">domContentLoaded</a></th>";
-            $out .= "<th><a href=\"https://w3c.github.io/navigation-timing/#processing-model\">loadEvent</a></th>";
+            $out .= '<a title="The execution time of all `DOMContentLoaded` event listeners" href="https://w3c.github.io/navigation-timing/#processing-model">domContentLoadedEvent</a></th>';
+            $out .= '<th><a title="The execution time of all `onload` event listeners" href="https://w3c.github.io/navigation-timing/#processing-model">loadEvent</a></th>';
         }
         $out .= "</tr>\n";
         return $out;
@@ -95,9 +91,6 @@ class UserTimingHtmlTable
         }
         if ($this->hasNavTiming) {
             $out .= "<td>";
-            if ($this->hasDomInteractive) {
-                $out .= $this->_getTimeMetric($stepResult, "domInteractive") . '</td><td>';
-            }
             $out .= $this->_getTimeRangeMetric($stepResult, 'domContentLoadedEventStart', 'domContentLoadedEventEnd');
             $out .= "</td><td>";
             $out .= $this->_getTimeRangeMetric($stepResult, 'loadEventStart', 'loadEventEnd');
