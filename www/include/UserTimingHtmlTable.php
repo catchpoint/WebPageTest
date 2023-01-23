@@ -17,7 +17,6 @@ class UserTimingHtmlTable
     private $isMultistep;
     private $hasNavTiming;
     private $hasUserTiming;
-    private $hasDomInteractive;
 
   /**
    * UserTimingHtmlTable constructor.
