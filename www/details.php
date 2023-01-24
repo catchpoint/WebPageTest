@@ -113,7 +113,8 @@ function createForm($formName, $btnText, $id, $owner, $secret)
 
                         echo "<a href=\"$link\"" . ($run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
                         if ($linkCACHED) {
-                            echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";;
+                            echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
+                            ;
                         }
 
                         if ($i + 1 < $runs) {
