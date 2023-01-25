@@ -6,10 +6,10 @@ namespace WebPageTest\TestResults;
 
 class Timings
 {
-    const NO_METRIC_STRING = "-";
+    private const NO_METRIC_STRING = "-";
 
-    const ELEMENT = 'elementTiming.';
-    const USER = 'userTime.';
+    public const ELEMENT = 'elementTiming.';
+    public const USER = 'userTime.';
 
     private $runResults;
     private $numSteps;
@@ -52,7 +52,8 @@ class Timings
         for ($i = 0; $i < $this->numSteps; $i++) {
             $stepResult = $this->runResults->getStepResult($i + 1);
             $timings[$i] = [
-                'domContentLoadedEvent' => $this->getTimeRangeMetric($stepResult, 'domContentLoadedEventStart', 'domContentLoadedEventEnd'),
+                'domContentLoadedEvent' =>
+                    $this->getTimeRangeMetric($stepResult, 'domContentLoadedEventStart', 'domContentLoadedEventEnd'),
                 'loadEvent' => $this->getTimeRangeMetric($stepResult, 'loadEventStart', 'loadEventEnd'),
             ];
         }

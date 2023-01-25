@@ -8,9 +8,9 @@ use WebPageTest\Util\CustomMetricFiles;
 
 class CustomMetrics
 {
-    const ALL = 1;
-    const FROM_FILES = 2;
-    const FROM_TEST_SETTINGS = 3;
+    public const ALL = 1;
+    public const FROM_FILES = 2;
+    public const FROM_TEST_SETTINGS = 3;
 
     private $runResults;
     private $numSteps;
