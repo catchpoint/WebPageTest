@@ -141,10 +141,6 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 echo $htmlTable->create(true);
                 ?>
                 <?php
-                $userTimingTable = new UserTimingHtmlTable($testRunResults);
-                echo $userTimingTable->create(true);
-
-
                 // Full custom metrics
                 $customPageData = @$pageData[$run][$cached]['custom'];
                 if (!empty($customPageData) && is_array($customPageData)) {
