@@ -15,6 +15,7 @@ class Plan
     private string $id;
     private string $name;
     private float $annual_savings = 5.0 / 4.0; // Monthly costs 25% more than annual per year
+                                               // in other words annual is 20% off of (monthly * 12)
 
     public function __construct(array $options = [])
     {
