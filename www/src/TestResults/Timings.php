@@ -78,7 +78,8 @@ class Timings
     /**
      * @param string $type One of Timings::ELEMENT or Timings::USER
      */
-    private function getTimingsByType(string $type): array {
+    private function getTimingsByType(string $type): array
+    {
         $timings = [];
         for ($i = 0; $i < $this->numSteps; $i++) {
             $stepResult = $this->runResults->getStepResult($i + 1);
@@ -90,7 +91,6 @@ class Timings
                     $timings[$i][substr($metric, $len)] = $value === 0 ? '0s' : number_format($value / 1000, 3) . 's';
                 }
             }
-
         }
         return $timings;
     }
