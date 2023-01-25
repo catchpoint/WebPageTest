@@ -50,9 +50,6 @@
         <div class="card-section-subhed card-section-subhed__grid">
             <span class="plan-name">Starter<span class="status">Active</span></span>
 
-            <div class="account-cta">
-                <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
-            </div>
         </div>
         <ul class="subscription-plan-details">
             <li><strong>Runs per month</strong> <?= $monthly_runs ?></li>
@@ -61,8 +58,9 @@
         </ul>
     <?php endif; ?>
 </div>
-<div class="card-section">
-    <?php if ($is_paid && !$is_canceled && !$is_wpt_enterprise) : ?>
+<?php if (!$is_wpt_enterprise) : ?>
+    <?php if ($is_paid && !$is_canceled) : ?>
+    <div class="card-section">
         <div class="account-cta">
             <label class="dropdown">
                 <input type="checkbox" class="dd-input" id="test">
@@ -76,5 +74,12 @@
                 </ul>
             </label>
         </div>
+    </div>
+    <?php else : ?>
+    <div class="card-section">
+        <div class="account-cta">
+            <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+        </div>
+    </div>
     <?php endif; ?>
-</div>
+<?php endif; ?>

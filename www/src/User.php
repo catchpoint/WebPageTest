@@ -14,7 +14,7 @@ class User
     private ?string $owner_id;
     private ?string $access_token;
     private ?int $user_id;
-    private bool $is_paid_and_in_good_standing;
+    private bool $is_paid_cp_client;
     private bool $is_verified;
     private bool $is_wpt_enterprise_client;
     private int $remaining_runs;
@@ -24,6 +24,7 @@ class User
     private string $company_name;
     private string $subscription_id;
     private DateTime $run_renewal_date;
+    private string $payment_status;
 
     public function __construct()
     {
@@ -35,7 +36,7 @@ class User
         $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
         $this->user_id = null;
-        $this->is_paid_and_in_good_standing = false;
+        $this->is_paid_cp_client = false;
         $this->is_verified = false;
         $this->user_priority = 9; //default to lowest possible priority
         $this->is_wpt_enterprise_client = false;
@@ -43,6 +44,7 @@ class User
         $this->monthly_runs = 300; // default to new, free account
         $this->subscription_id = "";
         $this->run_renewal_date = $this->getFreeRunRenewalDate(); // default to free
+        $this->payment_status = "EXPIRED";
     }
 
     public function getEmail(): ?string
@@ -77,12 +79,13 @@ class User
 
     public function isPaid(): bool
     {
-        return $this->is_paid_and_in_good_standing;
+        return $this->is_paid_cp_client &&
+            ($this->payment_status == 'ACTIVE' || str_contains($this->payment_status, 'CANCEL'));
     }
 
-    public function setPaid(bool $is_paid): void
+    public function setPaidClient(bool $is_paid): void
     {
-        $this->is_paid_and_in_good_standing = $is_paid;
+        $this->is_paid_cp_client = $is_paid;
     }
 
     public function isAdmin(): bool
@@ -238,6 +241,22 @@ class User
         if ((isset($date_string) && !is_null($date_string) && !empty($date_string))) {
             $this->run_renewal_date = new DateTime($date_string);
         }
+    }
+
+    public function setPaymentStatus(?string $status = 'EXPIRED'): void
+    {
+        $status ??= 'EXPIRED';
+        $this->payment_status = $status;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->payment_status == 'EXPIRED';
+    }
+
+    public function isCanceled(): bool
+    {
+        return str_contains($this->payment_status, 'CANCEL');
     }
 
     private function getFreeRunRenewalDate(): DateTimeInterface

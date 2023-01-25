@@ -536,11 +536,15 @@
   class ApiKeyForm {
     constructor(element) {
       this.form = element;
-      const formType = element.getAttribute('data-apikey-form');
-      const submitButton = document.querySelector(`[data-apikey-form-submit=${formType}]`);
-      this.submit = submitButton ? submitButton : element.querySelector('[type=submit]');
+      const formType = element.getAttribute("data-apikey-form");
+      const submitButton = document.querySelector(
+        `[data-apikey-form-submit=${formType}]`
+      );
+      this.submit = submitButton
+        ? submitButton
+        : element.querySelector("[type=submit]");
 
-      this.form.addEventListener('submit', this.preventDoubleClick.bind(this));
+      this.form.addEventListener("submit", this.preventDoubleClick.bind(this));
     }
     preventDoubleClick(e) {
       e.preventDefault();
@@ -727,7 +731,7 @@
       new DeleteApiKeyBoxSet(deleteApiKeyBoxes[i]);
     }
 
-    const apiKeyForms = document.querySelectorAll('form[data-apikey-form]');
+    const apiKeyForms = document.querySelectorAll("form[data-apikey-form]");
     for (let i = 0; i < apiKeyForms.length; i++) {
       new ApiKeyForm(apiKeyForms[i]);
     }

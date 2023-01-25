@@ -71,6 +71,11 @@ if ($request_method === 'POST') {
         header('Content-type: application/json');
         echo $response_body;
         exit();
+    } elseif ($type == "canceled-account-signup") {
+        $body = AccountHandler::validateCanceledAccountSignup($_POST);
+        $response = AccountHandler::canceledAccountSignup($request_context, $body);
+        $response->send();
+        exit();
     } elseif ($type == "cancel-subscription") {
         $redirect_uri = AccountHandler::cancelSubscription($request_context);
         header("Location: {$redirect_uri}");
@@ -98,15 +103,15 @@ if ($request_method === 'POST') {
         exit();
     } elseif ($type == "upgrade-plan-1") {
         $body = AccountHandler::validatePlanUpgrade($_POST);
-        $redirect_uri = AccountHandler::postPlanUpgrade($request_context, $body);
+        $response = AccountHandler::postPlanUpgrade($request_context, $body);
 
-        header("Location: {$redirect_uri}");
+        $response->send();
         exit();
     } elseif ($type == "upgrade-plan-2") {
         $body = AccountHandler::validatePostUpdatePlanSummary($_POST);
-        $redirect_uri = AccountHandler::postUpdatePlanSummary($request_context, $body);
+        $response = AccountHandler::postUpdatePlanSummary($request_context, $body);
 
-        header("Location: {$redirect_uri}");
+        $response->send();
         exit();
     } elseif ($type == "resend-verification-email") {
         try {
@@ -139,6 +144,7 @@ if ($request_method === 'POST') {
 }
 
 $page = (string) filter_input(INPUT_GET, 'page', FILTER_UNSAFE_RAW);
-$contents = AccountHandler::getAccountPage($request_context, $page);
-echo $contents;
+$response = AccountHandler::getAccountPage($request_context, $page);
+$response->send();
+
 exit();
