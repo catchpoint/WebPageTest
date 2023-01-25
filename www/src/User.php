@@ -254,6 +254,11 @@ class User
         return $this->payment_status == 'EXPIRED';
     }
 
+    public function isPendingCancelation(): bool
+    {
+        return str_contains($this->payment_status, 'PENDING');
+    }
+
     public function isCanceled(): bool
     {
         return str_contains($this->payment_status, 'CANCEL');

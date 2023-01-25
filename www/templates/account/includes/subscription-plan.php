@@ -75,7 +75,7 @@
             </label>
         </div>
     </div>
-    <?php else : ?>
+    <?php elseif (!$is_paid || ($is_paid && $is_canceled && $is_pending)) : ?>
     <div class="card-section">
         <div class="account-cta">
             <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
