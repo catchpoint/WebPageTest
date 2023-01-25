@@ -21,7 +21,7 @@
                 <th scope="col" class="pro-plans">
                     <div class="pro-plans-header">
                         <div class="heading wpt-pro-logo"> <span class="visually-hidden">WebPageTest <em class="new-banner">Pro</em></span></div>
-                        <span class="upsell">Save 25% with Annual Plans</span>
+                        <span class="upsell">Save 20% with Annual Plans</span>
                     </div>
 
                     <form method="POST" id="pro-plan-form" action="/signup">
