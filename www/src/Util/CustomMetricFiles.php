@@ -41,7 +41,8 @@ class CustomMetricFiles
      * @param bool $include_conditional TRUE if conditional_metrics are to be included
      * @return array List of abs paths to .js files
      */
-    public static function getFilenames($include_conditional = false): array {
+    public static function getFilenames($include_conditional = false): array
+    {
         $files = [];
         if (is_dir(SETTINGS_PATH . '/custom_metrics')) {
             $files = glob(SETTINGS_PATH . '/custom_metrics/*.js') ?? [];
