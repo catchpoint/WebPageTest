@@ -31,10 +31,8 @@
                 <li><strong>Estimated Taxes</strong> $<?= $tax ?></li>
                 <li>
                     <strong>Due today:</strong> $0.00
-                    <?php if (isset($renewaldate)) : ?>
                     <br>
-                    <strong>Due at the next billing date (<?= $renewaldate ?> ):</strong> $<?= $total ?>
-                    <?php endif; ?>
+                    <strong>Due at the next billing date<?= isset($renewaldate) && !empty($renewaldate) ? ' (' . $renewaldate . ')' : '' ?>:</strong> $<?= $total ?>
                 </li>
             </ul>
             <div class="info-notice">Updating your account's billing address can result in new tax fees.</div>
