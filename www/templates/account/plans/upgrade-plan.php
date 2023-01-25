@@ -22,7 +22,7 @@
                     <option value="annual">Annual</option>
                     <option value="monthly">Monthly</option>
                 </select>
-                <p>Save 20% with Annual Plans</p>
+                <p>Save 25% with Annual Plans</p>
             </div>
             <div class="upgrade-legend">
 

@@ -203,7 +203,7 @@
     </div>
 </div>
 <form id="wpt-account-signup" method="post" action="/account">
-    <h3>Save 20% by paying annually!</h3>
+    <h3>Save 25% by paying annually!</h3>
     <fieldset class="wpt-plans radiobutton-tab-container">
         <legend for="pro-plan-selector" class="visually-hidden"> Choose payment plan frequency:</legend>
         <input id="annual-plans" type="radio" name="plans" value="annual" checked />
