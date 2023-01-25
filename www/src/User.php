@@ -80,7 +80,7 @@ class User
     public function isPaid(): bool
     {
         return $this->is_paid_cp_client &&
-            ($this->payment_status == 'ACTIVE' || str_contains($this->payment_status, 'CANCEL'));
+            ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
     }
 
     public function setPaidClient(bool $is_paid): void

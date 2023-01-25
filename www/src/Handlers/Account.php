@@ -424,7 +424,7 @@ class Account
     //
     // #[HandlerMethod]
     // #[Route(Http::POST, '/account', 'account-signup')]
-    public static function subscribeToAccount(RequestContext $request_context, object $body): string
+    public static function subscribeToAccount(RequestContext $request_context, object $body): RedirectResponse
     {
         $address = new ChargifyAddressInput([
             'city' => $body->city,
@@ -443,8 +443,8 @@ class Account
                 'type' => 'success',
                 'text' => 'Your plan has been successfully updated! '
             );
-            Util::setBannerMessage('form', $successMessage);
-            return $redirect_uri;
+            $request_context->getBannerMessageManager()->put('form', $successMessage);
+            return new RedirectResponse($redirect_uri);
         } catch (BaseException $e) {
             error_log($e->getMessage());
             $message = "There was an error. Please try again or contact customer service.";
@@ -452,10 +452,12 @@ class Account
                 'type' => 'error',
                 'text' => $message
             );
-            Util::setBannerMessage('form', $errorMessage);
+            $request_context->getBannerMessageManager()->put('form', $errorMessage);
             $host = $request_context->getHost();
             $protocol = $request_context->getUrlProtocol();
-            return "{$protocol}://{$host}/account";
+            $redirect_uri = "{$protocol}://{$host}/account";
+
+            return new RedirectResponse($redirect_uri);
         }
     }
 
@@ -926,7 +928,7 @@ class Account
         $state_list = Util::getChargifyUSStateList();
 
 
-        if ($is_paid) {
+        if ($is_paid || $is_canceled) {
             $acct_info = $is_wpt_enterprise
                 ? $request_context->getClient()->getPaidEnterpriseAccountPageInfo()
                 : $request_context->getClient()->getPaidAccountPageInfo();
@@ -1004,7 +1006,7 @@ class Account
                 if (isset($planCookie) && $planCookie) {
                     $plan = Util::getPlanFromArray($planCookie, $all_plans);
                     $results['plan'] = $plan;
-                    if ($is_paid && !$is_canceled) {
+                    if ($is_paid) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                         $billing_address = $customer->getAddress();
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
@@ -1017,9 +1019,9 @@ class Account
 
                         $content = $tpl->render('plans/plan-summary-upgrade', $results);
                         return new Response($content, Response::HTTP_OK);
-                    } elseif ($is_canceled) {
+                    } elseif ($is_pending) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
-                        $results['is_canceled'] = $is_canceled;
+                        $results['is_pending'] = $is_pending;
 
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
@@ -1077,7 +1079,7 @@ class Account
                 return new Response($content, Response::HTTP_OK);
                 break;
             default:
-                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$is_canceled);
+                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise);
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
                 if (isset($next_plan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);

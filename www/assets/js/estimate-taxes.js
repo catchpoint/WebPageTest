@@ -10,6 +10,8 @@
       this.summary = summaryNode;
       this.form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        e.stopImmediatePropagation();
+
         const pulse = e.target.querySelector(
           "button[type='submit'] span[data-id='pulse']"
         );
