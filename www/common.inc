@@ -338,7 +338,12 @@ $id = '';
 if (isset($_REQUEST['test']) && preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_REQUEST['test'];
 }
-
+//TEMP FIX: Need to add the bot check back, but for now, this fixes a bug
+// for the monitoring tool until it's patched upstream
+$isSaaSTest = (stripos($id, '_saas_') !== false);
+if ($isSaaSTest) {
+    $userIsBot = false;
+}
 $median_metric = Util::getSetting('medianMetric', null) ?? 'loadTime';
 $testLabel = '';
 $page_title = 'WebPageTest Test';
