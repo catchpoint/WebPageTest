@@ -16,7 +16,6 @@ set_time_limit(30);
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
 require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
-require_once INCLUDES_PATH . '/include/UserTimingHtmlTable.php';
 require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/RequestDetailsHtmlSnippet.php';
