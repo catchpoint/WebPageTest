@@ -24,17 +24,22 @@ class Timings
     }
 
     /**
-     * @return bool true is moe than one step
+     * @return array All metrics for a step with keys 'element', 'user', 'navigation'
      */
-    public function isMultistep(): bool
+    public function getAllForStep(int $stepNum): array
     {
-        return $this->numSteps > 1;
+        $idx = $stepNum - 1;
+        return [
+            'element' => $this->getElementTimings()[$idx],
+            'user' => $this->getUserTimings()[$idx],
+            'navigation' => $this->getNavigationTimings()[$idx],
+        ];
     }
 
     /**
      * @return array Nav timings indexed by step
      */
-    public function getNavTimings(): array
+    public function getNavigationTimings(): array
     {
         $timings = [];
         if (
