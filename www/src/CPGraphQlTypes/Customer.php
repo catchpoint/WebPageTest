@@ -185,6 +185,11 @@ class Customer
         return $this->plan_renewal_date;
     }
 
+    public function isPendingCancelation(): bool
+    {
+        return str_contains($this->status, 'PENDING');
+    }
+
     public function isCanceled(): bool
     {
         return str_contains($this->status, 'CANCEL');

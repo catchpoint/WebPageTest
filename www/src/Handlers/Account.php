@@ -888,6 +888,7 @@ class Account
         $is_canceled = $request_context->getUser()->isCanceled();
         $is_expired = $request_context->getUser()->isExpired();
         $is_verified = $request_context->getUser()->isVerified();
+        $is_pending = $request_context->getUser()->isPendingCancelation();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
         $user_id = $request_context->getUser()->getUserId();
         $remaining_runs = $request_context->getUser()->getRemainingRuns();
@@ -908,6 +909,7 @@ class Account
         $contact_info = [
             'layout_theme' => 'b',
             'is_paid' => $is_paid,
+            'is_pending' => $is_pending,
             'is_canceled' => $is_canceled,
             'is_expired' => $is_expired,
             'is_verified' => $is_verified,
