@@ -8,7 +8,7 @@
                     <?= $billing_frequency  ?>
                     Pro
                 <?php endif; ?>
-                <?php if ($is_canceled) : ?>
+                <?php if ($is_pending) : ?>
                     <span class="status status__red"><?= $status; ?></span>
                 <?php else : ?>
                     <span class="status"><?= $status; ?></span>
@@ -24,7 +24,7 @@
             <li><strong>Price</strong> $<?= $wptCustomer->getFormattedSubscriptionPrice() ?> (+ applicable taxes)</li>
             <li><strong>Billing Cycle</strong> <?= $billing_frequency ?></li>
             <?php if (!isset($upcoming_plan)) : ?>
-                <?php if ($is_canceled) : ?>
+                <?php if ($is_pending) : ?>
                     <li><strong>End Date</strong> <?= $next_billing_date ?: "N/A" ?></li>
                 <?php else : ?>
                     <li><strong>Plan Renewal</strong> <?= $next_billing_date ?: "N/A" ?></li>
@@ -59,7 +59,7 @@
     <?php endif; ?>
 </div>
 <?php if (!$is_wpt_enterprise) : ?>
-    <?php if ($is_paid && !$is_canceled) : ?>
+    <?php if ($is_paid && !$is_pending) : ?>
     <div class="card-section">
         <div class="account-cta">
             <label class="dropdown">
@@ -75,10 +75,17 @@
             </label>
         </div>
     </div>
-    <?php elseif (!$is_paid || ($is_paid && $is_canceled && $is_pending)) : ?>
+    <?php elseif ((!$is_paid && !$is_canceled) || ($is_paid && $is_pending)) :
+// only pending users can restart their plans currently ?>
     <div class="card-section">
         <div class="account-cta">
             <a href="/account/update_plan" class="pill-button yellow">Upgrade Plan</a>
+        </div>
+    </div>
+    <?php else : ?>
+    <div class="card-section">
+        <div class="account-cta">
+            <a href="<?= $support_link ?>" class="pill-button yellow">Contact Support to Upgrade</a>
         </div>
     </div>
     <?php endif; ?>

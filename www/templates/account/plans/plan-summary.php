@@ -12,7 +12,7 @@
                 <?php require_once __DIR__ . '/../includes/chargify-payment-form.php' ?>
                 <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
                 <input type="hidden" name="nonce" id="hidden-nonce-input" required />
-                <?php if ($is_canceled) : ?>
+                <?php if ($is_pending) : ?>
                     <input type="hidden" name="type" value="canceled-account-signup" required />
                     <input name="is-upgrade" type="hidden" value="<?= $is_upgrade ?>" />
                     <input name="subscription-id" type="hidden" value="<?= $subscription_id ?>" />

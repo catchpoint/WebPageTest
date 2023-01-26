@@ -52,9 +52,8 @@ if ($request_method === 'POST') {
         exit();
     } elseif ($type == "account-signup") {
         $body = AccountHandler::validateSubscribeToAccount($_POST);
-        $redirect_uri = AccountHandler::subscribeToAccount($request_context, $body);
-
-        header("Location: {$redirect_uri}");
+        $response = AccountHandler::subscribeToAccount($request_context, $body);
+        $response->send();
         exit();
     } elseif ($type == "account-signup-preview") {
         $response_body = "{}";

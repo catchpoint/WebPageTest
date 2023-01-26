@@ -60,7 +60,7 @@
  */
 function DisplayTraceroute(&$testPath, $run)
 {
-?>
+    ?>
     <table class="pretty details">
         <?php
         $rows = gz_file("$testPath/{$run}_traceroute.txt");
@@ -107,7 +107,7 @@ function DisplayTraceroute(&$testPath, $run)
                     $index++;
                     if ($index == 1) {
                         echo "<caption>Traceroute #$run to $addr</caption>\n";
-        ?>
+                        ?>
                         <thead>
                             <tr>
                                 <th>Hop</th>
@@ -117,7 +117,7 @@ function DisplayTraceroute(&$testPath, $run)
                             </tr>
                         </thead>
                         <tbody>
-            <?php
+                        <?php
                     }
                     echo "<tr>\n";
                     echo "<td>{$data['hop']}</td>\n";
@@ -129,9 +129,9 @@ function DisplayTraceroute(&$testPath, $run)
             }
             echo "</tbody>\n";
         }
-            ?>
+        ?>
     </table>
-<?php
+    <?php
 }
 
 ?>
