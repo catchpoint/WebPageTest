@@ -1,4 +1,6 @@
 <?php
+$requests = $testStepResult->getRequests();
+global $request_context;
 
 AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Add HTML to document",
@@ -64,6 +66,27 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "good" =>  null,
     "inputttext" => true
 ]);
+
+if ($requests[0]['body_url']) {
+    AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
+        "title" =>  "Edit Response HTML",
+        "desc" =>  "This experiment allows you to freely edit the text of the initial HTML response",
+        "examples" =>  array(),
+        "experiments" =>  array(
+            (object) [
+                'id' => '054',
+                'title' => 'Edit Response HTML',
+                "desc" => '<p>This experiment will replace the initial HTML with the submitted value as if it was served that way initially.</p>',
+                "expvar" => 'editresponsehtml',
+                'textinputvalue' => htmlentities(file_get_contents('https://' . $request_context->getHost() . $requests[0]['body_url'])),
+                "fullscreenfocus" => true
+            ]
+        ),
+        "good" =>  null,
+        "inputttext" => true
+    ]);
+}
+
 AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Delivery Optimizations",
     "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. Note expected syntax examples when using.",

@@ -886,6 +886,7 @@ h4.experiments_list_hed-recs {
 }
 .experiments_list > li:target {
   background: #f8f7e0;
+  scroll-padding-top: 4rem;
 }
 
 .experiment_description code {
@@ -1192,7 +1193,7 @@ h4.experiments_list_hed-recs {
   margin: 0 1em 1em 3em;
   padding: 1em;
   height: 10em;
-  border: 0;
+  border: 1px solid #eee;
   max-width: none;
   line-height: 1.6;
   white-space: nowrap;
@@ -2215,6 +2216,19 @@ footer ul {
   .experiments_details_body {
     padding-left: 2rem;
   }
+}
+
+.experiment_description_go > label.experiment_pair_value textarea[data-fullscreenfocus=true]:focus {
+  position: fixed;
+  top: 10vh;
+  left: 10vw;
+  right: 10vw;
+  bottom: 10vh;
+  z-index: 999999;
+  box-shadow: 0 0 0 20vw rgb(0 0 0 / 30%);
+  height: 80vh;
+  width: 80vw;
+  margin: 0;
 }
 
 @media (max-width: 50em) {

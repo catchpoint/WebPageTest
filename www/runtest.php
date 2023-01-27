@@ -1021,6 +1021,10 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 }
                                 $ingredients = implode(",", $ingredients);
                             }
+                            if($recipeSansId === "editresponsehtml"){
+                                // striking out the ingredients here because it's too much to send in a cookie
+                                $ingredients = "";
+                            }
                             // these recipes need encoded values. they all do afterwards! TODO
                             if (
                                 $recipeSansId === "insertheadstart"
@@ -1109,7 +1113,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
 
 
                         //replace last step with last step plus recipes
-                        $test['script'] = str_replace($scriptNavigate, "setCookie\t" . $originToUse . "\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script']);
+                        $test['script'] = str_replace($scriptNavigate, "setCookie\t" . $originToUse . "\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . "setCookie\t" . $originToUse . "\twpt-testid=" . urlencode($id) . "\r\n" . $scriptNavigate, $test['script']);
 
 
                         $id = CreateTest($test, $test['url']);
