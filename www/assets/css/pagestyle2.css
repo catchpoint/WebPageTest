@@ -1169,6 +1169,11 @@ h4.experiments_list_hed-recs {
   flex: 1 1 auto;
 }
 
+/* hide stuff after unchecked dependency checks */
+.has-js .experiment_description_go:not(.experiment_description_go-checked) label:first-child ~ * {
+  display: none;
+}
+
 .experiment_description_go > label.experiment_pair_value input,
 .experiment_description_go > label.experiment_pair_value textarea {
   width: 14em;
