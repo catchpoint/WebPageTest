@@ -325,7 +325,7 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with...</label>
                                         EOT;
                                         $addmore = $exp->addmore ? ' experiment_pair_value-add' : '';
 
@@ -352,7 +352,7 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with...</label>
                                         <label class="experiment_pair_value"><span>Value: </span><textarea name="{$expNum}-{$exp->expvar}[]" placeholder="{$placeholderEncodedVal}"></textarea></label>
 
                                         </div>
@@ -547,6 +547,35 @@ $page_description = "Website performance test result$testLabel.";
 
 
 <script>
+    // dependency fields
+    function toggleDepChecks(check){
+        let parent = check.closest(".experiment_description_go");
+        let inputsToDisable = 'textarea,input:not([name="recipes[]"])';
+        if(check.checked){
+            parent.classList.add('experiment_description_go-checked');
+            parent.querySelectorAll(inputsToDisable).forEach(textarea => {
+                textarea.disabled = false;
+            });
+        } else {
+            parent.classList.remove('experiment_description_go-checked');
+            parent.querySelectorAll(inputsToDisable).forEach(textarea => {
+                textarea.disabled = true;
+            });
+        }
+    }
+    let depChecks = document.querySelectorAll('.experiment_pair_check input');
+    depChecks.forEach(check => {
+        check.addEventListener('change', () => {
+            toggleDepChecks(check);
+        });
+    });
+    function updateCheckDeps(){
+        depChecks.forEach(check => {
+            toggleDepChecks(check);
+        });
+    }
+    updateCheckDeps();
+
     // refresh the form state from saved localstorage values
     function refreshExperimentFormState(){
         var priorState = localStorage.getItem("experimentForm");
@@ -589,7 +618,7 @@ $page_description = "Website performance test result$testLabel.";
                         
                     }
                 });
-
+            updateCheckDeps();
         }
     }
 
@@ -792,6 +821,8 @@ $page_description = "Website performance test result$testLabel.";
             }
         });
     });
+
+    
 
 </script>
     </body>
