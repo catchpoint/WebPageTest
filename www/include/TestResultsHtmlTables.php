@@ -148,10 +148,10 @@ class TestResultsHtmlTables
         }
         $out = "<tr>\n";
 
-        $out .= "<th align=\"left\" valign=\"middle\">\n";
+        $out .= "<td align=\"left\" valign=\"middle\">\n";
         $breakdownUrl = $urlGenerator->resultPage("breakdown");
         $out .= "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-        $out .= "</th>";
+        $out .= "</td>";
 
         $span = $tableColumns - 1;
         $out .= "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
@@ -213,7 +213,7 @@ class TestResultsHtmlTables
     private function _createResultCell($stepResult, $even)
     {
         $evenClass = $even ? " even" : "";
-        $out = "<th align=\"left\" class='resultCell$evenClass'>\n";
+        $out = "<td align=\"left\" class='resultCell$evenClass'>\n";
         if ($this->isMultistep) {
             $out .= FitText($stepResult->readableIdentifier(), 30);
         } else {
@@ -225,7 +225,7 @@ class TestResultsHtmlTables
         $out .=  $this->_getTraceLinks($stepResult);
         $out .=  $this->_getNetlogLinks($stepResult);
         $out .=  $this->_getDebuglogLinks($stepResult);
-        $out .=  '</th>';
+        $out .=  '</td>';
         return $out;
     }
 

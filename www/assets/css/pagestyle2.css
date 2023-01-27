@@ -587,7 +587,12 @@ span.lh-flag.poor {
   margin: 1em -3rem !important;
   background-clip: padding-box;
   position: relative;
-  overflow: hidden;
+}
+/* this pseudo lets the results body padding kick in, as overflow: hidden had done, which we do not want to use */
+.results_body:before {
+  content: "";
+  display: block;
+  height: 1px;
 }
 
 @media (max-width: 87.5em) {
@@ -597,10 +602,6 @@ span.lh-flag.poor {
     box-shadow: none;
     margin: 0 0 !important;
   }
-}
-
-.experiments_grades {
-  overflow: visible;
 }
 
 .form_clip .grade_header:first-of-type {
@@ -1169,6 +1170,11 @@ h4.experiments_list_hed-recs {
   flex: 1 1 auto;
 }
 
+/* hide stuff after unchecked dependency checks */
+.has-js .experiment_description_go:not(.experiment_description_go-checked) label:first-child ~ * {
+  display: none;
+}
+
 .experiment_description_go > label.experiment_pair_value input,
 .experiment_description_go > label.experiment_pair_value textarea {
   width: 14em;
@@ -1711,7 +1717,7 @@ footer ul {
   font-size: 0.9em;
 }
 
-@media (min-width: 75em) {
+@media (min-width: 85em) {
   footer {
     align-items: center;
     padding-right: 0;

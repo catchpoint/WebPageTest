@@ -139,7 +139,7 @@ class Customer
     }
     public function getStatus(): string
     {
-        return $this->status;
+        return $this->isCanceled() ? 'CANCELED' : $this->status;
     }
     public function getWptPlanName(): string
     {
@@ -185,6 +185,11 @@ class Customer
         return $this->plan_renewal_date;
     }
 
+    public function isPendingCancelation(): bool
+    {
+        return str_contains($this->status, 'PENDING');
+    }
+
     public function isCanceled(): bool
     {
         return str_contains($this->status, 'CANCEL');
@@ -192,7 +197,7 @@ class Customer
 
     public function getNextPlanStartDate(): ?DateTime
     {
-        return isset($this->plan_renewal_date) ? $this->plan_renewal_date : $this->billing_period_end_date;
+        return $this->plan_renewal_date ?? $this->billing_period_end_date;
     }
 
     public function getAddress(): ?ChargifyInvoiceAddressType

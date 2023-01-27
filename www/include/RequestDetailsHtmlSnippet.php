@@ -11,12 +11,12 @@ class RequestDetailsHtmlSnippet
     private $requests;
     private $useLinks;
 
-  /**
-   * RequestDetailsHtmlSnippet constructor.
-   * @param TestInfo $testInfo
-   * @param TestStepResult $stepResult
-   * @param bool $useLinks
-   */
+    /**
+     * RequestDetailsHtmlSnippet constructor.
+     * @param TestInfo $testInfo
+     * @param TestStepResult $stepResult
+     * @param bool $useLinks
+     */
     public function __construct($testInfo, $stepResult, $useLinks)
     {
         $this->testInfo = $testInfo;
@@ -43,6 +43,8 @@ class RequestDetailsHtmlSnippet
         $out .= $this->_createLegendCell("#dfffdf", "Before Start Render");
         $out .= $this->_createLegendCell("#dfdfff", "Before On Load");
         $out .= $this->_createLegendCell("gainsboro", "After On Load");
+        $out .= $this->_createLegendCell("#ffff88", "3xx Response");
+        $out .= $this->_createLegendCell("#ff8888", "4xx Response");
         $out .= "\n</tr>\n</tbody>\n</table>\n";
         return $out;
     }
@@ -63,6 +65,9 @@ class RequestDetailsHtmlSnippet
         $out .= "<th class=\"reqNum pin\">#</th>\n";
         $out .= "<th class=\"reqUrl\">Resource</th>\n";
         $out .= "<th class=\"reqMime\">Content Type</th>\n";
+        if ($this->requests->hasPriorities()) {
+            $out .= '<th class="reqPri">Priority</th>' . "\n";
+        }
         $out .= "<th class=\"reqStart\">Request Start</th>\n";
         $out .= "<th class=\"reqDNS\">DNS Lookup</th>\n";
         $out .= "<th class=\"reqSocket\">Initial Connection</th>\n";
@@ -83,7 +88,7 @@ class RequestDetailsHtmlSnippet
     private function _createTableBody()
     {
         $out = "<tbody>\n";
-      // loop through all of the requests and spit out a data table
+        // loop through all of the requests and spit out a data table
         foreach ($this->requests->getRequests() as $reqNum => $request) {
             if (!$request) {
                 continue;
@@ -109,6 +114,10 @@ class RequestDetailsHtmlSnippet
         $out .= $this->_createDataCell($reqUrl, "reqUrl", $highlight);
 
         $out .= $this->_createDataCell(@$request["contentType"], "reqMime", $highlight);
+
+        if ($this->requests->hasPriorities()) {
+            $out .= $this->_createDataCell($request["priority"], "reqPri", $highlight);
+        }
 
         $loadStart = empty($request["load_start"]) ? "-" : (($request["load_start"] / 1000.0) . " s");
         $out .= $this->_createDataCell($loadStart, "reqStart", $highlight);

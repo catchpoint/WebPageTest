@@ -41,25 +41,10 @@ if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a website URL...';
-$profile_file = SETTINGS_PATH . '/profiles.ini';
-if (file_exists(SETTINGS_PATH . '/common/profiles.ini')) {
-    $profile_file = SETTINGS_PATH . '/common/profiles.ini';
-}
-if (file_exists(SETTINGS_PATH . '/server/profiles.ini')) {
-    $profile_file = SETTINGS_PATH . '/server/profiles.ini';
-}
-$profiles = parse_ini_file($profile_file, true);
-$connectivity_file = SETTINGS_PATH . '/connectivity.ini.sample';
-if (file_exists(SETTINGS_PATH . '/connectivity.ini')) {
-    $connectivity_file = SETTINGS_PATH . '/connectivity.ini';
-}
-if (file_exists(SETTINGS_PATH . '/common/connectivity.ini')) {
-    $connectivity_file = SETTINGS_PATH . '/common/connectivity.ini';
-}
-if (file_exists(SETTINGS_PATH . '/server/connectivity.ini')) {
-    $connectivity_file = SETTINGS_PATH . '/server/connectivity.ini';
-}
-$connectivity = parse_ini_file($connectivity_file, true);
+
+$profiles = IniReader::parse('profiles.ini', true);
+$connectivity = IniReader::parse('connectivity.ini', true, true);
+
 $mobile_devices = LoadMobileDevices();
 
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {

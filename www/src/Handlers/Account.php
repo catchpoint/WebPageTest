@@ -6,6 +6,9 @@ namespace WebPageTest\Handlers;
 
 use Exception as BaseException;
 use stdClass;
+use Illuminate\Http\Response;
+use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\Cookie;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\ValidatorPatterns;
@@ -19,6 +22,79 @@ use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as Subscripti
 
 class Account
 {
+    /* Validate the form for a canceled account signing up again
+     *
+     * #[ValidationMethod]
+     * #[Route(Http::POST, '/account', 'canceled-account-signup')]
+     *
+     *  @param array{plan: string} $post_body
+     *  @return object{plan: string} $vars
+     */
+    public static function validateCanceledAccountSignup(array $post_body): object
+    {
+        $body = new stdClass();
+        $body->is_upgrade = !empty($post_body['is-upgrade']);
+
+        $subscription_id = $post_body['subscription-id'] ?? "";
+        $nonce = $post_body['nonce'] ?? "";
+        $city = $post_body['city'] ?? "";
+        $country = $post_body['country'] ?? "";
+        $state = $post_body['state'] ?? "";
+        $street_address = $post_body['street-address'] ?? "";
+        $zipcode = $post_body['zipcode'] ?? "";
+
+        if (
+            empty($city) ||
+            empty($country) ||
+            empty($state) ||
+            empty($street_address) ||
+            empty($zipcode) ||
+            empty($nonce) ||
+            empty($subscription_id)
+        ) {
+            throw new ClientException("Please complete all required fields", "/account");
+        }
+
+        $body->subscription_id = $subscription_id;
+        $body->token = $nonce;
+        $body->address = new ChargifyAddressInput([
+          'city' => $city,
+          'country' => $country,
+          'state' => $state,
+          'street_address' => $street_address,
+          'zipcode' => $zipcode
+        ]);
+
+        $body->plan = $post_body['plan'];
+
+        return $body;
+    }
+
+    public static function canceledAccountSignup(RequestContext $request_context, object $body): RedirectResponse
+    {
+        $up = $request_context->getClient()->updatePaymentMethod($body->token, $body->address);
+        $new = $up && $request_context->getClient()->updatePlan($body->subscription_id, $body->plan, $body->is_upgrade);
+
+        if ($new) {
+            $success_message = [
+              'type' => 'success',
+              'text' => 'Your plan has been successfully updated!'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $success_message);
+        } else {
+            $error_message = [
+              'type' => 'error',
+              'text' => 'Your plan was not updated successfully. Please try again or contact customer service.'
+            ];
+            $request_context->getBannerMessageManager()->put('form', $error_message);
+        }
+
+        $protocol = $request_context->getUrlProtocol();
+        $host = $request_context->getHost();
+        $redirect_uri = "{$protocol}://{$host}/account";
+        return new RedirectResponse($redirect_uri);
+    }
+
     /* Validate that a plan is selected
      *
      * #[ValidationMethod]
@@ -45,15 +121,21 @@ class Account
     *
     *  @param WebPageTest\RequestContext $request_context
     *  @param object{plan: string} $body
-    *  @return string $redirect_uri
+    *  @return Symfony\Component\HttpFoundation\Response
     */
-    public static function postPlanUpgrade(RequestContext $request_context, object $body): string
+    public static function postPlanUpgrade(RequestContext $request_context, object $body): RedirectResponse
     {
         $host = $request_context->getHost();
-        setcookie('upgrade-plan', $body->plan, time() + (5 * 60), "/", $host);
         $protocol = $request_context->getUrlProtocol();
         $redirect_uri = "{$protocol}://{$host}/account/plan_summary";
-        return $redirect_uri;
+        $response = new RedirectResponse($redirect_uri);
+        $cookie = Cookie::create('upgrade-plan')
+            ->withValue($body->plan)
+            ->withExpires(time() + (5 * 60))
+            ->withPath("/")
+            ->withDomain($host);
+        $response->headers->setCookie($cookie);
+        return $response;
     }
 
     /* validate PostUpdatePlanSummary
@@ -81,9 +163,9 @@ class Account
      *
      *  @param WebPageTest\RequestContext $request_context
      *  @param object{plan: string, subscription_id: string, is_upgrade: bool, runs: int} $body
-     *  @return string $redirect_uri
+     *  @return Symfony\Component\HttpFoundation\RedirectResponse
      */
-    public static function postUpdatePlanSummary(RequestContext $request_context, object $body): string
+    public static function postUpdatePlanSummary(RequestContext $request_context, object $body): RedirectResponse
     {
         $host = $request_context->getHost();
         $protocol = $request_context->getUrlProtocol();
@@ -102,7 +184,7 @@ class Account
                 $_SESSION['new-run-count'] = $body->runs;
             }
 
-            return "{$protocol}://{$host}/account";
+            return new RedirectResponse("{$protocol}://{$host}/account");
         } catch (\Exception $e) {
             error_log($e->getMessage());
             $error_message = [
@@ -110,8 +192,7 @@ class Account
                 'text' => 'There was an error updating your plan. Please try again or contact customer service.'
             ];
             $request_context->getBannerMessageManager()->put('form', $error_message);
-
-            return "{$protocol}://{$host}/account";
+            return new RedirectResponse("{$protocol}://{$host}/account");
         }
     }
 
@@ -339,11 +420,11 @@ class Account
         return $body;
     }
 
-    // Existing free user subscribes to a paid account
+    // Existing free/canceled/expired user subscribes to a paid account
     //
     // #[HandlerMethod]
     // #[Route(Http::POST, '/account', 'account-signup')]
-    public static function subscribeToAccount(RequestContext $request_context, object $body): string
+    public static function subscribeToAccount(RequestContext $request_context, object $body): RedirectResponse
     {
         $address = new ChargifyAddressInput([
             'city' => $body->city,
@@ -357,12 +438,13 @@ class Account
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
+
             $successMessage = array(
                 'type' => 'success',
                 'text' => 'Your plan has been successfully updated! '
             );
-            Util::setBannerMessage('form', $successMessage);
-            return $redirect_uri;
+            $request_context->getBannerMessageManager()->put('form', $successMessage);
+            return new RedirectResponse($redirect_uri);
         } catch (BaseException $e) {
             error_log($e->getMessage());
             $message = "There was an error. Please try again or contact customer service.";
@@ -370,10 +452,12 @@ class Account
                 'type' => 'error',
                 'text' => $message
             );
-            Util::setBannerMessage('form', $errorMessage);
+            $request_context->getBannerMessageManager()->put('form', $errorMessage);
             $host = $request_context->getHost();
             $protocol = $request_context->getUrlProtocol();
-            return "{$protocol}://{$host}/account";
+            $redirect_uri = "{$protocol}://{$host}/account";
+
+            return new RedirectResponse($redirect_uri);
         }
     }
 
@@ -476,6 +560,7 @@ class Account
         $body->state = $post['state'];
         $body->country = $post['country'];
         $body->zipcode = $post['zipcode'];
+
         return $body;
     }
     // Change a user's payment method
@@ -523,7 +608,7 @@ class Account
     public static function cancelSubscription(RequestContext $request_context): string
     {
 
-        $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_SANITIZE_STRING);
+        $subscription_id = filter_input(INPUT_POST, 'subscription-id', FILTER_UNSAFE_RAW);
 
         try {
             $request_context->getClient()->cancelWptSubscription($subscription_id);
@@ -561,7 +646,7 @@ class Account
         $vars = new stdClass();
 
         $name = $post_body['api-key-name'] ?? "";
-        $vars->name = filter_var($name, FILTER_SANITIZE_STRING);
+        $vars->name = filter_var($name, FILTER_UNSAFE_RAW);
 
         if (empty($vars->name)) {
             throw new ClientException('Valid name required for API key', '/account#api-consumers');
@@ -795,14 +880,17 @@ class Account
      * @param WebPageTest\RequestContext $request_context
      * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
-     * @return string $contents the contents of the page
+     * @return Symfony\Component\HttpFoundation\Response
      */
-    public static function getAccountPage(RequestContext $request_context, string $page): string
+    public static function getAccountPage(RequestContext $request_context, string $page): Response
     {
         $error_message = $_SESSION['client-error'] ?? null;
 
         $is_paid = $request_context->getUser()->isPaid();
+        $is_canceled = $request_context->getUser()->isCanceled();
+        $is_expired = $request_context->getUser()->isExpired();
         $is_verified = $request_context->getUser()->isVerified();
+        $is_pending = $request_context->getUser()->isPendingCancelation();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
         $user_id = $request_context->getUser()->getUserId();
         $remaining_runs = $request_context->getUser()->getRemainingRuns();
@@ -823,6 +911,9 @@ class Account
         $contact_info = [
             'layout_theme' => 'b',
             'is_paid' => $is_paid,
+            'is_pending' => $is_pending,
+            'is_canceled' => $is_canceled,
+            'is_expired' => $is_expired,
             'is_verified' => $is_verified,
             'is_wpt_enterprise' => $is_wpt_enterprise,
             'first_name' => htmlspecialchars($first_name),
@@ -836,7 +927,8 @@ class Account
         $country_list = Util::getChargifyCountryList();
         $state_list = Util::getChargifyUSStateList();
 
-        if ($is_paid) {
+
+        if ($is_paid || $is_canceled) {
             $acct_info = $is_wpt_enterprise
                 ? $request_context->getClient()->getPaidEnterpriseAccountPageInfo()
                 : $request_context->getClient()->getPaidAccountPageInfo();
@@ -848,7 +940,6 @@ class Account
                 'wptCustomer' => $customer,
                 'transactionHistory' => $sub_id ? $request_context->getClient()->getTransactionHistory($sub_id) : null,
                 'status' => $customer->getStatus(),
-                'is_canceled' => $customer->isCanceled(),
                 'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
                 'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
                 'masked_cc' => $customer->getMaskedCreditCard(),
@@ -864,7 +955,6 @@ class Account
         $all_plans = $plan_set->getAllPlans();
 
         $results = array_merge($contact_info, $billing_info);
-        $results['is_canceled'] ??= false;
         $results['run_renewal_date'] = $run_renewal_date;
         $results['remaining_runs'] = $remaining_runs;
         $results['monthly_runs'] = $monthly_runs;
@@ -900,14 +990,16 @@ class Account
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                 $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
 
-                return $tpl->render('billing/billing-cycle', $results);
+                $content = $tpl->render('billing/billing-cycle', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
             case 'update_plan':
                 if ($is_paid) {
                     $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
                     $results['oldPlan'] = $oldPlan;
                 }
-                return $tpl->render('plans/upgrade-plan', $results);
+                $content = $tpl->render('plans/upgrade-plan', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
@@ -916,7 +1008,6 @@ class Account
                     $results['plan'] = $plan;
                     if ($is_paid) {
                         $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
-                        $sub_id = $customer->getSubscriptionId();
                         $billing_address = $customer->getAddress();
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
                         $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $addr);
@@ -925,16 +1016,32 @@ class Account
                         $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
                         $results['isUpgrade'] = $plan->isUpgrade($oldPlan);
                         $results['renewaldate'] = $customer->getNextPlanStartDate();
-                        return $tpl->render('plans/plan-summary-upgrade', $results);
+
+                        $content = $tpl->render('plans/plan-summary-upgrade', $results);
+                        return new Response($content, Response::HTTP_OK);
+                    } elseif ($is_pending) {
+                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                        $results['is_pending'] = $is_pending;
+
+                        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+                        $results['ch_site'] = Util::getSetting('ch_site');
+                        $results['is_upgrade'] = $plan->isUpgrade($oldPlan);
+                        $results['subscription_id'] = $customer->getSubscriptionId();
+
+                        $content = $tpl->render('plans/plan-summary', $results);
+                        return new Response($content, Response::HTTP_OK);
                     } else {
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
-                        return $tpl->render('plans/plan-summary', $results);
+
+                        $content = $tpl->render('plans/plan-summary', $results);
+                        return new Response($content, Response::HTTP_OK);
                     }
                     break;
                 } else {
                   //TODO redirect instead
-                    return $tpl->render('plans/upgrade-plan', $results);
+                    $content = $tpl->render('plans/upgrade-plan', $results);
+                    return new Response($content, Response::HTTP_OK);
                     break;
                 }
             case 'update_payment_method':
@@ -942,7 +1049,7 @@ class Account
                     $host = $request_context->getHost();
                     $protocol = $request_context->getUrlProtocol();
                     $redirect_uri = "{$protocol}://{$host}/account";
-                    header("Location: {$redirect_uri}");
+                    return new RedirectResponse($redirect_uri);
                     exit();
                 }
                 $results['plan'] = $customer->getWptPlanId();
@@ -968,16 +1075,18 @@ class Account
 
                 $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
 
-                return $tpl->render('billing/update-payment-confirm-address', $results);
-              break;
+                $content = $tpl->render('billing/update-payment-confirm-address', $results);
+                return new Response($content, Response::HTTP_OK);
+                break;
             default:
-                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise && !$customer->isCanceled());
+                $can_have_next_plan = ($is_paid && !$is_wpt_enterprise);
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
                 if (isset($next_plan)) {
                     $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);
                 }
 
-                return $tpl->render('my-account', $results);
+                $content = $tpl->render('my-account', $results);
+                return new Response($content, Response::HTTP_OK);
                 break;
         }
 

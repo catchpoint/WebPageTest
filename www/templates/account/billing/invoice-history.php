@@ -4,7 +4,7 @@
         <?php if (strtolower($billing_frequency) == "monthly") : ?>
             <div class="account-cta">
                 <a href="/account/update_billing" class="two-tone-pill-button "> <span class="two-tone-pill-button__left">Upgrade to Annual Billing</span>
-                    <span class="two-tone-pill-button__right">Save 25%</span>
+                    <span class="two-tone-pill-button__right">Save 20%</span>
                 </a>
             </div>
         <?php endif; ?>
