@@ -65,4 +65,57 @@ final class UserTest extends TestCase
         $user->setLastName("Pls");
         $this->assertEquals("Pls", $user->getLastName());
     }
+
+    public function testSetGetIsPaid(): void
+    {
+        $user = new User();
+        $this->assertFalse($user->isPaid());
+        $user->setPaidClient(true);
+        $this->assertFalse($user->isPaid());
+        $user->setPaymentStatus('ACTIVE');
+        $this->assertTrue($user->isPaid());
+    }
+
+    public function testSetGetIsPaidNoStatusPassed(): void
+    {
+        $user = new User();
+        $this->assertFalse($user->isPaid());
+        $user->setPaidClient(true);
+        $this->assertFalse($user->isPaid());
+        $user->setPaymentStatus();
+        $this->assertFalse($user->isPaid());
+    }
+
+    public function testSetGetIsPaidNullStatusPassed(): void
+    {
+        $user = new User();
+        $this->assertFalse($user->isPaid());
+        $user->setPaidClient(true);
+        $this->assertFalse($user->isPaid());
+        $user->setPaymentStatus(null);
+        $this->assertFalse($user->isPaid());
+    }
+
+    public function testSetGetIsPaidCanceledStatusPassed(): void
+    {
+        $user = new User();
+        $this->assertFalse($user->isPaid());
+        $user->setPaidClient(true);
+        $this->assertFalse($user->isPaid());
+        $user->setPaymentStatus('CANCELED');
+        $this->assertFalse($user->isPaid());
+        $this->assertTrue($user->isCanceled());
+    }
+
+    public function testSetGetIsPaidPendingStatusPassed(): void
+    {
+        $user = new User();
+        $this->assertFalse($user->isPaid());
+        $user->setPaidClient(true);
+        $this->assertFalse($user->isPaid());
+        $user->setPaymentStatus('PENDING_CANCELATION');
+        $this->assertTrue($user->isPaid());
+        $this->assertTrue($user->isCanceled());
+        $this->assertTrue($user->isPendingCancelation());
+    }
 }

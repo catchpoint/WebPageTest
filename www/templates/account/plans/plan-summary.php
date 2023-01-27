@@ -12,7 +12,13 @@
                 <?php require_once __DIR__ . '/../includes/chargify-payment-form.php' ?>
                 <input type="hidden" name="plan" value="<?= $plan->getId() ?>" />
                 <input type="hidden" name="nonce" id="hidden-nonce-input" required />
-                <input type="hidden" name="type" value="account-signup" required />
+                <?php if ($is_pending) : ?>
+                    <input type="hidden" name="type" value="canceled-account-signup" required />
+                    <input name="is-upgrade" type="hidden" value="<?= $is_upgrade ?>" />
+                    <input name="subscription-id" type="hidden" value="<?= $subscription_id ?>" />
+                <?php else : ?>
+                    <input type="hidden" name="type" value="account-signup" required />
+                <?php endif; ?>
                 <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>" />
                 <input name="street-address" type="hidden" value="<?= $street_address ?>" data-chargify="address" required />
                 <input name="city" type="hidden" value="<?= $city ?>" data-chargify="city" required />

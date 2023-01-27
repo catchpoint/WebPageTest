@@ -35,10 +35,10 @@ global $support_link;
         <!-- radio buttons control the JS-less tabs-->
         <input type="radio" name="account-tabs" id="account-settings" value="account settings" checked />
         <!-- these sections only exist for paid users-->
+        <?php if (($is_paid || $is_canceled) && !$is_wpt_enterprise) : ?>
+            <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
+        <?php endif; ?>
         <?php if ($is_paid) : ?>
-            <?php if (!$is_wpt_enterprise) : ?>
-                <input type="radio" name="account-tabs" id="payments-invoices" value="payments and invoices" />
-            <?php endif; ?>
             <input type="radio" name="account-tabs" id="api-consumers" value="api consumers" />
         <?php endif; ?>
 
@@ -46,10 +46,10 @@ global $support_link;
         <div class="tab-labels" data-id="tab-labels">
             <label for="account-settings">Account Settings</label>
             <!-- these sections only exist for paid users-->
+            <?php if (($is_paid || $is_canceled) && !$is_wpt_enterprise) : ?>
+                <label for="payments-invoices">Payments and Invoices</label>
+            <?php endif; ?>
             <?php if ($is_paid) : ?>
-                <?php if (!$is_wpt_enterprise) : ?>
-                    <label for="payments-invoices">Payments and Invoices</label>
-                <?php endif; ?>
                 <label for="api-consumers">Api Consumers</label>
             <?php endif; ?>
         </div>
@@ -95,7 +95,7 @@ global $support_link;
 
 
         <!-- PAYING ONLY: Billing Invoice tab -->
-        <?php if ($is_paid && !$is_wpt_enterprise) : ?>
+        <?php if (($is_paid || $is_canceled) && !$is_wpt_enterprise) : ?>
             <div class="tab-content" id="billing-settings-content">
             <?php include_once __DIR__ . '/billing/invoice-history.php'; ?>
             </div>
@@ -108,7 +108,7 @@ global $support_link;
                 <?php include_once __DIR__ . '/includes/api-keys.php'; ?>
             </div>
         <?php endif; ?>
-    </div>
+     </div>
 </div>
 
 
