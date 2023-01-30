@@ -5694,12 +5694,6 @@ table.details td.reqMime {
   z-index: 99;
 }
 
-.crux_legends:before {
-  content: "Key: ";
-  font-weight: 700;
-  color: #666;
-}
-
 .cruxlabel + .cruxbars {
   margin-top: -15px !important;
 }
@@ -5804,11 +5798,11 @@ table.details td.reqMime {
 }
 
 .cruxembed .crux .fvarrow {
-  color: #1a1a1a;
+  color: #1072ba;
 }
 
 .cruxembed .crux .rvarrow {
-  color: #737373;
+  color: #5dbbe8;
 }
 
 /* end vitals page styles */
