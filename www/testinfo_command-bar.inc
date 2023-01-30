@@ -1,3 +1,7 @@
+<?php
+use WebPageTest\Util;
+?>
+
 <div class="test_meta_commands">
 
                 <p class="results_nav_hed">Tools:</p>
@@ -44,7 +48,7 @@
 
                   <?php
                     if (
-                        !$headless && gz_is_file("$testPath/testinfo.json")
+                        !Util::getSetting('headless') && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && !isset($tests)
