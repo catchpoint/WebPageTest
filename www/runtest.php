@@ -2349,7 +2349,10 @@ function LogTest(&$test, $testId, $url)
         server_sync($apiKey, $runcount, null);
         return;
     }
-    $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
+
+    $host = parse_url($url, PHP_URL_HOST);
+    $exempt_host = parse_url(Util::getExemptHost(), PHP_URL_HOST);
+    $runcount = ($host == $exempt_host) ? 0 : Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
 
     if (!is_dir('./logs')) {
         mkdir('./logs', 0777, true);

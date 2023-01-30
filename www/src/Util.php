@@ -747,9 +747,9 @@ class Util
     /**
      * This is used to determine which hosts don't get counted in test runs
      */
-    public static function getExemptHost(): string
+    public static function getExemptHost(?string $default = ""): string
     {
-        return 'webpagetest.org';
+        return self::getSetting('exempt_from_test_run_count_host', $default);
     }
 
     /**
