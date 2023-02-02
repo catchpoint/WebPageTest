@@ -1,4 +1,5 @@
 <?php
+
 $requests = $testStepResult->getRequests();
 global $request_context;
 

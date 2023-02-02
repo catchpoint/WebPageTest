@@ -17,7 +17,11 @@
             <div class="cc-details">
                 <div class="cc-number"><?= $masked_cc; ?></div>
                 <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
-
+            </div>
+        </div>
+        <div class="card-section">
+            <div class="edit-button">
+                <a href="/account/update_payment_method"><span>Edit Billing Info</span></a>
             </div>
         </div>
     </div>

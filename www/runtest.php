@@ -1021,7 +1021,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 }
                                 $ingredients = implode(",", $ingredients);
                             }
-                            if($recipeSansId === "editresponsehtml"){
+                            if ($recipeSansId === "editresponsehtml") {
                                 // striking out the ingredients here because it's too much to send in a cookie
                                 $ingredients = "";
                             }
