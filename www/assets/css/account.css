@@ -156,7 +156,10 @@ body.theme-b {
     center center no-repeat;
 }
 
-.edit-button button {
+.edit-button button,
+.edit-button a {
+  display: inline-block;
+  text-decoration: none;
   position: relative;
   padding: 8px;
   padding-left: 24px;
@@ -168,7 +171,8 @@ body.theme-b {
   background-repeat: no-repeat;
 }
 
-.edit-button button span {
+.edit-button button span,
+.edit-button a span {
   color: rgb(43, 148, 255);
   font-size: 1rem;
 }

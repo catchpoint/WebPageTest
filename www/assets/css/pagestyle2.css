@@ -1171,7 +1171,10 @@ h4.experiments_list_hed-recs {
 }
 
 /* hide stuff after unchecked dependency checks */
-.has-js .experiment_description_go:not(.experiment_description_go-checked) label:first-child ~ * {
+.has-js
+  .experiment_description_go:not(.experiment_description_go-checked)
+  label:first-child
+  ~ * {
   display: none;
 }
 
@@ -2218,7 +2221,9 @@ footer ul {
   }
 }
 
-.experiment_description_go > label.experiment_pair_value textarea[data-fullscreenfocus=true]:focus {
+.experiment_description_go
+  > label.experiment_pair_value
+  textarea[data-fullscreenfocus="true"]:focus {
   position: fixed;
   top: 10vh;
   left: 10vw;
