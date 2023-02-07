@@ -440,7 +440,10 @@ class CPClient
         }
     }
 
-    public function updateUserContactInfo(string $id, array $options): array
+    /**
+     * @return array|object
+     */
+    public function updateUserContactInfo(string $id, array $options)
     {
         $gql = (new Mutation('wptContactUpdate'))
             ->setVariables([
@@ -466,7 +469,10 @@ class CPClient
         return $results->getData();
     }
 
-    public function changePassword(string $new_pass, string $current_pass): array
+    /**
+     * @return array|object
+     */
+    public function changePassword(string $new_pass, string $current_pass)
     {
         $gql = (new Mutation('userPasswordChange'))
             ->setVariables([
@@ -493,7 +499,10 @@ class CPClient
         }
     }
 
-    public function createApiKey(string $name): array
+    /**
+     * @return array|object
+     */
+    public function createApiKey(string $name)
     {
         $gql = (new Mutation('wptApiKeyCreate'))
             ->setVariables([
@@ -522,7 +531,10 @@ class CPClient
         }
     }
 
-    public function deleteApiKey(array $ids): array
+    /**
+     * @return array|object
+     */
+    public function deleteApiKey(array $ids)
     {
         $gql = (new Mutation('wptApiKeyBulkDelete'))
             ->setVariables([
@@ -572,11 +584,14 @@ class CPClient
         }
     }
 
+    /**
+     * @return array|object
+     */
     public function cancelWptSubscription(
         string $subscription_id,
         string $reason = "",
         string $suggestion = ""
-    ): array {
+    ) {
         $wpt_api_subscription_cancellation =
             new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
 

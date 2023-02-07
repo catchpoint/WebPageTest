@@ -13,6 +13,12 @@ class OAuth
     public static string $cp_access_token_cookie_key = 'cp_access_token';
     public static string $cp_refresh_token_cookie_key = 'cp_refresh_token';
 
+    private string $code_verifier;
+    private string $code_challenge;
+    private string $provider;
+    private string $nonce;
+    private string $client_id;
+
     public function __construct(string $auth_host, string $client_id)
     {
         $this->provider = "{$auth_host}/auth";

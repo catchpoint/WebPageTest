@@ -14,6 +14,9 @@ class Cache
      *
      * returns bool
      */
+    /**
+     * @param array|false|string $value
+     */
     public static function store(string $key, $value, int $ttl = 0): bool
     {
         $ret = false;

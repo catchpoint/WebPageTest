@@ -10,6 +10,12 @@ use Countable;
 use ArrayIterator;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
 
+/**
+ *
+ * @implements IteratorAggregate<ChargifyInvoiceResponseType>
+ * @implements Countable<ChargifyInvoiceResponseType>
+ *
+ * */
 class ChargifyInvoiceResponseTypeList implements IteratorAggregate, Countable
 {
     private array $list;

@@ -15,7 +15,7 @@ class Admin
    * This should only be available in QA and Dev environments.
    * Does not require Admin credentials.
    *
-   * @param WebPageTest\RequestContext $request_context
+   * @param RequestContext $request_context
    *
    * @return string $contents the contents of the page
    *

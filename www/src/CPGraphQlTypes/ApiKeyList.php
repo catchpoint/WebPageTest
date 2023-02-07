@@ -10,6 +10,11 @@ use Countable;
 use ArrayIterator;
 use WebPageTest\CPGraphQlTypes\ApiKey;
 
+/**
+ * @template-implements IteratorAggregate<ApiKey> getIterator()
+ * @template-implements Countable count()
+ *
+ */
 class ApiKeyList implements IteratorAggregate, Countable
 {
     private array $list;

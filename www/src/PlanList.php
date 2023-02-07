@@ -10,6 +10,12 @@ use Countable;
 use ArrayIterator;
 use WebPageTest\Plan;
 
+/**
+ *
+ * @implements IteratorAggregate<Plan>
+ * @implements Countable<Plan>
+ *
+ * */
 class PlanList implements IteratorAggregate, Countable
 {
     private array $list;
