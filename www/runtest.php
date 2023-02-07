@@ -73,7 +73,19 @@ $includePaid = $isPaid || $admin;
 // load the secret key (if there is one)
 $server_secret = Util::getServerSecret();
 $api_keys = null;
-if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
+$user_api_key = $_REQUEST['k'] ?? "";
+if (empty($user_api_key)) {
+    $user_api_key_header = 'X-WPT-API-KEY';
+    $request_headers = getallheaders();
+    $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
+        return strtolower($k) == strtolower($user_api_key_header);
+    }, ARRAY_FILTER_USE_KEY);
+    if (!empty($matching_headers)) {
+        $user_api_key = array_values($matching_headers)[0];
+    }
+}
+
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
@@ -100,7 +112,7 @@ $is_bulk_test = false;
 // Load the location information
 $locations = LoadLocationsIni();
 // See if we need to load a subset of the locations
-if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() && isset($api_keys) && !isset($api_keys[$_REQUEST['k']])) {
+if (!$privateInstall && !empty($user_api_key) && $user_api_key != GetServerKey() && isset($api_keys) && !isset($api_keys[$user_api_key])) {
     foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['noapi'])) {
             unset($locations[$name]);
@@ -525,9 +537,9 @@ if (!isset($test)) {
     }
 
     // see if we need to process a template for these requests
-    if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
-        if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {
-            $template = $api_keys[$req_k]['template'];
+    if (!empty($user_api_key) && isset($api_keys)) {
+        if (count($api_keys) && array_key_exists($user_api_key, $api_keys) && array_key_exists('template', $api_keys[$user_api_key])) {
+            $template = $api_keys[$user_api_key]['template'];
             if (is_file("./settings/common/templates/$template.php")) {
                 include("./settings/common/templates/$template.php");
             }
@@ -820,8 +832,8 @@ if ($headless) {
 if (isset($req_vo)) {
     $test['owner'] = $req_vo;
 }
-if (isset($req_k)) {
-    $test['key'] = $req_k;
+if (!empty($user_api_key)) {
+    $test['key'] = $user_api_key;
 }
 
 if (isset($user) && !array_key_exists('user', $test)) {
