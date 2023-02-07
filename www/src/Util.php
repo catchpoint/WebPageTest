@@ -17,6 +17,9 @@ class Util
         throw new \Exception("Util should not be instantiated. It only has static methods.");
     }
 
+    /**
+     * @param false|null|string $default
+     */
     public static function getSetting(string $setting, $default = false, string $override_settings_file = "")
     {
         if (empty(self::$SETTINGS)) {
@@ -764,7 +767,7 @@ class Util
     /**
      * gets a plan by it's id if you pass it an array of plans
      */
-    public static function getPlanFromArray($id, $plans): Plan
+    public static function getPlanFromArray(string $id, PlanList $plans): Plan
     {
         foreach ($plans as $plan) {
             $planId = $plan->getId();
@@ -802,7 +805,7 @@ class Util
         return $messages_array;
     }
 
-    public static function getAnnualPlanByRuns(int $runs, $annualPlans): Plan
+    public static function getAnnualPlanByRuns(int $runs, array $annualPlans): Plan
     {
         foreach ($annualPlans as $plan) {
             $planRuns = $plan->getRuns();

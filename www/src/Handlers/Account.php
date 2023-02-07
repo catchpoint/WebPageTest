@@ -828,7 +828,7 @@ class Account
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'account-signup-preview')]
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @param object{
      *     plan: string,
      *     street_address: string,
@@ -837,7 +837,8 @@ class Account
      *     country: string,
      *     zipcode: string
      * } $body
-     * @return WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse|array $totals
+     *
+     * @return SubscriptionPreview $totals
      */
     public static function previewCost(RequestContext $request_context, object $body): SubscriptionPreview
     {
@@ -860,7 +861,7 @@ class Account
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'resend-email-verification')]
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @return string $redirect_uri
      */
     public static function resendEmailVerification(RequestContext $request_context): string
@@ -882,12 +883,12 @@ class Account
     /**
      * GET for the account page
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
-     * @return Symfony\Component\HttpFoundation\Response
+     * @return RedirectResponse|Response
      */
-    public static function getAccountPage(RequestContext $request_context, string $page): Response
+    public static function getAccountPage(RequestContext $request_context, string $page)
     {
         $error_message = $_SESSION['client-error'] ?? null;
 
