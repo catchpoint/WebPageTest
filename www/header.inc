@@ -104,18 +104,18 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $showUrl = $numSteps > 1 || !$url ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         echo "<ul class=\"header_data_urltime\">";
 
-        if($test['testinfo']['type'] === "traceroute"){
+        if ($test['testinfo']['type'] === "traceroute") {
             $showUrl = "http://" . $showUrl;
             echo "<li><strong>HOST/IP: </strong>";
-        }else{
+        } else {
             echo "<li><strong>URL: </strong>";
         }
-        
+
         $shortUrl = str_replace('http://', '', FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
-        
 
-        
+
+
         if (GetSetting('nolinks')) {
             echo "<span class=\"page-tested\">$shortUrl</span>";
         } else {
