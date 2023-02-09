@@ -46,6 +46,7 @@ $auditExperiments = [
     "render-blocking-resources" => "001",
     "viewport" => "009",
     "preload-lcp-image" => "010",
+    "prioritize-lcp-image" => "010", // "preload-lcp-image" is renamed in v112
     "unsized-images" => "012",
     "lcp-lazy-loaded" => "013",
     "meta-viewport" => "009"
