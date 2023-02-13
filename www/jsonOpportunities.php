@@ -23,12 +23,8 @@ if ($experiment && isset($experimentOriginalExperimentsHref)) {
 }
 
 $breakdown = array();
-$testComplete = true;
 $status = GetTestStatus($id, false);
-
-if ($status['statusCode'] < 200) {
-    $testComplete = false;
-}
+$testComplete = ($status['statusCode'] >= 200);
 
 $testInfo = TestInfo::fromFiles($testPath);
 $testResults = TestResults::fromFiles($testInfo);
