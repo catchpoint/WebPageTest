@@ -17,7 +17,7 @@ require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
 
 // if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
-// TODO this should redirect to the json url 
+// TODO this should redirect to the json url
 if ($experiment && isset($experimentOriginalExperimentsHref)) {
     header('Location: ' . $experimentOriginalExperimentsHref);
 }
@@ -38,4 +38,3 @@ if ($testComplete) {
     include INCLUDES_PATH . '/experiments/common.inc';
     json_response($assessment);
 }
-?>
