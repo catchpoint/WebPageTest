@@ -123,6 +123,17 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             'hint' => 'site.js'
         ],
         (object) [
+            'id' => '055',
+            'expvar' => 'disablescripts',
+            'title' => 'Disable JavaScript',
+            "desc" => '<p>This experiment effectively disables JavaScript (and enables noscript elements) to test a site\'s JavaScript dependence. It works by changing <code>script</code> elements into <code>scrapt</code> elements, and <code>noscript</code> elements into <code>noscrapt</code> elements so that the page weight remains and behaviors mimic a JS-disabled environment.</p>',
+            'textfield' => false,
+            'expval' => array(''),
+            "hideassets" => true,
+            'instruction' => false,
+            'hint' => 'no value necessary'
+        ],
+        (object) [
             'id' => '029',
             'expvar' => 'asynccss',
             'title' => 'Load CSS Async',
