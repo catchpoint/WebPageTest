@@ -9,13 +9,13 @@ $usingAPI = false;
 $usingApi2 = false;
 $forceValidate = false;
 $apiKey = null;
-$key = $_REQUEST['k'];
+$user_api_key = $request_context->getApiKeyInUse();
 $error = null;
 
 // load the secret key (if there is one)
 $server_secret = GetServerSecret();
 $api_keys = null;
-if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
