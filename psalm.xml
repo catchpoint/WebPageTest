@@ -11,6 +11,8 @@
         <directory name="www/src" />
         <ignoreFiles>
             <directory name="vendor" />
+            <directory name="www/lib" />
+            <directory name="www/chrome" />
         </ignoreFiles>
     </projectFiles>
 </psalm>
