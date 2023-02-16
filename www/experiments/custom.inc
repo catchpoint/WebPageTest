@@ -179,7 +179,7 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             'id' => '032',
             'expvar' => 'addpreload',
             'title' => 'Preload Files',
-            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="' . $lcpSource . '"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
+            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="..."&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request a file earlier and at a higher priority than they otherwise might.</p>',
 
             "expfields" => array(
                 (object) [
