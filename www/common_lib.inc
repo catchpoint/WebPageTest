@@ -6,33 +6,15 @@
 
 // Load app and composer-based dependencies
 require_once(__DIR__ . '/../vendor/autoload.php');
+
 require_once INCLUDES_PATH . '/archive.inc';
 require_once INCLUDES_PATH . '/util.inc';
 require_once INCLUDES_PATH . '/logging.inc';
 
 use WebPageTest\Util;
 use WebPageTest\Util\Cache;
+use WebPageTest\Util\GZ;
 
-function GetSetting($setting, $default = false)
-{
-    return Util::getSetting($setting, $default);
-}
-
-function CacheFetch($key)
-{
-    return Cache::fetch($key);
-}
-
-function CacheStore($key, $value, $ttl = 0)
-{
-    return Cache::store($key, $value, $ttl);
-}
-
-function GetServerSecret()
-{
-    $secret = Util::getServerSecret();
-    return $secret;
-}
 
 /**
 * Figure out the test path (relative) for the given test ID
@@ -427,154 +409,6 @@ function readfile_chunked($filename, $retbytes = true)
         return $cnt; // return num. bytes delivered like readfile() does.
     }
     return $status;
-}
-
-/**
-* Send a large file a chunk at a time (supports gzipped files)
-*
-* @param mixed $filename
-* @param mixed $retbytes
-* @return bool
-*/
-function gz_readfile_chunked($filename, $retbytes = true)
-{
-    $buffer = '';
-    $cnt = 0;
-    $handle = gzopen("$filename.gz", 'rb');
-    if ($handle === false) {
-        $handle = gzopen($filename, 'rb');
-    }
-    if ($handle === false) {
-        return false;
-    }
-    while (!gzeof($handle)) {
-        $buffer = gzread($handle, 1024 * 1024);  // 1MB at a time
-        echo $buffer;
-        ob_flush();
-        flush();
-        if ($retbytes) {
-            $cnt += strlen($buffer);
-        }
-    }
-    $status = gzclose($handle);
-    if ($retbytes && $status) {
-        return $cnt; // return num. bytes delivered like readfile() does.
-    }
-    return $status;
-}
-
-/**
-* Transparently read a GZIP version of the given file (we will be looking for .gz extensions though it's not technically required, just good practice)
-*
-* @param mixed $file
-*/
-function gz_file_get_contents($file)
-{
-    $data = null;
-
-    $fileSize = @filesize("$file.gz");
-    if (!$fileSize) {
-        $fileSize = @filesize($file);
-    }
-    if ($fileSize) {
-        $chunkSize = min(4096, max(1024000, $fileSize * 10));
-        $zip = @gzopen("$file.gz", 'rb');
-        if ($zip === false) {
-            $zip = @gzopen($file, 'rb');
-        }
-
-        if ($zip !== false) {
-            while ($string = gzread($zip, $chunkSize)) {
-                $data .= $string;
-            }
-            gzclose($zip);
-        } else {
-            $data = false;
-        }
-    }
-
-    return $data;
-}
-
-/**
-* Write out a GZIP version of the given file (tacking on the .gz automatically)
-*
-* @param mixed $filename
-* @param mixed $data
-*/
-function gz_file_put_contents($filename, $data)
-{
-    $ret = false;
-    $nogzip = GetSetting('nogzip');
-    $compression = GetSetting('compression', '6');
-    if (!is_numeric($compression) || $compression < 1 || $compression > 9) {
-        $compression = 6;
-    }
-    if (!$nogzip && extension_loaded('zlib')) {
-        $zip = @gzopen("$filename.gz", "wb$compression");
-        if ($zip !== false) {
-            if (gzwrite($zip, $data)) {
-                $ret = true;
-            }
-            gzclose($zip);
-        }
-    } else {
-        if (file_put_contents($filename, $data)) {
-            $ret = true;
-        }
-    }
-
-    return $ret;
-}
-
-/**
-* read a GZIP file into an array
-*
-* @param mixed $filename
-*/
-function gz_file($filename)
-{
-    $ret = null;
-
-    if (is_file("$filename.gz")) {
-        $ret = gzfile("$filename.gz");
-    } elseif (is_file($filename)) {
-        $ret = file($filename);
-    }
-
-    return $ret;
-}
-
-/**
-* GZip compress the given file
-*
-* @param mixed $filename
-*/
-function gz_compress($filename)
-{
-    $ret = false;
-
-    $nogzip = GetSetting('nogzip');
-    if (!$nogzip && extension_loaded('zlib')) {
-        $data = file_get_contents($filename);
-        if ($data) {
-            $ret = gz_file_put_contents($filename, $data);
-            unset($data);
-        }
-    }
-
-    return $ret;
-}
-
-/**
-* Check for either the compressed or uncompressed file
-*
-* @param mixed $filename
-*/
-function gz_is_file($filename)
-{
-    $ret = is_file("$filename.gz") || is_file($filename);
-    return $ret;
 }
 
 /**
@@ -4104,4 +3938,61 @@ if (!function_exists('str_contains')) {
     {
         return $needle !== '' && mb_strpos($haystack, $needle) !== false;
     }
+}
+
+/*
+ * Below are functions that have been replaced by namespaced stuff
+ * Their use is deprecated.
+ * Get rid of them once they're no longer found
+ */
+
+function GetSetting($setting, $default = false)
+{
+    return Util::getSetting($setting, $default);
+}
+
+function CacheFetch($key)
+{
+    return Cache::fetch($key);
+}
+
+function CacheStore($key, $value, $ttl = 0)
+{
+    return Cache::store($key, $value, $ttl);
+}
+
+function GetServerSecret()
+{
+    $secret = Util::getServerSecret();
+    return $secret;
+}
+
+function gz_readfile_chunked($filename, $retbytes = true)
+{
+    return GZ::gzReadfileChunked($filename, $retbytes);
+}
+
+function gz_file_get_contents($file)
+{
+    return GZ::gzFileGetContents($file);
+}
+
+function gz_file_put_contents($filename, $data)
+{
+    return GZ::gzFilePutContents($filename, $data);
+}
+
+function gz_file($filename)
+{
+    return GZ::gzFile($filename);
+}
+
+function gz_compress($filename)
+{
+    return GZ::gzCompress($filename);
+}
+
+function gz_is_file($filename)
+{
+    return GZ::gzIsFile($filename);
 }
