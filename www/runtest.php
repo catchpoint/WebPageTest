@@ -212,7 +212,15 @@ if (!isset($test)) {
      * True private tests are a paid feature (we formerly said we had
      * private tests, but they weren't actually private
      */
-    $is_private = (($isPaid && ($_POST['private'] == 'on')) || (!empty($user_api_key) && !empty($req_private))) ? 1 : 0;
+    $is_private = 0;
+
+    $is_private_api_call = !empty($user_api_key) && !empty($req_private) &&
+      ((int)$req_private == 1 || $req_private == 'true');
+    $is_private_web_call = $isPaid && ($_POST['private'] == 'on');
+
+    if ($is_private_api_call || $is_private_web_call) {
+        $is_private = 1;
+    }
     $test['private'] = $is_private;
 
     if (isset($req_web10)) {
