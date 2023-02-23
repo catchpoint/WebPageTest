@@ -12,7 +12,7 @@
     <form method="POST" action="/account">
         <h3>Subscription Details</h3>
         <p>Active Plan: <?= $wptCustomer->getWptPlanName() ?></p>
-        <p>These changes will take effect immediately. You can resubscribe at any time.</p>
+        <p>These changes will take effect at the end of your billing period. You can resubscribe at any time.</p>
         <button type="submit" class="pill-button red">Cancel Subscription</button>
         <input type="hidden" name="type" value="cancel-subscription" />
         <input type="hidden" name="subscription-id" value="<?= $wptCustomer->getSubscriptionId() ?>" />
