@@ -740,6 +740,10 @@ if (!isset($test)) {
         $test['runs'] = 1;
         $test['fvonly'] = 1;
     }
+    // Force test options when running a traceroute-only test
+    if (isset($test['type']) && $test['type'] === 'traceroute') {
+        $test['fvonly'] = 1;
+    }
 } else {
     // don't inherit some settings from the stored test
     unset($test['id']);

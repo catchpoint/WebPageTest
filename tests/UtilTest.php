@@ -84,4 +84,13 @@ final class UtilTest extends TestCase
         $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
         $this->assertEquals(1, $total_runs);
     }
+    public function testGetRunCountTracerouteTest(): void
+    {
+        $runs = 1;
+        $fvonly = 1;
+        $lighthouse = 0;
+        $testtype = 'traceroute';
+        $total_runs = Util::getRunCount($runs, $fvonly, $lighthouse, $testtype);
+        $this->assertEquals(1, $total_runs);
+    }
 }
