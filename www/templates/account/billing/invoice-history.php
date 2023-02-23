@@ -29,6 +29,7 @@
     <?php if (!$is_wpt_enterprise) : ?>
         <div class=" billing-history">
             <div class="info">
+            <?php if (!empty($transactionHistory)): ?>
                 <table class="sortable responsive-vertical-table">
                     <caption>
                         <span class="sr-only">, column headers with buttons are sortable.</span>
@@ -76,6 +77,9 @@
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            <?php else: // $!empty($transactionHistory) ?>
+                <p>We cannot currently retrieve any of your invoices. If this seems incorrect to you, please reach out to <a href="<?= $support_link ?>">Our Support Team</a>.</p>
+            <?php endif; ?>
             </div>
         </div>
     <?php endif; // (!$is_wpt_enterprise):
