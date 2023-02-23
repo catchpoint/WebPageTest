@@ -32,13 +32,13 @@ if ($redis_server = GetSetting('redis_api_keys')) {
     try {
         $redis = new Redis();
         if ($redis->connect($redis_server, 6379, 30)) {
-            $account = CacheFetch("APIkey_$key");
+            $account = CacheFetch("APIkey_$user_api_key");
             if (!isset($account)) {
-                $response = $redis->get("API_$key");
+                $response = $redis->get("API_$user_api_key");
                 if ($response && strlen($response)) {
                     $account = json_decode($response, true);
                     if (isset($account) && is_array($account)) {
-                        CacheStore("APIkey_$key", $account, 60);
+                        CacheStore("APIkey_$user_api_key", $account, 60);
                     }
                 }
             }
