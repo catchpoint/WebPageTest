@@ -50,6 +50,7 @@ use WebPageTest\Util\Cache;
 use WebPageTest\Template;
 use WebPageTest\RateLimiter;
 use WebPageTest\Util\IniReader;
+use WebPageTest\Environment;
 
 require_once(INCLUDES_PATH . '/ec2/ec2.inc.php');
 require_once(INCLUDES_PATH . '/include/CrUX.php');
@@ -907,8 +908,9 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
     $isAnon = !is_null($request_context->getUser()) && $request_context->getUser()->isAnon();
+    $isDev = Util::getSetting('environment') === Environment::$Development;
 
-    if (!$hasRunsAvailable && !$isAnon && !is_null($request_context->getUser())) {
+    if (!$hasRunsAvailable && !$isAnon && !is_null($request_context->getUser()) && !$isDev) {
         $error = "Not enough runs available";
     }
 

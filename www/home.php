@@ -8,6 +8,7 @@ include 'common.inc';
 
 use WebPageTest\Util;
 use WebPageTest\Util\IniReader;
+use WebPageTest\Environment;
 
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
@@ -75,7 +76,11 @@ $loc = ParseLocations($locations);
 // Is the user a logged in and paid user?
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
-$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
+if (Util::getSetting('environment') === Environment::$Development) {
+    $remaining_runs = 5000;
+} else {
+    $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
+}
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 ?>
 <!DOCTYPE html>
