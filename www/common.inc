@@ -387,11 +387,17 @@ if (strlen($id)) {
             $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
         }
 
+        $creator_id = 0;
+        if (!is_null($request_context->getUser())) {
+            $creator_id = $request_context->getUser()->getUserId() ?? 0;
+        }
+
         // $owner is set by CP details in AttachUser middleware if loaded
         $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
         $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
+        $creator_id_matches_test = array_key_exists('creator', $test['testinfo']) && ($creator_id == $test['testinfo']['creator']);
 
-        $isOwner = $owner_id_matches_test || $uid_matches_test;
+        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test;
         $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'];
 
         if ($test_is_private && !$isOwner) {
