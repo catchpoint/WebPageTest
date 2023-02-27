@@ -774,7 +774,9 @@ function FilterLocations(&$locations, $includeHidden = '',
           unset($locations[$name]);
         }
       }
-      unset($locRef['hidden']);
+      if (isset($locRef) && is_array($locRef)) {
+        unset($locRef['hidden']);
+      }
 
       // see if the location is restricted
       if (isset($locations[$name]) && isset($locRef['restricted'])) {
