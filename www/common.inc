@@ -398,7 +398,12 @@ if (strlen($id)) {
         $creator_id_matches_test = array_key_exists('creator', $test['testinfo']) && ($creator_id == $test['testinfo']['creator']);
 
         $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test;
-        $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'];
+
+        // Boy what a hack. This gets around us running tests as private that should not have been
+        // This happened because we had some profiles set to default private so they ran private for unpaid users
+        // _But_ priority should've been set to free user priority if they were free
+        $was_test_runner_paid = array_key_exists('priority', $test['testinfo']) && $test['testinfo']['priority'] == (int)Util::getSetting('paid_priority', 0);
+        $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'] && $was_test_runner_paid;
 
         if ($test_is_private && !$isOwner) {
             throw new ForbiddenException();
