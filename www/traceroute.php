@@ -5,6 +5,9 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
+$current_user = $request_context->getUser();
+$is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
+
 // load the secret key (if there is one)
 $secret = GetServerSecret();
 if (!isset($secret)) {
@@ -146,10 +149,11 @@ $page_description = "Test network path from multiple locations around the world 
                                             ?>
                                         </select>
                                     </div>
-
-
-
-
+                                    <?php if ($is_paid) : ?>
+                                        <div class="fieldrow">
+                                            <label class="full" for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div>
                                     <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
