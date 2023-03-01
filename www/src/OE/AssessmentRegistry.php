@@ -1,16 +1,20 @@
 <?php
 
+namespace WebPageTest\OE;
+
+use WebPageTest\OE\TestResult;
+
 class AssessmentRegistry
 {
     private static $instance = null;
 
-    const Quick = 'Quick';
-    const Usable = 'Usable';
-    const Resilient = 'Resilient';
-    const Custom = 'Custom';
+    public const QUICK = 'Quick';
+    public const USABLE = 'Usable';
+    public const RESILIENT = 'Resilient';
+    public const CUSTOM = 'Custom';
 
     private $assessments = [
-        self::Quick => [
+        self::QUICK => [
             'grade' => '',
             'sentiment' => '',
             'summary' => '',
@@ -18,7 +22,7 @@ class AssessmentRegistry
             'num_recommended' => 0,
             'num_experiments' => 0
         ],
-        self::Usable => [
+        self::USABLE => [
             'grade' => '',
             'sentiment' => '',
             'summary' => '',
@@ -26,7 +30,7 @@ class AssessmentRegistry
             'num_recommended' => 0,
             'num_experiments' => 0
         ],
-        self::Resilient => [
+        self::RESILIENT => [
             'grade' => '',
             'sentiment' => '',
             'summary' => '',
@@ -34,7 +38,7 @@ class AssessmentRegistry
             'num_recommended' => 0,
             'num_experiments' => 0
         ],
-        self::Custom => [
+        self::CUSTOM => [
             'grade' => '',
             'sentiment' => 'Advanced!',
             'summary' => '',
@@ -53,9 +57,14 @@ class AssessmentRegistry
         return self::$instance;
     }
 
-    public function register($category, $opportunity)
+    public function register($category, TestResult $opportunity): void
     {
         $this->assessments[$category]['opportunities'][] = $opportunity;
+    }
+
+    public function registerMultiple($category, array $opportunities): void
+    {
+        array_push($this->assessments[$category]['opportunities'], ...$opportunities);
     }
 
     public function getAll()

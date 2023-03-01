@@ -640,6 +640,9 @@ class CPClient
         }
     }
 
+    /**
+     * @return array|object
+     */
     public function resendEmailVerification()
     {
         $gql = (new Mutation('wptResendVerificationMail'));

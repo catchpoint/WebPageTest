@@ -1,6 +1,29 @@
 <?php
 
-(function(){
+declare(strict_types=1);
+
+use WebPageTest\OE\AssessmentRegistry;
+use WebPageTest\OE\OpportunityTest\SlowTTFB;
+use WebPageTest\OE\OpportunityTest\RenderBlockingScripts;
+use WebPageTest\OE\OpportunityTest\RenderBlockingCSS;
+use WebPageTest\OE\OpportunityTest\LCP;
+use WebPageTest\OE\OpportunityTest\ImgsLazyLoaded;
+use WebPageTest\OE\OpportunityTest\ImgsLazyLoadable;
+use WebPageTest\OE\OpportunityTest\FontRendering;
+use WebPageTest\OE\OpportunityTest\Fonts3rdParty;
+use WebPageTest\OE\OpportunityTest\UnusedPreloads;
+use WebPageTest\OE\OpportunityTest\CDN;
+use WebPageTest\OE\OpportunityTest\Cache;
+use WebPageTest\OE\OpportunityTest\HTTPRedirects;
+
+(function () {
+    global $requests;
+    global $metaInfo;
+    global $testStepResult;
+    global $tests;
+    global $test;
+    global $testResults;
+
     // container for assessment including opportunities, experiments to recommend
 
     // initial host is used by a few opps, so we'll calculate it here
@@ -14,18 +37,6 @@
             $initialOrigin = "http" . (strpos($rootURL, "https") === 0 ? "s" : "" ) . "://" . $initialHost;
             break;
         }
-    }
-
-
-    function documentRelativePath($url, $path)
-    {
-        $basePath = explode('/', $path);
-        array_pop($basePath);
-        $basePath = implode('/', $basePath);
-        if (strpos($url, $basePath) === 0) {
-            $url = substr($url, strlen($basePath) + 1);
-        }
-        return $url;
     }
 
     // globals to be set by assessment includes and used here too
@@ -80,36 +91,30 @@
     // accessibility!
     $axe = $testStepResult->getMetric('axe');
 
-
-    function is300s($req)
-    {
-        return $req['responseCode'] >= 300 &&  $req['responseCode'] <= 399  && $req['responseCode'] != 304;
-    }
-
     $requestsInitial = $testStepResult->getRequests();
 
-    function initiatedByRoot($request)
-    {
-        global $rootURL;
-        return strcasecmp($request['initiator'], $rootURL) === 0 || $request['initiator'] == '';
+    //@var Array<TestResult> $quick_tests
+    $quick_tests = [
+        SlowTTFB::run([$testResults]),
+        RenderBlockingScripts::run([$testStepResult, $rootURL]),
+        RenderBlockingCSS::run([$testStepResult, $requests, $rootURL, $blockingCSSReqs]),
+        LCP::run([$testStepResult]),
+        ImgsLazyLoaded::run([$testStepResult]),
+        ImgsLazyLoadable::run([$testStepResult]),
+        FontRendering::run([$testStepResult]),
+        Fonts3rdParty::run([$testStepResult, $initialHost]),
+        CDN::run([$testStepResult, $requests]),
+        Cache::run([$testStepResult, $requests]),
+        HTTPRedirects::run([$testStepResult])
+    ];
+
+    //Today this opp only works in Chrome or Edge so to avoid showing it as
+    //ok when it might not be, we'll just not do it in other browsers
+    if ($browser == 'Chrome' || $browser == 'Edge') {
+        $quick_tests[] = UnusedPreloads::run([$testStepResult, $rootURL]);
     }
 
-
-    require_once OE_PATH . '/AssessmentRegistry.php';
-
-    // quick
-    require_once OE_PATH . '/slow-ttfb.inc';
-    require_once OE_PATH . '/render-blocking-scripts.inc';
-    require_once OE_PATH . '/render-blocking-css.inc';
-    require_once OE_PATH . '/lcp.inc';
-    require_once OE_PATH . '/imgs-lazy-loaded.inc';
-    require_once OE_PATH . '/imgs-lazy-loadable.inc';
-    require_once OE_PATH . '/font-rendering.inc';
-    require_once OE_PATH . '/fonts-3rdparty.inc';
-    require_once OE_PATH . '/unused-preloads.inc';
-    require_once OE_PATH . '/cdn.inc';
-    require_once OE_PATH . '/cache.inc';
-    require_once OE_PATH . '/http-redirects.inc';
+    AssessmentRegistry::getInstance()->registerMultiple(AssessmentRegistry::QUICK, $quick_tests);
 
     // usable
     require_once OE_PATH . '/layout-shifts.inc';
@@ -156,7 +161,7 @@
 
 
 
-        if ($key === "Quick") {
+        if ($key === AssessmentRegistry::QUICK) {
             // build sentiment
             $summary = "This site ";
             $ttfbCheck = $testStepResult->getMetric('TTFB');
@@ -195,7 +200,7 @@
                     $summary .= " quickly.";
                 }
             }
-        } elseif ($key === "Usable") {
+        } elseif ($key === AssessmentRegistry::USABLE) {
             // build sentiment
             $summary = "This site ";
             if (isset($cls)) {
@@ -243,7 +248,7 @@
                     $summary .= " HTML content was mostly generated server-side.";
                 }
             }
-        } elseif ($key === "Resilient") {
+        } elseif ($key === AssessmentRegistry::RESILIENT) {
             // build sentiment
             $summary = "This site ";
             if (isset($blocking3pReqs)) {
@@ -284,7 +289,7 @@
             $summary = "Use this section to create custom experiments to add to your test.";
         }
 
-        if ($key === "Custom") {
+        if ($key === AssessmentRegistry::CUSTOM) {
             $assessment[$key]["grade"] = "";
             $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Advanced.</span>";
         } elseif (
