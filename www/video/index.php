@@ -5,6 +5,10 @@
 // found in the LICENSE.md file.
 chdir('..');
 include 'common.inc';
+
+$current_user = $request_context->getUser();
+$is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
+
 $loc = GetDefaultLocation();
 $tid = array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
 $run = array_key_exists('run', $_GET) ? $_GET['run'] : 0;
@@ -112,6 +116,11 @@ if (is_file($profile_file)) {
                         ?>
 
 
+                      <?php if ($is_paid) : ?>
+                          <div>
+                              <label for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                          </div>
+                      <?php endif; ?>
 
                       </div>
                       <div>
