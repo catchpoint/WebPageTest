@@ -123,6 +123,17 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             'hint' => 'site.js'
         ],
         (object) [
+            'id' => '055',
+            'expvar' => 'disablescripts',
+            'title' => 'Disable JavaScript',
+            "desc" => '<p>This experiment effectively disables JavaScript (and enables noscript elements) to test a site\'s JavaScript dependence. It works by changing <code>script</code> elements into <code>scrapt</code> elements, and <code>noscript</code> elements into <code>noscrapt</code> elements so that the page weight remains and behaviors mimic a JS-disabled environment.</p>',
+            'textfield' => false,
+            'expval' => array(''),
+            "hideassets" => true,
+            'instruction' => false,
+            'hint' => 'no value necessary'
+        ],
+        (object) [
             'id' => '029',
             'expvar' => 'asynccss',
             'title' => 'Load CSS Async',
@@ -168,7 +179,7 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             'id' => '032',
             'expvar' => 'addpreload',
             'title' => 'Preload Files',
-            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="' . $lcpSource . '"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
+            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="..."&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request a file earlier and at a higher priority than they otherwise might.</p>',
 
             "expfields" => array(
                 (object) [

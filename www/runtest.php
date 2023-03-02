@@ -73,17 +73,7 @@ $includePaid = $isPaid || $admin;
 // load the secret key (if there is one)
 $server_secret = Util::getServerSecret();
 $api_keys = null;
-$user_api_key = $_REQUEST['k'] ?? "";
-if (empty($user_api_key)) {
-    $user_api_key_header = 'X-WPT-API-KEY';
-    $request_headers = getallheaders();
-    $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
-        return strtolower($k) == strtolower($user_api_key_header);
-    }, ARRAY_FILTER_USE_KEY);
-    if (!empty($matching_headers)) {
-        $user_api_key = array_values($matching_headers)[0];
-    }
-}
+$user_api_key = $request_context->getApiKeyInUse();
 
 if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
@@ -222,7 +212,15 @@ if (!isset($test)) {
      * True private tests are a paid feature (we formerly said we had
      * private tests, but they weren't actually private
      */
-    $is_private = ($isPaid && ($_POST['private'] == 'on')) ? 1 : 0;
+    $is_private = 0;
+
+    $is_private_api_call = !empty($user_api_key) && !empty($req_private) &&
+      ((int)$req_private == 1 || $req_private == 'true');
+    $is_private_web_call = $isPaid && ($_POST['private'] == 'on');
+
+    if ($is_private_api_call || $is_private_web_call) {
+        $is_private = 1;
+    }
     $test['private'] = $is_private;
 
     if (isset($req_web10)) {
@@ -834,6 +832,15 @@ if (isset($req_vo)) {
 }
 if (!empty($user_api_key)) {
     $test['key'] = $user_api_key;
+    $test['owner'] = $request_context->getUser()->getOwnerId();
+}
+
+$creator_id = 0;
+if (!is_null($request_context->getUser())) {
+    $creator_id = $request_context->getUser()->getUserId() ?? 0;
+}
+if ($creator_id != 0) {
+    $test["creator"] = $creator_id;
 }
 
 if (isset($user) && !array_key_exists('user', $test)) {
@@ -844,7 +851,7 @@ if (isset($uid) && !array_key_exists('uid', $test)) {
     $test['uid'] = $uid;
 }
 
-// create an owner string (for API calls, this should already be set as a cookie for normal visitors)
+// create an owner string (if one is not yet set for some reason. API users and form users should've already been set)
 if (!isset($test['owner']) || !strlen($test['owner']) || !preg_match("/^[\w @\.]+$/", $test['owner'])) {
     $test['owner'] = sha1(uniqid(uniqid('', true), true));
 }
@@ -2742,6 +2749,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
         if (isset($test['owner']) && strlen($test['owner'])) {
             AddIniLine($testInfo, "owner", $test['owner']);
+        }
+        if (!empty($test["creator"])) {
+            AddIniLine($testInfo, "creator", $test["creator"]);
         }
         if (isset($test['type']) && strlen($test['type'])) {
             AddIniLine($testInfo, "type", $test['type']);

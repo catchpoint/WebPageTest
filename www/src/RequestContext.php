@@ -25,6 +25,9 @@ class RequestContext
     private ?BannerMessageManager $banner_message_manager;
     // Should use an enum, TODO
     private string $environment;
+    private string $api_key_in_use;
+
+    private string $user_api_key_header = 'X-WPT-API-KEY';
 
     public function __construct(array $global_request, array $server = [], array $options = [])
     {
@@ -46,6 +49,7 @@ class RequestContext
         $this->host = $options['host'] ?? Util::getSetting('host', "");
 
         $this->environment = Environment::$Production;
+        $this->api_key_in_use = "";
     }
 
     public function getRaw(): array
@@ -147,5 +151,31 @@ class RequestContext
     public function getEnvironment(): string
     {
         return $this->environment;
+    }
+
+    /**
+     * This returns an API key if one is in use, if not, it returns an empty string
+     *
+     * @return string the api key
+     * */
+    public function getApiKeyInUse(): string
+    {
+        if (empty($this->api_key_in_use)) {
+            $user_api_key = $this->getRaw()['k'] ?? "";
+            if (empty($user_api_key)) {
+                $user_api_key_header = $this->user_api_key_header;
+                $request_headers = getallheaders();
+                $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
+                    return strtolower($k) == strtolower($user_api_key_header);
+                }, ARRAY_FILTER_USE_KEY);
+                if (!empty($matching_headers)) {
+                    $user_api_key = array_values($matching_headers)[0];
+                }
+            }
+
+            $this->api_key_in_use = $user_api_key;
+        }
+
+        return $this->api_key_in_use;
     }
 }
