@@ -5599,8 +5599,8 @@ table.details td.reqMime {
   flex-wrap: wrap;
   justify-content: space-between;
   width: 100%;
-  margin: 1rem 0 3rem 0;
-  padding: 0 0 3rem;
+  margin: 1rem 0 1rem 0;
+  padding: 0;
   gap: 3rem;
   text-align: center;
 }
@@ -5704,110 +5704,159 @@ table.details td.reqMime {
 }
 
 .cruxbars {
-  margin: 0;
-  z-index: 1;
-  padding: inherit;
-  text-align: left;
   display: flex;
-  justify-content: flex-start;
+  gap: 2rem;
+  flex-flow: row wrap;
+  justify-content: space-between;
 }
-
-.cruxlabel .legend {
-  font-size: smaller;
-  font-weight: normal;
+.cruxbars div.crux_metric {
+  flex: 1 0 30%;
+  margin: 0;
 }
-
-.cruxlabel .fvarrow {
-  color: #1a1a1a;
-}
-
-/* these are for crux embeds */
-
-.cruxembed .cruxbars {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 30em) {
-  .cruxembed .cruxbars {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 80em) {
+  .cruxbars div.crux_metric {
+    flex: 1 0 40%;
   }
 }
+.crux_subhed {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: .5em;
+  margin-bottom: 1.5em;
+  border-bottom: 1px solid #eee;
+  gap: 2em;
+}
 
-@media (min-width: 60em) {
-  .cruxembed .cruxbars {
-    grid-template-columns: repeat(8, 1fr);
+.crux_subhed p {
+  font-size: .9em;
+  margin: 0;
+  line-height: 1.4;
+  color: #444;
+}
+.crux_subhed p.crux_subhed_cite {
+  font-size: .9em;
+  color: #8B8B8B;
+  font-style: normal;
+}
+@media (max-width: 50em) {
+  .cruxbars div.crux_metric {
+    flex: 1 0 100%;
   }
-
-  .cruxembed .cruxbars svg {
-    grid-column: span 2;
+  .crux_subhed {
+    display: block;
   }
-
-  .cruxembed .cruxbars svg:last-child:nth-child(4n - 1) {
-    grid-column-end: -3;
-  }
-
-  .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n + 1) {
-    grid-column-end: 5;
+  .crux_subhed p {
+    margin: .5em 0;
   }
 }
-
-.summary-container .crux h3 {
-  font-size: 1.2rem;
-  color: #2a3c64;
-  margin: 2em 0 0;
-}
-
-.summary-container .crux h3 em {
-  display: block;
-  font-size: 0.7em;
-  margin: 0.4em 0;
-  line-height: 1.5;
-}
-
-.cruxembed .crux h3 {
-  margin-top: 2rem;
-}
-
-.crux_legends {
-  display: inline-flex;
-  gap: 0.5rem;
-  border: 1px solid #eee;
-  padding: 0.7em 1.5em 0;
-  border-radius: 1rem;
-  margin: 1em 0;
-}
-
-.crux_legends strong {
-  background: none;
-  border: 0px solid #fff;
-  font-weight: 700;
+h4.crux_metric_title {
+  font-size: .9em;
+  font-weight: 900;
   color: #686868;
-  font-size: 0.9em;
-  min-height: 2em;
-}
-
-.summary-container .crux_legends {
-  display: inline-block;
-  padding: 0.3em 1em;
+  white-space: nowrap;
   margin: 0;
 }
 
-.cruxembed .crux .legend {
-  font-size: smaller;
-  font-weight: normal;
-  margin: 0 0 1em;
-  display: block;
-  text-align: right;
+.crux_metric_value {
+  border: 0 solid #fff;
+  display:block;
+  padding: 0 0 0;
+  margin: 0;
+  font-size: 2.2em;
+  font-weight: 900;
+  border-top-width: 0;
+  color: #2a3c64;
+  -webkit-text-stroke: 0.04em currentColor;
+  line-height: 1;
+}
+.crux_metric_value-good {
+  color: #6ca71a;
+}
+.crux_metric_value-fair {
+  color: #d48e08;
+}
+.crux_metric_value-poor {
+  color: #d02424;
+}
+.crux_metric_value em {
+  font-size: .5em;
+  font-weight: 200;
+  text-transform: capitalize;
+  font-style: normal;
+}
+.crux_metric_desc {
+  font-size: .75em;
+  margin: 0 0 .8em;
+  color: #666;
+}
+.crux_bars {
+  display: flex;
+  position: relative;
+}
+.crux_bars:before,
+.crux_bars:after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 10px solid #fff;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  margin-top: -4px;
+  position: absolute;
+  left: calc(75% - 5px);
+}
+.crux_bars:after {
+  border-top: 8px solid #2a3b64;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  left: calc(75% - 3px);
+  margin-top: -5px;
+}
+.crux_bars li {
+  flex: 0 0 0;
+  color: #fff;
+  padding: .2em 0em;
+  box-sizing: border-box;
+  font-size: .8em;
+  overflow: hidden;
+  text-indent: 1em;
+}
+.crux_bars li.crux_bars-hidelabel {
+  text-indent: -999px;
+}
+.crux_bars-good {
+  background:#6ca71a;
+}
+.crux_bars-fair {
+  background: #d48e08;
+}
+.crux_bars-poor {
+  background: #d02424;
+}
+.crux details.metrics_shown {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  display: inline-block;
+  margin: .5em 0 0;
+}
+.crux details.metrics_shown span.units {
+  color: inherit;
+}
+.crux_diff {
+  font-size: .9em;
+  font-style: normal;
+  margin: .5em 0 0;
+  color: #666;
 }
 
-.cruxembed .crux .fvarrow {
-  color: #1072ba;
+.crux_diff span.units {
+  font-weight: 500;
+  padding-left: 0;
 }
-
-.cruxembed .crux .rvarrow {
-  color: #5dbbe8;
+.crux details.metrics_shown {
+  margin: 2em 0 0;
 }
 
 /* end vitals page styles */
@@ -6575,8 +6624,7 @@ table#tableResults td.ok {
   color: #d48e08;
 }
 
-table.pretty td.poor,
-table#tableResults td.poor {
+table.pretty td.poor, table#tableResults td {
   color: #d02424;
 }
 
