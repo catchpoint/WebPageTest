@@ -149,9 +149,9 @@ function InsertWebVitalsHTML($stepResult)
     if (isset($testRunResults)) {
         echo '<div class="cruxembed">';
         require_once(INCLUDES_PATH . '/include/CrUX.php');
-        
+
             InsertCruxHTML($testRunResults, null, "cwv");
-        
+
         echo '</div>';
     }
     InsertWebVitalsHTML_LCP($stepResult);
@@ -186,7 +186,7 @@ function InsertWebVitalsHTML_Summary($stepResult)
         }
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<h4>Largest Contentful Paint</h4>";
-        echo "<p class='metric-value $scoreClass'>". formatMsInterval($lcp['time'],2) . "</p>";
+        echo "<p class='metric-value $scoreClass'>" . formatMsInterval($lcp['time'], 2) . "</p>";
         //InsertCruxHTML($testRunResults, null, 'lcp', false, false);
         echo "</div></a>";
     }
@@ -243,7 +243,7 @@ function InsertWebVitalsHTML_Summary($stepResult)
         }
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<h4>Total Blocking Time</h4>";
-        echo "<p class='metric-value $scoreClass'>" . formatMsInterval($tbt,2) ."</p>";
+        echo "<p class='metric-value $scoreClass'>" . formatMsInterval($tbt, 2) . "</p>";
         //InsertCruxHTML($testRunResults, null, 'fid', false, true);
         echo "</div></a>";
     }

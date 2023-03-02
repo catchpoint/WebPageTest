@@ -156,9 +156,9 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 if (isset($testRunResults) && !$cached) {
                     echo '<div class="cruxembed">';
                     require_once(INCLUDES_PATH . '/include/CrUX.php');
-                    
+
                     InsertCruxHTML($testRunResults, null);
-                    
+
                     echo '</div>';
                 }
                 ?>

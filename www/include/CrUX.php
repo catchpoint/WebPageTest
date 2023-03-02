@@ -82,7 +82,7 @@ function RealUserMeasurementCruxTitle($pageData)
     $ret = '<h3 class="hed_sub">Real-World Usage Metrics</h3><div class="crux_subhed"><p class="crux_subhed_desc">Compare this WebPageTest run with browser-collected performance data for this site.</p>';
 
     $cruxOrigin = $pageData['CrUX']['key']['url'];
-    $cruxStudioURL = "https://lookerstudio.google.com/reporting/bbc5698d-57bb-4969-9e07-68810b9fa348/page/keDQB?params=%7B%22origin%22:%22". urlencode($cruxOrigin) ."%22%7D";
+    $cruxStudioURL = "https://lookerstudio.google.com/reporting/bbc5698d-57bb-4969-9e07-68810b9fa348/page/keDQB?params=%7B%22origin%22:%22" . urlencode($cruxOrigin) . "%22%7D";
     if (
         isset($pageData['CrUX']['collectionPeriod']) &&
         isset($pageData['CrUX']['collectionPeriod']['firstDate']) &&
@@ -112,7 +112,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             $pageData = $stepResult->getRawResults();
         }
     }
-    
+
     if (
         isset($pageData) &&
         is_array($pageData) &&
@@ -186,10 +186,10 @@ function InsertCruxMetricHTML($fvPageData, $metric, $crux_metric, $label, $short
     if (isset($fvPageData['CrUX']['metrics'][$crux_metric]['percentiles']['p75'])) {
         $p75 = $fvPageData['CrUX']['metrics'][$crux_metric]['percentiles']['p75'];
         $p75Score = "good";
-        if($p75 >=  $histogram[0]['end'] ){
+        if ($p75 >=  $histogram[0]['end']) {
             $p75Score = "fair";
         }
-        if($p75 >=  $histogram[1]['end']){
+        if ($p75 >=  $histogram[1]['end']) {
             $p75Score = "poor";
         }
     }
@@ -202,10 +202,9 @@ function InsertCruxMetricHTML($fvPageData, $metric, $crux_metric, $label, $short
 
 function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels = true, $p75Score)
 {
-    
+
     if (is_float($p75)) {
         $p75 = round($p75, 3);
-
     }
     $goodPct = intval(round($histogram[0]['density'] * 100));
     $fairPct = intval(round($histogram[1]['density'] * 100));
@@ -218,29 +217,28 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     $metricDiff = '<p class="crux_diff">Field metric only, no WPT test run data.</p>';
 
 
-    if( isset($fvValue) ){
-
+    if (isset($fvValue)) {
         if (is_float($fvValue)) {
             $fvValue = round($fvValue, 3);
         }
-        if( $p75 === $fvValue ){
+        if ($p75 === $fvValue) {
             $metricDiff = '<p class="crux_diff">Same result as this WPT run.</p>';
         }
 
-        if( $p75 !== $fvValue ){
+        if ($p75 !== $fvValue) {
             $absMetricDiff = abs($p75 - $fvValue);
 
-            if($short !== 'CLS'){
+            if ($short !== 'CLS') {
                 $absMetricDiff = formatMsInterval($absMetricDiff, 2);
             }
-            
+
             $wptCompare = "better";
             $cruxCompare = "worse";
-            if( $p75 < $fvValue ){
+            if ($p75 < $fvValue) {
                 $wptCompare = "worse";
                 $cruxCompare = "better";
             }
-            if($short !== 'CLS'){
+            if ($short !== 'CLS') {
                 $fvValue = formatMsInterval($fvValue, 2);
             }
             $metricDiff = <<<EOD
@@ -250,10 +248,10 @@ function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvVa
     }
 
 
-    if($short !== 'CLS'){
+    if ($short !== 'CLS') {
         $p75 = formatMsInterval($p75, 2);
     }
-    
+
     $svg = <<<EOD
 <div class="crux_metric">
 <h4 class="crux_metric_title">$label ($short)</h4>
