@@ -67,8 +67,8 @@ if (Util::getSetting('cp_auth')) {
             echo '</pre>';
             exit();
         } else {
-          error_log($e->getMessage());
-          throw $e;
+            error_log($e->getMessage());
+            throw $e;
         }
     });
 }

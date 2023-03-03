@@ -9,6 +9,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/common.inc';
 
 use WebPageTest\Util;
+use WebPageTest\OE\Assessment\Types as AssessmentType;
 
 require_once INCLUDES_PATH . '/optimization_detail.inc.php';
 require_once INCLUDES_PATH . '/breakdown.inc';
@@ -141,6 +142,7 @@ $page_description = "Website performance test result$testLabel.";
 
 
                 <?php
+                    global $initialHost;
                 if (
                     !$headless && gz_is_file("$testPath/testinfo.json")
                     && !array_key_exists('published', $test['testinfo'])
@@ -188,14 +190,14 @@ $page_description = "Website performance test result$testLabel.";
                         global $experiments_logged_in;
                         $allowedFreeExperimentIds = array('001','020');
 
-                        $bottleneckTitle = $parts["title"];
+                        $bottleneckTitle = $parts->getTitle();
 
-                        $bottleneckDesc = $parts["desc"];
-                        $bottleneckExamples = $parts["examples"];
-                        $relevantExperiments = $parts["experiments"];
-                        $good = $parts["good"];
-                        $textinput = isset($parts["inputttext"]);
-                        $hideassets = $parts["hideassets"];
+                        $bottleneckDesc = $parts->getDescription();
+                        $bottleneckExamples = $parts->getExamples();
+                        $relevantExperiments = $parts->getExperiments();
+                        $good = $parts->isGood();
+                        $textinput = $parts->inputTText();
+                        $hideassets = $parts->hideAssets();
 
                         $out = '';
 
@@ -392,14 +394,14 @@ $page_description = "Website performance test result$testLabel.";
 
                     // write out the observations HTML
                     foreach ($assessment as $key => $cat) {
-                        $grade = $cat["grade"];
-                        $summary = $cat["summary"];
-                        $sentiment = $cat["sentiment"];
-                        $opps = count($cat["opportunities"]);
+                        $grade = $cat->getGrade();
+                        $summary = $cat->getSummary();
+                        $sentiment = $cat->getSentiment();
+                        $opps = count($cat->getOpportunities());
                         $oppsEnd = $opps === 1 ? "y" : "ies";
-                        $bad = $cat["num_recommended"];
+                        $bad = $cat->getNumRecommended();
                         $good = $opps - $bad;
-                        if ($key === "Custom") {
+                        if ($key === AssessmentType::CUSTOM) {
                             echo <<<EOT
                             <details class="experiments_create">
                             <summary class="grade_header" id="${key}">
@@ -410,7 +412,7 @@ $page_description = "Website performance test result$testLabel.";
                                 <ol>
 
                             EOT;
-                            foreach ($cat["opportunities"] as $opportunity) {
+                            foreach ($cat->getOpportunities() as $opportunity) {
                                 echo observationHTML($opportunity);
                             }
                             echo '</ol></div></details>';
@@ -428,7 +430,7 @@ $page_description = "Website performance test result$testLabel.";
                         EOT;
 
 
-                            foreach ($cat["opportunities"] as $opportunity) {
+                            foreach ($cat->getOpportunities() as $opportunity) {
                                   echo observationHTML($opportunity);
                             }
                             echo '</ol></div>';

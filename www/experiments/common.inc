@@ -3,32 +3,26 @@
 declare(strict_types=1);
 
 use WebPageTest\OE\AssessmentRegistry;
-use WebPageTest\OE\OpportunityTest\SlowTTFB;
-use WebPageTest\OE\OpportunityTest\RenderBlockingScripts;
-use WebPageTest\OE\OpportunityTest\RenderBlockingCSS;
-use WebPageTest\OE\OpportunityTest\LCP;
-use WebPageTest\OE\OpportunityTest\ImgsLazyLoaded;
-use WebPageTest\OE\OpportunityTest\ImgsLazyLoadable;
-use WebPageTest\OE\OpportunityTest\FontRendering;
-use WebPageTest\OE\OpportunityTest\Fonts3rdParty;
-use WebPageTest\OE\OpportunityTest\UnusedPreloads;
-use WebPageTest\OE\OpportunityTest\CDN;
-use WebPageTest\OE\OpportunityTest\Cache;
-use WebPageTest\OE\OpportunityTest\HTTPRedirects;
+use WebPageTest\OE\Assessment\Types as AssessmentType;
+use WebPageTest\OE\OpportunityTest as OT;
+use WebPageTest\RequestContext;
 
-(function () {
+(function (RequestContext $request_context) {
     global $requests;
-    global $metaInfo;
     global $testStepResult;
     global $tests;
     global $test;
     global $testResults;
-
-    // container for assessment including opportunities, experiments to recommend
+    global $id;
 
     // initial host is used by a few opps, so we'll calculate it here
     $initialHost = null;
     $rootURL = null;
+    /**
+    * used in /experiments.php
+    *
+    * @var null|string $initialOrigin
+    */
     $initialOrigin = null;
     foreach ($requests as $request) {
         if ($request['is_base_page'] == "true") {
@@ -39,48 +33,13 @@ use WebPageTest\OE\OpportunityTest\HTTPRedirects;
         }
     }
 
-    // globals to be set by assessment includes and used here too
-    $blockingJSReqs = null;
-    $blockingCSSReqs = null;
-    $genContentPercent = null;
-    $genContentSize = null;
-    $blocking3pReqs = null;
-    //sec
-    $jsLibsVulns = null;
-    $numVulns = null;
-    $num_high = null;
-    $num_medium = null;
-    $num_serious = null;
-    //axe
-    $violations = null;
-    $num_violations = null;
-    $num_critical = null;
-    $num_moderate = null;
-    $num_minor = null;
-    $cls = null;
-
-    if ($metaInfo) {
-        $assessmentData = $metaInfo['experiment']['assessment'];
-    }
-
-    // define $lcp for future experiments
+    // define for future experiments
     if (!$testStepResult && isset($tests)) {
         $testStepResult = $tests[0]['stepResult'];
     }
     $browser = $test['testinfo']['browser'];
-    $events = $testStepResult->getMetric('largestPaints');
-    $lcp = null;
-    if (isset($events) && is_array($events)) {
-        // Find the actual LCP event
-        foreach ($events as $event) {
-            if (isset($event['event']) && $event['event'] == 'LargestContentfulPaint' && isset($event['time']) && isset($event['size'])) {
-                if (!isset($lcp) || $event['time'] > $lcp['time'] && $event['size'] > $lcp['size']) {
-                    $lcp = $event;
-                }
-            }
-        }
-    }
-
+    $genContentSize = $testStepResult->getMetric('generated-content-size');
+    $genContentPercent = $testStepResult->getMetric('generated-content-percent');
     // for custom metrics
     $rawResultData = $testStepResult->getRawResults();
     $customMetrics = null;
@@ -88,227 +47,98 @@ use WebPageTest\OE\OpportunityTest\HTTPRedirects;
         $customMetrics = $rawResultData['custom'];
     }
 
+    $test_step_requests = $testStepResult->getRequests();
+
     // accessibility!
     $axe = $testStepResult->getMetric('axe');
 
-    $requestsInitial = $testStepResult->getRequests();
-
-    //@var Array<TestResult> $quick_tests
+    /**
+     *@var array { TestResult } $quick_tests
+     */
     $quick_tests = [
-        SlowTTFB::run([$testResults]),
-        RenderBlockingScripts::run([$testStepResult, $rootURL]),
-        RenderBlockingCSS::run([$testStepResult, $requests, $rootURL, $blockingCSSReqs]),
-        LCP::run([$testStepResult]),
-        ImgsLazyLoaded::run([$testStepResult]),
-        ImgsLazyLoadable::run([$testStepResult]),
-        FontRendering::run([$testStepResult]),
-        Fonts3rdParty::run([$testStepResult, $initialHost]),
-        CDN::run([$testStepResult, $requests]),
-        Cache::run([$testStepResult, $requests]),
-        HTTPRedirects::run([$testStepResult])
+        OT\SlowTTFB::run([$testResults, $testStepResult]),
+        OT\RenderBlockingScripts::run([$testStepResult, $rootURL]),
+        OT\RenderBlockingCSS::run([$testStepResult, $requests, $rootURL]),
+        OT\LCP::run([$testStepResult]),
+        OT\ImgsLazyLoaded::run([$testStepResult]),
+        OT\ImgsLazyLoadable::run([$testStepResult]),
+        OT\FontRendering::run([$testStepResult]),
+        OT\Fonts3rdParty::run([$testStepResult, $initialHost]),
+        OT\CDN::run([$testStepResult, $requests]),
+        OT\Cache::run([$testStepResult, $requests]),
+        OT\HTTPRedirects::run([$testStepResult])
     ];
 
     //Today this opp only works in Chrome or Edge so to avoid showing it as
     //ok when it might not be, we'll just not do it in other browsers
     if ($browser == 'Chrome' || $browser == 'Edge') {
-        $quick_tests[] = UnusedPreloads::run([$testStepResult, $rootURL]);
+        $quick_tests[] = OT\UnusedPreloads::run([$testStepResult, $rootURL]);
     }
 
-    AssessmentRegistry::getInstance()->registerMultiple(AssessmentRegistry::QUICK, $quick_tests);
+    if (isset($genContentSize) && isset($genContentPercent)) {
+        $quick_tests[] = OT\GeneratedContentQuick::run([$genContentSize, $genContentPercent, $id]);
+    }
 
-    // usable
-    require_once OE_PATH . '/layout-shifts.inc';
-    require_once OE_PATH . '/tbt.inc';
-    require_once OE_PATH . '/meta-viewport.inc';
-    require_once OE_PATH . '/axe-warnings.inc';
+    AssessmentRegistry::getInstance()->registerMultiple(AssessmentType::QUICK, $quick_tests);
 
-    // resilient
-    require_once OE_PATH . '/render-blocking-3rd-party.inc';
-    require_once OE_PATH . '/security-jslibs.inc';
-    require_once OE_PATH . '/insecure-requests.inc';
+    /*
+     * @var array { TestResult } $usable_tests
+     */
+    $usable_tests = [];
 
-    // all
-    require_once OE_PATH . '/generated-content.inc';
+    $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
+    if (isset($cls)) {
+        $usable_tests[] = OT\LayoutShift::run([$testStepResult, $cls]);
+    }
+    $tbtMetric = $testStepResult->getMetric('TotalBlockingTime');
+    if (isset($tbtMetric)) {
+        $usable_tests[] = OT\TBT::run([$testStepResult, $tbtMetric]);
+    }
 
-    require_once OE_PATH . '/custom.inc';
+    $metaMetric = $testStepResult->getMetric('meta-viewport');
+    if (isset($metaMetric)) {
+        $usable_tests[] = OT\MetaViewport::run([$metaMetric]);
+    }
+    if (isset($axe)) {
+        $usable_tests[] = OT\AxeWarnings::run([$axe]);
+    }
+    if (isset($genContentSize) && isset($genContentPercent)) {
+        $usable_tests[] = OT\GeneratedContentUsable::run([$genContentSize, $genContentPercent]);
+    }
+
+    AssessmentRegistry::getInstance()->registerMultiple(AssessmentType::USABLE, $usable_tests);
+
+    $resilient_tests = [
+      OT\RenderBlocking3rdParty::run([$testStepResult, $initialHost, $rootURL]),
+      OT\SecurityJSLibs::run([$testStepResult]),
+      OT\InsecureRequests::run([$testStepResult])
+    ];
+    if (isset($genContentSize) && isset($genContentPercent)) {
+        $resilient_tests[] = OT\GeneratedContentResilient::run([$test_step_requests, $genContentSize, $genContentPercent, $initialHost]);
+    }
+
+    AssessmentRegistry::getInstance()->registerMultiple(AssessmentType::RESILIENT, $resilient_tests);
+
+    $custom_tests = [
+      OT\Custom\AddHtmlToDoc::run([]),
+      OT\Custom\FindAndReplace::run([]),
+      OT\Custom\DeliveryOptimizations::run([])
+    ];
+
+    $body_url = $test_step_requests[0]['body_url'] ?? "";
+    if (!empty($body_url)) {
+        $location = 'https://' . $request_context->getHost() . $body_url;
+        $custom_tests[] = OT\Custom\EditResponseHtml::run([$location]);
+    }
+
+    AssessmentRegistry::getInstance()->registerMultiple(AssessmentType::CUSTOM, $custom_tests);
 
     $assessment = AssessmentRegistry::getInstance()->getAll();
 
-    // fill out high-level info in
-    foreach ($assessment as $key => $cat) {
-        $opps = $assessment[$key]["opportunities"];
-        $numChecks = count($opps);
-        $numExperiments = 0;
-        $checkTitles = array();
-        $oppTitles = array();
-        $numGood = 0;
-        foreach ($opps as $op) {
-            if ($op["good"]) {
-                $numGood++;
-                array_push($checkTitles, $op["title"]);
-            } elseif (isset($op["experiments"])) {
-                array_push($oppTitles, $op["title"]);
-                $numExperiments += count($op["experiments"]);
-            }
-        }
-        $numRecommended = $numChecks - $numGood;
-        $ending = $numRecommended === 1 ? "y" : "ies";
-
-        $assessment[$key]["num_recommended"] = $numRecommended;
-        $assessment[$key]["num_experiments"] = $numExperiments;
-        $assessment[$key]["num_good"] = $numGood;
-        $assessment[$key]["num_bad"] = $numChecks - $numGood;
 
 
 
-        if ($key === AssessmentRegistry::QUICK) {
-            // build sentiment
-            $summary = "This site ";
-            $ttfbCheck = $testStepResult->getMetric('TTFB');
-            if ($ttfbCheck > 2000) {
-                $summary .= "was very slow";
-            } elseif ($ttfbCheck > 1000) {
-                $summary .= "took little time";
-            } else {
-                $summary .= "was quick";
-            }
-            $summary .= " to connect and deliver initial code. It began rendering content";
-
-            $fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
-            $fcpCheck = $fcpCheck / 1000;
-            if ($fcpCheck > 5) {
-                $summary .= " with considerable delay.";
-            } elseif ($fcpCheck > 2) {
-                $summary .= " with little delay.";
-            } else {
-                $summary .= " very quickly.";
-            }
-
-            if (isset($blockingCSSReqs) && isset($blockingJSReqs) && (count($blockingCSSReqs) > 0 || count($blockingJSReqs) > 0)) {
-                 $summary .= " There were " . ( count($blockingCSSReqs) + count($blockingJSReqs) ) . " render-blocking requests.";
-            } else {
-                $summary .= " There were no render-blocking requests.";
-            }
-
-            if (isset($lcp)) {
-                $summary .= " The largest content rendered ";
-                if ($lcp['time'] > 3500) {
-                    $summary .= " later than ideal.";
-                } elseif ($lcp['time'] > 2500) {
-                    $summary .= " a little late.";
-                } else {
-                    $summary .= " quickly.";
-                }
-            }
-        } elseif ($key === AssessmentRegistry::USABLE) {
-            // build sentiment
-            $summary = "This site ";
-            if (isset($cls)) {
-                if ($cls > .25) {
-                    $summary .= "had major layout shifts";
-                } elseif ($cls > 0) {
-                    $summary .= "had minor layout shifts";
-                } else {
-                    $summary .= "had good layout stability";
-                }
-                $summary .= ".";
-            }
-
-            $tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
-            if (isset($tbtCheck)) {
-                (isset($cls)) ? $summary .= " It took" : $summary .= "took";
-                if ($tbtCheck > 1000) {
-                    $summary .= " a long time";
-                } elseif ($tbtCheck > 500) {
-                    $summary .= " some time";
-                } else {
-                    $summary .= " little time";
-                }
-                $summary .= " to become interactive. ";
-            }
-
-            if (isset($axe) && count($axe['violations'])) {
-                $summary .= " It had $num_violations accessibility issues, ";
-                if ($num_critical > 0) {
-                    $summary .= " $num_critical critical";
-                } elseif ($$num_serious > 0) {
-                    $summary .= "$num_critical serious";
-                } else {
-                    $summary .= " none serious";
-                }
-                $summary .= ".";
-            }
-            if (isset($genContentSize) && isset($genContentPercent)) {
-                $genContentSize = floatval($genContentSize);
-                $genContentPercent = floatval($genContentPercent);
-
-                if ($genContentSize > .5 || $genContentPercent > 1) {
-                    $summary .= " Some HTML was generated after delivery, potentially delaying usability.";
-                } else {
-                    $summary .= " HTML content was mostly generated server-side.";
-                }
-            }
-        } elseif ($key === AssessmentRegistry::RESILIENT) {
-            // build sentiment
-            $summary = "This site ";
-            if (isset($blocking3pReqs)) {
-                if (count($blocking3pReqs) > 2) {
-                    $summary .= "had many";
-                } elseif (count($blocking3pReqs) > 0) {
-                    $summary .= "had";
-                } else {
-                    $summary .= "had no";
-                }
-                $summary .= " render-blocking 3rd party requests that could be a single point of failure.";
-            }
-            if ($jsLibsVulns) {
-                (isset($blocking3pReqs)) ? $summary .= " It had $numVulns security issues" : $summary .= "had $numVulns security issues";
-                if ($num_high > 0) {
-                    $summary .= ", $num_high high-priority";
-                } elseif ($num_medium > 0) {
-                    $summary .= ", $num_medium low-priority";
-                } elseif ($num_low > 0) {
-                    $summary .= ", $num_low low-priority";
-                }
-
-                $summary .= ".";
-            } else {
-                (isset($blocking3pReqs)) ? $summary .= " It had no security issues." : $summary .= "had no security issues.";
-            }
-            if (isset($genContentSize) && isset($genContentPercent)) {
-                $genContentSize = floatval($genContentSize);
-                $genContentPercent = floatval($genContentPercent);
-
-                if ($genContentSize > .5 || $genContentPercent > 1) {
-                    $summary .= " Some HTML was generated after delivery, which can cause fragility.";
-                } else {
-                    $summary .= " HTML content was mostly generated server-side.";
-                }
-            }
-        } else {
-            $summary = "Use this section to create custom experiments to add to your test.";
-        }
-
-        if ($key === AssessmentRegistry::CUSTOM) {
-            $assessment[$key]["grade"] = "";
-            $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Advanced.</span>";
-        } elseif (
-            $numRecommended > 2
-            // and it's the quickness category and fcp is reasonably slow
-            && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
-            && ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
-            && ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2))  )
-        ) {
-            $assessment[$key]["grade"] = "f";
-            $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Needs Improvement.</span>";
-        } elseif ($numRecommended > 0) {
-            $assessment[$key]["grade"] = "c";
-            $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Not bad...</span>";
-        } else {
-            $assessment[$key]["grade"] = "a";
-            $assessment[$key]["sentiment"] = "<span class=\"opportunity_summary_sentiment\">Looks great!</span>";
-        }
-
-        $assessment[$key]["summary"] = $summary;
-    }
-})();
+    $GLOBALS['assessment'] = $assessment;
+    $GLOBALS['initialOrigin'] = $initialOrigin;
+    $GLOBALS['customMetrics'] = $customMetrics;
+})($request_context);

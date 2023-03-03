@@ -15,8 +15,8 @@ class RenderBlockingCSS implements OpportunityTest
         $testStepResult = $data[0];
         $requests = $data[1];
         $rootURL = $data[2];
-        $blockingCSSReqs = $data[3] ?? [];
 
+        $blockingCSSReqs = [];
         $requests = $testStepResult->getRequests();
         $potentiallyBlockingCSSReqs = array();
         $startRender = $testStepResult->getMetric("render");
@@ -87,7 +87,10 @@ class RenderBlockingCSS implements OpportunityTest
                     "expval" => array_unique($blockingCSSReqs)
                 ]
             ),
-            "good" =>  false
+            "good" =>  false,
+            "custom_attributes" => [
+                'blockingCSSReqs' => $blockingCSSReqs
+              ]
             ]);
         } else {
             $opp = new TestResult([
@@ -95,7 +98,10 @@ class RenderBlockingCSS implements OpportunityTest
             "desc" =>  "Great job. Fewer render-blocking requests mean the browser can visibly render content sooner.",
             "examples" =>  array(),
             "experiments" =>  array(),
-            "good" =>  true
+            "good" =>  true,
+            "custom_attributes" => [
+                'blockingCSSReqs' => $blockingCSSReqs
+            ]
             ]);
         }
 

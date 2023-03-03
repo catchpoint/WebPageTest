@@ -27,7 +27,7 @@ class Fonts3rdParty implements OpportunityTest
 
         if (count($Font3pReqs) > 0) {
             $opp = new TestResult([
-              "title" =>  count($Font3pReqs) . " font" . (count($Font3pReqs) === 1 ? " is " : "s are") .
+              "title" =>  count($Font3pReqs) . " font" . (count($Font3pReqs) === 1 ? " is" : "s are") .
                           " hosted on 3rd-party hosts",
               "desc" =>  "Fonts on 3rd party domains may take longer to load due to DNS and connection steps that are" .
                          " not necessary when fonts are hosted on the same domain.",

@@ -16,8 +16,8 @@ class RenderBlockingScripts implements OpportunityTest
         $rootURL = $data[1];
 
         $requests = $testStepResult->getRequests();
-        $blockingJSReqs = array();
-        $potentiallyBlockingJSReqs = array();
+        $blockingJSReqs = [];
+        $potentiallyBlockingJSReqs = [];
         $startRender = $testStepResult->getMetric("render");
         $possibleRenderBlockers = $testStepResult->getMetric('possibly-render-blocking-reqs');
         $blockingIndicator = false;
@@ -45,9 +45,8 @@ class RenderBlockingScripts implements OpportunityTest
             } elseif (
                 !isset($request['renderBlocking']) &&
                 (
-                isset($request['requestType']) &&
-                $request['requestType'] === "script" ||
-                $request['request_type'] === "Script"
+                  (isset($request['requestType']) && $request['requestType'] === "script") ||
+                  (isset($request['request_type']) && $request['request_type'] === "Script")
                 ) &&
                 $request['all_end'] < $startRender
             ) {
@@ -107,7 +106,10 @@ class RenderBlockingScripts implements OpportunityTest
                       "expval" => array_unique($blockingJSReqs)
                   ]
               ),
-              "good" =>  false
+              "good" =>  false,
+              "custom_attributes" => [
+                  'blockingJSReqs' => $blockingJSReqs
+              ]
             ]);
         } else {
             $opp = new TestResult([
@@ -115,7 +117,10 @@ class RenderBlockingScripts implements OpportunityTest
               "desc" => "Great job. Fewer render-blocking requests mean the browser can visibly render content sooner.",
               "examples" => array(),
               "experiments" => array(),
-              "good" => true
+              "good" => true,
+              "custom_attributes" => [
+                  'blockingJSReqs' => $blockingJSReqs
+              ]
             ]);
         }
 

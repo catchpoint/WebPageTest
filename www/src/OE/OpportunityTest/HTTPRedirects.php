@@ -70,7 +70,15 @@ class HTTPRedirects implements OpportunityTest
         return $opp;
     }
 
-    private static function joinValues($arr)
+    /**
+     * @return string[]
+     *
+     * @psalm-return list<non-empty-string>
+     * @param (false|mixed|string)[][] $arr
+     *
+     * @psalm-param list{0: list{mixed, false|string}, 1?: list{mixed, false|string},...} $arr
+     */
+    private static function joinValues(array $arr): array
     {
         $oneLevel = array();
         foreach ($arr as $item) {

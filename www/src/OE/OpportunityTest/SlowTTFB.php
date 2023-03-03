@@ -16,6 +16,12 @@ class SlowTTFB implements OpportunityTest
     public static function run(array $data): TestResult
     {
         $testResults = $data[0];
+        $testStepResult = $data[1];
+
+        $ttfbCheck = $testStepResult->getMetric('TTFB');
+        // Not actually part of TTFB, and maybe we can throw it into another opp test later
+        $fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
+
         $slowttfbThreshold = 1000;
         $firstByteTimes = $testResults->getMetricFromRuns("TTFB", false, false);
 
@@ -41,7 +47,11 @@ class SlowTTFB implements OpportunityTest
                                 'More info on MDN</a></p>'
                   ]
               ),
-              "good" =>  false
+              "good" =>  false,
+              "custom_attributes" => [
+                  'ttfbCheck' => $ttfbCheck,
+                  'fcpCheck' => $fcpCheck
+              ]
             ]);
         } else {
             $opp = new TestResult([
@@ -49,7 +59,11 @@ class SlowTTFB implements OpportunityTest
               "desc" =>  "A fast time to first byte is essential for delivering assets quickly. ",
               "examples" =>  array(),
               "experiments" =>  array(),
-              "good" =>  true
+              "good" =>  true,
+              "custom_attributes" => [
+                  'ttfbCheck' => $ttfbCheck,
+                  'fcpCheck' => $fcpCheck
+              ]
             ]);
         }
 

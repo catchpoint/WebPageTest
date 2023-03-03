@@ -124,10 +124,10 @@ $page_description = "Website performance test result$testLabel.";
 
 
                 <?php
-                include INCLUDES_PATH . '/experiments/common.inc';
-                include INCLUDES_PATH . '/experiments/summary.inc';
-
+                require_once INCLUDES_PATH . '/experiments/common.inc';
+                require_once INCLUDES_PATH . '/experiments/summary.inc';
                 ?>
+</div>
                 <?php if (!isset($experiments_paid) || !$experiments_paid) { ?>
                 <p><span class="opportunities_summary_exps">You have Free Experiments Available!
                     <?php
@@ -221,7 +221,7 @@ $page_description = "Website performance test result$testLabel.";
                         do {
                             $link .= $id . '-r:' . $cnt;
                             $repeatlink .= $id . '-r:' . $cnt . '-c:1';
-                            if ($tests[0]['step']) {
+                            if (!empty($test['step'])) {
                                 $link .= '-s:' . $test['step'];
                                 $repeatlink .= '-s:' . $test['step'];
                             }

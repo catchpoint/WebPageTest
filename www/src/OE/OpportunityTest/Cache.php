@@ -13,8 +13,9 @@ class Cache implements OpportunityTest
     {
         $testStepResult = $data[0];
         $requests = $data[1];
+
         $rawResults = $testStepResult->getRawResults();
-        $needCache = array();
+        $needCache = [];
         if (isset($rawResults['score_cache'])) {
             foreach ($requests as $index => &$request) {
                 if (isset($request['score_cache']) && $request['score_cache'] >= 0 && $request['score_cache'] < 100) {

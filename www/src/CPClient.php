@@ -90,7 +90,7 @@ class CPClient
         );
     }
 
-    public function getAccessToken(): string
+    public function getAccessToken(): ?string
     {
         return $this->access_token;
     }

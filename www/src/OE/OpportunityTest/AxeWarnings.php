@@ -1,24 +1,26 @@
 <?php
 
-(function () {
+declare(strict_types=1);
 
-    global $axe;
-    global $violations;
-    global $num_violations;
-    global $num_critical;
-    global $num_serious;
-    global $num_moderate;
-    global $num_minor;
+namespace WebPageTest\OE\OpportunityTest;
 
-    if (isset($axe)) {
-        if (count($axe['violations'])) {
-            $violations = $axe['violations'];
-            $num_violations = count($violations);
-            $num_critical = 0;
-            $num_serious = 0;
-            $num_moderate = 0;
-            $num_minor = 0;
+use WebPageTest\OE\TestResult;
+use WebPageTest\OE\OpportunityTest;
 
+class AxeWarnings implements OpportunityTest
+{
+    public static function run(array $data): TestResult
+    {
+        $axe = $data[0];
+        $opp = null;
+        $violations = $axe['violations'] ?? [];
+        $num_violations = count($violations);
+        $num_critical = 0;
+        $num_serious = 0;
+        $num_moderate = 0;
+        $num_minor = 0;
+
+        if ($num_violations > 0) {
             foreach ($violations as $v) {
                 if ($v['impact'] === "critical") {
                     $num_critical++;
@@ -41,7 +43,9 @@
 
             $recs = array();
             foreach ($violations as $v) {
-                $thisRec = '<h6 class="recommendation_level-' . $v['impact'] . '"><span>' . $v['impact'] . '</span> ' . htmlentities($v['help']) .  ' <a href="' . $v['helpUrl'] . '">More info</a></h6>';
+                $thisRec = '<h6 class="recommendation_level-' . $v['impact'] . '"><span>' . $v['impact'] .
+                         '</span> ' . htmlentities($v['help']) .  ' <a href="' . $v['helpUrl'] .
+                         '">More info</a></h6>';
                 if ($v["nodes"] && count($v["nodes"])) {
                     //print_r($v["nodes"])
                     if (count($v["nodes"]) > 6) {
@@ -50,7 +54,8 @@
                         $thisRec .=  '<ul>';
                     }
                     foreach ($v["nodes"] as $vnode) {
-                        $thisRec .=  '<li>' . htmlentities($vnode["failureSummary"]) . '<code>' . htmlentities($vnode["html"]) . '</code></li>';
+                        $thisRec .=  '<li>' . htmlentities($vnode["failureSummary"]) . '<code>' .
+                                   htmlentities($vnode["html"]) . '</code></li>';
                     }
                     $thisRec .=  '</ul>';
                 }
@@ -58,7 +63,7 @@
                 array_push($recs, $thisRec);
             }
 
-            $opp = [
+            $opp = new TestResult([
                 "title" => "Accessibility Issues were Detected",
                 "desc" => "Axe found $num_violations accessibility issues: " .
                     ($num_critical > 0 ? "$num_critical critical, " : '') .
@@ -72,18 +77,34 @@
                         "desc" => implode($recs)
                     ]
                 ),
-                "good" => false
-            ];
+                "good" => false,
+                "custom_attributes" => [
+                    "axe_violations" => $violations,
+                    "axe_num_violations" => $num_violations,
+                    "axe_num_critical" => $num_critical,
+                    "axe_num_serious" => $num_serious,
+                    "axe_num_moderate" => $num_moderate,
+                    "axe_num_minor" => $num_minor
+                ]
+            ]);
         } else {
-            $opp = [
+            $opp = new TestResult([
                 "title" => "Zero Accessibility Issues were Detected",
                 "desc" => "Axe found no accessibility issues. ",
                 "examples" =>  array(),
                 "experiments" => array(),
-                "good" => true
-            ];
+                "good" => true,
+                "custom_attributes" => [
+                    "axe_violations" => $violations,
+                    "axe_num_violations" => $num_violations,
+                    "axe_num_critical" => $num_critical,
+                    "axe_num_serious" => $num_serious,
+                    "axe_num_moderate" => $num_moderate,
+                    "axe_num_minor" => $num_minor
+                ]
+            ]);
         }
 
-        AssessmentRegistry::getInstance()->register(AssessmentRegistry::Usable, $opp);
+        return $opp;
     }
-})();
+}

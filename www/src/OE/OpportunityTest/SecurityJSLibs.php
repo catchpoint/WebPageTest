@@ -1,23 +1,41 @@
 <?php
 
-(function () {
+declare(strict_types=1);
 
-    global $testStepResult;
-    global $jsLibsVulns;
-    global $numVulns;
-    global $num_high;
-    global $num_medium;
-    global $num_low;
+namespace WebPageTest\OE\OpportunityTest;
 
-    if ($testStepResult) {
-        $jsLibsVulns = $testStepResult->getRawResults()['jsLibsVulns'];
-    }
+use WebPageTest\OE\OpportunityTest;
+use WebPageTest\OE\TestResult;
 
-    if ($jsLibsVulns) {
+class SecurityJSLibs implements OpportunityTest
+{
+    public static function run(array $data): TestResult
+    {
+        $testStepResult = $data[0];
+
+        $jsLibsVulns = $testStepResult->getRawResults()['jsLibsVulns'] ?? [];
         $numVulns = count($jsLibsVulns);
         $num_high = 0;
         $num_medium = 0;
-        $num_low = 0;
+        $num_low =  0;
+
+        if (!$jsLibsVulns) {
+            return new TestResult([
+                "name" => "security-js-libs",
+                "title" => "Zero security vulnerabilies were detected by Snyk",
+                "desc" => "Snyk has found 0 security vulnerabilities with included packages.",
+                "examples" => [],
+                "experiments" => [],
+                "custom_attributes" => [
+                    'jsLibsVulns' => [],
+                    'numVulns' => $numVulns,
+                    'num_high' => $num_high,
+                    'num_medium' => $num_medium,
+                    'num_low' => $num_low
+                ],
+                "good" =>  true
+            ]);
+        }
 
         foreach ($jsLibsVulns as $v) {
             if ($v['severity'] === "high") {
@@ -51,7 +69,7 @@
             array_push($secRecs, $thisRec);
         }
 
-        $opp = [
+        return new TestResult([
             "title" =>  "Several security vulnerabilies were detected by Snyk",
             "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") . ": $num_high high, $num_medium medium, $num_low low.",
             "examples" =>  array(),
@@ -61,17 +79,14 @@
                     "desc" => implode($secRecs)
                 ]
             ),
-            "good" =>  false
-        ];
-    } else {
-        $opp = [
-            "title" =>  "Zero security vulnerabilies were detected by Snyk",
-            "desc" =>  "Snyk has found 0 security vulnerabilities with included packages.",
-            "examples" =>  array(),
-            "experiments" =>  array(),
-            "good" =>  true
-        ];
+            "good" =>  false,
+            "custom_attributes" => [
+              "jsLibsVulns" => $jsLibsVulns,
+              "numVulns" => $numVulns,
+              "num_high" => $num_high,
+              "num_medium" => $num_medium,
+              "num_low" => $num_low
+            ]
+        ]);
     }
-
-    AssessmentRegistry::getInstance()->register(AssessmentRegistry::Resilient, $opp);
-})();
+}

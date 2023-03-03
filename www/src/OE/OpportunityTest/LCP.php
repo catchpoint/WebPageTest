@@ -34,7 +34,7 @@ class LCP implements OpportunityTest
             }
         }
 
-        if (isset($lcp)) {
+        if (!is_null($lcp)) {
             if ($lcp['time'] > 2500) {
                 $isBG = false;
                 $isVideo = false;
@@ -132,7 +132,10 @@ class LCP implements OpportunityTest
                             "LCP Image: $lcpFullSource"
                         ),
                         "experiments" => $expsToAdd,
-                        "good" =>  false
+                        "good" =>  false,
+                        "custom_attributes" => [
+                          'lcp_time' => $lcp['time']
+                        ]
                     ]);
                 } else {
                     // LCP was high but wasn't due to an Image. TBD!
@@ -149,7 +152,10 @@ class LCP implements OpportunityTest
                                 ' loading, and CSS or JavaScript animations.</p>'
                             ]
                         ),
-                        "good" =>  false
+                        "good" =>  false,
+                        "custom_attributes" => [
+                          'lcp_time' => $lcp['time']
+                        ]
                     ]);
                 }
             } else {
@@ -158,7 +164,10 @@ class LCP implements OpportunityTest
                     "desc" =>  "Great job. If LCP was higher, WebPageTest would look for ways to speed it up.",
                     "examples" =>  array(),
                     "experiments" =>  array(),
-                    "good" =>  true
+                    "good" =>  true,
+                    "custom_attributes" => [
+                      'lcp_time' => $lcp['time']
+                    ]
                 ]);
             }
 

@@ -23,12 +23,17 @@ class FontRendering implements OpportunityTest
             }
         }
 
-
         if (count($fontsThatBlock)) {
             $blockers = array();
             foreach ($fontsThatBlock as $font) {
-                array_push($blockers, $font["family"] . " " . (isset($font["weight"]) ? $font["weight"] : "") . " " .
-                (isset($font["style"]) ? $font["style"] : ""));
+                $blocker = $font["family"];
+                if (isset($font["weight"])) {
+                    $blocker .= " {$font['weight']}";
+                }
+                if (isset($font["style"])) {
+                    $blocker .= " {$font['style']}";
+                }
+                array_push($blockers, $blocker);
             }
 
             $opp = new TestResult([

@@ -15,7 +15,6 @@ use WebPageTest\Util;
 use WebPageTest\Util\Cache;
 use WebPageTest\Util\GZ;
 
-
 /**
 * Figure out the test path (relative) for the given test ID
 *
