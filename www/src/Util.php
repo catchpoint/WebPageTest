@@ -791,7 +791,9 @@ class Util
      */
     public static function setBannerMessage(string $message_type, array $message): void
     {
-        $_SESSION['messages'][$message_type][] = $message;
+        if (self::getSetting('php_sessions')) {
+            $_SESSION['messages'][$message_type][] = $message;
+        }
     }
 
     /**
@@ -800,6 +802,10 @@ class Util
      */
     public static function getBannerMessage(): array
     {
+        if (!self::getSetting('php_sessions')) {
+            return [];
+        }
+
         $messages_array = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
         unset($_SESSION['messages']);
         return $messages_array;

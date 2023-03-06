@@ -23,8 +23,10 @@ $support_link = Util::getSetting('support_link', 'https://support.catchpoint.com
 
 $client_error = null;
 if (Util::getSetting('cp_auth')) {
-    $client_error = $_SESSION['client_error'] ?? null;
-    unset($_SESSION['client_error']);
+    if (Util::getSetting('php_sessions')) {
+        $client_error = $_SESSION['client_error'] ?? null;
+        unset($_SESSION['client_error']);
+    }
 
     set_exception_handler(function ($e) {
         // Developer envs just get a print out
@@ -42,8 +44,10 @@ if (Util::getSetting('cp_auth')) {
             $route = $e->getRoute();
             $message = $e->getMessage();
             $host = Util::getSetting('host');
-            unset($_SESSION['client_error']);
-            $_SESSION['client_error'] = $message;
+            if (Util::getSetting('php_sessions')) {
+                unset($_SESSION['client_error']);
+                $_SESSION['client_error'] = $message;
+            }
             $protocol = "https";
             $location = "{$protocol}://{$host}{$route}";
             header('Location: ' . $location);
