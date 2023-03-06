@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+echo 'Login temporarily down. Sorry for the inconvenience.';
+die();
+
 require_once __DIR__ . '/../common.inc';
 
 use WebPageTest\Util;
