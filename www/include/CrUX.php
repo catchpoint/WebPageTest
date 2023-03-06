@@ -163,6 +163,16 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             <summary><strong>Note:</strong> Why can real browser usage metrics vary from test run metrics?</summary>
             <p>Variance between your test run and real world usage is expected because a WebPageTest run uses a specific connection speed, and real world data spans all connection speeds. To closely match the p75 user in WebPageTest, try rerunning your test using a different connection speed.</p>
             </details>';
+        echo <<<EOD
+        <script>
+        let cruxContain = document.querySelector(".crux");
+        cruxContain.addEventListener("click", (e) => {
+            if( e.target && e.target.closest("a[href='#crux_diff_why'") ){
+                document.getElementById("crux_diff_why").open = true;
+            }
+        });
+        </script>
+        EOD;
 
         echo '</div>';
     }
