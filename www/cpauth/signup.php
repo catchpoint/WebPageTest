@@ -103,13 +103,6 @@ use WebPageTest\Handlers\Signup as SignupHandler;
     $plan = $_COOKIE['signup-plan'] ?? 'free';
     $is_plan_free = $plan == 'free';
 
-    $auth_token = $_SESSION['signup-auth-token'] ?? null;
-    if (is_null($auth_token)) {
-        $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
-        $_SESSION['signup-auth-token'] = $auth_token;
-    }
-    $request_context->getSignupClient()->authenticate($auth_token);
-    $vars['auth_token'] = $auth_token;
     $vars['plan'] = $plan;
     $vars['is_plan_free'] = $is_plan_free;
     $vars['step'] = $signup_step;
