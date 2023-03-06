@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+echo 'Signup currently down. Will be back soon';
+die();
+
 require_once __DIR__ . '/../common.inc';
 
 use WebPageTest\RequestContext;
