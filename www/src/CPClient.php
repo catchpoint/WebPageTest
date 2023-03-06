@@ -48,8 +48,8 @@ class CPClient
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
         $graphql_client_options = array(
-            'timeout' => 30,
-            'connect_timeout' => 30
+            'timeout' => 5,
+            'connect_timeout' => 5
         );
 
         $this->client_id = $auth_client_options['client_id'] ?? null;

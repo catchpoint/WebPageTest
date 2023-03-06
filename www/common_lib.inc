@@ -1746,9 +1746,9 @@ function cp_http_post($url, $body, $cpid, $file = null)
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$headers) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
@@ -1807,7 +1807,7 @@ function cp_http_get($url, $cpid)
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$headers) {
@@ -1843,9 +1843,9 @@ function cp_http_get_file($url, $cpid, $file)
             curl_setopt($ch, CURLOPT_FAILONERROR, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+            curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 60);
             curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
             curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$headers) {
                 $len = strlen($header);
                 $header = explode(':', $header, 2);
@@ -2779,7 +2779,7 @@ function http_fetch($url)
         curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
         $ret = curl_exec($CURL_CONTEXT);
     } else {
-        $context = stream_context_create(array('http' => array('header' => 'Connection: close', 'timeout' => 600)));
+        $context = stream_context_create(array('http' => array('header' => 'Connection: close', 'timeout' => 60)));
         $ret = file_get_contents($url, false, $context);
     }
     return $ret;
@@ -2860,7 +2860,7 @@ function http_put_raw($url, $body)
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         $response = curl_exec($ch);
         curl_close($ch);
         if ($response === false) {
@@ -2890,9 +2890,9 @@ function http_put_file($url, $file)
             curl_setopt($ch, CURLOPT_FAILONERROR, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+            curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 60);
             curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
             $response = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
             curl_close($ch);
@@ -2923,9 +2923,9 @@ function http_post_raw($url, $body, $content_type = 'text/plain', $return_respon
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         $response = curl_exec($ch);
         curl_close($ch);
         if ($response === false) {
