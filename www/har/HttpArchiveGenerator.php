@@ -155,6 +155,11 @@ class HttpArchiveGenerator
         $pd['testID'] = $this->testInfo->getId();
         $pd['pageTimings'] = array('onLoad' => $stepData['docTime'], 'onContentLoad' => -1, '_startRender' => $stepData['render']);
 
+        $info = $this->testInfo->getInfoArray();
+        if (!empty($info['bwIn'])) {
+            $pd['_bwDown'] = $info['bwIn'];
+        }
+
         // dump all of our metrics into the HAR data as custom fields
         foreach ($stepData as $name => $value) {
             $pd["_$name"] = $value;
