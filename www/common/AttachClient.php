@@ -16,7 +16,9 @@ use WebPageTest\Exception\UnauthorizedException;
         'auth_client_options' => array(
             'base_uri' => Util::getSetting('cp_auth_host'),
             'client_id' => Util::getSetting('cp_auth_client_id'),
-            'client_secret' => Util::getSetting('cp_auth_client_secret')
+            'client_secret' => Util::getSetting('cp_auth_client_secret'),
+            'timeout' => 5,
+            'connect_timeout' => 5
         )
     ));
 

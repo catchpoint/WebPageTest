@@ -60,7 +60,11 @@ class CPSignupClient
     {
         $this->graphql_client = new GraphQLClient(
             $this->gql_uri,
-            ['Authorization' => "Bearer {$access_token}"]
+            [
+              'Authorization' => "Bearer {$access_token}",
+              'timeout' => 5,
+              'connect_timeout' => 5
+            ]
         );
     }
 
