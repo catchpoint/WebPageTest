@@ -6,6 +6,7 @@
 require_once(INCLUDES_PATH . '/devtools.inc.php');
 require_once(INCLUDES_PATH . '/include/TestPaths.php');
 require_once(INCLUDES_PATH . '/video/visualProgress.inc.php');
+require_once(INCLUDES_PATH . '/draw.inc');
 
 /**
 * Load the page results directly from the results files
@@ -171,6 +172,12 @@ function loadPageStepData($localPaths, $testInfo = null)
                 if (isset($long_tasks) && is_array($long_tasks)) {
                     $ret['longTasks'] = $long_tasks;
                 }
+            }
+
+          // Load CPU and BW
+            $perfs = LoadPerfData($localPaths->utilizationFile(), true, true);
+            if ($perfs) {
+                $ret['utilization'] = $perfs;
             }
 
           // Load the diagnostic test timing information if available
