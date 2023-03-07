@@ -121,20 +121,20 @@ $page_description = "Website performance test result$testLabel.";
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
-                <p>Opportunities &amp; Experiments <em class="flag">New</em>
-            <?php
-            if ($tabs && $tabs['Opportunities & Experiments']) {
-                echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
-            }
-            ?>
-
-                </p>
+              
 
                 <?php
                 include INCLUDES_PATH . '/experiments/common.inc';
                 include INCLUDES_PATH . '/experiments/summary.inc';
 
                 ?>
+                <p><span><em>Learn more in </em> Opportunities &amp; Experiments <em class="flag">New</em>
+                    <?php
+                    if ($tabs && $tabs['Opportunities & Experiments']) {
+                        echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
+                    }
+                    ?></span>
+                    </p>
                 </div>
 
 

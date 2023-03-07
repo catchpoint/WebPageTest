@@ -88,7 +88,7 @@ h3.hed_sub {
   text-transform: none;
   color: #555;
   font-weight: 500;
-  background: #f0f0f0;
+  background: #f6f6f6;
   padding: .5em 1em;
   vertical-align: middle;
   border-radius: .6em;
@@ -320,6 +320,11 @@ span.lh-flag {
 
 .summary_opps em.flag {
   font-size: 0.4em;
+  font-size: .5em;
+  top: -1em;
+  display: inline-block;
+  position: relative;
+  margin: 0 .5em;
 }
 
 .pro-flag {
@@ -1902,7 +1907,7 @@ footer ul {
 }
 
 .result .opportunities_summary {
-  margin: 0 0 2rem;
+  margin: 0 0 1rem;
   gap: 3rem;
 }
 
@@ -1961,7 +1966,23 @@ footer ul {
   color: #2a3c64;
   font-weight: 900;
 }
-
+.summary_opps .opportunities_summary h4 {
+  display: inline;
+}
+.summary_opps .opportunities_summary h4 strong {
+  display: block;
+  margin-bottom: .4em;
+  font-size: 1.2em
+}
+.summary_opps .opportunities_summary h4 span { 
+display: inline;
+}
+.summary_opps .opportunities_summary .grade_anchor p {
+  display: inline;
+  font-size: .9em;
+  margin: 0 0 .4em;
+  line-height: 1.4;
+}
 .opportunities_summary .grade_heading.grade-a > span {
   background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
@@ -2032,12 +2053,11 @@ footer ul {
   display: flex;
   gap: 0.8em;
   align-items: center;
-  margin: 0;
-  padding: 0.1rem 0 0;
+  
   justify-content: flex-start;
-  border-color: #efefef;
-  background: #fff;
+  
 }
+.summary_opps .opportunities_summary ul {background: #f6f6f6;/* background: #fff; */border-radius: .5em;margin: .8em 0 0;padding: .3em .8em;}
 
 .opportunities_summary_opps,
 .opportunities_summary_recs,
@@ -2057,6 +2077,11 @@ footer ul {
 .experiment_summary_label {
   text-indent: -9999px;
 }
+.summary_opps .experiment_summary_label {
+text-indent: 0;
+  font-size: .9em;
+}
+.summary_opps .experiment_summary_label {color: #444;}
 
 .opportunities_summary_opps {
   background: url(/assets/images/src/icon_opportunities.svg) left 0 bottom 50%
@@ -2474,13 +2499,28 @@ details.details_custommetrics summary {
 
 .summary_opps > p {
   line-height: 1.5;
-  font-weight: 700;
-  border-bottom: 1px solid #1071ba;
-  margin: 0.6em 0 1em;
+  font-weight: 500;
+  margin: 0 0 1em;
   max-width: none;
-  padding-bottom: 0.7em;
+  padding: 0;
   display: flex;
-  color: #2a3b64;
+  color: #555;
+  justify-content: flex-end;
+  font-size: 1.1em;
+  position: relative;
+}
+.summary_opps > p span {
+  position:relative;
+  background: #fff;
+  padding: 0 0 0 1em;
+  
+}
+.summary_opps > p:before {
+   content: ""; 
+  border-top: 1px solid #eee;
+  position: absolute;
+  width: 100%;
+  top: .8em;
 }
 
 .summary_opps > p a {
@@ -2493,6 +2533,8 @@ details.details_custommetrics summary {
   text-decoration: none;
   display: inline-block;
   margin-left: 1em;
+  vertical-align: middle;
+  /* color: #fff; */
 }
 
 .summary_opps > p a:hover,
