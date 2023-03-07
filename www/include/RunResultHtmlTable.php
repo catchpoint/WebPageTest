@@ -170,12 +170,12 @@ class RunResultHtmlTable
               //$out .= $this->_headCell("", "empty pin", 1);
             }
         }
-        $out .= $this->_headCell("First Byte");
+        $out .= $this->_headCell("Time to First Byte");
         if ($this->isColumnEnabled(self::COL_START_RENDER)) {
             $out .= $this->_headCell("Start Render");
         }
         if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-            $out .= $this->_headCell('<abbr title="First Contentful Paint">FCP</abbr>');
+            $out .= $this->_headCell('First Contentful Paint');
         }
         if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
             $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
@@ -197,36 +197,36 @@ class RunResultHtmlTable
         }
 
         if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-            $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title='Largest Contentful Paint'>LCP</abbr></a>", $vitalsBorder);
+            $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest Contentful Paint</a>", $vitalsBorder);
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-            $out .= $this->_headCell("<a href='$vitals_url#cls'><abbr title='Cumulative Layout Shift'>CLS</abbr></a>", $vitalsBorder);
+            $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative Layout Shift</a>", $vitalsBorder);
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-            $out .= $this->_headCell("<a href='$vitals_url#tbt'><abbr title='Total Blocking Time'>TBT</abbr></a>", $vitalsBorder);
+            $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
             $vitalsBorder = null;
         }
 
         if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
-            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Time', "border");
+            $out .= $this->_headCell('Document Complete Time', "border");
         }
         if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
-            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Requests', "border");
+            $out .= $this->_headCell('Document Complete Requests', "border");
         }
         if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
-            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Bytes', "border");
+            $out .= $this->_headCell('Document Complete Bytes', "border");
         }
 
         for ($i = 1; $i < 2; $i++) {
             if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
-                $out .= $this->_headCell("Time", "border");
+                $out .= $this->_headCell("Total Time", "border");
             }
             if ($this->isColumnEnabled(self::COL_REQUESTS)) {
-                $out .= $this->_headCell("Requests");
+                $out .= $this->_headCell("Total Requests");
             }
-            $out .= $this->_headCell("Total Bytes");
+            $out .= $this->_headCell("Page Weight");
         }
 
 
@@ -236,6 +236,109 @@ class RunResultHtmlTable
 
         if ($this->isColumnEnabled(self::COL_COST)) {
             $out .= $this->_headCell("Cost");
+        }
+
+        return $out;
+    }
+
+    private function _createFoot()
+    {
+        $out = '';
+
+        $out .= "<tr class=\"metric_descs\">";
+        if ($this->isColumnEnabled(self::COL_LABEL)) {
+            if ($this->isMultistep) {
+                // TODO test multistep
+                //$out .= $this->_headCell("Step");
+            } else {
+              //$out .= $this->_headCell("", "empty pin", 1);
+            }
+        }
+        $out .= $this->_bodyCell(null, "When did the content start downloading?");
+        if ($this->isColumnEnabled(self::COL_START_RENDER)) {
+            //$out .= $this->_headCell("Start Render");
+            $out .= $this->_bodyCell(null, "When did pixels first start to appear?");
+        }
+        if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
+            //$out .= $this->_headCell('First Contentful Paint');
+            $out .= $this->_bodyCell(null, "How soon did text and images start to load?");
+        }
+        if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
+            //$out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
+            $out .= $this->_bodyCell(null, "How soon did the page appear usable?");
+        }
+        if ($this->isColumnEnabled(self::COL_RESULT)) {
+            //$out .= $this->_headCell("Result (error&nbsp;code)");
+            $out .= $this->_bodyCell(null, "What error code was shown?");
+        }
+        $vitalsBorder = "border";
+      //for now, only provide a link to vitals if all metrics are collected
+        if (
+            $this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT) &&
+            $this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT) &&
+            $this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)
+        ) {
+            $test_id = $this->testInfo->getId();
+            $run = $this->runResults->getRunNumber();
+            $cached = $this->runResults->isCachedRun() ? '1' : '0';
+            $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
+        }
+
+        if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
+            //$out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest Contentful Paint</a>", $vitalsBorder);
+            $out .= $this->_bodyCell("", "When did the largest visible content finish loading?");
+
+            $vitalsBorder = null;
+        }
+        if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
+            //$out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative Layout Shift</a>", $vitalsBorder);
+            $out .= $this->_bodyCell("", "How much did the design shift while loading?");
+            $vitalsBorder = null;
+        }
+        if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
+            //$out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
+            $out .= $this->_bodyCell("", "How long was content blocked from user input?");
+            $vitalsBorder = null;
+        }
+
+        if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
+            //$out .= $this->_headCell('Document Complete Time', "border");
+            $out .= $this->_bodyCell("", "When was the document completely downloaded?");
+        }
+        if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
+            //$out .= $this->_headCell('Document Complete Requests', "border");
+            $out .= $this->_bodyCell("", "How many requests for document complete?");
+        }
+        if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
+            //$out .= $this->_headCell('Document Complete Bytes', "border");
+            $out .= $this->_bodyCell("", "How many bytes downloaded for document complete?");
+        }
+
+        for ($i = 1; $i < 2; $i++) {
+            if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
+                //$out .= $this->_headCell("Total Time", "border");
+                $out .= $this->_bodyCell("", "What was the total download time?");
+
+            }
+            if ($this->isColumnEnabled(self::COL_REQUESTS)) {
+                //$out .= $this->_headCell("Total Requests");
+                $out .= $this->_bodyCell("", "How many requests did the browser make?");
+
+            }
+            //$out .= $this->_headCell("Page Weight");
+            $out .= $this->_bodyCell("", "How many bytes were downloaded?");
+
+        }
+
+
+        if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
+            //$out .= $this->_headCell("Certificates");
+            $out .= $this->_bodyCell("", "How heavy were the certificates?");
+        }
+
+        if ($this->isColumnEnabled(self::COL_COST)) {
+           // $out .= $this->_headCell("Cost");
+            $out .= $this->_bodyCell("", "What was the avg. download cost?");
         }
 
         return $out;
@@ -406,7 +509,10 @@ class RunResultHtmlTable
         }
 
         $out .= "</tr>\n";
+        
+
         if ($repeatMetricLabels) {
+            $out .= $this->_createFoot();
             $out .= "</table></div>\n";
             $localPaths = $stepResult->createTestPaths();
             if (is_dir($localPaths->videoDir())) {

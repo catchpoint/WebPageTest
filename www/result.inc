@@ -159,7 +159,7 @@ $page_description = "Website performance test result$testLabel.";
                 $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
 
                 if ($fvMedian) {
-                      echo '<h3 class="hed_sub">Observed Metrics ';
+                      echo '<h3 class="hed_sub">Page Performance Metrics ';
                       $medianMetrics = array(
                         "chromeUserTiming.CumulativeLayoutShift" => "Cumulative Layout Shift",
                         "firstContentfulPaint" => "First Contentful Paint",
@@ -176,7 +176,7 @@ $page_description = "Website performance test result$testLabel.";
                           $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
                       if ($testResults->countRuns() > 1) {
-                          echo '<em>(Based on Median Run by:
+                          echo '<em>(Showing <a href="#run' . $runNumber . '">Run ' . $fvMedian . ($rvRunResults ? ", first view." : ".") . '</a> Based on Median Run by:
                           <details><summary>' . $friendlyMedianMetric . '</summary>';
                           echo "<ul>";
 
@@ -194,8 +194,8 @@ $page_description = "Website performance test result$testLabel.";
                         echo '</h3>';
 
                         echo '<details class="metrics_shown">
-                          <summary><strong>Note:</strong> Metrics offered will vary</summary>
-                          <p><strong>Please note:</strong> Supported metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
+                          <summary><strong>Note:</strong> Metric availability will vary</summary>
+                          <p><strong>Please note:</strong> Availability of metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
                           </details>';
 
                       $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
