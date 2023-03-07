@@ -6537,6 +6537,7 @@ table.pretty .metric_groups th {
   vertical-align: top;
   white-space: nowrap;
   color: #2a3b64;
+  overflow: visible;
 }
 
 .results-filmstrip-container h4 {
