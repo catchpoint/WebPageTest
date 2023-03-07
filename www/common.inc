@@ -242,7 +242,8 @@ $supportsAuth = false;
 $supportsSaml = Util::getSetting('saml_login') !== false;
 $supportsCPAuth = Util::getSetting('cp_auth');
 $supportsGoogleOAuth = Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret');
-$supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
+$login_off = Util::getSetting('login_off');
+$supportsAuth = !$login_off && ($supportsSaml || $supportsCPAuth || $supportsGoogleOAuth);
 
 $uid = null;
 $user = null;
@@ -250,7 +251,7 @@ $saml_user = null;
 $admin = Util::getSetting('admin_on') == "true";
 $api_keys;
 
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $USER_EMAIL = GetSamlEmail();
     $saml_user = new User();
     $saml_user->setEmail($USER_EMAIL);
@@ -288,7 +289,7 @@ if (!$admin && !$supportsCPAuth) {
 $isFirstVisit = true;
 $isOwner = false;
 $owner = null;
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $isFirstVisit = false;
     $owner = GetSamlAccount();
     $saml_user->setOwnerId($owner);
@@ -322,14 +323,14 @@ if (isset($_REQUEST['color'])) {
     $_REQUEST['color'] = $_REQUEST['color'];
 }
 
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $request_context->setUser($saml_user);
 }
 
 /**
  * Load app specific middleware
  */
-if ($supportsCPAuth) {
+if ($supportsAuth && $supportsCPAuth) {
     require_once INCLUDES_PATH . '/common/AttachClient.php';
     require_once INCLUDES_PATH . '/common/AttachUser.php';
     require_once INCLUDES_PATH . '/common/AttachSignupClient.php';
