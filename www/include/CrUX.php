@@ -78,6 +78,11 @@ function PruneCruxCache()
 // returns a string of the Real User Measurement title for results.php if CrUX has collectionPeriod
 function RealUserMeasurementCruxTitle($pageData)
 {
+
+    $ret = '<h3 class="hed_sub">Real-World Usage Metrics</h3><div class="crux_subhed"><p class="crux_subhed_desc">Compare this WebPageTest run with browser-collected performance data for this site.</p>';
+
+    $cruxOrigin = $pageData['CrUX']['key']['url'];
+    $cruxStudioURL = "https://lookerstudio.google.com/reporting/bbc5698d-57bb-4969-9e07-68810b9fa348/page/keDQB?params=%7B%22origin%22:%22" . urlencode($cruxOrigin) . "%22%7D";
     if (
         isset($pageData['CrUX']['collectionPeriod']) &&
         isset($pageData['CrUX']['collectionPeriod']['firstDate']) &&
@@ -88,16 +93,12 @@ function RealUserMeasurementCruxTitle($pageData)
         $startDate = date('F j\, Y', mktime(0, 0, 0, $firstDate['month'], $firstDate['day'], $firstDate['year']));
         $endDate = date('F j\, Y', mktime(0, 0, 0, $lastDate['month'], $lastDate['day'], $lastDate['year']));
         // Example: Real User Measurements (Collected anonymously by Chrome browser via Chrome User Experience Report, between October 15, 2022 and September 18, 2022)
-        return sprintf('<h3 class="hed_sub">
-                            Real User Measurements
-                            <em>(Collected anonymously by Chrome browser via Chrome User Experience Report, between %s and %s)</em>
-                        </h3>', $startDate, $endDate);
+        $ret .= sprintf('<p class="crux_subhed_cite">(Collected anonymously by Chrome browser from %s to %s | <a href="%s">Full Report</a>)</p>', $startDate, $endDate, $cruxStudioURL);
     } else {
-        return '<h3 class="hed_sub">
-                    Real User Measurements
-                    <em>(Collected anonymously by Chrome browser via Chrome User Experience Report)</em>
-                </h3>';
+        $ret .= sprintf('<p class="crux_subhed_cite">(Collected anonymously by Chrome browser | <a href="%s">Full Report</a>)</p>', $cruxStudioURL);
     }
+    $ret .= "</div>";
+    return $ret;
 }
 
 function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels = true, $includeMetricName = true)
@@ -111,15 +112,7 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
             $pageData = $stepResult->getRawResults();
         }
     }
-    if (isset($rvRunResults)) {
-        $stepResult = $rvRunResults->getStepResult(1);
-        if ($stepResult) {
-            $rvPageData = $stepResult->getRawResults();
-            if (!isset($pageData) && isset($rvPageData) && isset($rvPageData['CrUX'])) {
-                $pageData = array('CrUX' => $rvPageData['CrUX']);
-            }
-        }
-    }
+
     if (
         isset($pageData) &&
         is_array($pageData) &&
@@ -133,55 +126,59 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         }
         echo '<div class="crux">';
         echo RealUserMeasurementCruxTitle($pageData);
-        echo '<div class="crux_legends"><strong>Metrics from this run:</strong>';
-        if (isset($pageData) && (isset($pageData['chromeUserTiming.firstContentfulPaint']) || isset($pageData['chromeUserTiming.LargestContentfulPaint']) || isset($pageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' &nbsp;<span class="legend"><span class="fvarrow">&#x25BC</span> ';
-            if ($includeLabels) {
-                echo "First View";
-            }
-            echo '</span>';
-        }
-        if (isset($rvPageData) && (isset($rvPageData['chromeUserTiming.firstContentfulPaint']) || isset($rvPageData['chromeUserTiming.LargestContentfulPaint']) || isset($rvPageData['chromeUserTiming.CumulativeLayoutShift']))) {
-            echo ' &nbsp;<span class="legend"><span class="rvarrow">&#x25BC</span>';
-            if ($includeLabels) {
-                echo "Repeat View";
-            }
-            echo '</span>';
-        }
-        echo '</div>';
 
 
         // The individual metrics
         echo '<div class="cruxbars">';
         if ($metric == '') {
             //show all
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
-            InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
         } elseif ($metric == 'fcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
         } elseif ($metric == 'lcp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
         } elseif ($metric == 'cls') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
         } elseif ($metric == 'fid') {
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
         } elseif ($metric == 'ttfb') {
-            InsertCruxMetricHTML($pageData, $rvPageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
         } elseif ($metric == 'inp') {
-            InsertCruxMetricHTML($pageData, $rvPageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
+        } elseif ($metric == 'cwv') {
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
         }
 
+
         echo '</div>';
+
+        echo '<details class="metrics_shown" id="crux_diff_why">
+            <summary><strong>Note:</strong> Why can real browser usage metrics vary from test run metrics?</summary>
+            <p>Variance between your test run and real world usage is expected because a WebPageTest run uses a specific connection speed, and real world data spans all connection speeds. To closely match the p75 user in WebPageTest, try rerunning your test using a different connection speed.</p>
+            </details>';
+        echo <<<EOD
+        <script>
+        let cruxContain = document.querySelector(".crux");
+        cruxContain.addEventListener("click", (e) => {
+            if( e.target && e.target.closest("a[href='#crux_diff_why'") ){
+                document.getElementById("crux_diff_why").open = true;
+            }
+        });
+        </script>
+        EOD;
 
         echo '</div>';
     }
 }
 
-function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $label, $short, $includeLabels = true)
+function InsertCruxMetricHTML($fvPageData, $metric, $crux_metric, $label, $short, $includeLabels = true)
 {
     $fvValue = null;
     $rvValue = null;
@@ -198,90 +195,86 @@ function InsertCruxMetricHTML($fvPageData, $rvPageData, $metric, $crux_metric, $
     }
     if (isset($fvPageData['CrUX']['metrics'][$crux_metric]['percentiles']['p75'])) {
         $p75 = $fvPageData['CrUX']['metrics'][$crux_metric]['percentiles']['p75'];
+        $p75Score = "good";
+        if ($p75 >=  $histogram[0]['end']) {
+            $p75Score = "fair";
+        }
+        if ($p75 >=  $histogram[1]['end']) {
+            $p75Score = "poor";
+        }
     }
     if (isset($histogram) && is_array($histogram) && count($histogram) == 3) {
-        InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels);
+        InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels, $p75Score);
     }
 }
 
-function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels = true)
+
+
+function InsertCruxMetricImage($label, $short, $histogram, $p75, $fvValue, $rvValue, $includeLabels = true, $p75Score)
 {
-    // Figure out offsets and adjustments to the svg
-    $width = 200;
+
     if (is_float($p75)) {
         $p75 = round($p75, 3);
-    }
-    if (is_float($fvValue)) {
-        $fvValue = round($fvValue, 3);
     }
     $goodPct = intval(round($histogram[0]['density'] * 100));
     $fairPct = intval(round($histogram[1]['density'] * 100));
     $poorPct = intval(round($histogram[2]['density'] * 100));
-    $poorStart = $goodPct + $fairPct;
-    $poorPct = 100 - $poorStart;
-    $goodText = '';
-    if ($goodPct >= 7) {
-        $pos = $goodPct / 2;
-        $goodText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='white'>$goodPct%</text>";
-    }
-    $fairText = '';
-    if ($fairPct >= 7) {
-        $pos = $goodPct + ($fairPct / 2);
-        $fairText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='black'>$fairPct%</text>";
-    }
-    $poorText = '';
-    if ($poorPct >= 7) {
-        $pos = $goodPct + $fairPct + ($poorPct / 2);
-        $poorText = "<text x='$pos%' y='16' text-anchor='middle' font-size='12' font-family='Open Sans, sans-serif' fill='white'>$poorPct%</text>";
-    }
-    $p75arrow = '';
-    $p75text = '';
-    $maxVal = max($p75, $fvValue, $rvValue);
-    $unit = $short === 'CLS' ? '' : ' ms';
-    if (isset($p75)) {
-        $pos = 5 + GetCruxValuePosition($p75, $maxVal, $histogram, $width, $color);
-        $start = $pos - 5;
-        $end = $pos + 5;
-        $p75arrow = "<svg x='5' width='250' y='55' height='15'><polygon points='$start,10 $pos,0 $end,10' fill='$color'/></svg>";
-        $text = "p75 ($p75$unit)";
-        $anchor = $pos < 90 ? 'start' : 'end';
-        $textPos = $pos < 90 ? $pos + 12 : $pos - 5;
-        $p75text = "<text x='$textPos' y='67' font-size='12' text-anchor='$anchor' font-family='Open Sans, sans-serif'>$text</text>";
-    }
-    $fvArrow = '';
+    $goodClass = $goodPct < 10 ? " crux_bars-hidelabel" : "";
+    $fairClass = $fairPct < 10 ? " crux_bars-hidelabel" : "";
+    $poorClass = $poorPct < 10 ? " crux_bars-hidelabel" : "";
+    $metricDiff = '';
+
+    $metricDiff = '<p class="crux_diff">Field metric only, no WPT test run data.</p>';
+
+
     if (isset($fvValue)) {
-        $pos = 5 + GetCruxValuePosition($fvValue, $maxVal, $histogram, $width, $color);
-        $start = $pos - 5;
-        $end = $pos + 5;
-        $fvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#1072ba'><title>$fvValue$unit</title></polygon></svg>";
+        if (is_float($fvValue)) {
+            $fvValue = round($fvValue, 3);
+        }
+        if ($p75 === $fvValue) {
+            $metricDiff = '<p class="crux_diff">Same result as this WPT run.</p>';
+        }
+
+        if ($p75 !== $fvValue) {
+            $absMetricDiff = abs($p75 - $fvValue);
+
+            if ($short !== 'CLS') {
+                $absMetricDiff = formatMsInterval($absMetricDiff, 2);
+            }
+
+            $wptCompare = "better";
+            $cruxCompare = "worse";
+            if ($p75 < $fvValue) {
+                $wptCompare = "worse";
+                $cruxCompare = "better";
+            }
+            if ($short !== 'CLS') {
+                $fvValue = formatMsInterval($fvValue, 2);
+            }
+            $metricDiff = <<<EOD
+            <p class="crux_diff">$absMetricDiff $cruxCompare than this WPT test run's first view ($fvValue). <a href="#crux_diff_why"> Why?</a></p>
+        EOD;
+        }
     }
-    $rvArrow = '';
-    if (isset($rvValue)) {
-        $pos = 5 + GetCruxValuePosition($rvValue, $maxVal, $histogram, $width, $color);
-        $start = $pos - 5;
-        $end = $pos + 5;
-        $rvArrow = "<svg x='5' width='250' y='15' height='15'><polygon points='$start,5 $pos,15 $end,5' fill='#5dbbe8'><title>$rvValue$unit</title></polygon></svg>";
+
+
+    if ($short !== 'CLS') {
+        $p75 = formatMsInterval($p75, 2);
     }
-    $image_width = $width + 20;
+
     $svg = <<<EOD
-<svg viewBox="0 0 $image_width 80" version='1.1' xmlns='http://www.w3.org/2000/svg'>
-<svg x='10' width='$width' y='30' height='25'>
-    <rect x='0' width='100%' height='100%' fill='#009316'><title>$goodPct%</title></rect>
-    <rect x='$goodPct%' width='100%' height='100%' fill='#ffa400'><title>$fairPct%</title></rect>
-    <rect x='$poorStart%' width='100%' height='100%' fill='#ff4e42'><title>$poorPct%</title></rect>
-    $goodText
-    $fairText
-    $poorText
-</svg>
-$p75arrow
-$rvArrow
-$fvArrow
-$p75text
+<div class="crux_metric">
+<h4 class="crux_metric_title">$label ($short)</h4>
+<p class="crux_metric_value crux_metric_value-$p75Score">$p75 <em>($p75Score)</em></p>
+<p class="crux_metric_desc">At 75th percentile of visits.</p>
+<ul class="crux_bars">
+    <li class="crux_bars-good$goodClass" style="flex-basis: $goodPct%">$goodPct%</li>
+    <li class="crux_bars-fair$fairClass" style="flex-basis: $fairPct%">$fairPct%</li>
+    <li class="crux_bars-poor$poorClass" style="flex-basis: $poorPct%">$poorPct%</li>
+</ul>
+$metricDiff
+</div>
 EOD;
-    if ($includeLabels) {
-        $svg .= "<text x='100' y='16' font-size='13' text-anchor='middle' font-family='Open Sans, sans-serif'>$label ($short)</text>";
-    }
-    $svg .= '</svg>';
     echo $svg;
 }
 

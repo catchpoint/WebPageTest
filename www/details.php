@@ -153,14 +153,12 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     ]);
                 }
 
-                if (isset($testRunResults)) {
+                if (isset($testRunResults) && !$cached) {
                     echo '<div class="cruxembed">';
                     require_once(INCLUDES_PATH . '/include/CrUX.php');
-                    if ($cached) {
-                        InsertCruxHTML(null, $testRunResults);
-                    } else {
-                        InsertCruxHTML($testRunResults, null);
-                    }
+
+                    InsertCruxHTML($testRunResults, null);
+
                     echo '</div>';
                 }
                 ?>

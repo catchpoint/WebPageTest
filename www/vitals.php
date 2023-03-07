@@ -66,12 +66,8 @@ $page_description = "Web Vitals details$testLabel";
             <div id="result" class="results_body vitals-diagnostics crux-embed">
 
             <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
-
-            <?php
-            if (isset($testRunResults)) {
-                require_once(INCLUDES_PATH . '/include/CrUX.php');
-            }
-            ?>
+            
+            
             <?php
             if ($isMultistep) {
                 for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
@@ -84,6 +80,8 @@ $page_description = "Web Vitals details$testLabel";
                 InsertWebVitalsHTML($stepResult);
             }
             ?>
+
+            
             </div>
             </div>
             <?php include('footer.inc'); ?>
@@ -147,6 +145,15 @@ $lcp_request = '';
 function InsertWebVitalsHTML($stepResult)
 {
     InsertWebVitalsHTML_Summary($stepResult);
+    global $testRunResults;
+    if (isset($testRunResults)) {
+        echo '<div class="cruxembed">';
+        require_once(INCLUDES_PATH . '/include/CrUX.php');
+
+            InsertCruxHTML($testRunResults, null, "cwv");
+
+        echo '</div>';
+    }
     InsertWebVitalsHTML_LCP($stepResult);
     InsertWebVitalsHTML_CLS($stepResult);
     InsertWebVitalsHTML_TBT($stepResult);
@@ -179,8 +186,8 @@ function InsertWebVitalsHTML_Summary($stepResult)
         }
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<h4>Largest Contentful Paint</h4>";
-        echo "<p class='metric-value $scoreClass'>{$lcp['time']}<span class='units'>ms</span></p>";
-        InsertCruxHTML($testRunResults, null, 'lcp', false, false);
+        echo "<p class='metric-value $scoreClass'>" . formatMsInterval($lcp['time'], 2) . "</p>";
+        //InsertCruxHTML($testRunResults, null, 'lcp', false, false);
         echo "</div></a>";
     }
     // CLS
@@ -222,7 +229,7 @@ function InsertWebVitalsHTML_Summary($stepResult)
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
         echo "<h4>Cumulative Layout Shift</h4>";
         echo "<p class='metric-value $scoreClass'>$cls</p>";
-        InsertCruxHTML($testRunResults, null, 'cls', false, false);
+        //InsertCruxHTML($testRunResults, null, 'cls', false, false);
         echo "</div></a>";
     }
     // TBT
@@ -236,8 +243,8 @@ function InsertWebVitalsHTML_Summary($stepResult)
         }
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<h4>Total Blocking Time</h4>";
-        echo "<p class='metric-value $scoreClass'>$tbt<span class='units'>ms</span></p>";
-        InsertCruxHTML($testRunResults, null, 'fid', false, true);
+        echo "<p class='metric-value $scoreClass'>" . formatMsInterval($tbt, 2) . "</p>";
+        //InsertCruxHTML($testRunResults, null, 'fid', false, true);
         echo "</div></a>";
     }
 
