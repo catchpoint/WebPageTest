@@ -6232,13 +6232,14 @@ th.header {
   padding: 0.8em 1em 1.2em;
 }
 
-.alert-service-note {
+.alert-banner .alert-service-note {
   background: #ffffff;
   color: #aa0000;
   padding: 1em;
   border-bottom: 1px solid #fff;
-  font-size: 1em;
+  font-size: 1rem;
 }
+
 
 .alert-banner p {
   margin: 0 auto;
