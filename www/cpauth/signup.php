@@ -13,7 +13,7 @@ use WebPageTest\Exception\ClientException;
 use WebPageTest\Handlers\Signup as SignupHandler;
 
 (function (RequestContext $request_context) {
-    if (!Util::getSetting('cp_auth')) {
+    if (!Util::getSetting('cp_auth') || Util::getSetting('login_off') || Util::getSetting('signup_off')) {
         $protocol = $request_context->getUrlProtocol();
         $host = $request_context->getHost();
         $route = '/';

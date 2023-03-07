@@ -160,7 +160,7 @@ if ($id) {
                                 </li>
                             <?php else : ?>
                                 <li><a href="/login">Login</a></li>
-                                <?php if (!Util::getSetting('signup_off')): ?>
+                                <?php if (!Util::getSetting('signup_off')) : ?>
                                     <li><a href="/signup">Sign-up</a></li>
                                 <?php endif; ?>
                             <?php endif; //$is_logged_in
