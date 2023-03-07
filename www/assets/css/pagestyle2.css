@@ -6624,7 +6624,7 @@ table#tableResults td.ok {
   color: #d48e08;
 }
 
-table.pretty td.poor, table#tableResults td {
+table.pretty td.poor, table#tableResults td.poor {
   color: #d02424;
 }
 
