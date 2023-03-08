@@ -28,10 +28,24 @@ function documentRelativePath($url, $path)
 }
 
 // globals to be set by assessment includes and used here too
+$blockingJSReqs = null;
+$blockingCSSReqs = null;
 $genContentPercent = null;
 $genContentSize = null;
 $blocking3pReqs = null;
+//sec
 $jsLibsVulns = null;
+$numVulns = null;
+$num_high = null;
+$num_medium = null;
+$num_serious = null;
+//axe
+$violations = null;
+$num_violations = null;
+$num_critical = null;
+$num_moderate = null;
+$num_minor = null;
+
 $cls = null;
 
 if ($metaInfo) {
@@ -164,6 +178,12 @@ foreach ($assessment as $key => $cat) {
         } else {
             $summary .= " very quickly.";
         }
+        
+        if (isset($blockingCSSReqs) && isset($blockingJSReqs) && (count($blockingCSSReqs) > 0 || count($blockingJSReqs) > 0) ){
+             $summary .= " There were ". ( count($blockingCSSReqs) + count($blockingJSReqs) ) ." render-blocking requests.";
+        } else {
+          $summary .= " There were no render-blocking requests.";   
+        }
 
         if (isset($lcp)) {
             $summary .= " The largest contentful paint time was ";
@@ -234,7 +254,7 @@ foreach ($assessment as $key => $cat) {
             } else {
                 $summary .= "had zero";
             }
-            $summary .= " render-blocking 3rd party requests.";
+            $summary .= " render-blocking 3rd party requests, which can be a single point of failure.";
         }
         if ($jsLibsVulns) {
             (isset($blocking3pReqs)) ? $summary .= " It had $numVulns security issues" : $summary .= "had $numVulns security issues";
@@ -248,16 +268,16 @@ foreach ($assessment as $key => $cat) {
 
             $summary .= ".";
         } else {
-            (isset($blocking3pReqs)) ? $summary .= " It had no security issues detected." : $summary .= "had no security issues detected.";
+            (isset($blocking3pReqs)) ? $summary .= " It had no detectable security issues." : $summary .= "had no detectable security issues.";
         }
         if (isset($genContentSize) && isset($genContentPercent)) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
 
             if ($genContentSize > .5 || $genContentPercent > 1) {
-                $summary .= " Dependence on client-generated HTML risks fragility.";
+                $summary .= " Some amount of HTML content was generated after delivery, which can cause fragilty.";
             } else {
-                $summary .= " HTML generation was not overly JavaScript-dependent";
+                $summary .= " HTML content generation was not particularly JavaScript-dependent";
             }
         }
     } else {
