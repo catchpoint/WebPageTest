@@ -27,6 +27,13 @@ function documentRelativePath($url, $path)
     return $url;
 }
 
+// globals to be set by assessment includes and used here too
+$genContentPercent = null;
+$genContentSize = null;
+$blocking3pReqs = null;
+$jsLibsVulns = null;
+$cls = null;
+
 if ($metaInfo) {
     $assessmentData = $metaInfo['experiment']['assessment'];
 }
