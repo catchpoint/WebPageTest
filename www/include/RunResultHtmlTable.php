@@ -138,30 +138,6 @@ class RunResultHtmlTable
     private function _createHead()
     {
         $out = '';
-      //$colspan = 1 + $this->_countLeftEnabledColumns() - GetSetting('strict_video', 0); // if strict_video = 1, render is optional
-      // $out = "<tr class=\"metric_groups\">\n";
-      // $out .= $this->_headCell("", "empty pin");
-      // $out .= $this->_headCell("", "empty", $colspan);
-
-      // // Count the web vitals metrics that we have
-
-      // $vitals_count = 0;
-      // if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-      //   $vitals_count++;
-      // }
-      // if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-      //   $vitals_count++;
-      // }
-      // if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-      //   $vitals_count++;
-      // }
-      // if ($vitals_count > 0) {
-      //   $out .= $this->_headCell("<span><a href='$vitals_url'>Web Vitals</a></span>", "border", $vitals_count);
-      //}
-  //    $out .= $this->_headCell("<span>Document Complete</span>", "border", 3);
-      // $out .= $this->_headCell("<span>Fully Loaded</span>", "border", 3 + $this->_countRightEnabledColumns());
-      // $out .= "</tr>\n";
-
 
         $out .= "<tr class=\"metric_labels\">";
         if ($this->isColumnEnabled(self::COL_LABEL)) {
