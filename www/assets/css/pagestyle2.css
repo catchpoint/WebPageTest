@@ -83,11 +83,16 @@ h3.hed_sub {
 
 .hed_sub em,
 .results_header .hed_sub + p {
-  font-size: 0.5em;
+  font-size: 0.45em;
   font-style: normal;
   text-transform: none;
   color: #555;
   font-weight: 500;
+  background: #f6f6f6;
+  padding: 0.5em 1em;
+  vertical-align: middle;
+  border-radius: 0.6em;
+  margin-left: 1em;
 }
 
 .hed_sub em details {
@@ -100,8 +105,13 @@ h3.hed_sub {
 .hed_sub em details summary {
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-style: dotted;
+  text-decoration-style: solid;
+  text-decoration-color: #aaa;
   list-style-position: outside;
+  list-style-type: disclosure-open;
+}
+.hed_sub em a {
+  color: inherit;
 }
 
 .hed_sub em details ul {
@@ -120,7 +130,12 @@ h3.hed_sub {
 .hed_sub em details li {
   padding: 0.4em;
 }
-
+@media (max-width: 80em) {
+  .hed_sub em {
+    display: block;
+    margin: 1em 0 0;
+  }
+}
 @media (max-width: 50em) {
   .hed_sub {
     font-size: 1em;
@@ -310,6 +325,11 @@ span.lh-flag {
 
 .summary_opps em.flag {
   font-size: 0.4em;
+  font-size: 0.5em;
+  top: -1em;
+  display: inline-block;
+  position: relative;
+  margin: 0 0.5em;
 }
 
 .pro-flag {
@@ -687,11 +707,8 @@ p.grade_summary {
   min-height: none;
   padding-left: 2.5rem;
 }
-
-@media (max-width: 50em) {
-  .experiments_grades p.grade_summary {
-    font-size: 1rem;
-  }
+.experiments_grades p.grade_summary {
+  font-size: 1rem;
 }
 
 .grade_heading span {
@@ -1892,7 +1909,7 @@ footer ul {
 }
 
 .result .opportunities_summary {
-  margin: 0 0 2rem;
+  margin: 0 0 1rem;
   gap: 3rem;
 }
 
@@ -1951,7 +1968,23 @@ footer ul {
   color: #2a3c64;
   font-weight: 900;
 }
-
+.summary_opps .opportunities_summary h4 {
+  display: inline;
+}
+.summary_opps .opportunities_summary h4 strong {
+  display: block;
+  margin-bottom: 0.4em;
+  font-size: 1.2em;
+}
+.summary_opps .opportunities_summary h4 span {
+  display: inline;
+}
+.summary_opps .opportunities_summary .grade_anchor p {
+  display: inline;
+  font-size: 0.9em;
+  margin: 0 0 0.4em;
+  line-height: 1.4;
+}
 .opportunities_summary .grade_heading.grade-a > span {
   background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
@@ -2022,11 +2055,14 @@ footer ul {
   display: flex;
   gap: 0.8em;
   align-items: center;
-  margin: 0;
-  padding: 0.1rem 0 0;
+
   justify-content: flex-start;
-  border-color: #efefef;
-  background: #fff;
+}
+.summary_opps .opportunities_summary ul {
+  background: #f6f6f6; /* background: #fff; */
+  border-radius: 0.5em;
+  margin: 0.8em 0 0;
+  padding: 0.3em 0.8em;
 }
 
 .opportunities_summary_opps,
@@ -2046,6 +2082,13 @@ footer ul {
 
 .experiment_summary_label {
   text-indent: -9999px;
+}
+.summary_opps .experiment_summary_label {
+  text-indent: 0;
+  font-size: 0.9em;
+}
+.summary_opps .experiment_summary_label {
+  color: #444;
 }
 
 .opportunities_summary_opps {
@@ -2124,7 +2167,7 @@ footer ul {
   left: 0;
 }
 
-@media (max-width: 60em) {
+@media (max-width: 90em) {
   .opportunities_summary {
     display: block;
   }
@@ -2464,13 +2507,27 @@ details.details_custommetrics summary {
 
 .summary_opps > p {
   line-height: 1.5;
-  font-weight: 700;
-  border-bottom: 1px solid #1071ba;
-  margin: 0.6em 0 1em;
+  font-weight: 500;
+  margin: 0 0 1em;
   max-width: none;
-  padding-bottom: 0.7em;
+  padding: 0;
   display: flex;
-  color: #2a3b64;
+  color: #555;
+  justify-content: flex-end;
+  font-size: 1.1em;
+  position: relative;
+}
+.summary_opps > p span {
+  position: relative;
+  background: #fff;
+  padding: 0 0 0 1em;
+}
+.summary_opps > p:before {
+  content: "";
+  border-top: 1px solid #eee;
+  position: absolute;
+  width: 100%;
+  top: 0.8em;
 }
 
 .summary_opps > p a {
@@ -2483,6 +2540,8 @@ details.details_custommetrics summary {
   text-decoration: none;
   display: inline-block;
   margin-left: 1em;
+  vertical-align: middle;
+  /* color: #fff; */
 }
 
 .summary_opps > p a:hover,
@@ -5361,6 +5420,10 @@ label.test_preset_profile {
   vertical-align: top;
 }
 
+.result-details tr.metric_descs td {
+  display: none;
+}
+
 .test_results-content {
   padding: 1em 0;
 }
@@ -5505,6 +5568,12 @@ li.even {
   font-size: 1em;
   position: sticky;
   left: 0;
+}
+.result-summary
+  .scrollableTable
+  table.pretty#tableResults
+  tr.runview:first-of-type {
+  display: none;
 }
 
 div.results-filmstrip-container {
@@ -6468,6 +6537,11 @@ table#tableResults.pretty td {
 
 table.pretty th a {
   color: inherit;
+  text-decoration: none;
+}
+table.pretty th a:hover,
+table.pretty th a:focus {
+  text-decoration: underline;
 }
 
 table.pretty .runview a {
@@ -6507,11 +6581,12 @@ table.pretty .metric_groups th {
   background: none;
   border: 0px solid #fff;
   font-weight: 700;
-  color: #686868;
-  padding: 0 2rem 4px 0;
-  padding-top: 24px;
-  font-size: 0.9em;
+  padding: 1rem 1rem 0 0;
+  font-size: 0.85em;
   vertical-align: top;
+  white-space: nowrap;
+  color: #2a3b64;
+  overflow: visible;
 }
 
 .results-filmstrip-container h4 {
@@ -6580,8 +6655,8 @@ table.pretty .metric_groups th {
 
 table#tableResults.pretty td {
   border: 0 solid #fff;
-  padding: 5px 2rem 0.5rem 0;
-  font-size: 2.75em;
+  padding: 5px 1.5rem 0.5rem 0;
+  font-size: 2.55em;
   font-weight: 900;
   border-top-width: 0;
   vertical-align: baseline;
@@ -6635,6 +6710,16 @@ table#tableResults td.ok {
 table.pretty td.poor,
 table#tableResults td.poor {
   color: #d02424;
+}
+
+table#tableResults tr.metric_descs td {
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  font-weight: 300;
+  color: #666;
+  line-height: 1.3;
+  padding: 0 2em 0 0;
+  font-style: italic;
 }
 
 a.result_plot {
