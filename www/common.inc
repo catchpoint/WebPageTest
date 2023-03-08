@@ -12,6 +12,7 @@ use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\ForbiddenException;
+use WebPageTest\Exception\UnauthorizedException;
 use WebPageTest\Environment;
 
 if (Util::getSetting('php_sessions')) {
@@ -40,7 +41,7 @@ if (Util::getSetting('cp_auth')) {
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
-        } elseif (is_a($e, ClientException::class)) {
+        } elseif (is_a($e, ClientException::class) || is_a($e, UnauthorizedException::class)) {
             $route = $e->getRoute();
             $message = $e->getMessage();
             $host = Util::getSetting('host');
