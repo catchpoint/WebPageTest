@@ -5721,21 +5721,21 @@ table.details td.reqMime {
 .crux_subhed {
   display: flex;
   justify-content: space-between;
-  padding-bottom: .5em;
+  padding-bottom: 0.5em;
   margin-bottom: 1.5em;
   border-bottom: 1px solid #eee;
   gap: 2em;
 }
 
 .crux_subhed p {
-  font-size: .9em;
+  font-size: 0.9em;
   margin: 0;
   line-height: 1.4;
   color: #444;
 }
 .crux_subhed p.crux_subhed_cite {
-  font-size: .9em;
-  color: #8B8B8B;
+  font-size: 0.9em;
+  color: #8b8b8b;
   font-style: normal;
 }
 @media (max-width: 50em) {
@@ -5746,11 +5746,11 @@ table.details td.reqMime {
     display: block;
   }
   .crux_subhed p {
-    margin: .5em 0;
+    margin: 0.5em 0;
   }
 }
 h4.crux_metric_title {
-  font-size: .9em;
+  font-size: 0.9em;
   font-weight: 900;
   color: #686868;
   white-space: nowrap;
@@ -5759,7 +5759,7 @@ h4.crux_metric_title {
 
 .crux_metric_value {
   border: 0 solid #fff;
-  display:block;
+  display: block;
   padding: 0 0 0;
   margin: 0;
   font-size: 2.2em;
@@ -5779,14 +5779,14 @@ h4.crux_metric_title {
   color: #d02424;
 }
 .crux_metric_value em {
-  font-size: .5em;
+  font-size: 0.5em;
   font-weight: 200;
   text-transform: capitalize;
   font-style: normal;
 }
 .crux_metric_desc {
-  font-size: .75em;
-  margin: 0 0 .8em;
+  font-size: 0.75em;
+  margin: 0 0 0.8em;
   color: #666;
 }
 .crux_bars {
@@ -5815,9 +5815,9 @@ h4.crux_metric_title {
 .crux_bars li {
   flex: 0 0 0;
   color: #fff;
-  padding: .2em 0em;
+  padding: 0.2em 0em;
   box-sizing: border-box;
-  font-size: .8em;
+  font-size: 0.8em;
   overflow: hidden;
   text-indent: 1em;
 }
@@ -5825,7 +5825,7 @@ h4.crux_metric_title {
   text-indent: -999px;
 }
 .crux_bars-good {
-  background:#6ca71a;
+  background: #6ca71a;
 }
 .crux_bars-fair {
   background: #d48e08;
@@ -5839,15 +5839,15 @@ h4.crux_metric_title {
   right: auto;
   left: auto;
   display: inline-block;
-  margin: .5em 0 0;
+  margin: 0.5em 0 0;
 }
 .crux details.metrics_shown span.units {
   color: inherit;
 }
 .crux_diff {
-  font-size: .9em;
+  font-size: 0.9em;
   font-style: normal;
-  margin: .5em 0 0;
+  margin: 0.5em 0 0;
   color: #666;
 }
 
@@ -6239,7 +6239,6 @@ th.header {
   border-bottom: 1px solid #fff;
   font-size: 1rem;
 }
-
 
 .alert-banner p {
   margin: 0 auto;
@@ -6633,7 +6632,8 @@ table#tableResults td.ok {
   color: #d48e08;
 }
 
-table.pretty td.poor, table#tableResults td.poor {
+table.pretty td.poor,
+table#tableResults td.poor {
   color: #d02424;
 }
 
