@@ -3,6 +3,12 @@
 (function () {
 
     global $axe;
+    global $violations;
+    global $num_violations;
+    global $num_critical;
+    global $num_serious;
+    global $num_moderate;
+    global $num_minor;
 
     if (isset($axe)) {
         if (count($axe['violations'])) {
