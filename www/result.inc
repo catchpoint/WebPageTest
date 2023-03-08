@@ -198,7 +198,7 @@ $page_description = "Website performance test result$testLabel.";
                           <p><strong>Please note:</strong> Availability of metrics will vary based on the browser being tested. Also, the way a site performs in some conditions may not predict how well it will perform in others, so we encourage testing in a variety of browsers, devices, & locations.</p>
                           </details>';
 
-                      $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
+                      $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults, false, true);
                       $resultTable->useLabelLinks(true);
                       $resultTable->disableColumns(array(
                       RunResultHtmlTable::COL_VISUAL_COMPLETE,

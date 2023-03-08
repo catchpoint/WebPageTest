@@ -50,7 +50,7 @@ class RunResultHtmlTable
    * @param TestRunResults $runResults
    * @param TestRunResults $rvRunResults Optional. Run results of the repeat view
    */
-    public function __construct($testInfo, $runResults, $rvRunResults = null)
+    public function __construct($testInfo, $runResults, $rvRunResults = null, $useShortNames = true, $useDescs = false)
     {
         $this->testInfo = $testInfo;
         $this->runResults = $runResults;
@@ -58,6 +58,8 @@ class RunResultHtmlTable
         $this->isMultistep = $runResults->isMultistep();
         $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_RESULT);
         $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
+        $this->useShortNames = $useShortNames;
+        $this->useDescs = $useDescs;
         $this->enabledColumns = array();
       // optional columns default setting based on data
         $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
@@ -170,12 +172,20 @@ class RunResultHtmlTable
               //$out .= $this->_headCell("", "empty pin", 1);
             }
         }
-        $out .= $this->_headCell("Time to First Byte");
+        if($this->useShortNames){
+            $out .= $this->_headCell('<abbr title="Time to First Byte">TTFB</abbr>');
+        } else {
+            $out .= $this->_headCell("Time to First Byte");
+        }
         if ($this->isColumnEnabled(self::COL_START_RENDER)) {
             $out .= $this->_headCell("Start Render");
         }
         if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-            $out .= $this->_headCell('First Contentful Paint');
+            if($this->useShortNames){
+                $out .= $this->_headCell('<abbr title="First Contentful Paint">FCP</abbr>');
+            } else{
+                $out .= $this->_headCell('First Contentful Paint');
+            }
         }
         if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
             $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
@@ -197,26 +207,39 @@ class RunResultHtmlTable
         }
 
         if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-            $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest Contentful Paint</a>", $vitalsBorder);
+            if($this->useShortNames){
+                $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title=\"Largest Contentful Paint\">LCP</abbr></a>");
+                
+            } else {
+                $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest Contentful Paint</a>", $vitalsBorder);
+            }
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-            $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative Layout Shift</a>", $vitalsBorder);
+            if($this->useShortNames){
+                $out .= $this->_headCell("<a href='$vitals_url#cls'><abbr title=\"Cumulative Layout Shift\">CLS</abbr></a>");
+            } else {
+                $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative Layout Shift</a>", $vitalsBorder);
+            }
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-            $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
+            if($this->useShortNames){
+                $out .= $this->_headCell("<a href='$vitals_url#tbt'><abbr title=\"Total Blocking Time\">TBT</abbr></a>");
+            } else {
+                $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
+            }
             $vitalsBorder = null;
         }
 
         if ($this->isColumnEnabled(self::COL_DOC_COMPLETE)) {
-            $out .= $this->_headCell('Document Complete Time', "border");
+            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Time', "border");
         }
         if ($this->isColumnEnabled(self::COL_DOC_REQUESTS)) {
-            $out .= $this->_headCell('Document Complete Requests', "border");
+            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Requests', "border");
         }
         if ($this->isColumnEnabled(self::COL_DOC_BYTES)) {
-            $out .= $this->_headCell('Document Complete Bytes', "border");
+            $out .= $this->_headCell('<abbr title="Document Complete">DC</abbr> Bytes', "border");
         }
 
         for ($i = 1; $i < 2; $i++) {
@@ -512,7 +535,9 @@ class RunResultHtmlTable
         
 
         if ($repeatMetricLabels) {
-            $out .= $this->_createFoot();
+            if( $this->useDescs ){
+                $out .= $this->_createFoot();
+            }
             $out .= "</table></div>\n";
             $localPaths = $stepResult->createTestPaths();
             if (is_dir($localPaths->videoDir())) {
