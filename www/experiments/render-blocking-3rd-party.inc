@@ -5,6 +5,8 @@
     global $testStepResult;
     global $initialHost;
     global $startRender;
+    global $blocking3pReqs;
+    global $blocking3pHosts;
 
     $requests = $testStepResult->getRequests();
     $blocking3pReqs = array();
