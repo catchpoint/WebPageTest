@@ -4,6 +4,7 @@
 
     global $testStepResult;
     global $requests;
+    global $blockingCSSReqs;
 
     $requests = $testStepResult->getRequests();
     $blockingCSSReqs = array();
