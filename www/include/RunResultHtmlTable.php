@@ -283,7 +283,7 @@ class RunResultHtmlTable
         }
         if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
             //$out .= $this->_headCell('First Contentful Paint');
-            $out .= $this->_bodyCell(null, "How soon did text and images start to load?");
+            $out .= $this->_bodyCell(null, "How soon did text and images start to appear?");
         }
         if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
             //$out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
