@@ -186,13 +186,13 @@ foreach ($assessment as $key => $cat) {
         }
 
         if (isset($lcp)) {
-            $summary .= " The largest contentful paint time was ";
+            $summary .= " The largest content rendered ";
             if ($lcp['time'] > 3500) {
-                $summary .= " slower than ideal.";
+                $summary .= " later than ideal.";
             } elseif ($lcp['time'] > 2500) {
-                $summary .= " a little slow.";
+                $summary .= " a little late.";
             } else {
-                $summary .= " good.";
+                $summary .= " quickly.";
             }
         }
     } elseif ($key === "Usable") {
@@ -212,9 +212,9 @@ foreach ($assessment as $key => $cat) {
         $tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
         if (isset($tbtCheck)) {
             (isset($cls)) ? $summary .= " It took" : $summary .= "took";
-            if ($tbtCheck > 2) {
+            if ($tbtCheck > 1000) {
                 $summary .= " a long time";
-            } elseif ($tbtCheck > 1) {
+            } elseif ($tbtCheck > 500) {
                 $summary .= " some time";
             } else {
                 $summary .= " little time";
@@ -238,7 +238,7 @@ foreach ($assessment as $key => $cat) {
             $genContentPercent = floatval($genContentPercent);
 
             if ($genContentSize > .5 || $genContentPercent > 1) {
-                $summary .= " " . $genContentPercent . "% of HTML was generated client-side, delaying usability.";
+                $summary .= " Some HTML was generated after delivery, potentially delaying usability.";
             } else {
                 $summary .= " HTML content was mostly generated server-side.";
             }
@@ -252,9 +252,9 @@ foreach ($assessment as $key => $cat) {
             } elseif (count($blocking3pReqs) > 0) {
                 $summary .= "had";
             } else {
-                $summary .= "had zero";
+                $summary .= "had no";
             }
-            $summary .= " render-blocking 3rd party requests, which can be a single point of failure.";
+            $summary .= " render-blocking 3rd party requests that could be a single point of failure.";
         }
         if ($jsLibsVulns) {
             (isset($blocking3pReqs)) ? $summary .= " It had $numVulns security issues" : $summary .= "had $numVulns security issues";
@@ -268,16 +268,16 @@ foreach ($assessment as $key => $cat) {
 
             $summary .= ".";
         } else {
-            (isset($blocking3pReqs)) ? $summary .= " It had no detectable security issues." : $summary .= "had no detectable security issues.";
+            (isset($blocking3pReqs)) ? $summary .= " It had no security issues." : $summary .= "had no security issues.";
         }
         if (isset($genContentSize) && isset($genContentPercent)) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
 
             if ($genContentSize > .5 || $genContentPercent > 1) {
-                $summary .= " Some amount of HTML content was generated after delivery, which can cause fragilty.";
+                $summary .= " Some HTML was generated after delivery, which can cause fragility.";
             } else {
-                $summary .= " HTML content generation was not particularly JavaScript-dependent";
+                $summary .= " HTML content was mostly generated server-side.";
             }
         }
     } else {
