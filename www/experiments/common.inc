@@ -177,11 +177,11 @@ foreach ($assessment as $key => $cat) {
         } else {
             $summary .= " very quickly.";
         }
-        
-        if (isset($blockingCSSReqs) && isset($blockingJSReqs) && (count($blockingCSSReqs) > 0 || count($blockingJSReqs) > 0) ){
-             $summary .= " There were ". ( count($blockingCSSReqs) + count($blockingJSReqs) ) ." render-blocking requests.";
+
+        if (isset($blockingCSSReqs) && isset($blockingJSReqs) && (count($blockingCSSReqs) > 0 || count($blockingJSReqs) > 0)) {
+             $summary .= " There were " . ( count($blockingCSSReqs) + count($blockingJSReqs) ) . " render-blocking requests.";
         } else {
-          $summary .= " There were no render-blocking requests.";   
+            $summary .= " There were no render-blocking requests.";
         }
 
         if (isset($lcp)) {

@@ -172,7 +172,7 @@ class RunResultHtmlTable
               //$out .= $this->_headCell("", "empty pin", 1);
             }
         }
-        if($this->useShortNames){
+        if ($this->useShortNames) {
             $out .= $this->_headCell('<abbr title="Time to First Byte">TTFB</abbr>');
         } else {
             $out .= $this->_headCell("Time to First Byte");
@@ -181,9 +181,9 @@ class RunResultHtmlTable
             $out .= $this->_headCell("Start Render");
         }
         if ($this->isColumnEnabled(self::COL_FIRST_CONTENTFUL_PAINT)) {
-            if($this->useShortNames){
+            if ($this->useShortNames) {
                 $out .= $this->_headCell('<abbr title="First Contentful Paint">FCP</abbr>');
-            } else{
+            } else {
                 $out .= $this->_headCell('First Contentful Paint');
             }
         }
@@ -207,16 +207,15 @@ class RunResultHtmlTable
         }
 
         if ($this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT)) {
-            if($this->useShortNames){
+            if ($this->useShortNames) {
                 $out .= $this->_headCell("<a href='$vitals_url#lcp'><abbr title=\"Largest Contentful Paint\">LCP</abbr></a>");
-                
             } else {
                 $out .= $this->_headCell("<a href='$vitals_url#lcp'>Largest Contentful Paint</a>", $vitalsBorder);
             }
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT)) {
-            if($this->useShortNames){
+            if ($this->useShortNames) {
                 $out .= $this->_headCell("<a href='$vitals_url#cls'><abbr title=\"Cumulative Layout Shift\">CLS</abbr></a>");
             } else {
                 $out .= $this->_headCell("<a href='$vitals_url#cls'>Cumulative Layout Shift</a>", $vitalsBorder);
@@ -224,7 +223,7 @@ class RunResultHtmlTable
             $vitalsBorder = null;
         }
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
-            if($this->useShortNames){
+            if ($this->useShortNames) {
                 $out .= $this->_headCell("<a href='$vitals_url#tbt'><abbr title=\"Total Blocking Time\">TBT</abbr></a>");
             } else {
                 $out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
@@ -341,16 +340,13 @@ class RunResultHtmlTable
             if ($this->isColumnEnabled(self::COL_FULLYLOADED)) {
                 //$out .= $this->_headCell("Total Time", "border");
                 $out .= $this->_bodyCell("", "What was the total download time?");
-
             }
             if ($this->isColumnEnabled(self::COL_REQUESTS)) {
                 //$out .= $this->_headCell("Total Requests");
                 $out .= $this->_bodyCell("", "How many requests did the browser make?");
-
             }
             //$out .= $this->_headCell("Page Weight");
             $out .= $this->_bodyCell("", "How many bytes were downloaded?");
-
         }
 
 
@@ -488,7 +484,7 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
             $value = $this->_getIntervalMetric($stepResult, self::COL_TOTAL_BLOCKING_TIME);
             if (!$this->isColumnEnabled(self::COL_TIME_TO_INTERACTIVE)) {
-                // todo: this does not appear to be a helpful character in TBT. 
+                // todo: this does not appear to be a helpful character in TBT.
                 //$value = '<span class="units comparator">&ge;</span> ' . $value;
             }
             $rawValue = $stepResult->getMetric(self::COL_TOTAL_BLOCKING_TIME);
@@ -533,10 +529,10 @@ class RunResultHtmlTable
         }
 
         $out .= "</tr>\n";
-        
+
 
         if ($repeatMetricLabels) {
-            if( $this->useDescs ){
+            if ($this->useDescs) {
                 $out .= $this->_createFoot();
             }
             $out .= "</table></div>\n";
