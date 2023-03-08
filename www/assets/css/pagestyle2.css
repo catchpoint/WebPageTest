@@ -130,7 +130,12 @@ h3.hed_sub {
 .hed_sub em details li {
   padding: 0.4em;
 }
-
+@media (max-width: 80em) {
+  .hed_sub em {
+    display: block;
+    margin: 1em 0 0;
+  }
+}
 @media (max-width: 50em) {
   .hed_sub {
     font-size: 1em;
@@ -2156,7 +2161,9 @@ text-indent: 0;
   left: 0;
 }
 
-@media (max-width: 60em) {
+
+
+@media (max-width: 90em) {
   .opportunities_summary {
     display: block;
   }
