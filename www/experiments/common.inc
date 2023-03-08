@@ -45,7 +45,6 @@ $num_violations = null;
 $num_critical = null;
 $num_moderate = null;
 $num_minor = null;
-
 $cls = null;
 
 if ($metaInfo) {
