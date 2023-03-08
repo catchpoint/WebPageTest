@@ -7,6 +7,8 @@
     global $testStepResult;
     global $initialHost;
     global $id;
+    global $genContentSize;
+    global $genContentPercent;
 
     $registry = AssessmentRegistry::getInstance();
 

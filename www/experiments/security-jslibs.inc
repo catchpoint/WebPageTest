@@ -3,6 +3,11 @@
 (function () {
 
     global $testStepResult;
+    global $jsLibsVulns;
+    global $numVulns;
+    global $num_high;
+    global $num_medium;
+    global $num_low;
 
     if ($testStepResult) {
         $jsLibsVulns = $testStepResult->getRawResults()['jsLibsVulns'];
