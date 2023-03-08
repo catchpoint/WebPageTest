@@ -488,7 +488,8 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
             $value = $this->_getIntervalMetric($stepResult, self::COL_TOTAL_BLOCKING_TIME);
             if (!$this->isColumnEnabled(self::COL_TIME_TO_INTERACTIVE)) {
-                $value = '<span class="units comparator">&ge;</span> ' . $value;
+                // todo: this does not appear to be a helpful character in TBT. 
+                //$value = '<span class="units comparator">&ge;</span> ' . $value;
             }
             $rawValue = $stepResult->getMetric(self::COL_TOTAL_BLOCKING_TIME);
             $scoreClass = 'good';
