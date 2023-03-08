@@ -146,7 +146,7 @@ class CPClient
             )
         );
         try {
-            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+            $response = $this->auth_verification_client->request('POST', '/auth/connect/token', $body);
         } catch (GuzzleException $e) {
             if ($e->getCode() == 400 || $e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
@@ -170,7 +170,7 @@ class CPClient
             )
         );
         try {
-            $this->auth_client->request('POST', '/auth/connect/revocation', $body);
+            $this->auth_verification_client->request('POST', '/auth/connect/revocation', $body);
         } catch (GuzzleException $e) {
             if ($e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
