@@ -15,6 +15,7 @@ use WebPageTest\Exception\UnauthorizedException;
     $client = new CPClient(Util::getSetting('cp_services_host'), array(
         'auth_client_options' => array(
             'base_uri' => Util::getSetting('cp_auth_host'),
+            'auth_login_verification_host' => Util::getSetting('cp_auth_login_verification_host'),
             'client_id' => Util::getSetting('cp_auth_client_id'),
             'client_secret' => Util::getSetting('cp_auth_client_secret'),
             'timeout' => 5,

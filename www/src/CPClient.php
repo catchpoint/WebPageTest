@@ -38,6 +38,7 @@ use WebPageTest\PlanListSet;
 class CPClient
 {
     private GuzzleClient $auth_client;
+    private GuzzleClient $auth_verification_client;
     private GraphQLClient $graphql_client;
     public ?string $client_id;
     public ?string $client_secret;
@@ -56,6 +57,11 @@ class CPClient
         $this->client_secret = $auth_client_options['client_secret'] ?? null;
         $this->handler = $auth_client_options['handler'] ?? null;
         $this->auth_client = new GuzzleClient($auth_client_options);
+
+        if (!empty($auth_client_options['auth_login_verification_host'])) {
+            $auth_client_options['base_uri'] = $auth_client_options['auth_login_verification_host'];
+        }
+        $this->auth_verification_client = new GuzzleClient($auth_client_options);
 
         $this->access_token = null;
 
@@ -112,7 +118,7 @@ class CPClient
 
         $body = array('form_params' =>  $form_params);
         try {
-            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+            $response = $this->auth_verification_client->request('POST', '/auth/connect/token', $body);
         } catch (GuzzleException $e) {
             if ($e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
