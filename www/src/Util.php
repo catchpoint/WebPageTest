@@ -41,7 +41,7 @@ class Util
     public static function getCookieName(string $name): string
     {
         $salt = self::getServerSecret();
-        $hash = hash('sha1', $name);
+        $hash = hash('sha1', $name . self::getSetting('cookie_secret', 'x'));
         return hash('sha256', $hash . $salt);
     }
 
