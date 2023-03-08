@@ -3,6 +3,7 @@
 (function () {
 
     global $testStepResult;
+    global $blockingJSReqs;
 
     $requests = $testStepResult->getRequests();
     $blockingJSReqs = array();
