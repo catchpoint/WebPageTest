@@ -89,9 +89,9 @@ h3.hed_sub {
   color: #555;
   font-weight: 500;
   background: #f6f6f6;
-  padding: .5em 1em;
+  padding: 0.5em 1em;
   vertical-align: middle;
-  border-radius: .6em;
+  border-radius: 0.6em;
   margin-left: 1em;
 }
 
@@ -325,11 +325,11 @@ span.lh-flag {
 
 .summary_opps em.flag {
   font-size: 0.4em;
-  font-size: .5em;
+  font-size: 0.5em;
   top: -1em;
   display: inline-block;
   position: relative;
-  margin: 0 .5em;
+  margin: 0 0.5em;
 }
 
 .pro-flag {
@@ -1973,16 +1973,16 @@ footer ul {
 }
 .summary_opps .opportunities_summary h4 strong {
   display: block;
-  margin-bottom: .4em;
-  font-size: 1.2em
+  margin-bottom: 0.4em;
+  font-size: 1.2em;
 }
-.summary_opps .opportunities_summary h4 span { 
-display: inline;
+.summary_opps .opportunities_summary h4 span {
+  display: inline;
 }
 .summary_opps .opportunities_summary .grade_anchor p {
   display: inline;
-  font-size: .9em;
-  margin: 0 0 .4em;
+  font-size: 0.9em;
+  margin: 0 0 0.4em;
   line-height: 1.4;
 }
 .opportunities_summary .grade_heading.grade-a > span {
@@ -2055,11 +2055,15 @@ display: inline;
   display: flex;
   gap: 0.8em;
   align-items: center;
-  
+
   justify-content: flex-start;
-  
 }
-.summary_opps .opportunities_summary ul {background: #f6f6f6;/* background: #fff; */border-radius: .5em;margin: .8em 0 0;padding: .3em .8em;}
+.summary_opps .opportunities_summary ul {
+  background: #f6f6f6; /* background: #fff; */
+  border-radius: 0.5em;
+  margin: 0.8em 0 0;
+  padding: 0.3em 0.8em;
+}
 
 .opportunities_summary_opps,
 .opportunities_summary_recs,
@@ -2080,10 +2084,12 @@ display: inline;
   text-indent: -9999px;
 }
 .summary_opps .experiment_summary_label {
-text-indent: 0;
-  font-size: .9em;
+  text-indent: 0;
+  font-size: 0.9em;
 }
-.summary_opps .experiment_summary_label {color: #444;}
+.summary_opps .experiment_summary_label {
+  color: #444;
+}
 
 .opportunities_summary_opps {
   background: url(/assets/images/src/icon_opportunities.svg) left 0 bottom 50%
@@ -2160,8 +2166,6 @@ text-indent: 0;
   position: absolute;
   left: 0;
 }
-
-
 
 @media (max-width: 90em) {
   .opportunities_summary {
@@ -2514,17 +2518,16 @@ details.details_custommetrics summary {
   position: relative;
 }
 .summary_opps > p span {
-  position:relative;
+  position: relative;
   background: #fff;
   padding: 0 0 0 1em;
-  
 }
 .summary_opps > p:before {
-   content: ""; 
+  content: "";
   border-top: 1px solid #eee;
   position: absolute;
   width: 100%;
-  top: .8em;
+  top: 0.8em;
 }
 
 .summary_opps > p a {
@@ -5566,7 +5569,10 @@ li.even {
   position: sticky;
   left: 0;
 }
-.result-summary .scrollableTable table.pretty#tableResults tr.runview:first-of-type {
+.result-summary
+  .scrollableTable
+  table.pretty#tableResults
+  tr.runview:first-of-type {
   display: none;
 }
 
@@ -5784,21 +5790,21 @@ table.details td.reqMime {
 .crux_subhed {
   display: flex;
   justify-content: space-between;
-  padding-bottom: .5em;
+  padding-bottom: 0.5em;
   margin-bottom: 1.5em;
   border-bottom: 1px solid #eee;
   gap: 2em;
 }
 
 .crux_subhed p {
-  font-size: .9em;
+  font-size: 0.9em;
   margin: 0;
   line-height: 1.4;
   color: #444;
 }
 .crux_subhed p.crux_subhed_cite {
-  font-size: .9em;
-  color: #8B8B8B;
+  font-size: 0.9em;
+  color: #8b8b8b;
   font-style: normal;
 }
 @media (max-width: 50em) {
@@ -5809,11 +5815,11 @@ table.details td.reqMime {
     display: block;
   }
   .crux_subhed p {
-    margin: .5em 0;
+    margin: 0.5em 0;
   }
 }
 h4.crux_metric_title {
-  font-size: .9em;
+  font-size: 0.9em;
   font-weight: 900;
   color: #686868;
   white-space: nowrap;
@@ -5822,7 +5828,7 @@ h4.crux_metric_title {
 
 .crux_metric_value {
   border: 0 solid #fff;
-  display:block;
+  display: block;
   padding: 0 0 0;
   margin: 0;
   font-size: 2.2em;
@@ -5842,14 +5848,14 @@ h4.crux_metric_title {
   color: #d02424;
 }
 .crux_metric_value em {
-  font-size: .5em;
+  font-size: 0.5em;
   font-weight: 200;
   text-transform: capitalize;
   font-style: normal;
 }
 .crux_metric_desc {
-  font-size: .75em;
-  margin: 0 0 .8em;
+  font-size: 0.75em;
+  margin: 0 0 0.8em;
   color: #666;
 }
 .crux_bars {
@@ -5878,9 +5884,9 @@ h4.crux_metric_title {
 .crux_bars li {
   flex: 0 0 0;
   color: #fff;
-  padding: .2em 0em;
+  padding: 0.2em 0em;
   box-sizing: border-box;
-  font-size: .8em;
+  font-size: 0.8em;
   overflow: hidden;
   text-indent: 1em;
 }
@@ -5888,7 +5894,7 @@ h4.crux_metric_title {
   text-indent: -999px;
 }
 .crux_bars-good {
-  background:#6ca71a;
+  background: #6ca71a;
 }
 .crux_bars-fair {
   background: #d48e08;
@@ -5902,15 +5908,15 @@ h4.crux_metric_title {
   right: auto;
   left: auto;
   display: inline-block;
-  margin: .5em 0 0;
+  margin: 0.5em 0 0;
 }
 .crux details.metrics_shown span.units {
   color: inherit;
 }
 .crux_diff {
-  font-size: .9em;
+  font-size: 0.9em;
   font-style: normal;
-  margin: .5em 0 0;
+  margin: 0.5em 0 0;
   color: #666;
 }
 
@@ -6302,7 +6308,6 @@ th.header {
   border-bottom: 1px solid #fff;
   font-size: 1rem;
 }
-
 
 .alert-banner p {
   margin: 0 auto;
@@ -6704,12 +6709,13 @@ table#tableResults td.ok {
   color: #d48e08;
 }
 
-table.pretty td.poor, table#tableResults td.poor {
+table.pretty td.poor,
+table#tableResults td.poor {
   color: #d02424;
 }
 
 table#tableResults tr.metric_descs td {
-  font-size: .8rem;
+  font-size: 0.8rem;
   white-space: pre-wrap;
   font-weight: 300;
   color: #666;
