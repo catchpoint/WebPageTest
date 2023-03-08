@@ -267,7 +267,7 @@ class RunResultHtmlTable
     {
         $out = '';
 
-        $out .= "<tr class=\"metric_descs\">";
+        $out .= '<tr class="metric_descs">';
         if ($this->isColumnEnabled(self::COL_LABEL)) {
             if ($this->isMultistep) {
                 // TODO test multistep
