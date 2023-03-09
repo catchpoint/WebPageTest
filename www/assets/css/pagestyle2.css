@@ -6527,6 +6527,10 @@ table#tableResults.pretty td {
   padding-right: 1rem;
 }
 
+.result-details thead th {
+  text-align: left;
+}
+
 #custom-metrics table.pretty td,
 #custom-metrics table.pretty th {
   overflow: hidden;
