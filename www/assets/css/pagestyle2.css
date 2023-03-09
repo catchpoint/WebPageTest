@@ -6444,6 +6444,9 @@ div.overflow-container > *,
   font-size: 1em;
   background: #fff;
 }
+.result-details thead th {
+  text-align: left;
+}
 
 .scrollableTable thead {
   z-index: 1000;
