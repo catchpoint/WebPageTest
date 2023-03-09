@@ -75,7 +75,9 @@ $includePaid = $isPaid || $admin;
 // load the secret key (if there is one)
 $server_secret = Util::getServerSecret();
 $api_keys = null;
-if (isset($_REQUEST['k']) && strlen($_REQUEST['k'])) {
+$user_api_key = $request_context->getApiKeyInUse();
+
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
@@ -102,7 +104,7 @@ $is_bulk_test = false;
 // Load the location information
 $locations = LoadLocationsIni();
 // See if we need to load a subset of the locations
-if (!$privateInstall && isset($_REQUEST['k']) && $_REQUEST['k'] != GetServerKey() && isset($api_keys) && !isset($api_keys[$_REQUEST['k']])) {
+if (!$privateInstall && !empty($user_api_key) && $user_api_key != GetServerKey() && isset($api_keys) && !isset($api_keys[$user_api_key])) {
     foreach ($locations as $name => $location) {
         if (isset($location['browser']) && isset($location['noapi'])) {
             unset($locations[$name]);
@@ -212,7 +214,15 @@ if (!isset($test)) {
      * True private tests are a paid feature (we formerly said we had
      * private tests, but they weren't actually private
      */
-    $is_private = ($isPaid && ($_POST['private'] == 'on')) ? 1 : 0;
+    $is_private = 0;
+
+    $is_private_api_call = !empty($user_api_key) && !empty($req_private) &&
+      ((int)$req_private == 1 || $req_private == 'true');
+    $is_private_web_call = $isPaid && ($_POST['private'] == 'on');
+
+    if ($is_private_api_call || $is_private_web_call) {
+        $is_private = 1;
+    }
     $test['private'] = $is_private;
 
     if (isset($req_web10)) {
@@ -527,9 +537,9 @@ if (!isset($test)) {
     }
 
     // see if we need to process a template for these requests
-    if (isset($req_k) && strlen($req_k) && isset($api_keys)) {
-        if (count($api_keys) && array_key_exists($req_k, $api_keys) && array_key_exists('template', $api_keys[$req_k])) {
-            $template = $api_keys[$req_k]['template'];
+    if (!empty($user_api_key) && isset($api_keys)) {
+        if (count($api_keys) && array_key_exists($user_api_key, $api_keys) && array_key_exists('template', $api_keys[$user_api_key])) {
+            $template = $api_keys[$user_api_key]['template'];
             if (is_file("./settings/common/templates/$template.php")) {
                 include("./settings/common/templates/$template.php");
             }
@@ -792,8 +802,17 @@ if ($headless) {
 if (isset($req_vo)) {
     $test['owner'] = $req_vo;
 }
-if (isset($req_k)) {
-    $test['key'] = $req_k;
+if (!empty($user_api_key)) {
+    $test['key'] = $user_api_key;
+    $test['owner'] = $request_context->getUser()->getOwnerId();
+}
+
+$creator_id = 0;
+if (!is_null($request_context->getUser())) {
+    $creator_id = $request_context->getUser()->getUserId() ?? 0;
+}
+if ($creator_id != 0) {
+    $test["creator"] = $creator_id;
 }
 
 if (isset($user) && !array_key_exists('user', $test)) {
@@ -804,7 +823,7 @@ if (isset($uid) && !array_key_exists('uid', $test)) {
     $test['uid'] = $uid;
 }
 
-// create an owner string (for API calls, this should already be set as a cookie for normal visitors)
+// create an owner string (if one is not yet set for some reason. API users and form users should've already been set)
 if (!isset($test['owner']) || !strlen($test['owner']) || !preg_match("/^[\w @\.]+$/", $test['owner'])) {
     $test['owner'] = sha1(uniqid(uniqid('', true), true));
 }
@@ -993,6 +1012,10 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                                 }
                                 $ingredients = implode(",", $ingredients);
                             }
+                            if ($recipeSansId === "editresponsehtml") {
+                                // striking out the ingredients here because it's too much to send in a cookie
+                                $ingredients = "";
+                            }
                             // these recipes need encoded values. they all do afterwards! TODO
                             if (
                                 $recipeSansId === "insertheadstart"
@@ -1081,7 +1104,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
 
 
                         //replace last step with last step plus recipes
-                        $test['script'] = str_replace($scriptNavigate, "setCookie\t" . $originToUse . "\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . $scriptNavigate, $test['script']);
+                        $test['script'] = str_replace($scriptNavigate, "setCookie\t" . $originToUse . "\twpt-experiments=" . urlencode($recipeScript) . "\r\n" . "setCookie\t" . $originToUse . "\twpt-testid=" . urlencode($id) . "\r\n" . $scriptNavigate, $test['script']);
 
 
                         $id = CreateTest($test, $test['url']);
@@ -2317,7 +2340,10 @@ function LogTest(&$test, $testId, $url)
         server_sync($apiKey, $runcount, null);
         return;
     }
-    $runcount = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
+
+    $host = parse_url($url, PHP_URL_HOST);
+    $exempt_host = parse_url(Util::getExemptHost(), PHP_URL_HOST);
+    $runcount = ($host == $exempt_host) ? 0 : Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
 
     if (!is_dir('./logs')) {
         mkdir('./logs', 0777, true);
@@ -2695,6 +2721,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
         if (isset($test['owner']) && strlen($test['owner'])) {
             AddIniLine($testInfo, "owner", $test['owner']);
+        }
+        if (!empty($test["creator"])) {
+            AddIniLine($testInfo, "creator", $test["creator"]);
         }
         if (isset($test['type']) && strlen($test['type'])) {
             AddIniLine($testInfo, "type", $test['type']);

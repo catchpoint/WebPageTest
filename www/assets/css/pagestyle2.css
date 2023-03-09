@@ -83,11 +83,16 @@ h3.hed_sub {
 
 .hed_sub em,
 .results_header .hed_sub + p {
-  font-size: 0.5em;
+  font-size: 0.45em;
   font-style: normal;
   text-transform: none;
   color: #555;
   font-weight: 500;
+  background: #f6f6f6;
+  padding: 0.5em 1em;
+  vertical-align: middle;
+  border-radius: 0.6em;
+  margin-left: 1em;
 }
 
 .hed_sub em details {
@@ -100,8 +105,13 @@ h3.hed_sub {
 .hed_sub em details summary {
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-style: dotted;
+  text-decoration-style: solid;
+  text-decoration-color: #aaa;
   list-style-position: outside;
+  list-style-type: disclosure-open;
+}
+.hed_sub em a {
+  color: inherit;
 }
 
 .hed_sub em details ul {
@@ -120,7 +130,12 @@ h3.hed_sub {
 .hed_sub em details li {
   padding: 0.4em;
 }
-
+@media (max-width: 80em) {
+  .hed_sub em {
+    display: block;
+    margin: 1em 0 0;
+  }
+}
 @media (max-width: 50em) {
   .hed_sub {
     font-size: 1em;
@@ -310,6 +325,11 @@ span.lh-flag {
 
 .summary_opps em.flag {
   font-size: 0.4em;
+  font-size: 0.5em;
+  top: -1em;
+  display: inline-block;
+  position: relative;
+  margin: 0 0.5em;
 }
 
 .pro-flag {
@@ -687,11 +707,8 @@ p.grade_summary {
   min-height: none;
   padding-left: 2.5rem;
 }
-
-@media (max-width: 50em) {
-  .experiments_grades p.grade_summary {
-    font-size: 1rem;
-  }
+.experiments_grades p.grade_summary {
+  font-size: 1rem;
 }
 
 .grade_heading span {
@@ -886,6 +903,7 @@ h4.experiments_list_hed-recs {
 }
 .experiments_list > li:target {
   background: #f8f7e0;
+  scroll-padding-top: 4rem;
 }
 
 .experiment_description code {
@@ -1169,6 +1187,14 @@ h4.experiments_list_hed-recs {
   flex: 1 1 auto;
 }
 
+/* hide stuff after unchecked dependency checks */
+.has-js
+  .experiment_description_go:not(.experiment_description_go-checked)
+  label:first-child
+  ~ * {
+  display: none;
+}
+
 .experiment_description_go > label.experiment_pair_value input,
 .experiment_description_go > label.experiment_pair_value textarea {
   width: 14em;
@@ -1187,7 +1213,7 @@ h4.experiments_list_hed-recs {
   margin: 0 1em 1em 3em;
   padding: 1em;
   height: 10em;
-  border: 0;
+  border: 1px solid #eee;
   max-width: none;
   line-height: 1.6;
   white-space: nowrap;
@@ -1883,7 +1909,7 @@ footer ul {
 }
 
 .result .opportunities_summary {
-  margin: 0 0 2rem;
+  margin: 0 0 1rem;
   gap: 3rem;
 }
 
@@ -1942,7 +1968,23 @@ footer ul {
   color: #2a3c64;
   font-weight: 900;
 }
-
+.summary_opps .opportunities_summary h4 {
+  display: inline;
+}
+.summary_opps .opportunities_summary h4 strong {
+  display: block;
+  margin-bottom: 0.4em;
+  font-size: 1.2em;
+}
+.summary_opps .opportunities_summary h4 span {
+  display: inline;
+}
+.summary_opps .opportunities_summary .grade_anchor p {
+  display: inline;
+  font-size: 0.9em;
+  margin: 0 0 0.4em;
+  line-height: 1.4;
+}
 .opportunities_summary .grade_heading.grade-a > span {
   background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
 }
@@ -2013,11 +2055,14 @@ footer ul {
   display: flex;
   gap: 0.8em;
   align-items: center;
-  margin: 0;
-  padding: 0.1rem 0 0;
+
   justify-content: flex-start;
-  border-color: #efefef;
-  background: #fff;
+}
+.summary_opps .opportunities_summary ul {
+  background: #f6f6f6; /* background: #fff; */
+  border-radius: 0.5em;
+  margin: 0.8em 0 0;
+  padding: 0.3em 0.8em;
 }
 
 .opportunities_summary_opps,
@@ -2037,6 +2082,13 @@ footer ul {
 
 .experiment_summary_label {
   text-indent: -9999px;
+}
+.summary_opps .experiment_summary_label {
+  text-indent: 0;
+  font-size: 0.9em;
+}
+.summary_opps .experiment_summary_label {
+  color: #444;
 }
 
 .opportunities_summary_opps {
@@ -2115,7 +2167,7 @@ footer ul {
   left: 0;
 }
 
-@media (max-width: 60em) {
+@media (max-width: 90em) {
   .opportunities_summary {
     display: block;
   }
@@ -2210,6 +2262,21 @@ footer ul {
   .experiments_details_body {
     padding-left: 2rem;
   }
+}
+
+.experiment_description_go
+  > label.experiment_pair_value
+  textarea[data-fullscreenfocus="true"]:focus {
+  position: fixed;
+  top: 10vh;
+  left: 10vw;
+  right: 10vw;
+  bottom: 10vh;
+  z-index: 999999;
+  box-shadow: 0 0 0 20vw rgb(0 0 0 / 30%);
+  height: 80vh;
+  width: 80vw;
+  margin: 0;
 }
 
 @media (max-width: 50em) {
@@ -2440,13 +2507,27 @@ details.details_custommetrics summary {
 
 .summary_opps > p {
   line-height: 1.5;
-  font-weight: 700;
-  border-bottom: 1px solid #1071ba;
-  margin: 0.6em 0 1em;
+  font-weight: 500;
+  margin: 0 0 1em;
   max-width: none;
-  padding-bottom: 0.7em;
+  padding: 0;
   display: flex;
-  color: #2a3b64;
+  color: #555;
+  justify-content: flex-end;
+  font-size: 1.1em;
+  position: relative;
+}
+.summary_opps > p span {
+  position: relative;
+  background: #fff;
+  padding: 0 0 0 1em;
+}
+.summary_opps > p:before {
+  content: "";
+  border-top: 1px solid #eee;
+  position: absolute;
+  width: 100%;
+  top: 0.8em;
 }
 
 .summary_opps > p a {
@@ -2459,6 +2540,8 @@ details.details_custommetrics summary {
   text-decoration: none;
   display: inline-block;
   margin-left: 1em;
+  vertical-align: middle;
+  /* color: #fff; */
 }
 
 .summary_opps > p a:hover,
@@ -5337,6 +5420,10 @@ label.test_preset_profile {
   vertical-align: top;
 }
 
+.result-details tr.metric_descs td {
+  display: none;
+}
+
 .test_results-content {
   padding: 1em 0;
 }
@@ -5482,6 +5569,12 @@ li.even {
   position: sticky;
   left: 0;
 }
+.result-summary
+  .scrollableTable
+  table.pretty#tableResults
+  tr.runview:first-of-type {
+  display: none;
+}
 
 div.results-filmstrip-container {
   position: relative;
@@ -5575,8 +5668,8 @@ table.details td.reqMime {
   flex-wrap: wrap;
   justify-content: space-between;
   width: 100%;
-  margin: 1rem 0 3rem 0;
-  padding: 0 0 3rem;
+  margin: 1rem 0 1rem 0;
+  padding: 0;
   gap: 3rem;
   text-align: center;
 }
@@ -5675,121 +5768,164 @@ table.details td.reqMime {
   z-index: 99;
 }
 
-.crux_legends:before {
-  content: "Key: ";
-  font-weight: 700;
-  color: #666;
-}
-
 .cruxlabel + .cruxbars {
   margin-top: -15px !important;
 }
 
 .cruxbars {
-  margin: 0;
-  z-index: 1;
-  padding: inherit;
-  text-align: left;
   display: flex;
-  justify-content: flex-start;
+  gap: 2rem;
+  flex-flow: row wrap;
+  justify-content: space-between;
 }
-
-.cruxlabel .legend {
-  font-size: smaller;
-  font-weight: normal;
+.cruxbars div.crux_metric {
+  flex: 1 0 30%;
+  margin: 0;
 }
-
-.cruxlabel .fvarrow {
-  color: #1a1a1a;
-}
-
-/* these are for crux embeds */
-
-.cruxembed .cruxbars {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 30em) {
-  .cruxembed .cruxbars {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 80em) {
+  .cruxbars div.crux_metric {
+    flex: 1 0 40%;
   }
 }
-
-@media (min-width: 60em) {
-  .cruxembed .cruxbars {
-    grid-template-columns: repeat(8, 1fr);
-  }
-
-  .cruxembed .cruxbars svg {
-    grid-column: span 2;
-  }
-
-  .cruxembed .cruxbars svg:last-child:nth-child(4n - 1) {
-    grid-column-end: -3;
-  }
-
-  .cruxembed .cruxbars svg:nth-last-child(2):nth-child(4n + 1) {
-    grid-column-end: 5;
-  }
+.crux_subhed {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.5em;
+  margin-bottom: 1.5em;
+  border-bottom: 1px solid #eee;
+  gap: 2em;
 }
 
-.summary-container .crux h3 {
-  font-size: 1.2rem;
-  color: #2a3c64;
-  margin: 2em 0 0;
-}
-
-.summary-container .crux h3 em {
-  display: block;
-  font-size: 0.7em;
-  margin: 0.4em 0;
-  line-height: 1.5;
-}
-
-.cruxembed .crux h3 {
-  margin-top: 2rem;
-}
-
-.crux_legends {
-  display: inline-flex;
-  gap: 0.5rem;
-  border: 1px solid #eee;
-  padding: 0.7em 1.5em 0;
-  border-radius: 1rem;
-  margin: 1em 0;
-}
-
-.crux_legends strong {
-  background: none;
-  border: 0px solid #fff;
-  font-weight: 700;
-  color: #686868;
+.crux_subhed p {
   font-size: 0.9em;
-  min-height: 2em;
+  margin: 0;
+  line-height: 1.4;
+  color: #444;
 }
-
-.summary-container .crux_legends {
-  display: inline-block;
-  padding: 0.3em 1em;
+.crux_subhed p.crux_subhed_cite {
+  font-size: 0.9em;
+  color: #8b8b8b;
+  font-style: normal;
+}
+@media (max-width: 50em) {
+  .cruxbars div.crux_metric {
+    flex: 1 0 100%;
+  }
+  .crux_subhed {
+    display: block;
+  }
+  .crux_subhed p {
+    margin: 0.5em 0;
+  }
+}
+h4.crux_metric_title {
+  font-size: 0.9em;
+  font-weight: 900;
+  color: #686868;
+  white-space: nowrap;
   margin: 0;
 }
 
-.cruxembed .crux .legend {
-  font-size: smaller;
-  font-weight: normal;
-  margin: 0 0 1em;
+.crux_metric_value {
+  border: 0 solid #fff;
   display: block;
-  text-align: right;
+  padding: 0 0 0;
+  margin: 0;
+  font-size: 2.2em;
+  font-weight: 900;
+  border-top-width: 0;
+  color: #2a3c64;
+  -webkit-text-stroke: 0.04em currentColor;
+  line-height: 1;
+}
+.crux_metric_value-good {
+  color: #6ca71a;
+}
+.crux_metric_value-fair {
+  color: #d48e08;
+}
+.crux_metric_value-poor {
+  color: #d02424;
+}
+.crux_metric_value em {
+  font-size: 0.5em;
+  font-weight: 200;
+  text-transform: capitalize;
+  font-style: normal;
+}
+.crux_metric_desc {
+  font-size: 0.75em;
+  margin: 0 0 0.8em;
+  color: #666;
+}
+.crux_bars {
+  display: flex;
+  position: relative;
+}
+.crux_bars:before,
+.crux_bars:after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 10px solid #fff;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  margin-top: -4px;
+  position: absolute;
+  left: calc(75% - 5px);
+}
+.crux_bars:after {
+  border-top: 8px solid #2a3b64;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  left: calc(75% - 3px);
+  margin-top: -5px;
+}
+.crux_bars li {
+  flex: 0 0 0;
+  color: #fff;
+  padding: 0.2em 0em;
+  box-sizing: border-box;
+  font-size: 0.8em;
+  overflow: hidden;
+  text-indent: 1em;
+}
+.crux_bars li.crux_bars-hidelabel {
+  text-indent: -999px;
+}
+.crux_bars-good {
+  background: #6ca71a;
+}
+.crux_bars-fair {
+  background: #d48e08;
+}
+.crux_bars-poor {
+  background: #d02424;
+}
+.crux details.metrics_shown {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  display: inline-block;
+  margin: 0.5em 0 0;
+}
+.crux details.metrics_shown span.units {
+  color: inherit;
+}
+.crux_diff {
+  font-size: 0.9em;
+  font-style: normal;
+  margin: 0.5em 0 0;
+  color: #666;
 }
 
-.cruxembed .crux .fvarrow {
-  color: #1a1a1a;
+.crux_diff span.units {
+  font-weight: 500;
+  padding-left: 0;
 }
-
-.cruxembed .crux .rvarrow {
-  color: #737373;
+.crux details.metrics_shown {
+  margin: 2em 0 0;
 }
 
 /* end vitals page styles */
@@ -6165,6 +6301,14 @@ th.header {
   padding: 0.8em 1em 1.2em;
 }
 
+.alert-banner .alert-service-note {
+  background: #ffffff;
+  color: #aa0000;
+  padding: 1em;
+  border-bottom: 1px solid #fff;
+  font-size: 1rem;
+}
+
 .alert-banner p {
   margin: 0 auto;
   font-size: 0.9em;
@@ -6393,6 +6537,11 @@ table#tableResults.pretty td {
 
 table.pretty th a {
   color: inherit;
+  text-decoration: none;
+}
+table.pretty th a:hover,
+table.pretty th a:focus {
+  text-decoration: underline;
 }
 
 table.pretty .runview a {
@@ -6432,11 +6581,12 @@ table.pretty .metric_groups th {
   background: none;
   border: 0px solid #fff;
   font-weight: 700;
-  color: #686868;
-  padding: 0 2rem 4px 0;
-  padding-top: 24px;
-  font-size: 0.9em;
+  padding: 1rem 1rem 0 0;
+  font-size: 0.85em;
   vertical-align: top;
+  white-space: nowrap;
+  color: #2a3b64;
+  overflow: visible;
 }
 
 .results-filmstrip-container h4 {
@@ -6505,8 +6655,8 @@ table.pretty .metric_groups th {
 
 table#tableResults.pretty td {
   border: 0 solid #fff;
-  padding: 5px 2rem 0.5rem 0;
-  font-size: 2.75em;
+  padding: 5px 1.5rem 0.5rem 0;
+  font-size: 2.55em;
   font-weight: 900;
   border-top-width: 0;
   vertical-align: baseline;
@@ -6560,6 +6710,16 @@ table#tableResults td.ok {
 table.pretty td.poor,
 table#tableResults td.poor {
   color: #d02424;
+}
+
+table#tableResults tr.metric_descs td {
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  font-weight: 300;
+  color: #666;
+  line-height: 1.3;
+  padding: 0 2em 0 0;
+  font-style: italic;
 }
 
 a.result_plot {

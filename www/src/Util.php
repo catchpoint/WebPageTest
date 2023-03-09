@@ -17,6 +17,9 @@ class Util
         throw new \Exception("Util should not be instantiated. It only has static methods.");
     }
 
+    /**
+     * @param false|null|string $default
+     */
     public static function getSetting(string $setting, $default = false, string $override_settings_file = "")
     {
         if (empty(self::$SETTINGS)) {
@@ -38,7 +41,7 @@ class Util
     public static function getCookieName(string $name): string
     {
         $salt = self::getServerSecret();
-        $hash = hash('sha1', $name);
+        $hash = hash('sha1', $name . self::getSetting('cookie_secret', 'x'));
         return hash('sha256', $hash . $salt);
     }
 
@@ -747,9 +750,9 @@ class Util
     /**
      * This is used to determine which hosts don't get counted in test runs
      */
-    public static function getExemptHost(): string
+    public static function getExemptHost(?string $default = ""): string
     {
-        return 'webpagetest.org';
+        return self::getSetting('exempt_from_test_run_count_host', $default);
     }
 
     /**
@@ -764,7 +767,7 @@ class Util
     /**
      * gets a plan by it's id if you pass it an array of plans
      */
-    public static function getPlanFromArray($id, $plans): Plan
+    public static function getPlanFromArray(string $id, PlanList $plans): Plan
     {
         foreach ($plans as $plan) {
             $planId = $plan->getId();
@@ -788,7 +791,9 @@ class Util
      */
     public static function setBannerMessage(string $message_type, array $message): void
     {
-        $_SESSION['messages'][$message_type][] = $message;
+        if (self::getSetting('php_sessions')) {
+            $_SESSION['messages'][$message_type][] = $message;
+        }
     }
 
     /**
@@ -797,12 +802,16 @@ class Util
      */
     public static function getBannerMessage(): array
     {
+        if (!self::getSetting('php_sessions')) {
+            return [];
+        }
+
         $messages_array = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
         unset($_SESSION['messages']);
         return $messages_array;
     }
 
-    public static function getAnnualPlanByRuns(int $runs, $annualPlans): Plan
+    public static function getAnnualPlanByRuns(int $runs, array $annualPlans): Plan
     {
         foreach ($annualPlans as $plan) {
             $planRuns = $plan->getRuns();

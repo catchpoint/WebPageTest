@@ -91,7 +91,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
             <div id="result" class="results_body">
 
                 <?php
-                echo '<h3 class="hed_sub">Observed Metrics <em>(Run number ' . $run . ($cached ? ', Repeat View' : '') . ')</em></h3>';
+                echo '<h3 class="hed_sub">Page Performance Metrics <em>(Run ' . $run . ($cached ? ', Repeat View' : '') . ')</em></h3>';
 
                 $hasRepeats = GetMedianRun($pageData, 1, $median_metric);
                 if ($testResults->countRuns() > 1 || $hasRepeats) {
@@ -147,14 +147,12 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     ]);
                 }
 
-                if (isset($testRunResults)) {
+                if (isset($testRunResults) && !$cached) {
                     echo '<div class="cruxembed">';
                     require_once(INCLUDES_PATH . '/include/CrUX.php');
-                    if ($cached) {
-                        InsertCruxHTML(null, $testRunResults);
-                    } else {
-                        InsertCruxHTML($testRunResults, null);
-                    }
+
+                    InsertCruxHTML($testRunResults, null);
+
                     echo '</div>';
                 }
                 ?>

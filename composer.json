@@ -7,17 +7,20 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^9",
-    "squizlabs/php_codesniffer": "^3"
+    "squizlabs/php_codesniffer": "^3",
+    "vimeo/psalm": "^5.6"
   },
   "scripts": {
     "format:php": "phpcbf --extensions=php,inc --standard=PSR12 --ignore=www/lib/,www/ec2/,www/resources/compiled www/ tests/ bulktest/",
     "format:prettier": "npx prettier@2.7.1 --write 'www/**/*.css' 'www/**/*.js'",
     "format": "composer format:php && composer format:prettier",
+    "typecheck": "psalm",
     "lint:css": "npx stylelint@14.9.1 'www/**/*.css'",
     "lint:php": "phpcs --standard=PSR12 www/src www/cpauth www/common",
     "lint": "composer lint:php && composer lint:css",
     "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
-    "test": "phpunit --configuration tests/phpunit.xml"
+    "test": "phpunit --configuration tests/phpunit.xml",
+    "build": "composer typecheck && composer format && composer test"
   },
   "require": {
     "gmostafa/php-graphql-client": "^1.13",

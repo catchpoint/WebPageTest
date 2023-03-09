@@ -513,19 +513,24 @@ class Account
         'zipcode' => $body->zipcode
         ]);
 
-        $preview = $request_context->getClient()->getChargifySubscriptionPreview($body->plan, $address);
-
         $results['street_address'] = $body->street_address;
         $results['city'] = $body->city;
         $results['state'] = $body->state;
         $results['country'] = $body->country;
         $results['zipcode'] = $body->zipcode;
 
-        $results['subtotal'] = number_format($preview->getSubTotalInCents() / 100, 2);
-        $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
-        $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
+        $is_canceled = $request_context->getUser()->isCanceled();
+        $results['is_canceled'] = $is_canceled;
 
-        $results['renewaldate'] = $body->renewaldate;
+        if (!$is_canceled) {
+            $preview = $request_context->getClient()->getChargifySubscriptionPreview($body->plan, $address);
+
+            $results['subtotal'] = number_format($preview->getSubTotalInCents() / 100, 2);
+            $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
+            $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
+            $results['renewaldate'] = $body->renewaldate;
+        }
+
         $results['ch_client_token'] = Util::getSetting('ch_key_public');
         $results['ch_site'] = Util::getSetting('ch_site');
         $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
@@ -823,7 +828,7 @@ class Account
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'account-signup-preview')]
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @param object{
      *     plan: string,
      *     street_address: string,
@@ -832,7 +837,8 @@ class Account
      *     country: string,
      *     zipcode: string
      * } $body
-     * @return WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse|array $totals
+     *
+     * @return SubscriptionPreview $totals
      */
     public static function previewCost(RequestContext $request_context, object $body): SubscriptionPreview
     {
@@ -855,7 +861,7 @@ class Account
      * #[HandlerMethod]
      * #[Route(Http::POST, '/account', 'resend-email-verification')]
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @return string $redirect_uri
      */
     public static function resendEmailVerification(RequestContext $request_context): string
@@ -877,12 +883,12 @@ class Account
     /**
      * GET for the account page
      *
-     * @param WebPageTest\RequestContext $request_context
+     * @param RequestContext $request_context
      * @param string $page the specific account route being accessed - UNSAFE. Do not output
      *
-     * @return Symfony\Component\HttpFoundation\Response
+     * @return RedirectResponse|Response
      */
-    public static function getAccountPage(RequestContext $request_context, string $page): Response
+    public static function getAccountPage(RequestContext $request_context, string $page)
     {
         $error_message = $_SESSION['client-error'] ?? null;
 
@@ -1045,12 +1051,11 @@ class Account
                     break;
                 }
             case 'update_payment_method':
-                if (!$is_paid) {
+                if (!$is_paid && !$is_canceled) {
                     $host = $request_context->getHost();
                     $protocol = $request_context->getUrlProtocol();
                     $redirect_uri = "{$protocol}://{$host}/account";
                     return new RedirectResponse($redirect_uri);
-                    exit();
                 }
                 $results['plan'] = $customer->getWptPlanId();
                 $results['renewaldate'] = !is_null($customer->getNextPlanStartDate())

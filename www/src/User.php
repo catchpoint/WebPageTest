@@ -226,9 +226,9 @@ class User
         return $this->subscription_id;
     }
 
-    public function setSubscriptionId(string $subscription_id): void
+    public function setSubscriptionId(?string $subscription_id = ""): void
     {
-        $this->subscription_id = $subscription_id;
+        $this->subscription_id = $subscription_id ?? "";
     }
 
     public function getRunRenewalDate(): DateTimeInterface

@@ -3,6 +3,11 @@
 (function () {
 
     global $testStepResult;
+    global $jsLibsVulns;
+    global $numVulns;
+    global $num_high;
+    global $num_medium;
+    global $num_low;
 
     if ($testStepResult) {
         $jsLibsVulns = $testStepResult->getRawResults()['jsLibsVulns'];
@@ -48,10 +53,7 @@
 
         $opp = [
             "title" =>  "Several security vulnerabilies were detected by Snyk",
-            "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") .
-                ($num_high > 0 ? "$num_high high, " : '') .
-                ($num_medium > 0 ? "$num_medium medium, " : '') .
-                ($num_low > 0 ? "$num_low low, " : ''),
+            "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") . ": $num_high high, $num_medium medium, $num_low low.",
             "examples" =>  array(),
             "experiments" =>  array(
                 (object) [

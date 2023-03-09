@@ -96,21 +96,30 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
 
 
+        $header_data_class = !empty($data_class) ? $data_class : '';
 
-
-        echo "<div id=\"header_data\"$data_class>";
+        echo "<div id=\"header_data\"$header_data_class>";
         // for multistep, link the first URL and show additional text. Otherwise take the test URL
         $numSteps = $gradeRunResults->countSteps();
         $showUrl = $numSteps > 1 || !$url ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
-        $shortUrl = str_replace('http://', '', FitText($showUrl, 180));
-        $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
         echo "<ul class=\"header_data_urltime\">";
 
-        echo "<li><strong>URL: </strong>";
+        if ($test['testinfo']['type'] === "traceroute") {
+            $showUrl = "http://" . $showUrl;
+            echo "<li><strong>HOST/IP: </strong>";
+        } else {
+            echo "<li><strong>URL: </strong>";
+        }
+
+        $shortUrl = str_replace('http://', '', FitText($showUrl, 180));
+        $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
+
+
+
         if (GetSetting('nolinks')) {
             echo "<span class=\"page-tested\">$shortUrl</span>";
         } else {
-            echo "<a class=\"url\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
+            echo "<a class=\"url\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\" target=\"_blank\">$shortUrl</a>";
         }
         echo "</li>";
         echo "<li><strong>Date: </strong>";

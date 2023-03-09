@@ -1,3 +1,9 @@
+<?php
+
+use WebPageTest\Util;
+
+?>
+
 <div class="test_meta_commands">
 
                 <p class="results_nav_hed">Tools:</p>
@@ -13,29 +19,29 @@
 
                       echo "<li><a href='/jsonResult.php?test=$id&highlight=1'>View Test JSON</a></li>";
                       echo "<li><a href='/jsonResult.php?test=$id&pretty=1'>View Test JSON (unformatted)</a></li>";
-                  if (is_file("$testPath/test.log")) {
-                      echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
-                  }
-                  if (is_file("$testPath/lighthouse.log.gz")) {
-                      echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\">View Lighthouse Log</a></li>";
-                  }
-                  if (is_file("$testPath/lighthouse.html.gz")) {
-                      echo "<li><a href=\"/lighthouse.php?test=$id&f=lh-viewer\">View Standard Lighthouse View</a></li>";
-                      echo "<li><a href=\"/lighthouse.php?test=$id&f=json\">View Lighthouse JSON</a></li>";
-                  }
+                    if (is_file("$testPath/test.log")) {
+                        echo "<li><a href=\"/viewlog.php?test=$id\">View Test Log</a></li>";
+                    }
+                    if (is_file("$testPath/lighthouse.log.gz")) {
+                        echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\">View Lighthouse Log</a></li>";
+                    }
+                    if (is_file("$testPath/lighthouse.html.gz")) {
+                        echo "<li><a href=\"/lighthouse.php?test=$id&f=lh-viewer\">View Standard Lighthouse View</a></li>";
+                        echo "<li><a href=\"/lighthouse.php?test=$id&f=json\">View Lighthouse JSON</a></li>";
+                    }
 
                       $publish = GetSetting('publishTo');
-                  if ($publish && GetSetting('host') != 'www.webpagetest.org') {
-                      echo "<li><a href=\"/publish.php?test=$id\">Publish to $publish</a></li>";
-                  }
+                    if ($publish && GetSetting('host') != 'www.webpagetest.org') {
+                        echo "<li><a href=\"/publish.php?test=$id\">Publish to $publish</a></li>";
+                    }
                       echo "<li data-artifact-json=\"download\"><a href='/jsonResult.php?test=$id&pretty=1' download>Download JSON</a></li>";
                       echo '<li><a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Download HAR</a></li>';
-                  if (is_file("$testPath/test.log")) {
-                      echo "<li><a href=\"/viewlog.php?test=$id\" download>Download Test Log</a></li>";
-                  }
-                  if (is_file("$testPath/lighthouse.log.gz")) {
-                      echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\" download>Download Lighthouse Log</a></li>";
-                  }
+                    if (is_file("$testPath/test.log")) {
+                        echo "<li><a href=\"/viewlog.php?test=$id\" download>Download Test Log</a></li>";
+                    }
+                    if (is_file("$testPath/lighthouse.log.gz")) {
+                        echo "<li><a href=\"/viewlog.php?test=$id&lighthouse=1\" download>Download Lighthouse Log</a></li>";
+                    }
                       echo "<li><a href=\"/csv.php?test=$id\">Download Page CSV</a></li>";
                       echo "<li><a href=\"/csv.php?test=$id&requests=1\">Download Request CSV</a></li>";
                     ?>
@@ -44,7 +50,7 @@
 
                   <?php
                     if (
-                        !$headless && gz_is_file("$testPath/testinfo.json")
+                        !Util::getSetting('headless') && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && !isset($tests)

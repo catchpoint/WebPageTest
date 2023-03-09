@@ -1,0 +1,47 @@
+{
+    "name": "spatie/array-to-xml",
+    "description": "Convert an array to xml",
+    "keywords": [
+        "convert",
+        "array",
+        "xml"
+    ],
+    "homepage": "https://github.com/spatie/array-to-xml",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Freek Van der Herten",
+            "email": "freek@spatie.be",
+            "homepage": "https://freek.dev",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php" : "^7.4|^8.0",
+        "ext-dom": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "^9.0",
+        "mockery/mockery": "^1.2",
+        "pestphp/pest": "^1.21",
+        "spatie/pest-plugin-snapshots": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Spatie\\ArrayToXml\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Spatie\\ArrayToXml\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

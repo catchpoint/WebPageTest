@@ -81,7 +81,7 @@ if ($id) {
                                     <?php
                                     $user_exists = !is_null($request_context) && !is_null($request_context->getUser());
                                     $is_paid_user = $user_exists && $request_context->getUser()->isPaid();
-                                    if (!$is_paid_user) {
+                                    if (!$is_paid_user && !Util::getSetting('signup_off')) {
                                         ?>
                                         <p class="wptheader_nav_cta">
                                             <span>Ready to go <strong>Pro?</strong></span>
@@ -95,7 +95,7 @@ if ($id) {
                         </details>
                     </li>
 
-                    <?php if ($supportsAuth && !EMBED) : ?>
+                    <?php if ($supportsAuth && !EMBED && !Util::getSetting('signup_off')) : ?>
                         <?= addTab('Pricing', '/signup'); ?>
                     <?php endif; ?>
 
@@ -160,7 +160,9 @@ if ($id) {
                                 </li>
                             <?php else : ?>
                                 <li><a href="/login">Login</a></li>
-                                <li><a href="/signup">Sign-up</a></li>
+                                <?php if (!Util::getSetting('signup_off')) : ?>
+                                    <li><a href="/signup">Sign-up</a></li>
+                                <?php endif; ?>
                             <?php endif; //$is_logged_in
                             ?>
                             <?php

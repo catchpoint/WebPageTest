@@ -244,9 +244,9 @@ $page_description = "Website performance test result$testLabel.";
                                 }
 
                                 // experiments are enabled for the following criteria
-                                $experimentEnabled = $experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds) && $experiments_logged_in);
+                                $experimentEnabled = $experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds));
                                 // exception allowed for tests on the metric times
-                                if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes') && $experiments_logged_in) {
+                                if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes')) {
                                     $experimentEnabled = true;
                                 }
 
@@ -325,7 +325,7 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
+                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with...</label>
                                         EOT;
                                         $addmore = $exp->addmore ? ' experiment_pair_value-add' : '';
 
@@ -349,12 +349,13 @@ $page_description = "Website performance test result$testLabel.";
                                 } elseif ($exp->expvar && !$exp->expval && $textinput) {
                                     if ($experimentEnabled) {
                                         $placeholderEncodedVal = htmlentities('<script src="https://example.com/test.js"></script>');
+                                        $textinputvalue = $exp->textinputvalue ? $exp->textinputvalue : "";
+                                        $fullscreenfocus = $exp->fullscreenfocus ? "true" : "false";
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
-                                        <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with:</label>
-                                        <label class="experiment_pair_value"><span>Value: </span><textarea name="{$expNum}-{$exp->expvar}[]" placeholder="{$placeholderEncodedVal}"></textarea></label>
-
+                                            <label class="experiment_pair_check"><input type="checkbox" name="recipes[]" value="{$expNum}-{$exp->expvar}">Run this Experiment with...</label>
+                                            <label class="experiment_pair_value"><span>Value: </span><textarea id="experiment-{$exp->id}-textarea" data-fullscreenfocus="{$fullscreenfocus}" name="{$expNum}-{$exp->expvar}[]">{$textinputvalue}</textarea></label>
                                         </div>
                                         EOT;
                                     } else {
@@ -547,6 +548,35 @@ $page_description = "Website performance test result$testLabel.";
 
 
 <script>
+    // dependency fields
+    function toggleDepChecks(check){
+        let parent = check.closest(".experiment_description_go");
+        let inputsToDisable = 'textarea,input:not([name="recipes[]"])';
+        if(check.checked){
+            parent.classList.add('experiment_description_go-checked');
+            parent.querySelectorAll(inputsToDisable).forEach(textarea => {
+                textarea.disabled = false;
+            });
+        } else {
+            parent.classList.remove('experiment_description_go-checked');
+            parent.querySelectorAll(inputsToDisable).forEach(textarea => {
+                textarea.disabled = true;
+            });
+        }
+    }
+    let depChecks = document.querySelectorAll('.experiment_pair_check input');
+    depChecks.forEach(check => {
+        check.addEventListener('change', () => {
+            toggleDepChecks(check);
+        });
+    });
+    function updateCheckDeps(){
+        depChecks.forEach(check => {
+            toggleDepChecks(check);
+        });
+    }
+    updateCheckDeps();
+
     // refresh the form state from saved localstorage values
     function refreshExperimentFormState(){
         var priorState = localStorage.getItem("experimentForm");
@@ -582,14 +612,14 @@ $page_description = "Website performance test result$testLabel.";
                                 }
                             }
                         }
-                        if( input && !(keyval[1] === 'on' && form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']")) ){
+                        if( input && !(keyval[1] === 'on' && form.querySelectorAll("[type=checkbox][name='" + keyval[0] + "']")) && keyval[1] !== "" ){
                             input.value = keyval[1];
                             input.setAttribute('data-hydrated', 'true');
                         }
                         
                     }
                 });
-
+            updateCheckDeps();
         }
     }
 
@@ -792,6 +822,8 @@ $page_description = "Website performance test result$testLabel.";
             }
         });
     });
+
+    
 
 </script>
     </body>

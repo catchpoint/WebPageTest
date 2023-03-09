@@ -1,5 +1,8 @@
 <?php
 
+$requests = $testStepResult->getRequests();
+global $request_context;
+
 AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Add HTML to document",
     "desc" =>  "These experiments allow you to add arbitrary html to a page, which can for example, enable to you test the impact of adding scripts, 3rd-party tags, or resource hints.",
@@ -64,6 +67,27 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "good" =>  null,
     "inputttext" => true
 ]);
+
+if ($requests[0]['body_url']) {
+    AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
+        "title" =>  "Edit Response HTML",
+        "desc" =>  "This experiment allows you to freely edit the text of the initial HTML response",
+        "examples" =>  array(),
+        "experiments" =>  array(
+            (object) [
+                'id' => '054',
+                'title' => 'Edit Response HTML',
+                "desc" => '<p>This experiment will replace the initial HTML with the submitted value as if it was served that way initially.</p>',
+                "expvar" => 'editresponsehtml',
+                'textinputvalue' => htmlentities(file_get_contents('https://' . $request_context->getHost() . $requests[0]['body_url'])),
+                "fullscreenfocus" => true
+            ]
+        ),
+        "good" =>  null,
+        "inputttext" => true
+    ]);
+}
+
 AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
     "title" =>  "Delivery Optimizations",
     "desc" =>  "These experiments allow you change attributes and manipulate how assets are delivered. Note expected syntax examples when using.",
@@ -97,6 +121,17 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             ),
             'addmore' => true,
             'hint' => 'site.js'
+        ],
+        (object) [
+            'id' => '055',
+            'expvar' => 'disablescripts',
+            'title' => 'Disable JavaScript',
+            "desc" => '<p>This experiment effectively disables JavaScript (and enables noscript elements) to test a site\'s JavaScript dependence. It works by changing <code>script</code> elements into <code>scrapt</code> elements, and <code>noscript</code> elements into <code>noscrapt</code> elements so that the page weight remains and behaviors mimic a JS-disabled environment.</p>',
+            'textfield' => false,
+            'expval' => array(''),
+            "hideassets" => true,
+            'instruction' => false,
+            'hint' => 'no value necessary'
         ],
         (object) [
             'id' => '029',
@@ -144,7 +179,7 @@ AssessmentRegistry::getInstance()->register(AssessmentRegistry::Custom, [
             'id' => '032',
             'expvar' => 'addpreload',
             'title' => 'Preload Files',
-            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="' . $lcpSource . '"&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request the file earlier and at a higher priority than it otherwise might.</p>',
+            "desc" => '<p>This experiment adds a <code>&lt;link rel="preload" type="image" href="..."&gt;</code> to the <code>head</code> of your HTML document, causing browsers to request a file earlier and at a higher priority than they otherwise might.</p>',
 
             "expfields" => array(
                 (object) [

@@ -17,14 +17,20 @@
             <div class="cc-details">
                 <div class="cc-number"><?= $masked_cc; ?></div>
                 <div class="cc-expiration">Expires: <?= $cc_expiration; ?></div>
-
+            </div>
+        </div>
+        <div class="card-section">
+            <div class="edit-button">
+                <a href="/account/update_payment_method"><span>Edit Billing Info</span></a>
             </div>
         </div>
     </div>
 
     <?php if (!$is_wpt_enterprise) : ?>
-        <div class=" billing-history">
+        <div class="billing-history">
             <div class="info">
+            <p>If you need an invoice that you do not see in your account please reach out to <a href="<?= $support_link ?>">our support team</a></p>
+        <?php if (!empty($transactionHistory)) : ?>
                 <table class="sortable responsive-vertical-table">
                     <caption>
                         <span class="sr-only">, column headers with buttons are sortable.</span>
@@ -72,6 +78,7 @@
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+        <?php endif; ?>
             </div>
         </div>
     <?php endif; // (!$is_wpt_enterprise):

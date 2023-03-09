@@ -51,13 +51,16 @@
                 if (GetSetting('nolinks')) {
                     echo "URL: $url<br>\n";
                 } else {
-                    echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    if ($test['testinfo']['type'] === "traceroute") {
+                        echo "Host/IP: <a rel=\"nofollow\" href=\"http://$url\" target=\"_blank\">$url</a><br>\n";
+                    } else {
+                        echo "URL: <a rel=\"nofollow\" href=\"$url\" target=\"_blank\">$url</a><br>\n";
+                    }
                 }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml(false);
                 ?>
                 </p>
-
 
                 <?php
                 $statusText = $status['statusText'];

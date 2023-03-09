@@ -25,3 +25,6 @@ jobs:
 
       - name: Run linter
         run: composer lint
+
+      - name: Run typechecker (psalm)
+        run: composer typecheck

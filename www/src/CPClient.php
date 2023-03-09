@@ -38,6 +38,7 @@ use WebPageTest\PlanListSet;
 class CPClient
 {
     private GuzzleClient $auth_client;
+    private GuzzleClient $auth_verification_client;
     private GraphQLClient $graphql_client;
     public ?string $client_id;
     public ?string $client_secret;
@@ -48,14 +49,19 @@ class CPClient
     {
         $auth_client_options = $options['auth_client_options'] ?? array();
         $graphql_client_options = array(
-            'timeout' => 30,
-            'connect_timeout' => 30
+            'timeout' => 5,
+            'connect_timeout' => 5
         );
 
         $this->client_id = $auth_client_options['client_id'] ?? null;
         $this->client_secret = $auth_client_options['client_secret'] ?? null;
         $this->handler = $auth_client_options['handler'] ?? null;
         $this->auth_client = new GuzzleClient($auth_client_options);
+
+        if (!empty($auth_client_options['auth_login_verification_host'])) {
+            $auth_client_options['base_uri'] = $auth_client_options['auth_login_verification_host'];
+        }
+        $this->auth_verification_client = new GuzzleClient($auth_client_options);
 
         $this->access_token = null;
 
@@ -112,9 +118,9 @@ class CPClient
 
         $body = array('form_params' =>  $form_params);
         try {
-            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+            $response = $this->auth_verification_client->request('POST', '/auth/connect/token', $body);
         } catch (GuzzleException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
             }
             throw new ClientException($e->getMessage());
@@ -140,9 +146,9 @@ class CPClient
             )
         );
         try {
-            $response = $this->auth_client->request('POST', '/auth/connect/token', $body);
+            $response = $this->auth_verification_client->request('POST', '/auth/connect/token', $body);
         } catch (GuzzleException $e) {
-            if ($e->getCode() == 400 || $e->getCode() == 401) {
+            if ($e->getCode() == 400 || $e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
             }
             throw new ClientException($e->getMessage());
@@ -164,9 +170,9 @@ class CPClient
             )
         );
         try {
-            $this->auth_client->request('POST', '/auth/connect/revocation', $body);
+            $this->auth_verification_client->request('POST', '/auth/connect/revocation', $body);
         } catch (GuzzleException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
             }
             throw new ClientException($e->getMessage());
@@ -240,7 +246,7 @@ class CPClient
 
             return $user;
         } catch (GuzzleException $e) {
-            if ($e->getCode() == 401) {
+            if ($e->getCode() == 401 || $e->getCode() == 403) {
                 throw new UnauthorizedException();
             }
             throw new ClientException($e->getMessage());
@@ -440,7 +446,10 @@ class CPClient
         }
     }
 
-    public function updateUserContactInfo(string $id, array $options): array
+    /**
+     * @return array|object
+     */
+    public function updateUserContactInfo(string $id, array $options)
     {
         $gql = (new Mutation('wptContactUpdate'))
             ->setVariables([
@@ -466,7 +475,10 @@ class CPClient
         return $results->getData();
     }
 
-    public function changePassword(string $new_pass, string $current_pass): array
+    /**
+     * @return array|object
+     */
+    public function changePassword(string $new_pass, string $current_pass)
     {
         $gql = (new Mutation('userPasswordChange'))
             ->setVariables([
@@ -493,7 +505,10 @@ class CPClient
         }
     }
 
-    public function createApiKey(string $name): array
+    /**
+     * @return array|object
+     */
+    public function createApiKey(string $name)
     {
         $gql = (new Mutation('wptApiKeyCreate'))
             ->setVariables([
@@ -522,7 +537,10 @@ class CPClient
         }
     }
 
-    public function deleteApiKey(array $ids): array
+    /**
+     * @return array|object
+     */
+    public function deleteApiKey(array $ids)
     {
         $gql = (new Mutation('wptApiKeyBulkDelete'))
             ->setVariables([
@@ -572,11 +590,14 @@ class CPClient
         }
     }
 
+    /**
+     * @return array|object
+     */
     public function cancelWptSubscription(
         string $subscription_id,
         string $reason = "",
         string $suggestion = ""
-    ): array {
+    ) {
         $wpt_api_subscription_cancellation =
             new SubscriptionCancellationInputType($subscription_id, $reason, $suggestion);
 

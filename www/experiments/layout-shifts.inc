@@ -3,6 +3,7 @@
 (function () {
 
     global $testStepResult;
+    global $cls;
 
     $cls = $testStepResult->getMetric('chromeUserTiming.CumulativeLayoutShift');
     $imgsInViewport = $testStepResult->getMetric('imgs-in-viewport');

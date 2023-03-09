@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use WebPageTest\User;
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 use WebPageTest\Util\OAuth as CPOauth;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\UnauthorizedException;
@@ -76,6 +77,36 @@ use WebPageTest\Exception\UnauthorizedException;
             error_log($e->getMessage());
             setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
             setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+        }
+    } elseif (!empty($request->getApiKeyInUse())) {
+        $user_api_key = $request->getApiKeyInUse();
+        $redis_server = Util::getSetting('redis_api_keys');
+        // Check the redis-based API keys if it wasn't a local key
+        try {
+            $redis = new Redis();
+            if ($redis->connect($redis_server, 6379, 30)) {
+                $account = Cache::fetch("APIkey_$user_api_key");
+                if (!isset($account)) {
+                    $response = $redis->get("API_$user_api_key");
+                    if ($response && strlen($response)) {
+                        $account = json_decode($response, true);
+                        if (isset($account) && is_array($account)) {
+                            Cache::store("APIkey_$user_api_key", $account, 60);
+                        }
+                    }
+                }
+                if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
+                    // Check the expiration (with a 2-day buffer)
+                    if (time() <= $account['expiration'] + 172800) {
+                        $owner = $account['accountId'];
+                        $user->setPaidClient(true);
+                        $user->setOwnerId($owner);
+                        $user->setUserId($account['contactId']);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            throw new Exception('Error validating API Key');
         }
     }
 

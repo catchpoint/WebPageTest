@@ -24,6 +24,7 @@
                 <?php require_once __DIR__ . '/../includes/chargify-payment-form.php'; ?>
             </div>
         </div>
+<?php if (!$is_canceled) : ?>
         <div class="box">
             <h3>Estimated Monthly Payment</h3>
             <ul class="plan-summary-list">
@@ -37,6 +38,7 @@
             </ul>
             <div class="info-notice">Updating your account's billing address can result in new tax fees.</div>
         </div>
+<?php endif; ?>
         <button class="yellow pill-button" type="submit">Update Billing Information</button>
     </form>
 

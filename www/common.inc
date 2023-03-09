@@ -12,6 +12,7 @@ use WebPageTest\User;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\ForbiddenException;
+use WebPageTest\Exception\UnauthorizedException;
 use WebPageTest\Environment;
 
 if (Util::getSetting('php_sessions')) {
@@ -23,8 +24,10 @@ $support_link = Util::getSetting('support_link', 'https://support.catchpoint.com
 
 $client_error = null;
 if (Util::getSetting('cp_auth')) {
-    $client_error = $_SESSION['client_error'] ?? null;
-    unset($_SESSION['client_error']);
+    if (Util::getSetting('php_sessions')) {
+        $client_error = $_SESSION['client_error'] ?? null;
+        unset($_SESSION['client_error']);
+    }
 
     set_exception_handler(function ($e) {
         // Developer envs just get a print out
@@ -38,12 +41,14 @@ if (Util::getSetting('cp_auth')) {
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
-        } elseif (is_a($e, ClientException::class)) {
+        } elseif (is_a($e, ClientException::class) || is_a($e, UnauthorizedException::class)) {
             $route = $e->getRoute();
             $message = $e->getMessage();
             $host = Util::getSetting('host');
-            unset($_SESSION['client_error']);
-            $_SESSION['client_error'] = $message;
+            if (Util::getSetting('php_sessions')) {
+                unset($_SESSION['client_error']);
+                $_SESSION['client_error'] = $message;
+            }
             $protocol = "https";
             $location = "{$protocol}://{$host}{$route}";
             header('Location: ' . $location);
@@ -238,7 +243,8 @@ $supportsAuth = false;
 $supportsSaml = Util::getSetting('saml_login') !== false;
 $supportsCPAuth = Util::getSetting('cp_auth');
 $supportsGoogleOAuth = Util::getSetting('google_oauth_client_id') && Util::getSetting('google_oauth_client_secret');
-$supportsAuth = $supportsSaml || $supportsCPAuth || $supportsGoogleOAuth;
+$login_off = Util::getSetting('login_off');
+$supportsAuth = !$login_off && ($supportsSaml || $supportsCPAuth || $supportsGoogleOAuth);
 
 $uid = null;
 $user = null;
@@ -246,7 +252,7 @@ $saml_user = null;
 $admin = Util::getSetting('admin_on') == "true";
 $api_keys;
 
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $USER_EMAIL = GetSamlEmail();
     $saml_user = new User();
     $saml_user->setEmail($USER_EMAIL);
@@ -284,7 +290,7 @@ if (!$admin && !$supportsCPAuth) {
 $isFirstVisit = true;
 $isOwner = false;
 $owner = null;
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $isFirstVisit = false;
     $owner = GetSamlAccount();
     $saml_user->setOwnerId($owner);
@@ -318,14 +324,14 @@ if (isset($_REQUEST['color'])) {
     $_REQUEST['color'] = $_REQUEST['color'];
 }
 
-if ($supportsSaml && !$supportsCPAuth) {
+if ($supportsAuth && $supportsSaml && !$supportsCPAuth) {
     $request_context->setUser($saml_user);
 }
 
 /**
  * Load app specific middleware
  */
-if ($supportsCPAuth) {
+if ($supportsAuth && $supportsCPAuth) {
     require_once INCLUDES_PATH . '/common/AttachClient.php';
     require_once INCLUDES_PATH . '/common/AttachUser.php';
     require_once INCLUDES_PATH . '/common/AttachSignupClient.php';
@@ -387,12 +393,23 @@ if (strlen($id)) {
             $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
         }
 
+        $creator_id = 0;
+        if (!is_null($request_context->getUser())) {
+            $creator_id = $request_context->getUser()->getUserId() ?? 0;
+        }
+
         // $owner is set by CP details in AttachUser middleware if loaded
         $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
         $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
+        $creator_id_matches_test = array_key_exists('creator', $test['testinfo']) && ($creator_id == $test['testinfo']['creator']);
 
-        $isOwner = $owner_id_matches_test || $uid_matches_test;
-        $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'];
+        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test;
+
+        // Boy what a hack. This gets around us running tests as private that should not have been
+        // This happened because we had some profiles set to default private so they ran private for unpaid users
+        // _But_ priority should've been set to free user priority if they were free
+        $was_test_runner_paid = array_key_exists('priority', $test['testinfo']) && $test['testinfo']['priority'] == (int)Util::getSetting('paid_priority', 0);
+        $test_is_private = array_key_exists('private', $test['testinfo']) && !!$test['testinfo']['private'] && $was_test_runner_paid;
 
         if ($test_is_private && !$isOwner) {
             throw new ForbiddenException();
@@ -460,8 +477,7 @@ if (strlen($id)) {
     $experiment = false;
     if ($test['testinfo']) {
         $testTestInfo = $test['testinfo'];
-        $metaInfo = $testTestInfo['metadata'];
-        if (isset($metaInfo) && is_string($metaInfo)) {
+        if (!empty($testTestInfo['metadata'])) {
             $metaInfo = json_decode($metaInfo, true);
             if ($metaInfo['experiment'] && $metaInfo['experiment']['control'] === false) {
                 $experiment = true;
