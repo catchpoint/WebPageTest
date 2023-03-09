@@ -5568,7 +5568,11 @@ li.even {
   position: sticky;
   left: 0; 
 }
-
+@media (max-width: 60em){
+  .scrollableTable table.pretty#tableResults tr.runview th {
+    padding-top: 1em;
+  }
+}
 div.results-filmstrip-container {
   position: relative;
   left: 0;
