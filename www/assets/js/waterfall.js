@@ -139,7 +139,7 @@ async function SelectRequest(step, request) {
     var r = wptRequestData[stepLabel][request - 1];
     var totalConnectionTime = 0;
     json = JSON.stringify(r, null, 4);
-    const PRIORITY_MAP = {
+    const CHROME_PRIORITY_MAP = {
       VeryHigh: "Highest",
       HIGHEST: "Highest",
       MEDIUM: "High",
@@ -148,6 +148,29 @@ async function SelectRequest(step, request) {
       IDLE: "Lowest",
       VeryLow: "Lowest",
     };
+    function firefoxPriority(priority) {
+      priority = parseFloat(priority);
+      let prioLabel = null;
+
+      // https://searchfox.org/mozilla-central/source/xpcom/threads/nsISupportsPriority.idl#24-28
+      if (priority < -10) {
+        prioLabel = 'Highest';
+      } else if (priority >= -10 && priority < 0) {
+        prioLabel = 'High';
+      } else if (priority === 0) {
+        prioLabel = 'Normal';
+      } else if (priority <= 10 && priority > 0) {
+        prioLabel = 'Low';
+      } else if (priority > 10) {
+        prioLabel = 'Lowest';
+      }
+
+      if (!prioLabel) {
+        return null;
+      }
+
+      return prioLabel + '(' + priority + ')';
+    }
     if (r["full_url"] !== undefined) {
       if (wptNoLinks) {
         details += "<b>URL:</b> " + htmlEncode(r["full_url"]) + "<br>";
@@ -191,9 +214,17 @@ async function SelectRequest(step, request) {
       details +=
         "<b>Error/Status Code: </b>" + htmlEncode(r["responseCode"]) + "<br>";
     const initial_priority =
-      PRIORITY_MAP[r["initial_priority"]] || r["initial_priority"];
-    const requested_priority = PRIORITY_MAP[r["priority"]] || r["priority"];
-    if (requested_priority !== undefined && requested_priority.length > 0) {
+      CHROME_PRIORITY_MAP[r["initial_priority"]] || r["initial_priority"];
+
+    let requested_priority = '';
+    if (r["priority"] !== undefined && !isNaN(parseFloat(r["priority"]))) {
+      //firefox has numeric priorities
+      requested_priority = firefoxPriority(r["priority"]);
+    } else {
+      requested_priority = CHROME_PRIORITY_MAP[r["priority"]] || r["priority"];
+    }
+
+    if (requested_priority !== '') {
       if (
         initial_priority !== undefined &&
         initial_priority.length > 0 &&
