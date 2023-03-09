@@ -5,6 +5,8 @@
 // found in the LICENSE.md file.
 require_once(__DIR__ . '/../vendor/autoload.php');
 
+use WebPageTest\Util\CustomMetricFiles;
+
 // see if we are loading the test settings from a profile
 $profile_file = SETTINGS_PATH . '/profiles.ini';
 if (file_exists(SETTINGS_PATH . '/common/profiles.ini')) {
@@ -672,39 +674,9 @@ if (!isset($test)) {
         $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
     }
 
-    if ($test['bodies']) {
-        $test['customMetrics'] = array();
-        $code = file_get_contents(ASSETS_PATH . '/js/conditional_metrics/generated-html.js');
-        $test['customMetrics']['generated-html'] = $code;
-    }
+    $consditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
 
-    // see if there are any custom metrics to extract
-    if (is_dir('./settings/custom_metrics')) {
-        $files = glob('./settings/custom_metrics/*.js');
-        if ($files !== false && is_array($files) && count($files)) {
-            if (!isset($test['customMetrics'])) {
-                $test['customMetrics'] = array();
-            }
-            foreach ($files as $file) {
-                $name = basename($file, '.js');
-                $code = file_get_contents($file);
-                $test['customMetrics'][$name] = $code;
-            }
-        }
-    }
-    if (is_dir('./settings/common/custom_metrics')) {
-        $files = glob('./settings/common/custom_metrics/*.js');
-        if ($files !== false && is_array($files) && count($files)) {
-            if (!isset($test['customMetrics'])) {
-                $test['customMetrics'] = array();
-            }
-            foreach ($files as $file) {
-                $name = basename($file, '.js');
-                $code = file_get_contents($file);
-                $test['customMetrics'][$name] = $code;
-            }
-        }
-    }
     if (array_key_exists('custom', $_REQUEST)) {
         $metric = null;
         $code = '';

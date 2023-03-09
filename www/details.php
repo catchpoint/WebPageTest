@@ -15,7 +15,6 @@ require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestResults.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
 require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
-require_once INCLUDES_PATH . '/include/UserTimingHtmlTable.php';
 require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/RequestDetailsHtmlSnippet.php';
@@ -114,7 +113,6 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                         echo "<a href=\"$link\"" . ($run === $i && !$cached ? ' aria-current="page"' : '') . ">Run $i</a>";
                         if ($linkCACHED) {
                             echo " <a href=\"$linkCACHED\"" . ($run === $i && $cached ? ' aria-current="page"' : '') . ">(Repeat View)</a>";
-                            ;
                         }
 
                         if ($i + 1 < $runs) {
@@ -141,10 +139,6 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 echo $htmlTable->create(true);
                 ?>
                 <?php
-                $userTimingTable = new UserTimingHtmlTable($testRunResults);
-                echo $userTimingTable->create(true);
-
-
                 // Full custom metrics
                 $customPageData = @$pageData[$run][$cached]['custom'];
                 if (!empty($customPageData) && is_array($customPageData)) {

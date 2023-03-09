@@ -4,6 +4,9 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
+use WebPageTest\TestResults\CustomMetrics;
+use WebPageTest\TestResults\Timings;
+
 require_once INCLUDES_PATH . '/common_lib.inc';
 
 class RunResultHtmlTable
@@ -522,6 +525,16 @@ class RunResultHtmlTable
                 $out .= '<h4>Visual Page Loading Process <span>(<a href=' . $filmstripUrl . '>Explore</a>)</span></h4>';
                 $out .= '<a href=' . $filmstripUrl . '><img src="' . $filmstripImage . '-l:+&bg=2a3c64&text=ffffff&thumbSize=56&ival=100"></a></div>';
             }
+            // custom metrics and timings
+            $customMetrics = (new CustomMetrics($this->runResults))
+                ->getBySource(CustomMetrics::FROM_TEST_SETTINGS)[$stepNum - 1];
+            $timingsAndMetrics = array_merge(
+                ['custom' => $customMetrics],
+                (new Timings($this->runResults))->getAllForStep($stepNum),
+            );
+            $out .= view('partials.timings', [
+                'data' => $timingsAndMetrics,
+            ]);
         }
         return $out;
     }

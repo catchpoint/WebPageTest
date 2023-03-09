@@ -10,7 +10,6 @@ require_once INCLUDES_PATH . '/waterfall.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
 require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
-require_once INCLUDES_PATH . '/include/UserTimingHtmlTable.php';
 require_once INCLUDES_PATH . '/include/WaterfallViewHtmlSnippet.php';
 
 $testInfo = TestInfo::fromFiles($testPath);
