@@ -18,7 +18,7 @@ class CustomMetrics
     private $agentMetrics = ['jsLibsVulns', 'securityHeaders'];
 
     /**
-     * @param TestRunResults $runResults Run results to use for the table
+     * @param mixed $runResults Run results to use for the table (TestRunResults)
      */
     public function __construct($runResults)
     {

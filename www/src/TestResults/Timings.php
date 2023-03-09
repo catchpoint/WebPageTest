@@ -15,7 +15,7 @@ class Timings
     private $numSteps;
 
     /**
-     * @param TestRunResults $runResults Run results to use for the table
+     * @param mixed $runResults Run results to use for the table (TestRunResults)
      */
     public function __construct($runResults)
     {
