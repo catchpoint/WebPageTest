@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace WebPageTest\Util;
 
+use WebPageTest\Plan;
+use WebPageTest\PlanList;
+
 class Cache
 {
     /*
@@ -54,5 +57,29 @@ class Cache
             }
         }
         return $ret;
+    }
+
+    public static function storeWptPlans(PlanList $plan_list): bool
+    {
+        return self::store('WPT_PLANS', json_encode($plan_list), 0);
+    }
+
+    /*
+     * @return PlanList|null
+     */
+    public static function fetchWptPlans()
+    {
+        $fetched = self::fetch('WPT_PLANS');
+        if ($fetched && !empty($fetched)) {
+            $arr = json_decode($fetched);
+            if (!empty($arr)) {
+                $plans = array_map(function ($opts) {
+                    return new Plan((array)$opts);
+                }, $arr);
+                return new PlanList(...$plans);
+            }
+        }
+
+        return null;
     }
 }

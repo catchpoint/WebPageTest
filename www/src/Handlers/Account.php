@@ -983,8 +983,8 @@ class Account
 
         switch ($page) {
             case 'update_billing':
-                $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
-                $newPlan = Util::getAnnualPlanByRuns($oldPlan->getRuns(), $all_plans->getAnnualPlans());
+                $oldPlan = $all_plans->getPlanById($customer->getWptPlanId());
+                $newPlan = $all_plans->getAnnualPlanByRuns($oldPlan->getRuns());
                 $results['oldPlan'] = $oldPlan;
                 $results['newPlan'] = $newPlan;
                 $sub_id = $customer->getSubscriptionId();
@@ -1001,7 +1001,7 @@ class Account
                 break;
             case 'update_plan':
                 if ($is_paid) {
-                    $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                    $oldPlan = $all_plans->getPlanById($customer->getWptPlanId());
                     $results['oldPlan'] = $oldPlan;
                 }
                 $content = $tpl->render('plans/upgrade-plan', $results);
@@ -1010,10 +1010,10 @@ class Account
             case 'plan_summary':
                 $planCookie = $_COOKIE['upgrade-plan'];
                 if (isset($planCookie) && $planCookie) {
-                    $plan = Util::getPlanFromArray($planCookie, $all_plans);
+                    $plan = $all_plans->getPlanById($planCookie);
                     $results['plan'] = $plan;
                     if ($is_paid) {
-                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                        $oldPlan = $all_plans->getPlanById($customer->getWptPlanId());
                         $billing_address = $customer->getAddress();
                         $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
                         $preview = $request_context->getClient()->getChargifySubscriptionPreview($plan->getId(), $addr);
@@ -1026,7 +1026,7 @@ class Account
                         $content = $tpl->render('plans/plan-summary-upgrade', $results);
                         return new Response($content, Response::HTTP_OK);
                     } elseif ($is_pending) {
-                        $oldPlan = Util::getPlanFromArray($customer->getWptPlanId(), $all_plans);
+                        $oldPlan = $all_plans->getPlanById($customer->getWptPlanId());
                         $results['is_pending'] = $is_pending;
 
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
@@ -1087,7 +1087,7 @@ class Account
                 $can_have_next_plan = ($is_paid && !$is_wpt_enterprise);
                 $next_plan =  $can_have_next_plan ? $customer->getNextWptPlanId() : null;
                 if (isset($next_plan)) {
-                    $results['upcoming_plan'] =  Util::getPlanFromArray($next_plan, $all_plans);
+                    $results['upcoming_plan'] =  $all_plans->getPlanById($next_plan);
                 }
 
                 $content = $tpl->render('my-account', $results);

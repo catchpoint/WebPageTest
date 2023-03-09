@@ -25,8 +25,6 @@
                     </div>
 
                     <form method="POST" id="pro-plan-form" action="/signup">
-                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                        <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
                         <input type="hidden" name="step" value="1" />
                         <div>
                             <label for="runs-per-month"> Runs/mo:</label>
@@ -73,8 +71,6 @@
                         <span class="visually-hidden">Sign up for a Free Plan</span>
                         <input type="hidden" name="plan" value="free" />
                         <input type="hidden" name="step" value="1" />
-                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
-                        <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
                         <button type="submit" class="signup-button">Start for free</button>
                     </form>
                 </td>

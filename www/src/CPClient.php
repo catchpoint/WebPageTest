@@ -24,6 +24,7 @@ use WebPageTest\CPGraphQlTypes\Customer as CPCustomer;
 use WebPageTest\CPGraphQlTypes\EnterpriseCustomer;
 use WebPageTest\TestRecord;
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseType;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoiceResponseTypeList;
 use WebPageTest\CPGraphQlTypes\ChargifyInvoicePayment;
@@ -324,6 +325,10 @@ class CPClient
 
     public function getWptPlans(): PlanList
     {
+        $fetched = Cache::fetchWptPlans();
+        if (!empty($fetched)) {
+            return $fetched;
+        }
         $gql = (new Query('wptPlan'))
             ->setSelectionSet([
                 'name',
@@ -334,7 +339,7 @@ class CPClient
             ]);
 
         $results = $this->graphql_client->runQuery($gql, true);
-        $plans = array_filter(array_map(function ($data): Plan {
+        $plans = array_map(function ($data): Plan {
             $options = [
                 'id' => $data['name'],
                 'name' => $data['description'],
@@ -344,18 +349,28 @@ class CPClient
             ];
 
             return new Plan($options);
-        }, $results->getData()['wptPlan'] ?? []), function (Plan $plan) {
-                return strtolower($plan->getId()) == 'ap5' ||
-                     strtolower($plan->getId()) == 'ap6' ||
-                     strtolower($plan->getId()) == 'ap7' ||
-                     strtolower($plan->getId()) == 'ap8' ||
-                     strtolower($plan->getId()) == 'mp5' ||
-                     strtolower($plan->getId()) == 'mp6' ||
-                     strtolower($plan->getId()) == 'mp7' ||
-                     strtolower($plan->getId()) == 'mp8';
+        }, $results->getData()['wptPlan'] ?? []);
+
+        /** This is a bit of a hack for now. These are our approved plans for new
+         * customers to be able to use. We will better handle this from the backend
+         *
+         */
+        $active_current_sellable_plans = array_filter(
+            explode(',', Util::getSetting('active_current_sellable_plans', '')),
+            function ($str) {
+                return strlen($str);
+            }
+        ) ?: ['ap5', 'ap6', 'ap7', 'ap8', 'mp5', 'mp6', 'mp7', 'mp8'];
+
+        $plans = array_filter($plans, function (Plan $plan) use ($active_current_sellable_plans): bool {
+            return in_array(strtolower($plan->getId()), $active_current_sellable_plans);
         });
 
-        return new PlanList(...$plans);
+        $plan_list = new PlanList(...$plans);
+        if (count($plan_list) > 0) {
+            Cache::storeWptPlans($plan_list);
+        }
+        return $plan_list;
     }
 
     public function getPaidAccountPageInfo(): PaidPageInfo

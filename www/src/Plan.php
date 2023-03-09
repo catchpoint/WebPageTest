@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace WebPageTest;
 
-class Plan
+use JsonSerializable;
+
+class Plan implements JsonSerializable
 {
     private string $billing_frequency;
     private int $price_in_cents;
@@ -26,6 +28,7 @@ class Plan
         $annual_savings_in_cents = $annual_price_in_cents * $this->annual_savings;
         $other_annual = $bf == "Monthly" ?  $monthly_extra_in_cents : $annual_savings_in_cents;
 
+        $this->original_billing_frequency = $options['billingFrequency'] ?? $bf;
         $this->billing_frequency = $bf;
         $this->price_in_cents = $options['priceInCents'];
         $this->monthly_price = number_format(($monthly_price_in_cents / 100), 2, ".", ",");
@@ -102,5 +105,20 @@ class Plan
         // annual to monthly (any)
         // return "annual to monthly";
         return false;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'billingFrequency' => $this->original_billing_frequency,
+            'priceInCents' => $this->price_in_cents,
+            'monthlyPrice' => $this->monthly_price,
+            'annualPrice' => $this->annual_price,
+            'otherAnnual' => $this->other_annual,
+            'runs' => $this->runs,
+            'id' => $this->id,
+            'name' => $this->name,
+            'annualSavings' => $this->annual_savings
+        ];
     }
 }

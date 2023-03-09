@@ -11,9 +11,9 @@ global $_SESSION;
 global $client_error;
 global $support_link;
 
-$page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
+
 ?>
-<title><?php echo $page_title; ?></title>
+<title><?= $page_title ?? 'Go Pro with WebPageTest'; ?></title>
 <?php require_once __DIR__ . '/head.inc'; ?>
 <link href="/assets/css/account.css?v=<?= constant('VER_ACCOUNT_CSS') ?>" rel="stylesheet">
 <script defer src="/assets/js/accessible-faq.js?v=<?= constant('VER_FAQ_JS') ?>"></script>
@@ -25,7 +25,7 @@ $page_title = $page_title ? $page_title : 'Go Pro with WebPageTest';
     $GLOBALS['tab'] = "Pricing";
     require_once __DIR__ . '/header.inc'; ?>
     <main>
-        <?php echo $template_output; ?>
+        <?= $template_output; ?>
     </main>
     <?php require_once __DIR__ . '/../../footer.inc'; ?>
 </body>
