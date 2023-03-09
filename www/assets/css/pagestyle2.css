@@ -5556,26 +5556,23 @@ li.even {
 /* results table rows */
 
 .scrollableTable table tr.runview {
-  margin-top: 1em;
+  margin: 0;
 }
 
 .scrollableTable table.pretty#tableResults tr.runview th {
   background: #fff;
-  padding: 1.5em 0 0 0;
-  color: #2a3b64;
+  padding: 0;
+  color: #666;
   font-weight: 500;
-  text-transform: uppercase;
-  font-size: 1em;
+  font-size: .8em;
   position: sticky;
-  left: 0;
+  left: 0; 
 }
-.result-summary
-  .scrollableTable
-  table.pretty#tableResults
-  tr.runview:first-of-type {
-  display: none;
+@media (max-width: 60em){
+  .scrollableTable table.pretty#tableResults tr.runview th {
+    padding-top: 1em;
+  }
 }
-
 div.results-filmstrip-container {
   position: relative;
   left: 0;
@@ -6526,11 +6523,9 @@ table#tableResults.pretty td {
   font-size: 2rem;
   padding-right: 1rem;
 }
-
 .result-details thead th {
   text-align: left;
 }
-
 #custom-metrics table.pretty td,
 #custom-metrics table.pretty th {
   overflow: hidden;

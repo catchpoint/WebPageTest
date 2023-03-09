@@ -176,7 +176,7 @@ $page_description = "Website performance test result$testLabel.";
                           $friendlyMedianMetric = htmlspecialchars($median_metric);
                       }
                       if ($testResults->countRuns() > 1) {
-                          echo '<em>(Showing <a href="#run' . $fvMedian . '">Run ' . $fvMedian . ($rvRunResults ? ", first view." : ".") . '</a> Based on Median Run by:
+                          echo '<em>(Based on Median Run by:
                           <details><summary>' . $friendlyMedianMetric . '</summary>';
                           echo "<ul>";
 
