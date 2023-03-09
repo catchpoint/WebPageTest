@@ -530,6 +530,26 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name)
 
 function AddScriptTimings(&$requests, $script_timing_file_name)
 {
+    // todo: reconsile with AddRequestScriptTimings from waterfall.inc
+    $script_events = [
+        'EvaluateScript',
+        'v8.compile',
+        'FunctionCall',
+        'GCEvent',
+        'TimerFire',
+        'EventDispatch',
+        'TimerInstall',
+        'TimerRemove',
+        'XHRLoad',
+        'XHRReadyStateChange',
+        'MinorGC',
+        'MajorGC',
+        'FireAnimationFrame',
+        'ThreadState::completeSweep',
+        'Heap::collectGarbage',
+        'ThreadState::performIdleLazySweep'
+    ];
+
     if (gz_is_file($script_timing_file_name)) {
         $timings = json_decode(gz_file_get_contents($script_timing_file_name), true);
         if (
@@ -565,6 +585,16 @@ function AddScriptTimings(&$requests, $script_timing_file_name)
                     }
                     $all_total = intval(round($all_total));
                     $request['cpuTime'] = $all_total;
+
+                    // js exec
+                    $request['js_timing'] = array();
+                    foreach ($script_events as $script_event) {
+                        if (isset($js_timing[$request['full_url']][$script_event])) {
+                            foreach ($js_timing[$request['full_url']][$script_event] as $times) {
+                                $request['js_timing'][] = $times;
+                            }
+                        }
+                    }
                 }
             }
         }
