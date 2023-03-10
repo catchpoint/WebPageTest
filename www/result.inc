@@ -128,13 +128,14 @@ $page_description = "Website performance test result$testLabel.";
                 include INCLUDES_PATH . '/experiments/summary.inc';
 
                 ?>
-                <!--<p><span><em>Learn more in </em> Opportunities &amp; Experiments <em class="flag">New</em>
+                <?php if( !isset($experiments_paid) || !$experiments_paid ){ ?>
+                <p><span class="opportunities_summary_exps">You have Free Experiments Available!
                     <?php
                     if ($tabs && $tabs['Opportunities & Experiments']) {
-                        echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Explore All</a>';
+                        echo '<a href="' . $tabs['Opportunities & Experiments'] . '">Try them now!</a>';
                     }
-                    ?></span>
-                    </p>-->
+                    ?></span></p>
+                <?php } ?>
                 </div>
 
 
