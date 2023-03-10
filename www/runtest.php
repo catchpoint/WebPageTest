@@ -51,7 +51,7 @@ use WebPageTest\Util;
 use WebPageTest\Util\Cache;
 use WebPageTest\Template;
 use WebPageTest\RateLimiter;
-use WebPageTest\Util\IniReader;
+use WebPageTest\Util\SettingsFileReader;
 
 require_once(INCLUDES_PATH . '/ec2/ec2.inc.php');
 require_once(INCLUDES_PATH . '/include/CrUX.php');
@@ -518,7 +518,7 @@ if (!isset($test)) {
     }
 
     if (isset($_REQUEST['extensions']) && is_string($_REQUEST['extensions']) && strlen($_REQUEST['extensions']) == 32) {
-        $extensions = IniReader::getExtensions();
+        $extensions = SettingsFileReader::getExtensions();
         $requested = $_REQUEST['extensions'];
         if (array_key_exists($requested, $extensions)) {
             $test['extensions'] = $_REQUEST['extensions'];
@@ -2516,14 +2516,8 @@ function CheckIp(&$test)
         $date = gmdate("Ymd");
         $ip2 = @$test['ip'];
         $ip = $_SERVER['REMOTE_ADDR'];
-        if (file_exists('./settings/server/blockip.txt')) {
-            $blockIps = file('./settings/server/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockip.txt')) {
-            $blockIps = file('./settings/common/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
-        if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
+        $blockIps = SettingsFileReader::plain('blockip.txt');
+        if (is_array($blockIps) && count($blockIps)) {
             foreach ($blockIps as $block) {
                 $block = trim($block);
                 if (strlen($block)) {
@@ -2565,20 +2559,8 @@ function CheckUrl($url)
         $url = 'https://' . $url;
     }
     if ($forceValidate || (!$usingAPI && !$admin)) {
-        if (file_exists('./settings/server/blockurl.txt')) {
-            $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockurl.txt')) {
-            $blockUrls = file('./settings/common/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
-        if (file_exists('./settings/server/blockdomains.txt')) {
-            $blockHosts = file('./settings/server/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockdomains.txt')) {
-            $blockHosts = file('./settings/common/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
+        $blockUrls = SettingsFileReader::plain('blockurl.txt');
+        $blockHosts = SettingsFileReader::plain('blockdomains.txt');
         if (
             $blockUrls !== false && count($blockUrls) ||
             $blockHosts !== false && count($blockHosts)
