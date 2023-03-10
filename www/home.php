@@ -260,14 +260,15 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             // show or hide simple lighthouse field depending on whether chrome test is running
                                                             let simplePresets = document.querySelector('.test_presets_easy');
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            let lhSimpleCheck = lhSimpleFields.querySelector('input');
                                                             function enableDisableLHSimple(){
                                                               let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
                                                               if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
                                                                   lhSimpleFields.style.display = "block";
-                                                                  checkedPreset.disabled = false;
+                                                                  lhSimpleCheck.disabled = false;
                                                               } else {
                                                                   lhSimpleFields.style.display = "none";
-                                                                  checkedPreset.disabled = true;
+                                                                  lhSimpleCheck.disabled = true;
                                                               }
                                                             }
                                                             enableDisableLHSimple();
