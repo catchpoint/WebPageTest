@@ -2207,7 +2207,7 @@ footer ul {
   }
 
   .experiment_meta > *:first-child {
-    margin-bottom: 2rem;
+    /* this rule was breaking experiment previews. temp commenting out margin-bottom: 2rem; */
   }
 
   .experiments_foot-stick {
