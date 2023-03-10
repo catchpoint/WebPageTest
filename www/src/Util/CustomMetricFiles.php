@@ -14,7 +14,7 @@ class CustomMetricFiles
      * @param array $conditional A list of conditional metric names
      * @return array Assoc array with metric name => JS code to extract it
      */
-    public static function get(array $conditional = []): array
+    public static function get(?array $conditional = []): array
     {
         $customMetrics = [];
         foreach ($conditional as $name) {
