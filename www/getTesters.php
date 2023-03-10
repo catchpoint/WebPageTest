@@ -4,6 +4,10 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 include 'common.inc';
+if (!$privateInstall && !$admin) {
+    header("HTTP/1.1 403 Unauthorized");
+    exit;
+}
 if (isset($_REQUEST['k'])) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
@@ -154,9 +158,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 }
 
 /**
-* Load the location information and extract just the end nodes
-*
-*/
+ * Load the location information and extract just the end nodes
+ *
+ */
 function GetAllTesters($include_sensitive = true)
 {
     $locations = array();
@@ -164,8 +168,10 @@ function GetAllTesters($include_sensitive = true)
 
     if (isset($_REQUEST['location'])) {
         $location = $_REQUEST['location'];
-        $new = array('locations' => array('1' => 'group', 'default' => 'group'),
-                 'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder'));
+        $new = array(
+            'locations' => array('1' => 'group', 'default' => 'group'),
+            'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder')
+        );
         if (isset($loc[$_REQUEST['location']])) {
             $new[$_REQUEST['location']] = $loc[$_REQUEST['location']];
         }
