@@ -81,8 +81,8 @@ h3.hed_sub {
   color: #2a3d64;
 }
 
-.hed_sub em,
-.results_header .hed_sub + p {
+.hed_sub em, 
+.result-summary .results_header .hed_sub + p {
   font-size: 0.45em;
   font-style: normal;
   text-transform: none;
@@ -93,7 +93,10 @@ h3.hed_sub {
   vertical-align: middle;
   border-radius: 0.6em;
   margin-left: 1em;
+  z-index: 10;
+  position: relative;
 }
+
 
 .hed_sub em details {
   display: inline-block;
