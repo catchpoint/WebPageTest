@@ -674,7 +674,7 @@ if (!isset($test)) {
         $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
     }
 
-    $consditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
 
     if (array_key_exists('custom', $_REQUEST)) {
