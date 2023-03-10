@@ -47,6 +47,8 @@ class RunResultHtmlTable
     private $enabledColumns;
     private $enableLabelLinks;
 
+    private $showCustomMetrics = true;
+
   /**
    * RunResultHtmlTable constructor.
    * @param TestInfo $testInfo
@@ -120,6 +122,10 @@ class RunResultHtmlTable
     public function isColumnEnabled($column)
     {
         return !empty($this->enabledColumns[$column]);
+    }
+
+    public function disableCustomMetrics() {
+        $this->showCustomMetrics = false;
     }
 
     public function create($repeatMetricLabels = false)
@@ -526,15 +532,17 @@ class RunResultHtmlTable
                 $out .= '<a href=' . $filmstripUrl . '><img src="' . $filmstripImage . '-l:+&bg=2a3c64&text=ffffff&thumbSize=56&ival=100"></a></div>';
             }
             // custom metrics and timings
-            $customMetrics = (new CustomMetrics($this->runResults))
-                ->getBySource(CustomMetrics::FROM_TEST_SETTINGS)[$stepNum - 1];
-            $timingsAndMetrics = array_merge(
-                ['custom' => $customMetrics],
-                (new Timings($this->runResults))->getAllForStep($stepNum),
-            );
-            $out .= view('partials.timings', [
-                'data' => $timingsAndMetrics,
-            ]);
+            if ($this->showCustomMetrics) {
+                $customMetrics = (new CustomMetrics($this->runResults))
+                    ->getBySource(CustomMetrics::FROM_TEST_SETTINGS)[$stepNum - 1];
+                $timingsAndMetrics = array_merge(
+                    ['custom' => $customMetrics],
+                    (new Timings($this->runResults))->getAllForStep($stepNum),
+                );
+                $out .= view('partials.timings', [
+                    'data' => $timingsAndMetrics,
+                ]);
+            }
         }
         return $out;
     }
