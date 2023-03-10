@@ -17,12 +17,12 @@ class PlanListSet
         $this->current_plans = new PlanList();
     }
 
-    public function setAllPlans(PlanList $all_plans)
+    public function setAllPlans(PlanList $all_plans): void
     {
         $this->all_plans = $all_plans;
     }
 
-    public function setCurrentPlans(PlanList $current_plans)
+    public function setCurrentPlans(PlanList $current_plans): void
     {
         $this->current_plans = $current_plans;
     }

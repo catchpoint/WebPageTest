@@ -18,19 +18,25 @@ use WebPageTest\CPGraphQlTypes\CPSignupInput;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput as ShippingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
 use WebPageTest\Util;
+use WebPageTest\Util\Cache;
 
 class CPSignupClient
 {
     private GraphQLClient $graphql_client;
     private string $base_uri;
+    private string $redirect_base_uri;
     private string $client_id;
     private string $client_secret;
     private string $grant_type;
     private string $gql_uri;
 
+    private $handler; // For unit tests
+    private $auth_handler; // For unit tests
+
     public function __construct(array $options = [])
     {
         $base_uri = $options['base_uri'] ?? null;
+        $redirect_base_uri = $options['redirect_base_uri'] ?? null;
         $client_id = $options['client_id'] ?? null;
         $client_secret = $options['client_secret'] ?? null;
         $grant_type = $options['grant_type'] ?? null;
@@ -39,17 +45,26 @@ class CPSignupClient
 
         if (
             is_null($base_uri) ||
+            is_null($redirect_base_uri) ||
             is_null($gql_uri) ||
             is_null($client_id) ||
             is_null($client_secret) ||
             is_null($grant_type)
         ) {
-            throw new BaseException('base_uri, client_id, client_secret, and grant_type are all required');
+            $msg = 'base_uri, redirect_base_uri, gql_uri, client_id, client_secret, and grant_type are all required';
+            throw new BaseException($msg);
         }
 
         $this->access_token = null;
-        $this->graphql_client = new GraphQLClient($gql_uri);
+        $this->handler = $options['handler'] ?? null;
+        $this->auth_handler = $options['auth_handler'] ?? null;
+        $graphql_client_options = [];
+        if (!empty($this->handler)) {
+            $graphql_client_options['handler'] = $this->handler;
+        }
+        $this->graphql_client = new GraphQLClient($gql_uri, [], $graphql_client_options);
         $this->base_uri = $base_uri;
+        $this->redirect_base_uri = $redirect_base_uri;
         $this->gql_uri = $gql_uri;
         $this->client_id = $client_id;
         $this->client_secret = $client_secret;
@@ -58,19 +73,26 @@ class CPSignupClient
 
     public function authenticate(string $access_token): void
     {
+        $options = [];
+
+        if (!empty($this->handler)) {
+            $options['handler'] = $this->handler;
+        }
+
         $this->graphql_client = new GraphQLClient(
             $this->gql_uri,
             [
-              'Authorization' => "Bearer {$access_token}",
-              'timeout' => 5,
-              'connect_timeout' => 5
-            ]
+                'Authorization' => "Bearer {$access_token}",
+                'timeout' => 5,
+                'connect_timeout' => 5
+            ],
+            $options
         );
     }
 
     public function getAuthUrl(string $login_verification_id): string
     {
-        return "{$this->base_uri}/auth/WptAccount/Signup?token={$login_verification_id}";
+        return "{$this->redirect_base_uri}/auth/WptAccount/Signup?token={$login_verification_id}";
     }
 
     public function getAuthToken(): SignupToken
@@ -161,6 +183,10 @@ class CPSignupClient
 
     public function getWptPlans(): PlanList
     {
+        $fetched = Cache::fetchWptPlans();
+        if (!empty($fetched)) {
+            return $fetched;
+        }
         $gql = (new Query('wptPlan'))
             ->setSelectionSet([
                 'name',
@@ -170,7 +196,10 @@ class CPSignupClient
                 'monthlyTestRuns'
             ]);
 
+        $auth_token = $this->getAuthToken();
+        $this->authenticate($auth_token->access_token);
         $results = $this->graphql_client->runQuery($gql, true);
+
         $plans = array_map(function ($data): Plan {
             $options = [
                 'id' => $data['name'],
@@ -198,7 +227,11 @@ class CPSignupClient
             return in_array(strtolower($plan->getId()), $active_current_sellable_plans);
         });
 
-        return new PlanList(...$plans);
+        $plan_list = new PlanList(...$plans);
+        if (count($plan_list) > 0) {
+            Cache::storeWptPlans($plan_list);
+        }
+        return $plan_list;
     }
 
     public function getChargifySubscriptionPreview(string $plan, ShippingAddress $shipping_address): SubscriptionPreview
@@ -235,9 +268,14 @@ class CPSignupClient
 
     private function makeRequest(string $method, string $url, array $headers, array $body): array
     {
-        $client = new Client(array(
-        'base_uri' => $this->base_uri
-        ));
+        $guzzle_client_options = [
+          'base_uri' => $this->base_uri
+        ];
+
+        if (!empty($this->auth_handler)) {
+            $guzzle_client_options['handler'] = $this->auth_handler;
+        }
+        $client = new Client($guzzle_client_options);
         $options = [
         'form_params' => $body,
         'headers' => $headers

@@ -14,7 +14,7 @@
     "format:php": "phpcbf --extensions=php,inc --standard=PSR12 --ignore=www/lib/,www/ec2/,www/resources/compiled www/ tests/ bulktest/",
     "format:prettier": "npx prettier@2.7.1 --write 'www/**/*.css' 'www/**/*.js'",
     "format": "composer format:php && composer format:prettier",
-    "typecheck": "psalm",
+    "typecheck": "psalm --no-cache",
     "lint:css": "npx stylelint@14.9.1 'www/**/*.css'",
     "lint:php": "phpcs --standard=PSR12 www/src www/cpauth www/common",
     "lint": "composer lint:php && composer lint:css",

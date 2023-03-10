@@ -765,18 +765,6 @@ class Util
         return $file;
     }
     /**
-     * gets a plan by it's id if you pass it an array of plans
-     */
-    public static function getPlanFromArray(string $id, PlanList $plans): Plan
-    {
-        foreach ($plans as $plan) {
-            $planId = $plan->getId();
-            if (strtolower($planId) == strtolower($id)) {
-                return $plan;
-            }
-        }
-    }
-    /**
      * Set a message in session storage to be accessed in the UI
      * @param $message_type string  - example is something like FORM, ACCOUNT, TESTING  to handle styling different
      * types of messaging, currently only used for form notifications
@@ -809,16 +797,5 @@ class Util
         $messages_array = isset($_SESSION['messages']) ? $_SESSION['messages'] : [];
         unset($_SESSION['messages']);
         return $messages_array;
-    }
-
-    public static function getAnnualPlanByRuns(int $runs, array $annualPlans): Plan
-    {
-        foreach ($annualPlans as $plan) {
-            $planRuns = $plan->getRuns();
-            if ($planRuns == $runs) {
-                return $plan;
-                exit();
-            }
-        }
     }
 }

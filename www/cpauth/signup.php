@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-echo 'Signup currently down. Will be back soon';
-die();
-
 require_once __DIR__ . '/../common.inc';
 
 use WebPageTest\RequestContext;
@@ -130,7 +127,8 @@ use WebPageTest\Handlers\Signup as SignupHandler;
             echo SignupHandler::getStepThree($request_context, $vars);
             break;
         default: // step 1 or whatever somebody tries to send
-            echo SignupHandler::getStepOne($request_context, $vars);
+            $resp = SignupHandler::getStepOne($request_context, $vars);
+            $resp->send();
             break;
     }
     exit();

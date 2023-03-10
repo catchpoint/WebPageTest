@@ -15,9 +15,10 @@ use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\CPGraphQlTypes\ChargifySubscription;
 use WebPageTest\CPGraphQlTypes\CPSignupInput;
 use WebPageTest\CPGraphQlTypes\CustomerInput;
-use Exception;
 use GuzzleHttp\Exception\RequestException;
 use WebPageTest\Exception\ClientException;
+use WebPageTest\Exception\UnauthorizedException;
+use Illuminate\Http\Response;
 
 class Signup
 {
@@ -26,47 +27,26 @@ class Signup
         throw new \Error('Do not use, static methods only');
     }
 
-    public static function getStepOne(RequestContext $request_context, array $vars): string
+    public static function getStepOne(RequestContext $request_context, array $vars): Response
     {
+        $response = new Response();
         $tpl = new Template('account/signup');
         $tpl->setLayout('signup-flow-step-1');
 
-        try {
-            $wpt_plans = $request_context->getSignupClient()->getWptPlans();
-            $vars['annual_plans'] = $wpt_plans->getAnnualPlans();
-            $vars['monthly_plans'] = $wpt_plans->getMonthlyPlans();
-        } catch (RequestException $e) {
-            if ($e->getCode() == 401 || $e->getCode() == 400) {
-                // get auth token again and retry!
-                unset($_SESSION['signup-auth-token']);
-                $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
-                $_SESSION['signup-auth-token'] = $auth_token;
-                $request_context->getSignupClient()->authenticate($auth_token);
-                unset($vars['auth_token']);
-                $vars['auth_token'] = $auth_token;
-                $vars['wpt_plans'] = $request_context->getSignupClient()->getWptPlans();
-            } else {
-                throw $e;
-            }
-        }
+        $wpt_plans = $request_context->getSignupClient()->getWptPlans();
+        $vars['annual_plans'] = $wpt_plans->getAnnualPlans();
+        $vars['monthly_plans'] = $wpt_plans->getMonthlyPlans();
 
-        return $tpl->render('step-1', $vars);
+        $content = $tpl->render('step-1', $vars);
+        $response->setContent($content);
+        return $response;
     }
 
     public static function getStepTwo(RequestContext $request_context, array $vars): string
     {
         $plan_id = $vars['plan'];
         $plan = null;
-        $plans = [];
-        try {
-            $plans = $request_context->getSignupClient()->getWptPlans();
-        } catch (Exception $e) {
-            if ($e->getCode() == 401) {
-                $auth_token = $request_context->getSignupClient()->getAuthToken();
-                $request_context->getSignupClient()->authenticate($auth_token->access_token);
-                $plans = $request_context->getSignupClient()->getWptPlans();
-            }
-        }
+        $plans = $request_context->getSignupClient()->getWptPlans();
 
         foreach ($plans as $p) {
             if ($p->getId() == $plan_id) {
@@ -101,16 +81,7 @@ class Signup
 
         $plan_id = $vars['plan'];
         $plan = null;
-        $plans = [];
-        try {
-            $plans = $request_context->getSignupClient()->getWptPlans();
-        } catch (Exception $e) {
-            if ($e->getCode() == 401) {
-                $auth_token = $request_context->getSignupClient()->getAuthToken();
-                $request_context->getSignupClient()->authenticate($auth_token->access_token);
-                $plans = $request_context->getSignupClient()->getWptPlans();
-            }
-        }
+        $plans = $request_context->getSignupClient()->getWptPlans();
 
         foreach ($plans as $p) {
             if ($p->getId() == $plan_id) {
@@ -155,20 +126,17 @@ class Signup
 
     public static function postStepTwoFree(RequestContext $request_context, object $body): string
     {
-        $auth_token = $_SESSION['signup-auth-token'] ?? $_POST['auth_token'];
-        if (is_null($auth_token)) {
-            $auth_token = $request_context->getSignupClient()->getAuthToken()->access_token;
-        }
-        $request_context->getSignupClient()->authenticate($auth_token);
-
         try {
-            $data = $request_context->getSignupClient()->signup(array(
+            $auth_token = $request_context->getSignupClient()->getAuthToken();
+            $request_context->getSignupClient()->authenticate($auth_token->access_token);
+
+            $data = $request_context->getSignupClient()->signup([
                 'first_name' => $body->first_name,
                 'last_name' => $body->last_name,
                 'company' => $body->company_name,
                 'email' => $body->email,
                 'password' => $body->password
-            ));
+            ]);
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
@@ -297,31 +265,7 @@ class Signup
             $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
             $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
         } catch (\Exception $e) {
-            if ($e->getCode() != 401) {
-                throw new ClientException($e->getMessage(), '/signup/2');
-                exit();
-            }
-
-            // Auth issue, retry
-            try {
-                $auth_token = $request_context->getSignupClient()->getAuthToken();
-                $request_context->getSignupClient()->authenticate($auth_token->access_token);
-
-                $total = $request_context->getSignupClient()->getChargifySubscriptionPreview($plan, $chargify_address);
-
-                $_SESSION['signup-street-address'] = $body->street_address;
-                $_SESSION['signup-city'] = $body->city;
-                $_SESSION['signup-state-code'] = $body->state_code;
-                $_SESSION['signup-country-code'] = $body->country_code;
-                $_SESSION['signup-zipcode'] = $body->zipcode;
-
-                $_SESSION['signup-total-in-cents'] = $total->getTotalInCents();
-                $_SESSION['signup-subtotal-in-cents'] = $total->getSubTotalInCents();
-                $_SESSION['signup-tax-in-cents'] = $total->getTaxInCents();
-            } catch (\Exception $e) {
-                throw new ClientException($e->getMessage(), '/signup/2');
-                exit();
-            }
+            throw new ClientException($e->getMessage(), '/signup/2');
         }
 
         $host = Util::getSetting('host');
@@ -446,29 +390,14 @@ class Signup
 
         // handle signup
         try {
+            $auth_token = $request_context->getSignupClient()->getAuthToken();
+            $request_context->getSignupClient()->authenticate($auth_token->access_token);
             $data = $request_context->getSignupClient()->signupWithChargify($cp_signup_input);
 
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
             return $redirect_uri;
         } catch (\Exception $e) {
-            if ($e->getCode() == 401) {
-                try {
-                    $auth_token = $request_context->getSignupClient()->getAuthToken();
-                    $request_context->getSignupClient()->authenticate($auth_token->access_token);
-
-                    $data = $request_context->getSignupClient()->signupWithChargify($cp_signup_input);
-
-                    $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
-
-                    return $redirect_uri;
-                    exit();
-                } catch (\Exception $e) {
-                    throw new ClientException($e->getMessage(), '/signup/3');
-                    exit();
-                }
-            }
             throw new ClientException($e->getMessage(), '/signup/3');
-            exit();
         }
     }
 

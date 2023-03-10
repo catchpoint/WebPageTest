@@ -8,6 +8,7 @@ use IteratorAggregate;
 use Traversable;
 use Countable;
 use ArrayIterator;
+use JsonSerializable;
 use WebPageTest\Plan;
 
 /**
@@ -16,10 +17,13 @@ use WebPageTest\Plan;
  * @implements Countable<Plan>
  *
  * */
-class PlanList implements IteratorAggregate, Countable
+class PlanList implements IteratorAggregate, Countable, JsonSerializable
 {
+    //@var array { Plan } $list
     private array $list;
+    //@var array { Plan } $monthly_plans
     private array $monthly_plans;
+    //@var array { Plan } $annual_plans
     private array $annual_plans;
 
     public function __construct(Plan ...$plans)
@@ -45,7 +49,7 @@ class PlanList implements IteratorAggregate, Countable
         $this->list = $plans;
     }
 
-    public function add(Plan $plan)
+    public function add(Plan $plan): void
     {
         $this->list[] = $plan;
     }
@@ -58,6 +62,27 @@ class PlanList implements IteratorAggregate, Countable
     public function getAnnualPlans(): array
     {
         return $this->annual_plans;
+    }
+
+    public function getAnnualPlanByRuns(int $runs): Plan
+    {
+        foreach ($this->annual_plans as $plan) {
+            $planRuns = $plan->getRuns();
+            if ($planRuns == $runs) {
+                return $plan;
+                exit();
+            }
+        }
+    }
+
+    public function getPlanById(string $id): Plan
+    {
+        foreach ($this->list as $plan) {
+            $planId = $plan->getId();
+            if (strtolower($planId) == strtolower($id)) {
+                return $plan;
+            }
+        }
     }
 
     public function toArray(): array
@@ -73,5 +98,10 @@ class PlanList implements IteratorAggregate, Countable
     public function count(): int
     {
         return count($this->list);
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->list;
     }
 }

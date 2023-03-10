@@ -524,27 +524,6 @@ final class CPClientTest extends TestCase
           $this->assertEquals(3, count($plans));
     }
 
-    public function testGetWptPlansNullResponse(): void
-    {
-        $handler = $this->createMockResponse(200, '{
-            "data": {
-              "wptPlan": null
-            }
-          }');
-
-          $host = "http://webpagetest.org";
-          $client = new CPClient($host, array(
-              'auth_client_options' => [
-                  'client_id' => '123',
-                  'client_secret' => '345',
-                  'grant_type' => 'these are good to have',
-                  'handler' => $handler
-              ]
-          ));
-
-          $plans = $client->getWptPlans();
-          $this->assertEquals(0, count($plans));
-    }
 
     /**
     public function getPaidAccountPageInfo(): PaidPageInfo

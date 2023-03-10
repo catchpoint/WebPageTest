@@ -154,22 +154,22 @@ async function SelectRequest(step, request) {
 
       // https://searchfox.org/mozilla-central/source/xpcom/threads/nsISupportsPriority.idl#24-28
       if (priority < -10) {
-        prioLabel = 'Highest';
+        prioLabel = "Highest";
       } else if (priority >= -10 && priority < 0) {
-        prioLabel = 'High';
+        prioLabel = "High";
       } else if (priority === 0) {
-        prioLabel = 'Normal';
+        prioLabel = "Normal";
       } else if (priority <= 10 && priority > 0) {
-        prioLabel = 'Low';
+        prioLabel = "Low";
       } else if (priority > 10) {
-        prioLabel = 'Lowest';
+        prioLabel = "Lowest";
       }
 
       if (!prioLabel) {
         return null;
       }
 
-      return prioLabel + '(' + priority + ')';
+      return prioLabel + "(" + priority + ")";
     }
     if (r["full_url"] !== undefined) {
       if (wptNoLinks) {
@@ -216,7 +216,7 @@ async function SelectRequest(step, request) {
     const initial_priority =
       CHROME_PRIORITY_MAP[r["initial_priority"]] || r["initial_priority"];
 
-    let requested_priority = '';
+    let requested_priority = "";
     if (r["priority"] !== undefined && !isNaN(parseFloat(r["priority"]))) {
       //firefox has numeric priorities
       requested_priority = firefoxPriority(r["priority"]);
@@ -224,7 +224,7 @@ async function SelectRequest(step, request) {
       requested_priority = CHROME_PRIORITY_MAP[r["priority"]] || r["priority"];
     }
 
-    if (requested_priority !== '') {
+    if (requested_priority !== "") {
       if (
         initial_priority !== undefined &&
         initial_priority.length > 0 &&
