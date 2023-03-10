@@ -2262,6 +2262,9 @@ footer ul {
   .experiments_details_body {
     padding-left: 2rem;
   }
+  .opportunities_summary .experiment_summary_label {
+    text-indent: -9999px;
+  }
 }
 
 .experiment_description_go
@@ -2508,57 +2511,87 @@ details.details_custommetrics summary {
 .summary_opps > p {
   line-height: 1.5;
   font-weight: 500;
-  margin: 0 0 1em;
+  margin: 0;
   max-width: none;
   padding: 0;
   display: flex;
   color: #555;
   justify-content: flex-end;
-  font-size: 1.1em;
+  font-size: 1em;
   position: relative;
 }
 .summary_opps > p span {
   position: relative;
-  background: #fff;
-  padding: 0 0 0 1em;
+  background-color: #fff;
+  padding: .5em .4em .5em 2.8em;
+  font-weight: 700;
+  color: #498706;
+  border: 1px solid #ddd;
+  border-radius: 2rem;
+  background-position: left .4em top .1em;
 }
 .summary_opps > p:before {
   content: "";
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ddd;
   position: absolute;
   width: 100%;
-  top: 0.8em;
+  top: 50%;
 }
 
 .summary_opps > p a {
   font-weight: 700;
-  font-size: 0.6em;
-  padding: 0.4em 1em;
+  font-size: .9em;
+  padding: 0.5em 1.3em;
   border-radius: 2em;
-  color: #5c9811;
-  border: 1px solid #5c9811;
+  background: #1072bb;
   text-decoration: none;
   display: inline-block;
   margin-left: 1em;
   vertical-align: middle;
-  /* color: #fff; */
+  color: #fff;
+  border: 1px solid #1072bb;
 }
 
 .summary_opps > p a:hover,
 .summary_opps > p a:focus {
-  background-color: #5c9811;
+  background-color: #fff;
   border-color: #448204;
-  color: #fff;
+  color: #5c9811;
 }
 
 @media (max-width: 60em) {
+  .summary_opps > p,
+  .summary_opps > p span {
+    flex-flow: row wrap;
+    height: auto;
+    border: 0;
+    justify-content: flex-start;
+    gap: 2em;
+    width: 100%;
+    
+  }
+  .summary_opps > p span {
+    display: block;
+    padding-bottom: .5em;
+    background-position: .3em .3em;
+  }
+  .summary_opps > p:before {
+    display: none;
+  }
+  .summary_opps > p a {
+    display: inline-block;
+    margin: 0 .5em;
+    flex: 0 0 8em;
+    max-width: 8em;
+    text-align: center;
+  }
   .results_header h2 {
     margin-top: 0.3em;
     font-size: 2.3em;
   }
 
   .results_header p {
-    font-size: 1.1em;
+     font-size: 1.1em;
   }
 }
 
@@ -2570,6 +2603,10 @@ details.details_custommetrics summary {
 
   .results_header p {
     font-size: 1em;
+  }
+  .summary_opps > p a {
+    display: block;
+    margin: .5em 0
   }
 }
 
