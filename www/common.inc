@@ -401,9 +401,10 @@ if (strlen($id)) {
         // $owner is set by CP details in AttachUser middleware if loaded
         $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
         $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
+        $user_id_matches_test = array_key_exists('user_id', $test['testinfo']) && ($user_id == $test['testinfo']['user_id']);
         $creator_id_matches_test = array_key_exists('creator', $test['testinfo']) && ($creator_id == $test['testinfo']['creator']);
 
-        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test;
+        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test || $user_id_matches_test;
 
         // Boy what a hack. This gets around us running tests as private that should not have been
         // This happened because we had some profiles set to default private so they ran private for unpaid users

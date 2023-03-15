@@ -99,9 +99,12 @@ use WebPageTest\Exception\UnauthorizedException;
                     // Check the expiration (with a 2-day buffer)
                     if (time() <= $account['expiration'] + 172800) {
                         $owner = $account['accountId'];
+                        $user_id = $account['userId'] ?? null;
+                        $contact_id = $account['contactId'] ?? null;
                         $user->setPaidClient(true);
                         $user->setOwnerId($owner);
-                        $user->setUserId($account['contactId']);
+                        $user->setContactId($contact_id);
+                        $user->setUserId($user_id);
                     }
                 }
             }
