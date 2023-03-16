@@ -124,7 +124,8 @@ class RunResultHtmlTable
         return !empty($this->enabledColumns[$column]);
     }
 
-    public function disableCustomMetrics() {
+    public function disableCustomMetrics()
+    {
         $this->showCustomMetrics = false;
     }
 

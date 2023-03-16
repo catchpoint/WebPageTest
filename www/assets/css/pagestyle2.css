@@ -81,7 +81,7 @@ h3.hed_sub {
   color: #2a3d64;
 }
 
-.hed_sub em, 
+.hed_sub em,
 .result-summary .results_header .hed_sub + p {
   font-size: 0.45em;
   font-style: normal;
@@ -96,7 +96,6 @@ h3.hed_sub {
   z-index: 10;
   position: relative;
 }
-
 
 .hed_sub em details {
   display: inline-block;
@@ -2526,12 +2525,12 @@ details.details_custommetrics summary {
 .summary_opps > p span {
   position: relative;
   background-color: #fff;
-  padding: .5em .4em .5em 2.8em;
+  padding: 0.5em 0.4em 0.5em 2.8em;
   font-weight: 700;
   color: #498706;
   border: 1px solid #ddd;
   border-radius: 2rem;
-  background-position: left .4em top .1em;
+  background-position: left 0.4em top 0.1em;
 }
 .summary_opps > p:before {
   content: "";
@@ -2543,7 +2542,7 @@ details.details_custommetrics summary {
 
 .summary_opps > p a {
   font-weight: 700;
-  font-size: .9em;
+  font-size: 0.9em;
   padding: 0.5em 1.3em;
   border-radius: 2em;
   background: #1072bb;
@@ -2571,19 +2570,18 @@ details.details_custommetrics summary {
     justify-content: flex-start;
     gap: 2em;
     width: 100%;
-    
   }
   .summary_opps > p span {
     display: block;
-    padding-bottom: .5em;
-    background-position: .3em .3em;
+    padding-bottom: 0.5em;
+    background-position: 0.3em 0.3em;
   }
   .summary_opps > p:before {
     display: none;
   }
   .summary_opps > p a {
     display: inline-block;
-    margin: 0 .5em;
+    margin: 0 0.5em;
     flex: 0 0 8em;
     max-width: 8em;
     text-align: center;
@@ -2594,7 +2592,7 @@ details.details_custommetrics summary {
   }
 
   .results_header p {
-     font-size: 1.1em;
+    font-size: 1.1em;
   }
 }
 
@@ -2609,7 +2607,7 @@ details.details_custommetrics summary {
   }
   .summary_opps > p a {
     display: block;
-    margin: .5em 0
+    margin: 0.5em 0;
   }
 }
 

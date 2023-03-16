@@ -128,7 +128,7 @@ $page_description = "Website performance test result$testLabel.";
                 include INCLUDES_PATH . '/experiments/summary.inc';
 
                 ?>
-                <?php if( !isset($experiments_paid) || !$experiments_paid ){ ?>
+                <?php if (!isset($experiments_paid) || !$experiments_paid) { ?>
                 <p><span class="opportunities_summary_exps">You have Free Experiments Available!
                     <?php
                     if ($tabs && $tabs['Opportunities & Experiments']) {
