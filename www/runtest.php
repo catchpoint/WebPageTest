@@ -808,11 +808,16 @@ if (!empty($user_api_key)) {
 }
 
 $creator_id = 0;
+$user_id = 0;
 if (!is_null($request_context->getUser())) {
-    $creator_id = $request_context->getUser()->getUserId() ?? 0;
+    $creator_id = $request_context->getUser()->getContactId() ?? 0;
+    $user_id = $request_context->getUser()->getUserId() ?? 0;
 }
 if ($creator_id != 0) {
     $test["creator"] = $creator_id;
+}
+if ($user_id != 0) {
+    $test["user_id"] = $user_id;
 }
 
 if (isset($user) && !array_key_exists('user', $test)) {
@@ -2724,6 +2729,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
         if (!empty($test["creator"])) {
             AddIniLine($testInfo, "creator", $test["creator"]);
+        }
+        if (!empty($test["user_id"])) {
+            AddIniLine($testInfo, "user_id", $test["user_id"]);
         }
         if (isset($test['type']) && strlen($test['type'])) {
             AddIniLine($testInfo, "type", $test['type']);

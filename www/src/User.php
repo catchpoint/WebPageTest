@@ -14,6 +14,7 @@ class User
     private ?string $owner_id;
     private ?string $access_token;
     private ?int $user_id;
+    private ?int $contact_id;
     private bool $is_paid_cp_client;
     private bool $is_verified;
     private bool $is_wpt_enterprise_client;
@@ -36,6 +37,7 @@ class User
         $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
         $this->user_id = null;
+        $this->contact_id = null;
         $this->is_paid_cp_client = false;
         $this->is_verified = false;
         $this->user_priority = 9; //default to lowest possible priority
@@ -131,6 +133,18 @@ class User
     {
         if (isset($user_id)) {
             $this->user_id = $user_id;
+        }
+    }
+
+    public function getContactId(): ?int
+    {
+        return $this->contact_id;
+    }
+
+    public function setContactId(?int $contact_id): void
+    {
+        if (isset($contact_id)) {
+            $this->contact_id = $contact_id;
         }
     }
 

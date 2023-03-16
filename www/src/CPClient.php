@@ -188,6 +188,7 @@ class CPClient
             ->setSelectionSet([
                 (new Query('userIdentity'))
                     ->setSelectionSet([
+                        'id',
                         (new Query('activeContact'))
                             ->setSelectionSet([
                                 'id',
@@ -234,7 +235,8 @@ class CPClient
             }
             $user->setRunRenewalDate($run_renewal_date);
             $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
-            $user->setUserId($data['userIdentity']['activeContact']['id']);
+            $user->setUserId($data['userIdentity']['id']);
+            $user->setContactId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
             $user->setPaidClient($data['userIdentity']['activeContact']['isWptPaidUser']);
             $user->setPaymentStatus($data['wptCustomer']['status']);
