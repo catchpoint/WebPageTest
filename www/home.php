@@ -7,7 +7,7 @@
 include 'common.inc';
 
 use WebPageTest\Util;
-use WebPageTest\Util\IniReader;
+use WebPageTest\Util\SettingsFileReader;
 
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
@@ -42,8 +42,8 @@ if (isset($req_url)) {
 }
 $placeholder = 'Enter a website URL...';
 
-$profiles = IniReader::parse('profiles.ini', true);
-$connectivity = IniReader::parse('connectivity.ini', true, true);
+$profiles = SettingsFileReader::ini('profiles.ini', true);
+$connectivity = SettingsFileReader::ini('connectivity.ini', true, true);
 
 $mobile_devices = LoadMobileDevices();
 
@@ -802,7 +802,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;" autocomplete="off">
                                                 </li>
                                                 <?php
-                                                $extensions = IniReader::getExtensions();
+                                                $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
                                                     ?>
                                                 <li>
