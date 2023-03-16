@@ -685,7 +685,7 @@ final class AccountTest extends TestCase
 
         $req = new RequestContext([]);
         $user = new User();
-        $user->setUserId(12345);
+        $user->setContactId(12345);
         $req->setUser($user);
 
         $client = $this->createMock(CPClient::class);
@@ -717,7 +717,7 @@ final class AccountTest extends TestCase
 
         $req = new RequestContext([]);
         $user = new User();
-        $user->setUserId(12345);
+        $user->setContactId(12345);
         $req->setUser($user);
 
         $client = $this->createMock(CPClient::class);
@@ -750,7 +750,7 @@ final class AccountTest extends TestCase
         $user = new User();
         $user->setPaidClient(true);
         $user->setPaymentStatus('ACTIVE');
-        $user->setUserId(12345);
+        $user->setContactId(12345);
         $req->setUser($user);
 
         $client = $this->createMock(CPClient::class);

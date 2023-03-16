@@ -898,7 +898,7 @@ class Account
         $is_verified = $request_context->getUser()->isVerified();
         $is_pending = $request_context->getUser()->isPendingCancelation();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
-        $contact_id = $request_context->getUser()->getUserId();
+        $contact_id = $request_context->getUser()->getContactId();
         $remaining_runs = $request_context->getUser()->getRemainingRuns();
         // See NOTE1
         if (isset($_SESSION['new-run-count'])) {
