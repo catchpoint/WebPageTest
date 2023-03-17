@@ -8,7 +8,9 @@ include 'common.inc';
 
 use WebPageTest\Util;
 use WebPageTest\Util\SettingsFileReader;
+use WebPageTest\Util\Timers;
 
+$Timers = new Timers();
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -41,12 +43,12 @@ if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a website URL...';
-
+$Timers->startTimer('init');
 $profiles = SettingsFileReader::ini('profiles.ini', true);
 $connectivity = SettingsFileReader::ini('connectivity.ini', true, true);
 
 $mobile_devices = LoadMobileDevices();
-
+$Timers->endTimer('init');
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
     // move it to the front of the list
     $insert = $connectivity[$_REQUEST['connection']];
@@ -68,15 +70,20 @@ if (isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l'])) {
     }
     $connectivity['custom'] = $conn;
 }
-
+$Timers->startTimer('loc');
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
+$Timers->endTimer('loc');
 
+$Timers->startTimer('status');
 // Is the user a logged in and paid user?
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
+$Timers->endTimer('status');
+
+header('Server-Timing: ' . $Timers->getTimers());
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -105,7 +112,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
         <div class="home_content">
             <?php
             if (!$headless) {
-                ?>
+            ?>
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
@@ -261,18 +268,19 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             let simplePresets = document.querySelector('.test_presets_easy');
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
                                                             let lhSimpleCheck = lhSimpleFields.querySelector('input');
-                                                            function enableDisableLHSimple(){
-                                                              let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
-                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
-                                                                  lhSimpleFields.style.display = "block";
-                                                                  lhSimpleCheck.disabled = false;
-                                                              } else {
-                                                                  lhSimpleFields.style.display = "none";
-                                                                  lhSimpleCheck.disabled = true;
-                                                              }
+
+                                                            function enableDisableLHSimple() {
+                                                                let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
+                                                                if (checkedPreset.parentElement.querySelector('img[alt*="chrome"]')) {
+                                                                    lhSimpleFields.style.display = "block";
+                                                                    lhSimpleCheck.disabled = false;
+                                                                } else {
+                                                                    lhSimpleFields.style.display = "none";
+                                                                    lhSimpleCheck.disabled = true;
+                                                                }
                                                             }
                                                             enableDisableLHSimple();
-                                                            simplePresets.addEventListener("click", enableDisableLHSimple );
+                                                            simplePresets.addEventListener("click", enableDisableLHSimple);
                                                         </script>
                                                     </div>
                                                     <?php if ($is_paid) : ?>
@@ -519,7 +527,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
                                                                                                                                     echo 'checked=checked';
-                                                                                                                              } ?> value="0">First View and Repeat View</label>
+                                                                                                                                } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
                                                                                                                                     echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
@@ -619,11 +627,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
                                                                                                                                                     echo 'checked=checked';
-                                                                                                                                              } ?> style="float: left;width: auto;">
+                                                                                                                                                } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
-                                                <?php } ?>
+                                                    <?php } ?>
                                                     <li>
                                                         <label for="time">
                                                             Minimum test duration<br>
@@ -764,7 +772,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </li>
                                                 <?php
                                                 if ($admin && GetSetting('wprDesktop')) {
-                                                    ?>
+                                                ?>
                                                     <li>
 
                                                         <label for="wprDesktop" class="auto_width">
@@ -773,10 +781,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 if ($admin && GetSetting('wprMobile')) {
-                                                    ?>
+                                                ?>
                                                     <li>
                                                         <label for="wprMobile" class="auto_width">
                                                             <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox">
@@ -784,7 +792,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 ?>
                                                 <li>
@@ -804,21 +812,21 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <?php
                                                 $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
-                                                    ?>
-                                                <li>
-                                                    <label for="extensions">
-                                                        Enable extension<br>
-                                                    </label>
-                                                    <select name="extensions" id="extensions">
-                                                        <option>Pick an extension...</option>
-                                                        <?php
-                                                        foreach ($extensions as $id => $name) {
-                                                            echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
-                                                        }
-                                                        ?>
-                                                    <select>
-                                                </li>
-                                                    <?php
+                                                ?>
+                                                    <li>
+                                                        <label for="extensions">
+                                                            Enable extension<br>
+                                                        </label>
+                                                        <select name="extensions" id="extensions">
+                                                            <option>Pick an extension...</option>
+                                                            <?php
+                                                            foreach ($extensions as $id => $name) {
+                                                                echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
+                                                            }
+                                                            ?>
+                                                            <select>
+                                                    </li>
+                                                <?php
                                                 }
                                                 ?>
                                             </ul>
@@ -934,10 +942,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 </script>
                                             </p>
                                             <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
-                                            if (array_key_exists('spof', $_REQUEST)) {
-                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                            }
-                                            ?></textarea>
+                                                                                                    if (array_key_exists('spof', $_REQUEST)) {
+                                                                                                        echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                                                                                    }
+                                                                                                    ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
@@ -1016,7 +1024,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                         </div>
                     </div>
                 </form>
-                <?php
+            <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
                 }
