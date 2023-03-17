@@ -112,7 +112,7 @@ header('Server-Timing: ' . $Timers->getTimers());
         <div class="home_content">
             <?php
             if (!$headless) {
-            ?>
+                ?>
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
@@ -527,7 +527,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
                                                                                                                                     echo 'checked=checked';
-                                                                                                                                } ?> value="0">First View and Repeat View</label>
+                                                                                                                              } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
                                                                                                                                     echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
@@ -627,11 +627,11 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
                                                                                                                                                     echo 'checked=checked';
-                                                                                                                                                } ?> style="float: left;width: auto;">
+                                                                                                                                              } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
-                                                    <?php } ?>
+                                                <?php } ?>
                                                     <li>
                                                         <label for="time">
                                                             Minimum test duration<br>
@@ -772,7 +772,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                 </li>
                                                 <?php
                                                 if ($admin && GetSetting('wprDesktop')) {
-                                                ?>
+                                                    ?>
                                                     <li>
 
                                                         <label for="wprDesktop" class="auto_width">
@@ -781,10 +781,10 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                <?php
+                                                    <?php
                                                 }
                                                 if ($admin && GetSetting('wprMobile')) {
-                                                ?>
+                                                    ?>
                                                     <li>
                                                         <label for="wprMobile" class="auto_width">
                                                             <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox">
@@ -792,7 +792,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                             <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                <?php
+                                                    <?php
                                                 }
                                                 ?>
                                                 <li>
@@ -812,7 +812,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                 <?php
                                                 $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
-                                                ?>
+                                                    ?>
                                                     <li>
                                                         <label for="extensions">
                                                             Enable extension<br>
@@ -826,7 +826,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                             ?>
                                                             <select>
                                                     </li>
-                                                <?php
+                                                    <?php
                                                 }
                                                 ?>
                                             </ul>
@@ -942,10 +942,10 @@ header('Server-Timing: ' . $Timers->getTimers());
                                                 </script>
                                             </p>
                                             <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
-                                                                                                    if (array_key_exists('spof', $_REQUEST)) {
-                                                                                                        echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                                                                                    }
-                                                                                                    ?></textarea>
+                                            if (array_key_exists('spof', $_REQUEST)) {
+                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                            }
+                                            ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
@@ -1024,7 +1024,7 @@ header('Server-Timing: ' . $Timers->getTimers());
                         </div>
                     </div>
                 </form>
-            <?php
+                <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
                 }
