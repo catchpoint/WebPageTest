@@ -5,8 +5,6 @@
  *
  * PHP version 5 and 7
  *
- * @category  Math
- * @package   BigInteger
  * @author    Jim Wigginton <terrafrost@php.net>
  * @copyright 2017 Jim Wigginton
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
@@ -15,7 +13,6 @@
 
 namespace phpseclib3\Math\BigInteger\Engines;
 
-use ParagonIE\ConstantTime\Hex;
 use phpseclib3\Common\Functions\Strings;
 use phpseclib3\Crypt\Random;
 use phpseclib3\Exception\BadConfigurationException;
@@ -24,9 +21,7 @@ use phpseclib3\Math\BigInteger;
 /**
  * Base Engine.
  *
- * @package Engine
  * @author  Jim Wigginton <terrafrost@php.net>
- * @access  public
  */
 abstract class Engine implements \JsonSerializable
 {
@@ -171,12 +166,12 @@ abstract class Engine implements \JsonSerializable
                     $x = substr($x, 1);
                 }
 
-                $x = preg_replace('#^(?:0x)?([A-Fa-f0-9]*).*#', '$1', $x);
+                $x = preg_replace('#^(?:0x)?([A-Fa-f0-9]*).*#s', '$1', $x);
 
                 $is_negative = false;
                 if ($base < 0 && hexdec($x[0]) >= 8) {
                     $this->is_negative = $is_negative = true;
-                    $x = Hex::encode(~Hex::decode($x));
+                    $x = Strings::bin2hex(~Strings::hex2bin($x));
                 }
 
                 $this->value = $x;
@@ -192,7 +187,7 @@ abstract class Engine implements \JsonSerializable
                 // (?<!^)(?:-).*: find any -'s that aren't at the beginning and then any characters that follow that
                 // (?<=^|-)0*: find any 0's that are preceded by the start of the string or by a - (ie. octals)
                 // [^-0-9].*: find any non-numeric characters and then any characters that follow that
-                $this->value = preg_replace('#(?<!^)(?:-).*|(?<=^|-)0*|[^-0-9].*#', '', $x);
+                $this->value = preg_replace('#(?<!^)(?:-).*|(?<=^|-)0*|[^-0-9].*#s', '', $x);
                 if (!strlen($this->value) || $this->value == '-') {
                     $this->value = '0';
                 }
@@ -205,7 +200,7 @@ abstract class Engine implements \JsonSerializable
                     $x = substr($x, 1);
                 }
 
-                $x = preg_replace('#^([01]*).*#', '$1', $x);
+                $x = preg_replace('#^([01]*).*#s', '$1', $x);
 
                 $temp = new static(Strings::bits2bin($x), 128 * $base); // ie. either -16 or +16
                 $this->value = $temp->value;
@@ -274,7 +269,7 @@ abstract class Engine implements \JsonSerializable
      */
     public function toHex($twos_compliment = false)
     {
-        return Hex::encode($this->toBytes($twos_compliment));
+        return Strings::bin2hex($this->toBytes($twos_compliment));
     }
 
     /**
@@ -375,6 +370,8 @@ abstract class Engine implements \JsonSerializable
      * JSON Serialize
      *
      * Will be called, automatically, when json_encode() is called on a BigInteger object.
+     *
+     * @return array{hex: string, precision?: int]
      */
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
