@@ -17,8 +17,6 @@
  * is specific to private keys it's basically creating a DER-encoded wrapper
  * for keys. This just extends that same concept to public keys (much like ssh-keygen)
  *
- * @category  Crypt
- * @package   RSA
  * @author    Jim Wigginton <terrafrost@php.net>
  * @copyright 2015 Jim Wigginton
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
@@ -27,7 +25,6 @@
 
 namespace phpseclib3\Crypt\RSA\Formats\Keys;
 
-use phpseclib3\Common\Functions\Strings;
 use phpseclib3\Crypt\Common\Formats\Keys\PKCS8 as Progenitor;
 use phpseclib3\File\ASN1;
 use phpseclib3\Math\BigInteger;
@@ -35,9 +32,7 @@ use phpseclib3\Math\BigInteger;
 /**
  * PKCS#8 Formatted RSA Key Handler
  *
- * @package RSA
  * @author  Jim Wigginton <terrafrost@php.net>
- * @access  public
  */
 abstract class PKCS8 extends Progenitor
 {
@@ -45,7 +40,6 @@ abstract class PKCS8 extends Progenitor
      * OID Name
      *
      * @var string
-     * @access private
      */
     const OID_NAME = 'rsaEncryption';
 
@@ -53,7 +47,6 @@ abstract class PKCS8 extends Progenitor
      * OID Value
      *
      * @var string
-     * @access private
      */
     const OID_VALUE = '1.2.840.113549.1.1.1';
 
@@ -61,43 +54,25 @@ abstract class PKCS8 extends Progenitor
      * Child OIDs loaded
      *
      * @var bool
-     * @access private
      */
     protected static $childOIDsLoaded = false;
 
     /**
      * Break a public or private key down into its constituent components
      *
-     * @access public
      * @param string $key
      * @param string $password optional
      * @return array
      */
     public static function load($key, $password = '')
     {
-        if (!Strings::is_stringable($key)) {
-            throw new \UnexpectedValueException('Key should be a string - not a ' . gettype($key));
-        }
-
-        if (strpos($key, 'PUBLIC') !== false) {
-            $components = ['isPublicKey' => true];
-        } elseif (strpos($key, 'PRIVATE') !== false) {
-            $components = ['isPublicKey' => false];
-        } else {
-            $components = [];
-        }
-
         $key = parent::load($key, $password);
 
         if (isset($key['privateKey'])) {
-            if (!isset($components['isPublicKey'])) {
-                $components['isPublicKey'] = false;
-            }
+            $components['isPublicKey'] = false;
             $type = 'private';
         } else {
-            if (!isset($components['isPublicKey'])) {
-                $components['isPublicKey'] = true;
-            }
+            $components['isPublicKey'] = true;
             $type = 'public';
         }
 
@@ -113,7 +88,6 @@ abstract class PKCS8 extends Progenitor
     /**
      * Convert a private key to the appropriate format.
      *
-     * @access public
      * @param \phpseclib3\Math\BigInteger $n
      * @param \phpseclib3\Math\BigInteger $e
      * @param \phpseclib3\Math\BigInteger $d
@@ -134,7 +108,6 @@ abstract class PKCS8 extends Progenitor
     /**
      * Convert a public key to the appropriate format
      *
-     * @access public
      * @param \phpseclib3\Math\BigInteger $n
      * @param \phpseclib3\Math\BigInteger $e
      * @param array $options optional
