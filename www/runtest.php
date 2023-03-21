@@ -804,7 +804,7 @@ if (isset($req_vo)) {
 }
 if (!empty($user_api_key)) {
     $test['key'] = $user_api_key;
-    $test['owner'] = $request_context->getUser()->getOwnerId();
+    $test['owner'] = !is_null($request_context->getUser()) ? $request_context->getUser()->getOwnerId() : $user_api_key;
 }
 
 $creator_id = 0;

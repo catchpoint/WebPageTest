@@ -54,8 +54,22 @@ if (Util::getSetting('cp_auth')) {
             header('Location: ' . $location);
             exit();
         }
-        error_log($e->getMessage);
+        error_log($e->getMessage());
         throw $e;
+    });
+} else {
+    // For private install users
+    set_exception_handler(function ($e) {
+        // Developer envs just get a print out
+        if (Util::getSetting('environment') == Environment::$Development) {
+            echo '<pre>';
+            var_dump($e);
+            echo '</pre>';
+            exit();
+        } else {
+          error_log($e->getMessage());
+          throw $e;
+        }
     });
 }
 
