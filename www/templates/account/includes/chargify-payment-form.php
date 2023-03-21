@@ -25,6 +25,10 @@
                 <span id="cc_cvv"></span>
             </div>
         </div>
+        <div class="vat-number-container">
+            <label for="vat-number">VAT Number</label>
+            <input name="vat-number" type="text" />
+        </div>
     </div>
 </div>
 <script src="https://js.chargify.com/latest/chargify.js"></script>
