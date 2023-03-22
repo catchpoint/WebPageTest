@@ -19,7 +19,6 @@ use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
 use WebPageTest\Template;
 use WebPageTest\CPGraphQlTypes\ChargifySubscriptionPreviewResponse as SubscriptionPreview;
-use WebPageTest\Util\OAuth as CPOauth;
 
 class Account
 {
@@ -910,46 +909,10 @@ class Account
         $run_renewal_date = $request_context->getUser()->getRunRenewalDate()->format('F d, Y');
         $user_email = $request_context->getUser()->getEmail();
         $contact_info = $request_context->getClient()->getUserContactInfo($contact_id);
-
-        // If null, user has had their client suspended by admin.
-        // This should log the user out so they can log in again and get the correct client id
-        if (is_null($contact_info)) {
-            $host = Util::getSetting('host');
-            $protocol = $request_context->getUrlProtocol();
-            $access_token = $request_context->getUser()->getAccessToken();
-            if (!is_null($access_token)) {
-                $request_context->getClient()->revokeToken($access_token);
-            }
-            $cp_access_token_cookie_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
-            $cp_refresh_token_cookie_name = Util::getCookieName(CPOauth::$cp_refresh_token_cookie_key);
-
-            setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
-            setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
-
-            // Destroy the session
-            $_SESSION = array();
-
-            if (ini_get("session.use_cookies")) {
-                $params = session_get_cookie_params();
-                setcookie(
-                    session_name(),
-                    '',
-                    time() - 42000,
-                    $params["path"],
-                    $params["domain"],
-                    $params["secure"],
-                    $params["httponly"]
-                );
-            }
-
-            session_destroy();
-            $redirect_uri = "{$protocol}://{$host}/";
-            return new RedirectResponse($redirect_uri);
-        }
-
         $first_name = $contact_info['firstName'];
         $last_name = $contact_info['lastName'];
         $company_name = $contact_info['companyName'] ?? "";
+
 
         $contact_info = [
             'layout_theme' => 'b',
