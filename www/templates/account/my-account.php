@@ -64,9 +64,6 @@ global $support_link;
                         <div class="info">
                             <p><?= htmlspecialchars($company_name); ?></p>
                             <p><?= htmlspecialchars($email) ?></p>
-                            <?php if ($vat_number) : ?>
-                            <p>VAT Number: <?= htmlspecialchars($vat_number) ?></p>
-                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

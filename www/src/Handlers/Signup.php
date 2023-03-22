@@ -12,7 +12,7 @@ use Respect\Validation\Rules;
 use Respect\Validation\Exceptions\NestedValidationException;
 use WebPageTest\CPGraphQlTypes\BraintreeBillingAddressInput as BillingAddress;
 use WebPageTest\CPGraphQlTypes\ChargifyAddressInput;
-use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType as ChargifySubscription;
+use WebPageTest\CPGraphQlTypes\ChargifySubscription;
 use WebPageTest\CPGraphQlTypes\CPSignupInput;
 use WebPageTest\CPGraphQlTypes\CustomerInput;
 use GuzzleHttp\Exception\RequestException;
@@ -311,7 +311,6 @@ class Signup
         $first_name = $_POST["first-name"];
         $last_name = $_POST["last-name"];
         $company_name = $_POST["company-name"] ?? null;
-        $vat_number = $_POST["vat-number"] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
@@ -319,10 +318,6 @@ class Signup
 
             if (!(is_null($company_name) || (empty($company_name)))) {
                 $contact_info_validator->assert($company_name);
-            }
-
-            if (!(is_null($vat_number) || (empty($vat_number)))) {
-                $contact_info_validator->assert($vat_number);
             }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
@@ -348,7 +343,6 @@ class Signup
         $vars->first_name = $first_name;
         $vars->last_name = $last_name;
         $vars->company = $company_name;
-        $vars->vat_number = $vat_number;
         $vars->password = $password;
         $vars->email = $email;
 
@@ -379,14 +373,17 @@ class Signup
           "subscription_plan_id" => $body->plan
         ], $billing_address);
 
-        $subscription = new ChargifySubscription($body->plan, $body->nonce, $chargify_address, $body->vat_number);
+        $subscription = new ChargifySubscription([
+          "plan_handle" => $body->plan,
+          "payment_token" => $body->nonce
+        ], $chargify_address);
 
         $options = [
-            'first_name' => $body->first_name,
-            'last_name' => $body->last_name,
-            'company' => $body->company,
-            'email' => $body->email,
-            'password' => $body->password,
+                'first_name' => $body->first_name,
+                'last_name' => $body->last_name,
+                'company' => $body->company,
+                'email' => $body->email,
+                'password' => $body->password,
         ];
 
         $cp_signup_input = new CPSignupInput($options, $customer, $subscription);
