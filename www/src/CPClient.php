@@ -215,8 +215,7 @@ class CPClient
                         'subscriptionId',
                         'planRenewalDate',
                         'nextBillingDate',
-                        'status',
-                        'vatNumber'
+                        'status'
                     ])
             ]);
 
@@ -247,7 +246,6 @@ class CPClient
             $user->setCompanyName($data['userIdentity']['activeContact']['companyName']);
             $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
             $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
-            $user->setVatNumber($data['wptCustomer']['vatNumber']);
 
             return $user;
         } catch (GuzzleException $e) {
