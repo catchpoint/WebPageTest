@@ -41,9 +41,19 @@ if (Util::getSetting('cp_auth')) {
         if (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
-        } elseif (is_a($e, ClientException::class) || is_a($e, UnauthorizedException::class)) {
+        } elseif (
+            is_a($e, ClientException::class) ||
+            is_a($e, UnauthorizedException::class) ||
+            is_a($e, PortalException::class)
+        ) {
             $route = $e->getRoute();
-            $message = $e->getMessage();
+            $message = "";
+            if (is_a($e, PortalException::class)) {
+                $message = "There was a problem with you account. Please reach out to customer service." .
+                          "Error number: {$e->getErrorNumber()}";
+            } else {
+                $message = $e->getMessage();
+            }
             $host = Util::getSetting('host');
             if (Util::getSetting('php_sessions')) {
                 unset($_SESSION['client_error']);
@@ -67,8 +77,8 @@ if (Util::getSetting('cp_auth')) {
             echo '</pre>';
             exit();
         } else {
-          error_log($e->getMessage());
-          throw $e;
+            error_log($e->getMessage());
+            throw $e;
         }
     });
 }

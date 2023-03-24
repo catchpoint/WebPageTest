@@ -11,13 +11,14 @@ class Customer
     private string $customer_id;
     private string $subscription_id;
     private string $wpt_plan_id;
-    private ?DateTime $billing_period_end_date;
     private float $subscription_price;
     private string $formatted_subscription_price;
     private string $status;
     private string $wpt_plan_name;
-    private ?string $next_wpt_plan_id;
     private int $monthly_runs;
+
+    private ?DateTime $billing_period_end_date;
+    private ?string $next_wpt_plan_id;
     private ?string $masked_credit_card;
     private ?string $cc_last_four;
     private ?string $credit_card_type;
