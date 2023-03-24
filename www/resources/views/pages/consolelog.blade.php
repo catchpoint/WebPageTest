@@ -2,7 +2,7 @@
 
 @section('style')
 <style>
-    #console-log {
+    .console-log {
         text-align: left;
         width: 100%;
         display: block;
@@ -10,21 +10,21 @@
         margin-right: auto;
     }
 
-    #console-log th {
+    .console-log th {
         padding: 0.2em 1em;
         text-align: left;
     }
 
-    #console-log td {
+    .console-log td {
         padding: 0.2em 1em;
         max-width: 100px;
     }
 
-    #console-log .message {
+    .console-log .message {
         max-width: 700px;
     }
 
-    #console-log .url {
+    .console-log .url {
         max-width: 300px;
     }
 
@@ -37,6 +37,11 @@
 
     tr.even {
         background: whitesmoke;
+    }
+    .step-summary {
+        display: inline-block;
+        padding: 1.5em .2em 0;
+        cursor: pointer;
     }
 </style>
 @endsection
@@ -53,34 +58,40 @@
                         </div>
                     </div>
                     <div id="result" class="results_body">
-
                         <div class="overflow-container">
-                            <table id="console-log" class="translucent">
-                                <thead>
-                                <tr>
-                                    <th>Source</th>
-                                    <th>Level</th>
-                                    <th>Message</th>
-                                    <th>URL</th>
-                                    <th>Line</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach ($log as &$log_entry)
-                                <tr @if ($loop->even) class="even" @endif>
-                                    <td width="50" class="source">{{ $log_entry['source'] }} </td>
-                                    <td width="50" class="level">{{ $log_entry['level'] }} </td>
-                                    <td class="message">
-                                        <div class="scrollable">{{ $log_entry['text'] }}</div>
-                                    </td>
-                                    <td class="url">
-                                        <div class="scrollable"><a href={{ $log_entry['url'] }}>{{ $log_entry['url'] }}</a></div>
-                                    </td>
-                                    <td width="50" class="line">{{ @$log_entry['line'] }}</td>
-                                </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
+                            @foreach ($log as $stepnum => $steplog)
+                                <details open>
+                                    <summary>
+                                        <h4 class="step-summary">Step_{{ $stepnum }}</h4>
+                                    </summary>
+                                    <table class="console-log" class="translucent">
+                                        <thead>
+                                        <tr>
+                                            <th>Source</th>
+                                            <th>Level</th>
+                                            <th>Message</th>
+                                            <th>URL</th>
+                                            <th>Line</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach ($steplog as $log_entry)
+                                        <tr @if ($loop->even) class="even" @endif>
+                                            <td width="50" class="source">{{ $log_entry['source'] }} </td>
+                                            <td width="50" class="level">{{ $log_entry['level'] }} </td>
+                                            <td class="message">
+                                                <div class="scrollable">{{ $log_entry['text'] }}</div>
+                                            </td>
+                                            <td class="url">
+                                                <div class="scrollable"><a href={{ $log_entry['url'] }}>{{ $log_entry['url'] }}</a></div>
+                                            </td>
+                                            <td width="50" class="line">{{ @$log_entry['line'] }}</td>
+                                        </tr>
+                                        @endforeach
+                                        </tbody>
+                                    </table>
+                                </details>
+                            @endforeach
                         </div>
                     </div>
                 </div>
