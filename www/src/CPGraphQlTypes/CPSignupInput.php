@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace WebPageTest\CPGraphQlTypes;
 
 use WebPageTest\CPGraphQlTypes\CustomerInput as Customer;
-use WebPageTest\CPGraphQlTypes\ChargifySubscription as Subscription;
+use WebPageTest\CPGraphQlTypes\ChargifySubscriptionInputType as Subscription;
 use Exception;
 
 class CPSignupInput

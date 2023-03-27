@@ -283,7 +283,8 @@ final class AccountTest extends TestCase
                 'email' => $email,
                 'first_name' => $body->first_name,
                 'last_name' => $body->last_name,
-                'company_name' => $body->company_name
+                'company_name' => $body->company_name,
+                'vat_number' => ""
             ]);
 
         $req->setClient($client);
@@ -315,7 +316,8 @@ final class AccountTest extends TestCase
                 'email' => $email,
                 'first_name' => $body->first_name,
                 'last_name' => $body->last_name,
-                'company_name' => ""
+                'company_name' => "",
+                'vat_number' => ""
             ]);
 
         $req->setClient($client);
@@ -470,7 +472,7 @@ final class AccountTest extends TestCase
             'country' => 'US',
             'state' => 'NY',
             'street-address' => '123 Main St',
-            'zipcode' => '12345-123'
+            'zipcode' => '12345-123',
         ];
 
         $expected = new stdClass();
@@ -481,6 +483,33 @@ final class AccountTest extends TestCase
         $expected->state = 'NY';
         $expected->street_address = '123 Main St';
         $expected->zipcode = '12345-123';
+
+        $actual = Account::validateSubscribeToAccount($post);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testValidateSubscribeToAccountWithVat(): void
+    {
+        $post = [
+            'nonce' => 'abcdef',
+            'plan' => 'ap1',
+            'city' => 'New York',
+            'country' => 'US',
+            'state' => 'NY',
+            'street-address' => '123 Main St',
+            'zipcode' => '12345-123',
+            'vat-number' => 'EU12334235'
+        ];
+
+        $expected = new stdClass();
+        $expected->nonce = 'abcdef';
+        $expected->plan = 'ap1';
+        $expected->city = 'New York';
+        $expected->country = 'US';
+        $expected->state = 'NY';
+        $expected->street_address = '123 Main St';
+        $expected->zipcode = '12345-123';
+        $expected->vat_number = 'EU12334235';
 
         $actual = Account::validateSubscribeToAccount($post);
         $this->assertEquals($expected, $actual);

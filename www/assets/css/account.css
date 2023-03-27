@@ -2355,6 +2355,16 @@ form:invalid button[type="submit"] {
   align-items: stretch;
 }
 
+.vat-number-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.vat-number-container input {
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+}
+
 .signup-flow-layout .notification-banner__error {
   color: rgb(14, 30, 56);
 }
