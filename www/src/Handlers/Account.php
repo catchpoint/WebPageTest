@@ -226,12 +226,17 @@ class Account
         $first_name = $post_body['first-name'];
         $last_name = $post_body['last-name'];
         $company_name = $post_body['company-name'] ?? null;
+        $vat_number = $post_body['vat-number'] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
             $contact_info_validator->assert($last_name);
             if (!is_null($company_name) && !empty($company_name)) {
                 $contact_info_validator->assert($company_name);
+            }
+
+            if (!is_null($vat_number) && !empty($vat_number)) {
+                $contact_info_validator->assert($vat_number);
             }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
@@ -247,6 +252,9 @@ class Account
             $body->company_name = $company_name;
         }
 
+        if (!is_null($vat_number)) {
+            $body->vat_number = $vat_number;
+        }
         return $body;
     }
 
@@ -256,7 +264,7 @@ class Account
      * #[Route(Http::POST, '/account', 'change-info')]
      *
      * @param WebPageTest\RequestContext $request_context
-     * @param object{first_name: string, last_name: string, company_name: ?string} $body
+     * @param object{first_name: string, last_name: string, company_name: ?string, vat_number: ?string} $body
      * @return string $redirect_uri
      */
     public static function changeContactInfo(RequestContext $request_context, object $body): string
@@ -267,7 +275,8 @@ class Account
             'email' => $email,
             'first_name' => $body->first_name,
             'last_name' => $body->last_name,
-            'company_name' => $body->company_name ?? ""
+            'company_name' => $body->company_name ?? "",
+            'vat_number' => $body->vat_number ?? ""
         ];
 
         try {
@@ -373,7 +382,9 @@ class Account
      *  country: string,
      *  state: string,
      *  'street-address': string,
-     *  zipcode: string} $post_body
+     *  zipcode: string,
+     *  vat-number: string|null
+     *  } $post_body
      *
      * @return object{
      *  nonce: string,
@@ -382,7 +393,8 @@ class Account
      *  country: string,
      *  state: string,
      *  street_address: string,
-     *  zipcode: string
+     *  zipcode: string,
+     *  vat-number: string|null
      *  } $body
      */
     public static function validateSubscribeToAccount(array $post_body): object
@@ -396,6 +408,7 @@ class Account
         $state = $post_body['state'] ?? "";
         $street_address = $post_body['street-address'] ?? "";
         $zipcode = $post_body['zipcode'] ?? "";
+        $vat_number = $post_body['vat-number'] ?? "";
 
         if (
             empty($nonce) ||
@@ -417,6 +430,10 @@ class Account
         $body->street_address = $street_address;
         $body->zipcode = $zipcode;
 
+        if (!empty($vat_number)) {
+            $body->vat_number = $vat_number;
+        }
+
         return $body;
     }
 
@@ -434,7 +451,9 @@ class Account
             'zipcode' => $body->zipcode
         ]);
 
-        $subscription = new ChargifySubscriptionInputType($body->plan, $body->nonce, $address);
+        $vat_number = $body->vat_number ?? null;
+
+        $subscription = new ChargifySubscriptionInputType($body->plan, $body->nonce, $address, $vat_number);
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
@@ -912,6 +931,7 @@ class Account
         $first_name = $contact_info['firstName'];
         $last_name = $contact_info['lastName'];
         $company_name = $contact_info['companyName'] ?? "";
+        $vat_number = $request_context->getUser()->getVatNumber() ?? "";
 
 
         $contact_info = [
@@ -926,6 +946,7 @@ class Account
             'last_name' => htmlspecialchars($last_name),
             'email' => $user_email,
             'company_name' => htmlspecialchars($company_name),
+            'vat_number' => htmlspecialchars($vat_number),
             'id' => $contact_id
         ];
 
