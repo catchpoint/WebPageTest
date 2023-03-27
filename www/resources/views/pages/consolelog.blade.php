@@ -38,7 +38,7 @@
     tr.even {
         background: whitesmoke;
     }
-    .step-summary {
+    .console-log-step {
         display: inline-block;
         padding: 1.5em .2em 0;
         cursor: pointer;
@@ -62,7 +62,7 @@
                             @foreach ($log as $stepnum => $steplog)
                                 <details open>
                                     <summary>
-                                        <h4 class="step-summary">Step_{{ $stepnum }}</h4>
+                                        <h4 class="console-log-step">Step_{{ $stepnum }}</h4>
                                     </summary>
                                     <table class="console-log" class="translucent">
                                         <thead>
