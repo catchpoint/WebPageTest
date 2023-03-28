@@ -2377,7 +2377,7 @@ function LogTest(&$test, $testId, $url)
     if ($supportsCPAuth && isset($request_context) && !is_null($request_context->getUser())) {
         $user_info = $request_context->getUser()->getEmail();
         $client_id = $request_context->getUser()->getOwnerId();
-        $create_contact_id = $request_context->getUser()->getUserId();
+        $create_contact_id = $request_context->getUser()->getContactId();
     } elseif ($supportsSaml) {
         $saml_email = GetSamlEmail();
         $client_id = GetSamlAccount();
@@ -2408,6 +2408,7 @@ function LogTest(&$test, $testId, $url)
         'private' => $test['private'],
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
+        'testUserId' => @$test['user_id'],
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
@@ -2435,6 +2436,7 @@ function LogTest(&$test, $testId, $url)
             'private' => $test['private'],
             'testUID' => @$test['uid'],
             'testUser' => $user_info,
+            'testUserId' => @$test['user_id'],
             'video' => @$video,
             'label' => @$test['label'],
             'owner' => @$test['owner'],
