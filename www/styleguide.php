@@ -52,6 +52,7 @@ function getTOC()
             $ret .= sprintf('<li><a href="?ex=%s:%s">%s: %s</a></li>', $file, $idx, $file, $ex['title']);
         }
     }
+    $ret .= sprintf('<li><a href="%s">HOME</li>', $_SERVER['PHP_SELF']);
     $ret .= '</ul>';
     return $ret;
 }
