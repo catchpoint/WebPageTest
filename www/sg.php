@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once 'common.inc';
+if (!$privateInstall && !$admin) {
+    header("HTTP/1.1 403 Unauthorized");
+    exit;
+}
 
 define('SG', 1);
 
