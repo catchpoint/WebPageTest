@@ -5,7 +5,7 @@
     @yield('style')
     <style>
         body {
-            display: inherit !important
+            display: inherit !important;
         }
 
         .styleguide-container h1 {
