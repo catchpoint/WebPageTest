@@ -1706,9 +1706,8 @@ footer .logo img {
   margin: 0;
 }
 
-body:not(.home) footer .logo {
-  background: url(/assets/images/wpt-logo-dark.svg) no-repeat;
-  background-size: contain;
+body:not(.home) footer .logo path {
+  fill: #142036;
 }
 
 body:not(.home) footer .logo img {
@@ -2771,7 +2770,7 @@ video:focus {
 }
 
 #main {
-  padding: 1.5em 0;
+  padding: 6em 0 1.5rem;
 }
 
 .home #main {
@@ -2819,6 +2818,7 @@ body.result #main {
   background: #141e33;
   color: #fff;
   width: 100%;
+  padding-top: 6rem;
 }
 
 .results_grades_contain,
@@ -2832,7 +2832,9 @@ body.result #main {
 }
 
 .home_feature {
-  background: #fff;
+  background: transparent;
+  padding: 0 0;
+  margin-top: 0;
 }
 
 .home_feature_hed_contain {
@@ -3234,10 +3236,13 @@ header .pro-flag {
 }
 
 .home_feature_hed p {
-  font-size: 1.75rem;
+  font-size: 1.55rem;
   line-height: 1.5;
   margin: 0.5em 0 0;
-  max-width: 26em;
+  max-width: 31em;
+}
+.home_feature_hed p .home_feature_hed_highlighter {
+  color: #FFC763;
 }
 
 .home_feature_hed a {
@@ -3252,7 +3257,7 @@ header .pro-flag {
 }
 
 .home_feature_hed_visual {
-  flex: 0 1 45%;
+  flex: 0 1 35%;
   border: 6px solid #fff;
   box-shadow: 0px 0px 5px 3px #fe89ff7a;
   background: #fff;
@@ -3277,12 +3282,12 @@ header .pro-flag {
 }
 
 .home_feature_hed_contain {
-  padding: 0 1.5rem;
+  padding: 6rem 1.5rem 0;
 }
 
 @media (min-width: 50em) {
   .home_feature_hed_contain {
-    padding: 0 3rem;
+    padding: 6rem 3rem 0;
   }
 }
 
@@ -5404,6 +5409,7 @@ label.test_preset_profile {
   max-width: 40em;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
+  display: none;
 }
 
 .cta-banner p {
@@ -8429,7 +8435,7 @@ body.screenshot .results_header h2 {
   padding: 0;
   height: 1rem;
 }
-
+body.screenshot wpt-header,
 body.screenshot .alert-banner,
 body.screenshot .cta-banner,
 body.screenshot .experiment_meta-more,
@@ -8471,7 +8477,9 @@ body.screenshot.result:not(.compare-experiment)
   p {
   display: none !important;
 }
-
+body.screenshot .results_header_contain {
+  padding-top: 2rem;
+}
 body.screenshot.result:not(.compare-experiment)
   .results_main-lh
   .results_header {

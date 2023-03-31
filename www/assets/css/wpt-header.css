@@ -6,29 +6,77 @@ WebPageTest Global Header.
   /* NOTE! Keep this in sync with the breakpoints below, it is for the JS */
   --wpt-header-layoutchange: 86em;
 }
+wpt-header {
+  --wpt-header-text: #fff;
+  --wpt-header-activeborder: rgba(255, 255, 255, 0.2);
+  --wpt-header-border: #fff;
+  --wpt-header-background: #1e4078;
+  --wpt-user-icon: url(/assets/images/icon-user.svg) left 50% no-repeat;
+}
+wpt-header * {
+  transition: color .2s linear;
+}
+.account-layout wpt-header,
+body.history wpt-header,
+body.about wpt-header,
+body.common wpt-header {
+  --wpt-header-text: #1e4078;
+  --wpt-header-activeborder: #091a3f33;
+  --wpt-header-border: #fff;
+  --wpt-header-background: #fff;
+  --wpt-user-icon: url(/assets/images/icon-user-dark.svg) left 50% no-repeat;
+}
 
 wpt-header {
   width: 100%;
   grid-column: 1 / 13;
   position: relative;
-  z-index: 9999999;
+  z-index: 999;
+  background: none;
+  border: none;
 }
 /* for compat with systems that set box-sizing globally */
 wpt-header * {
   box-sizing: content-box;
 }
 
+cp-header {
+  background: #3578BD;
+  display: block;
+  border-bottom: 1px solid var(--wpt-header-border);
+}
+cp-header a {
+  display: flex;
+  width: 100%;
+  align-content: center;
+  justify-content: space-between;
+  padding: 0 2vw;
+  border: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 4.5rem;
+}
+cp-header a svg {
+  max-width: 192px;
+  flex: 1 1 auto;
+}
+
+
 wpt-header header {
   position: relative;
-  color: #fff;
+  color: var(--wpt-header-text);
   font-family: Open Sans, sans-serif;
   margin: 0;
   display: flex;
   flex-flow: row wrap;
   align-content: top;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-  border-bottom: 4px solid #5dbbe8;
+  box-shadow: none;
+  border-bottom: 1px solid var(--wpt-header-activeborder);
+  background: transparent;
+  margin-bottom: -6rem;
 }
+
+
 
 wpt-header a {
   color: #fff;
@@ -43,7 +91,37 @@ wpt-header .wptheader_logo {
   box-sizing: border-box;
   align-content: center;
   padding: 1em 0 1em 1.5rem;
-  background: #141e33;
+  background: none;
+  line-height: 3rem;
+  font-weight: 300;
+  font-size: .9em;
+  margin: 0;
+}
+wpt-header .wptheader_logo a {
+  color: var(--wpt-header-text);
+}
+wpt-header .wptheader_logo a:hover,
+wpt-header .wptheader_logo a:focus {
+  text-decoration: underline;
+}
+wpt-header .wptheader_logo a:first-child {
+  margin-right: .7rem;
+  
+}
+wpt-header .wptheader_logo a:last-child {
+  font-weight: 700;
+}
+wpt-header .wptheader_logo a:first-child:after {
+  content: "";
+  border-left: 5px solid var(--wpt-header-text);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  padding: 0;
+  font-size: 0;
+  margin-left: .7rem;
 }
 
 @media (min-width: 50em) {
@@ -53,7 +131,7 @@ wpt-header .wptheader_logo {
 }
 
 wpt-header .wptheader_logo img {
-  width: 200px;
+  width: 120px;
   max-width: 70%;
 }
 
@@ -68,9 +146,9 @@ wpt-header .wptheader_menubtn {
   height: 5rem;
   max-height: 5rem;
   box-sizing: border-box;
-  color: #fff;
+  color: var(--wpt-header-text);
   border: 0;
-  background: #141e33 url(/assets/images/wpt-header-menubtn.svg) 50% 50%
+  background: transparent url(/assets/images/wpt-header-menubtn.svg) 50% 50%
     no-repeat;
   text-indent: -9999px;
   background-size: 16px auto;
@@ -95,13 +173,15 @@ wpt-header .wptheader_menubtn-expanded {
 wpt-header nav {
   display: block;
   background: #141e33;
-  top: calc(5rem + 4px);
+  color: #fff;
+  top: calc(5rem + 1px);
   position: absolute;
   width: 90%;
   right: 0;
   z-index: 1000;
   box-shadow: -5px 2px 5px rgba(0, 0, 0, 0.2);
   min-height: calc(100vh - 5rem + 4px);
+  /* box-shadow: none; */
 }
 
 wpt-header ul,
@@ -159,13 +239,14 @@ wpt-header .wptheader_acct {
   display: flex;
   margin: 1rem;
   padding: 2rem 1rem 2rem 2rem;
-  background: url(/assets/images/icon-user.svg) left 50% no-repeat;
+  background: var(--wpt-user-icon);
+  color: var(--wpt-header-text);
 }
 
 wpt-header .wptheader_acct a,
-wpt-header .wptheader_acct button {
+wpt-header .wptheader_acct button[type="submit"] {
   background: none;
-  color: #fff;
+  color: var(--wpt-header-text);
   font-size: 1em;
   border: 0;
   cursor: pointer;
@@ -179,7 +260,7 @@ wpt-header .wptheader_acct button:hover {
 }
 
 wpt-header .wptheader_acct li:first-child {
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid var(--wpt-header-activeborder);
 }
 
 wpt-header .wptheader_nav_menu a span,
@@ -200,13 +281,11 @@ wpt-header .wptheader_nav_menu summary span:after {
   margin-left: 0.5rem;
 }
 
-wpt-header .wptheader_nav_menu details[open] summary span:after {
-  border-top-color: #1e4078;
-}
+
 
 wpt-header .wptheader_nav_menu_link a {
   padding: 0.5em 0;
-  color: #1e4078;
+  color: #fff;
   text-decoration: none;
   font-size: 1rem;
   font-weight: 700;
@@ -269,24 +348,38 @@ wpt-header .wptheader_nav_cta a {
 }
 
 wpt-header .wptheader_nav li details[open] {
-  background: #fff;
-  color: #1e4078;
+  background: var(--wpt-header-text);
+  color: var(--wpt-header-border);
 }
 
-wpt-header .wptheader_nav li > a:hover,
-wpt-header .wptheader_nav li > a:focus,
+wpt-header .wptheader_nav > li > a:hover,
+wpt-header .wptheader_nav > li > a:focus,
 wpt-header .wptheader_nav details:hover summary,
 wpt-header .wptheader_nav details:focus summary {
+  background: #1e4078;;
+  color: #fff;
+}
+
+wpt-header .wptheader_nav details[open] summary,
+wpt-header .wptheader_nav details[open] summary {
   background: #fff;
   color: #1e4078;
 }
 
 wpt-header .wptheader_nav_menu details:hover summary span:after,
 wpt-header .wptheader_nav_menu details:focus summary span:after {
-  border-top-color: #1e4078;
+  border-top-color: #fff;
+}
+wpt-header .wptheader_nav_menu details[open] summary span:after {
+  border-top-color: #101623;
 }
 
 @media (min-width: 86em) {
+  wpt-header a,
+  wpt-header .wptheader_nav details summary span,
+  wpt-header .wptheader_nav details summary span {
+    color: var(--wpt-header-text);
+  }
   wpt-header .wptheader_nav li > a:hover,
   wpt-header .wptheader_nav li > a:focus,
   wpt-header .wptheader_nav details:hover summary,
@@ -296,20 +389,17 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
   wpt-header .wptheader_nav li > a:hover span,
   wpt-header .wptheader_nav li > a:focus span,
   wpt-header .wptheader_nav li details[open] summary span,
-  wpt-header
-    .wptheader_nav
-    li
-    details:focus
-    summary
-    span
-    .wptheader_nav
-    li
-    details
-    summary:hover
-    span {
-    background: #fff;
-    color: #1e4078;
+  wpt-header .wptheader_nav li details:focus summary span .wptheader_nav li details summary:hover span {
+    background: var(--wpt-header-text);
+    color: var(--wpt-header-background);
   }
+  wpt-header .wptheader_nav_menu summary span:after {
+    border-top: 5px solid var(--wpt-header-text);
+  }
+  wpt-header .wptheader_nav_menu details[open] summary span:after {
+    border-top: 5px solid var(--wpt-header-background);
+  }
+  
   wpt-header .wptheader_menu[open] .wptheader_menubtn {
     display: none !important;
   }
@@ -320,13 +410,14 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     position: relative;
     top: auto;
     display: flex !important;
-    flex: 1 1 80%;
+    flex: 1 1 60%;
     width: auto;
     box-shadow: none;
     min-height: auto;
     right: auto;
     align-items: center;
     justify-content: space-between;
+    background: none;
   }
   wpt-header nav > ul {
     display: flex;
@@ -349,11 +440,12 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     min-width: 15rem;
     padding-top: 2rem;
     line-height: 1.3rem;
+    border-top: 1px solid var(--wpt-header-activeborder);
   }
   wpt-header nav ul li .wptheader_nav_menu_content:before {
     content: "";
     position: absolute;
-    border-bottom: 5px solid #fff;
+    border-bottom: 5px solid var(--wpt-header-text);
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     top: -5px;
@@ -364,9 +456,9 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     padding: 0;
   }
   wpt-header {
-    background: #141e33;
+    /* background: transparent; */
     display: block;
-    border-bottom: 4px solid #5dbbe8;
+    /* border-bottom: 1px solid #fff; */
   }
   wpt-header header {
     flex-flow: row nowrap;
@@ -374,9 +466,8 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     align-content: center;
     justify-content: space-between;
     padding: 0 2vw;
-    border: 0;
     max-width: 1400px;
-    margin: 0 auto;
+    margin: 0 auto -6rem;
     height: 6rem;
   }
   wpt-header .wptheader_logo {
@@ -386,6 +477,7 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     padding: 0;
     background: none;
     padding-left: 3vw;
+    line-height: 6rem;
   }
   wpt-header .wptheader_nav {
     justify-content: space-between;
@@ -412,7 +504,7 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
   }
   wpt-header li > a.wptheader-current span,
   wpt-header li > details summary.wptheader-current span {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--wpt-header-activeborder);
   }
   wpt-header .wptheader_nav_menu_content li > a,
   wpt-header .wptheader_nav_menu_content summary {
@@ -457,3 +549,32 @@ wpt-header .wptheader_nav_menu details:focus summary span:after {
     }
   }
 }
+
+
+
+/* overrides for marketing pages */
+.navigation_menu + .pro_section {
+  min-height: 600px !important;
+  padding-top: 9rem !important;
+  
+}
+.navigation_menu + div + .hero_section_block {
+  margin-top: -6rem;
+  padding-top: 12rem;
+}
+@media (min-width: 50em){
+  .navigation_menu + .pro_section {
+    padding-top: 6rem !important;
+  }
+  .navigation_menu + div + .hero_section_block {
+    margin-top: 0;
+    padding-top: 12rem;
+  }
+}
+@media (min-width: 70em){
+  .navigation_menu + .pro_section {
+    min-height: 500px !important;
+  }
+}
+
+
