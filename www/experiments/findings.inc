@@ -29,8 +29,8 @@ if ($experiment) {
         array("chromeUserTiming.LargestContentfulPaint", "Largest Contentful Paint", "s", null, true),
         array("chromeUserTiming.CumulativeLayoutShift", "Cumulative Layout Shift", "", array("Better", "Worse"), false),
         array("TotalBlockingTime", "Total Blocking Time", "s", null, false),
-        array("visualComplete", "Visual Complete", "s", null, true),
-        array("fullyLoaded", "Fully Loaded", "s", null, true),
+        //array("visualComplete", "Visual Complete", "s", null, true),
+        array("carbon-footprint", "Carbon Footprint", "g", array("Lighter", "Heavier"), false),
         array("bytesIn", "Page Weight", "KB", array("Lighter", "Heavier"), false)
     );
 
@@ -54,6 +54,12 @@ if ($experiment) {
                     foreach ($diffMetrics as $metric) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
+
+                        if( $metric[0] === "carbon-footprint" ){
+                            $experimentMetric = $experimentMetric['sustainable-web-design'];
+                            $controlMetric = $controlMetric['sustainable-web-design'];
+                        }
+
                         if ($ttfbDiffNotable && $removeTTFBfromDiffs && $metric[4]) {
                             $experimentMetric = $experimentMetric - $experimentTTFB;
                             $controlMetric = $controlMetric - $controlTTFB;
@@ -71,7 +77,7 @@ if ($experiment) {
 
                     // additional non-metric comparisons
                     if ($blockingReqsDiff !== 0) {
-                        echo '<th align="center" valign="middle">Render-Blocking Requests</th>';
+                        echo '<th align="center" valign="middle">Blocking Requests</th>';
                     }
 
                     ?>
@@ -81,6 +87,10 @@ if ($experiment) {
                     foreach ($diffMetrics as $metric) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
+                        if( $metric[0] === "carbon-footprint" ){
+                            $experimentMetric = $experimentMetric['sustainable-web-design'];
+                            $controlMetric = $controlMetric['sustainable-web-design'];
+                        }
                         if ($ttfbDiffNotable && $removeTTFBfromDiffs && $metric[4]) {
                             $experimentMetric = $experimentMetric - $experimentTTFB;
                             $controlMetric = $controlMetric - $controlTTFB;

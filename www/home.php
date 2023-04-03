@@ -89,7 +89,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     ?>
 </head>
 
-<body class="home feature-pro">
+<body class="home feature-cc">
     <?php
     $tab = 'Start Test';
     include 'header.inc';
@@ -252,6 +252,9 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run.</small></label>
+                                                        </div>
+                                                    <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                                                     </div>
                                                     <div class="fieldrow">
@@ -280,6 +283,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <label for="private-simple"><input type="checkbox" name="private" id="private-simple" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
                                                         </div>
                                                     <?php endif; ?>
+                                                        
                                                 </div>
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
@@ -544,6 +548,9 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         </div>
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
+                                                <li>
+                                                    <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run.</small></label>
+                                                </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
                                                         Stop Test at Document Complete<br>

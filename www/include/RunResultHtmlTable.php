@@ -32,6 +32,7 @@ class RunResultHtmlTable
     const COL_DOC_COMPLETE = 'DocComplete';
     const COL_DOC_REQUESTS = 'RequestsDoc';
     const COL_DOC_BYTES = 'BytesInDoc';
+    const COL_ENV_IMP = 'carbon-footprint';
 
 
   /* @var TestInfo */
@@ -71,7 +72,7 @@ class RunResultHtmlTable
         $this->enabledColumns[self::COL_RESULT] = true;
         $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
         $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
-                           self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME);
+                           self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME, self::COL_ENV_IMP);
         foreach ($checkByMetric as $col) {
             $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
@@ -245,6 +246,13 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_COST)) {
             $out .= $this->_headCell("Cost");
         }
+        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+            if ($this->useShortNames) {
+                $out .= $this->_headCell('<abbr title="co2 Per Visit">co2</abbr>');
+            } else {
+                $out .= $this->_headCell("Carbon Footprint");
+            }
+        }
 
         return $out;
     }
@@ -344,6 +352,9 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_COST)) {
            // $out .= $this->_headCell("Cost");
             $out .= $this->_bodyCell("", "What was the avg. download cost?");
+        }
+        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+            $out .= $this->_bodyCell("", "How much carbon does 1 visit emit?");
         }
 
         return $out;
@@ -511,6 +522,13 @@ class RunResultHtmlTable
                 $out .= "<td>&nbsp;</td>";
             } else {
                 $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $this->_costColumnText($stepResult), $class);
+            }
+        }
+        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+            if ($cachedRun) {
+                $out .= "<td>&nbsp;</td>";
+            } else {
+                $out .= $this->_bodyCell($idPrefix . "Footprint" . $idSuffix, $this->_getSimpleMetric($stepResult, "carbon-footprint")['sustainable-web-design'] . '<span class="units">g</span>', $class);
             }
         }
 
