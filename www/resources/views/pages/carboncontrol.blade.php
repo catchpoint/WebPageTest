@@ -237,7 +237,7 @@
                             
                         </div>
 
-                        <p><small><em>Credit: Trees graphic by <a href="https://www.figma.com/@thevisualteam">@thevisualteam</a> | CC Licensed on Figma</em></small></p>                        
+                        <p class="treecreds"><small><em>Credit: Trees graphic by <a href="https://www.figma.com/@thevisualteam">@thevisualteam</a> | CC Licensed on Figma</em></small></p>                        
                         @else
                         <p class="ei_nodata">This test contains no Carbon Control data. Try re-running the test to get information on this site's Carbon Control.</p>
                         @endif
