@@ -15,7 +15,7 @@
             <?php } else { ?>
                 <div class="home_feature_hed home_feature_hed-main">
                     <div class="home_feature_hed_text">
-                        <h1 class="attention">Test, Experiment, Improve!</h1>
+                        <h1 class="attention">Test. Experiment. Improve!</h1>
                         <p><strong>WebPageTest.</strong> <span class="home_feature_hed_highlighter">The gold standard in web performance testing. </span></p>
 
                     </div>
