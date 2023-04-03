@@ -50,7 +50,7 @@ cp-header a {
   width: 100%;
   align-content: center;
   justify-content: space-between;
-  padding: 0 2vw;
+  padding: 0 1.5rem;
   border: 0;
   max-width: 1400px;
   margin: 0 auto;
@@ -121,6 +121,9 @@ wpt-header .wptheader_logo a:first-child:after {
 }
 
 @media (min-width: 50em) {
+  cp-header a {
+    padding-left: 3rem;
+  }
   wpt-header .wptheader_logo {
     padding-left: 3rem;
   }
@@ -369,6 +372,9 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
 }
 
 @media (min-width: 86em) {
+  cp-header a {
+    padding-left: 1.5rem;
+  }
   wpt-header a,
   wpt-header .wptheader_nav details summary span,
   wpt-header .wptheader_nav details summary span {
