@@ -9816,7 +9816,7 @@ font-weight: 500;
   background-image: url(/assets/images/src/icon-microchip.svg);
 }
 .ei_reduce {
-  margin: 0 0 4rem;
+  margin: 0;
 }
 .ei_reduce p, 
 .ei_reduce li,
@@ -9997,7 +9997,6 @@ font-weight: 500;
   .ei_supporting {
     display: flex;
     gap: 3rem;
-
   }
   .ei_supporting > div {
     flex: 1 1 50%;
@@ -10016,6 +10015,58 @@ font-weight: 500;
     gap: 8em;
    
   }
+}
+
+.ei_spread {
+  border-top: 1px solid #eee;
+
+  margin-bottom: 1em;
+}
+.ei_spread h3.hed_sub {
+  margin-top: .5em;
+}
+
+.badge-info {
+  display: flex;
+  gap: 2rem;
+  flex-flow: row wrap;
+  justify-items: flex-start;
+  
+}
+.badge-preview {
+  flex: 0 1 15em;
+  width: 15em;
+}
+.badge-preview img {
+  display: block;
+  width: 15em;
+  height: auto;
+  max-width: none;
+  object-fit: unset;
+}
+.badge-snip {
+  background: #1578c2;
+  padding: 1em;
+  flex: 1 1 50%;
+  border-radius: 1em;
+  align-self: center;
+  
+}
+.badge-snip p,
+.badge-snip p a {
+  font-size: .8em;
+  color: #fff;
+}
+.badge-snip p a {
+  font-size: 1em;
+}
+.badge-snip pre {
+  background: #fff;
+  padding: .5em;
+  overflow: auto;
+  display: block;
+  white-space: break-spaces;
+  line-height: 1.2;
 }
 
 body.screenshot .ei_sky {

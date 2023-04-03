@@ -202,6 +202,7 @@
                         </ul>
                         </div>
 
+                       
                         <div class="ei_supporting">
                             <div class="ei_requests">
                                 <h3 class="hed_sub">Carbon Control by Resource Type</h3>
@@ -224,10 +225,11 @@
                             </div>
 
                             <div class="ei_reduce">
-                                <h3 class="hed_sub">Looking for ways reduce your footprint?</h3>
-                                <p>Check out the new <a href="{{ $opps_url }}">Opportunities & Experiments</a> section where you’ll find observations about specific issues and bottlenecks that are causing your site to be less quick, usable, resilient, or eco-friendly than it can be!</p>
-                                <p><img  width="105" height="14" src="/assets/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"> users can run no-code experiments to see the real impact of changes and optimizations on live sites, so you can know which changes are worth your time!
-                                <strong>Looking to go Pro?</strong> <a href="/signup">Compare Plans</a></p>
+                            <h3 class="hed_sub">Looking for ways reduce your footprint?</h3>
+                            <p>Check out the new <a href="{{ $opps_url }}">Opportunities & Experiments</a> section where you’ll find observations about specific issues and bottlenecks that are causing your site to be less quick, usable, resilient, or eco-friendly than it can be!</p>
+                            <p><img  width="105" height="14" src="/assets/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"> users can run no-code experiments to see the real impact of changes and optimizations on live sites, so you can know which changes are worth your time!
+                            <strong>Looking to go Pro?</strong> <a href="/signup">Compare Plans</a></p>
+
                                 <h4>Additionally, check out these excellent resources:</h4>
                                 <ul>
                                     <li><a href="https://almanac.httparchive.org/en/2022/sustainability">2022 Web Almanac: Sustainability</a></li>
@@ -235,6 +237,21 @@
                                 </ul>
                             </div>
                             
+                        </div>
+                        <div class="ei_spread">
+                        <h3 class="hed_sub">Show your peers you care!</h3>
+                                <p>Spread the word that you're tracking your footprint by adding this badge to your site or social media!</p>
+                                <div class="badge-info">
+                                    <div class="badge-preview">
+                                        <a href="/assets/images/webpagetest-carbon-control-badge-monitored.png">
+                                        <img class="badge" src="/assets/images/webpagetest-carbon-control-badge-monitored.png" alt="We Monitor Our Footprint - WebPageTest Carbon Control from Catchpoint">
+                                        </a>
+                                    </div>
+                                    <div class="badge-snip">
+                                    <p>Copy the code below (<a href="/assets/images/webpagetest-carbon-control-badge-monitored.png">or download the image here</a>):</p>
+                                    <pre><code>&lt;a href=&quot;https://www.webpagetest.org/carbon-control&quot;&gt;&lt;img src=&quot;https://www.webpagetest.org/assets/images/webpagetest-carbon-control-badge-monitored.png&quot; alt=&quot;We Monitor Our Footprint - WebPageTest Carbon Control from Catchpoint&quot;&gt;&lt;/a&gt;</code></pre>
+                                    </div>
+                                </div>
                         </div>
 
                         <p class="treecreds"><small><em>Credit: Trees graphic by <a href="https://www.figma.com/@thevisualteam">@thevisualteam</a> | CC Licensed on Figma</em></small></p>                        
