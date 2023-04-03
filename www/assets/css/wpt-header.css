@@ -14,7 +14,7 @@ wpt-header {
   --wpt-user-icon: url(/assets/images/icon-user.svg) left 50% no-repeat;
 }
 wpt-header * {
-  transition: color .2s linear;
+  transition: color 0.2s linear;
 }
 .account-layout wpt-header,
 body.history wpt-header,
@@ -41,7 +41,7 @@ wpt-header * {
 }
 
 cp-header {
-  background: #3578BD;
+  background: #3578bd;
   display: block;
   border-bottom: 1px solid var(--wpt-header-border);
 }
@@ -61,7 +61,6 @@ cp-header a svg {
   flex: 1 1 auto;
 }
 
-
 wpt-header header {
   position: relative;
   color: var(--wpt-header-text);
@@ -75,8 +74,6 @@ wpt-header header {
   background: transparent;
   margin-bottom: -6rem;
 }
-
-
 
 wpt-header a {
   color: #fff;
@@ -94,7 +91,7 @@ wpt-header .wptheader_logo {
   background: none;
   line-height: 3rem;
   font-weight: 300;
-  font-size: .9em;
+  font-size: 0.9em;
   margin: 0;
 }
 wpt-header .wptheader_logo a {
@@ -105,8 +102,7 @@ wpt-header .wptheader_logo a:focus {
   text-decoration: underline;
 }
 wpt-header .wptheader_logo a:first-child {
-  margin-right: .7rem;
-  
+  margin-right: 0.7rem;
 }
 wpt-header .wptheader_logo a:last-child {
   font-weight: 700;
@@ -121,7 +117,7 @@ wpt-header .wptheader_logo a:first-child:after {
   vertical-align: top;
   padding: 0;
   font-size: 0;
-  margin-left: .7rem;
+  margin-left: 0.7rem;
 }
 
 @media (min-width: 50em) {
@@ -281,8 +277,6 @@ wpt-header .wptheader_nav_menu summary span:after {
   margin-left: 0.5rem;
 }
 
-
-
 wpt-header .wptheader_nav_menu_link a {
   padding: 0.5em 0;
   color: #fff;
@@ -356,7 +350,7 @@ wpt-header .wptheader_nav > li > a:hover,
 wpt-header .wptheader_nav > li > a:focus,
 wpt-header .wptheader_nav details:hover summary,
 wpt-header .wptheader_nav details:focus summary {
-  background: #1e4078;;
+  background: #1e4078;
   color: #fff;
 }
 
@@ -389,7 +383,17 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   wpt-header .wptheader_nav li > a:hover span,
   wpt-header .wptheader_nav li > a:focus span,
   wpt-header .wptheader_nav li details[open] summary span,
-  wpt-header .wptheader_nav li details:focus summary span .wptheader_nav li details summary:hover span {
+  wpt-header
+    .wptheader_nav
+    li
+    details:focus
+    summary
+    span
+    .wptheader_nav
+    li
+    details
+    summary:hover
+    span {
     background: var(--wpt-header-text);
     color: var(--wpt-header-background);
   }
@@ -399,7 +403,7 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   wpt-header .wptheader_nav_menu details[open] summary span:after {
     border-top: 5px solid var(--wpt-header-background);
   }
-  
+
   wpt-header .wptheader_menu[open] .wptheader_menubtn {
     display: none !important;
   }
@@ -550,19 +554,16 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   }
 }
 
-
-
 /* overrides for marketing pages */
 .navigation_menu + .pro_section {
   min-height: 600px !important;
   padding-top: 9rem !important;
-  
 }
 .navigation_menu + div + .hero_section_block {
   margin-top: -6rem;
   padding-top: 12rem;
 }
-@media (min-width: 50em){
+@media (min-width: 50em) {
   .navigation_menu + .pro_section {
     padding-top: 6rem !important;
   }
@@ -571,10 +572,8 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
     padding-top: 12rem;
   }
 }
-@media (min-width: 70em){
+@media (min-width: 70em) {
   .navigation_menu + .pro_section {
     min-height: 500px !important;
   }
 }
-
-
