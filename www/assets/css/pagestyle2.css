@@ -2128,9 +2128,8 @@ footer ul {
 }
 
 .opportunities_summary_exps {
-  background: url(/assets/images/src/icon_science_bubbling.svg) left 0 bottom 0
-    no-repeat;
-  background-size: auto 2rem;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left -.4em bottom .2em no-repeat;
+  background-size: auto 1.8rem;
   padding-left: 2.2em;
   height: 1em;
 }
@@ -9846,7 +9845,7 @@ font-weight: 500;
 .ei_diagnostics_item-experiments {
     display: inline-block;
     color: #4e8f37;
-    padding-left: 2em;
+    padding-left: 1.6em;
     position: relative;
   }
   .result-impact .ei_diagnostics_item-experiments .experiment_summary_count {
@@ -9857,7 +9856,7 @@ font-weight: 500;
   .result-impact .opportunities_summary_exps {
     display:inline-block;
     margin: 0;
-    padding: 0 0 0 2.5em;
+    padding: 0 0 0 1.8em;
     position: absolute;
     left: 0;
   }
