@@ -55,10 +55,8 @@ $resource_config['flash'] = ['Flash', "#222"];
 
 $mime_breakdown = $testStepResult->getMimeTypeBreakdown();
 
-$totalPercent = 0;
 foreach ($mime_breakdown as $type => $values) {
     $val = $values["bytes"] / $pageweight_total_bytes * 100;
-    $totalPercent += $val;
     $resource_impact[] = [$resource_config[$type][0], $val, $resource_config[$type][1], round($val)];
 }
 

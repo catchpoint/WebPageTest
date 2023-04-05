@@ -212,14 +212,16 @@
                                         <li style="background-color: {{$item[2]}}">{{$item[0]}}: {{$item[3]}}%</li>
                                     @endforeach
                                     </ul>
-                                    <svg viewBox="0 0 32 32">
-                                        <g stroke-width="16">
-                                            @php ($itemiterator = 0)
+                                    <svg  viewBox='0 0 20 20'>
+                                        <g transform='rotate(-90 10 10)' fill='none' stroke-width='10'>
+                                            @php ($rotate = 0)
                                             @foreach ($resource_impact as $item)
-                                            <circle data-label="{{$item[0]}}" cx="16" cy="16" r="16" stroke-dasharray="{{$item[1]}} 100" stroke-dashoffset="-{{$itemiterator}}" stroke="{{$item[2]}}"></circle>
-                                            @php ($itemiterator += $item[1])
+                                            @php ($deg = $item[1] * .3142)
+                                            <circle data-label="{{$item[0]}}" r='5' cx='10' cy='10' stroke="{{$item[2]}}" stroke-dasharray='{{$deg}} 31.42' transform="rotate({{$rotate}} 10 10)"></circle>
+                                            @php ($rotate += ($deg / 31.42) * 360)
                                             @endforeach
                                         </g>
+                                        <circle cx='10' cy='10' stroke="#fff" stroke-width="5" r="2"></circle>
                                     </svg>
                                 </div>
                             </div>
