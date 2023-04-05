@@ -625,8 +625,7 @@ if (!isset($test)) {
     // see if it is a batch test
     $test['batch'] = 0;
     if (
-        (isset($req_bulkurls) && strlen($req_bulkurls)) ||
-        (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']))
+        isset($req_bulkurls) && strlen($req_bulkurls)
     ) {
         $test['batch'] = 1;
         $is_bulk_test = true;
@@ -1157,9 +1156,6 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 $bulkUrls = '';
                 if (isset($req_bulkurls) && strlen($req_bulkurls)) {
                     $bulkUrls = $req_bulkurls . "\n";
-                }
-                if (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) {
-                    $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
                 }
 
                 $current_mode = 'urls';
