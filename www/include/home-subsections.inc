@@ -42,7 +42,7 @@ $quote = $quotes[array_rand($quotes)];
 <div class="tri-col">
     <div class="resource-block">
         <a href="https://blog.webpagetest.org/posts/better-performance-testing-through-the-power-of-defaults/">
-            <img src="/assets/images/tiles/Deploy.png" alt="">
+            <img src="https://blog.webpagetest.org/cloudinary/webpagetest/image/upload/f_auto,q_auto,c_fill,w_1280,h_1024/simple-config-hero_hjgx3z.png" alt="">
             <h3>Better Performance Testing Through the Power of Defaults</h3>
             <p>See how data supports the idea that we can influence a healthier approach to performance testing through our product decisions.</p>
         </a>
