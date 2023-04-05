@@ -247,10 +247,16 @@ class RunResultHtmlTable
             $out .= $this->_headCell("Cost");
         }
         if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+
+            $cctest_id = $this->testInfo->getId();
+            $ccrun = $this->runResults->getRunNumber();
+            $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/");
+
+
             if ($this->useShortNames) {
                 $out .= $this->_headCell('<abbr title="co2 Per Visit">co2</abbr>');
             } else {
-                $out .= $this->_headCell("Carbon Footprint");
+                $out .= $this->_headCell('<a href="' . $carboncontrol_url . '">Carbon Footprint</a>');
             }
         }
 
