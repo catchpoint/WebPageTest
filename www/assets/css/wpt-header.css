@@ -56,7 +56,8 @@ cp-header a {
   margin: 0 auto;
   height: 4.5rem;
 }
-cp-header a svg {
+cp-header a svg,
+cp-header a object {
   max-width: 192px;
   flex: 1 1 auto;
 }
