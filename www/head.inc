@@ -20,10 +20,8 @@ if (strlen($page_description)) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-<link rel="apple-touch-icon" sizes="96x96" href="/assets/images/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="256x256" href="/assets/images/favicon/favicon-256x256.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon/favicon-32x32.png">
 
 <style>
     @font-face {

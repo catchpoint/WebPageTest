@@ -15,8 +15,8 @@
             <?php } else { ?>
                 <div class="home_feature_hed home_feature_hed-main">
                     <div class="home_feature_hed_text">
-                        <h1 class="attention">Test. Optimize. Repeat!</h1>
-                        <p>Instantly test your site’s speed, usability, and resilience in real <b>browsers</b>, <b>devices</b>, and <b>locations</b> around the&nbsp;world. </p>
+                        <h1 class="attention">Test. Experiment. Improve!</h1>
+                        <p><strong>WebPageTest.</strong> <span class="home_feature_hed_highlighter">The gold standard in web performance testing. </span></p>
 
                     </div>
                     <div class="home_feature_hed_visual">

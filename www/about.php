@@ -18,7 +18,7 @@ $page_description = "More information about WebPageTest website speed testing an
     <?php include('head.inc'); ?>
 </head>
 
-<body>
+<body class="about">
     <?php
     $tab = 'About';
     include 'header.inc';
