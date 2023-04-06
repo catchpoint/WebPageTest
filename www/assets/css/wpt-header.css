@@ -21,7 +21,8 @@ body.history wpt-header,
 body.about wpt-header,
 body.common wpt-header,
 body.video wpt-header,
-body.compare:not(.compare-experiment) wpt-header {
+body.compare:not(.compare-experiment) wpt-header,
+body#custom-waterfall wpt-header {
   --wpt-header-text: #1e4078;
   --wpt-header-activeborder: #091a3f33;
   --wpt-header-border: #fff;
@@ -563,6 +564,11 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
     }
   }
 }
+
+body.compare:not(.compare-experiment) .test_results {
+ padding-top: 6em; 
+}
+  
 
 /* overrides for marketing pages */
 .navigation_menu + .pro_section {
