@@ -19,7 +19,9 @@ wpt-header * {
 .account-layout wpt-header,
 body.history wpt-header,
 body.about wpt-header,
-body.common wpt-header {
+body.common wpt-header,
+body.video wpt-header,
+body.compare:not(.compare-experiment) wpt-header {
   --wpt-header-text: #1e4078;
   --wpt-header-activeborder: #091a3f33;
   --wpt-header-border: #fff;
