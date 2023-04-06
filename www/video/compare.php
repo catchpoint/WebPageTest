@@ -211,7 +211,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
                         position: sticky;
                         top: 0;
-                        z-index: 9999;
+                        z-index: 998;
                     }
                 <?php } ?>
 
