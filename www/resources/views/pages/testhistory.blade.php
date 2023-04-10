@@ -10,9 +10,10 @@
         @if (!$is_logged_in)
             <div class="logged-out-history">
                 <p>Test history is available for up to 30 days as long as your storage isn't cleared. By registering for a free account, you can keep test history for longer, compare tests, and review changes. Additionally, you will also be able to post on the <a href="https://forums.webpagetest.org">WebPageTest Forum</a> and contribute to the discussions there about features, test results and more.</p>
-                <a href="{{ $protocol }}://{{ $host }}/signup" ?>" class="btn-primary">Get Free Access</a>
+                <a href="{{ $protocol }}://{{ $host }}/signup" class="btn-primary">Get Free Access</a>
             </div>
         @endif
+
         <div class="history_filter">
             <label for="filter">Filter test history:</label>
             <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
