@@ -41,24 +41,24 @@ $quote = $quotes[array_rand($quotes)];
 <h2 class="light">What's new on the WebPageTest Blog</h2>
 <div class="tri-col">
     <div class="resource-block">
-        <a href="https://blog.webpagetest.org/posts/full-throttle-comparing-packet-level-and-dev-tools-throttling/">
-            <img src="/assets/images/tiles/blog-throttling.png" alt="">
-            <h3>Full Throttle: Comparing packet-level and DevTools throttling</h3>
-            <p>Learn why packet-level throttling is better than DevTools throttling and the gold standard in accuracy for WebPerf measurements.</p>
+        <a href="https://blog.webpagetest.org/posts/better-performance-testing-through-the-power-of-defaults/">
+            <img src="https://blog.webpagetest.org/cloudinary/webpagetest/image/upload/f_auto,q_auto,c_fill,w_1280,h_1024/simple-config-hero_hjgx3z.png" alt="">
+            <h3>Better Performance Testing Through the Power of Defaults</h3>
+            <p>See how data supports the idea that we can influence a healthier approach to performance testing through our product decisions.</p>
         </a>
     </div>
     <div class="resource-block">
-        <a href="https://css-tricks.com/webpagetest-api/">
-            <img src="/assets/images/tiles/CSS.png" alt="">
-            <h3>WebPageTest API Review on CSS Tricks</h3>
-            <p>Chris Coyier takes the API out for a spin and shares where he sees the most promise for developers</p>
+        <a href="https://blog.webpagetest.org/posts/edit-response-html/">
+            <img src="https://blog.webpagetest.org/cloudinary/webpagetest/image/upload/f_auto,q_auto,c_fill,w_1280,h_1024/edit-html-feature_s5yqkh.jpg" alt="">
+            <h3>Edit Response HTML</h3>
+            <p>Introducing a new WebPageTest experiment type </p>
         </a>
     </div>
     <div class="resource-block">
-        <a href="https://blog.webpagetest.org/posts/new-render-blocking-indicator-in-chrome-and-webpagetest/">
-            <img src="/assets/images/tiles/blog-renderblock.png" alt="">
-            <h3>New Render Blocking Indicator in Chrome and WebPageTest</h3>
-            <p>How to use WebPageTest's render-blocking indicator to improve on one of the most common performance bottlenecks.</p>
+        <a href="https://blog.webpagetest.org/posts/introducing-html-diffs/">
+            <img src="https://blog.webpagetest.org/cloudinary/webpagetest/image/upload/f_auto,q_auto,c_fill,w_1280,h_1024/htmldiff_ujkeho.png" alt="">
+            <h3>Introducing HTML Diffs</h3>
+            <p>What changed between the page's HTML as sent by the server over the network and the HTML that the browser finally used to render the page when the test was complete?</p>
         </a>
     </div>
 </div>
