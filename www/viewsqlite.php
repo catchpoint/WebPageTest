@@ -10,7 +10,7 @@ use WebPageTest\Util;
 global $admin;
 
 if (
-    (isset($request_context->getUser()) && $request_context->getUser()->isAdmin()) ||
+    ($request_context->getUser() !== null && $request_context->getUser()->isAdmin()) ||
     $admin
 ) {
     $host = Util::getSetting('host');
@@ -22,6 +22,10 @@ error_reporting(-1);
 
 $db = new SQLite3('./dat/labels.db');
 $results = $db->query('SELECT * FROM labels');
+
+if (!$results) {
+    die('No results');
+}
 
 // Some really basic CSS for the table
 ?>
