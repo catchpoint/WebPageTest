@@ -99,7 +99,7 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
         'page_title' => 'WebPageTest - Test History',
 
     ];
-    // uncomment for Blade
+
     echo view('pages.testhistory', $vars);
     exit();
 
