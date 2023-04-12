@@ -5,7 +5,6 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 
-use WebPageTest\Template;
 use WebPageTest\Util;
 
 $host = Util::getSetting('host');
@@ -100,15 +99,10 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
         'page_title' => 'WebPageTest - Test History',
 
     ];
-    /*
-    // uncomment for Blade
+
     echo view('pages.testhistory', $vars);
     exit();
-    */
-    $tpl = new Template('testhistory');
-    $tpl->setLayout('default');
-    echo $tpl->render('user', $vars);
-    exit();
+
 }
 
 if ($csv) {
