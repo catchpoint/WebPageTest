@@ -11,7 +11,7 @@
                 <option value="7" @if ($days === 7) selected @endif>7 Days</option>
                 <option value="30" @if ($days === 30) selected @endif>30 Days</option>
                 <option value="128" @if ($days === 128) selected @endif>128 Days</option>
-                <option value="365" @if ($days === 365) selected @endif>356 Days</option>
+                <option value="365" @if ($days === 365) selected @endif>1 Year</option>
 
             </select> test log for URLs containing
             <input id="filter" name="filter" type="text" style="width:30em" value="{{ $filter }}">
@@ -89,7 +89,7 @@
                             </b>
                         @endif
                     </td>
-                    <td class="location">{{ $location }}
+                    <td class="location">{!! $location !!}
                         @if ($video)
                         <span>(video)</span>
                         @endif

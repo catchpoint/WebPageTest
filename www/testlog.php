@@ -129,6 +129,7 @@ $vars = [
     'requestIP' => !empty($_REQUEST['ip']),
     'body_class' => 'history',
     'page_title' => 'WebPageTest - Test History',
+    'admin' => $admin,
     'adminish' => ($admin || !Util::getSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))),
     'includeip' => $includeip,
     'filter' => $filter,
