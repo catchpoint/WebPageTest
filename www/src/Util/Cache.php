@@ -67,7 +67,7 @@ class Cache
     /*
      * @return PlanList|null
      */
-    public static function fetchWptPlans()
+    public static function fetchWptPlans(): ?PlanList
     {
         $fetched = self::fetch('WPT_PLANS');
         if ($fetched && !empty($fetched)) {

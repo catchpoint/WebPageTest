@@ -1,4 +1,5 @@
 <?php
+
 require_once 'common.inc';
 if (!$privateInstall && !$admin) {
     header("HTTP/1.1 403 Unauthorized");
@@ -30,7 +31,8 @@ if (!empty($_REQUEST['ex'])) {
     $toc = getTOC();
     $renderedExample = $example['example']();
     if ($example['type'] === 'fullpage') {
-        echo str_replace(['<!--TITLE-->', '<!--TOC-->'], [$title, $toc], $renderedExample);;
+        echo str_replace(['<!--TITLE-->', '<!--TOC-->'], [$title, $toc], $renderedExample);
+        ;
     } else {
         $page = view('styleguide', [
             'body_class' => 'styleguide-partial',

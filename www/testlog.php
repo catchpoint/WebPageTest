@@ -102,7 +102,6 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
 
     echo view('pages.testhistory', $vars);
     exit();
-
 }
 
 if ($csv) {

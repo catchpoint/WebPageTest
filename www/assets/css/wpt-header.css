@@ -567,9 +567,8 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
 }
 
 body.compare:not(.compare-experiment) .test_results {
- padding-top: 6em; 
+  padding-top: 6em;
 }
-  
 
 /* overrides for marketing pages */
 .navigation_menu + .pro_section {
