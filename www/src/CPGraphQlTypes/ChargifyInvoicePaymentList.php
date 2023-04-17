@@ -25,7 +25,7 @@ class ChargifyInvoicePaymentList implements IteratorAggregate, Countable
         $this->list = $payment;
     }
 
-    public function add(ChargifyInvoicePayment $payment)
+    public function add(ChargifyInvoicePayment $payment): void
     {
         $this->list[] = $payment;
     }

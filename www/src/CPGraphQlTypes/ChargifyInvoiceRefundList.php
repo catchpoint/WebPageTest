@@ -23,7 +23,7 @@ class ChargifyInvoiceRefundList implements IteratorAggregate, Countable
         $this->list = $refund;
     }
 
-    public function add(ChargifyInvoiceRefund $refund)
+    public function add(ChargifyInvoiceRefund $refund): void
     {
         $this->list[] = $refund;
     }

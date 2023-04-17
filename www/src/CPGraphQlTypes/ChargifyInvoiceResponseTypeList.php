@@ -25,7 +25,7 @@ class ChargifyInvoiceResponseTypeList implements IteratorAggregate, Countable
         $this->list = $invoice;
     }
 
-    public function add(ChargifyInvoiceResponseType $invoice)
+    public function add(ChargifyInvoiceResponseType $invoice): void
     {
         $this->list[] = $invoice;
     }

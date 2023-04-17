@@ -1,4 +1,5 @@
 <?php
+
 $EXAMPLES = [
     [
         'title' => 'Default',
