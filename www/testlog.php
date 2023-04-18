@@ -141,7 +141,21 @@ $vars = [
 
 echo view('pages.testhistoryadmin', $vars);
 
-// loop through the number of days we are supposed to display
+/**
+ * Retrieves log data from log files in  `/logs/.log`
+ *
+ * @param string $from The starting date for the log data retrieval, in the format "Ymd."
+ * @param int $days The number of days of log data to retrieve.
+ * @param bool $supportsGrep Is `grep` supported by the system.
+ * @param bool $all Tests from all users
+ * @param string $filterstr Filter the log data by matching patterns.
+ * @param bool $onlyVideo Only tests with videos
+ * @param bool $includePrivate Private tests too
+ * @param bool $repeat Tests with repeats views.
+ * @param bool $nolimit Ignore the hard limit of 100 tests (slow)
+ *
+ * @return array An array of log data.
+ */
 function getHistoryLog($from, $days, $supportsGrep, $all, $filterstr, $onlyVideo, $includePrivate, $repeat, $nolimit)
 {
     global $user;
