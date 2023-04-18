@@ -19,6 +19,7 @@ wpt-header * {
 .account-layout wpt-header,
 body.history wpt-header,
 body.about wpt-header,
+body.four-oh-four wpt-header,
 body.common wpt-header,
 body.video wpt-header,
 body.compare:not(.compare-experiment) wpt-header,
