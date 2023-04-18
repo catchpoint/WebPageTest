@@ -103,14 +103,15 @@ if ($csv) {
     header("Content-type: text/csv");
     echo '"Date/Time","Location","Test ID","URL","Label"' . "\r\n";
     // only track local tests
-    foreach ($history as
-        [
+    foreach (
+        $history as [
             'guid' => $guid,
             'newDate' => $newDate,
             'location' => $location,
             'url' => $url,
             'label' => $label,
-        ]) {
+        ]
+    ) {
         if (strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6)) {
             echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '","' . $label . '"' . "\r\n";
         }
