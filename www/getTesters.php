@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
     header("HTTP/1.1 403 Unauthorized");
     exit;
@@ -40,7 +40,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html') {
     $refresh = 240;
     $title = 'WebPageTest - Tester Status';
-    include 'admin_header.inc';
+    require_once INCLUDES_PATH . '/include/admin_header.inc';
     echo "<table class=\"table\">\n";
     foreach ($locations as $name => &$location) {
         $error = ' danger';
@@ -106,7 +106,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
     }
     echo "</table>\n";
-    include 'admin_footer.inc';
+    require_once INCLUDES_PATH . '/include/admin_footer.inc';
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";

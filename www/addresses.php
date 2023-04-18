@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 
 if (isset($_REQUEST['k'])) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
@@ -36,7 +36,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     json_response($ret);
 } else {
     $title = 'WebPageTest - Tester IP Addresses';
-    include 'admin_header.inc';
+    require_once INCLUDES_PATH . '/include/admin_header.inc';
     echo "<table class=\"table\">\n";
     echo "<tr><th nowrap class=\"header\">Location</th><th nowrap class=\"header\">IP Addresses</th></tr>";
     foreach ($addresses as $name => $location) {
@@ -56,13 +56,13 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         echo "</td></tr>";
     }
     echo "</table>\n";
-    include 'admin_footer.inc';
+    require_once INCLUDES_PATH . '/include/admin_footer.inc';
 }
 
 /**
-* Load the location information and extract just the end nodes
-*
-*/
+ * Load the location information and extract just the end nodes
+ *
+ */
 function GetAllAddresses($include_sensitive = true)
 {
     global $request_context;
@@ -72,8 +72,10 @@ function GetAllAddresses($include_sensitive = true)
 
     if (isset($_REQUEST['location'])) {
         $location = $_REQUEST['location'];
-        $new = array('locations' => array('1' => 'group', 'default' => 'group'),
-                 'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder'));
+        $new = array(
+            'locations' => array('1' => 'group', 'default' => 'group'),
+            'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder')
+        );
         if (isset($loc[$_REQUEST['location']])) {
             $new[$_REQUEST['location']] = $loc[$_REQUEST['location']];
         }
@@ -110,7 +112,7 @@ function GetAllAddresses($include_sensitive = true)
         $i++;
     }
 
-  // Go through and build a list of IP addresses for each location
+    // Go through and build a list of IP addresses for each location
     $addresses = array();
     foreach ($locations as $name => $location) {
         $addresses[$name] = array('id' => $name, 'addresses' => array());

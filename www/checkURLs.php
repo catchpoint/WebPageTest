@@ -4,7 +4,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 
-require_once('common.inc');
+require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
     header("HTTP/1.1 403 Unauthorized");
     exit;
@@ -92,7 +92,7 @@ arsort($counts);
 
 
 $title = 'WebPageTest - Check URLs';
-include 'admin_header.inc';
+require_once INCLUDES_PATH . '/include/admin_header.inc';
 
 echo '<table class="table"><tr><th>Total</th>';
 if ($days < 15) {
@@ -122,7 +122,7 @@ foreach ($counts as $url => $count) {
 }
 echo "</table>";
 
-include 'admin_footer.inc';
+require_once INCLUDES_PATH . '/include/admin_footer.inc';
 
 function FQDNBlocked($fqdn)
 {
@@ -145,10 +145,10 @@ function FQDNBlocked($fqdn)
                 if (
                     strlen($block) &&
                     (!strcasecmp($fqdn, $block) ||
-                    !strcasecmp($fqdn, "www.$block"))
+                        !strcasecmp($fqdn, "www.$block"))
                 ) {
-                      $blocked = true;
-                      break;
+                    $blocked = true;
+                    break;
                 }
             }
         }
