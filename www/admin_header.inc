@@ -41,6 +41,7 @@ function header_link($url, $title)
                     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                         <ul class="nav navbar-nav">
                             <?php header_link('/getLocations.php?f=html', 'Locations');?>
+                            <?php header_link('/addresses.php', 'Location IPs');?>
                             <?php header_link('/getTesters.php?f=html', 'Testers');?>
                             <?php header_link('/usage.php', 'Usage');?>
                             <?php header_link('/checkURLs.php', 'Check URLs');?>
