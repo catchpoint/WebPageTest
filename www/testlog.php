@@ -5,12 +5,12 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 
+use WebPageTest\Exception\ForbiddenException;
 use WebPageTest\Util;
 
 // why are you even here
 if ($userIsBot || Util::getSetting('disableTestlog')) {
-    header('HTTP/1.0 403 Forbidden');
-    exit;
+    throw new ForbiddenException();
 }
 
 // login status
@@ -78,8 +78,7 @@ $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 
 if (!$privateInstall && $all && $days > 7 && !strlen(trim($filterstr))) {
-    header('HTTP/1.0 403 Forbidden');
-    exit;
+    throw new ForbiddenException();
 }
 
 if (isset($USER_EMAIL) && !isset($user)) {
