@@ -15,7 +15,7 @@ $page_description = "Page Not Found.";
 
         <?php include('head.inc'); ?>
     </head>
-    <body>
+    <body class="not-found">
             <?php
             $tab = '404';
             include 'header.inc';
