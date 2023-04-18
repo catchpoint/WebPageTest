@@ -686,13 +686,6 @@ function ScreenShotTable()
                 echo WrapableString(htmlspecialchars($test['name']));
             }
 
-            // Print out a link to edit the test
-            echo ' <a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
-            if (class_exists("SQLite3")) {
-                echo 'Edit title';
-            }
-            echo '</a>';
-
             if (!EMBED) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
                 $href = $urlGenerator->resultPage("details") . "#waterfall_view_step" . $test['step'];

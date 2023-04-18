@@ -254,12 +254,6 @@ function LoadTestData()
             }
         }
 
-      // See if we have an overridden test label in the SQLite DB
-        $new_label = getLabel($test['id'], $user);
-        if (!empty($new_label)) {
-            $test['name'] = $new_label;
-        }
-
       // Override everything with the query-string label
         if (isset($test['label_override'])) {
             $test['name'] = $test['label_override'];

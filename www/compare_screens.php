@@ -108,17 +108,6 @@ function ParseTests()
                 }
 
                 if (!isset($test['label'])) {
-                    $label = getLabel($test['id'], $user);
-                    if (!empty($label)) {
-                        $test['label'] = $new_label;
-                    } else {
-                        $info = GetTestInfo($test['id']);
-                        if ($info && isset($info['label']) && strlen($info['label'])) {
-                            $test['label'] = trim($info['label']);
-                        }
-                    }
-                }
-                if (!isset($test['label'])) {
                     $test['label'] = $test['id'];
                 }
 

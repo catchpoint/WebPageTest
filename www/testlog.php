@@ -320,12 +320,6 @@ for ($offset = 0; $offset <= $days && !$done; $offset++) {
                         }
 
                         if ($ok) {
-                            // See if we have to override the label
-                            $new_label = getLabel($guid, $user);
-                            if (!empty($new_label)) {
-                                $label = htmlentities($new_label);
-                            }
-
                             $rowCount++;
                             $totalCount++;
                             $newDate = strftime('%x %X', $date + ($tz_offset * 60));
@@ -395,12 +389,6 @@ for ($offset = 0; $offset <= $days && !$done; $offset++) {
 
                                 echo "<td title=\"$label\" class=\"label\">";
                                 echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
-
-                                // Only allow people to update labels if they are logged in
-                                if ($user && class_exists("SQLite3")) {
-                                    echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
-                                }
-
                                 echo "</td>";
 
                                 echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url, 80) . '</a></td></tr>';
