@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-require_once('common.inc');
+require_once __DIR__ . '/common.inc';
 
 if (!$privateInstall && !$admin) {
     header("HTTP/1.1 403 Unauthorized");
@@ -88,13 +88,13 @@ for ($offset = 0; $offset <= $days; $offset++) {
                             }
                         }
                         if (isset($counts[$ip])) {
-                                $counts[$ip] += $count;
+                            $counts[$ip] += $count;
                         } else {
                             $counts[$ip] = $count;
                         }
 
                         if (isset($dayCount[$ip])) {
-                              $dayCount[$ip] += $count;
+                            $dayCount[$ip] += $count;
                         } else {
                             $dayCount[$ip] = $count;
                         }
@@ -106,7 +106,7 @@ for ($offset = 0; $offset <= $days; $offset++) {
 
     $dayCounts[] = $dayCount;
 
-  // on to the previous day
+    // on to the previous day
     $targetDate->modify('-1 day');
 }
 
@@ -114,7 +114,7 @@ for ($offset = 0; $offset <= $days; $offset++) {
 arsort($counts);
 
 $title = 'WebPageTest - Check IPs';
-include 'admin_header.inc';
+require_once INCLUDES_PATH . '/include/admin_header.inc';
 
 echo '<table class="table"><tr><th>Total</th>';
 
@@ -143,7 +143,7 @@ foreach ($counts as $ip => $count) {
             $separator = '';
             foreach ($users[$ip] as $key) {
                 if (!isset($keys[$key])) {
-                  // See if we have API key info in redis
+                    // See if we have API key info in redis
                     $keys[$key] = GetKeyInfo($key);
                 }
                 if (isset($keys[$key]) && isset($keys[$key]['contact'])) {
@@ -166,7 +166,7 @@ foreach ($counts as $ip => $count) {
 }
 echo "</table>";
 
-include 'admin_footer.inc';
+require_once INCLUDES_PATH . '/include/admin_footer.inc';
 
 function IPBlocked($ip)
 {
