@@ -38,7 +38,22 @@ if (Util::getSetting('cp_auth')) {
             exit();
         }
 
-        if (is_a($e, ForbiddenException::class)) {
+        if (is_a($e, TypeError::class)) {
+            error_log($e->getMessage());
+            $route = "/";
+            $message = "There was a problem with you account. Please reach out to customer service." .
+                       "Error number: 2000";
+
+            $host = Util::getSetting('host');
+            if (Util::getSetting('php_sessions')) {
+                unset($_SESSION['client_error']);
+                $_SESSION['client_error'] = $message;
+            }
+            $protocol = "https";
+            $location = "{$protocol}://{$host}{$route}";
+            header('Location: ' . $location);
+            exit();
+        } elseif (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
         } elseif (
