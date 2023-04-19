@@ -227,7 +227,7 @@
                             </div>
 
                             <div class="ei_reduce">
-                            <h3 class="hed_sub">Looking for ways reduce your footprint?</h3>
+                            <h3 class="hed_sub">Looking For Ways To Reduce Your Footprint?</h3>
                             <p>Check out the new <a href="{{ $opps_url }}">Opportunities & Experiments</a> section where you’ll find observations about specific issues and bottlenecks that are causing your site to be less quick, usable, resilient, or eco-friendly than it can be!</p>
                             <p><img  width="105" height="14" src="/assets/images/wpt-logo-pro-dark.svg" alt="WebPageTest Pro"> users can run no-code experiments to see the real impact of changes and optimizations on live sites, so you can know which changes are worth your time!
                             <strong>Looking to go Pro?</strong> <a href="/signup">Compare Plans</a></p>
@@ -241,7 +241,7 @@
                             
                         </div>
                         <div class="ei_spread">
-                        <h3 class="hed_sub">Show your peers you care!</h3>
+                        <h3 class="hed_sub">Show Your Peers That You Care!</h3>
                                 <p>Spread the word that you're tracking your footprint by adding this badge to your site or social media!</p>
                                 <div class="badge-info">
                                     <div class="badge-preview">

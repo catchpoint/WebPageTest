@@ -109,6 +109,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
+
+                    <?php if( isset($req_cc) ){?>
+                        <input type="hidden" name="carbon_control_redirect" value="1">
+                    <?php } ?>
+
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
