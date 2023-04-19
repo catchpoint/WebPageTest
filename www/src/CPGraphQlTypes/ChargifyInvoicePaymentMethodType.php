@@ -17,13 +17,13 @@ class ChargifyInvoicePaymentMethodType
 
     public function __construct(array $options)
     {
-        $this->details = $options['details'];
-        $this->kind = $options['kind'];
-        $this->memo = $options['memo'];
-        $this->type = $options['type'];
-        $this->card_brand = $options['cardBrand'];
-        $this->card_expiration = $options['cardExpiration'];
-        $this->masked_card_number = $options['maskedCardNumber'];
+        $this->details = $options['details'] ?? "";
+        $this->kind = $options['kind'] ?? "";
+        $this->memo = $options['memo'] ?? "";
+        $this->type = $options['type'] ?? "";
+        $this->card_brand = $options['cardBrand'] ?? "";
+        $this->card_expiration = $options['cardExpiration'] ?? "";
+        $this->masked_card_number = $options['maskedCardNumber'] ?? "";
         $this->last_four = $options['lastFour'] ?? null;
     }
 
