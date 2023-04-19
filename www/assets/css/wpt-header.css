@@ -29,14 +29,13 @@ body.compare-loading wpt-header {
   --wpt-header-activeborder: #091a3f33;
   --wpt-header-border: #fff;
   --wpt-header-background: #fff;
-  --wpt-user-icon: url(/assets/images/icon-user-dark.svg) left 50% no-repeat;
 }
 
 wpt-header {
   width: 100%;
   grid-column: 1 / 13;
   position: relative;
-  z-index: 999;
+  z-index: 9999999;
   background: none;
   border: none;
 }
@@ -246,13 +245,11 @@ wpt-header .wptheader_acct {
   margin: 1rem;
   padding: 2rem 1rem 2rem 2rem;
   background: var(--wpt-user-icon);
-  color: var(--wpt-header-text);
 }
 
 wpt-header .wptheader_acct a,
 wpt-header .wptheader_acct button[type="submit"] {
   background: none;
-  color: var(--wpt-header-text);
   font-size: 1em;
   border: 0;
   cursor: pointer;
@@ -379,6 +376,9 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
 }
 
 @media (min-width: 86em) {
+  wpt-header {
+    z-index: 999;
+  }
   cp-header a {
     padding-left: 1.5rem;
   }
@@ -530,6 +530,21 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   }
   wpt-header .wptheader_nav li details[open] {
     background: transparent;
+  }
+  wpt-header .wptheader_acct a,
+  wpt-header .wptheader_acct button[type="submit"] {
+    color: var(--wpt-header-text);
+  }
+  .account-layout wpt-header,
+  body.history wpt-header,
+  body.about wpt-header,
+  body.four-oh-four wpt-header,
+  body.common wpt-header,
+  body.video wpt-header,
+  body.compare:not(.compare-experiment) wpt-header,
+  body#custom-waterfall wpt-header,
+  body.compare-loading wpt-header {
+    --wpt-user-icon: url(/assets/images/icon-user-dark.svg) left 50% no-repeat;
   }
 }
 
