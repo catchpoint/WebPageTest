@@ -73,7 +73,7 @@ $from      = (isset($_GET["from"]) && strlen($_GET["from"])) ? $_GET["from"] : '
 $filter    = $_GET["filter"];
 $filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \@\/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
 $onlyVideo = !empty($_REQUEST['video']);
-$all       = !empty($_REQUEST['all']);
+$all       = ($admin || !Util::getSetting('forcePrivate')) && !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 
