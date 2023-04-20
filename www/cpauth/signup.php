@@ -42,7 +42,7 @@ use WebPageTest\Handlers\Signup as SignupHandler;
 
         switch ($signup_step) {
             case 2:
-                $body = SignupHandler::validatePostStepTwo();
+                $body = SignupHandler::validatePostStepTwo($_POST);
                 if ($body->plan == 'free') {
                     $redirect_uri = SignupHandler::postStepTwoFree($request_context, $body);
                     header("Location: {$redirect_uri}");

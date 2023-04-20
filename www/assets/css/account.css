@@ -833,9 +833,14 @@ a.button {
   font-size: 0.9375rem;
 }
 
-.signup-flow-layout .disclaimer {
-  margin-top: 1.25rem;
-  text-align: center;
+.terms-service-set {
+  display: flex;
+  align-items: flex-start;
+}
+
+.terms-service-set input {
+  margin-right: 1rem;
+  margin-top: 0.4rem;
 }
 
 .signup-flow-layout .disclaimer a {
