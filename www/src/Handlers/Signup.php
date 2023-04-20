@@ -145,15 +145,21 @@ class Signup
         }
     }
 
-    public static function validatePostStepTwo(): object
+    public static function validatePostStepTwo($post_body): object
     {
         $vars = (object)[];
 
-        $plan = isset($_POST['plan']) ? htmlentities($_POST['plan']) : 'free';
+        $plan = isset($post_body['plan']) ? htmlentities($post_body['plan']) : 'free';
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
-        $password = $_POST["password"];
-        if ($password != $_POST['confirm-password']) {
+        $password = $post_body["password"] ?? null;
+        $confirm_password = $post_body['confirm-password'] ?? null;
+
+        if (is_null($password)) {
+            throw new ClientException('Password required', '/signup/2');
+        }
+
+        if ($password != $confirm_password) {
             throw new ClientException('Passwords must match', '/signup/2');
         }
 
@@ -179,14 +185,24 @@ class Signup
             new Rules\Length(0, 32)
         );
 
-        $first_name = $_POST["first-name"];
-        $last_name = $_POST["last-name"];
-        $company_name = $_POST["company-name"] ?? null;
-        $street_address = $_POST["street-address"] ?? null;
-        $city = $_POST["city"] ?? null;
-        $state_code = $_POST["state"] ?? null;
-        $country_code = $_POST["country"] ?? null;
-        $zipcode = $_POST["zipcode"] ?? null;
+        $first_name = $post_body["first-name"] ?? "";
+        $last_name = $post_body["last-name"] ?? "";
+
+        if (empty($first_name) || empty($last_name)) {
+            throw new ClientException("First and Last Name must be filled in");
+        }
+
+        $company_name = $post_body["company-name"] ?? null;
+        $street_address = $post_body["street-address"] ?? null;
+        $city = $post_body["city"] ?? null;
+        $state_code = $post_body["state"] ?? null;
+        $country_code = $post_body["country"] ?? null;
+        $zipcode = $post_body["zipcode"] ?? null;
+
+        $accepts_terms = $post_body["terms-service"] ?? null;
+        if (is_null($accepts_terms)) {
+            throw new ClientException("Must accept terms and conditions", "/signup/2");
+        }
 
         try {
             $contact_info_validator->assert($first_name);
