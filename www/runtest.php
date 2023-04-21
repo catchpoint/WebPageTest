@@ -1685,8 +1685,11 @@ function ValidateKey(&$test, &$error, $key = null)
                             }
                         }
                         if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
-                            // Check the expiration (with a 2-day buffer)
-                            if (time() <= $account['expiration'] + 172800) {
+                            // Check the expiration (with a buffer)
+                            $seconds_in_day = 86400;
+                            $buffer_days = Util::getSetting('api_key_expiration_buffer_days', 2);
+                            $buffer_seconds = $buffer_days * $seconds_in_day;
+                            if (time() <= $account['expiration'] + $buffer_seconds) {
                                 // Check the balance
                                 $response = $redis->get("C_{$account['accountId']}");
                                 if (isset($response) && $response !== false && is_string($response) && strlen($response) && is_numeric($response)) {
