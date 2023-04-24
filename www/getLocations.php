@@ -62,6 +62,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     if (array_key_exists('location', $_REQUEST) && !$locations[$_REQUEST['location']]) {
         echo "Invalid location";
     } else {
+        echo '<style>.legend {width: 20px; height: 20px; display: inline-block; margin: 0 10px;}</style>';
+        echo '<div style="display: flex; padding: 10px">Key: <div class="alert-danger legend"></div> Offline location';
+        echo '<div class="alert-warning legend"></div> Location with more than one pending test</div>';
         echo "<table class=\"table\">\n";
         echo "<tr>
             <th class=\"location\">Location ID</th>
