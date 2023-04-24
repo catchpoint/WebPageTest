@@ -5641,6 +5641,10 @@ table.pretty td {
   width: 1%;
 }
 
+.pretty-autowidth.pretty-autowidth td {
+  width: auto;
+}
+
 img.autohide:hover {
   opacity: 0;
 }
