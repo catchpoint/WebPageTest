@@ -27,101 +27,107 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
 $data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
 $isMultistep = $testRunResults->countSteps() > 1;
 
-$page_keywords = array('Performance Test','Details','WebPageTest','Website Speed Test','Page Speed');
+$page_keywords = array('Performance Test', 'Details', 'WebPageTest', 'Website Speed Test', 'Page Speed');
 $page_description = "Web Vitals details$testLabel";
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title><?php echo "$page_title - Web Vitals Details"; ?></title>
-        <script>document.documentElement.classList.add('has-js');</script>
 
-        <?php include('head.inc'); ?>
-    </head>
-    <body class="result">
-            <?php
-            $tab = 'Test Result';
-            $subtab = 'Web Vitals';
-            include 'header.inc';
-            ?>
+<head>
+    <title><?php echo "$page_title - Web Vitals Details"; ?></title>
+    <script>
+        document.documentElement.classList.add('has-js');
+    </script>
 
-            <div class="results_main_contain">
-                <div class="results_main">
+    <?php include('head.inc'); ?>
+</head>
 
+<body class="result">
+    <?php
+    $tab = 'Test Result';
+    $subtab = 'Web Vitals';
+    include 'header.inc';
+    ?>
 
-                <div class="results_and_command">
-
-                    <div class="results_header">
-                        <h2>Core Web Vitals</h2>
-                        <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/assets/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
-                    </div>
+    <div class="results_main_contain">
+        <div class="results_main">
 
 
+            <div class="results_and_command">
+
+                <div class="results_header">
+                    <h2>Core Web Vitals</h2>
+                    <p>This page details results from metrics that Google has deemed <a href="https://web.dev/vitals/" target="_blank" rel="noopener">Core Web Vitals <img src='/assets/images/icon-external.svg'></a>. For more information about these metrics and their significance, check out our <a href="https://product.webpagetest.org/core-web-vitals">Core Web Vitals Guide.</a></p>
                 </div>
+
+
+            </div>
 
 
 
 
             <div id="result" class="results_body vitals-diagnostics crux-embed">
 
-            <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
-            
-            
-            <?php
-            if ($isMultistep) {
-                for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-                    $stepResult = $testRunResults->getStepResult($i);
-                    echo "<h4>" . $stepResult->readableIdentifier() . "</h4>";
+                <h3 class="hed_sub">Observed Web Vitals Metrics <em>(Collected in this WPT test run)</em></h3>
+
+
+                <?php
+                if ($isMultistep) {
+                    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+                        $stepResult = $testRunResults->getStepResult($i);
+                        echo "<h4>" . $stepResult->readableIdentifier() . "</h4>";
+                        InsertWebVitalsHTML($stepResult);
+                    }
+                } else {
+                    $stepResult = $testRunResults->getStepResult(1);
                     InsertWebVitalsHTML($stepResult);
                 }
-            } else {
-                $stepResult = $testRunResults->getStepResult(1);
-                InsertWebVitalsHTML($stepResult);
-            }
-            ?>
+                ?>
 
-            
-            </div>
-            </div>
-            <?php include('footer.inc'); ?>
-            </div>
-                  </div>
 
+            </div>
         </div>
+        <?php include('footer.inc'); ?>
+    </div>
+    </div>
 
-        <script>
+    </div>
+
+    <script>
         function expandRequest(targetNode) {
-          if (targetNode.length) {
-            var div_to_expand = $('#' + targetNode.attr('data-target-id'));
+            if (targetNode.length) {
+                var div_to_expand = $('#' + targetNode.attr('data-target-id'));
 
-            if (div_to_expand.is(":visible")) {
-                div_to_expand.hide();
-                targetNode.html('+' + targetNode.html().substring(1));
-            } else {
-                div_to_expand.show();
-                targetNode.html('-' + targetNode.html().substring(1));
+                if (div_to_expand.is(":visible")) {
+                    div_to_expand.hide();
+                    targetNode.html('+' + targetNode.html().substring(1));
+                } else {
+                    div_to_expand.show();
+                    targetNode.html('-' + targetNode.html().substring(1));
+                }
             }
-          }
         }
 
         function expandAll(step) {
-          var expandAllNode = $("#step" + step + "_all");
-          var expandText = expandAllNode.html();
-          var doShow = expandText.substring(0, 1) == "+";
-          expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
-          $("#header_details_step" + step + " .header_details").each(function(index) {
-            $(this).toggle(doShow);
-          });
+            var expandAllNode = $("#step" + step + "_all");
+            var expandText = expandAllNode.html();
+            var doShow = expandText.substring(0, 1) == "+";
+            expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
+            $("#header_details_step" + step + " .header_details").each(function(index) {
+                $(this).toggle(doShow);
+            });
         }
 
         function scrollTo(node) {
-            $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
+            $('html, body').animate({
+                scrollTop: node.offset().top + 'px'
+            }, 'fast');
         }
 
         // init existing snippets
         $(document).ready(function() {
             <?php if ($isMultistep) { ?>
-              accordionHandler.connect();
+                accordionHandler.connect();
             <?php } ?>
         });
 
@@ -129,14 +135,15 @@ $page_description = "Web Vitals details$testLabel";
         include "assets/js/waterfall.js";
         if ($lcp_request != '') {
             ?>
-        var stepLabel = "step1";
-$("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
+            var stepLabel = "step1";
+            $("#request-overlay-" + stepLabel + "-" + <?php echo $lcp_request; ?>).addClass("lcp-request");
 
             <?php
         }
         ?>
-        </script>
-    </body>
+    </script>
+</body>
+
 </html>
 
 <?php
@@ -149,7 +156,7 @@ function InsertWebVitalsHTML($stepResult)
         echo '<div class="cruxembed">';
         require_once(INCLUDES_PATH . '/include/CrUX.php');
 
-            InsertCruxHTML($testRunResults, null, "cwv");
+        InsertCruxHTML($testRunResults, null, "cwv");
 
         echo '</div>';
     }
@@ -186,7 +193,6 @@ function InsertWebVitalsHTML_Summary($stepResult)
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
         echo "<h4>Largest Contentful Paint</h4>";
         echo "<p class='metric-value $scoreClass'>" . formatMsInterval($lcp['time'], 2) . "</p>";
-        //InsertCruxHTML($testRunResults, null, 'lcp', false, false);
         echo "</div></a>";
     }
     // CLS
@@ -228,7 +234,6 @@ function InsertWebVitalsHTML_Summary($stepResult)
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
         echo "<h4>Cumulative Layout Shift</h4>";
         echo "<p class='metric-value $scoreClass'>$cls</p>";
-        //InsertCruxHTML($testRunResults, null, 'cls', false, false);
         echo "</div></a>";
     }
     // TBT
@@ -243,7 +248,6 @@ function InsertWebVitalsHTML_Summary($stepResult)
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
         echo "<h4>Total Blocking Time</h4>";
         echo "<p class='metric-value $scoreClass'>" . formatMsInterval($tbt, 2) . "</p>";
-        //InsertCruxHTML($testRunResults, null, 'fid', false, true);
         echo "</div></a>";
     }
 
@@ -265,16 +269,6 @@ function pretty_print($array)
         }
         echo '</ul>';
     }
-}
-function prettyHTML($markup)
-{
-    $dom = new DOMDocument();
-    $dom->preserveWhiteSpace = true;
-    $dom->formatOutput = true;
-    $dom->loadHTML($markup, LIBXML_HTML_NOIMPLIED);
-
-
-    return $dom->saveXML($dom->documentElement);
 }
 
 function InsertWebVitalsHTML_LCP($stepResult)
@@ -418,7 +412,7 @@ function InsertWebVitalsHTML_LCP($stepResult)
                 echo "<tr><th align='left'>Background Image</th><td>{$lcp['element']['background-image']}</td></tr>";
                 preg_match_all('/url\(([\s])?([\"|\'])?(.*?)([\"|\'])?([\s])?\)/i', $lcp['element']['background-image'], $matches, PREG_PATTERN_ORDER);
                 if ($matches) {
-                     $lcpSource = $matches[3][0];
+                    $lcpSource = $matches[3][0];
                 }
             }
             echo "<tr><th align='left'>Outer HTML</th><td>";
@@ -434,11 +428,13 @@ function InsertWebVitalsHTML_LCP($stepResult)
             $raw_requests = $requests->getRequests();
             // Find the last request that finished before LCP
             $last_request = 0;
+            $lcp_request_bytes = 0;
             if (isset($raw_requests)) {
                 foreach ($raw_requests as $request) {
                     if (isset($lcpSource)) {
                         if ($request['full_url'] == $lcpSource) {
                             $lcp_request = $request['number'];
+                            $lcp_request_bytes = $request['objectSize'];
                         }
                     }
                     if (isset($request['responseCode']) && $request['responseCode'] > 0 && isset($request['download_end']) && $request['download_end'] <= $lcp['time'] && isset($request['number']) && $request['number'] > $last_request) {
@@ -469,10 +465,15 @@ function InsertWebVitalsHTML_LCP($stepResult)
             echo $waterfallLegend->create(true);
             echo $out;
             echo "</div>";
-
-                //image
+            //image
             if ($lcpSource) {
-                echo "<div class='lcp-image'><h4>LCP Image</h4><img src='" . $lcpSource . "' /></div>";
+                $bpp_info = '';
+                if ($lcp_request_bytes && !empty($lcp['element']['boundingRect'])) {
+                    $bpp = $lcp_request_bytes * 8 / ($lcp['element']['boundingRect']['width'] * $lcp['element']['boundingRect']['height']);
+                    $bpp_info = sprintf('(<abbr title="Bits per pixel">BPP</abbr>: %s)', round($bpp, 2));
+                    $lcp['objectSize'] = $lcp_request_bytes . ' bytes';
+                }
+                echo sprintf('<div class="lcp-image"><h4>LCP Image %s</h4><img src="%s"/></div>', $bpp_info, $lcpSource);
             }
 
             // Insert the raw debug details
@@ -704,9 +705,9 @@ function MergeBlockingTime(&$times, $start, $end)
         $e = $times[1];
         if (
             ($start >= $s && $start <= $e) ||
-                ($end >= $s && $end <= $e) ||
-                ($s >= $start && $s <= $end) ||
-                ($e >= $start && $e <= $end)
+            ($end >= $s && $end <= $e) ||
+            ($s >= $start && $s <= $end) ||
+            ($e >= $start && $e <= $end)
         ) {
             $times[0] = min($start, $s);
             $times[1] = max($end, $e);
@@ -842,28 +843,28 @@ function InsertWebVitalsHTML_TBT($stepResult)
                     ?>
                     <h4>Main Thread Blocking Time by Script Origin</h4>
                     <div class="scrollableTable">
-                    <table class="pretty">
-                        <thead>
-                            <tr>
-                                <th class="domain">Script Origin</th>
-                                <th class="blocking">Blocking Time (ms)</th>
-                            </tr>
-                        </thead>
-                    <?php
-                    echo "<tbody>";
-                    foreach ($domains as $domain => $blocking) {
-                        echo "<tr>";
-                        echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
-                        echo "<td class='blocking'>$blocking</td>";
-                        echo "</tr>";
-                    }
-                    echo "</tbody></table></div>\n";
-                    ?>
-                    <script>
-                        window.addEventListener('DOMContentLoaded', (event) => {
-                            $(document).find(".tableDetails").tablesorter();
-                        });
-                    </script>
+                        <table class="pretty">
+                            <thead>
+                                <tr>
+                                    <th class="domain">Script Origin</th>
+                                    <th class="blocking">Blocking Time (ms)</th>
+                                </tr>
+                            </thead>
+                            <?php
+                            echo "<tbody>";
+                            foreach ($domains as $domain => $blocking) {
+                                echo "<tr>";
+                                echo "<td class='domain'>" . htmlspecialchars($domain) . "</td>";
+                                echo "<td class='blocking'>$blocking</td>";
+                                echo "</tr>";
+                            }
+                            echo "</tbody></table></div>\n";
+                            ?>
+                            <script>
+                                window.addEventListener('DOMContentLoaded', (event) => {
+                                    $(document).find(".tableDetails").tablesorter();
+                                });
+                            </script>
                     <?php
                 }
             }

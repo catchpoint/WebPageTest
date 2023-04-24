@@ -67,6 +67,12 @@
                 </div>
 
             <?php endif; ?>
+            <div class="form-input terms-service-set">
+                <input id="terms-service-check" type="checkbox" name="terms-service" required />
+                <label for="terms-service-check">
+                  <p class="disclaimer">By signing up I agree to WebPageTest's <a href="/terms.php" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://www.catchpoint.com/trust#privacy" target="_blank" rel="noopener">Privacy Statement</a>.</p>
+                </label>
+            </div>
             <div class="form-input">
                 <?php
 
@@ -74,7 +80,6 @@
                 <button type="submit"><?= $btntxt ?></button>
             </div>
 
-            <p class="disclaimer">By signing up I agree to WebPageTest's <a href="/terms.php" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://www.catchpoint.com/trust#privacy" target="_blank" rel="noopener">Privacy Statement</a>.</p>
             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
             <input type="hidden" name="auth_token" value="<?= $auth_token ?>" />
             <input type="hidden" name="plan" value="<?= $plan ?>" />

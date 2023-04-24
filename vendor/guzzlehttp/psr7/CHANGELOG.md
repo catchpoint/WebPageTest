@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 2.5.0 - 2023-04-17
+
+### Changed
+
+- Adjusted `psr/http-message` version constraint to `^1.1 || ^2.0`
+
+## 2.4.5 - 2023-04-17
+
+### Fixed
+
+- Prevent possible warnings on unset variables in `ServerRequest::normalizeNestedFileSpec`
+- Fixed `Message::bodySummary` when `preg_match` fails
+- Fixed header validation issue
+
+## 2.4.4 - 2023-03-09
+
+### Changed
+
+- Removed the need for `AllowDynamicProperties` in `LazyOpenStream`
+
+## 2.4.3 - 2022-10-26
+
+### Changed
+
+- Replaced `sha1(uniqid())` by `bin2hex(random_bytes(20))`
+
+## 2.4.2 - 2022-10-25
+
+### Fixed
+
+- Fixed erroneous behaviour when combining host and relative path
+
+## 2.4.1 - 2022-08-28
+
+### Fixed
+
+- Rewind body before reading in `Message::bodySummary`
+
 ## 2.4.0 - 2022-06-20
 
 ### Added
@@ -97,7 +135,7 @@ Identical to the RC release.
 ### Removed
 
 - PHP < 7.2 support
-- All functions in the Guzzle\Psr7 namespace
+- All functions in the `GuzzleHttp\Psr7` namespace
 
 ## 1.8.1 - 2021-03-21
 

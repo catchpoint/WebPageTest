@@ -2509,7 +2509,7 @@ details.details_custommetrics summary {
 }
 
 .compare-experiment.compare-loading .results_header {
-  padding: 1.2rem 6rem 0;
+  padding: 6rem 0 0;
   background: url(/assets/images/src/icon_science_bubbling.svg) left top
     no-repeat;
   background-size: 6rem auto;

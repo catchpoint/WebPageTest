@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
     header("HTTP/1.1 403 Unauthorized");
     exit;
@@ -21,7 +21,7 @@ $json = false;
 if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
     $json = true;
 } else {
-    include 'admin_header.inc';
+    require_once INCLUDES_PATH . '/include/admin_header.inc';
 }
 ?>
 
@@ -83,12 +83,12 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
                     $domains[$domain] += $entry['used'];
                 }
             }
-                arsort($domains);
-                echo "<table class=\"table\"><tr><th>Used</th><th>Contact Domain</th></tr>";
+            arsort($domains);
+            echo "<table class=\"table\"><tr><th>Used</th><th>Contact Domain</th></tr>";
             foreach ($domains as $domain => $count) {
                 echo "<tr><td>$count</td><td>$domain</td></tr>";
             }
-                echo '</table>';
+            echo '</table>';
         } else {
             if (count($used)) {
                 usort($used, 'comp');
@@ -190,6 +190,5 @@ function comp($a, $b)
 }
 
 if (!$json) {
-    include 'admin_footer.inc';
+    require_once INCLUDES_PATH . '/include/admin_footer.inc';
 }
-

@@ -98,8 +98,10 @@ class Timings
 
     /**
      * @return string Single formatted metric
+     *
+     * @psalm-param '-'|'?' $default
      */
-    private function getTimeMetric($stepResult, $metric, $default = self::NO_METRIC_STRING): string
+    private function getTimeMetric($stepResult, string $metric, string $default = self::NO_METRIC_STRING): string
     {
         $value = $stepResult->getMetric($metric);
         if ($value === null) {
@@ -113,8 +115,11 @@ class Timings
 
     /**
      * @return string Range of 2 metrics, formatted like `(start - end)`
+     *
+     * @psalm-param 'domContentLoadedEventStart'|'loadEventStart' $startMetric
+     * @psalm-param 'domContentLoadedEventEnd'|'loadEventEnd' $endMetric
      */
-    private function getTimeRangeMetric($stepResult, $startMetric, $endMetric)
+    private function getTimeRangeMetric($stepResult, string $startMetric, string $endMetric)
     {
         $startValue = $this->getTimeMetric($stepResult, $startMetric, '?');
         $endValue = $this->getTimeMetric($stepResult, $endMetric, '?');

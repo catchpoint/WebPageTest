@@ -91,7 +91,7 @@ class CPClient
         );
     }
 
-    public function getAccessToken(): string
+    public function getAccessToken(): ?string
     {
         return $this->access_token;
     }
@@ -662,6 +662,9 @@ class CPClient
         }
     }
 
+    /**
+     * @return array|object
+     */
     public function resendEmailVerification()
     {
         $gql = (new Mutation('wptResendVerificationMail'));

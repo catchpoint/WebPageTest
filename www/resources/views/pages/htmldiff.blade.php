@@ -1,4 +1,4 @@
-@extends('default')
+@extends(defined('SG') ? 'styleguide' : 'default')
 
 @section('style')
 <style>

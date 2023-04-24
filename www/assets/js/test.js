@@ -16,8 +16,7 @@ function ValidateInput(form, remainingRuns) {
   if (
     (form.url.value == "" || form.url.value == "Enter a Website URL") &&
     form.script.value == "" &&
-    (form["bulkurls"] == undefined || form.bulkurls.value == "") &&
-    (form["bulkfile"] == undefined || form.bulkfile.value == "")
+    (form["bulkurls"] == undefined || form.bulkurls.value == "")
   ) {
     alert("Please enter an URL to test.");
     form.url.focus();
