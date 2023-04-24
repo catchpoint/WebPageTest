@@ -62,8 +62,8 @@ if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER
                         gz_readfile_chunked($filePath);
                     }
                 } else {
-                    // show new template
-                    require_once 'lighthouse-new.php';
+                    // show HTML (Blade) page
+                    require_once INCLUDES_PATH . '/include/lighthouse-page.inc.php';
                 }
             } else {
                 $info = GetTestInfo($testPath);
