@@ -97,7 +97,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getLocations.xsl\" version=\"1.0\"?>\n";
+    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"/assets/xsl/getLocations.xsl\" version=\"1.0\"?>\n";
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";
