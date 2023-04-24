@@ -132,6 +132,11 @@
                                 </li>
                             </ul>
                         </div>
+
+
+                        <p class="try-exps"><span class="opportunities_summary_exps">WebPageTest Pro experiments can help you improve your footprint! <a href="../experiments/">Try them now!</a></span></p>
+
+
                        <h3 class="hed_sub">Impactful Practices Quick-Check <em>(See <a href="{{ $opps_url }}">Opportunities & Experiments</a> for details)</em></h3>
 
                         <div class="ei_diagnostics">

@@ -2527,7 +2527,8 @@ details.details_custommetrics summary {
   font-weight: 300;
 }
 
-.summary_opps > p {
+.summary_opps > p,
+.result-impact p.try-exps {
   line-height: 1.5;
   font-weight: 500;
   margin: 0;
@@ -2538,8 +2539,18 @@ details.details_custommetrics summary {
   justify-content: flex-end;
   font-size: 1em;
   position: relative;
+  align-items: center;
+  line-height: 1.5;
+  /* padding: .2em 0; */
 }
-.summary_opps > p span {
+.result-impact p.try-exps {
+  margin: 0 0 1em 0;
+  width: 100%;
+  justify-content: center;
+  font-size: 1.1em;
+}
+.summary_opps > p span,
+.result-impact p.try-exps span {
   position: relative;
   background-color: #fff;
   padding: 0.5em 0.4em 0.5em 2.8em;
@@ -2549,7 +2560,13 @@ details.details_custommetrics summary {
   border-radius: 2rem;
   background-position: left 0.4em top 0.1em;
 }
-.summary_opps > p:before {
+.result-impact p.try-exps span {
+  align-items: center;
+  display: flex;
+  background-position: left 0.4em top 0.4em;
+}
+.summary_opps > p:before,
+.result-impact p.try-exps:before {
   content: "";
   border-top: 1px solid #ddd;
   position: absolute;
@@ -2557,7 +2574,8 @@ details.details_custommetrics summary {
   top: 50%;
 }
 
-.summary_opps > p a {
+.summary_opps > p a,
+.result-impact p.try-exps a {
   font-weight: 700;
   font-size: 0.9em;
   padding: 0.5em 1.3em;
@@ -2572,7 +2590,9 @@ details.details_custommetrics summary {
 }
 
 .summary_opps > p a:hover,
-.summary_opps > p a:focus {
+.summary_opps > p a:focus,
+.result-impact p.try-exps a:hover,
+.result-impact p.try-exps a:focus {
   background-color: #fff;
   border-color: #448204;
   color: #5c9811;
@@ -2580,7 +2600,9 @@ details.details_custommetrics summary {
 
 @media (max-width: 60em) {
   .summary_opps > p,
-  .summary_opps > p span {
+  .summary_opps > p span,
+  .result-impact p.try-exps,
+  .result-impact p.try-exps span {
     flex-flow: row wrap;
     height: auto;
     border: 0;
@@ -2588,15 +2610,22 @@ details.details_custommetrics summary {
     gap: 2em;
     width: 100%;
   }
-  .summary_opps > p span {
+  .result-impact p.try-exps {
+    margin: 2em 0 0;
+    max-width: 25em;
+  }
+  .summary_opps > p span,
+  .result-impact p.try-exps span {
     display: block;
     padding-bottom: 0.5em;
     background-position: 0.3em 0.3em;
   }
-  .summary_opps > p:before {
+  .summary_opps > p:before,
+  .result-impact p.try-exps:before {
     display: none;
   }
-  .summary_opps > p a {
+  .summary_opps > p a,
+  .result-impact p.try-exps a{
     display: inline-block;
     margin: 0 0.5em;
     flex: 0 0 8em;
@@ -9958,7 +9987,9 @@ font-weight: 500;
     background-position: right 13rem top 3rem, right 1rem top 2rem;
   }
   
-  
+  .ei_diagnostics ul {
+    border-bottom: none;
+  }
 
   
   .result-impact .results_header {
