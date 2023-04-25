@@ -34,9 +34,11 @@ if (count($testsId) == 1) {
     $_GET['test'] = $testsId[0];
     $_REQUEST['test'] = $testsId[0];
 }
-include 'common.inc';
-require_once('page_data.inc');
-require_once('graph_page_data.inc');
+
+require_once __DIR__ . '/common.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/graph_page_data.inc';
+
 $page_keywords = array('Graph Page Data', 'Webpagetest', 'Website Speed Test', 'Page Speed', 'comparison');
 $page_description = "Graph Page Data Comparison.";
 
