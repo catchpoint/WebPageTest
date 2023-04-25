@@ -943,7 +943,8 @@ h4.experiments_list_hed-recs {
   background: url(/assets/images/icon-external.svg) right center no-repeat;
 }
 
-.experiment_description_text span {
+.experiment_description_text span,
+.experiment_description_text .selectbutton {
   font-size: 0.7em;
   padding: 0.2em 0.4em;
   border: 1px solid #666;
