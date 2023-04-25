@@ -156,7 +156,7 @@
                                     @else
                                     <p>{{$practices['unused_preloads_total']}} file{{ $practices['unused_preloads_total'] > 1 ? 's were' : ' was' }} preloaded but never used, increasing page weight.
 
-                                    <a href="{{ $opps_url }}#experiment-022" class="ei_diagnostics_item-experiments"><span class="opportunities_summary_exps"></span>See Experiments</a>
+                                    <a href="{{ $opps_url }}#experiment-022" class="ei_diagnostics_item-experiments"><span class="opportunities_summary_exps"></span>Relevant Experiments</a>
                                     </p>
                                     @endif
                                 </li>
@@ -166,7 +166,7 @@
                                     <p>Zero images were found that could potentially be lazy-loaded.</p>
                                     @else
                                     <p>{{$practices['images_need_lazy_total']}} image{{ $practices['images_need_lazy_total'] > 1 ? 's were' : ' was' }} hidden at page load and could possibly be lazy-loaded to reduce potential page weight.
-                                    <a href="{{ $opps_url }}#experiment-014" class="ei_diagnostics_item-experiments"><span class="opportunities_summary_exps"></span>See Experiments</a>
+                                    <a href="{{ $opps_url }}#experiment-014" class="ei_diagnostics_item-experiments"><span class="opportunities_summary_exps"></span>Relevant Experiments</a>
 
                                     </p>
                                     @endif
