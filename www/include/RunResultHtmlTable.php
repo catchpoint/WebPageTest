@@ -287,7 +287,7 @@ class RunResultHtmlTable
         }
         if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
             //$out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
-            $out .= $this->_bodyCell(null, "How soon did the page appear usable?");
+            $out .= $this->_bodyCell(null, "How soon did the page look usable?");
         }
         if ($this->isColumnEnabled(self::COL_RESULT)) {
             //$out .= $this->_headCell("Result (error&nbsp;code)");
@@ -319,7 +319,7 @@ class RunResultHtmlTable
         }
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
             //$out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
-            $out .= $this->_bodyCell("", "How long was content blocked from user input?");
+            $out .= $this->_bodyCell("", "Was the main thread blocked?");
             $vitalsBorder = null;
         }
 
@@ -346,7 +346,7 @@ class RunResultHtmlTable
                 $out .= $this->_bodyCell("", "How many requests did the browser make?");
             }
             //$out .= $this->_headCell("Page Weight");
-            $out .= $this->_bodyCell("", "How many bytes were downloaded?");
+            $out .= $this->_bodyCell("", "How many bytes downloaded?");
         }
 
 
