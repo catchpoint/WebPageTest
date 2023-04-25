@@ -314,9 +314,7 @@ h6 {
   line-height: 1;
 }
 
-.test_results-content h2 em.flag,
-.summary_opps em.flag,
-span.lh-flag {
+.test_results-content h2 em.flag, .summary_opps em.flag, span.lh-flag, .metric_descs em.flag {
   font-size: 0.3em;
   font-weight: 500;
   text-transform: uppercase;
@@ -328,6 +326,13 @@ span.lh-flag {
   align-self: flex-start;
   font-style: normal;
   margin: 0 1em;
+}
+.metric_descs em.flag {
+  font-size: 0.7em;
+  display: inline-block;
+  position: relative;
+  margin: 0;
+  vertical-align: middle;
 }
 
 .summary_opps em.flag {
@@ -6729,6 +6734,7 @@ table.pretty .metric_groups th {
   white-space: nowrap;
   color: #2a3b64;
   overflow: visible;
+  width: 20%;
 }
 
 .results-filmstrip-container h4 {

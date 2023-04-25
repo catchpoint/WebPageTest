@@ -254,9 +254,9 @@ class RunResultHtmlTable
 
 
             if ($this->useShortNames) {
-                $out .= $this->_headCell('<abbr title="co2 Per Visit">co2</abbr>');
+                $out .= $this->_headCell('<abbr title="co2 Per Visit">co2</abbr>', 'carboncontrol');
             } else {
-                $out .= $this->_headCell('<a href="' . $carboncontrol_url . '">Carbon Footprint</a>');
+                $out .= $this->_headCell('<a href="' . $carboncontrol_url . '">Carbon Footprint</a>', 'carboncontrol');
             }
         }
 
@@ -360,7 +360,7 @@ class RunResultHtmlTable
             $out .= $this->_bodyCell("", "What was the avg. download cost?");
         }
         if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
-            $out .= $this->_bodyCell("", "How much carbon does 1 visit emit?");
+            $out .= $this->_bodyCell("carboncontrol", "How eco-friendly is it? <em class=\"flag\">Experimental</em>");
         }
 
         return $out;
