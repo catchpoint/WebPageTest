@@ -57,6 +57,7 @@ $page_description = "Website performance test result$testLabel.";
             }
             .selectall, .unselectall {
                 cursor: pointer;
+                margin-right: 0.4em;
             }
         </style>
         <?php if (!$testComplete) {
@@ -280,7 +281,8 @@ $page_description = "Website performance test result$testLabel.";
                                         $enable_select_all = count($exp->expval) > 7;
                                         $out .= '<details class="experiment_assets ' . (($hideassets === true || $exp->hideassets === true) ? "experiment_assets-hide" : "" )  . '"><summary>Assets included in experiment:</summary>';
                                         if ($enable_select_all) {
-                                            $out .= '<span class="selectall">Select all</span> <span class="unselectall">Unselect all</span>';
+                                            $out .= '<button type="button" class="selectbutton selectall">Select all</button>';
+                                            $out .= '<button type="button" class="selectbutton unselectall">Unselect all</button>';
                                         }
 
                                         $out .= '<ol>';
@@ -600,7 +602,7 @@ $page_description = "Website performance test result$testLabel.";
                             });
                         }
                         var input = form.querySelector("textarea[name='" + keyval[0] + "']:not([data-hydrated='true']),input[type='text'][name='" + keyval[0] + "']:not([data-hydrated='true'])");
-                        
+
                         if( !input ){
                             let priors = form.querySelectorAll("textarea[name='" + keyval[0] + "'],input[type='text'][name='" + keyval[0] + "']");
                             if( priors.length ){
@@ -616,7 +618,7 @@ $page_description = "Website performance test result$testLabel.";
                             input.value = keyval[1];
                             input.setAttribute('data-hydrated', 'true');
                         }
-                        
+
                     }
                 });
             updateCheckDeps();
@@ -633,11 +635,11 @@ $page_description = "Website performance test result$testLabel.";
         for (const pair of formData.entries()) {
             formString += `${encodeURIComponent(pair[0])}=${encodeURIComponent(pair[1])}&`;
         }
-        
-        
+
+
         localStorage.setItem("experimentForm", formString);
     }
-    
+
     form.addEventListener("change", saveExperimentFormState );
     form.addEventListener("submit", sortExperimentOrder );
     form.addEventListener("submit", saveExperimentFormState );
@@ -701,7 +703,7 @@ $page_description = "Website performance test result$testLabel.";
             localStorage.setItem("experimentOrder", JSON.stringify(orderObj));
         }
     }
-    
+
 
     var expsActive;
     function updateCount(){
@@ -715,7 +717,7 @@ $page_description = "Website performance test result$testLabel.";
                 }
             });
 
-            
+
             document.querySelector(".experiments_foot").classList.add("experiments_foot-stick");
             let cta = document.querySelector(".exps-cta");
             if( cta ){
@@ -727,7 +729,7 @@ $page_description = "Website performance test result$testLabel.";
             let expsActiveLinksContain = document.createElement('div');
             expsActiveLinksContain.innerHTML = '<p class="experiments_jump">Experiments apply in this order: <i>(Order matters! Some experiments will override others.)</i></p>';
             let expsActiveLinks = document.createElement('ol');
-            
+
             expsActive.forEach(exp => {
                 let newLi = document.createElement('li');
                 newLi.setAttribute("data-input-name", exp.getAttribute('name'));
@@ -764,7 +766,7 @@ $page_description = "Website performance test result$testLabel.";
             if( cta ){
                 cta.innerText = "Select one or more experiments...";
             }
-            
+
             document.querySelector("[type=submit]").setAttribute("aria-disabled", true);
 
         }
@@ -794,7 +796,7 @@ $page_description = "Website performance test result$testLabel.";
         btn.className = "experiment_pair_value_addbtn";
         btn.innerText = "Add more";
         pair.after(btn);
-        btn.addEventListener("click", () => { 
+        btn.addEventListener("click", () => {
             let newpair = pair.cloneNode(true);
             pair.after(newpair);
         });
@@ -804,9 +806,9 @@ $page_description = "Website performance test result$testLabel.";
     overflowSections.forEach(section => {
         let btn = document.createElement('button');
         btn.type = "button";
-        btn.innerText = "Expand All"; 
+        btn.innerText = "Expand All";
         section.append(btn);
-        btn.addEventListener("click", () => { 
+        btn.addEventListener("click", () => {
             btn.closest(".util_overflow_more").classList.add("util_overflow_more-expanded");
         });
     });
@@ -814,16 +816,16 @@ $page_description = "Website performance test result$testLabel.";
     // select all
     document.querySelectorAll('.experiment_assets').forEach(details => {
         details.addEventListener('click', e => {
-            if (e.target.className === 'selectall') {
+            if (e.target.classList.contains('selectall')) {
                 details.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = true);
             }
-            if (e.target.className === 'unselectall') {
+            if (e.target.classList.contains('unselectall')) {
                 details.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
             }
         });
     });
 
-    
+
 
 </script>
     </body>
