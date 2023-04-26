@@ -41,6 +41,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     $refresh = 240;
     $title = 'WebPageTest - Tester Status';
     require_once INCLUDES_PATH . '/include/admin_header.inc';
+    echo '<style>.legend {width: 20px; height: 20px; display: inline-block; margin: 0 10px;}</style>';
+    echo '<div style="display: flex; padding: 10px">Key: <div class="alert-danger legend"></div> Offline location';
+    echo '<div class="alert-success legend"></div> Locations where oldest test started &lt; 30 minutes ago</div>';
     echo "<table class=\"table\">\n";
     foreach ($locations as $name => &$location) {
         $error = ' danger';
