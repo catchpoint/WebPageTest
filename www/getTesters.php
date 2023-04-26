@@ -5,8 +5,8 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
-    header("HTTP/1.1 403 Unauthorized");
-    exit;
+    //header("HTTP/1.1 403 Unauthorized");
+    //exit;
 }
 if (isset($_REQUEST['k'])) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
@@ -110,7 +110,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getTesters.xsl\" version=\"1.0\"?>\n";
+    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"/assets/xsl/getTesters.xsl\" version=\"1.0\"?>\n";
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";
