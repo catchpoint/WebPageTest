@@ -37,7 +37,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                     include 'vitals.php';
                 } elseif (isset($_REQUEST['view']) && $_REQUEST['view'] == 'carboncontrol') {
                     $urlSansQ = explode("?", $_SERVER['REQUEST_URI']);
-                    header('Location: ' . $urlSansQ[0] . '1/carboncontrol');
+                    header('Location: ' . $urlSansQ[0] . '1/carboncontrol/');
                 } else {
                     include 'result.inc';
                 }
