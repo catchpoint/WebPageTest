@@ -62,13 +62,14 @@ foreach ($mime_breakdown as $type => $values) {
 
 
 // green hosting info metric
-$green_hosting = $testStepResult->getMetric('green-hosting');
+$carbon_footprint = $testStepResult->getMetric('carbon-footprint');
+
+
+
+$green_hosting = $carbon_footprint['green-hosting'];
 if (!isset($green_hosting[0]['hosted_by'])) {
     $green_hosting[0]['hosted_by'] = 'Unknown';
 }
-
-// green hosting info metric
-$carbon_footprint = $testStepResult->getMetric('carbon-footprint');
 
 // for the quick check impact audits
 $practices = [];

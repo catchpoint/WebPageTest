@@ -13,7 +13,6 @@
 
 
     $carbonFootprint = $testStepResult->getMetric('carbon-footprint');
-    //$hostsGreen = $testStepResult->getMetric('green-hosting');
 
     
     //TODO this is from gen content
