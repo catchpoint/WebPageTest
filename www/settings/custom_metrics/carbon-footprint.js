@@ -26,12 +26,17 @@ let collectHostStatuses = async function(){
     $WPT_REQUESTS.forEach(req => {
         var url = new URL(req.url);
         var host = url.host;
-        if( hosts.indexOf(host) === -1 ){
+        if( hosts.indexOf(host) === -1 && host !== "" ){
             hosts.push(host);
         }
     });
 
-    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url).then(res => res.json())); 
+    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url).then(res => {
+        let jsonResp = res.json();
+        if(jsonResp !== ""){ 
+            return jsonResp;
+        } 
+    })); 
     return Promise.all(requests); 
 }
 
