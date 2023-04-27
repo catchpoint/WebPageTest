@@ -13,6 +13,9 @@
 
 
     $carbonFootprint = $testStepResult->getMetric('carbon-footprint');
+        
+    $green_hosting = $carbonFootprint['green-hosting'];
+    
 
     
     //TODO this is from gen content
@@ -30,9 +33,6 @@
 
 
         $carbonFootprint = $carbonFootprint['sustainable-web-design'];
-        if (!isset($green_hosting[0]['hosted_by'])) {
-            $green_hosting[0]['hosted_by'] = 'Unknown';
-        }
 
         $carbonCompareAmt = round( ( abs($avgSiteCarbon - $carbonFootprint ) /  $avgSiteCarbon  ) * 100 );
         if ($carbonCompareAmt === 0){
@@ -75,7 +75,30 @@
                         "expval" => array(''),
                         "hideassets" => true
                     ]);
-                }                
+
+                    
+                }   
+
+
+                if (isset($green_hosting)) {
+                    $nongreenhosts = [];
+                    foreach( $green_hosting as $host ){
+                        if( isset($host['green']) && $host['green'] === false ){
+                            
+                            array_push($nongreenhosts, $host['url']);
+                        }
+                    }
+
+                    if( count($nongreenhosts) > 0 ){
+                        array_push($expsToAdd, (object) [
+                            "id" => '100',
+                            'title' => 'Move Files to Green Hosts',
+                            "desc" => '<p>This experiment will test for changes in carbon footprint from moving files to green hosting. Note: the overrides happen at the host level, so any requests from that host will now be self-hosted.</p>',
+                            "expvar" => 'experiment-overrideHost',
+                            "expval" => array_unique($nongreenhosts)
+                        ]);
+                    }
+                }             
             }
             if( count($expsToAdd) > 0 ){
                 $opp = [

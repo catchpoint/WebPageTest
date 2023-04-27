@@ -6,11 +6,12 @@ if ($experiment) {
 
     foreach ($recips as $recipe) {
         $recipeID = key($recipe);
+        
 
         foreach ($appliedAssessment as $cat) {
             foreach ($cat["opportunities"] as $opp) {
                 foreach ($opp["experiments"] as $exp) {
-                    if ($exp["id"] === $recipeID) {
+                    if ($exp["id"] == $recipeID) {
                         $experimentInfo = $exp;
                     }
                 }
