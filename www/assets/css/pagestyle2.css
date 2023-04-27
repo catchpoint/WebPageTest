@@ -9657,18 +9657,24 @@ p.lh-filteraudits {
 }
 .ei_summary_hosting_info summary {
   list-style: none;
-  padding-left: 1.5em;
+  padding: .2em 1.2em .2em 1.7em;
   cursor: pointer;
-  text-decoration: dotted underline #888;
-  background: url(/assets/images/src/icon_info_circle.svg) left .1em
-    no-repeat;
-  background-size: 1.2em auto;
+  background: url(/assets/images/src/icon_info_circle.svg), url("/assets/images/src/icon_triangledown.svg");
+  background-size: 1.2em auto, .6em auto;
+  border: 1px solid #eee;
+  background-repeat: no-repeat;
+  background-position: left .3em center, right .3em center;
+  white-space: nowrap;
+  border-radius: 3em;
+  display: inline-block;
 }
 .ei_summary_hosting_info summary:hover,
 .ei_summary_hosting_info summary:focus,
 .ei_summary_hosting_info summary:active {
-  text-decoration: dotted underline #888;
+  background-color: #fff;
   outline: none;
+  box-shadow: 0 0 8px #ddd;
+  border-color: #ccc;
 }
 .ei_summary_hosting_info summary + div {
   position: absolute;
