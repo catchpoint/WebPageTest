@@ -80,7 +80,7 @@
                                     <tbody>
                                         <tr class="metric_labels">
                                             <th>Page Weight</th>
-                                            <th>CO<sub>2</sub> {{$carbon_footprint['scale']}}</th>
+                                            <th><abbr title="carbon dioxide equivalent">CO<sub>2</sub>e</abbr> {{$carbon_footprint['scale']}}</th>
                                         </tr>
                                         <tr>
                                             <td>{{$pageweight_total}}<span class="units">{{$pageweight_units}}</span></td>
