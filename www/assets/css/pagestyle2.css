@@ -2514,11 +2514,11 @@ details.details_custommetrics summary {
 }
 
 .compare-experiment.compare-loading .results_header {
-  padding: 6rem 0 0;
-  background: url(/assets/images/src/icon_science_bubbling.svg) left top
+  padding: 2rem 0 0 6rem;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left center
     no-repeat;
   background-size: 6rem auto;
-  margin: 3rem 0 0;
+  margin: 6rem 0 0 0;
 }
 
 .compare-experiment.compare-loading .results_header h1 {
