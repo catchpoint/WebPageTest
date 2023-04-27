@@ -40,6 +40,9 @@
                         <p><b>Now included in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
                         
                     </div>
+                    <div class="home_feature_hed_visual">
+                        <img src="/assets/images/wpt_home_featureimg-cc.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                    </div>
                 </div>
                 <div class="home_feature_hed home_feature_hed-pro">
                     <div class="home_feature_hed_text">

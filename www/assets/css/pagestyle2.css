@@ -3040,10 +3040,10 @@ body.result #main {
 
 .home.feature-cc .home_feature_hed_contain {
   background-image: url(/assets/images/wpt_home_swoop.svg);
-  background: url(/assets/images/src/energyimpact-trees.svg), url(/assets/images/src/energyimpact-clouds.svg),url(/assets/images/wpt_home_swoop-cc.svg);
-  background-repeat: no-repeat, no-repeat,no-repeat, no-repeat,no-repeat;
-  background-size: auto auto, auto auto,104% auto;
-  background-position: right 15rem bottom 7rem, right 0rem top 9rem, bottom -11px left 50%;
+  background:  url(/assets/images/src/energyimpact-clouds.svg),url(/assets/images/wpt_home_swoop-cc.svg);
+  background-repeat:  no-repeat,no-repeat, no-repeat,no-repeat;
+  background-size: auto auto,104% auto;
+  background-position: right 0rem top 9rem, bottom -11px left 50%;
   background-color: #e0f3ff;
 }
 
@@ -3370,6 +3370,9 @@ header .pro-flag {
   object-fit: contain;
   height: auto;
 }
+.home_feature_hed-cc .home_feature_hed_visual {
+  box-shadow: 0px 0px 5px 3px #d3dfef;
+}
 
 .home_feature_hed_visual img,
 .home_feature_hed_visual video,
@@ -3519,6 +3522,9 @@ header .pro-flag {
   .home_feature_hed,
   .home_feature_main {
     display: block;
+  }
+  .home_feature_hed p {
+    margin-bottom: 1rem;
   }
 }
 
