@@ -20,20 +20,46 @@ See https://developers.thegreenwebfoundation.org/co2js/methods/ to learn more ab
 //# sourceMappingURL=index.js.map
 
 
+// note: this section is borrowed from green-hosting js. 
+let collectHostStatuses = async function(){
+    const hosts = [location.host];
+    $WPT_REQUESTS.forEach(req => {
+        var url = new URL(req.url);
+        var host = url.host;
+        if( hosts.indexOf(host) === -1 ){
+            hosts.push(host);
+        }
+    });
+
+    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url).then(res => res.json())); 
+    return Promise.all(requests); 
+}
+
+
+
 
 let calculate_carbon = async function(){
     let totalCarbon = 0;
     const emissionsSWD = new co2.co2();
+    let greenstatuses = await collectHostStatuses();
 
     $WPT_REQUESTS.forEach(req => {
         if( req.transfer_size ){
-            totalCarbon += emissionsSWD.perByte(req.transfer_size );
+            // try to determine request green status
+            let green = false;
+            if( req.url){
+                let url = new URL(req.url);
+                let host = url.host;
+                green = greenstatuses.find(element => element.url === host && element.green) ? true : false;
+            }
+            totalCarbon += emissionsSWD.perByte(req.transfer_size, green );
         }
     });
     
     return Promise.resolve({ 
         "sustainable-web-design": totalCarbon.toFixed(2), 
-        "scale": "per new visit"
+        "scale": "per new visit",
+        "green-hosting": greenstatuses
     }); // We use toFixed(2) here to set the result to 2 decimal places.
 }
 
