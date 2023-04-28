@@ -9958,6 +9958,8 @@ font-weight: 500;
 
 .ei_nodata {
   margin: 3rem 0;
+  display: block;
+  padding-bottom: 3rem;
 }
 .treecreds {
   text-align: right;

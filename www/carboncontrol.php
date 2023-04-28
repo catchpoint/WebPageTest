@@ -67,6 +67,7 @@ $carbon_footprint = $testStepResult->getMetric('carbon-footprint');
 
 
 $green_hosting = $carbon_footprint['green-hosting'];
+
 if (!isset($green_hosting[0]['hosted_by'])) {
     $green_hosting[0]['hosted_by'] = 'Unknown';
 }

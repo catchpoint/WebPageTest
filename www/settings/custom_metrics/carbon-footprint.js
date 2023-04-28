@@ -19,9 +19,20 @@ See https://developers.thegreenwebfoundation.org/co2js/methods/ to learn more ab
 See https://developers.thegreenwebfoundation.org/co2js/methods/ to learn more about the methods available in CO2.js.`)}perDomain(e,t){let o=[];for(let n of Object.keys(e.domains)){let i;t&&t.indexOf(n)>-1?i=this.perByte(e.domains[n].transferSize,!0):i=this.perByte(e.domains[n].transferSize),o.push({domain:n,co2:i,transferSize:e.domains[n].transferSize})}return o.sort((n,i)=>i.co2-n.co2),o}perPage(e,t){let o=this.perDomain(e,t),n=0;for(let i of o)n+=i.co2;return n}perContentType(e,t){let o={};for(let i of e.assets){let a=new URL(i.url).domain,f=i.transferSize,C=this.perByte(f,t&&t.indexOf(a)>-1),l=i.type;o[l]||(o[l]={co2:0,transferSize:0}),o[l].co2+=C,o[l].transferSize+=f}let n=[];for(let i of Object.keys(o))n.push({type:i,co2:o[i].co2,transferSize:o[i].transferSize});return n.sort((i,a)=>a.co2-i.co2),n}dirtiestResources(e,t){let o=[];for(let n of e.assets){let i=new URL(n.url).domain,a=n.transferSize,f=this.perByte(a,t&&t.indexOf(i)>-1);o.push({url:n.url,co2:f,transferSize:a})}return o.sort((n,i)=>i.co2-n.co2),o.slice(0,o.length>10?10:o.length)}perParty(e,t){let o=0,n=0,i=e.firstPartyRegEx;for(let a of Object.keys(e.domains))a.match(i)?o+=this.perByte(e.domains[a].transferSize,t&&t.indexOf(a)>-1):n+=this.perByte(e.domains[a].transferSize,t&&t.indexOf(a)>-1);return{firstParty:o,thirdParty:n}}};var z=$;var de=D(w());var le=D(w()),dt=(0,le.default)("tgwf:hostingAPI");function we(r){return typeof r=="string"?Me(r):Le(r)}async function Me(r){return(await(await fetch(`https://api.thegreenwebfoundation.org/greencheck/${r}`)).json()).green}async function Le(r){try{let e="https://api.thegreenwebfoundation.org/v2/greencheckmulti",t=JSON.stringify(r),n=await(await fetch(`${e}/${t}`)).json();return De(n)}catch{return[]}}function De(r){return Object.entries(r).filter(([o,n])=>n.green).map(([o,n])=>n.url)}var ue={check:we};var Ct=(0,de.default)("tgwf:hosting");function Ve(r,e){return ue.check(r)}var J={check:Ve};var Ue={AFG:120.482,AFRICA:483.78,ALB:23.438,DZA:488.393,ASM:687.5,AGO:168.594,ATG:657.143,ARG:337.533,ARM:222.678,ABW:591.398,ASIA:531.78,AUS:503.179,AUT:157.52,AZE:532.902,BHS:698.113,BHR:489.924,BGD:581.485,BRB:644.86,BLR:415.774,BEL:165.363,BLZ:484.375,BEN:666.667,BTN:24.444,BOL:319.432,BIH:516.626,BWA:794.521,BRA:102.411,BRN:658.849,BGR:399.565,BFA:611.429,BDI:250,CPV:600,KHM:399.31,CMR:278.261,CAN:125.55,CYM:684.932,CAF:0,TCD:677.419,CHL:333.173,CHN:530.214,COL:169.309,COM:714.286,COG:398.01,COD:25.362,COK:400,CRI:37.213,CIV:390.71,HRV:246.459,CUB:574.684,CYP:589.354,CZE:415.345,DNK:180.709,DJI:666.667,DMA:529.412,DOM:540.387,ECU:169.384,EGY:485.367,SLV:194.226,GNQ:492.958,ERI:688.889,EST:464.029,SWZ:189.189,ETH:25.187,EU:277.35,EUROPE:298.01,FLK:500,FRO:428.571,FJI:292.035,FIN:130.977,FRA:84.817,GUF:254.717,PYF:471.429,G20:440.39,G7:341.23,GAB:397.38,GMB:700,GEO:134.831,DEU:385.467,GHA:362.942,GRC:343.822,GRL:133.333,GRD:714.286,GLP:611.765,GUM:670.33,GTM:313.019,GIN:208.633,GNB:750,GUY:634.146,HTI:606.061,HND:374.269,HKG:684.823,HUN:222.973,ISL:28.557,IND:632.406,IDN:623.281,IRN:493.595,IRQ:500.206,IRL:345.347,ISR:550.493,ITA:371.692,JAM:524.138,JPN:483.039,JOR:399.909,KAZ:635.574,KEN:99.919,KIR:666.667,XKX:766.605,KWT:489.61,KGZ:104.354,LAO:242.182,"LATIN AMERICA AND CARIBBEAN":238.27,LVA:181.818,LBN:545.941,LSO:20,LBR:304.348,LBY:496.565,LTU:194.245,LUX:168.142,MAC:491.525,MDG:483.254,MWI:133.803,MYS:543.737,MDV:651.515,MLI:466.077,MLT:442.478,MTQ:698.63,MRT:526.596,MUS:611.111,MEX:421.402,"MIDDLE EAST":514.89,MDA:685.874,MNG:749.656,MNE:399.381,MSR:1e3,MAR:610.412,MOZ:125.063,MMR:348.837,NAM:63.694,NRU:750,NPL:24.51,NLD:354.988,NCL:610.119,NZL:98.639,NIC:354.212,NER:622.222,NGA:368.421,"NORTH AMERICA":336.4,PRK:157.785,MKD:529.328,NOR:28.818,OCEANIA:446.65,OECD:338.75,OMN:488.272,PAK:343.366,PSE:465.116,PAN:193.923,PNG:526.749,PRY:25.487,PER:254.521,POL:634.579,PRT:234.029,PRI:681.469,QAT:489.867,REU:519.031,ROU:264.121,RUS:367.189,RWA:294.118,KNA:681.818,LCA:685.714,SPM:800,VCT:500,WSM:470.588,STP:600,SAU:571.336,SEN:502.674,SRB:569.375,SYC:615.385,SLE:47.619,SGP:489.234,SVK:140.666,SVN:237.378,SLB:727.273,SOM:634.146,ZAF:709.002,KOR:435.689,SSD:684.211,ESP:217.373,LKA:479.829,SDN:242.917,SUR:356.436,SWE:45.084,CHE:45.622,SYR:540.573,TWN:561.431,TJK:84.136,TZA:361.077,THA:503.07,PHL:582.365,TGO:507.937,TON:625,TTO:520.046,TUN:469.428,TUR:413.628,TKM:544.393,TCA:703.704,UGA:52.273,UKR:206.539,ARE:461.845,GBR:257.379,USA:367.768,URY:116.168,UZB:506.164,VUT:571.429,VEN:189.446,VNM:376.828,VGB:714.286,VIR:685.714,WORLD:435.99,YEM:528.409,ZMB:84.698,ZWE:393.035},Ke="average";var y={data:Ue,type:Ke};var We={AFG:"414",ALB:"0",DZA:"528",ASM:"753",AND:"188",AGO:"1476",AIA:"753",ATG:"753",ARG:"478",ARM:"390",ABW:"753",AUS:"808",AUT:"242",AZE:"534","AZORES (PORTUGAL)":"753",BHS:"753",BHR:"726",BGD:"528",BRB:"749",BLR:"400",BEL:"252",BLZ:"403",BEN:"745",BMU:"753",BTN:"0",BOL:"604",BES:"753",BIH:"1197",BWA:"1486",BRA:"284",VGB:"753",BRN:"681",BGR:"911",BFA:"753",BDI:"414",KHM:"1046",CMR:"659",CAN:"372",CYM:"753",CPV:"753",CAF:"188",TCD:"753","CHANNEL ISLANDS (U.K)":"753",CHL:"657",CHN:"899",COL:"410",COM:"753",COD:"0",COG:"659",COK:"753",CRI:"108",CIV:"466",HRV:"294",CUB:"559",CUW:"876",CYP:"751",CZE:"902",DNK:"362",DJI:"753",DMA:"753",DOM:"601",ECU:"560",EGY:"554",SLV:"547",GNQ:"632",ERI:"915",EST:"1057",SWZ:"0",ETH:"0",FLK:"753",FRO:"753",FJI:"640",FIN:"267",FRA:"158",GUF:"423",PYF:"753",GAB:"946",GMB:"753",GEO:"289",DEU:"650",GHA:"495",GIB:"779",GRC:"507",GRL:"264",GRD:"753",GLP:"753",GUM:"753",GTM:"798",GIN:"753",GNB:"753",GUY:"847",HTI:"1048",HND:"662",HUN:"296",ISL:"0",IND:"951",IDN:"783",IRN:"592",IRQ:"1080",IRL:"380",IMN:"436",ISR:"394",ITA:"414",JAM:"711",JPN:"471",JOR:"529",KAZ:"797",KEN:"574",KIR:"753",PRK:"754",KOR:"555",XKX:"1145",KWT:"675",KGZ:"217",LAO:"1069",LVA:"240",LBN:"794",LSO:"0",LBR:"677",LBY:"668",LIE:"151",LTU:"211",LUX:"220",MDG:"876","MADEIRA (PORTUGAL)":"663",MWI:"489",MYS:"551",MDV:"753",MLI:"1076",MLT:"520",MHL:"753",MTQ:"753",MRT:"753",MUS:"700",MYT:"753",MEX:"531",FSM:"753",MDA:"541",MCO:"158",MNG:"1366",MNE:"899",MSR:"753",MAR:"729",MOZ:"234",MMR:"719",NAM:"355",NRU:"753",NPL:"0",NLD:"326",NCL:"779",NZL:"246",NIC:"675",NER:"772",NGA:"526",NIU:"753",MKD:"851",MNP:"753",NOR:"47",OMN:"479",PAK:"592",PLW:"753",PSE:"719",PAN:"477",PNG:"597",PRY:"0",PER:"473",PHL:"672",POL:"828",PRT:"389",PRI:"596",QAT:"503",REU:"772",ROU:"489",RUS:"476",RWA:"712",SHN:"753",KNA:"753",LCA:"753",MAF:"753",SPM:"753",VCT:"753",WSM:"753",SMR:"414",STP:"753",SAU:"592",SEN:"870",SRB:"1086",SYC:"753",SLE:"489",SGP:"379",SXM:"753",SVK:"332",SVN:"620",SLB:"753",SOM:"753",ZAF:"1070",SSD:"890",ESP:"402",LKA:"731",SDN:"736",SUR:"1029",SWE:"68",CHE:"48",SYR:"713",TWN:"484",TJK:"255",TZA:"531",THA:"450",TLS:"753",TGO:"859",TON:"753",TTO:"559",TUN:"468",TUR:"376",TKM:"927",TCA:"753",TUV:"753",UGA:"279",UKR:"768",ARE:"556",GBR:"380",USA:"416",URY:"174",UZB:"612",VUT:"753",VEN:"711",VNM:"560",VIR:"650",YEM:"807",ZMB:"416",ZWE:"1575","MEMO:  EU 27":"409"},Ye="marginal",ke="2021";var Q={data:We,type:Ye,year:ke};var He={co2:z,hosting:J,averageIntensity:y,marginalIntensity:Q};return Ne(xe);})();
 //# sourceMappingURL=index.js.map
 
+let hasCSPblock = false;
+if( $WPT_REQUESTS ){
+    let req1csp = $WPT_REQUESTS[0].response_headers['content-security-policy'];
+    hasCSPblock = req1csp && req1csp.indexOf("connect-src 'self'") > -1;
+}
 
 // note: this section is borrowed from green-hosting js. 
 let collectHostStatuses = async function(){
+    if( !$WPT_REQUESTS ){
+        return Promise.all([{error: "Carbon calculation requires Chromium."}]);
+    }
+    if( hasCSPblock ){
+        return Promise.all([{error: "Unable to check green hosting."}]);
+    }
     const hosts = [location.host];
     $WPT_REQUESTS.forEach(req => {
         var url = new URL(req.url);
@@ -31,12 +42,16 @@ let collectHostStatuses = async function(){
         }
     });
 
-    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url).then(res => {
+    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url)
+    .then(res => {
+        if( res !== undefined ){
         let jsonResp = res.json();
         if(jsonResp !== ""){ 
             return jsonResp;
         } 
-    })); 
+    }
+    }));
+    
     return Promise.all(requests); 
 }
 
@@ -44,6 +59,7 @@ let collectHostStatuses = async function(){
 
 
 let calculate_carbon = async function(){
+    
     let totalCarbon = 0;
     const emissionsSWD = new co2.co2();
     let greenstatuses = await collectHostStatuses();
@@ -52,14 +68,19 @@ let calculate_carbon = async function(){
         if( req.transfer_size ){
             // try to determine request green status
             let green = false;
-            if( req.url){
-                let url = new URL(req.url);
-                let host = url.host;
-                green = greenstatuses.find(element => element.url === host && element.green) ? true : false;
+            if( !hasCSPblock ){
+                if( req.url){
+                    let url = new URL(req.url);
+                    let host = url.host;
+                    if( greenstatuses[0] !== undefined ){
+                        green = greenstatuses.find(element => element.url === host && element.green) ? true : false;
+                    }
+                }
             }
             totalCarbon += emissionsSWD.perByte(req.transfer_size, green );
         }
     });
+
     
     return Promise.resolve({ 
         "sustainable-web-design": totalCarbon.toFixed(2), 
@@ -68,4 +89,7 @@ let calculate_carbon = async function(){
     }); // We use toFixed(2) here to set the result to 2 decimal places.
 }
 
+// without wpt requests, this isn't able to calculate. no metric unless chromium browsers
+if( $WPT_REQUESTS ){
 return calculate_carbon();
+}

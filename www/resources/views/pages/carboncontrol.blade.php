@@ -18,7 +18,13 @@
                             <li>
                                 <div class="ei_summary_hosting_info">
                                     <h4>Primary Domain</h4>
-                                    <p>Hosted by <em>{{$green_hosting[0]['hosted_by']}}</em></p>
+                                    <p>
+                                    @if ($green_hosting[0]['error'] )
+                                    <em>{{$green_hosting[0]['error']}}
+                                    @else   
+                                    Hosted by <em> 
+                                    {{$green_hosting[0]['hosted_by']}}
+                                    @endif</em></p>
                                 </div>
                                 @if( $green_hosting[0]['green'] )
                                 <img src="/assets/images/src/icon_tree.svg" alt="Green-Hosted">
@@ -61,6 +67,8 @@
                                             </table>
                                         </div>
                                     </details>
+                                    @elseif  ($green_hosting[0]['error'] )
+                                        <p>{{$green_hosting[0]['error']}}</p>
                                     @else
                                         <p>No third party hosts detected.</p>
                                     @endif
@@ -263,7 +271,7 @@
 
                         <p class="treecreds"><small><em>Credit: Trees graphic by <a href="https://www.figma.com/@thevisualteam">@thevisualteam</a> | CC Licensed on Figma</em></small></p>                        
                         @else
-                        <p class="ei_nodata">This test contains no Carbon Control data. Try re-running the test to get information on this site's Carbon Control.</p>
+                        <p class="ei_nodata">This test contains no Carbon Control data. That could mean the test was run before WebPageTest began tracking carbon footprint, or perhaps that the test is in a non-Chromium browser. </p>
                         @endif
 
                     </div>

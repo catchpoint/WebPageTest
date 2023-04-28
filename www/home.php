@@ -257,7 +257,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
-                                                            <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run.</small></label>
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run (Chromium browsers only).</small></label>
                                                         </div>
                                                     <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
@@ -265,9 +265,10 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <div class="fieldrow">
                                                         <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
                                                         <script>
-                                                            // show or hide simple lighthouse field depending on whether chrome test is running
+                                                            // show or hide simple lighthouse and cc fields depending on whether chrome test is running
                                                             let simplePresets = document.querySelector('.test_presets_easy');
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            let ccSimpleField = document.querySelector('[for=inc-cc-simple]');
                                                             let lhSimpleCheck = lhSimpleFields.querySelector('input');
                                                             function enableDisableLHSimple(){
                                                               let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
@@ -277,6 +278,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                               } else {
                                                                   lhSimpleFields.style.display = "none";
                                                                   lhSimpleCheck.disabled = true;
+                                                              }
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
+                                                                  ccSimpleField.style.display = "block";
+                                                              } else {
+                                                                  ccSimpleField.style.display = "none";
                                                               }
                                                             }
                                                             enableDisableLHSimple();
@@ -554,7 +560,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
                                                 <li>
-                                                    <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run.</small></label>
+                                                    <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run. (Chromium browsers only)</small></label>
                                                 </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
