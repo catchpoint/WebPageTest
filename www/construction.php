@@ -10,4 +10,3 @@ echo view('pages.construction', [
     'page_title' => 'WebPageTest - Under Construction',
     'body_class' => 'four-oh-four',
 ]);
-
