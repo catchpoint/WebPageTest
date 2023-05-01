@@ -55,7 +55,7 @@ if ($experiment) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
 
-                        if( $metric[0] === "carbon-footprint" ){
+                        if ($metric[0] === "carbon-footprint") {
                             $experimentMetric = $experimentMetric['sustainable-web-design'];
                             $controlMetric = $controlMetric['sustainable-web-design'];
                         }
@@ -87,7 +87,7 @@ if ($experiment) {
                     foreach ($diffMetrics as $metric) {
                         $experimentMetric = $tests[0]['stepResult']->getMetric($metric[0]);
                         $controlMetric = $tests[1]['stepResult']->getMetric($metric[0]);
-                        if( $metric[0] === "carbon-footprint" ){
+                        if ($metric[0] === "carbon-footprint") {
                             $experimentMetric = $experimentMetric['sustainable-web-design'];
                             $controlMetric = $controlMetric['sustainable-web-design'];
                         }

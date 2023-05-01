@@ -88,7 +88,7 @@
             }
         },8000);
 
-        <?php if( isset($req_cc) ){?>
+        <?php if (isset($req_cc)) {?>
             clearTimeout(featureSlides);
         <?php } ?>
 

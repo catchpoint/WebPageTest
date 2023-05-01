@@ -246,8 +246,7 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_COST)) {
             $out .= $this->_headCell("Cost");
         }
-        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
-
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
             $cctest_id = $this->testInfo->getId();
             $ccrun = $this->runResults->getRunNumber();
             $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/");
@@ -359,7 +358,7 @@ class RunResultHtmlTable
            // $out .= $this->_headCell("Cost");
             $out .= $this->_bodyCell("", "What was the avg. download cost?");
         }
-        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
             $out .= $this->_bodyCell("carboncontrol", "How eco-friendly is it? <em class=\"flag\">Experimental</em>");
         }
 
@@ -530,7 +529,7 @@ class RunResultHtmlTable
                 $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $this->_costColumnText($stepResult), $class);
             }
         }
-        if( $this->isColumnEnabled(self::COL_ENV_IMP) ){
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
             if ($cachedRun) {
                 $out .= "<td>&nbsp;</td>";
             } else {

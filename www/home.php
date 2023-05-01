@@ -110,7 +110,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
 
-                    <?php if( isset($req_cc) ){?>
+                    <?php if (isset($req_cc)) {?>
                         <input type="hidden" name="carbon_control_redirect" value="1">
                     <?php } ?>
 

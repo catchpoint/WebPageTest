@@ -6,7 +6,7 @@ if ($experiment) {
 
     foreach ($recips as $recipe) {
         $recipeID = key($recipe);
-        
+
 
         foreach ($appliedAssessment as $cat) {
             foreach ($cat["opportunities"] as $opp) {

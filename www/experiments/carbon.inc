@@ -13,11 +13,11 @@
 
 
     $carbonFootprint = $testStepResult->getMetric('carbon-footprint');
-        
-    $green_hosting = $carbonFootprint['green-hosting'];
-    
 
-    
+    $green_hosting = $carbonFootprint['green-hosting'];
+
+
+
     //TODO this is from gen content
     $genContentSize = $testStepResult->getMetric('generated-content-size');
     $genContentPercent = $testStepResult->getMetric('generated-content-percent');
@@ -27,25 +27,23 @@
     //end todo
 
 
-    if ( isset($carbonFootprint)  ) {
-
+    if (isset($carbonFootprint)) {
         $errDesc = "Factors such as heavier page weight and hosts that do not use green energy both increase a site's carbon footprint.";
 
 
         $carbonFootprint = $carbonFootprint['sustainable-web-design'];
 
-        $carbonCompareAmt = round( ( abs($avgSiteCarbon - $carbonFootprint ) /  $avgSiteCarbon  ) * 100 );
-        if ($carbonCompareAmt === 0){
+        $carbonCompareAmt = round(( abs($avgSiteCarbon - $carbonFootprint) /  $avgSiteCarbon  ) * 100);
+        if ($carbonCompareAmt === 0) {
              $carbonCompare = "Carbon footprint was average.";
-        } elseif ($carbonFootprint > $avgSiteCarbon){
+        } elseif ($carbonFootprint > $avgSiteCarbon) {
             $carbonCompare = "Carbon footprint was $carbonCompareAmt% higher than average.";
         } else {
              $carbonCompare = "Carbon footprint was $carbonCompareAmt% better than average.";
         }
         $opp = null;
 
-        if( $carbonFootprint > $avgSiteCarbon ){
-
+        if ($carbonFootprint > $avgSiteCarbon) {
             $errTitle = "This site's carbon footprint was higher than average";
 
             if (isset($genContentSize) && isset($genContentPercent)) {
@@ -53,8 +51,8 @@
                 $genContentPercent = floatval($genContentPercent);
                 $expsToAdd = array();
 
-                
-        
+
+
                 if ($genContentSize > .5 || $genContentPercent > 1) {
                     $amtNote = "(" . $genContentSize . "kb larger, or " . $genContentPercent . "% of total HTML)";
 
@@ -75,21 +73,18 @@
                         "expval" => array(''),
                         "hideassets" => true
                     ]);
-
-                    
-                }   
+                }
 
 
                 if (isset($green_hosting)) {
                     $nongreenhosts = [];
-                    foreach( $green_hosting as $host ){
-                        if( isset($host['green']) && $host['green'] === false ){
-                            
+                    foreach ($green_hosting as $host) {
+                        if (isset($host['green']) && $host['green'] === false) {
                             array_push($nongreenhosts, $host['url']);
                         }
                     }
 
-                    if( count($nongreenhosts) > 0 ){
+                    if (count($nongreenhosts) > 0) {
                         array_push($expsToAdd, (object) [
                             "id" => '100',
                             'title' => 'Move Files to Green Hosts',
@@ -98,9 +93,9 @@
                             "expval" => array_unique($nongreenhosts)
                         ]);
                     }
-                }             
+                }
             }
-            if( count($expsToAdd) > 0 ){
+            if (count($expsToAdd) > 0) {
                 $opp = [
                     "title" =>  $errTitle,
                     "desc" =>  $errDesc,

@@ -286,7 +286,7 @@ foreach ($assessment as $key => $cat) {
                 $summary .= " HTML content was mostly generated server-side.";
             }
         }
-        if( $carbonFootprint !== null && $carbonCompare !== null ){
+        if ($carbonFootprint !== null && $carbonCompare !== null) {
             $summary .= " " . $carbonCompare;
         }
     } else {
