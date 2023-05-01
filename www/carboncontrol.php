@@ -81,7 +81,7 @@ function convertToTextScore($score)
     if ($score > 90) {
         $score = "good";
     } elseif ($score > 50) {
-        $score = "average";
+        $score = "avg";
     } else {
         $score = "bad";
     }
