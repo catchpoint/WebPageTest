@@ -10081,7 +10081,7 @@ font-weight: 500;
   gap: 2rem;
   flex-flow: row wrap;
   justify-items: flex-start;
-  
+  padding-bottom: 2rem;
 }
 .badge-preview {
   flex: 0 1 15em;

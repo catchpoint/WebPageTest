@@ -269,7 +269,6 @@
                                 </div>
                         </div>
 
-                        <p class="treecreds"><small><em>Credit: Trees graphic by <a href="https://www.figma.com/@thevisualteam">@thevisualteam</a> | CC Licensed on Figma</em></small></p>                        
                         @else
                         <p class="ei_nodata">This test contains no Carbon Control data. That could mean the test was run before WebPageTest began tracking carbon footprint, or perhaps that the test is in a non-Chromium browser. </p>
                         @endif
