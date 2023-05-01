@@ -23,7 +23,6 @@ body.four-oh-four wpt-header,
 body.common wpt-header,
 body.video wpt-header,
 body.compare:not(.compare-experiment) wpt-header,
-body#custom-waterfall wpt-header,
 body.compare-loading wpt-header {
   --wpt-header-text: #1e4078;
   --wpt-header-activeborder: #091a3f33;
@@ -542,7 +541,6 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   body.common wpt-header,
   body.video wpt-header,
   body.compare:not(.compare-experiment) wpt-header,
-  body#custom-waterfall wpt-header,
   body.compare-loading wpt-header {
     --wpt-user-icon: url(/assets/images/icon-user-dark.svg) left 50% no-repeat;
   }
