@@ -9830,7 +9830,7 @@ font-weight: 500;
 .ei_diagnostics li.ei_diagnostics_item-good:before {
   background-color: #7abc47;
 }
-.ei_diagnostics li.ei_diagnostics_item-average:before {
+.ei_diagnostics li.ei_diagnostics_item-avg:before {
   background-color: #f1af47;
 }
 .ei_diagnostics li.ei_diagnostics_item-bad:before {
