@@ -8,6 +8,7 @@ use WebPageTest\Util\Cache;
 use WebPageTest\Util\OAuth as CPOauth;
 use WebPageTest\RequestContext;
 use WebPageTest\Exception\UnauthorizedException;
+use WebPageTest\Exception\AuthenticationException;
 
 (function (RequestContext $request) {
     global $admin;
@@ -23,6 +24,15 @@ use WebPageTest\Exception\UnauthorizedException;
     if ($request->getClient()->isAuthenticated()) {
         try {
             $user = $request->getClient()->getUser();
+
+            // If somebody has a paid client but does not have a paid account, log out.
+            // Their current client should be suspended at this point. They will run into
+            // issues
+            if ($user->isPaidClient() && $user->isCanceled() && !$user->isPendingCancelation()) {
+                setcookie($cp_access_token_cookie_name, "", time() - 3600, "/", $host);
+                setcookie($cp_refresh_token_cookie_name, "", time() - 3600, "/", $host);
+                throw new AuthenticationException();
+            }
             $owner = $user->getOwnerId();
             if ($request->getClient()->isAuthenticated()) {
                 $user->setAccessToken($request->getClient()->getAccessToken());
