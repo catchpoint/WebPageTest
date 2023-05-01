@@ -69,7 +69,7 @@ class Customer
         $this->remaining_runs = $options['remainingRuns'] ?? null;
         $this->billing_frequency = $options['billingFrequency'] ?? null;
         $this->plan_renewal_date = isset($options['planRenewalDate']) ?
-            new DateTime($options['nextBillingDate']) : null;
+            new DateTime($options['planRenewalDate']) : null;
         $this->next_wpt_plan_id = $options['nextWptPlanId'] ?? null;
         $this->address = null;
         if (
