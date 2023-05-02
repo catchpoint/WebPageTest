@@ -2663,12 +2663,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             mkdir($test['path'], 0777, true);
         }
 
-        // Fetch the CrUX data for the URL
-        $crux_data = GetCruxDataForURL($url, $is_mobile);
-        if (isset($crux_data) && strlen($crux_data)) {
-            gz_file_put_contents("{$test['path']}/crux.json", $crux_data);
-        }
-
         // Start with an initial state of waiting/submitted
         if (!$batch) {
             touch("{$test['path']}/test.waiting");

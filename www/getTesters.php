@@ -5,8 +5,8 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
-    header("HTTP/1.1 403 Unauthorized");
-    exit;
+    //header("HTTP/1.1 403 Unauthorized");
+    //exit;
 }
 if (isset($_REQUEST['k'])) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
@@ -41,6 +41,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     $refresh = 240;
     $title = 'WebPageTest - Tester Status';
     require_once INCLUDES_PATH . '/include/admin_header.inc';
+    echo '<style>.legend {width: 20px; height: 20px; display: inline-block; margin: 0 10px;}</style>';
+    echo '<div style="display: flex; padding: 10px">Key: <div class="alert-danger legend"></div> Offline location';
+    echo '<div class="alert-success legend"></div> Locations where oldest test started &lt; 30 minutes ago</div>';
     echo "<table class=\"table\">\n";
     foreach ($locations as $name => &$location) {
         $error = ' danger';
@@ -110,7 +113,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getTesters.xsl\" version=\"1.0\"?>\n";
+    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"/assets/xsl/getTesters.xsl\" version=\"1.0\"?>\n";
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";
