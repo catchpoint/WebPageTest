@@ -405,6 +405,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
                 }
                 $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
+                $tabs['Carbon Control'] = $menuUrlGenerator->resultPage("carboncontrol", $endParams);
 
                 if ($gradedRunResults->hasBreakdownTimeline()) {
                 // currently only supported by standard urls

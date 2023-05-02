@@ -1369,6 +1369,9 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 if (isset($_REQUEST['webvital_profile'])) {
                     $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
                 }
+                if (isset($_REQUEST['carbon_control_redirect'])) {
+                    $view = FRIENDLY_URLS ? '?view=carboncontrol' : '&view=carboncontrol';
+                }
                 if (FRIENDLY_URLS) {
                     header("Location: $protocol://$host$uri/result/{$test['id']}/$view");
                 } else {

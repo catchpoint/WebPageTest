@@ -34,6 +34,16 @@
                     </div>
                     
                 </div>
+                <div class="home_feature_hed home_feature_hed-cc">
+                    <div class="home_feature_hed_text">
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Introducing <b>Carbon Control <span class="flag">Experimental</span></b></span> </h1>
+                        <p><b>Now included in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
+                        
+                    </div>
+                    <div class="home_feature_hed_visual">
+                        <img src="/assets/images/wpt_home_featureimg-cc.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                    </div>
+                </div>
                 <div class="home_feature_hed home_feature_hed-pro">
                     <div class="home_feature_hed_text">
                         <h1 class="attention"><span class="home_feature_hed_text_leadin">Say hello to </span> <img class="home_feature_hed_text_logo" width="105" height="14" src="/assets/images/wpt-logo-pro.svg" alt="WebPageTest Pro"></h1>
@@ -49,6 +59,7 @@
                         <button class="play" id="playbtn">Play/Pause Video</button>
                     </div>
                 </div>
+                
             <?php } ?>
         </div>
 
@@ -67,12 +78,19 @@
                     document.body.classList.add("feature-lfwp");
                 } else if( document.body.classList.contains("feature-lfwp") ){
                     document.body.classList.remove("feature-lfwp");
+                    document.body.classList.add("feature-cc");
+                } else if( document.body.classList.contains("feature-cc") ){
+                    document.body.classList.remove("feature-cc");
                 } else {
                     document.body.classList.add("feature-pro");
                 }
                 
             }
         },8000);
+
+        <?php if (isset($req_cc)) {?>
+            clearTimeout(featureSlides);
+        <?php } ?>
 
 
         (function(){
