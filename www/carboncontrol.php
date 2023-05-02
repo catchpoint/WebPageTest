@@ -68,7 +68,7 @@ $carbon_footprint = $testStepResult->getMetric('carbon-footprint');
 
 $green_hosting = $carbon_footprint['green-hosting'];
 
-if (!isset($green_hosting[0]['hosted_by'])) {
+if (isset($green_hosting) && !isset($green_hosting[0]['hosted_by'])) {
     $green_hosting[0]['hosted_by'] = 'Unknown';
 }
 
@@ -183,7 +183,7 @@ echo view('pages.carboncontrol', [
     'page_title' => $page_title,
     'test_url' => $url,
     'resource_impact' => $resource_impact,
-    'has_ei_results' => isset($carbon_footprint),
+    'has_ei_results' => isset($carbon_footprint) && $carbon_footprint !== [],
     'green_hosting' => $green_hosting,
     'carbon_footprint' => $carbon_footprint,
     'pageweight_total' => $pageweight_total,

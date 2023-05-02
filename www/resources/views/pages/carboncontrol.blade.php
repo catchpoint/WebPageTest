@@ -270,7 +270,7 @@
                         </div>
 
                         @else
-                        <p class="ei_nodata">This test contains no Carbon Control data. That could mean the test was run before WebPageTest began tracking carbon footprint, or perhaps that the test is in a non-Chromium browser. </p>
+                        <p class="ei_nodata">This test contains no Carbon Control data. That could mean the test was run before WebPageTest began tracking carbon footprint, or that the services that Carbon Control relies upon were not responding at test-time, or perhaps that the test is in a non-Chromium browser. </p>
                         @endif
 
                     </div>

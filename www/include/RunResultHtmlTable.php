@@ -78,6 +78,13 @@ class RunResultHtmlTable
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
         }
 
+
+        // disable env impact if not collected
+        if( count($this->runResults->getStepResult(1)->getMetric(self::COL_ENV_IMP)) === 0 ){
+            $this->enabledColumns[self::COL_ENV_IMP] = false;
+        }
+
+
       // If strict_video = 1, only show if metric is present, otherwise alway show
         if (GetSetting('strict_video')) {
             array_push($this->leftOptionalColumns, self::COL_START_RENDER);

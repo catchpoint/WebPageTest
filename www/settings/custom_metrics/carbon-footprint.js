@@ -42,7 +42,7 @@ let collectHostStatuses = async function(){
         }
     });
 
-    const requests = hosts.map((url) => fetch('https://api.thegreenwebfoundation.org/api/v3/greencheck/' + url)
+    const requests = hosts.map((url) => fetch('https://api.org/api/v3/greencheck/' + url)
     .then(res => {
         if( res !== undefined ){
         let jsonResp = res.json();
