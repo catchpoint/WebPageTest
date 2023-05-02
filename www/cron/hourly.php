@@ -27,7 +27,6 @@ if (GetSetting('ec2_key')) {
     EC2_DeleteOrphanedVolumes();
 }
 
-PruneCruxCache();
 PruneVideos();
 
 Unlock($cron_lock);
