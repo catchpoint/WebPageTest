@@ -5,7 +5,7 @@
 // found in the LICENSE.md file.
 require_once INCLUDES_PATH . '/common_lib.inc';
 require_once INCLUDES_PATH . '/draw.inc';
-require_once INCLUDES_PATH . '/contentColors.inc';
+require_once INCLUDES_PATH . '/include/contentColors.inc';
 require_once INCLUDES_PATH . '/include/TestPaths.php';
 
 /**

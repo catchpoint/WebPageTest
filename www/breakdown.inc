@@ -4,8 +4,7 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 require_once('object_detail.inc');
-require_once('contentColors.inc');
-
+require_once INCLUDES_PATH . '/include/contentColors.inc';
 /**
 * Aggregate the individual requests by mime type
 *

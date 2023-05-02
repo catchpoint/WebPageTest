@@ -5,7 +5,7 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 require_once('breakdown.inc');
-require_once('contentColors.inc');
+require_once INCLUDES_PATH . '/include/contentColors.inc';
 require_once('waterfall.inc');
 require_once('page_data.inc');
 

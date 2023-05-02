@@ -7,7 +7,7 @@ include 'common.inc';
 require_once INCLUDES_PATH . '/object_detail.inc';
 require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/draw.inc';
-require_once INCLUDES_PATH . '/contentColors.inc';
+require_once INCLUDES_PATH . '/include/contentColors.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';
 require_once INCLUDES_PATH . '/include/TestRunResults.php';
 
