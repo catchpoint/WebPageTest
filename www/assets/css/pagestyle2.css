@@ -2546,7 +2546,6 @@ details.details_custommetrics summary {
   font-size: 1em;
   position: relative;
   align-items: center;
-  line-height: 1.5;
   /* padding: .2em 0; */
 }
 .result-impact p.try-exps {
@@ -3040,7 +3039,6 @@ body.result #main {
 
 
 .home.feature-cc .home_feature_hed_contain {
-  background-image: url(/assets/images/wpt_home_swoop.svg);
   background:  url(/assets/images/src/energyimpact-clouds.svg),url(/assets/images/wpt_home_swoop-cc.svg);
   background-repeat:  no-repeat,no-repeat, no-repeat,no-repeat;
   background-size: auto auto,104% auto;
@@ -5520,7 +5518,6 @@ label.test_preset_profile {
   max-width: 40em;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
-  display: none;
 }
 
 .cta-banner p {
