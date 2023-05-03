@@ -256,11 +256,12 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
             $cctest_id = $this->testInfo->getId();
             $ccrun = $this->runResults->getRunNumber();
-            $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/");
+            $cachedparam = $this->runResults->isCachedRun() ? "cached/" : "";
+            $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/$cachedparam");
 
 
             if ($this->useShortNames) {
-                $out .= $this->_headCell('<abbr title="co2 Per Visit">co2</abbr>', 'carboncontrol');
+                $out .= $this->_headCell('<abbr title="co2 equivalent Per Visit">co2e</abbr>', 'carboncontrol');
             } else {
                 $out .= $this->_headCell('<a href="' . $carboncontrol_url . '">Carbon Footprint</a>', 'carboncontrol');
             }
@@ -537,11 +538,7 @@ class RunResultHtmlTable
             }
         }
         if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
-            if ($cachedRun) {
-                $out .= "<td>&nbsp;</td>";
-            } else {
                 $out .= $this->_bodyCell($idPrefix . "Footprint" . $idSuffix, $this->_getSimpleMetric($stepResult, "carbon-footprint")['sustainable-web-design'] . '<span class="units">g</span>', $class);
-            }
         }
 
         $out .= "</tr>\n";
