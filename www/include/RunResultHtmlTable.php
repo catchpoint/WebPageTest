@@ -257,7 +257,7 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
             $cctest_id = $this->testInfo->getId();
             $ccrun = $this->runResults->getRunNumber();
-            $cachedparam = $this->runResults->isCachedRun() ? "cached/" : "";
+            $cachedparam = $cachedRun ? "cached/" : "";
             $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/$cachedparam");
 
 
