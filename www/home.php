@@ -117,9 +117,13 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
 
-                    <?php if (isset($req_cc)) {?>
+                    <?php if (isset($req_cc)) {
+                        $ccInputState = " checked ";
+                        ?>
                         <input type="hidden" name="carbon_control_redirect" value="1">
-                    <?php } ?>
+                    <?php }else {
+                        $ccInputState = "";
+                    } ?>
 
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
@@ -264,8 +268,8 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
-                                                            <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run (Chromium browsers only).</small></label>
-                                                        </div>
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control Test <small>(Experimental: Measures estimated carbon footprint. Chromium browsers only).</small></label>
+                                                    </div>
                                                     <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                                                     </div>
@@ -567,7 +571,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
                                                 <li>
-                                                    <label for="inc-cc-simple"><input type="checkbox" name="inccc" id="inc-cc-simple" checked disabled class="checkbox"> Run Carbon Control Test <small> Always included as part of a test run. (Chromium browsers only)</small></label>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control Test <small>Experimental: Measures estimated carbon footprint. Chromium browsers only.</small></label>
                                                 </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
@@ -684,6 +688,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <input type="checkbox" name="injectScriptAllFrames" id="injectScriptAllFrames" class="checkbox" style="float: left;width: auto;">
                                                         <label for="injectScriptAllFrames" class="auto_width">Inject script into all frames and run before any page scripts run (Chrome-only)</label>
                                                     </li>
+                                                    
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">

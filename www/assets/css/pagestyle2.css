@@ -1575,19 +1575,7 @@ input[type="checkbox"] {
   padding: 0.3em;
 }
 
-input#inc-cc-simple {
-    appearance: none;
-    background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
-    background-size: 1rem 1rem;
-    width: 1rem;
-    height: 1rem;
-    display: inline-block;
-    border-radius: 100%;
-    background-color: #fff;
-    position: relative;
-    top: 0.1em;
-    left: 0.1em;
-}
+
 
 h2 .small {
   font-weight: normal;
