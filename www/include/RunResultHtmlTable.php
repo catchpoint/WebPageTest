@@ -153,7 +153,7 @@ class RunResultHtmlTable
         return $out;
     }
 
-    private function _createHead()
+    private function _createHead($cachedRun = false)
     {
         $out = '';
 
@@ -196,7 +196,8 @@ class RunResultHtmlTable
         ) {
             $test_id = $this->testInfo->getId();
             $run = $this->runResults->getRunNumber();
-            $cached = $this->runResults->isCachedRun() ? '1' : '0';
+
+            $cached = $cachedRun ? '1' : '0';
             $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
         }
 
@@ -269,7 +270,7 @@ class RunResultHtmlTable
         return $out;
     }
 
-    private function _createFoot()
+    private function _createFoot($cachedRun = false)
     {
         $out = '';
 
@@ -308,7 +309,7 @@ class RunResultHtmlTable
         ) {
             $test_id = $this->testInfo->getId();
             $run = $this->runResults->getRunNumber();
-            $cached = $this->runResults->isCachedRun() ? '1' : '0';
+            $cached = $cachedRun ? 1 : 0;
             $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
         }
 
@@ -435,7 +436,7 @@ class RunResultHtmlTable
         }
 
         if ($repeatMetricLabels) {
-            $out .= $this->_createHead();
+            $out .= $this->_createHead($cachedRun);
         }
 
 
@@ -549,7 +550,7 @@ class RunResultHtmlTable
 
         if ($repeatMetricLabels) {
             if ($this->useDescs) {
-                $out .= $this->_createFoot();
+                $out .= $this->_createFoot($cachedRun);
             }
             $out .= "</table></div>\n";
             $localPaths = $stepResult->createTestPaths();
