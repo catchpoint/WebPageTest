@@ -9639,6 +9639,14 @@ p.lh-filteraudits {
   margin: 0;
   color: #686868;
 }
+.result-impact .results_header p.ei_runrepeat {
+  background: #f6f6f6;
+  display: inline-block;
+  margin: 5rem 0 0;
+  font-size: .9em;
+  padding: 0.3em 0.8em;
+  border-radius: 0.5em;
+}
 
 .ei_summary_hosting_info summary::marker,
 .ei_summary_hosting_info summary::-webkit-details-marker {
@@ -9941,6 +9949,9 @@ font-weight: 500;
   .ei_diagnostics-context li img {
     height: 45px;
   }
+  .result-impact .results_header p.ei_runrepeat {
+    margin: .5rem 0 1rem;
+  }
 }
 .pie circle {
 	fill: transparent;
@@ -10016,7 +10027,7 @@ font-weight: 500;
     gap: 1rem;
   }
   .ei_summary {
-    margin: 6em 0 1rem;
+    margin: 1em 0 1rem;
     gap: 3rem;
   }
   .ei_summary_hosting li {

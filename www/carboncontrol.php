@@ -25,7 +25,7 @@ $fileHandler = new FileHandler();
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 $pageData = $testRunResults->getStepResult(1)->getRawResults();
-$testStepResult = TestStepResult::fromFiles($testInfo, 1, 0, 1);
+$testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, 1);
 $requests = $testStepResult->getRequests();
 
 
@@ -183,6 +183,8 @@ echo view('pages.carboncontrol', [
     'has_ei_results' => isset($carbon_footprint) && $carbon_footprint !== [],
     'green_hosting' => $green_hosting,
     'carbon_footprint' => $carbon_footprint,
+    'run' => $run,
+    'cached' => $cached,
     'pageweight_total' => $pageweight_total,
     'pageweight_units' => $pageweight_units,
     'opps_url' => $experimentOptsHref,
