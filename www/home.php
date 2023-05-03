@@ -91,7 +91,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 <?php
 $homeclass = "feature-cc";
-if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
     $homeclass = "feature-pro";
 }
 ?>
