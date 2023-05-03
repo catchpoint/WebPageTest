@@ -22,9 +22,9 @@
                                     @if ($green_hosting[0]['error'] )
                                     <em>{{$green_hosting[0]['error']}}
                                     @else   
-                                    Hosted by <em> 
-                                    {{$green_hosting[0]['hosted_by']}}
-                                    @endif</em></p>
+                                    Origin: 
+                                    {{$green_hosting[0]['url']}}
+                                    @endif</p>
                                 </div>
                                 @if( $green_hosting[0]['green'] )
                                 <img src="/assets/images/src/icon_tree.svg" alt="Green-Hosted">
