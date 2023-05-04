@@ -1008,6 +1008,7 @@ class Account
                 $newPlan = $all_plans->getAnnualPlanByRuns($oldPlan->getRuns());
                 $results['oldPlan'] = $oldPlan;
                 $results['newPlan'] = $newPlan;
+                $next_start_date = $customer->getNextPlanStartDate();
                 $sub_id = $customer->getSubscriptionId();
                 $billing_address = $customer->getAddress();
                 $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
@@ -1015,7 +1016,7 @@ class Account
                 $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
-                $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
+                $results['renewaldate'] = !is_null($next_start_date) ? $next_start_date->format('m/d/Y') : null;
 
                 $content = $tpl->render('billing/billing-cycle', $results);
                 return new Response($content, Response::HTTP_OK);

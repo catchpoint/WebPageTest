@@ -14,7 +14,7 @@ wpt-header {
   --wpt-user-icon: url(/assets/images/icon-user.svg) left 50% no-repeat;
 }
 wpt-header * {
-  transition: color 0.2s linear;
+  transition: color .4s linear, background-color .4s linear;
 }
 .account-layout wpt-header,
 body.history wpt-header,
@@ -23,7 +23,8 @@ body.four-oh-four wpt-header,
 body.common wpt-header,
 body.video wpt-header,
 body.compare:not(.compare-experiment) wpt-header,
-body.compare-loading wpt-header {
+body.compare-loading wpt-header,
+body.feature-cc wpt-header {
   --wpt-header-text: #1e4078;
   --wpt-header-activeborder: #091a3f33;
   --wpt-header-border: #fff;
@@ -79,6 +80,8 @@ wpt-header header {
   background: transparent;
   margin-bottom: -6rem;
 }
+
+
 
 wpt-header a {
   color: #fff;
@@ -415,7 +418,6 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   wpt-header .wptheader_nav_menu details[open] summary span:after {
     border-top: 5px solid var(--wpt-header-background);
   }
-
   wpt-header .wptheader_menu[open] .wptheader_menubtn {
     display: none !important;
   }
@@ -541,7 +543,8 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
   body.common wpt-header,
   body.video wpt-header,
   body.compare:not(.compare-experiment) wpt-header,
-  body.compare-loading wpt-header {
+  body.compare-loading wpt-header,
+  body.feature-cc wpt-header {
     --wpt-user-icon: url(/assets/images/icon-user-dark.svg) left 50% no-repeat;
   }
 }
