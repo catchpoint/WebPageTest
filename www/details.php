@@ -151,7 +151,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                     echo '<div class="cruxembed">';
                     require_once(INCLUDES_PATH . '/include/CrUX.php');
 
-                    InsertCruxHTML($testRunResults, null);
+                    InsertCruxHTML($testRunResults);
 
                     echo '</div>';
                 }
