@@ -56,8 +56,15 @@ let collectHostStatuses = async function(){
                 return { url: host, green: false };
             });
 
-        return greenResults.concat(grayResults);
-
+        let fullResults = greenResults.concat(grayResults);
+        fullResults = fullResults.sort((a,b) => {
+              if (a.url == hosts[0]) {
+                return -1;
+              } else {
+                return 1;
+              }
+        });
+        return fullResults;
     });
 
     return dependenciesCheck; 
