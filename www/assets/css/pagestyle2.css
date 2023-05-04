@@ -1575,19 +1575,7 @@ input[type="checkbox"] {
   padding: 0.3em;
 }
 
-input#inc-cc-simple {
-    appearance: none;
-    background: url(/assets/images/src/icon_grading_check.svg) left 50% no-repeat;
-    background-size: 1rem 1rem;
-    width: 1rem;
-    height: 1rem;
-    display: inline-block;
-    border-radius: 100%;
-    background-color: #fff;
-    position: relative;
-    top: 0.1em;
-    left: 0.1em;
-}
+
 
 h2 .small {
   font-weight: normal;
@@ -9651,6 +9639,14 @@ p.lh-filteraudits {
   margin: 0;
   color: #686868;
 }
+.result-impact .results_header p.ei_runrepeat {
+  background: #f6f6f6;
+  display: inline-block;
+  margin: 5rem 0 0;
+  font-size: .9em;
+  padding: 0.3em 0.8em;
+  border-radius: 0.5em;
+}
 
 .ei_summary_hosting_info summary::marker,
 .ei_summary_hosting_info summary::-webkit-details-marker {
@@ -9953,6 +9949,9 @@ font-weight: 500;
   .ei_diagnostics-context li img {
     height: 45px;
   }
+  .result-impact .results_header p.ei_runrepeat {
+    margin: .5rem 0 1rem;
+  }
 }
 .pie circle {
 	fill: transparent;
@@ -10028,7 +10027,7 @@ font-weight: 500;
     gap: 1rem;
   }
   .ei_summary {
-    margin: 6em 0 1rem;
+    margin: 1em 0 1rem;
     gap: 3rem;
   }
   .ei_summary_hosting li {
