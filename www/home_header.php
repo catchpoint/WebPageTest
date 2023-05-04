@@ -37,7 +37,7 @@
                 <div class="home_feature_hed home_feature_hed-cc">
                     <div class="home_feature_hed_text">
                         <h1 class="attention"><span class="home_feature_hed_text_leadin">Introducing <b>Carbon Control <span class="flag">Experimental</span></b></span> </h1>
-                        <p><b>New in WebPageTest!</b> Optionally measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
+                        <p><b>New in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
                         
                     </div>
                     <div class="home_feature_hed_visual">

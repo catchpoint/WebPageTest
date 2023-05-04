@@ -268,7 +268,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
-                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control Test <small>(Experimental: Measures estimated carbon footprint. Chromium browsers only).</small></label>
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>).</small></label>
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
@@ -571,7 +571,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
                                                 <li>
-                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control Test <small>Experimental: Measures estimated carbon footprint. Chromium browsers only.</small></label>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>)</small></label>
                                                 </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">

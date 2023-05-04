@@ -677,6 +677,10 @@ if (!isset($test)) {
     }
 
     $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    // opt API usage out of CC availability for now
+    if (!empty($user_api_key)){
+        $test['carbon_control'] = false;
+    }
     if( $test['carbon_control'] ){
         array_push($conditionalMetrics, "carbon-footprint");
     }
