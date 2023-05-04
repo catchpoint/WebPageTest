@@ -23,7 +23,7 @@
                                     <h4>Primary Domain</h4>
                                     <p>
                                     @if ($green_hosting[0]['error'] )
-                                    <em>{{$green_hosting[0]['error']}}
+                                    {{$green_hosting[0]['error']}}
                                     @else   
                                     Origin: 
                                     {{$green_hosting[0]['url']}}
