@@ -392,7 +392,8 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 if ($gradedRunResults->hasWebVitals()) {
                     $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
                 }
-                if( $test['carbon_control'] ){
+                
+                if ($firstRunResults && $firstRunResults->getStepResult(1)->getMetric('carbon-footprint')) {
                     $tabs['Carbon Control'] = $menuUrlGenerator->resultPage("carboncontrol", $endParams);
                 }
 
