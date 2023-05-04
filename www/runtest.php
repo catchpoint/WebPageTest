@@ -681,7 +681,7 @@ if (!isset($test)) {
     if (!empty($user_api_key)){
         $test['carbon_control'] = false;
     }
-    if( $test['carbon_control'] ){
+    if( isset($test['carbon_control']) && $test['carbon_control'] ){
         array_push($conditionalMetrics, "carbon-footprint");
     }
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
