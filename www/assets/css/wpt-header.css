@@ -16,6 +16,7 @@ wpt-header {
 wpt-header * {
   transition: color .4s linear, background-color .4s linear;
 }
+.account-layout wpt-header,
 body.history wpt-header,
 body.about wpt-header,
 body.four-oh-four wpt-header,
