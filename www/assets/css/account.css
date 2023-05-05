@@ -929,10 +929,10 @@ a.button {
 /*
  * End signup step 2
  */
- .signup-flow-layout wpt-header,
- .signup-flow-layout header {
+.signup-flow-layout wpt-header,
+.signup-flow-layout header {
   background: #141e33;
- }
+}
 .signup-flow-layout header {
   padding-left: 0;
   margin-bottom: 0;

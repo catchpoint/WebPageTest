@@ -99,7 +99,7 @@ h3.hed_sub {
 .result-impact .hed_sub em {
   background: none;
   padding: 0;
-  margin: 0
+  margin: 0;
 }
 
 .hed_sub em details {
@@ -314,7 +314,10 @@ h6 {
   line-height: 1;
 }
 
-.test_results-content h2 em.flag, .summary_opps em.flag, span.lh-flag, .metric_descs em.flag {
+.test_results-content h2 em.flag,
+.summary_opps em.flag,
+span.lh-flag,
+.metric_descs em.flag {
   font-size: 0.3em;
   font-weight: 500;
   text-transform: uppercase;
@@ -1575,8 +1578,6 @@ input[type="checkbox"] {
   padding: 0.3em;
 }
 
-
-
 h2 .small {
   font-weight: normal;
   font-size: 12px;
@@ -2122,7 +2123,8 @@ footer ul {
 }
 
 .opportunities_summary_exps {
-  background: url(/assets/images/src/icon_science_bubbling.svg) left -.4em bottom .2em no-repeat;
+  background: url(/assets/images/src/icon_science_bubbling.svg) left -0.4em bottom
+    0.2em no-repeat;
   background-size: auto 1.8rem;
   padding-left: 2.2em;
   height: 1em;
@@ -2618,7 +2620,7 @@ details.details_custommetrics summary {
     display: none;
   }
   .summary_opps > p a,
-  .result-impact p.try-exps a{
+  .result-impact p.try-exps a {
     display: inline-block;
     margin: 0 0.5em;
     flex: 0 0 8em;
@@ -2963,12 +2965,12 @@ body.result #main {
 .home_feature_hed-cc span.flag {
   background: #66a865;
   color: #fff;
-  font-size: .9rem;
+  font-size: 0.9rem;
   vertical-align: top;
   margin-left: 0;
   text-transform: uppercase;
   font-weight: 300;
-  padding: .2em .4em;
+  padding: 0.2em 0.4em;
   display: inline-block;
   border-radius: 0.4em;
 }
@@ -2984,7 +2986,7 @@ body.result #main {
   background: #255d24;
 }
 .home.feature-cc #advanced_settings-container {
-  background: rgba(0,0,0,.3);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .home_feature_hed-pro {
@@ -3024,12 +3026,11 @@ body.result #main {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23123D80'/%3E%3Cstop offset='1' stop-color='%23050D26'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23307CD1' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23307CD1' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-
-
 .home.feature-cc .home_feature_hed_contain {
-  background:  url(/assets/images/src/energyimpact-clouds.svg),url(/assets/images/wpt_home_swoop-cc.svg);
-  background-repeat:  no-repeat,no-repeat, no-repeat,no-repeat;
-  background-size: auto auto,104% auto;
+  background: url(/assets/images/src/energyimpact-clouds.svg),
+    url(/assets/images/wpt_home_swoop-cc.svg);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: auto auto, 104% auto;
   background-position: right 0rem top 9rem, bottom -11px left 50%;
   background-color: #e0f3ff;
 }
@@ -3038,7 +3039,7 @@ body.result #main {
   background-color: #559154;
 }
 .home.feature-cc .home_feature_hed-cc {
-    color: #154281;
+  color: #154281;
 }
 
 .home_feature_hed_visual {
@@ -3333,7 +3334,7 @@ header .pro-flag {
   max-width: 31em;
 }
 .home_feature_hed p .home_feature_hed_highlighter {
-  color: #FFC763;
+  color: #ffc763;
 }
 
 .home_feature_hed a {
@@ -8531,9 +8532,9 @@ body.screenshot a {
 }
 
 body.screenshot:not(.result-impact) .results_header h2 {
-  opacity: 0; 
-  margin: 0; 
-  padding: 0; 
+  opacity: 0;
+  margin: 0;
+  padding: 0;
   height: 1rem;
 }
 body.screenshot.result-impact .results_header h2 {
@@ -8542,7 +8543,6 @@ body.screenshot.result-impact .results_header h2 {
 body.screenshot.result-impact .results_header h2 + p {
   display: none;
 }
-
 
 body.screenshot wpt-header,
 body.screenshot .alert-banner,
@@ -8553,7 +8553,8 @@ body.screenshot .test_presets_more,
 body.screenshot .experiment_meta_urls,
 body.screenshot header ul,
 body.screenshot .experiment_opportunities + .hed_sub,
-body.screenshot.result:not(.compare-experiment):not(.result-impact) .results_header,
+body.screenshot.result:not(.compare-experiment):not(.result-impact)
+  .results_header,
 body.screenshot .metrics_shown,
 body.screenshot.result-summary .cruxembed,
 body.screenshot.result-summary #tables,
@@ -9585,16 +9586,13 @@ p.lh-filteraudits {
   }
 }
 
-
-
-
 /* env impact */
 .ei_sky {
   display: none;
 }
 .result-impact .results_header p a {
   font-weight: 500;
-  text-decoration: none
+  text-decoration: none;
 }
 
 .result-impact .results_header p a:hover,
@@ -9602,9 +9600,9 @@ p.lh-filteraudits {
   text-decoration: underline;
 }
 .results_header .ei_summary h3.hed_sub {
-  border-bottom: 1px solid #CBCBCB;
-  padding-bottom: .3em;
-  color: #2A3C64;
+  border-bottom: 1px solid #cbcbcb;
+  padding-bottom: 0.3em;
+  color: #2a3c64;
   margin: 0;
 }
 .ei_summary_hosting li {
@@ -9620,10 +9618,10 @@ p.lh-filteraudits {
   padding: 0;
   max-width: 2rem;
 }
-.ei_summary_hosting li img[src*=alert]{
+.ei_summary_hosting li img[src*="alert"] {
   background: #d16122;
 }
-.ei_summary_hosting_info  {
+.ei_summary_hosting_info {
   order: 2;
   flex: 1 1 100%;
 }
@@ -9643,7 +9641,7 @@ p.lh-filteraudits {
   background: #f6f6f6;
   display: inline-block;
   margin: 5rem 0 0;
-  font-size: .9em;
+  font-size: 0.9em;
   padding: 0.3em 0.8em;
   border-radius: 0.5em;
 }
@@ -9655,13 +9653,14 @@ p.lh-filteraudits {
 }
 .ei_summary_hosting_info summary {
   list-style: none;
-  padding: .2em 1.2em .2em 1.7em;
+  padding: 0.2em 1.2em 0.2em 1.7em;
   cursor: pointer;
-  background: url(/assets/images/src/icon_info_circle.svg), url("/assets/images/src/icon_triangledown.svg");
-  background-size: 1.2em auto, .6em auto;
+  background: url(/assets/images/src/icon_info_circle.svg),
+    url("/assets/images/src/icon_triangledown.svg");
+  background-size: 1.2em auto, 0.6em auto;
   border: 1px solid #eee;
   background-repeat: no-repeat;
-  background-position: left .3em center, right .3em center;
+  background-position: left 0.3em center, right 0.3em center;
   white-space: nowrap;
   border-radius: 3em;
   display: inline-block;
@@ -9679,27 +9678,27 @@ p.lh-filteraudits {
   width: 35em;
   max-width: 50vw;
   background: #fff;
-  border-radius: .3em;
+  border-radius: 0.3em;
   border: 1px solid #ddd;
   padding: 1em 0;
   z-index: 100;
   overflow: auto;
-  margin: .5em 0 0;
+  margin: 0.5em 0 0;
   max-height: 60vh;
   box-shadow: 0 0 5px #aaa;
 }
 .ei_summary_hosting_info summary + div table {
-  font-size: .8rem;
+  font-size: 0.8rem;
   border-collapse: collapse;
   width: 100%;
-  }
+}
 .ei_summary_hosting_info summary + div table tr:nth-child(even) th,
-.ei_summary_hosting_info summary + div table tr:nth-child(even) td{
+.ei_summary_hosting_info summary + div table tr:nth-child(even) td {
   background: #f6f6f6;
 }
 .ei_summary_hosting_info summary + div table th,
 .ei_summary_hosting_info summary + div table td {
-  padding: .3em 1em;
+  padding: 0.3em 1em;
   text-align: left;
 }
 .ei_summary_hosting_info summary + div table th {
@@ -9710,8 +9709,8 @@ p.lh-filteraudits {
   width: 80%;
   overflow: auto;
 }
-.ei_summary_hosting_info summary + div tr:nth-child(n+2) th {
-font-weight: 500;
+.ei_summary_hosting_info summary + div tr:nth-child(n + 2) th {
+  font-weight: 500;
 }
 .ei_summary_hosting_info summary + div img {
   width: 20px;
@@ -9722,14 +9721,14 @@ font-weight: 500;
 }
 .ei_summary_metrics td span.flag {
   text-align: left;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: #222;
   text-decoration: none;
   font-weight: 500;
   text-transform: uppercase;
   -webkit-text-stroke: 0;
   display: block;
-  margin: .3em 0 0;
+  margin: 0.3em 0 0;
 }
 .result-impact .ei_summary_metrics th {
   white-space: nowrap;
@@ -9742,7 +9741,7 @@ font-weight: 500;
 }
 
 .ei_diagnostics ul {
-  display:flex;
+  display: flex;
   flex-flow: row wrap;
   gap: 2rem;
   margin: 1rem 0 2rem;
@@ -9762,23 +9761,23 @@ font-weight: 500;
 }
 
 .ei_diagnostics li h5 {
-  margin: 0 0 .1em;
+  margin: 0 0 0.1em;
   padding: 0;
   font-size: 1.1em;
 }
 .ei_diagnostics li p {
   margin: 0;
-  font-size: .9em;
+  font-size: 0.9em;
   padding: 0;
-  line-height: 1.3
+  line-height: 1.3;
 }
 .ei_diagnostics small {
   display: block;
   text-transform: uppercase;
-  font-size: .7em;
+  font-size: 0.7em;
   font-weight: 500;
   color: #0f71ba;
-  margin-top: .6em;
+  margin-top: 0.6em;
 }
 .ei_diagnostics li:before {
   content: "";
@@ -9804,15 +9803,15 @@ font-weight: 500;
   max-width: 30em;
 }
 .ei_diagnostics-context li:before {
- display: none;
+  display: none;
 }
 .ei_diagnostics-context li img {
   height: 65px;
-  margin: .5em auto 0;
+  margin: 0.5em auto 0;
   display: block;
   float: right;
 }
-  .ei_diagnostics-context li:first-child {
+.ei_diagnostics-context li:first-child {
   background: url(/assets/images/src/bg_envblobby2.svg) center top no-repeat;
   background-size: contain;
 }
@@ -9823,7 +9822,7 @@ font-weight: 500;
 .ei_diagnostics-context li:last-child {
   background: url(/assets/images/src/bg_envblobby4.svg) center top no-repeat;
   background-size: contain;
-} 
+}
 
 .ei_diagnostics li.ei_diagnostics_item-good:before {
   background-color: #7abc47;
@@ -9862,16 +9861,16 @@ font-weight: 500;
 .ei_reduce {
   margin: 0;
 }
-.ei_reduce p, 
+.ei_reduce p,
 .ei_reduce li,
 .ei_reduce h4 {
   font-size: 1.1em;
   line-height: 1.5;
-  max-width: 38em
+  max-width: 38em;
 }
 .ei_reduce h4 {
   font-weight: 700;
-  font-size: 1.2em
+  font-size: 1.2em;
 }
 .ei_reduce li {
   list-style: disc;
@@ -9888,30 +9887,30 @@ font-weight: 500;
 }
 
 .ei_diagnostics_item-experiments {
-    display: inline-block;
-    color: #4e8f37;
-    padding-left: 1.6em;
-    position: relative;
-  }
-  .result-impact .ei_diagnostics_item-experiments .experiment_summary_count {
-    position: static;
-    background: #fff;
-    margin: 0;
-  }
-  .result-impact .opportunities_summary_exps {
-    display:inline-block;
-    margin: 0;
-    padding: 0 0 0 1.8em;
-    position: absolute;
-    left: 0;
-  }
+  display: inline-block;
+  color: #4e8f37;
+  padding-left: 1.6em;
+  position: relative;
+}
+.result-impact .ei_diagnostics_item-experiments .experiment_summary_count {
+  position: static;
+  background: #fff;
+  margin: 0;
+}
+.result-impact .opportunities_summary_exps {
+  display: inline-block;
+  margin: 0;
+  padding: 0 0 0 1.8em;
+  position: absolute;
+  left: 0;
+}
 
 .pie {
-	width: 100%;
-	display: flex;
-	margin: 1rem 0 3rem;
-	justify-content: flex-start;
-	gap: 3rem;
+  width: 100%;
+  display: flex;
+  margin: 1rem 0 3rem;
+  justify-content: flex-start;
+  gap: 3rem;
 }
 .pie_key {
   flex: 0 1 auto;
@@ -9920,10 +9919,10 @@ font-weight: 500;
 }
 .pie_key li {
   list-style: none;
-  padding: .3em .8em;
+  padding: 0.3em 0.8em;
   border-radius: 2em;
-  margin: 0 0 .4em;
-  font-size: .9em;
+  margin: 0 0 0.4em;
+  font-size: 0.9em;
   font-weight: 700;
   color: #fff;
 }
@@ -9950,11 +9949,11 @@ font-weight: 500;
     height: 45px;
   }
   .result-impact .results_header p.ei_runrepeat {
-    margin: .5rem 0 1rem;
+    margin: 0.5rem 0 1rem;
   }
 }
 .pie circle {
-	fill: transparent;
+  fill: transparent;
 }
 
 .ei_nodata {
@@ -9967,27 +9966,24 @@ font-weight: 500;
   padding-bottom: 2rem;
 }
 
-
-
 @media (min-width: 50em) {
   .result-impact .results_header p {
     max-width: 28em;
-  }  
+  }
 }
-
 
 @media (min-width: 70em) {
   .result-impact #test_results-container {
     position: relative;
     overflow: hidden;
   }
-  
+
   .result-impact .results_main_contain {
-   /* position: relative; */
-   z-index: 1;
+    /* position: relative; */
+    z-index: 1;
   }
   .result-impact .ei_sky {
-    display:block;
+    display: block;
     left: 0;
     width: 100%;
     top: -2.5rem;
@@ -10002,17 +9998,17 @@ font-weight: 500;
     background-position: right 1rem top 2rem;
   }
   .result-impact .results_main {
-    background: url(/assets/images/src/energyimpact-trees.svg), url(/assets/images/src/energyimpact-clouds.svg);
+    background: url(/assets/images/src/energyimpact-trees.svg),
+      url(/assets/images/src/energyimpact-clouds.svg);
     background-repeat: no-repeat, no-repeat;
     background-size: auto auto, auto auto;
     background-position: right 13rem top 3rem, right 1rem top 2rem;
   }
-  
+
   .ei_diagnostics ul {
     border-bottom: none;
   }
 
-  
   .result-impact .results_header {
     padding: 0;
     margin: 0;
@@ -10021,7 +10017,7 @@ font-weight: 500;
   .ei_summary_hosting ul {
     display: flex;
     justify-content: space-between;
-    justify-content: flex-start
+    justify-content: flex-start;
   }
   .ei_summary_hosting ul {
     gap: 1rem;
@@ -10036,14 +10032,12 @@ font-weight: 500;
   .ei_summary_hosting li img {
     max-width: 3rem;
   }
-  
+
   .ei_summary_hosting,
   .ei_summary_metrics {
     margin-top: 0;
     flex: 1 1 50%;
   }
-
-
 
   .ei_supporting {
     display: flex;
@@ -10064,7 +10058,6 @@ font-weight: 500;
   }
   .ei_diagnostics-context ul {
     gap: 8em;
-   
   }
 }
 
@@ -10074,7 +10067,7 @@ font-weight: 500;
   margin-bottom: 1em;
 }
 .ei_spread h3.hed_sub {
-  margin-top: .5em;
+  margin-top: 0.5em;
 }
 
 .badge-info {
@@ -10101,11 +10094,10 @@ font-weight: 500;
   flex: 1 1 50%;
   border-radius: 1em;
   align-self: center;
-  
 }
 .badge-snip p,
 .badge-snip p a {
-  font-size: .8em;
+  font-size: 0.8em;
   color: #fff;
 }
 .badge-snip p a {
@@ -10113,7 +10105,7 @@ font-weight: 500;
 }
 .badge-snip pre {
   background: #fff;
-  padding: .5em;
+  padding: 0.5em;
   overflow: auto;
   display: block;
   white-space: break-spaces;
@@ -10123,12 +10115,12 @@ font-weight: 500;
 body.screenshot .ei_sky {
   top: -3em;
 }
-body.screenshot .ei_summary { 
-margin: 3.5rem 0 0;
+body.screenshot .ei_summary {
+  margin: 3.5rem 0 0;
 }
 
 body.screenshot.result-impact .ei_sky {
-  display:block;
+  display: block;
   left: 0;
   width: 100%;
   top: -2.5rem;
@@ -10143,7 +10135,8 @@ body.screenshot.result-impact .results_main {
   background-position: right 1rem top 2rem;
 }
 body.screenshot.result-impact .results_main {
-  background: url(/assets/images/src/energyimpact-trees.svg), url(/assets/images/src/energyimpact-clouds.svg);
+  background: url(/assets/images/src/energyimpact-trees.svg),
+    url(/assets/images/src/energyimpact-clouds.svg);
   background-repeat: no-repeat, no-repeat;
   background-size: 11em auto, auto auto;
   background-position: right 13rem top 0, right 1rem top -2rem;

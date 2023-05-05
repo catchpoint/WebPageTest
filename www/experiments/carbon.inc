@@ -27,7 +27,7 @@
     //end todo
 
 
-    if (isset($carbonFootprint) && $carbonFootprint !== [] ) {
+    if (isset($carbonFootprint) && $carbonFootprint !== []) {
         $errDesc = "Factors such as heavier page weight and hosts that do not use green energy both increase a site's carbon footprint.";
 
 
