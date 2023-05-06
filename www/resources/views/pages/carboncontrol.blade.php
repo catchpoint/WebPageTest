@@ -9,7 +9,7 @@
                 <h2>
                 Carbon Control<em class="flag">Experimental</em>
                 </h2>
-                <p>WebPageTest evaluates a website's carbon usage through the use of services such as the <a href="https://www.thegreenwebfoundation.org/">Green Web Foundation’s</a> <em>GreenCheck</em> and <em>CO2.js</em> </p>
+                <p>WebPageTest evaluates a website's carbon usage through the use of services such as the <a href="https://www.thegreenwebfoundation.org/">Green Web Foundation’s</a> <em>Green Web Dataset</em> and <em>CO2.js</em> </p>
                 <p class="ei_runrepeat">Displaying Test Run {{$run}}@if ($cached), Repeat View @else . @endif</p>
 
                 <div class="ei_summary">
