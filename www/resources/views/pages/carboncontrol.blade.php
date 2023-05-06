@@ -112,7 +112,7 @@
                 <div class='experiments_grades'>
                     <div class="form_clip">
                         @if ($has_ei_results)
-                        <h3 class="hed_sub">Your Footprint, in Context... <em>(Using <a href="https://developers.thegreenwebfoundation.org/co2js/explainer/methodologies-for-calculating-website-carbon/#the-sustainable-web-design-model">Sustainable Web</a> Model)</em></h3>
+                        <h3 class="hed_sub">Your Footprint, in Context... <em>(Using <a href="https://developers.thegreenwebfoundation.org/co2js/explainer/methodologies-for-calculating-website-carbon/#the-sustainable-web-design-model">Sustainable Web Design</a> Model)</em></h3>
                         <div class="ei_diagnostics ei_diagnostics-context">
                             <ul>
                             @php ($avgSiteCarbon = 0.6)
