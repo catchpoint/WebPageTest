@@ -1,3 +1,4 @@
+// prettier-ignore
 var co2=(()=>{var Ee=Object.create;var _=Object.defineProperty;var Re=Object.getOwnPropertyDescriptor;var ye=Object.getOwnPropertyNames;var me=Object.getPrototypeOf,pe=Object.prototype.hasOwnProperty;var L=(r,e)=>()=>(e||r((e={exports:{}}).exports,e),e.exports),he=(r,e)=>{for(var t in e)_(r,t,{get:e[t],enumerable:!0})},ee=(r,e,t,o)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of ye(e))!pe.call(r,n)&&n!==t&&_(r,n,{get:()=>e[n],enumerable:!(o=Re(e,n))||o.enumerable});return r};var D=(r,e,t)=>(t=r!=null?Ee(me(r)):{},ee(e||!r||!r.__esModule?_(t,"default",{value:r,enumerable:!0}):t,r)),Ne=r=>ee(_({},"__esModule",{value:!0}),r);var ne=L((ze,re)=>{var h=1e3,N=h*60,I=N*60,p=I*24,Ie=p*7,Ae=p*365.25;re.exports=function(r,e){e=e||{};var t=typeof r;if(t==="string"&&r.length>0)return Te(r);if(t==="number"&&isFinite(r))return e.long?Oe(r):be(r);throw new Error("val is not a non-empty string or a valid number. val="+JSON.stringify(r))};function Te(r){if(r=String(r),!(r.length>100)){var e=/^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(r);if(!!e){var t=parseFloat(e[1]),o=(e[2]||"ms").toLowerCase();switch(o){case"years":case"year":case"yrs":case"yr":case"y":return t*Ae;case"weeks":case"week":case"w":return t*Ie;case"days":case"day":case"d":return t*p;case"hours":case"hour":case"hrs":case"hr":case"h":return t*I;case"minutes":case"minute":case"mins":case"min":case"m":return t*N;case"seconds":case"second":case"secs":case"sec":case"s":return t*h;case"milliseconds":case"millisecond":case"msecs":case"msec":case"ms":return t;default:return}}}}function be(r){var e=Math.abs(r);return e>=p?Math.round(r/p)+"d":e>=I?Math.round(r/I)+"h":e>=N?Math.round(r/N)+"m":e>=h?Math.round(r/h)+"s":r+"ms"}function Oe(r){var e=Math.abs(r);return e>=p?G(r,e,p,"day"):e>=I?G(r,e,I,"hour"):e>=N?G(r,e,N,"minute"):e>=h?G(r,e,h,"second"):r+" ms"}function G(r,e,t,o){var n=e>=t*1.5;return Math.round(r/t)+" "+o+(n?"s":"")}});var se=L((Je,oe)=>{function Se(r){t.debug=t,t.default=t,t.coerce=C,t.disable=i,t.enable=n,t.enabled=a,t.humanize=ne(),t.destroy=l,Object.keys(r).forEach(s=>{t[s]=r[s]}),t.names=[],t.skips=[],t.formatters={};function e(s){let c=0;for(let d=0;d<s.length;d++)c=(c<<5)-c+s.charCodeAt(d),c|=0;return t.colors[Math.abs(c)%t.colors.length]}t.selectColor=e;function t(s){let c,d=null,F,q;function R(...E){if(!R.enabled)return;let m=R,P=Number(new Date),fe=P-(c||P);m.diff=fe,m.prev=c,m.curr=P,c=P,E[0]=t.coerce(E[0]),typeof E[0]!="string"&&E.unshift("%O");let B=0;E[0]=E[0].replace(/%([a-zA-Z%])/g,(M,Ce)=>{if(M==="%%")return"%";B++;let X=t.formatters[Ce];if(typeof X=="function"){let ge=E[B];M=X.call(m,ge),E.splice(B,1),B--}return M}),t.formatArgs.call(m,E),(m.log||t.log).apply(m,E)}return R.namespace=s,R.useColors=t.useColors(),R.color=t.selectColor(s),R.extend=o,R.destroy=t.destroy,Object.defineProperty(R,"enabled",{enumerable:!0,configurable:!1,get:()=>d!==null?d:(F!==t.namespaces&&(F=t.namespaces,q=t.enabled(s)),q),set:E=>{d=E}}),typeof t.init=="function"&&t.init(R),R}function o(s,c){let d=t(this.namespace+(typeof c>"u"?":":c)+s);return d.log=this.log,d}function n(s){t.save(s),t.namespaces=s,t.names=[],t.skips=[];let c,d=(typeof s=="string"?s:"").split(/[\s,]+/),F=d.length;for(c=0;c<F;c++)!d[c]||(s=d[c].replace(/\*/g,".*?"),s[0]==="-"?t.skips.push(new RegExp("^"+s.slice(1)+"$")):t.names.push(new RegExp("^"+s+"$")))}function i(){let s=[...t.names.map(f),...t.skips.map(f).map(c=>"-"+c)].join(",");return t.enable(""),s}function a(s){if(s[s.length-1]==="*")return!0;let c,d;for(c=0,d=t.skips.length;c<d;c++)if(t.skips[c].test(s))return!1;for(c=0,d=t.names.length;c<d;c++)if(t.names[c].test(s))return!0;return!1}function f(s){return s.toString().substring(2,s.toString().length-2).replace(/\.\*\?$/,"*")}function C(s){return s instanceof Error?s.stack||s.message:s}function l(){console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.")}return t.enable(t.load()),t}oe.exports=Se});var w=L((g,v)=>{g.formatArgs=Pe;g.save=Be;g.load=_e;g.useColors=Fe;g.storage=Ge();g.destroy=(()=>{let r=!1;return()=>{r||(r=!0,console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."))}})();g.colors=["#0000CC","#0000FF","#0033CC","#0033FF","#0066CC","#0066FF","#0099CC","#0099FF","#00CC00","#00CC33","#00CC66","#00CC99","#00CCCC","#00CCFF","#3300CC","#3300FF","#3333CC","#3333FF","#3366CC","#3366FF","#3399CC","#3399FF","#33CC00","#33CC33","#33CC66","#33CC99","#33CCCC","#33CCFF","#6600CC","#6600FF","#6633CC","#6633FF","#66CC00","#66CC33","#9900CC","#9900FF","#9933CC","#9933FF","#99CC00","#99CC33","#CC0000","#CC0033","#CC0066","#CC0099","#CC00CC","#CC00FF","#CC3300","#CC3333","#CC3366","#CC3399","#CC33CC","#CC33FF","#CC6600","#CC6633","#CC9900","#CC9933","#CCCC00","#CCCC33","#FF0000","#FF0033","#FF0066","#FF0099","#FF00CC","#FF00FF","#FF3300","#FF3333","#FF3366","#FF3399","#FF33CC","#FF33FF","#FF6600","#FF6633","#FF9900","#FF9933","#FFCC00","#FFCC33"];function Fe(){return typeof window<"u"&&window.process&&(window.process.type==="renderer"||window.process.__nwjs)?!0:typeof navigator<"u"&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)?!1:typeof document<"u"&&document.documentElement&&document.documentElement.style&&document.documentElement.style.WebkitAppearance||typeof window<"u"&&window.console&&(window.console.firebug||window.console.exception&&window.console.table)||typeof navigator<"u"&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)&&parseInt(RegExp.$1,10)>=31||typeof navigator<"u"&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/)}function Pe(r){if(r[0]=(this.useColors?"%c":"")+this.namespace+(this.useColors?" %c":" ")+r[0]+(this.useColors?"%c ":" ")+"+"+v.exports.humanize(this.diff),!this.useColors)return;let e="color: "+this.color;r.splice(1,0,e,"color: inherit");let t=0,o=0;r[0].replace(/%[a-zA-Z%]/g,n=>{n!=="%%"&&(t++,n==="%c"&&(o=t))}),r.splice(o,0,e)}g.log=console.debug||console.log||(()=>{});function Be(r){try{r?g.storage.setItem("debug",r):g.storage.removeItem("debug")}catch{}}function _e(){let r;try{r=g.storage.getItem("debug")}catch{}return!r&&typeof process<"u"&&"env"in process&&(r=process.env.DEBUG),r}function Ge(){try{return localStorage}catch{}}v.exports=se()(g);var{formatters:ve}=v.exports;ve.j=function(r){try{return JSON.stringify(r)}catch(e){return"[UnexpectedJSONParseError]: "+e.message}}});var xe={};he(xe,{averageIntensity:()=>y,co2:()=>z,default:()=>He,hosting:()=>J,marginalIntensity:()=>Q});var V=4883333333333333e-25;var U=class{constructor(e){this.options=e,this.KWH_PER_BYTE_FOR_NETWORK=V}perByte(e,t){if(e<1)return 0;if(t){let n=e*72e-12*0,i=e*V*475;return n+i}let o=72e-12+V;return e*o*519}};var te=U;var ce=D(w());var K={GIGABYTE:1e9};var ie=.81,W=.52,Y=.14,k=.15,H=.19,u=442,T=50,b=.75,O=.25,S=.02;var A=r=>parseFloat(r.toFixed(2));function x(r){if(typeof r!="object")throw new Error("Options must be an object");let e={};if(r?.gridIntensity){e.gridIntensity={};let{device:t,dataCenter:o,network:n}=r.gridIntensity;t&&(typeof t=="object"?(y.data[t.country?.toUpperCase()]||(console.warn(`"${t.country}" is not a valid country. Please use a valid 3 digit ISO 3166 country code. 
 See https://developers.thegreenwebfoundation.org/co2js/data/ for more information. 
 Falling back to global average grid intensity.`),e.gridIntensity.device={value:u}),e.gridIntensity.device={country:t.country,value:parseFloat(y.data[t.country?.toUpperCase()])}):typeof t=="number"?e.gridIntensity.device={value:t}:(e.gridIntensity.device={value:u},console.warn(`The device grid intensity must be a number or an object. You passed in a ${typeof t}. 
@@ -20,91 +21,90 @@ See https://developers.thegreenwebfoundation.org/co2js/methods/ to learn more ab
 //# sourceMappingURL=index.js.map
 
 let hasCSPblock = false;
-if( $WPT_REQUESTS ){
-    let req1csp = $WPT_REQUESTS[0].response_headers['content-security-policy'];
-    hasCSPblock = req1csp && req1csp.indexOf("connect-src 'self'") > -1;
+if ($WPT_REQUESTS) {
+  let req1csp = $WPT_REQUESTS[0].response_headers["content-security-policy"];
+  hasCSPblock = req1csp && req1csp.indexOf("connect-src 'self'") > -1;
 }
 
-// note: this section is borrowed from green-hosting js. 
-let collectHostStatuses = async function(){
-    if( !$WPT_REQUESTS ){
-        return Promise.all([{error: "Carbon calculation requires Chromium."}]);
+// note: this section is borrowed from green-hosting js.
+let collectHostStatuses = async function () {
+  if (!$WPT_REQUESTS) {
+    return Promise.all([{ error: "Carbon calculation requires Chromium." }]);
+  }
+  if (hasCSPblock) {
+    return Promise.all([{ error: "Unable to check green hosting." }]);
+  }
+  const hosts = [location.host];
+  $WPT_REQUESTS.forEach((req) => {
+    var url = new URL(req.url);
+    var host = url.host;
+    if (hosts.indexOf(host) === -1 && host !== "") {
+      hosts.push(host);
     }
-    if( hasCSPblock ){
-        return Promise.all([{error: "Unable to check green hosting."}]);
+  });
+
+  // This uses hosting.check to go out to the Green Web Foundation API with one bulk lookup for hosts
+  let dependenciesCheck = co2.hosting.check(hosts).then((result) => {
+    let greenResults = result.map((host) => {
+      return { url: host, green: true };
+    });
+
+    let grayResults = hosts
+      .filter((host) => {
+        return result.indexOf(host) == -1;
+      })
+      .map((host) => {
+        return { url: host, green: false };
+      });
+
+    let fullResults = greenResults.concat(grayResults);
+    fullResults = fullResults.sort((a, b) => {
+      if (a.url == hosts[0]) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+    return fullResults;
+  });
+
+  return dependenciesCheck;
+};
+
+let calculate_carbon = async function () {
+  let totalCarbon = 0;
+  const emissionsSWD = new co2.co2();
+  let greenstatuses = await collectHostStatuses();
+
+  $WPT_REQUESTS.forEach((req) => {
+    if (req.transfer_size) {
+      // try to determine request green status
+      let green = false;
+      if (!hasCSPblock) {
+        if (req.url) {
+          let url = new URL(req.url);
+          let host = url.host;
+          if (greenstatuses[0] !== undefined) {
+            green = greenstatuses.find(
+              (element) => element.url === host && element.green
+            )
+              ? true
+              : false;
+          }
+        }
+      }
+      totalCarbon += emissionsSWD.perByte(req.transfer_size, green);
     }
-    const hosts = [location.host];
-    $WPT_REQUESTS.forEach(req => {
-        var url = new URL(req.url);
-        var host = url.host;
-        if( hosts.indexOf(host) === -1 && host !== "" ){
-            hosts.push(host);
-        }
-    });
+  });
 
-    // This uses hosting.check to go out to the Green Web Foundation API with one bulk lookup for hosts
-    let dependenciesCheck = co2.hosting.check(hosts).then((result) => {
-
-        let greenResults = result.map( host => {
-            return { url: host, green: true };
-        });
-
-        let grayResults = hosts
-            .filter(host => { 
-                return result.indexOf(host) == -1; 
-            }).map( host => {
-                return { url: host, green: false };
-            });
-
-        let fullResults = greenResults.concat(grayResults);
-        fullResults = fullResults.sort((a,b) => {
-              if (a.url == hosts[0]) {
-                return -1;
-              } else {
-                return 1;
-              }
-        });
-        return fullResults;
-    });
-
-    return dependenciesCheck; 
-}
-
-
-
-
-let calculate_carbon = async function(){
-    
-    let totalCarbon = 0;
-    const emissionsSWD = new co2.co2();
-    let greenstatuses = await collectHostStatuses();
-
-    $WPT_REQUESTS.forEach(req => {
-        if( req.transfer_size ){
-            // try to determine request green status
-            let green = false;
-            if( !hasCSPblock ){
-                if( req.url){
-                    let url = new URL(req.url);
-                    let host = url.host;
-                    if( greenstatuses[0] !== undefined ){
-                        green = greenstatuses.find(element => element.url === host && element.green) ? true : false;
-                    }
-                }
-            }
-            totalCarbon += emissionsSWD.perByte(req.transfer_size, green );
-        }
-    });
-
-    
-    return Promise.resolve({ 
-        "sustainable-web-design": totalCarbon.toFixed(2), 
-        "scale": "per new visit",
-        "green-hosting": greenstatuses
-    }); // We use toFixed(2) here to set the result to 2 decimal places.
-}
+  return Promise.resolve({
+    "sustainable-web-design": totalCarbon.toFixed(2),
+    scale: "per new visit",
+    "green-hosting": greenstatuses,
+  }); // We use toFixed(2) here to set the result to 2 decimal places.
+};
 
 // without wpt requests, this isn't able to calculate. no metric unless chromium browsers
-if( $WPT_REQUESTS ){
-return calculate_carbon();
+if ($WPT_REQUESTS) {
+  return calculate_carbon();
 }

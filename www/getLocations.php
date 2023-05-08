@@ -208,8 +208,10 @@ function LoadLocations($isPaid = false)
             }
         }
     } elseif (!$isPaid) {
-        if (isset($location['premium'])) {
-            unset($loc[$name]);
+        foreach ($loc as $name => $location) {
+            if (isset($location['premium'])) {
+                unset($loc[$name]);
+            }
         }
     }
     $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();

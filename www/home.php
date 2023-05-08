@@ -121,7 +121,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                         $ccInputState = " checked ";
                         ?>
                         <input type="hidden" name="carbon_control_redirect" value="1">
-                    <?php }else {
+                    <?php } else {
                         $ccInputState = "";
                     } ?>
 

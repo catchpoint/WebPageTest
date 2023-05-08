@@ -14,7 +14,7 @@ wpt-header {
   --wpt-user-icon: url(/assets/images/icon-user.svg) left 50% no-repeat;
 }
 wpt-header * {
-  transition: color .4s linear, background-color .4s linear;
+  transition: color 0.4s linear, background-color 0.4s linear;
 }
 .account-layout wpt-header,
 body.history wpt-header,
@@ -80,8 +80,6 @@ wpt-header header {
   background: transparent;
   margin-bottom: -6rem;
 }
-
-
 
 wpt-header a {
   color: #fff;
