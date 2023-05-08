@@ -9,7 +9,7 @@
                 <h2>
                 Carbon Control<em class="flag">Experimental</em>
                 </h2>
-                <p>WebPageTest evaluates a website's carbon usage through the use of services such as the <a href="https://www.thegreenwebfoundation.org/">Green Web Foundation’s</a> <em>GreenCheck</em> and <em>CO2.js</em> </p>
+                <p>WebPageTest evaluates a website's carbon usage through the use of services such as the <a href="https://www.thegreenwebfoundation.org/">Green Web Foundation’s</a> <em>Green Web Dataset</em> and <em>CO2.js</em> </p>
                 <p class="ei_runrepeat">Displaying Test Run {{$run}}@if ($cached), Repeat View @else . @endif</p>
 
                 <div class="ei_summary">
@@ -112,7 +112,7 @@
                 <div class='experiments_grades'>
                     <div class="form_clip">
                         @if ($has_ei_results)
-                        <h3 class="hed_sub">Your Footprint, in Context... <em>(Using <a href="https://developers.thegreenwebfoundation.org/co2js/explainer/methodologies-for-calculating-website-carbon/#the-sustainable-web-design-model">Sustainable Web</a> Model)</em></h3>
+                        <h3 class="hed_sub">Your Footprint, in Context... <em>(Using <a href="https://developers.thegreenwebfoundation.org/co2js/explainer/methodologies-for-calculating-website-carbon/#the-sustainable-web-design-model">Sustainable Web Design</a> Model)</em></h3>
                         <div class="ei_diagnostics ei_diagnostics-context">
                             <ul>
                             @php ($avgSiteCarbon = 0.6)
@@ -138,7 +138,7 @@
                                     <img src="/assets/images/src/env-scale.svg" alt="scales with servers in them sketch"> 
                                 </li>
                                 <li>
-                                    <span>A site's carbon footprint can vary by device and location, particularly if it relies on 3rd party ads. <a href="/?url={{ $test_url }}">Test this site from another country</a> to see how its footprint varies.</span>
+                                    <span>A site's carbon footprint can vary by device and location, particularly if it relies on 3rd party ads. <a href="/?url={{ $test_url }}&cc">Test this site from another country</a> to see how its footprint varies.</span>
                                     <img src="/assets/images/src/icon_routes.svg" alt="planet with arrows on it sketch"> 
                                 </li>
                             </ul>
