@@ -138,7 +138,7 @@
                                     <img src="/assets/images/src/env-scale.svg" alt="scales with servers in them sketch"> 
                                 </li>
                                 <li>
-                                    <span>A site's carbon footprint can vary by device and location, particularly if it relies on 3rd party ads. <a href="/?url={{ $test_url }}&cc">Test this site from another country</a> to see how its footprint varies.</span>
+                                    <span>A site's carbon footprint can vary by device and location, particularly if it relies on 3rd party ads. <a href="/carbon-control/?url={{ $test_url }}">Test this site from another country</a> to see how its footprint varies.</span>
                                     <img src="/assets/images/src/icon_routes.svg" alt="planet with arrows on it sketch"> 
                                 </li>
                             </ul>
