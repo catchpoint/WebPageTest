@@ -392,7 +392,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 if ($gradedRunResults->hasWebVitals()) {
                     $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
                 }
-                
+
                 if ($firstRunResults && $firstRunResults->getStepResult(1)->getMetric('carbon-footprint')) {
                     $tabs['Carbon Control'] = $menuUrlGenerator->resultPage("carboncontrol", $endParams);
                 }
@@ -409,7 +409,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
                 }
                 $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
-                
+
 
                 if ($gradedRunResults->hasBreakdownTimeline()) {
                 // currently only supported by standard urls

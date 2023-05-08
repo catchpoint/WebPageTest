@@ -224,7 +224,7 @@ if (!isset($test)) {
         $is_private = 1;
     }
 
-    if( isset($req_carbon_control) ){
+    if (isset($req_carbon_control)) {
         $test['carbon_control'] = $req_carbon_control;
     }
 
@@ -678,10 +678,10 @@ if (!isset($test)) {
 
     $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
     // opt API usage out of CC availability for now
-    if (!empty($user_api_key)){
+    if (!empty($user_api_key)) {
         $test['carbon_control'] = false;
     }
-    if( isset($test['carbon_control']) && $test['carbon_control'] ){
+    if (isset($test['carbon_control']) && $test['carbon_control']) {
         array_push($conditionalMetrics, "carbon-footprint");
     }
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);

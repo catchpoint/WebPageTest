@@ -8,6 +8,7 @@ ARG MAKEFLAGS="-j4"
 RUN apk add --no-cache --update \
     build-base \
     coreutils \
+    fdk-aac-dev \
     freetype-dev \
     gcc \
     lame-dev \
@@ -33,7 +34,7 @@ RUN apk add --no-cache --update \
 
 RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories \
     && echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories \
-    && apk add --no-cache --update fdk-aac-dev rav1e-dev
+    && apk add --no-cache --update rav1e-dev
 
 WORKDIR /tmp/
 RUN wget --progress=dot:giga http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz \
@@ -104,7 +105,7 @@ RUN apk add --no-cache supervisor beanstalkd zip libzip python3 libtheora rtmpdu
 
 COPY --from=build /opt/ffmpeg /opt/ffmpeg
 COPY --from=build /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
-COPY --from=build /usr/lib/librav1e.so /usr/lib/librav1e.so
+COPY --from=build /usr/lib/librav1e.so.0 /usr/lib/librav1e.so.0
 COPY --from=build /usr/lib/libx264.so.157 /usr/lib/libx264.so.157
 COPY --from=build /usr/lib/libvpx.so.6 /usr/lib/libvpx.so.6
 COPY --from=build /usr/lib/libx265.so.192 /usr/lib/libx265.so.192
