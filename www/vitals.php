@@ -153,13 +153,14 @@ $lcp_request = '';
 function InsertWebVitalsHTML($stepResult)
 {
     InsertWebVitalsHTML_Summary($stepResult);
+
     global $testRunResults;
+
     if (isset($testRunResults)) {
         echo '<div class="cruxembed">';
         require_once(INCLUDES_PATH . '/include/CrUX.php');
 
-        InsertCruxHTML($testRunResults, null, "cwv");
-
+        InsertCruxHTML($testRunResults, 'cwv');
         echo '</div>';
     }
     InsertWebVitalsHTML_LCP($stepResult);
