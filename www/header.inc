@@ -467,7 +467,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $id = $testInfo->getId();
                 }
                 echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-                "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
+                "href=\"https://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
 
 
                 if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
