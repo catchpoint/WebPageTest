@@ -394,13 +394,20 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
 
         </head>
-        <body class="result compare <?php if ($experiment) {
-            echo ' compare-experiment';
-                                    }  if ($req_screenshot) {
-                                        echo ' screenshot';
-                                    } if (!$ready) {
-                                        echo ' compare-loading';
-                                    }   ?>">
+        <body class="result compare <?php
+            if ($experiment) {
+                echo ' compare-experiment';
+            }
+            if ($req_screenshot) {
+                echo ' screenshot';
+            }
+            if (!$ready) {
+                echo ' compare-loading';
+            }
+            if (count($tests) === 1) {
+                echo ' compare-single';
+            }
+            ?>">
                 <?php
                 $tab = 'Test Result';
                 //$nosubheader = false;
