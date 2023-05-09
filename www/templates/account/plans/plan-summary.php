@@ -3,7 +3,6 @@
     <?php require_once __DIR__ . '/includes/subhed.php'; ?>
     <?php require_once __DIR__ . '/includes/billing-address-form.php'; ?>
     <!-- main form -->
-    <div id="notification-banner-container"></div>
     <form id="wpt-account-upgrade" method="post" action="/account">
         <!-- payment -->
         <div class="box card-section">
@@ -28,7 +27,7 @@
             </div>
 
         </div>
-
+        <div id="notification-banner-container"></div>
         <div class="box card-section">
             <h2>Selected Plan</h2>
             <div class="card-section-subhed">
