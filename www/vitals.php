@@ -7,9 +7,7 @@ require_once __DIR__ . '/common.inc';
 require_once(INCLUDES_PATH . '/object_detail.inc');
 require_once(INCLUDES_PATH . '/page_data.inc');
 require_once(INCLUDES_PATH . '/waterfall.inc');
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+
 // Prevent the details page from running out of control.
 set_time_limit(30);
 
@@ -29,6 +27,10 @@ $isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test', 'Details', 'WebPageTest', 'Website Speed Test', 'Page Speed');
 $page_description = "Web Vitals details$testLabel";
+
+$useScreenshot = true;
+$socialTitle = "Web Vitals Report for $url";
+$socialDesc = "View this Web Vitals Report on WebPageTest.org";
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
