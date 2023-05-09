@@ -160,7 +160,7 @@ function InsertWebVitalsHTML($stepResult)
         echo '<div class="cruxembed">';
         require_once(INCLUDES_PATH . '/include/CrUX.php');
 
-        InsertCruxHTML($testRunResults);
+        InsertCruxHTML($testRunResults, 'cwv');
         echo '</div>';
     }
     InsertWebVitalsHTML_LCP($stepResult);
