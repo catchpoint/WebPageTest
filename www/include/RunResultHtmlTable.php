@@ -32,6 +32,7 @@ class RunResultHtmlTable
     const COL_DOC_COMPLETE = 'DocComplete';
     const COL_DOC_REQUESTS = 'RequestsDoc';
     const COL_DOC_BYTES = 'BytesInDoc';
+    const COL_ENV_IMP = 'carbon-footprint';
 
 
   /* @var TestInfo */
@@ -71,11 +72,18 @@ class RunResultHtmlTable
         $this->enabledColumns[self::COL_RESULT] = true;
         $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
         $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
-                           self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME);
+                           self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME, self::COL_ENV_IMP);
         foreach ($checkByMetric as $col) {
             $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
         }
+
+
+        // disable env impact if not collected
+        if (count($this->runResults->getStepResult(1)->getMetric(self::COL_ENV_IMP)) === 0) {
+            $this->enabledColumns[self::COL_ENV_IMP] = false;
+        }
+
 
       // If strict_video = 1, only show if metric is present, otherwise alway show
         if (GetSetting('strict_video')) {
@@ -145,7 +153,7 @@ class RunResultHtmlTable
         return $out;
     }
 
-    private function _createHead()
+    private function _createHead($cachedRun = false)
     {
         $out = '';
 
@@ -188,7 +196,8 @@ class RunResultHtmlTable
         ) {
             $test_id = $this->testInfo->getId();
             $run = $this->runResults->getRunNumber();
-            $cached = $this->runResults->isCachedRun() ? '1' : '0';
+
+            $cached = $cachedRun ? '1' : '0';
             $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
         }
 
@@ -245,11 +254,24 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_COST)) {
             $out .= $this->_headCell("Cost");
         }
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
+            $cctest_id = $this->testInfo->getId();
+            $ccrun = $this->runResults->getRunNumber();
+            $cachedparam = $cachedRun ? "cached/" : "";
+            $carboncontrol_url = htmlspecialchars("/result/$cctest_id/$ccrun/carboncontrol/$cachedparam");
+
+
+            if ($this->useShortNames) {
+                $out .= $this->_headCell('<abbr title="co2 equivalent Per Visit">co2e</abbr>', 'carboncontrol');
+            } else {
+                $out .= $this->_headCell('<a href="' . $carboncontrol_url . '">Carbon Footprint</a>', 'carboncontrol');
+            }
+        }
 
         return $out;
     }
 
-    private function _createFoot()
+    private function _createFoot($cachedRun = false)
     {
         $out = '';
 
@@ -273,7 +295,7 @@ class RunResultHtmlTable
         }
         if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
             //$out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
-            $out .= $this->_bodyCell(null, "How soon did the page appear usable?");
+            $out .= $this->_bodyCell(null, "How soon did the page look usable?");
         }
         if ($this->isColumnEnabled(self::COL_RESULT)) {
             //$out .= $this->_headCell("Result (error&nbsp;code)");
@@ -288,7 +310,7 @@ class RunResultHtmlTable
         ) {
             $test_id = $this->testInfo->getId();
             $run = $this->runResults->getRunNumber();
-            $cached = $this->runResults->isCachedRun() ? '1' : '0';
+            $cached = $cachedRun ? 1 : 0;
             $vitals_url = htmlspecialchars("/vitals.php?test=$test_id&run=$run&cached=$cached");
         }
 
@@ -305,7 +327,7 @@ class RunResultHtmlTable
         }
         if ($this->isColumnEnabled(self::COL_TOTAL_BLOCKING_TIME)) {
             //$out .= $this->_headCell("<a href='$vitals_url#tbt'>Total Blocking Time</a>", $vitalsBorder);
-            $out .= $this->_bodyCell("", "How long was content blocked from user input?");
+            $out .= $this->_bodyCell("", "Was the main thread blocked?");
             $vitalsBorder = null;
         }
 
@@ -332,7 +354,7 @@ class RunResultHtmlTable
                 $out .= $this->_bodyCell("", "How many requests did the browser make?");
             }
             //$out .= $this->_headCell("Page Weight");
-            $out .= $this->_bodyCell("", "How many bytes were downloaded?");
+            $out .= $this->_bodyCell("", "How many bytes downloaded?");
         }
 
 
@@ -344,6 +366,9 @@ class RunResultHtmlTable
         if ($this->isColumnEnabled(self::COL_COST)) {
            // $out .= $this->_headCell("Cost");
             $out .= $this->_bodyCell("", "What was the avg. download cost?");
+        }
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
+            $out .= $this->_bodyCell("carboncontrol", "How eco-friendly is it? <em class=\"flag\">Experimental</em>");
         }
 
         return $out;
@@ -412,7 +437,7 @@ class RunResultHtmlTable
         }
 
         if ($repeatMetricLabels) {
-            $out .= $this->_createHead();
+            $out .= $this->_createHead($cachedRun);
         }
 
 
@@ -513,13 +538,16 @@ class RunResultHtmlTable
                 $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $this->_costColumnText($stepResult), $class);
             }
         }
+        if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
+                $out .= $this->_bodyCell($idPrefix . "Footprint" . $idSuffix, $this->_getSimpleMetric($stepResult, "carbon-footprint")['sustainable-web-design'] . '<span class="units">g</span>', $class);
+        }
 
         $out .= "</tr>\n";
 
 
         if ($repeatMetricLabels) {
             if ($this->useDescs) {
-                $out .= $this->_createFoot();
+                $out .= $this->_createFoot($cachedRun);
             }
             $out .= "</table></div>\n";
             $localPaths = $stepResult->createTestPaths();

@@ -223,7 +223,10 @@ if (!isset($test)) {
     if ($is_private_api_call || $is_private_web_call) {
         $is_private = 1;
     }
-    $test['private'] = $is_private;
+
+    if (isset($req_carbon_control)) {
+        $test['carbon_control'] = $req_carbon_control;
+    }
 
     if (isset($req_web10)) {
         $test['web10'] = $req_web10;
@@ -674,6 +677,13 @@ if (!isset($test)) {
     }
 
     $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    // opt API usage out of CC availability for now
+    if (!empty($user_api_key)) {
+        $test['carbon_control'] = false;
+    }
+    if (isset($test['carbon_control']) && $test['carbon_control']) {
+        array_push($conditionalMetrics, "carbon-footprint");
+    }
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
 
     if (array_key_exists('custom', $_REQUEST)) {
@@ -1368,6 +1378,9 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 $view = '';
                 if (isset($_REQUEST['webvital_profile'])) {
                     $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
+                }
+                if (isset($_REQUEST['carbon_control_redirect'])) {
+                    $view = FRIENDLY_URLS ? '?view=carboncontrol' : '&view=carboncontrol';
                 }
                 if (FRIENDLY_URLS) {
                     header("Location: $protocol://$host$uri/result/{$test['id']}/$view");

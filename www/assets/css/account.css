@@ -937,6 +937,10 @@ a.button {
   padding-left: 0;
   margin-bottom: 0;
 }
+.signup-flow-layout header {
+  padding-left: 0;
+  margin-bottom: 0;
+}
 
 .signup-flow-layout header .logo {
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);

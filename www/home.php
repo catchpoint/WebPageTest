@@ -89,7 +89,14 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     ?>
 </head>
 
-<body class="home feature-pro">
+<?php
+$homeclass = "feature-cc";
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
+    $homeclass = "feature-pro";
+}
+?>
+
+<body class="home <?php echo $homeclass; ?>">
     <?php
     $tab = 'Start Test';
     include 'header.inc';
@@ -109,6 +116,15 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
+
+                    <?php if (isset($req_cc)) {
+                        $ccInputState = " checked ";
+                        ?>
+                        <input type="hidden" name="carbon_control_redirect" value="1">
+                    <?php } else {
+                        $ccInputState = "";
+                    } ?>
+
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -252,14 +268,18 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>).</small></label>
+                                                    </div>
+                                                    <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
                                                         <script>
-                                                            // show or hide simple lighthouse field depending on whether chrome test is running
+                                                            // show or hide simple lighthouse and cc fields depending on whether chrome test is running
                                                             let simplePresets = document.querySelector('.test_presets_easy');
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            let ccSimpleField = document.querySelector('[for=inc-cc-simple]');
                                                             let lhSimpleCheck = lhSimpleFields.querySelector('input');
                                                             function enableDisableLHSimple(){
                                                               let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
@@ -269,6 +289,11 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                               } else {
                                                                   lhSimpleFields.style.display = "none";
                                                                   lhSimpleCheck.disabled = true;
+                                                              }
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
+                                                                  ccSimpleField.style.display = "block";
+                                                              } else {
+                                                                  ccSimpleField.style.display = "none";
                                                               }
                                                             }
                                                             enableDisableLHSimple();
@@ -280,6 +305,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <label for="private-simple"><input type="checkbox" name="private" id="private-simple" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
                                                         </div>
                                                     <?php endif; ?>
+                                                        
                                                 </div>
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
@@ -544,6 +570,9 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                         </div>
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
+                                                <li>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>)</small></label>
+                                                </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
                                                         Stop Test at Document Complete<br>
@@ -659,6 +688,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         <input type="checkbox" name="injectScriptAllFrames" id="injectScriptAllFrames" class="checkbox" style="float: left;width: auto;">
                                                         <label for="injectScriptAllFrames" class="auto_width">Inject script into all frames and run before any page scripts run (Chrome-only)</label>
                                                     </li>
+                                                    
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
