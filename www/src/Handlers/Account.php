@@ -650,7 +650,7 @@ class Account
             error_log($e->getMessage());
             $cancelSuccessMessage = array(
                 'type' => 'error',
-                'text' => 'There was an error with canceling your account. Please try again.'
+                'text' => 'There was an error with cancelling your account. Please try again.'
             );
             Util::setBannerMessage('form', $cancelSuccessMessage);
             throw new ClientException("There was an error", "/account");
