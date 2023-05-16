@@ -157,8 +157,6 @@ $profiles = parse_ini_file($profile_file, true);
         <?php
           echo "var profiles = " . json_encode($profiles) . ";\n";
         ?>
-        var wptStorage = window.localStorage || {};
-
         var profileChanged = function() {
           var sel = document.getElementById("webvital_profile");
           var txt = document.getElementById("description");
