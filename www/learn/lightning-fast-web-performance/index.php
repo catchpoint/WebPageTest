@@ -491,6 +491,10 @@ EOT;
                 var intro = document.querySelector(".video video");
                 var playbtn = document.querySelector(".play");
 
+                if (!intro || !playbtn) {
+                    return;
+                }
+
                 function activate(){
                     intro.controls = true;
                     document.body.classList.add("playing");

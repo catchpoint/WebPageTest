@@ -32,13 +32,13 @@
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_lfwp_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
                     </div>
-                    
+
                 </div>
                 <div class="home_feature_hed home_feature_hed-cc">
                     <div class="home_feature_hed_text">
                         <h1 class="attention"><span class="home_feature_hed_text_leadin">Introducing <b>Carbon Control <span class="flag">Experimental</span></b></span> </h1>
                         <p><b>New in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
-                        
+
                     </div>
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_featureimg-cc.jpg" width="1414" height="843" alt="screenshot of wpt results page">
@@ -59,7 +59,7 @@
                         <button class="play" id="playbtn">Play/Pause Video</button>
                     </div>
                 </div>
-                
+
             <?php } ?>
         </div>
 
@@ -84,7 +84,7 @@
                 } else {
                     document.body.classList.add("feature-pro");
                 }
-                
+
             }
         },8000);
 
@@ -96,7 +96,11 @@
         (function(){
                 var intro = document.querySelector("video");
                 var playbtn = document.querySelector(".play");
-                
+
+                if (!intro || !playbtn) {
+                    return;
+                }
+
                 function activate(){
                     intro.controls = true;
                     document.body.classList.add("playing");
@@ -106,7 +110,7 @@
                     intro.pause();
                     document.body.classList.remove("playing");
                 }
-                
+
                 intro.addEventListener( "play", function(e){
                     activate();
                     playbtn.classList.add("active");
@@ -128,8 +132,8 @@
                     }
                 });
 
-                
-                
+
+
                 document.body.addEventListener("mousedown",function( e ){
                     if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){
                         e.preventDefault();
@@ -146,4 +150,4 @@
 
     </script>
 
-    
+
