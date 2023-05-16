@@ -308,6 +308,10 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 var video = container.querySelector("video");
                 var playbtn = container.querySelector(".play");
 
+                if (!video || !playbtn) {
+                    return;
+                }
+
                 function activate(){
                     container.classList.add("playing");
                 }
