@@ -212,12 +212,13 @@ function LocationChanged() {
       browserHtml += "</optgroup>";
     }
   }
-  $("#browser").html(browserHtml);
+  if (document.getElementById('browser')) {
+    $("#browser").html(browserHtml);
+    if (wptStorage["testBrowser"] != undefined)
+      $("#browser").val(wptStorage["testBrowser"]);
 
-  if (wptStorage["testBrowser"] != undefined)
-    $("#browser").val(wptStorage["testBrowser"]);
-
-  BrowserChanged();
+    BrowserChanged();
+  }
 }
 
 /*
