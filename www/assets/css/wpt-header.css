@@ -59,6 +59,7 @@ cp-header a {
   max-width: 1400px;
   margin: 0 auto;
   height: 4.5rem;
+  box-sizing: border-box;
 }
 cp-header a svg,
 cp-header a object,
