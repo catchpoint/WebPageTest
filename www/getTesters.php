@@ -63,7 +63,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
         echo "</th></tr>\n";
         if (array_key_exists('testers', $location)) {
-            echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>";
+            echo '<tr><th class="tester">Tester</th><th>Busy?</th><th>Last Check (minutes)</th>';
+            echo '<th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th>';
+            echo '<th>Error Rate <tt title="A percentage of the last 100 tests">?</tt></th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>';
             echo "<th>IP</th><th>DNS Server(s)</th>";
             if ($admin) {
                 echo "<th>Current Test</th>";
