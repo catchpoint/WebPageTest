@@ -237,6 +237,11 @@ function BrowserChanged() {
     deviceID = parts[1];
   }
 
+  // on/off Chromium settings
+  const nonChrome = ['Firefox', 'Safari'].some(browser => selectedBrowser.startsWith(browser));
+  document.querySelectorAll('#advanced-chrome input, #advanced-chrome select').forEach(i => i.disabled = nonChrome);
+
+
   let connections = [];
 
   // build the list of connections for this location/browser
