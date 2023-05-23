@@ -305,7 +305,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             <label for="private-simple"><input type="checkbox" name="private" id="private-simple" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
                                                         </div>
                                                     <?php endif; ?>
-                                                        
+
                                                 </div>
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
@@ -570,9 +570,6 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                         </div>
                                         <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
-                                                <li>
-                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>)</small></label>
-                                                </li>
                                                 <li><label for="stop_test_at_document_complete" class="auto_width">
                                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
                                                         Stop Test at Document Complete<br>
@@ -688,62 +685,18 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <input type="checkbox" name="injectScriptAllFrames" id="injectScriptAllFrames" class="checkbox" style="float: left;width: auto;">
                                                         <label for="injectScriptAllFrames" class="auto_width">Inject script into all frames and run before any page scripts run (Chrome-only)</label>
                                                     </li>
-                                                    
+
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
-                                            <p>Chrome-specific advanced settings:</p>
                                             <ul class="input_fields">
+                                                <li>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint.)</small></label>
+                                                </li>
                                                 <li>
                                                     <label for="lighthouse-advanced" class="auto_width">
                                                         <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                                     </label>
-                                                </li>
-                                                <li><label for="mobile">
-                                                        <?php
-                                                        $checked = '';
-                                                        if (isset($_REQUEST['mobile']) && $_REQUEST['mobile']) {
-                                                            $checked = ' checked';
-                                                        }
-                                                        echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
-                                                        ?>
-                                                        Emulate Mobile Browser
-                                                    </label>
-                                                    <?php
-                                                    if (isset($mobile_devices)) {
-                                                        if (is_array($mobile_devices) && count($mobile_devices)) {
-                                                            $selectedDevice = null;
-                                                            if (isset($_COOKIE['mdev']) && isset($mobile_devices[$_COOKIE['mdev']])) {
-                                                                $selectedDevice = $_COOKIE['mdev'];
-                                                            }
-                                                            if (isset($_REQUEST['mdev']) && isset($mobile_devices[$_REQUEST['mdev']])) {
-                                                                $selectedDevice = $_REQUEST['mdev'];
-                                                            }
-                                                            echo '<select name="mobileDevice" id="mobileDevice">';
-                                                            $lastGroup = null;
-                                                            foreach ($mobile_devices as $deviceName => $deviceInfo) {
-                                                                if (isset($deviceInfo['label'])) {
-                                                                    if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
-                                                                        if (isset($lastGroup)) {
-                                                                            echo "</optgroup>";
-                                                                        }
-                                                                        $lastGroup = $deviceInfo['group'];
-                                                                        echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
-                                                                    }
-                                                                    $selected = '';
-                                                                    if (isset($selectedDevice) && $selectedDevice == $deviceName) {
-                                                                        $selected = 'selected';
-                                                                    }
-                                                                    echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
-                                                                }
-                                                            }
-                                                            if (isset($lastGroup)) {
-                                                                echo "</optgroup>";
-                                                            }
-                                                            echo '</select>';
-                                                        }
-                                                    }
-                                                    ?>
                                                 </li>
                                                 <li>
                                                     <label for="timeline" class="auto_width">
