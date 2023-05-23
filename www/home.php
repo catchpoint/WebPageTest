@@ -699,52 +699,6 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                                     </label>
                                                 </li>
-                                                <li><label for="mobile">
-                                                        <?php
-                                                        $checked = '';
-                                                        if (isset($_REQUEST['mobile']) && $_REQUEST['mobile']) {
-                                                            $checked = ' checked';
-                                                        }
-                                                        echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
-                                                        ?>
-                                                        Emulate Mobile Browser
-                                                    </label>
-                                                    <?php
-                                                    if (isset($mobile_devices)) {
-                                                        if (is_array($mobile_devices) && count($mobile_devices)) {
-                                                            $selectedDevice = null;
-                                                            if (isset($_COOKIE['mdev']) && isset($mobile_devices[$_COOKIE['mdev']])) {
-                                                                $selectedDevice = $_COOKIE['mdev'];
-                                                            }
-                                                            if (isset($_REQUEST['mdev']) && isset($mobile_devices[$_REQUEST['mdev']])) {
-                                                                $selectedDevice = $_REQUEST['mdev'];
-                                                            }
-                                                            echo '<select name="mobileDevice" id="mobileDevice">';
-                                                            $lastGroup = null;
-                                                            foreach ($mobile_devices as $deviceName => $deviceInfo) {
-                                                                if (isset($deviceInfo['label'])) {
-                                                                    if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
-                                                                        if (isset($lastGroup)) {
-                                                                            echo "</optgroup>";
-                                                                        }
-                                                                        $lastGroup = $deviceInfo['group'];
-                                                                        echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
-                                                                    }
-                                                                    $selected = '';
-                                                                    if (isset($selectedDevice) && $selectedDevice == $deviceName) {
-                                                                        $selected = 'selected';
-                                                                    }
-                                                                    echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
-                                                                }
-                                                            }
-                                                            if (isset($lastGroup)) {
-                                                                echo "</optgroup>";
-                                                            }
-                                                            echo '</select>';
-                                                        }
-                                                    }
-                                                    ?>
-                                                </li>
                                                 <li>
                                                     <label for="timeline" class="auto_width">
                                                         <input type="checkbox" name="timeline" id="timeline" class="checkbox" checked=checked style="float: left;width: auto;">
