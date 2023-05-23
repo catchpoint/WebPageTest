@@ -689,7 +689,6 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
-                                            <p>Chrome-specific advanced settings:</p>
                                             <ul class="input_fields">
                                                 <li>
                                                     <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint.)</small></label>
