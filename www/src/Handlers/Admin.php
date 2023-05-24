@@ -80,4 +80,26 @@ class Admin
 
         return $response;
     }
+
+    public static function getTestInfo(RequestContext $request_context): Response
+    {
+        $response = new Response();
+        $current_user = $request_context->getUser();
+        if (is_null($current_user)) {
+            throw new ForbiddenException();
+        }
+
+        if (!$current_user->isAdmin()) {
+            throw new ForbiddenException();
+        }
+
+        $raw = $request_context->getRaw();
+        if (empty($raw['test'])) {
+            $response->setContent('Please pass a test id like &test=221103_ABC123_ABC');
+        } else {
+            dd(GetTestInfo($raw['test']));
+        }
+
+        return $response;
+    }
 }
