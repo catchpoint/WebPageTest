@@ -83,6 +83,14 @@ class Admin
 
     public static function getTestInfo(RequestContext $request_context): Response
     {
+
+        // psalm workaround
+        if (!function_exists('GetTestInfo')) {
+            function GetTestInfo() {
+                return 'no GetTestInfo() in sight';
+            }
+        }
+
         $response = new Response();
         $current_user = $request_context->getUser();
         if (is_null($current_user)) {
