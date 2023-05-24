@@ -86,7 +86,8 @@ class Admin
 
         // psalm workaround
         if (!function_exists('GetTestInfo')) {
-            function GetTestInfo() {
+            function GetTestInfo()
+            {
                 return 'no GetTestInfo() in sight';
             }
         }
