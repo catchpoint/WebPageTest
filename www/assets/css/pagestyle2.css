@@ -4857,6 +4857,10 @@ form[name="filterLog"] .history_filter input[type="text"] {
   border-bottom: 2px solid #f9d856;
 }
 
+.simpleadvancedfields .chromium-hide:before {
+  content: "These features are disabled because a non-Chromium browser is selected.";
+}
+
 .input_fields li,
 .input_fields .fieldrow {
   width: 100%;
