@@ -237,6 +237,17 @@ function BrowserChanged() {
     deviceID = parts[1];
   }
 
+  // on/off Chromium settings
+  const nonChrome = ['Firefox', 'Safari'].some(browser => selectedBrowser.startsWith(browser));
+  const tabClasses = document.querySelector('#advanced-chrome').classList;
+  if (nonChrome) {
+    tabClasses.add('chromium-hide');
+  } else {
+    tabClasses.remove('chromium-hide');
+  }
+  document.querySelectorAll('#advanced-chrome input, #advanced-chrome select').forEach(i => i.disabled = nonChrome);
+
+
   let connections = [];
 
   // build the list of connections for this location/browser
