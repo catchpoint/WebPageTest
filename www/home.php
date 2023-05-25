@@ -283,17 +283,14 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             let lhSimpleCheck = lhSimpleFields.querySelector('input');
                                                             function enableDisableLHSimple(){
                                                               let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
-                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
+                                                                  ccSimpleField.style.display = "block";
                                                                   lhSimpleFields.style.display = "block";
                                                                   lhSimpleCheck.disabled = false;
                                                               } else {
+                                                                  ccSimpleField.style.display = "none";
                                                                   lhSimpleFields.style.display = "none";
                                                                   lhSimpleCheck.disabled = true;
-                                                              }
-                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
-                                                                  ccSimpleField.style.display = "block";
-                                                              } else {
-                                                                  ccSimpleField.style.display = "none";
                                                               }
                                                             }
                                                             enableDisableLHSimple();
