@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="account-layout">
+<html>
 
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
