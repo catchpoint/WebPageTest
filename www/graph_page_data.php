@@ -34,9 +34,11 @@ if (count($testsId) == 1) {
     $_GET['test'] = $testsId[0];
     $_REQUEST['test'] = $testsId[0];
 }
-include 'common.inc';
-require_once('page_data.inc');
-require_once('graph_page_data.inc');
+
+require_once __DIR__ . '/common.inc';
+require_once INCLUDES_PATH . '/page_data.inc';
+require_once INCLUDES_PATH . '/include/graph_page_data.inc';
+
 $page_keywords = array('Graph Page Data', 'Webpagetest', 'Website Speed Test', 'Page Speed', 'comparison');
 $page_description = "Graph Page Data Comparison.";
 
@@ -436,7 +438,7 @@ function InsertChart($metric, $label)
     $view_index = 0;
 
     if ($num_runs >= 3) {
-        echo '<div class="chartStats scrollableTable"><table class="pretty details">';
+        echo '<div class="chartStats scrollableTable"><table class="pretty pretty-autowidth details">';
         echo '<thead><tr><th class="pin"></th><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr></thead>';
         foreach ($views as $cached) {
             // For each run in that view

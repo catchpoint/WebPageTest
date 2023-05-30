@@ -15,6 +15,7 @@ use GuzzleHttp\Client as GuzzleClient;
 use WebPageTest\AuthToken;
 use WebPageTest\Exception\ClientException;
 use WebPageTest\Exception\UnauthorizedException;
+use WebPageTest\Exception\PortalException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 use WebPageTest\CPGraphQlTypes\ApiKey;
 use WebPageTest\CPGraphQlTypes\ApiKeyList;
@@ -90,7 +91,7 @@ class CPClient
         );
     }
 
-    public function getAccessToken(): string
+    public function getAccessToken(): ?string
     {
         return $this->access_token;
     }
@@ -188,6 +189,7 @@ class CPClient
             ->setSelectionSet([
                 (new Query('userIdentity'))
                     ->setSelectionSet([
+                        'id',
                         (new Query('activeContact'))
                             ->setSelectionSet([
                                 'id',
@@ -214,7 +216,8 @@ class CPClient
                         'subscriptionId',
                         'planRenewalDate',
                         'nextBillingDate',
-                        'status'
+                        'status',
+                        'vatNumber'
                     ])
             ]);
 
@@ -234,7 +237,8 @@ class CPClient
             }
             $user->setRunRenewalDate($run_renewal_date);
             $user->setSubscriptionId($data['wptCustomer']['subscriptionId']);
-            $user->setUserId($data['userIdentity']['activeContact']['id']);
+            $user->setUserId($data['userIdentity']['id']);
+            $user->setContactId($data['userIdentity']['activeContact']['id']);
             $user->setEmail($data['userIdentity']['activeContact']['email']);
             $user->setPaidClient($data['userIdentity']['activeContact']['isWptPaidUser']);
             $user->setPaymentStatus($data['wptCustomer']['status']);
@@ -244,6 +248,7 @@ class CPClient
             $user->setCompanyName($data['userIdentity']['activeContact']['companyName']);
             $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
             $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
+            $user->setVatNumber($data['wptCustomer']['vatNumber']);
 
             return $user;
         } catch (GuzzleException $e) {
@@ -424,6 +429,9 @@ class CPClient
             return new PaidPageInfo(new CPCustomer($customer), new ApiKeyList(...$api_keys));
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1001);
         }
     }
 
@@ -458,6 +466,9 @@ class CPClient
             return new EnterprisePaidPageInfo($customer, new ApiKeyList(...$api_keys));
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1002);
         }
     }
 
@@ -517,6 +528,9 @@ class CPClient
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1003);
         }
     }
 
@@ -549,6 +563,9 @@ class CPClient
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1004);
         }
     }
 
@@ -575,6 +592,9 @@ class CPClient
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1005);
         }
     }
 
@@ -602,6 +622,9 @@ class CPClient
             return $results->getData()['wptCreateSubscription'];
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1006);
         }
     }
 
@@ -633,9 +656,15 @@ class CPClient
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1007);
         }
     }
 
+    /**
+     * @return array|object
+     */
     public function resendEmailVerification()
     {
         $gql = (new Mutation('wptResendVerificationMail'));
@@ -644,6 +673,9 @@ class CPClient
             return $results->getData();
         } catch (QueryError $e) {
             throw new ClientException(implode(",", $e->getErrorDetails()));
+        } catch (BaseException $e) {
+            error_log($e->getMessage());
+            throw new PortalException($e->getMessage(), 1008);
         }
     }
 

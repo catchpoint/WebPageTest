@@ -51,7 +51,7 @@ use WebPageTest\Util;
 use WebPageTest\Util\Cache;
 use WebPageTest\Template;
 use WebPageTest\RateLimiter;
-use WebPageTest\Util\IniReader;
+use WebPageTest\Util\SettingsFileReader;
 
 require_once(INCLUDES_PATH . '/ec2/ec2.inc.php');
 require_once(INCLUDES_PATH . '/include/CrUX.php');
@@ -223,7 +223,10 @@ if (!isset($test)) {
     if ($is_private_api_call || $is_private_web_call) {
         $is_private = 1;
     }
-    $test['private'] = $is_private;
+
+    if (isset($req_carbon_control)) {
+        $test['carbon_control'] = $req_carbon_control;
+    }
 
     if (isset($req_web10)) {
         $test['web10'] = $req_web10;
@@ -518,7 +521,7 @@ if (!isset($test)) {
     }
 
     if (isset($_REQUEST['extensions']) && is_string($_REQUEST['extensions']) && strlen($_REQUEST['extensions']) == 32) {
-        $extensions = IniReader::getExtensions();
+        $extensions = SettingsFileReader::getExtensions();
         $requested = $_REQUEST['extensions'];
         if (array_key_exists($requested, $extensions)) {
             $test['extensions'] = $_REQUEST['extensions'];
@@ -625,8 +628,7 @@ if (!isset($test)) {
     // see if it is a batch test
     $test['batch'] = 0;
     if (
-        (isset($req_bulkurls) && strlen($req_bulkurls)) ||
-        (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']))
+        isset($req_bulkurls) && strlen($req_bulkurls)
     ) {
         $test['batch'] = 1;
         $is_bulk_test = true;
@@ -675,6 +677,13 @@ if (!isset($test)) {
     }
 
     $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    // opt API usage out of CC availability for now
+    if (!empty($user_api_key)) {
+        $test['carbon_control'] = false;
+    }
+    if (isset($test['carbon_control']) && $test['carbon_control']) {
+        array_push($conditionalMetrics, "carbon-footprint");
+    }
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
 
     if (array_key_exists('custom', $_REQUEST)) {
@@ -804,15 +813,20 @@ if (isset($req_vo)) {
 }
 if (!empty($user_api_key)) {
     $test['key'] = $user_api_key;
-    $test['owner'] = $request_context->getUser()->getOwnerId();
+    $test['owner'] = !is_null($request_context->getUser()) ? $request_context->getUser()->getOwnerId() : $user_api_key;
 }
 
 $creator_id = 0;
+$user_id = 0;
 if (!is_null($request_context->getUser())) {
-    $creator_id = $request_context->getUser()->getUserId() ?? 0;
+    $creator_id = $request_context->getUser()->getContactId() ?? 0;
+    $user_id = $request_context->getUser()->getUserId() ?? 0;
 }
 if ($creator_id != 0) {
     $test["creator"] = $creator_id;
+}
+if ($user_id != 0) {
+    $test["user_id"] = $user_id;
 }
 
 if (isset($user) && !array_key_exists('user', $test)) {
@@ -1153,9 +1167,6 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 if (isset($req_bulkurls) && strlen($req_bulkurls)) {
                     $bulkUrls = $req_bulkurls . "\n";
                 }
-                if (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) {
-                    $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
-                }
 
                 $current_mode = 'urls';
                 if (strlen($bulkUrls)) {
@@ -1367,6 +1378,9 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 $view = '';
                 if (isset($_REQUEST['webvital_profile'])) {
                     $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
+                }
+                if (isset($_REQUEST['carbon_control_redirect'])) {
+                    $view = FRIENDLY_URLS ? '?view=carboncontrol' : '&view=carboncontrol';
                 }
                 if (FRIENDLY_URLS) {
                     header("Location: $protocol://$host$uri/result/{$test['id']}/$view");
@@ -1684,8 +1698,11 @@ function ValidateKey(&$test, &$error, $key = null)
                             }
                         }
                         if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
-                            // Check the expiration (with a 2-day buffer)
-                            if (time() <= $account['expiration'] + 172800) {
+                            // Check the expiration (with a buffer)
+                            $seconds_in_day = 86400;
+                            $buffer_days = Util::getSetting('api_key_expiration_buffer_days', 2);
+                            $buffer_seconds = $buffer_days * $seconds_in_day;
+                            if (time() <= $account['expiration'] + $buffer_seconds) {
                                 // Check the balance
                                 $response = $redis->get("C_{$account['accountId']}");
                                 if (isset($response) && $response !== false && is_string($response) && strlen($response) && is_numeric($response)) {
@@ -2372,7 +2389,7 @@ function LogTest(&$test, $testId, $url)
     if ($supportsCPAuth && isset($request_context) && !is_null($request_context->getUser())) {
         $user_info = $request_context->getUser()->getEmail();
         $client_id = $request_context->getUser()->getOwnerId();
-        $create_contact_id = $request_context->getUser()->getUserId();
+        $create_contact_id = $request_context->getUser()->getContactId();
     } elseif ($supportsSaml) {
         $saml_email = GetSamlEmail();
         $client_id = GetSamlAccount();
@@ -2403,6 +2420,7 @@ function LogTest(&$test, $testId, $url)
         'private' => $test['private'],
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
+        'testUserId' => @$test['user_id'],
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
@@ -2430,6 +2448,7 @@ function LogTest(&$test, $testId, $url)
             'private' => $test['private'],
             'testUID' => @$test['uid'],
             'testUser' => $user_info,
+            'testUserId' => @$test['user_id'],
             'video' => @$video,
             'label' => @$test['label'],
             'owner' => @$test['owner'],
@@ -2516,14 +2535,8 @@ function CheckIp(&$test)
         $date = gmdate("Ymd");
         $ip2 = @$test['ip'];
         $ip = $_SERVER['REMOTE_ADDR'];
-        if (file_exists('./settings/server/blockip.txt')) {
-            $blockIps = file('./settings/server/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockip.txt')) {
-            $blockIps = file('./settings/common/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
-        if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
+        $blockIps = SettingsFileReader::plain('blockip.txt');
+        if (is_array($blockIps) && count($blockIps)) {
             foreach ($blockIps as $block) {
                 $block = trim($block);
                 if (strlen($block)) {
@@ -2565,20 +2578,8 @@ function CheckUrl($url)
         $url = 'https://' . $url;
     }
     if ($forceValidate || (!$usingAPI && !$admin)) {
-        if (file_exists('./settings/server/blockurl.txt')) {
-            $blockUrls = file('./settings/server/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockurl.txt')) {
-            $blockUrls = file('./settings/common/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
-        if (file_exists('./settings/server/blockdomains.txt')) {
-            $blockHosts = file('./settings/server/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } elseif (file_exists('./settings/common/blockdomains.txt')) {
-            $blockHosts = file('./settings/common/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        } else {
-            $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        }
+        $blockUrls = SettingsFileReader::plain('blockurl.txt');
+        $blockHosts = SettingsFileReader::plain('blockdomains.txt');
         if (
             $blockUrls !== false && count($blockUrls) ||
             $blockHosts !== false && count($blockHosts)
@@ -2672,12 +2673,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             mkdir($test['path'], 0777, true);
         }
 
-        // Fetch the CrUX data for the URL
-        $crux_data = GetCruxDataForURL($url, $is_mobile);
-        if (isset($crux_data) && strlen($crux_data)) {
-            gz_file_put_contents("{$test['path']}/crux.json", $crux_data);
-        }
-
         // Start with an initial state of waiting/submitted
         if (!$batch) {
             touch("{$test['path']}/test.waiting");
@@ -2724,6 +2719,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
         if (!empty($test["creator"])) {
             AddIniLine($testInfo, "creator", $test["creator"]);
+        }
+        if (!empty($test["user_id"])) {
+            AddIniLine($testInfo, "user_id", $test["user_id"]);
         }
         if (isset($test['type']) && strlen($test['type'])) {
             AddIniLine($testInfo, "type", $test['type']);

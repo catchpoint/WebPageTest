@@ -38,12 +38,37 @@ if (Util::getSetting('cp_auth')) {
             exit();
         }
 
-        if (is_a($e, ForbiddenException::class)) {
+        if (is_a($e, TypeError::class)) {
+            error_log($e->getMessage());
+            $route = "/";
+            $message = "There was a problem with you account. Please reach out to customer service." .
+                       "Error number: 2000";
+
+            $host = Util::getSetting('host');
+            if (Util::getSetting('php_sessions')) {
+                unset($_SESSION['client_error']);
+                $_SESSION['client_error'] = $message;
+            }
+            $protocol = "https";
+            $location = "{$protocol}://{$host}{$route}";
+            header('Location: ' . $location);
+            exit();
+        } elseif (is_a($e, ForbiddenException::class)) {
             http_response_code(404);
             die();
-        } elseif (is_a($e, ClientException::class) || is_a($e, UnauthorizedException::class)) {
+        } elseif (
+            is_a($e, ClientException::class) ||
+            is_a($e, UnauthorizedException::class) ||
+            is_a($e, PortalException::class)
+        ) {
             $route = $e->getRoute();
-            $message = $e->getMessage();
+            $message = "";
+            if (is_a($e, PortalException::class)) {
+                $message = "There was a problem with you account. Please reach out to customer service." .
+                          "Error number: {$e->getErrorNumber()}";
+            } else {
+                $message = $e->getMessage();
+            }
             $host = Util::getSetting('host');
             if (Util::getSetting('php_sessions')) {
                 unset($_SESSION['client_error']);
@@ -54,8 +79,22 @@ if (Util::getSetting('cp_auth')) {
             header('Location: ' . $location);
             exit();
         }
-        error_log($e->getMessage);
+        error_log($e->getMessage());
         throw $e;
+    });
+} else {
+    // For private install users
+    set_exception_handler(function ($e) {
+        // Developer envs just get a print out
+        if (Util::getSetting('environment') == Environment::$Development) {
+            echo '<pre>';
+            var_dump($e);
+            echo '</pre>';
+            exit();
+        } else {
+            error_log($e->getMessage());
+            throw $e;
+        }
     });
 }
 
@@ -401,9 +440,10 @@ if (strlen($id)) {
         // $owner is set by CP details in AttachUser middleware if loaded
         $owner_id_matches_test = array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'];
         $uid_matches_test = array_key_exists('uid', $test['testinfo']) && isset($uid) && strlen($uid) && $uid == $test['testinfo']['uid'];
+        $user_id_matches_test = array_key_exists('user_id', $test['testinfo']) && ($user_id == $test['testinfo']['user_id']);
         $creator_id_matches_test = array_key_exists('creator', $test['testinfo']) && ($creator_id == $test['testinfo']['creator']);
 
-        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test;
+        $isOwner = $owner_id_matches_test || $uid_matches_test || $creator_id_matches_test || $user_id_matches_test;
 
         // Boy what a hack. This gets around us running tests as private that should not have been
         // This happened because we had some profiles set to default private so they ran private for unpaid users
@@ -478,7 +518,7 @@ if (strlen($id)) {
     if ($test['testinfo']) {
         $testTestInfo = $test['testinfo'];
         if (!empty($testTestInfo['metadata'])) {
-            $metaInfo = json_decode($metaInfo, true);
+            $metaInfo = json_decode($testTestInfo['metadata'], true);
             if ($metaInfo['experiment'] && $metaInfo['experiment']['control'] === false) {
                 $experiment = true;
 

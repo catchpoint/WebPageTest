@@ -226,12 +226,17 @@ class Account
         $first_name = $post_body['first-name'];
         $last_name = $post_body['last-name'];
         $company_name = $post_body['company-name'] ?? null;
+        $vat_number = $post_body['vat-number'] ?? null;
 
         try {
             $contact_info_validator->assert($first_name);
             $contact_info_validator->assert($last_name);
             if (!is_null($company_name) && !empty($company_name)) {
                 $contact_info_validator->assert($company_name);
+            }
+
+            if (!is_null($vat_number) && !empty($vat_number)) {
+                $contact_info_validator->assert($vat_number);
             }
         } catch (NestedValidationException $e) {
             $message = $e->getMessages([
@@ -247,6 +252,9 @@ class Account
             $body->company_name = $company_name;
         }
 
+        if (!is_null($vat_number)) {
+            $body->vat_number = $vat_number;
+        }
         return $body;
     }
 
@@ -256,7 +264,7 @@ class Account
      * #[Route(Http::POST, '/account', 'change-info')]
      *
      * @param WebPageTest\RequestContext $request_context
-     * @param object{first_name: string, last_name: string, company_name: ?string} $body
+     * @param object{first_name: string, last_name: string, company_name: ?string, vat_number: ?string} $body
      * @return string $redirect_uri
      */
     public static function changeContactInfo(RequestContext $request_context, object $body): string
@@ -267,7 +275,8 @@ class Account
             'email' => $email,
             'first_name' => $body->first_name,
             'last_name' => $body->last_name,
-            'company_name' => $body->company_name ?? ""
+            'company_name' => $body->company_name ?? "",
+            'vat_number' => $body->vat_number ?? ""
         ];
 
         try {
@@ -373,7 +382,9 @@ class Account
      *  country: string,
      *  state: string,
      *  'street-address': string,
-     *  zipcode: string} $post_body
+     *  zipcode: string,
+     *  vat-number: string|null
+     *  } $post_body
      *
      * @return object{
      *  nonce: string,
@@ -382,7 +393,8 @@ class Account
      *  country: string,
      *  state: string,
      *  street_address: string,
-     *  zipcode: string
+     *  zipcode: string,
+     *  vat-number: string|null
      *  } $body
      */
     public static function validateSubscribeToAccount(array $post_body): object
@@ -396,6 +408,7 @@ class Account
         $state = $post_body['state'] ?? "";
         $street_address = $post_body['street-address'] ?? "";
         $zipcode = $post_body['zipcode'] ?? "";
+        $vat_number = $post_body['vat-number'] ?? "";
 
         if (
             empty($nonce) ||
@@ -417,6 +430,10 @@ class Account
         $body->street_address = $street_address;
         $body->zipcode = $zipcode;
 
+        if (!empty($vat_number)) {
+            $body->vat_number = $vat_number;
+        }
+
         return $body;
     }
 
@@ -434,7 +451,9 @@ class Account
             'zipcode' => $body->zipcode
         ]);
 
-        $subscription = new ChargifySubscriptionInputType($body->plan, $body->nonce, $address);
+        $vat_number = $body->vat_number ?? null;
+
+        $subscription = new ChargifySubscriptionInputType($body->plan, $body->nonce, $address, $vat_number);
         try {
             $data = $request_context->getClient()->addWptSubscription($subscription);
             $redirect_uri = $request_context->getSignupClient()->getAuthUrl($data['loginVerificationId']);
@@ -631,7 +650,7 @@ class Account
             error_log($e->getMessage());
             $cancelSuccessMessage = array(
                 'type' => 'error',
-                'text' => 'There was an error with canceling your account. Please try again.'
+                'text' => 'There was an error with cancelling your account. Please try again.'
             );
             Util::setBannerMessage('form', $cancelSuccessMessage);
             throw new ClientException("There was an error", "/account");
@@ -898,7 +917,7 @@ class Account
         $is_verified = $request_context->getUser()->isVerified();
         $is_pending = $request_context->getUser()->isPendingCancelation();
         $is_wpt_enterprise = $request_context->getUser()->isWptEnterpriseClient();
-        $user_id = $request_context->getUser()->getUserId();
+        $contact_id = $request_context->getUser()->getContactId();
         $remaining_runs = $request_context->getUser()->getRemainingRuns();
         // See NOTE1
         if (isset($_SESSION['new-run-count'])) {
@@ -908,10 +927,11 @@ class Account
         $monthly_runs = $request_context->getUser()->getMonthlyRuns();
         $run_renewal_date = $request_context->getUser()->getRunRenewalDate()->format('F d, Y');
         $user_email = $request_context->getUser()->getEmail();
-        $contact_info = $request_context->getClient()->getUserContactInfo($user_id);
+        $contact_info = $request_context->getClient()->getUserContactInfo($contact_id);
         $first_name = $contact_info['firstName'];
         $last_name = $contact_info['lastName'];
         $company_name = $contact_info['companyName'] ?? "";
+        $vat_number = $request_context->getUser()->getVatNumber() ?? "";
 
 
         $contact_info = [
@@ -926,7 +946,8 @@ class Account
             'last_name' => htmlspecialchars($last_name),
             'email' => $user_email,
             'company_name' => htmlspecialchars($company_name),
-            'id' => $user_id
+            'vat_number' => htmlspecialchars($vat_number),
+            'id' => $contact_id
         ];
 
         $billing_info = [];
@@ -987,6 +1008,7 @@ class Account
                 $newPlan = $all_plans->getAnnualPlanByRuns($oldPlan->getRuns());
                 $results['oldPlan'] = $oldPlan;
                 $results['newPlan'] = $newPlan;
+                $next_start_date = $customer->getNextPlanStartDate();
                 $sub_id = $customer->getSubscriptionId();
                 $billing_address = $customer->getAddress();
                 $addr = ChargifyAddressInput::fromChargifyInvoiceAddress($billing_address);
@@ -994,7 +1016,7 @@ class Account
                 $results['sub_total'] = number_format($preview->getSubTotalInCents() / 100, 2);
                 $results['tax'] = number_format($preview->getTaxInCents() / 100, 2);
                 $results['total'] = number_format($preview->getTotalInCents() / 100, 2);
-                $results['renewaldate'] = $customer->getNextPlanStartDate()->format('m/d/Y');
+                $results['renewaldate'] = !is_null($next_start_date) ? $next_start_date->format('m/d/Y') : null;
 
                 $content = $tpl->render('billing/billing-cycle', $results);
                 return new Response($content, Response::HTTP_OK);

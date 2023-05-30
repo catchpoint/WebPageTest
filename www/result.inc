@@ -121,14 +121,14 @@ $page_description = "Website performance test result$testLabel.";
            <div class="results_header">
                 <h2>Performance Summary</h2>
                 <div class="summary_opps">
-              
+
 
                 <?php
                 include INCLUDES_PATH . '/experiments/common.inc';
                 include INCLUDES_PATH . '/experiments/summary.inc';
 
                 ?>
-                <?php if( !isset($experiments_paid) || !$experiments_paid ){ ?>
+                <?php if (!isset($experiments_paid) || !$experiments_paid) { ?>
                 <p><span class="opportunities_summary_exps">You have Free Experiments Available!
                     <?php
                     if ($tabs && $tabs['Opportunities & Experiments']) {
@@ -202,12 +202,13 @@ $page_description = "Website performance test result$testLabel.";
                       $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults, false, true);
                       $resultTable->useLabelLinks(true);
                       $resultTable->disableColumns(array(
-                      RunResultHtmlTable::COL_VISUAL_COMPLETE,
-                      RunResultHtmlTable::COL_COST,
-                      RunResultHtmlTable::COL_FULLYLOADED,
-                      RunResultHtmlTable::COL_REQUESTS,
-                      RunResultHtmlTable::COL_RESULT
+                        RunResultHtmlTable::COL_VISUAL_COMPLETE,
+                        RunResultHtmlTable::COL_COST,
+                        RunResultHtmlTable::COL_FULLYLOADED,
+                        RunResultHtmlTable::COL_REQUESTS,
+                        RunResultHtmlTable::COL_RESULT,
                       ));
+                      $resultTable->disableCustomMetrics();
                     if (GetSetting('show_cost')) {
                         //$resultTable->enableColumns(array(RunResultHtmlTable::COL_COST));
                     }
@@ -274,7 +275,7 @@ $page_description = "Website performance test result$testLabel.";
             if (isset($fvRunResults)) {
                 echo '<div class="cruxembed">';
                 require_once(INCLUDES_PATH . '/include/CrUX.php');
-                InsertCruxHTML($fvRunResults, '');
+                InsertCruxHTML($fvRunResults);
                 echo '</div>';
             }
             ?>

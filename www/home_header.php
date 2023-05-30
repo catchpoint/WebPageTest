@@ -3,7 +3,7 @@
         <div class="home_feature_containslides">
             <?php
 
-            if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid()) {
+            if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
                 ?>
                 <div class="home_feature_hed home_feature_hed-pro home_feature_hed-pro-loggedin">
                     <div class="home_feature_hed_text">
@@ -15,8 +15,8 @@
             <?php } else { ?>
                 <div class="home_feature_hed home_feature_hed-main">
                     <div class="home_feature_hed_text">
-                        <h1 class="attention">Test. Optimize. Repeat!</h1>
-                        <p>Instantly test your site’s speed, usability, and resilience in real <b>browsers</b>, <b>devices</b>, and <b>locations</b> around the&nbsp;world. </p>
+                        <h1 class="attention">Test. Experiment. Improve!</h1>
+                        <p><strong>WebPageTest.</strong> <span class="home_feature_hed_highlighter">The gold standard in web performance testing. </span></p>
 
                     </div>
                     <div class="home_feature_hed_visual">
@@ -32,7 +32,17 @@
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_lfwp_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
                     </div>
-                    
+
+                </div>
+                <div class="home_feature_hed home_feature_hed-cc">
+                    <div class="home_feature_hed_text">
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Introducing <b>Carbon Control <span class="flag">Experimental</span></b></span> </h1>
+                        <p><b>New in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
+
+                    </div>
+                    <div class="home_feature_hed_visual">
+                        <img src="/assets/images/wpt_home_featureimg-cc.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                    </div>
                 </div>
                 <div class="home_feature_hed home_feature_hed-pro">
                     <div class="home_feature_hed_text">
@@ -49,6 +59,7 @@
                         <button class="play" id="playbtn">Play/Pause Video</button>
                     </div>
                 </div>
+
             <?php } ?>
         </div>
 
@@ -67,18 +78,29 @@
                     document.body.classList.add("feature-lfwp");
                 } else if( document.body.classList.contains("feature-lfwp") ){
                     document.body.classList.remove("feature-lfwp");
+                    document.body.classList.add("feature-cc");
+                } else if( document.body.classList.contains("feature-cc") ){
+                    document.body.classList.remove("feature-cc");
                 } else {
                     document.body.classList.add("feature-pro");
                 }
-                
+
             }
         },8000);
+
+        <?php if (isset($req_cc)) {?>
+            clearTimeout(featureSlides);
+        <?php } ?>
 
 
         (function(){
                 var intro = document.querySelector("video");
                 var playbtn = document.querySelector(".play");
-                
+
+                if (!intro || !playbtn) {
+                    return;
+                }
+
                 function activate(){
                     intro.controls = true;
                     document.body.classList.add("playing");
@@ -88,7 +110,7 @@
                     intro.pause();
                     document.body.classList.remove("playing");
                 }
-                
+
                 intro.addEventListener( "play", function(e){
                     activate();
                     playbtn.classList.add("active");
@@ -110,8 +132,8 @@
                     }
                 });
 
-                
-                
+
+
                 document.body.addEventListener("mousedown",function( e ){
                     if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){
                         e.preventDefault();
@@ -128,4 +150,4 @@
 
     </script>
 
-    
+

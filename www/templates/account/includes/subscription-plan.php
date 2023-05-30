@@ -32,7 +32,7 @@
             <?php endif; ?>
         <?php endif; ?>
         </ul>
-        <?php if (isset($upcoming_plan)) : ?>
+        <?php if (!$is_pending && isset($upcoming_plan)) : ?>
             <h3>Upcoming Subscription</h3>
             <div class="card-section-subhed card-section-subhed__grid">
                 <span class="plan-name">

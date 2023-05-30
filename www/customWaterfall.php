@@ -27,9 +27,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
     <?php include('head.inc'); ?>
 </head>
 
-<body id="custom-waterfall">
+<body id="custom-waterfall" class="result result-details">
     <?php
-    $tab = null;
+    $tab = 'Test Result';
+    $subtab = 'Customize Waterfall';
     include 'header.inc';
     ?>
     <div class="customwaterfall_hed">

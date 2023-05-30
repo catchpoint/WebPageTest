@@ -204,7 +204,7 @@ foreach ($tests as &$test) {
             $left += $colMargin;
             $width = imagesx($thumb);
             $padding = ($columnWidth - $width) / 2;
-            if (isset($border)) {
+            if (isset($border) && !array_key_exists('noborder', $_GET)) {
                 imagefilledrectangle($im, $left - 2 + $padding, $top - 2, $left + imagesx($thumb) + 2 + $padding, $top + imagesy($thumb) + 2, $border);
             }
             imagecopy($im, $thumb, $left + $padding, $top, 0, 0, $width, imagesy($thumb));

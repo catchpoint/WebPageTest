@@ -16,8 +16,7 @@ function ValidateInput(form, remainingRuns) {
   if (
     (form.url.value == "" || form.url.value == "Enter a Website URL") &&
     form.script.value == "" &&
-    (form["bulkurls"] == undefined || form.bulkurls.value == "") &&
-    (form["bulkfile"] == undefined || form.bulkfile.value == "")
+    (form["bulkurls"] == undefined || form.bulkurls.value == "")
   ) {
     alert("Please enter an URL to test.");
     form.url.focus();
@@ -65,7 +64,7 @@ function ValidateInput(form, remainingRuns) {
     document.cookie = "d=" + $("#bwDown").val() + expires + "; path=/";
     document.cookie = "l=" + $("#latency").val() + expires + "; path=/";
     document.cookie = "p=" + $("#plr").val() + expires + "; path=/";
-  } catch (error) {}
+  } catch (error) { }
 
   SaveSettings();
 
@@ -140,10 +139,10 @@ function LocationChanged() {
   let marker = locations[loc]["marker"];
   try {
     marker.setIcon("/assets/images/map_green.png");
-  } catch (err) {}
+  } catch (err) { }
   try {
     selectedMarker.setIcon("/assets/images/map_red.png");
-  } catch (err) {}
+  } catch (err) { }
   selectedMarker = marker;
 
   let defaultConfig = locations[loc]["default"];
@@ -213,12 +212,13 @@ function LocationChanged() {
       browserHtml += "</optgroup>";
     }
   }
-  $("#browser").html(browserHtml);
+  if (document.getElementById('browser')) {
+    $("#browser").html(browserHtml);
+    if (wptStorage["testBrowser"] != undefined)
+      $("#browser").val(wptStorage["testBrowser"]);
 
-  if (wptStorage["testBrowser"] != undefined)
-    $("#browser").val(wptStorage["testBrowser"]);
-
-  BrowserChanged();
+    BrowserChanged();
+  }
 }
 
 /*
@@ -236,6 +236,17 @@ function BrowserChanged() {
     selectedBrowser = parts[0];
     deviceID = parts[1];
   }
+
+  // on/off Chromium settings
+  const nonChrome = ['Firefox', 'Safari'].some(browser => selectedBrowser.startsWith(browser));
+  const tabClasses = document.querySelector('#advanced-chrome').classList;
+  if (nonChrome) {
+    tabClasses.add('chromium-hide');
+  } else {
+    tabClasses.remove('chromium-hide');
+  }
+  document.querySelectorAll('#advanced-chrome input, #advanced-chrome select').forEach(i => i.disabled = nonChrome);
+
 
   let connections = [];
 
@@ -322,7 +333,7 @@ function BrowserChanged() {
           $(this).attr("selected", "selected");
         }
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   ConnectionChanged();

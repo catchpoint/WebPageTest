@@ -1,80 +1,7 @@
 <?php
 
 $cruxStyles = false;
-// Helper to get the CrUX data for a given URL
-function GetCruxDataForURL($url, $mobile = false)
-{
-    $crux_data = null;
-    $api_key = GetSetting('crux_api_key', null);
-    if (isset($api_key) && strlen($api_key) && strlen($url)) {
-        if (substr($url, 0, 4) != 'http') {
-            $url = 'http://' . $url;
-        }
 
-        $cache_key = sha1($url);
-        if ($mobile) {
-            $cache_key .= '.mobile';
-        }
-        $crux_data = GetCachedCruxData($cache_key);
-
-        if (!isset($crux_data)) {
-            $options = array(
-                'url' => $url,
-                'formFactor' => $mobile ? 'PHONE' : 'DESKTOP'
-            );
-            $result = http_post_raw(
-                "https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=$api_key",
-                json_encode($options),
-                'application/json',
-                true
-            );
-            if (isset($result) && is_string($result)) {
-                $crux_data = $result;
-            }
-
-            CacheCruxData($cache_key, $crux_data);
-        }
-    }
-    return $crux_data;
-}
-
-function GetCachedCruxData($cache_key)
-{
-    $crux_data = null;
-    $today = gmdate('Ymd');
-    $cache_path = __DIR__ . "/../results/crux_cache/$today/" . substr($cache_key, 0, 2) . "/$cache_key.json";
-    if (file_exists($cache_path)) {
-        $crux_data = file_get_contents($cache_path);
-    }
-
-    return $crux_data;
-}
-
-function CacheCruxData($cache_key, $crux_data)
-{
-    if (isset($crux_data) && strlen($crux_data)) {
-        $today = gmdate('Ymd');
-        $cache_path = __DIR__ . "/../results/crux_cache/$today/" . substr($cache_key, 0, 2);
-        mkdir($cache_path, 0777, true);
-        $cache_path .= "/$cache_key.json";
-        file_put_contents($cache_path, $crux_data);
-    }
-}
-
-// Delete any cache directories that don't match the current date
-function PruneCruxCache()
-{
-    $cache_path = __DIR__ . '/../results/crux_cache';
-    if (is_dir($cache_path)) {
-        $today = gmdate('Ymd');
-        $files = scandir($cache_path);
-        foreach ($files as $file) {
-            if ($file !== '.' && $file != '..' && $file != $today) {
-                delTree("$cache_path/$file");
-            }
-        }
-    }
-}
 // returns a string of the Real User Measurement title for results.php if CrUX has collectionPeriod
 function RealUserMeasurementCruxTitle($pageData)
 {
@@ -101,7 +28,7 @@ function RealUserMeasurementCruxTitle($pageData)
     return $ret;
 }
 
-function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabels = true, $includeMetricName = true)
+function InsertCruxHTML($fvRunResults, $metric = '')
 {
     $pageData = null;
     $rvPageData = null;
@@ -132,28 +59,28 @@ function InsertCruxHTML($fvRunResults, $rvRunResults, $metric = '', $includeLabe
         echo '<div class="cruxbars">';
         if ($metric == '') {
             //show all
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
-            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
-            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
-            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID');
+            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB');
+            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP');
         } elseif ($metric == 'fcp') {
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.firstContentfulPaint', 'first_contentful_paint', 'First Contentful Paint', 'FCP');
         } elseif ($metric == 'lcp') {
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
         } elseif ($metric == 'cls') {
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
         } elseif ($metric == 'fid') {
-            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID');
         } elseif ($metric == 'ttfb') {
-            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'TTFB', 'experimental_time_to_first_byte', 'Time to First Byte', 'TTFB');
         } elseif ($metric == 'inp') {
-            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP', $includeMetricName);
+            InsertCruxMetricHTML($pageData, null, 'experimental_interaction_to_next_paint', 'Interaction to Next Paint', 'INP');
         } elseif ($metric == 'cwv') {
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP', $includeMetricName);
-            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS', $includeMetricName);
-            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID', $includeMetricName);
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.LargestContentfulPaint', 'largest_contentful_paint', 'Largest Contentful Paint', 'LCP');
+            InsertCruxMetricHTML($pageData, 'chromeUserTiming.CumulativeLayoutShift', 'cumulative_layout_shift', 'Cumulative Layout Shift', 'CLS');
+            InsertCruxMetricHTML($pageData, null, 'first_input_delay', 'First Input Delay', 'FID');
         }
 
 

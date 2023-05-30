@@ -55,7 +55,9 @@ global $support_link;
                     <strong>Due today:</strong> $<?= $total ?>
                 </li>
 
+                <?php if (isset($renewaldate)) : ?>
                 <li><strong>Next Payment:</strong> <?= $renewaldate ?></li>
+                <?php endif; ?>
             </ul>
         </div>
 

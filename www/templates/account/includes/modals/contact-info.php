@@ -18,6 +18,12 @@
                 <label for="company-name">Company Name</label>
                 <input type="text" name="company-name" maxlength=32 pattern="<?= $validation_pattern; ?>" title="Do not use <, >, or &#" value="<?= htmlspecialchars($company_name); ?>" />
             </div>
+<?php if ($is_paid) : ?>
+            <div class="section">
+                <label for="vat-number">VAT Number</label>
+                <input name="vat-number" type="text" maxlength=32 pattern="<?= $validation_pattern; ?>" title="Please insert a valid VAT number" value="<?= htmlspecialchars($vat_number); ?>" required />
+            </div>
+<?php endif; ?>
             <div class="section">
                 <label class="required disabled" for="email">Email</label>
                 <input type="email" name="email" disabled required value="<?= htmlspecialchars($email); ?>" />

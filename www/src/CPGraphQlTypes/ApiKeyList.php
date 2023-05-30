@@ -24,7 +24,7 @@ class ApiKeyList implements IteratorAggregate, Countable
         $this->list = $api_key;
     }
 
-    public function add(ApiKey $api_key)
+    public function add(ApiKey $api_key): void
     {
         $this->list[] = $api_key;
     }

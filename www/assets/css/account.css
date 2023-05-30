@@ -618,6 +618,7 @@ body.theme-b {
   background-repeat: no-repeat, no-repeat;
   background-size: 100%, cover;
   display: flex;
+  padding-top: 4rem;
 }
 
 /* when your monitor is really wide */
@@ -832,9 +833,14 @@ a.button {
   font-size: 0.9375rem;
 }
 
-.signup-flow-layout .disclaimer {
-  margin-top: 1.25rem;
-  text-align: center;
+.terms-service-set {
+  display: flex;
+  align-items: flex-start;
+}
+
+.terms-service-set input {
+  margin-right: 1rem;
+  margin-top: 0.4rem;
 }
 
 .signup-flow-layout .disclaimer a {
@@ -923,10 +929,17 @@ a.button {
 /*
  * End signup step 2
  */
-
+.signup-flow-layout wpt-header,
+.signup-flow-layout header {
+  background: #141e33;
+}
 .signup-flow-layout header {
   padding-left: 0;
-  background: #141e33;
+  margin-bottom: 0;
+}
+.signup-flow-layout header {
+  padding-left: 0;
+  margin-bottom: 0;
 }
 
 .signup-flow-layout header .logo {
@@ -2353,6 +2366,16 @@ form:invalid button[type="submit"] {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
+}
+
+.vat-number-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.vat-number-container input {
+  margin-bottom: 1.5rem;
+  border: 1px solid;
 }
 
 .signup-flow-layout .notification-banner__error {

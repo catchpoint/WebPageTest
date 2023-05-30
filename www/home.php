@@ -7,7 +7,7 @@
 include 'common.inc';
 
 use WebPageTest\Util;
-use WebPageTest\Util\IniReader;
+use WebPageTest\Util\SettingsFileReader;
 
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
@@ -42,8 +42,8 @@ if (isset($req_url)) {
 }
 $placeholder = 'Enter a website URL...';
 
-$profiles = IniReader::parse('profiles.ini', true);
-$connectivity = IniReader::parse('connectivity.ini', true, true);
+$profiles = SettingsFileReader::ini('profiles.ini', true);
+$connectivity = SettingsFileReader::ini('connectivity.ini', true, true);
 
 $mobile_devices = LoadMobileDevices();
 
@@ -89,7 +89,14 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
     ?>
 </head>
 
-<body class="home feature-pro">
+<?php
+$homeclass = "feature-cc";
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
+    $homeclass = "feature-pro";
+}
+?>
+
+<body class="home <?php echo $homeclass; ?>">
     <?php
     $tab = 'Start Test';
     include 'header.inc';
@@ -109,6 +116,15 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
+
+                    <?php if (isset($req_cc)) {
+                        $ccInputState = " checked ";
+                        ?>
+                        <input type="hidden" name="carbon_control_redirect" value="1">
+                    <?php } else {
+                        $ccInputState = "";
+                    } ?>
+
                     <?php
                     echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                     if (strlen($secret)) {
@@ -252,22 +268,29 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
+                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>).</small></label>
+                                                    </div>
+                                                    <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
                                                         <script>
-                                                            // show or hide simple lighthouse field depending on whether chrome test is running
+                                                            // show or hide simple lighthouse and cc fields depending on whether chrome test is running
                                                             let simplePresets = document.querySelector('.test_presets_easy');
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
+                                                            let ccSimpleField = document.querySelector('[for=inc-cc-simple]');
+                                                            let lhSimpleCheck = lhSimpleFields.querySelector('input');
                                                             function enableDisableLHSimple(){
                                                               let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
-                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]')){
+                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
+                                                                  ccSimpleField.style.display = "block";
                                                                   lhSimpleFields.style.display = "block";
-                                                                  checkedPreset.disabled = false;
+                                                                  lhSimpleCheck.disabled = false;
                                                               } else {
+                                                                  ccSimpleField.style.display = "none";
                                                                   lhSimpleFields.style.display = "none";
-                                                                  checkedPreset.disabled = true;
+                                                                  lhSimpleCheck.disabled = true;
                                                               }
                                                             }
                                                             enableDisableLHSimple();
@@ -279,6 +302,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                             <label for="private-simple"><input type="checkbox" name="private" id="private-simple" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
                                                         </div>
                                                     <?php endif; ?>
+
                                                 </div>
                                                 <div class="test_presets_easy_submit">
                                                     <?php if ($is_logged_in) : ?>
@@ -658,61 +682,18 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                         <input type="checkbox" name="injectScriptAllFrames" id="injectScriptAllFrames" class="checkbox" style="float: left;width: auto;">
                                                         <label for="injectScriptAllFrames" class="auto_width">Inject script into all frames and run before any page scripts run (Chrome-only)</label>
                                                     </li>
+
                                             </ul>
                                         </div>
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
-                                            <p>Chrome-specific advanced settings:</p>
                                             <ul class="input_fields">
+                                                <li>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint.)</small></label>
+                                                </li>
                                                 <li>
                                                     <label for="lighthouse-advanced" class="auto_width">
                                                         <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                                     </label>
-                                                </li>
-                                                <li><label for="mobile">
-                                                        <?php
-                                                        $checked = '';
-                                                        if (isset($_REQUEST['mobile']) && $_REQUEST['mobile']) {
-                                                            $checked = ' checked';
-                                                        }
-                                                        echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
-                                                        ?>
-                                                        Emulate Mobile Browser
-                                                    </label>
-                                                    <?php
-                                                    if (isset($mobile_devices)) {
-                                                        if (is_array($mobile_devices) && count($mobile_devices)) {
-                                                            $selectedDevice = null;
-                                                            if (isset($_COOKIE['mdev']) && isset($mobile_devices[$_COOKIE['mdev']])) {
-                                                                $selectedDevice = $_COOKIE['mdev'];
-                                                            }
-                                                            if (isset($_REQUEST['mdev']) && isset($mobile_devices[$_REQUEST['mdev']])) {
-                                                                $selectedDevice = $_REQUEST['mdev'];
-                                                            }
-                                                            echo '<select name="mobileDevice" id="mobileDevice">';
-                                                            $lastGroup = null;
-                                                            foreach ($mobile_devices as $deviceName => $deviceInfo) {
-                                                                if (isset($deviceInfo['label'])) {
-                                                                    if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
-                                                                        if (isset($lastGroup)) {
-                                                                            echo "</optgroup>";
-                                                                        }
-                                                                        $lastGroup = $deviceInfo['group'];
-                                                                        echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
-                                                                    }
-                                                                    $selected = '';
-                                                                    if (isset($selectedDevice) && $selectedDevice == $deviceName) {
-                                                                        $selected = 'selected';
-                                                                    }
-                                                                    echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
-                                                                }
-                                                            }
-                                                            if (isset($lastGroup)) {
-                                                                echo "</optgroup>";
-                                                            }
-                                                            echo '</select>';
-                                                        }
-                                                    }
-                                                    ?>
                                                 </li>
                                                 <li>
                                                     <label for="timeline" class="auto_width">
@@ -801,7 +782,7 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;" autocomplete="off">
                                                 </li>
                                                 <?php
-                                                $extensions = IniReader::getExtensions();
+                                                $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
                                                     ?>
                                                 <li>
@@ -967,10 +948,15 @@ $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
                                                     <label for="bulkurls" class="full_width">
                                                         List of URLs to test (one URL per line)...
                                                     </label>
+                                                    <small>
+                                                        Type in or read <label for="bulkurls_file" class="linklike">from a text file</label>
+                                                    </small>
+                                                    <input type="file" id="bulkurls_file" accept="text/*" class="a11y-hidden">
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', () => initFileReader('bulkurls_file', 'bulkurls'));
+                                                    </script>
                                                 </p>
                                                 <textarea class="large" name="bulkurls" id="bulkurls" cols="0" rows="0"></textarea><br>
-                                                <b>or</b><br>
-                                                upload list of URLs (one per line): <input type="file" name="bulkfile" size="40">
                                             </div>
                                         <?php } ?>
                                     </div>

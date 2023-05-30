@@ -158,53 +158,6 @@ function wptLogout(redirectUrl) {
   });
 })(jQuery);
 
-// This code handles editing test labels
-(function ($) {
-  $(document).ready(function () {
-    $(".editLabel").click(function (event) {
-      event.preventDefault();
-
-      var element_clicked = $(this),
-        testguid = element_clicked.attr("data-test-guid"),
-        labelNode = $("#label_" + testguid),
-        currentLabelText = element_clicked.attr("data-current-label"),
-        inputNode;
-
-      inputNode = $(
-        '<input id="label_input_' +
-          testguid +
-          '" type="text" value="' +
-          currentLabelText +
-          '" />'
-      );
-      labelNode.replaceWith(inputNode);
-      element_clicked.hide();
-      var saveNode = $('<a href="#">Save</a>');
-      saveNode.insertAfter(inputNode);
-
-      // Save the new label
-      saveNode.click(function () {
-        inputNode = $("#label_input_" + testguid);
-        newLabel = inputNode.val();
-
-        var request = $.ajax({
-          url: "/modifytest.php",
-          type: "POST",
-          data: { testID: testguid, label: newLabel },
-          dataType: "html",
-        });
-
-        request.done(function (msg) {
-          inputNode.replaceWith(labelNode.html(newLabel));
-          element_clicked.attr("data-current-label", newLabel);
-          saveNode.remove();
-          element_clicked.show();
-        });
-      });
-    });
-  });
-})(jQuery);
-
 // Store test info in the test history if it exists
 (function () {
   if (window.indexedDB && typeof wptTestInfo !== "undefined") {

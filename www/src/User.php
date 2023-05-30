@@ -14,6 +14,7 @@ class User
     private ?string $owner_id;
     private ?string $access_token;
     private ?int $user_id;
+    private ?int $contact_id;
     private bool $is_paid_cp_client;
     private bool $is_verified;
     private bool $is_wpt_enterprise_client;
@@ -25,6 +26,8 @@ class User
     private string $subscription_id;
     private DateTime $run_renewal_date;
     private string $payment_status;
+    private ?string $vat_number;
+    private bool $is_api_user;
 
     public function __construct()
     {
@@ -36,6 +39,7 @@ class User
         $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
         $this->user_id = null;
+        $this->contact_id = null;
         $this->is_paid_cp_client = false;
         $this->is_verified = false;
         $this->user_priority = 9; //default to lowest possible priority
@@ -45,6 +49,8 @@ class User
         $this->subscription_id = "";
         $this->run_renewal_date = $this->getFreeRunRenewalDate(); // default to free
         $this->payment_status = "EXPIRED";
+        $this->vat_number = null;
+        $this->is_api_user = false;
     }
 
     public function getEmail(): ?string
@@ -83,9 +89,24 @@ class User
             ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
     }
 
+    public function isPaidClient(): bool
+    {
+        return $this->is_paid_cp_client;
+    }
+
     public function setPaidClient(bool $is_paid): void
     {
         $this->is_paid_cp_client = $is_paid;
+    }
+
+    public function isApiUser(): bool
+    {
+        return $this->is_api_user;
+    }
+
+    public function setIsApiUser(bool $is_api_user): void
+    {
+        $this->is_api_user = $is_api_user;
     }
 
     public function isAdmin(): bool
@@ -131,6 +152,18 @@ class User
     {
         if (isset($user_id)) {
             $this->user_id = $user_id;
+        }
+    }
+
+    public function getContactId(): ?int
+    {
+        return $this->contact_id;
+    }
+
+    public function setContactId(?int $contact_id): void
+    {
+        if (isset($contact_id)) {
+            $this->contact_id = $contact_id;
         }
     }
 
@@ -262,6 +295,16 @@ class User
     public function isCanceled(): bool
     {
         return str_contains($this->payment_status, 'CANCEL');
+    }
+
+    public function getVatNumber(): ?string
+    {
+        return $this->vat_number;
+    }
+
+    public function setVatNumber(?string $vat_number = null): void
+    {
+        $this->vat_number = $vat_number;
     }
 
     private function getFreeRunRenewalDate(): DateTimeInterface

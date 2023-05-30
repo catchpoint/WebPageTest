@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="account-layout">
+<html>
 
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
@@ -490,6 +490,10 @@ EOT;
             (function(){
                 var intro = document.querySelector(".video video");
                 var playbtn = document.querySelector(".play");
+
+                if (!intro || !playbtn) {
+                    return;
+                }
 
                 function activate(){
                     intro.controls = true;

@@ -278,6 +278,7 @@ final class CPClientTest extends TestCase
         $handler = $this->createMockResponse(200, '{
             "data": {
               "userIdentity": {
+                "id": 12345,
                 "activeContact": {
                   "id": 263425,
                   "firstName": "Alice",
@@ -297,7 +298,8 @@ final class CPClientTest extends TestCase
                 "monthlyRuns": 3000,
                 "subscriptionId": "518235",
                 "planRenewalDate": "2125-12-25",
-                "status": "ACTIVE"
+                "status": "ACTIVE",
+                "vatNumber": null
               }
             }
             }');
@@ -312,7 +314,8 @@ final class CPClientTest extends TestCase
         ));
 
         $user = $client->getUser();
-        $this->assertEquals('263425', $user->getUserId());
+        $this->assertEquals('12345', $user->getUserId());
+        $this->assertEquals('263425', $user->getContactId());
         $this->assertEquals('Alice', $user->getFirstName());
         $this->assertEquals('Bob', $user->getLastName());
         $this->assertEquals('', $user->getCompanyName());
