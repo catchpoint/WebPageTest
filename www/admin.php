@@ -18,6 +18,10 @@ use WebPageTest\RequestContext;
             $response = AdminHandler::cacheCheck($request_context);
             $response->send();
             exit();
+        case ('test-info'):
+            $response = AdminHandler::getTestInfo($request_context);
+            $response->send();
+            exit();
         default:
             http_response_code(404);
             die();
