@@ -271,12 +271,12 @@ body.learn #main {
 }
 
 .learn_feature_hed_contain {
-  padding: 5rem 1.5rem;
+  padding: 1rem 1.5rem 8rem;
 }
 
 @media (min-width: 50em) {
   .learn_feature_hed_contain {
-    padding: 5rem 3rem;
+    padding: 1rem 3rem 8rem;
   }
 }
 
