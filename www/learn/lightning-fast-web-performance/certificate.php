@@ -24,7 +24,7 @@ if (isset($_GET['name'])) {
 
 
 <div class="learn_feature learn_feature-certificate">
-                <img src="/assets/images/wpt-logo-dark.svg"  alt="WebPageTest, by Catchpoint" />
+                <img src="/assets/images/cplogo-dark.svg"  alt="Catchpoint" />
                 <h1>Certificate of Achievement</h1>
                 <p>This certificate recognizes that <strong><?=$name?></strong> has completed the following professional skills training course from Catchpoint.</p>
     <div class="learn_feature_hed_contain">
