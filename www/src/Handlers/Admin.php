@@ -106,7 +106,14 @@ class Admin
         if (empty($raw['test'])) {
             $response->setContent('Please pass a test id like &test=221103_ABC123_ABC');
         } else {
-            dd(GetTestInfo($raw['test']));
+            $info = GetTestInfo($raw['test']);
+            if (!empty($raw['f']) && $raw['f'] === 'json') {
+                header("Content-type: application/json; charset=utf-8");
+                echo json_encode($info);
+            } else {
+                dd($info);
+            }
+
         }
 
         return $response;
