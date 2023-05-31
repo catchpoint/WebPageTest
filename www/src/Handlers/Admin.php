@@ -14,15 +14,15 @@ use APCUIterator;
 
 class Admin
 {
-  /**
-   * This should only be available in QA and Dev environments.
-   * Does not require Admin credentials.
-   *
-   * @param RequestContext $request_context
-   *
-   * @return Response $response
-   *
-   */
+    /**
+     * This should only be available in QA and Dev environments.
+     * Does not require Admin credentials.
+     *
+     * @param RequestContext $request_context
+     *
+     * @return Response $response
+     *
+     */
     public static function getChargifySandbox(RequestContext $request_context): Response
     {
         $response = new Response();
@@ -35,11 +35,11 @@ class Admin
         $tpl->setLayout('account');
 
         $variables = [
-        'country_list' => Util::getChargifyCountryList(),
-        'state_list' => Util::getChargifyUSStateList(),
-        'country_list_json_blob' => Util::getCountryJsonBlob(),
-        'ch_client_token' => Util::getSetting('ch_key_public'),
-        'ch_site' => Util::getSetting('ch_site')
+            'country_list' => Util::getChargifyCountryList(),
+            'state_list' => Util::getChargifyUSStateList(),
+            'country_list_json_blob' => Util::getCountryJsonBlob(),
+            'ch_client_token' => Util::getSetting('ch_key_public'),
+            'ch_site' => Util::getSetting('ch_site')
         ];
         $contents = $tpl->render('chargify-sandbox', $variables);
         $response->setContent($contents);
@@ -108,12 +108,11 @@ class Admin
         } else {
             $info = GetTestInfo($raw['test']);
             if (!empty($raw['f']) && $raw['f'] === 'json') {
-                header("Content-type: application/json; charset=utf-8");
+                header('Content-type: application/json; charset=utf-8');
                 $response->setContent(json_encode($info));
             } else {
                 dd($info);
             }
-
         }
 
         return $response;
