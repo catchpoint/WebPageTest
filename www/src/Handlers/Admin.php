@@ -109,7 +109,7 @@ class Admin
             $info = GetTestInfo($raw['test']);
             if (!empty($raw['f']) && $raw['f'] === 'json') {
                 header("Content-type: application/json; charset=utf-8");
-                echo json_encode($info);
+                $response->setContent(json_encode($info));
             } else {
                 dd($info);
             }
