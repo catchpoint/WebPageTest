@@ -89,11 +89,6 @@ class User
             ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
     }
 
-    public function isPaidClient(): bool
-    {
-        return $this->is_paid_cp_client;
-    }
-
     public function setPaidClient(bool $is_paid): void
     {
         $this->is_paid_cp_client = $is_paid;
