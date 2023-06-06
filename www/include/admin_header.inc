@@ -29,8 +29,17 @@ function header_link($url, $title)
         <script>
             setTimeout("window.location.reload(true)", <?php echo $refresh * 1000; ?>);
         </script>
-        <?php
+    <?php
     } ?>
+
+    <style>
+        details, summary {
+            display: revert;
+        }
+        summary {
+            cursor: pointer;
+        }
+    </style>
 
 </head>
 

@@ -138,11 +138,13 @@ class Admin
         require_once INCLUDES_PATH . '/include/admin_header.inc';
         foreach ($locations as $name => $loc) {
             if ($loc['browser']) {
-                $b = explode(',', $loc['browser']);
-                echo sprintf('%s (%s)', $loc['label'], $name);
+                echo '<details open>';
+                echo sprintf('<summary>%s (%s)</summary>', $loc['label'], $name);
                 echo '<ul><li>';
+                $b = explode(',', $loc['browser']);
                 echo implode('</li><li>', $b);
                 echo '</li></ul>';
+                echo '</details>';
             }
         }
         require_once INCLUDES_PATH . '/include/admin_footer.inc';
