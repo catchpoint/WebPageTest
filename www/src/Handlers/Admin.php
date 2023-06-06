@@ -117,4 +117,39 @@ class Admin
 
         return $response;
     }
+
+    public static function getBrowsers(RequestContext $request_context): Response
+    {
+
+        $response = new Response();
+        $current_user = $request_context->getUser();
+        if (is_null($current_user)) {
+            throw new ForbiddenException();
+        }
+
+        if (!$current_user->isAdmin()) {
+            throw new ForbiddenException();
+        }
+
+        $locations = Util\SettingsFileReader::ini('locations.ini', true);
+
+        ob_start();
+        $title = 'WebPageTest - configured browsers';
+        require_once INCLUDES_PATH . '/include/admin_header.inc';
+        foreach ($locations as $name => $loc) {
+            if ($loc['browser']) {
+                $b = explode(',', $loc['browser']);
+                echo sprintf('%s (%s)', $loc['label'], $name);
+                echo '<ul><li>';
+                echo implode('</li><li>', $b);
+                echo '</li></ul>';
+            }
+        }
+        require_once INCLUDES_PATH . '/include/admin_footer.inc';
+        $content = ob_get_contents();
+        ob_end_clean();
+
+        $response->setContent($content);
+        return $response;
+    }
 }
