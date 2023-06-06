@@ -20,7 +20,7 @@ require_once INCLUDES_PATH . '/include/admin_header.inc';
 foreach ($locations as $name => $loc) {
     if ($loc['browser']) {
         $b = explode(',', $loc['browser']);
-        echo $name;
+        echo sprintf('%s (%s)', $loc['label'], $name);
         echo '<ul><li>';
         echo implode('</li><li>', $b);
         echo '</li></ul>';
