@@ -17,7 +17,7 @@ $locations = LoadLocationsIni($includePaid);
 $title = 'WebPageTest - configured browsers';
 require_once INCLUDES_PATH . '/include/admin_header.inc';
 
-foreach($locations as $name => $loc) {
+foreach ($locations as $name => $loc) {
     if ($loc['browser']) {
         $b = explode(',', $loc['browser']);
         echo $name;
