@@ -29,8 +29,17 @@ function header_link($url, $title)
         <script>
             setTimeout("window.location.reload(true)", <?php echo $refresh * 1000; ?>);
         </script>
-        <?php
+    <?php
     } ?>
+
+    <style>
+        details, summary {
+            display: revert;
+        }
+        summary {
+            cursor: pointer;
+        }
+    </style>
 
 </head>
 
@@ -50,6 +59,7 @@ function header_link($url, $title)
                         <?php header_link('/checkURLs.php', 'Check URLs'); ?>
                         <?php header_link('/checkIPs.php', 'Check IPs'); ?>
                         <?php header_link('/checkLocations.php', 'Check Locations'); ?>
+                        <?php header_link('/admin.php?page=browsers', 'Browser config'); ?>
                     </ul>
                 </div>
             </div>
