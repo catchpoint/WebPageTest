@@ -21,7 +21,7 @@
             <a href="https://www.youtube.com/channel/UC5CqJ9V7cQddZDf1DKXcy7Q"><img src="/assets/images/youtube.svg" alt="Youtube"></a>
             <a href="https://www.linkedin.com/company/webpagetest/"><img src="/assets/images/linkedin.svg" alt="LinkedIn"></a>
         </li>
-        <li><a href="https://www.product.webpagetest.org/contact">Contact Us</a></li>
+        <li><a href="https://www.product.webpagetest.org/contact">Contact Sales</a></li>
         <?php
         if (is_file('settings/common/terms.inc') || is_file('settings/server/terms.inc') || is_file('settings/terms.inc')) {
             echo '<li><a href="/terms.php">Terms of Service</a></li>';
