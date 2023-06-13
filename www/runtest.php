@@ -2073,7 +2073,9 @@ function ValidateScript(&$script, &$error)
         if (!$ok) {
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
         } elseif ($navigateCount > $maxNavigateCount) {
-            $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
+            $error = 'Sorry, your test has been blocked due to too many navigation commands (navigate, submitForm, *AndWait). ';
+            $error .= sprintf('Maximum allowed: %s, found in your script: %s. ', $maxNavigateCount, $navigateCount);
+            $error .= 'Please contact us if you have any questions.';
         }
 
         if (strlen($error)) {
