@@ -2,8 +2,8 @@
     <form method="POST" action="/account">
         <h3 class="modal_title">Subscription Details</h3>
         <p>Active Plan: <?= $wptCustomer->getWptPlanName() ?></p>
-        <p>Cancelling your Pro subscription will downgrade your account to a free Starter plan.</p>
-        <p>These changes will take effect at the end of your billing period.
+        <p>Cancelling your Pro subscription will downgrade your account to a free Starter plan.
+            These changes will take effect at the end of your billing period.
             You can resubscribe at any time.</p>
         <p><strong>By cancelling your Pro subscription, you will lose access to any historical data.</strong></p>
         <input type="hidden" name="type" value="cancel-subscription" />
