@@ -1404,7 +1404,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
-  margin-top: -32px;
+  margin-top: 0;
   padding: 1rem 0;
 }
 .resend-email-verification-container div {
