@@ -11,7 +11,7 @@
         $useScreenshot = true;
         require_once INCLUDES_PATH . '/head.inc';
     ?>
-    <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css">
+    <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css?0622">
 </head>
 
 <body class="learn">
