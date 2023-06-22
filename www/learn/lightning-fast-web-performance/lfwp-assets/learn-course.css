@@ -142,7 +142,7 @@ body.learn #main {
   display: flex;
   margin: 0 auto;
   max-width: 1400px;
-  padding: 4rem 0 10rem;
+  padding: 7rem 0 4rem;
   justify-content: space-between;
   align-items: end;
   gap: 5rem;
@@ -290,7 +290,7 @@ body.learn #main {
     margin: 2em 0 0;
   }
   .learn_feature_hed {
-    padding-bottom: 8em;
+    padding-bottom: 2em;
   }
   .learn_feature {
     margin-bottom: 2em;
