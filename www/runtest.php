@@ -1414,6 +1414,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
             header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
             echo json_encode($ret);
         } else {
+            $body_class = 'common';
             $tpl = new Template('errors');
             if ($error == 'Not enough runs available') {
                 echo $tpl->render('runlimit');
@@ -1445,6 +1446,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
         header("Content-type: application/json");
         echo json_encode($ret);
     } elseif (strlen($error)) {
+        $body_class = 'common';
         $tpl = new Template('errors');
         if ($error == 'Not enough runs available') {
             echo $tpl->render('runlimit');
