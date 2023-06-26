@@ -932,7 +932,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         document.addEventListener('DOMContentLoaded', () => initFileReader('custom_metrics_file', 'custom'));
                                                     </script>
                                                 </p>
-                                                <textarea name="custom" class="large" id="custom" cols="0" rows="0"></textarea>
+                                                <textarea name="custom" class="large" id="custom" cols="0" rows="0" placeholder="[metricname]\nreturn code;"></textarea>
                                             </div>
                                             <div class="notification-container">
                                                 <div class="notification">

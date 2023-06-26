@@ -252,6 +252,7 @@ async function initCodeField(source, language = "js") {
   const codeArea = new CodeFlask(codeEl, {
     language,
   });
+  codeArea.elTextarea.placeholder = originalTextarea.placeholder.replace(/\\n/g, '\n');
   codeArea.onUpdate((code) => (hidden.value = code));
   window.codeFlasks[source] = codeArea;
 }
