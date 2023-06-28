@@ -80,7 +80,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
 
                     <li class="wptheader_nav_menu">
                         <details>
-                            <summary><span>Products</span></summary>
+                            <summary><span>Features</span></summary>
                             <div class="wptheader_nav_menu_content">
                                 <div class="wptheader_nav_menu_section">
                                     <img src="/assets/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
@@ -89,6 +89,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                     <ul>
                                         <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
                                         <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/api">API</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
                                     </ul>
                                 </div>
                                 <div class="wptheader_nav_menu_section">
@@ -104,6 +105,19 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                         <?php
                                     }
                                     ?>
+				</div>
+                                <div class="wptheader_nav_menu_section wptheader_nav_cta">
+				    <strong>Enterprise Monitoring</strong> 
+                                </div>
+                                <div class="wptheader_nav_menu_section">
+                                    <ul>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/website-experience/website-performance-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=websitePerformanceMonitoring">Website Performance Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/network-experience/dns?utm_source=WPT&utm_medium=NavBar&utm_content=dns">DNS Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/bgp?utm_source=WPT&utm_medium=NavBar&utm_content=bgp">BGP Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/network-experience/cdn?utm_source=WPT&utm_medium=NavBar&utm_content=cdn">CDN Monitoring</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </details>
