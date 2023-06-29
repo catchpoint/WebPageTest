@@ -5,7 +5,7 @@
         <p>Cancelling your Pro subscription will downgrade your account to a free Starter plan.
             These changes will take effect at the end of your billing period.
             You can resubscribe at any time.</p>
-        <p><strong>By cancelling your Pro subscription, you will lose access to any historical data.</strong></p>
+        <p><strong>By cancelling your Pro subscription, you will lose access to any historical data from this account.</strong></p>
         <input type="hidden" name="type" value="cancel-subscription" />
         <input type="hidden" name="subscription-id" value="<?= $wptCustomer->getSubscriptionId() ?>" />
         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
