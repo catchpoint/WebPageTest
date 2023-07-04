@@ -90,11 +90,6 @@
                     placeholder: 'MM',
                     message: 'Invalid Month',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 },
                 year: {
                     selector: '#cc_year',
@@ -102,11 +97,6 @@
                     placeholder: 'YYYY',
                     message: 'Invalid Year',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 },
                 cvv: {
                     selector: '#cc_cvv',
@@ -115,11 +105,6 @@
                     required: true,
                     message: 'Invalid CVC',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 }
             }
         });
