@@ -244,17 +244,18 @@ function DisplayTests(&$tests)
 
     if ($videoCaptured) {
         echo "<form name=\"compare\" method=\"get\" action=\"/video/compare.php\">";
-    }
-    echo '<br><table class="pretty" border="1" cellpadding="10" cellspacing="0">
-        <tr>';
-    if ($videoCaptured) {
+    
         ?>
-<div class="history-controls">
+                <div class="history-controls">
                 <input id="CompareBtn" type="submit" value="Compare Selected Tests">
                 </div>
         <?php
     }
-    echo    '<th>Test</th>
+    echo '<br><table class="pretty" border="1" cellpadding="10" cellspacing="0">
+        <tr>';
+    
+    echo    '<th>Select</th>
+            <th>Test</th>
             <th>Median load time<br>(First view)</th>';
     if (!$fvonly) {
         echo '<th>Median load time<br>(Repeat view)</th>';
