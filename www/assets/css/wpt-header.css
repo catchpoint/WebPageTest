@@ -349,6 +349,13 @@ wpt-header .wptheader_nav_cta a {
   font-size: 1rem;
 }
 
+wpt-header .wptheader_nav_title {
+  font-weight: bold;
+  -webkit-text-stroke: 1px;
+  font-size: 1rem;;
+  margin-bottom: 0.5em;
+}
+
 wpt-header .wptheader_nav li details[open] {
   background: var(--wpt-header-text);
   color: var(--wpt-header-border);
