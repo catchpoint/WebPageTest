@@ -245,7 +245,7 @@ $page_description = "Website performance test result$testLabel.";
                                 }
 
                                 // experiments are enabled for the following criteria
-                                $experimentEnabled = $experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds));
+                                $experimentEnabled = !Util::getSetting('experiments_disabled') && ($experiments_paid || ( in_array($expNum, $allowedFreeExperimentIds)));
                                 // exception allowed for tests on the metric times
                                 if (strpos($test['testinfo']['url'], 'webpagetest.org/themetrictimes')) {
                                     $experimentEnabled = true;
