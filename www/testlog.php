@@ -31,6 +31,9 @@ if ($admin || $privateInstall || $is_logged_in) {
 $csv = isset($_GET['f']) && !strcasecmp($_GET['f'], 'csv');
 $priority = (isset($_REQUEST['priority']) && is_numeric($_REQUEST['priority'])) ? intval($_REQUEST['priority']) : null;
 $days = (int)($_GET['days'] ?? 7);
+$filter    = $_GET["filter"];
+$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \@\/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
+
 
 $GLOBALS['tab'] = 'Test History';
 $GLOBALS['page_description'] = 'History of website performance speed tests run on WebPageTest.';
@@ -52,7 +55,7 @@ if (!$csv && ($is_logged_in || (!isset($user) && !isset($_COOKIE['google_email']
         'local' => isset($_REQUEST['local']) && $_REQUEST['local'],
         'body_class' => 'history',
         'page_title' => 'WebPageTest - Test History',
-
+        'filter' => $filterstr
     ];
 
     echo view('pages.testhistory', $vars);
@@ -70,8 +73,6 @@ if ($result_code == 0 && isset($output) && is_array($output) && count($output)) 
 }
 
 $from      = (isset($_GET["from"]) && strlen($_GET["from"])) ? $_GET["from"] : 'now';
-$filter    = $_GET["filter"];
-$filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \@\/\:\.\(\))\-\+]/', '', strtolower($filter)) : null;
 $onlyVideo = !empty($_REQUEST['video']);
 $all       = ($admin || !Util::getSetting('forcePrivate')) && !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);

@@ -32,12 +32,19 @@
 
   function handleDaySelector() {
     const daySelector = document.querySelector("select[name=days]");
+    const filter = document.getElementById('filter');
+
     daySelector.addEventListener("change", (e) => {
       const days = e.target.value;
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
-      const redirectUri = protocol + "//" + hostname + "/testlog/" + days + "/";
 
+      if (filter.value) {
+        document.querySelector('form[name=filterLog]').submit();
+        return;
+      }
+
+      const redirectUri = protocol + "//" + hostname + "/testlog/" + days + "/";
       window.location = redirectUri;
     });
   }
