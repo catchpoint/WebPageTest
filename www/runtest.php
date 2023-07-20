@@ -3554,9 +3554,10 @@ function CheckRateLimit($test, &$error, &$errorTitle)
     $passesMonthly = $cmrl->check($total_runs);
 
     $error = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
+    $errorTitleTemplate = "You've reached the limit for";
    
     if (!$passesMonthly) {
-        $errorLimitWindow = "this month";
+        $errorTitle = "{$errorTitleTemplate} this month";
         $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3584,7 +3585,7 @@ HTML;
             $count += $total_runs;
             Cache::store($cache_key, $count, 1800);
         } else {
-            $errorLimitWindow = "the hour";
+            $errorTitle = "{$errorTitleTemplate} this month";
             $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3602,6 +3603,5 @@ HTML;
         }
     }
 
-    $errorTitle = "You've reached the limit for {$errorLimitWindow}";
     return $ret;
 }
