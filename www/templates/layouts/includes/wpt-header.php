@@ -87,36 +87,23 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                 </div>
                                 <div class="wptheader_nav_menu_section">
                                     <ul>
-                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/api">API</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://product.webpagetest.org/api">API</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
                                     </ul>
                                 </div>
-                                <div class="wptheader_nav_menu_section">
-                                    <?php
-                                    $user_exists = !is_null($request_context) && !is_null($request_context->getUser());
-                                    $is_paid_user = $user_exists && $request_context->getUser()->isPaid();
-                                    if (!$is_paid_user && !Util::getSetting('signup_off')) {
-                                        ?>
-                                        <p class="wptheader_nav_cta">
-                                            <span>Ready to go <strong>Pro?</strong></span>
-                                            <a href="/signup">Compare Plans</a>
-                                        </p>
-                                        <?php
-                                    }
-                                    ?>
-				</div>
                                 <div class="wptheader_nav_menu_section wptheader_nav_cta">
 				    <p class="wptheader_nav_title" >Enterprise Monitoring</p> 
+                                    <div class="wptheader_top_right_arrow"></div>
                                 </div>
                                 <div class="wptheader_nav_menu_section">
                                     <ul>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/website-experience/website-performance-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=websitePerformanceMonitoring">Website Performance Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/network-experience/dns?utm_source=WPT&utm_medium=NavBar&utm_content=dns">DNS Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/bgp?utm_source=WPT&utm_medium=NavBar&utm_content=bgp">BGP Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a href="https://www.catchpoint.com/network-experience/cdn?utm_source=WPT&utm_medium=NavBar&utm_content=cdn">CDN Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/website-performance-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=websitePerformanceMonitoring">Website Performance Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/dns?utm_source=WPT&utm_medium=NavBar&utm_content=dns">DNS Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/bgp?utm_source=WPT&utm_medium=NavBar&utm_content=bgp">BGP Monitoring</a></li>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/cdn?utm_source=WPT&utm_medium=NavBar&utm_content=cdn">CDN Monitoring</a></li>
                                     </ul>
                                 </div>
                             </div>

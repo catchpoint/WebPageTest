@@ -356,6 +356,27 @@ wpt-header .wptheader_nav_title {
   margin-bottom: 0.5em;
 }
 
+wpt-header .wptheader_top_right_arrow{
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-top: 2px solid #000;
+  border-left: 2px solid #000;
+  transform: rotate(90deg);
+  margin-bottom: 6px;
+}
+
+wpt-header .wptheader_top_right_arrow::after{
+  content: "";
+  display: block;
+  width: 1.8px;
+  height: 15.5px;
+  background-color: #000;
+  transform: rotate(-45deg) translate(5px, 1.5px);
+  left: 0;
+  top: 0;
+}
+
 wpt-header .wptheader_nav li details[open] {
   background: var(--wpt-header-text);
   color: var(--wpt-header-border);
