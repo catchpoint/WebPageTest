@@ -80,24 +80,11 @@
                 </ul>
                 <?php
                 echo '<h3 id="statusText" class="runningStatusText">' . htmlspecialchars($statusText) . '</h3>';
-                ?>
 
-            <p>Your webpage-performance test has been submitted and is now being processed.  This page will automatically update with the test status as
-            the test continues to run.  When the test is complete the final results will be available here.</p>
-            <p>You can either leave this page open in your browser until the test
-             is complete, or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
-            </div>
+            } ?>
 
+	    <div class="marketing-section testingBannerMessage"></div>
 
-            <?php } ?>
-            <?php
-            $tip = GetTip();
-            if (strlen($tip)) {
-                echo '<div class="tip box"><div class="tipHead"><h2>Did you know?</h2><span class="tip_note">(all links open in a new window/tab)</span></div>';
-                echo $tip;
-                echo "</div>\n";
-            }
-            ?>
             <?php include('footer.inc'); ?>
         </div>
 
