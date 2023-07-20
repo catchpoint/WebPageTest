@@ -896,7 +896,6 @@ function buildSelfHost($hosts)
     return $selfHostScript;
 }
 
-
 if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
@@ -1452,6 +1451,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
             echo $tpl->render('runlimit');
         } else {
             echo $tpl->render('runtest', array(
+                'errorTitle' => $errorTitle,
                 'error' => $error
             ));
         }
@@ -3498,8 +3498,8 @@ function loggedOutLoginForm()
 {
     $ret = <<<HTML
 <ul class="testerror_login">
-    <li><a href="/login">Login</a></li>
     <li><a class="pill" href="/signup">Sign-up</a></li>
+    <li><a href="/login">Login</a></li>
 </ul>
 HTML;
 
@@ -3510,15 +3510,15 @@ function loggedInPerks()
 {
     $msg = <<<HTML
 <ul class="testerror_loginperks">
-    <li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>
+    <li>The ability to save your tests! Access up to 13 months of tests,  making it easier to compare tests and analyze results</li>
     <li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>
-    <li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>
+    <li>Access to upcoming betas and new features to enhance your WebPageTest experience.</li>
 </ul>
 HTML;
     return $msg;
 }
 
-function CheckRateLimit($test, &$error)
+function CheckRateLimit($test, &$error, &$errorTitle)
 {
     global $USER_EMAIL;
     global $supportsCPAuth;
@@ -3551,8 +3551,10 @@ function CheckRateLimit($test, &$error)
     $cmrl = new RateLimiter($test['ip'], $monthly_limit);
     $passesMonthly = $cmrl->check($total_runs);
 
+    $error = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
+   
     if (!$passesMonthly) {
-        $error = "<p>You've reached the limit for logged-out tests this month, but don't worry! You can keep testing once you log in, which will give you access to other nice features like:</p>";
+        $errorLimitWindow = "this month";
         $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3570,7 +3572,7 @@ HTML;
 
     // Enforce per-IP rate limits for testing
     $limit = Util::getSetting('rate_limit_anon', null);
-    if (isset($limit) && $limit > 0) {
+    if (true) {
         $cache_key = 'rladdr_' . $test['ip'];
         $count = Cache::fetch($cache_key);
         if (!isset($count)) {
@@ -3580,8 +3582,7 @@ HTML;
             $count += $total_runs;
             Cache::store($cache_key, $count, 1800);
         } else {
-            $apiUrl = Util::getSetting('api_url');
-            $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+            $errorLimitWindow = "the hour";
             $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3594,13 +3595,11 @@ HTML;
 HTML;
 
             $error .= loggedInPerks();
-            if ($apiUrl) {
-                $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
-            }
             $error .= loggedOutLoginForm();
             $ret = false;
         }
     }
 
+    $errorTitle = "You've reached the limit for {$errorLimitWindow}";
     return $ret;
 }
