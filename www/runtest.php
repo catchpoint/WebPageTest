@@ -63,6 +63,7 @@ set_time_limit(300);
 
 $redirect_cache = array();
 $error = null;
+$errorTitle = null;
 $xml = false;
 $usingAPI = false;
 $usingApi2 = false;
@@ -897,7 +898,7 @@ function buildSelfHost($hosts)
 }
 
 
-if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
+if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error, $errorTitle)) {
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
     $isAnon = !is_null($request_context->getUser()) && $request_context->getUser()->isAnon();
