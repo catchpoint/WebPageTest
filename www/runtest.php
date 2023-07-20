@@ -896,6 +896,7 @@ function buildSelfHost($hosts)
     return $selfHostScript;
 }
 
+
 if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
@@ -3572,7 +3573,7 @@ HTML;
 
     // Enforce per-IP rate limits for testing
     $limit = Util::getSetting('rate_limit_anon', null);
-    if (true) {
+    if (isset($limit) && $limit > 0) {
         $cache_key = 'rladdr_' . $test['ip'];
         $count = Cache::fetch($cache_key);
         if (!isset($count)) {
