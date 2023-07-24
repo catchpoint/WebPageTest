@@ -16,7 +16,7 @@
 
         <div class="history_filter">
             <label for="filter">Filter test history:</label>
-            <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search">
+            <input id="filter" name="filter" type="text" onkeyup="filterHistory()" placeholder="Search" value="{{ $filter ?? '' }}">
             @if ($is_logged_in)
                 <label for="days" class="a11y-hidden">Select how far back you want to see</label>
                 <select name="days" id="days">
