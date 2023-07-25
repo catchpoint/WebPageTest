@@ -3512,7 +3512,7 @@ function loggedInPerks()
 {
     $msg = <<<HTML
 <ul class="testerror_loginperks">
-    <li>The ability to save your tests! Access up to 13 months of tests,  making it easier to compare tests and analyze results</li>
+    <li>The ability to save your tests! Access up to 13 months of tests,  making it easier to compare tests and analyze results.</li>
     <li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>
     <li>Access to upcoming betas and new features to enhance your WebPageTest experience.</li>
 </ul>
