@@ -3553,11 +3553,12 @@ function CheckRateLimit($test, &$error, &$errorTitle)
     $cmrl = new RateLimiter($test['ip'], $monthly_limit);
     $passesMonthly = $cmrl->check($total_runs);
 
-    $error = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
+    $errorTemplate = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
     $errorTitleTemplate = "You've reached the limit for";
    
     if (!$passesMonthly) {
         $errorTitle = "{$errorTitleTemplate} this month";
+        $error = $errorTemplate;
         $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3585,6 +3586,7 @@ HTML;
             $count += $total_runs;
             Cache::store($cache_key, $count, 1800);
         } else {
+            $error = $errorTemplate;
             $errorTitle = "{$errorTitleTemplate} this month";
             $error .= <<<HTML
 <script>
