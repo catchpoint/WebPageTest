@@ -11,6 +11,8 @@
             $noanalytics = true;
             $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Running website performance test.";
+	    
+	    require_once WWW_PATH . '/templates/layouts/google-tag-manager.inc';
             include('head.inc');
         ?>
     </head>
@@ -79,11 +81,13 @@
                     <li id="done" >Done</li>
                 </ul>
                 <?php
-                echo '<h3 id="statusText" class="runningStatusText">' . htmlspecialchars($statusText) . '</h3>';
+                echo '<h3 id="statusText">' . htmlspecialchars($statusText) . '</h3>';
+                ?>
 
-            } ?>
-
-	    <div class="marketing-section testingBannerMessage"></div>
+	        <div class="marketing-section testingBannerMessage"></div>
+	        </div>
+            
+            <?php } ?>
 
             <?php include('footer.inc'); ?>
         </div>
