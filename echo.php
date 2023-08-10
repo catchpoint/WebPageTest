@@ -12,6 +12,12 @@ $admin = true;
 
 $title = 'WebPageTest - Echo';
 require_once INCLUDES_PATH . '/include/admin_header.inc';
+
+$hidden = ["argv", "REDIRECT_DOCUMENT_ROOT", "DOCUMENT_ROOT","CONTEXT_DOCUMENT_ROOT","SCRIPT_FILENAME","ORIG_PATH_TRANSLATED","SERVER_ADMIN","SERVER_SOFTWARE","PATH","REDIRECT_HANDLER"];
+foreach($hidden as $x) {
+  unset($_SERVER[$x]);
+}
 echo '<pre>'; print_r($_SERVER); echo '</pre>';
+
 require_once INCLUDES_PATH . '/include/admin_footer.inc';
 ?>
