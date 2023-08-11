@@ -12,8 +12,8 @@
             $page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
             $page_description = "Running website performance test.";
 	    
-	    require_once WWW_PATH . '/templates/layouts/google-tag-manager.inc';
             include('head.inc');
+	    require_once WWW_PATH . '/templates/layouts/google-tag-manager.inc';
         ?>
     </head>
     <body class="common">
