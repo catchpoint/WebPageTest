@@ -7,7 +7,6 @@ chdir('..');
 $MIN_DAYS = 2;
 
 require_once('common.inc');
-require_once('clearCache.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
 error_reporting(E_ALL);
