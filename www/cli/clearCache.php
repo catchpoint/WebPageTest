@@ -147,6 +147,7 @@ function CheckTest($testPath, $id, $elapsedDays)
         $logLine .= " Deleted";
     } else {
         $kept++;
+        $logLine .= " Kept";
     }
 
     if ($log) {
