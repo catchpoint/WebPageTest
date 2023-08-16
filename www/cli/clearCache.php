@@ -16,29 +16,29 @@ if ($is_cli && function_exists('proc_nice')) {
 }
 
 // bail if we are already running
-$lock = Lock("ClearLocalCache", false, 3600);
+$lock = Lock("ClearLocalResults", false, 3600);
 if (!isset($lock)) {
     if ($is_cli) {
-        echo "Clear local cache process is already running\n";
+        echo "Clear local results process is already running\n";
     }
     exit(0);
 }
 
-$days_results_cached = null;
-if (GetSetting('days_results_cached')) {
-    $days_results_cached = GetSetting('days_results_cached');
+$days_results_kept = null;
+if (GetSetting('days_results_kept')) {
+    $days_results_kept = GetSetting('days_results_kept');
 }
 
 $kept = 0;
 $deleted = 0;
-$log = fopen('./cli/clearedCache.log', 'w');
+$log = fopen('./cli/clearedLocalResults.log', 'w');
 
-$MIN_DAYS = max($days_results_cached, 0.1);
+$MIN_DAYS = max($days_results_kept, 0.1);
 $UTC = new DateTimeZone('UTC');
 $now = time();
 
-// Delete the cached results
-if (isset($days_results_cached)) {
+// Delete the local results
+if (isset($days_results_kept)) {
   $years = scandir('./results');
   foreach ($years as $year) {
       $yearDir = "./results/$year";
