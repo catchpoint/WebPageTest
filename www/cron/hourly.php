@@ -36,6 +36,11 @@ if (GetSetting('cron_archive')) {
     include 'archive.php';
 }
 
+if (GetSetting('cron_cache')) {
+    chdir('./cli');
+    include 'clearCache.php';
+}
+
 echo "Done\n";
 
 function PruneVideos()
