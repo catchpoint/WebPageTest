@@ -52,7 +52,7 @@ if (isset($days_results_kept)) {
                       $dayDir = "$monthDir/$day";
                       if (is_dir($dayDir) && $day != '.' && $day != '..') {
                           $elapsedDays = ElapsedDays($year, $month, $day);
-                          CheckDay($dayDir, "$year$month$day", $elapsedDays);
+                          DeleteExpiredTests($dayDir, "$year$month$day", $elapsedDays);
                       }
                   }
                   @rmdir($monthDir);
@@ -80,7 +80,7 @@ Unlock($lock);
 * @param mixed $dir
 * @param mixed $baseID
 */
-function CheckDay($dir, $baseID, $elapsedDays)
+function DeleteExpiredTests($dir, $baseID, $elapsedDays)
 {
     if (is_dir($dir)) {
         $tests = scandir($dir);
