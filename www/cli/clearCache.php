@@ -134,7 +134,7 @@ function DeleteTest($testPath, $id, $elapsedDays)
         $logLine .= " waiting.";
     } elseif (is_file("$testPath/archive.me")) {
         $logLine .= " to be archived.";
-    } else {
+    } elseif (is_file("$testPath/.archived")) {
         $elapsed = TestLastAccessed($id);
         if (isset($elapsed)) {
             $logLine .= "Last Accessed $elapsed days";
