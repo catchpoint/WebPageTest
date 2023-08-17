@@ -51,8 +51,7 @@ if (isset($days_results_kept)) {
                     foreach ($days as $day) {
                         $dayDir = "$monthDir/$day";
                         if (is_dir($dayDir) && $day != '.' && $day != '..') {
-                            $elapsedDays = ElapsedDays($year, $month, $day);
-                            DeleteExpiredTests($dayDir, "$year$month$day", $elapsedDays);
+                            DeleteExpiredTests($dayDir, "$year$month$day");
                         }
                     }
                     @rmdir($monthDir);
@@ -75,12 +74,12 @@ if ($log) {
 Unlock($lock);
 
 /**
- * Recursively check within a given day
+ * Recursively delete all files under $dir
  *
  * @param mixed $dir
  * @param mixed $baseID
  */
-function DeleteExpiredTests($dir, $baseID, $elapsedDays)
+function DeleteExpiredTests($dir, $baseID)
 {
     if (is_dir($dir)) {
         $tests = scandir($dir);
@@ -94,10 +93,10 @@ function DeleteExpiredTests($dir, $baseID, $elapsedDays)
                         is_file("$dir/$test/testinfo.json") ||
                         is_dir("$dir/$test/video_1")
                     ) {
-                        DeleteTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
+                        DeleteTest("$dir/$test", "{$baseID}_$test");
                     } else {
                         // We're likely looking at a shared directory, loop through the actual tests
-                        DeleteExpiredTests("$dir/$test", "{$baseID}_$test", $elapsedDays);
+                        DeleteExpiredTests("$dir/$test", "{$baseID}_$test");
                     }
                 }
             }
@@ -107,12 +106,12 @@ function DeleteExpiredTests($dir, $baseID, $elapsedDays)
 }
 
 /**
- * Check the given logfile for all matching tests
+ * Delete the test dir specified by $testPath if not running, queued, or needing to be archived.
  *
- * @param mixed $logFile
- * @param mixed $match
+ * @param mixed $testPath
+ * @param mixed $id
  */
-function DeleteTest($testPath, $id, $elapsedDays)
+function DeleteTest($testPath, $id)
 {
     global $deleted;
     global $kept;
@@ -158,17 +157,4 @@ function DeleteTest($testPath, $id, $elapsedDays)
         $logLine .= "\n";
         fwrite($log, $logLine);
     }
-}
-
-/**
- * Calculate how many days have passed since the given day
- */
-function ElapsedDays($year, $month, $day)
-{
-    global $now;
-    global $UTC;
-    $date = DateTime::createFromFormat('ymd', "$year$month$day", $UTC);
-    $daytime = $date->getTimestamp();
-    $elapsed = max($now - $daytime, 0) / 86400;
-    return $elapsed;
 }
