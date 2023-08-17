@@ -39,28 +39,28 @@ $now = time();
 
 // Delete the local results
 if (isset($days_results_kept)) {
-  $years = scandir('./results');
-  foreach ($years as $year) {
-      $yearDir = "./results/$year";
-      if (is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..') {
-          $months = scandir($yearDir);
-          foreach ($months as $month) {
-              $monthDir = "$yearDir/$month";
-              if (is_dir($monthDir) && $month != '.' && $month != '..') {
-                  $days = scandir($monthDir);
-                  foreach ($days as $day) {
-                      $dayDir = "$monthDir/$day";
-                      if (is_dir($dayDir) && $day != '.' && $day != '..') {
-                          $elapsedDays = ElapsedDays($year, $month, $day);
-                          DeleteExpiredTests($dayDir, "$year$month$day", $elapsedDays);
-                      }
-                  }
-                  @rmdir($monthDir);
-              }
-          }
-          @rmdir($yearDir);
-      }
-  }
+    $years = scandir('./results');
+    foreach ($years as $year) {
+        $yearDir = "./results/$year";
+        if (is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..') {
+            $months = scandir($yearDir);
+            foreach ($months as $month) {
+                $monthDir = "$yearDir/$month";
+                if (is_dir($monthDir) && $month != '.' && $month != '..') {
+                    $days = scandir($monthDir);
+                    foreach ($days as $day) {
+                        $dayDir = "$monthDir/$day";
+                        if (is_dir($dayDir) && $day != '.' && $day != '..') {
+                            $elapsedDays = ElapsedDays($year, $month, $day);
+                            DeleteExpiredTests($dayDir, "$year$month$day", $elapsedDays);
+                        }
+                    }
+                    @rmdir($monthDir);
+                }
+            }
+            @rmdir($yearDir);
+        }
+    }
 }
 
 if ($is_cli) {
@@ -75,11 +75,11 @@ if ($log) {
 Unlock($lock);
 
 /**
-* Recursively check within a given day
-*
-* @param mixed $dir
-* @param mixed $baseID
-*/
+ * Recursively check within a given day
+ *
+ * @param mixed $dir
+ * @param mixed $baseID
+ */
 function DeleteExpiredTests($dir, $baseID, $elapsedDays)
 {
     if (is_dir($dir)) {
@@ -94,10 +94,10 @@ function DeleteExpiredTests($dir, $baseID, $elapsedDays)
                         is_file("$dir/$test/testinfo.json") ||
                         is_dir("$dir/$test/video_1")
                     ) {
-                        CheckTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
+                        DeleteTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
                     } else {
                         // We're likely looking at a shared directory, loop through the actual tests
-                        CheckDay("$dir/$test", "{$baseID}_$test", $elapsedDays);
+                        DeleteExpiredTests("$dir/$test", "{$baseID}_$test", $elapsedDays);
                     }
                 }
             }
@@ -107,12 +107,12 @@ function DeleteExpiredTests($dir, $baseID, $elapsedDays)
 }
 
 /**
-* Check the given logfile for all matching tests
-*
-* @param mixed $logFile
-* @param mixed $match
-*/
-function CheckTest($testPath, $id, $elapsedDays)
+ * Check the given logfile for all matching tests
+ *
+ * @param mixed $logFile
+ * @param mixed $match
+ */
+function DeleteTest($testPath, $id, $elapsedDays)
 {
     global $deleted;
     global $kept;
@@ -127,9 +127,13 @@ function CheckTest($testPath, $id, $elapsedDays)
 
     $delete = false;
     if (is_file("$testPath/test.waiting")) {
-      // Skip tests that are still queued
+        // Skip tests that are still queued
+        $logLine .= " queued.";
     } elseif (is_file("$testPath/test.running")) {
-      // Skip tests that are still running
+        // Skip tests that are still running
+        $logLine .= " waiting.";
+    } elseif (is_file("$testPath/archive.me")) {
+        $logLine .= " to be archived.";
     } else {
         $elapsed = TestLastAccessed($id);
         if (isset($elapsed)) {
@@ -157,8 +161,8 @@ function CheckTest($testPath, $id, $elapsedDays)
 }
 
 /**
-* Calculate how many days have passed since the given day
-*/
+ * Calculate how many days have passed since the given day
+ */
 function ElapsedDays($year, $month, $day)
 {
     global $now;
