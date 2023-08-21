@@ -25,9 +25,11 @@
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       handleDaySelector();
+      filterHistory();
     });
   } else {
     handleDaySelector();
+    filterHistory();
   }
 
   function handleDaySelector() {
