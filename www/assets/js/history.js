@@ -1,4 +1,4 @@
-(function () {
+function loadRows() {
   const open = window.indexedDB.open("webpagetest", 1);
   const now = Date.now() / 1000;
   const months = [
@@ -104,7 +104,7 @@
       }
     };
   };
-})();
+};
 
 function filterHistory() {
   const input = document.getElementById("filter");
@@ -124,3 +124,16 @@ function filterHistory() {
     }
   }
 }
+
+function onReady(fn) {
+  if (document.readyState !== 'loading') {
+    fn();
+    return;
+  }
+  document.addEventListener('DOMContentLoaded', fn);
+}
+
+onReady(function () {
+  loadRows();
+  filterHistory();
+})
