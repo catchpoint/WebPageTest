@@ -112,6 +112,10 @@ function filterHistory() {
   const table = document.getElementById("historyBody");
   const rows = table.getElementsByTagName("tr");
 
+  if (filter === '') {
+    return;
+  }
+
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (row) {
