@@ -1,4 +1,4 @@
-(function () {
+function loadRows() {
   const open = window.indexedDB.open("webpagetest", 1);
   const now = Date.now() / 1000;
   const months = [
@@ -104,13 +104,17 @@
       }
     };
   };
-})();
+};
 
 function filterHistory() {
   const input = document.getElementById("filter");
   const filter = input.value.toUpperCase();
   const table = document.getElementById("historyBody");
   const rows = table.getElementsByTagName("tr");
+
+  if (filter === '') {
+    return;
+  }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -124,3 +128,16 @@ function filterHistory() {
     }
   }
 }
+
+function onReady(fn) {
+  if (document.readyState !== 'loading') {
+    fn();
+    return;
+  }
+  document.addEventListener('DOMContentLoaded', fn);
+}
+
+onReady(function () {
+  loadRows();
+  filterHistory();
+})
