@@ -30,4 +30,11 @@ final class TimersTest extends TestCase
         $setTimers = $Timers->getTimers();
         $this->assertStringContainsString('db', $setTimers);
     }
+    public function testTimerNoStartWithEndReturnsNull(): void
+    {
+        $Timers = new Timers();
+        $Timers->endTimer('DNE');
+        $setTimers = $Timers->getTimers();
+        $this->assertNull($setTimers);
+    }
 }
