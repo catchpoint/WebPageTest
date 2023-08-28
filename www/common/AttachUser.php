@@ -102,6 +102,7 @@ use WebPageTest\Exception\UnauthorizedException;
                         $user_id = $account['userId'] ?? null;
                         $contact_id = $account['contactId'] ?? null;
                         $user->setPaidClient(true);
+                        $user->setIsApiUser(true);
                         $user->setOwnerId($owner);
                         $user->setContactId($contact_id);
                         $user->setUserId($user_id);
@@ -113,7 +114,7 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
-    if ($user->isPaid()) {
+    if ($user->isPaid() || $user->isApiUser()) {
         //calculate based on paid priority
         $user->setUserPriority((int)Util::getSetting('paid_priority', 0));
     } else {

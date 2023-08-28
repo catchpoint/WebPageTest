@@ -27,7 +27,7 @@ class CustomMetrics
     }
 
     /**
-     * @param string $source One of CustomMetrics::ALL, CustomMetrics::FROM_FILES or CustomMetrics::FROM_TEST_SETTINGS
+     * @param int $source
      */
     public function getBySource(int $source = self::ALL): array
     {

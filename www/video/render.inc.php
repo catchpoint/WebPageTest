@@ -155,10 +155,6 @@ function BuildRenderTests()
                 if ($info && isset($info['label'])) {
                     $label = $info['label'];
                 }
-                $new_label = getLabel($test['id'], $user);
-                if (!empty($new_label)) {
-                    $label = $new_label;
-                }
             }
             if (empty($label)) {
                 $label = $test['url'];

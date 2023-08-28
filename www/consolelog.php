@@ -20,10 +20,16 @@ $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandl
 
 $socialDesc = 'Console.log output of the page being tested';
 
+
+$log = [];
+for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+    $log[$i] = $testRunResults->getStepResult($i)->getConsoleLog();
+}
+
 // template
 echo view('pages.consolelog', [
     'test_results_view' => true,
     'body_class' => 'result',
     'results_header' => $results_header,
-    'log' => $testRunResults->getStepResult(1)->getConsoleLog(),
+    'log' => $log,
 ]);

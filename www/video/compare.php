@@ -211,7 +211,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                     body:not(.viewport-too-short-for-sticky-filmstrip) #videoContainer {
                         position: sticky;
                         top: 0;
-                        z-index: 9999;
+                        z-index: 998;
                     }
                 <?php } ?>
 
@@ -394,13 +394,20 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
 
 
         </head>
-        <body class="result compare <?php if ($experiment) {
+        <body class="result compare <?php
+        if ($experiment) {
             echo ' compare-experiment';
-                                    }  if ($req_screenshot) {
-                                        echo ' screenshot';
-                                    } if (!$ready) {
-                                        echo ' compare-loading';
-                                    }   ?>">
+        }
+        if ($req_screenshot) {
+            echo ' screenshot';
+        }
+        if (!$ready) {
+            echo ' compare-loading';
+        }
+        if (count($tests) === 1) {
+            echo ' compare-single';
+        }
+        ?>">
                 <?php
                 $tab = 'Test Result';
                 //$nosubheader = false;
@@ -685,13 +692,6 @@ function ScreenShotTable()
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
             }
-
-            // Print out a link to edit the test
-            echo ' <a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
-            if (class_exists("SQLite3")) {
-                echo 'Edit title';
-            }
-            echo '</a>';
 
             if (!EMBED) {
                 $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);

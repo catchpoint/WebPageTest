@@ -48,6 +48,7 @@ if (!strlen($filename)) {
 $filename .= ".$id.har";
 header('Content-type: application/json');
 header("Content-disposition: attachment; filename=$filename");
+header('Access-Control-Allow-Origin: *');
 
 // see if we need to wrap it in a JSONP callback
 if (isset($_REQUEST['callback']) && strlen($_REQUEST['callback'])) {

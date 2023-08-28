@@ -3,10 +3,10 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 if (!$privateInstall && !$admin) {
-    header("HTTP/1.1 403 Unauthorized");
-    exit;
+    //header("HTTP/1.1 403 Unauthorized");
+    //exit;
 }
 if (isset($_REQUEST['k'])) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
@@ -40,7 +40,10 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html') {
     $refresh = 240;
     $title = 'WebPageTest - Tester Status';
-    include 'admin_header.inc';
+    require_once INCLUDES_PATH . '/include/admin_header.inc';
+    echo '<style>.legend {width: 20px; height: 20px; display: inline-block; margin: 0 10px;}</style>';
+    echo '<div style="display: flex; padding: 10px">Key: <div class="alert-danger legend"></div> Offline location';
+    echo '<div class="alert-success legend"></div> Locations where oldest test started &lt; 30 minutes ago</div>';
     echo "<table class=\"table\">\n";
     foreach ($locations as $name => &$location) {
         $error = ' danger';
@@ -60,7 +63,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
         echo "</th></tr>\n";
         if (array_key_exists('testers', $location)) {
-            echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>";
+            echo '<tr><th class="tester">Tester</th><th>Busy?</th><th>Last Check (minutes)</th>';
+            echo '<th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th>';
+            echo '<th>Error Rate <tt title="A percentage of the last 100 tests">?</tt></th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>';
             echo "<th>IP</th><th>DNS Server(s)</th>";
             if ($admin) {
                 echo "<th>Current Test</th>";
@@ -106,11 +111,11 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
     }
     echo "</table>\n";
-    include 'admin_footer.inc';
+    require_once INCLUDES_PATH . '/include/admin_footer.inc';
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getTesters.xsl\" version=\"1.0\"?>\n";
+    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"/assets/xsl/getTesters.xsl\" version=\"1.0\"?>\n";
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";

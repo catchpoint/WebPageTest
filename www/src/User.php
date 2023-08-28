@@ -26,6 +26,8 @@ class User
     private string $subscription_id;
     private DateTime $run_renewal_date;
     private string $payment_status;
+    private ?string $vat_number;
+    private bool $is_api_user;
 
     public function __construct()
     {
@@ -47,6 +49,8 @@ class User
         $this->subscription_id = "";
         $this->run_renewal_date = $this->getFreeRunRenewalDate(); // default to free
         $this->payment_status = "EXPIRED";
+        $this->vat_number = null;
+        $this->is_api_user = false;
     }
 
     public function getEmail(): ?string
@@ -88,6 +92,16 @@ class User
     public function setPaidClient(bool $is_paid): void
     {
         $this->is_paid_cp_client = $is_paid;
+    }
+
+    public function isApiUser(): bool
+    {
+        return $this->is_api_user;
+    }
+
+    public function setIsApiUser(bool $is_api_user): void
+    {
+        $this->is_api_user = $is_api_user;
     }
 
     public function isAdmin(): bool
@@ -276,6 +290,16 @@ class User
     public function isCanceled(): bool
     {
         return str_contains($this->payment_status, 'CANCEL');
+    }
+
+    public function getVatNumber(): ?string
+    {
+        return $this->vat_number;
+    }
+
+    public function setVatNumber(?string $vat_number = null): void
+    {
+        $this->vat_number = $vat_number;
     }
 
     private function getFreeRunRenewalDate(): DateTimeInterface

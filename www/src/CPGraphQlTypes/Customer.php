@@ -11,13 +11,14 @@ class Customer
     private string $customer_id;
     private string $subscription_id;
     private string $wpt_plan_id;
-    private ?DateTime $billing_period_end_date;
     private float $subscription_price;
     private string $formatted_subscription_price;
     private string $status;
     private string $wpt_plan_name;
-    private ?string $next_wpt_plan_id;
     private int $monthly_runs;
+
+    private ?DateTime $billing_period_end_date;
+    private ?string $next_wpt_plan_id;
     private ?string $masked_credit_card;
     private ?string $cc_last_four;
     private ?string $credit_card_type;
@@ -68,7 +69,7 @@ class Customer
         $this->remaining_runs = $options['remainingRuns'] ?? null;
         $this->billing_frequency = $options['billingFrequency'] ?? null;
         $this->plan_renewal_date = isset($options['planRenewalDate']) ?
-            new DateTime($options['nextBillingDate']) : null;
+            new DateTime($options['planRenewalDate']) : null;
         $this->next_wpt_plan_id = $options['nextWptPlanId'] ?? null;
         $this->address = null;
         if (

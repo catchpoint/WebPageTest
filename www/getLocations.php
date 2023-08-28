@@ -3,7 +3,7 @@
 // Copyright 2020 Catchpoint Systems Inc.
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
-include 'common.inc';
+require_once __DIR__ . '/common.inc';
 $remote_cache = array();
 if ($CURL_CONTEXT !== false) {
     curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
@@ -19,7 +19,7 @@ $locations = LoadLocations($includePaid);
 foreach ($locations as $id => &$location) {
     $location['PendingTests'] = GetBacklog($location['location']);
 
-  // calculate the ratio of pending tests to agents
+    // calculate the ratio of pending tests to agents
     if (isset($location['PendingTests']['Total'])) {
         $location['PendingTests']['TestAgentRatio'] = $location['PendingTests']['Total'];
         $agent_count = 0;
@@ -35,7 +35,7 @@ foreach ($locations as $id => &$location) {
     }
 
 
-  // strip out any sensitive data
+    // strip out any sensitive data
     unset($location['localDir']);
 }
 
@@ -58,10 +58,13 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html') {
     $refresh = 240;
     $title = 'WebPageTest - Location Status';
-    include 'admin_header.inc';
+    require_once INCLUDES_PATH . '/include/admin_header.inc';
     if (array_key_exists('location', $_REQUEST) && !$locations[$_REQUEST['location']]) {
         echo "Invalid location";
     } else {
+        echo '<style>.legend {width: 20px; height: 20px; display: inline-block; margin: 0 10px;}</style>';
+        echo '<div style="display: flex; padding: 10px">Key: <div class="alert-danger legend"></div> Offline location';
+        echo '<div class="alert-warning legend"></div> Location with more than one pending test</div>';
         echo "<table class=\"table\">\n";
         echo "<tr>
             <th class=\"location\">Location ID</th>
@@ -89,12 +92,12 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         }
 
         echo "</table>\n";
-        include 'admin_footer.inc';
+        require_once INCLUDES_PATH . '/include/admin_footer.inc';
     }
 } else {
     header('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getLocations.xsl\" version=\"1.0\"?>\n";
+    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"/assets/xsl/getLocations.xsl\" version=\"1.0\"?>\n";
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";
@@ -187,9 +190,9 @@ function outputHTMLRow($location)
     echo "</tr>";
 }
 /**
-* Load the location information and extract just the end nodes
-*
-*/
+ * Load the location information and extract just the end nodes
+ *
+ */
 function LoadLocations($isPaid = false)
 {
     global $request_context;
@@ -205,8 +208,10 @@ function LoadLocations($isPaid = false)
             }
         }
     } elseif (!$isPaid) {
-        if (isset($location['premium'])) {
-            unset($loc[$name]);
+        foreach ($loc as $name => $location) {
+            if (isset($location['premium'])) {
+                unset($loc[$name]);
+            }
         }
     }
     $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
@@ -241,13 +246,14 @@ function LoadLocations($isPaid = false)
                         if (isset($locations[$loc_name])) {
                             $locations[$loc_name]['Browsers'] .= ',' . $loc[$group[$j]]['browser'];
                         } else {
-                            $locations[$loc_name] = array( 'Label' => $label,
-                                              'location' => $loc[$group[$j]]['location'],
-                                              'Browsers' => $loc[$group[$j]]['browser'],
-                                              'localDir' => $loc[$group[$j]]['localDir'],
-                                              'status' => @$loc[$group[$j]]['status'],
-                                              'labelShort' => $loc[$loc_name]['label'],
-                                              );
+                            $locations[$loc_name] = array(
+                                'Label' => $label,
+                                'location' => $loc[$group[$j]]['location'],
+                                'Browsers' => $loc[$group[$j]]['browser'],
+                                'localDir' => $loc[$group[$j]]['localDir'],
+                                'status' => @$loc[$group[$j]]['status'],
+                                'labelShort' => $loc[$loc_name]['label'],
+                            );
 
                             if (isset($loc[$group[$j]]['scheduler_node'])) {
                                 $locations[$loc_name]['node'] = $loc[$group[$j]]['scheduler_node'];
@@ -273,12 +279,12 @@ function LoadLocations($isPaid = false)
 }
 
 /**
-* Get the backlog for the given location
-*/
+ * Get the backlog for the given location
+ */
 function GetBacklog($locationId)
 {
     global $request_context;
-    $ui_priority = $request_context->getUser()->getUserPriority();
+    $ui_priority = !is_null($request_context->getUser()) ? $request_context->getUser()->getUserPriority() : 0;
 
     $backlog = array();
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="account-layout">
+<html>
 
 <head>
     <title>Lightning-Fast Web Performance Online Course from WebPageTest</title>
@@ -11,7 +11,7 @@
         $useScreenshot = true;
         require_once INCLUDES_PATH . '/head.inc';
     ?>
-    <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css">
+    <link rel="stylesheet" href="/learn/lightning-fast-web-performance/lfwp-assets/learn-course.css?0622">
 </head>
 
 <body class="learn">
@@ -490,6 +490,10 @@ EOT;
             (function(){
                 var intro = document.querySelector(".video video");
                 var playbtn = document.querySelector(".play");
+
+                if (!intro || !playbtn) {
+                    return;
+                }
 
                 function activate(){
                     intro.controls = true;

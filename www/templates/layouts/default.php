@@ -19,6 +19,7 @@
     global $page_description;
     global $cdnPath;
     global $support_link;
+    global $body_class;
 
     $page_title ??= 'WebPageTest';
     $body_class = $body_class ? ' class="' . $body_class . '"' : '';

@@ -11,6 +11,7 @@ class ContactUpdateInput
     private string $last_name;
     private string $email;
     private ?string $company_name;
+    private ?string $vat_number;
 
     public function __construct(array $options)
     {
@@ -30,6 +31,7 @@ class ContactUpdateInput
         $this->last_name = $options['last_name'];
         $this->email = $options['email'];
         $this->company_name = $options['company_name'] ?? null;
+        $this->vat_number = $options['vat_number'] ?? null;
     }
 
     public function toArray(): array
@@ -42,7 +44,11 @@ class ContactUpdateInput
         ];
 
         if ($this->company_name) {
-            $arr['companyName'] = $this->company_name;
+            $arr['organization'] = $this->company_name;
+        }
+
+        if ($this->vat_number) {
+            $arr['vatNumber'] = $this->vat_number;
         }
 
         return $arr;

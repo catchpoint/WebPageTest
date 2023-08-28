@@ -275,7 +275,7 @@ $page_description = "Website performance test result$testLabel.";
             if (isset($fvRunResults)) {
                 echo '<div class="cruxembed">';
                 require_once(INCLUDES_PATH . '/include/CrUX.php');
-                InsertCruxHTML($fvRunResults, '');
+                InsertCruxHTML($fvRunResults);
                 echo '</div>';
             }
             ?>

@@ -25,7 +25,7 @@ class ChargifyInvoiceLineItemList implements IteratorAggregate, Countable
         $this->list = $line_item;
     }
 
-    public function add(ChargifyInvoiceLineItem $line_item)
+    public function add(ChargifyInvoiceLineItem $line_item): void
     {
         $this->list[] = $line_item;
     }

@@ -5,7 +5,7 @@
 // found in the LICENSE.md file.
 include __DIR__ . '/common.inc';
 require_once INCLUDES_PATH . '/breakdown.inc';
-require_once INCLUDES_PATH . '/contentColors.inc';
+require_once INCLUDES_PATH . '/include/contentColors.inc';
 require_once INCLUDES_PATH . '/waterfall.inc';
 require_once INCLUDES_PATH . '/page_data.inc';
 require_once INCLUDES_PATH . '/include/TestInfo.php';

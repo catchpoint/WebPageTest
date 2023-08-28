@@ -63,6 +63,7 @@ set_time_limit(300);
 
 $redirect_cache = array();
 $error = null;
+$errorTitle = null;
 $xml = false;
 $usingAPI = false;
 $usingApi2 = false;
@@ -223,7 +224,10 @@ if (!isset($test)) {
     if ($is_private_api_call || $is_private_web_call) {
         $is_private = 1;
     }
-    $test['private'] = $is_private;
+
+    if (isset($req_carbon_control)) {
+        $test['carbon_control'] = $req_carbon_control;
+    }
 
     if (isset($req_web10)) {
         $test['web10'] = $req_web10;
@@ -625,8 +629,7 @@ if (!isset($test)) {
     // see if it is a batch test
     $test['batch'] = 0;
     if (
-        (isset($req_bulkurls) && strlen($req_bulkurls)) ||
-        (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']))
+        isset($req_bulkurls) && strlen($req_bulkurls)
     ) {
         $test['batch'] = 1;
         $is_bulk_test = true;
@@ -675,6 +678,13 @@ if (!isset($test)) {
     }
 
     $conditionalMetrics = $test['bodies'] ? ['generated-html'] : [];
+    // opt API usage out of CC availability for now
+    if (!empty($user_api_key)) {
+        $test['carbon_control'] = false;
+    }
+    if (isset($test['carbon_control']) && $test['carbon_control']) {
+        array_push($conditionalMetrics, "carbon-footprint");
+    }
     $test['customMetrics'] = CustomMetricFiles::get($conditionalMetrics);
 
     if (array_key_exists('custom', $_REQUEST)) {
@@ -804,7 +814,7 @@ if (isset($req_vo)) {
 }
 if (!empty($user_api_key)) {
     $test['key'] = $user_api_key;
-    $test['owner'] = $request_context->getUser()->getOwnerId();
+    $test['owner'] = !is_null($request_context->getUser()) ? $request_context->getUser()->getOwnerId() : $user_api_key;
 }
 
 $creator_id = 0;
@@ -888,7 +898,7 @@ function buildSelfHost($hosts)
 }
 
 
-if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error)) {
+if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error, $errorTitle)) {
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
     $hasRunsAvailable = !is_null($request_context->getUser()) && $request_context->getUser()->hasEnoughRemainingRuns($total_runs);
     $isAnon = !is_null($request_context->getUser()) && $request_context->getUser()->isAnon();
@@ -1158,9 +1168,6 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 if (isset($req_bulkurls) && strlen($req_bulkurls)) {
                     $bulkUrls = $req_bulkurls . "\n";
                 }
-                if (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) {
-                    $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
-                }
 
                 $current_mode = 'urls';
                 if (strlen($bulkUrls)) {
@@ -1373,6 +1380,9 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                 if (isset($_REQUEST['webvital_profile'])) {
                     $view = FRIENDLY_URLS ? '?view=webvitals' : '&view=webvitals';
                 }
+                if (isset($_REQUEST['carbon_control_redirect'])) {
+                    $view = FRIENDLY_URLS ? '?view=carboncontrol' : '&view=carboncontrol';
+                }
                 if (FRIENDLY_URLS) {
                     header("Location: $protocol://$host$uri/result/{$test['id']}/$view");
                 } else {
@@ -1405,6 +1415,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
             header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
             echo json_encode($ret);
         } else {
+            $body_class = 'common';
             $tpl = new Template('errors');
             if ($error == 'Not enough runs available') {
                 echo $tpl->render('runlimit');
@@ -1436,11 +1447,13 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
         header("Content-type: application/json");
         echo json_encode($ret);
     } elseif (strlen($error)) {
+        $body_class = 'common';
         $tpl = new Template('errors');
         if ($error == 'Not enough runs available') {
             echo $tpl->render('runlimit');
         } else {
             echo $tpl->render('runtest', array(
+                'errorTitle' => $errorTitle,
                 'error' => $error
             ));
         }
@@ -1689,8 +1702,11 @@ function ValidateKey(&$test, &$error, $key = null)
                             }
                         }
                         if ($account && is_array($account) && isset($account['accountId']) && isset($account['expiration'])) {
-                            // Check the expiration (with a 2-day buffer)
-                            if (time() <= $account['expiration'] + 172800) {
+                            // Check the expiration (with a buffer)
+                            $seconds_in_day = 86400;
+                            $buffer_days = Util::getSetting('api_key_expiration_buffer_days', 2);
+                            $buffer_seconds = $buffer_days * $seconds_in_day;
+                            if (time() <= $account['expiration'] + $buffer_seconds) {
                                 // Check the balance
                                 $response = $redis->get("C_{$account['accountId']}");
                                 if (isset($response) && $response !== false && is_string($response) && strlen($response) && is_numeric($response)) {
@@ -2061,7 +2077,8 @@ function ValidateScript(&$script, &$error)
         if (!$ok) {
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
         } elseif ($navigateCount > $maxNavigateCount) {
-            $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
+            $error = '<p>Sorry, your test has been blocked due to too many navigation commands (navigate, submitForm, *AndWait).</p>';
+            $error .= sprintf('<p>%s is the maximum alowed, %s were found in your script.</p>', $maxNavigateCount, $navigateCount);
         }
 
         if (strlen($error)) {
@@ -2377,7 +2394,7 @@ function LogTest(&$test, $testId, $url)
     if ($supportsCPAuth && isset($request_context) && !is_null($request_context->getUser())) {
         $user_info = $request_context->getUser()->getEmail();
         $client_id = $request_context->getUser()->getOwnerId();
-        $create_contact_id = $request_context->getUser()->getUserId();
+        $create_contact_id = $request_context->getUser()->getContactId();
     } elseif ($supportsSaml) {
         $saml_email = GetSamlEmail();
         $client_id = GetSamlAccount();
@@ -2408,6 +2425,7 @@ function LogTest(&$test, $testId, $url)
         'private' => $test['private'],
         'testUID' => @$test['uid'],
         'testUser' => $user_info,
+        'testUserId' => @$test['user_id'],
         'video' => @$video,
         'label' => @$test['label'],
         'owner' => @$test['owner'],
@@ -2435,6 +2453,7 @@ function LogTest(&$test, $testId, $url)
             'private' => $test['private'],
             'testUID' => @$test['uid'],
             'testUser' => $user_info,
+            'testUserId' => @$test['user_id'],
             'video' => @$video,
             'label' => @$test['label'],
             'owner' => @$test['owner'],
@@ -2657,12 +2676,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // create the folder for the test results
         if (!is_dir($test['path'])) {
             mkdir($test['path'], 0777, true);
-        }
-
-        // Fetch the CrUX data for the URL
-        $crux_data = GetCruxDataForURL($url, $is_mobile);
-        if (isset($crux_data) && strlen($crux_data)) {
-            gz_file_put_contents("{$test['path']}/crux.json", $crux_data);
         }
 
         // Start with an initial state of waiting/submitted
@@ -3487,8 +3500,8 @@ function loggedOutLoginForm()
 {
     $ret = <<<HTML
 <ul class="testerror_login">
-    <li><a href="/login">Login</a></li>
     <li><a class="pill" href="/signup">Sign-up</a></li>
+    <li><a href="/login">Login</a></li>
 </ul>
 HTML;
 
@@ -3499,15 +3512,15 @@ function loggedInPerks()
 {
     $msg = <<<HTML
 <ul class="testerror_loginperks">
-    <li>Access to 13 months of saved tests, making it easier to compare tests and analyze trends.</li>
+    <li>The ability to save your tests! Access up to 13 months of tests,  making it easier to compare tests and analyze results.</li>
     <li>Ability to contribute to the <a href="https://forums.webpagetest.org/">WebPageTest Forum</a>.</li>
-    <li>Access to upcoming betas and new features that will enhance your WebPageTest experience.</li>
+    <li>Access to upcoming betas and new features to enhance your WebPageTest experience.</li>
 </ul>
 HTML;
     return $msg;
 }
 
-function CheckRateLimit($test, &$error)
+function CheckRateLimit($test, &$error, &$errorTitle)
 {
     global $USER_EMAIL;
     global $supportsCPAuth;
@@ -3540,8 +3553,12 @@ function CheckRateLimit($test, &$error)
     $cmrl = new RateLimiter($test['ip'], $monthly_limit);
     $passesMonthly = $cmrl->check($total_runs);
 
+    $errorTemplate = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
+    $errorTitleTemplate = "You've reached the limit for";
+   
     if (!$passesMonthly) {
-        $error = "<p>You've reached the limit for logged-out tests this month, but don't worry! You can keep testing once you log in, which will give you access to other nice features like:</p>";
+        $errorTitle = "{$errorTitleTemplate} this month";
+        $error = $errorTemplate;
         $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3569,8 +3586,8 @@ HTML;
             $count += $total_runs;
             Cache::store($cache_key, $count, 1800);
         } else {
-            $apiUrl = Util::getSetting('api_url');
-            $error = '<p>You\'ve reached the limit for logged-out tests per hour, but don\'t worry! You can keep testing once you log in, which will give you access to other nice features like:</p>';
+            $error = $errorTemplate;
+            $errorTitle = "{$errorTitleTemplate} this month";
             $error .= <<<HTML
 <script>
     var intervalId = setInterval(function () {
@@ -3583,9 +3600,6 @@ HTML;
 HTML;
 
             $error .= loggedInPerks();
-            if ($apiUrl) {
-                $error .= "<p>And also, if you need to run tests programmatically you might be interested in the <a href='$apiUrl'>WebPageTest API</a></p>";
-            }
             $error .= loggedOutLoginForm();
             $ret = false;
         }

@@ -46,6 +46,12 @@ $num_critical = null;
 $num_moderate = null;
 $num_minor = null;
 $cls = null;
+//carbon
+$carbonFootprint = null;
+$avgSiteCarbon = 0.6;
+$hostsGreen = null;
+$carbonCompare = null;
+
 
 if ($metaInfo) {
     $assessmentData = $metaInfo['experiment']['assessment'];
@@ -117,6 +123,7 @@ require_once OE_PATH . '/meta-viewport.inc';
 require_once OE_PATH . '/axe-warnings.inc';
 
 // resilient
+require_once OE_PATH . '/carbon.inc';
 require_once OE_PATH . '/render-blocking-3rd-party.inc';
 require_once OE_PATH . '/security-jslibs.inc';
 require_once OE_PATH . '/insecure-requests.inc';
@@ -278,6 +285,9 @@ foreach ($assessment as $key => $cat) {
             } else {
                 $summary .= " HTML content was mostly generated server-side.";
             }
+        }
+        if ($carbonFootprint !== null && $carbonCompare !== null) {
+            $summary .= " " . $carbonCompare;
         }
     } else {
         $summary = "Use this section to create custom experiments to add to your test.";

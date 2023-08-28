@@ -25,6 +25,10 @@
                 <span id="cc_cvv"></span>
             </div>
         </div>
+        <div class="vat-number-container">
+            <label for="vat-number">VAT Number</label>
+            <input name="vat-number" type="text" />
+        </div>
     </div>
 </div>
 <script src="https://js.chargify.com/latest/chargify.js"></script>
@@ -86,11 +90,6 @@
                     placeholder: 'MM',
                     message: 'Invalid Month',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 },
                 year: {
                     selector: '#cc_year',
@@ -98,11 +97,6 @@
                     placeholder: 'YYYY',
                     message: 'Invalid Year',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 },
                 cvv: {
                     selector: '#cc_cvv',
@@ -111,11 +105,6 @@
                     required: true,
                     message: 'Invalid CVC',
                     required: true,
-                    style: {
-                        input: {
-                            width: '158px'
-                        }
-                    }
                 }
             }
         });

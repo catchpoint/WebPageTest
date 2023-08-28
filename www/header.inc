@@ -308,6 +308,10 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                 var video = container.querySelector("video");
                 var playbtn = container.querySelector(".play");
 
+                if (!video || !playbtn) {
+                    return;
+                }
+
                 function activate(){
                     container.classList.add("playing");
                 }
@@ -393,6 +397,10 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $tabs['Web Vitals'] = $menuUrlGenerator->resultPagePHP("vitals", $endParams);
                 }
 
+                if ($firstRunResults && $firstRunResults->getStepResult(1)->getMetric('carbon-footprint')) {
+                    $tabs['Carbon Control'] = $menuUrlGenerator->resultPage("carboncontrol", $endParams);
+                }
+
 
                 if ($gradedRunResults->isOptimizationChecked()) {
                     $tabs['Optimization'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
@@ -405,6 +413,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $tabs['HTML Diff'] = $menuUrlGenerator->resultPage("htmldiff", $endParams);
                 }
                 $tabs['Detected Technologies'] = $menuUrlGenerator->resultPage("technologies", $endParams);
+
 
                 if ($gradedRunResults->hasBreakdownTimeline()) {
                 // currently only supported by standard urls
@@ -462,7 +471,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                     $id = $testInfo->getId();
                 }
                 echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-                "href=\"http://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
+                "href=\"https://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
 
 
                 if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {

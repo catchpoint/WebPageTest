@@ -3121,64 +3121,6 @@ function tokenizeLogLine($line)
 }
 
 /**
-* Update label for a test in a SQLite DB.
-*
-* @param string $test_guid  The ID of the test to update
-* @param string $label      The new label
-* @param string $test_uid   The test UID
-* @param string $cur_user   The current user
-* @param string $test_owner The user who created the test
-*/
-function updateLabel($test_guid, $label, $test_uid, $cur_user, $test_owner)
-{
-    if (!class_exists("SQLite3")) {
-        return "SQLite3 must be installed to update test labels";
-    }
-
-    // Connect to the SQLite DB, and make sure that the table exists
-    $db = new SQLite3('./dat/labels.db');
-    $result = $db->query("CREATE TABLE IF NOT EXISTS labels (test_id STRING, label STRING, user_updated STRING);");
-
-    $result = $db->query('INSERT OR IGNORE INTO labels (test_id, label, user_updated)
-        VALUES ("' . $db->escapeString($test_guid) . '", "' . $db->escapeString($label) . '", "' . $db->escapeString($cur_user) . '")');
-
-    $result = $db->query('UPDATE labels SET label="' . $db->escapeString($label) . '"
-                            WHERE test_id="' . $db->escapeString($test_guid) . '"
-                            AND user_updated="' . $db->escapeString($cur_user) . '"');
-
-    return $result !== false;
-}
-
-
-/**
-* Get an updated test label
-*
-* @param string $test_guid    The ID of the test to get the label for
-* @param string $current_user The current user trying to fetch the label
-*/
-function getLabel($test_guid, $current_user)
-{
-    if (!class_exists("SQLite3")) {
-        return false;
-    }
-
-    $db = new SQLite3('./dat/labels.db');
-    $result = @$db->query('SELECT label FROM labels
-                            WHERE test_id = "' . $db->escapeString($test_guid) . '"
-                            AND user_updated="' . $db->escapeString($current_user) . '"');
-
-    if ($result) {
-        $result = $result->fetchArray();
-    }
-
-    if (!empty($result)) {
-        return $result['label'];
-    } else {
-        return false;
-    }
-}
-
-/**
 *   Generate a unique ID
 */
 function uniqueId(&$test_num)
