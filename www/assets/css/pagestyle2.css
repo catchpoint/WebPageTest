@@ -1880,6 +1880,7 @@ footer ul {
 }
 
 .results_nav_contain {
+  z-index: 1;
   border-bottom: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 8px #6e6e6e36;
@@ -2661,6 +2662,7 @@ details.details_custommetrics summary {
 }
 
 .header_screenshots {
+  z-index: 2;
   order: 2;
   position: relative;
   flex: 0 1 33%;
