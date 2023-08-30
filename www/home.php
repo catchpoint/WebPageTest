@@ -8,7 +8,9 @@ include 'common.inc';
 
 use WebPageTest\Util;
 use WebPageTest\Util\SettingsFileReader;
+use WebPageTest\Util\Timers;
 
+$Timers = new Timers();
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
 if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
@@ -41,12 +43,12 @@ if (isset($req_url)) {
     $url = htmlspecialchars($req_url);
 }
 $placeholder = 'Enter a website URL...';
-
+$Timers->startTimer('init');
 $profiles = SettingsFileReader::ini('profiles.ini', true);
 $connectivity = SettingsFileReader::ini('connectivity.ini', true, true);
 
 $mobile_devices = LoadMobileDevices();
-
+$Timers->endTimer('init');
 if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
     // move it to the front of the list
     $insert = $connectivity[$_REQUEST['connection']];
@@ -68,15 +70,20 @@ if (isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l'])) {
     }
     $connectivity['custom'] = $conn;
 }
-
+$Timers->startTimer('loc');
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
+$Timers->endTimer('loc');
 
+$Timers->startTimer('status');
 // Is the user a logged in and paid user?
 $is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
+$Timers->endTimer('status');
+
+header('Server-Timing: ' . $Timers->getTimers());
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -294,7 +301,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                               }
                                                             }
                                                             enableDisableLHSimple();
-                                                            simplePresets.addEventListener("click", enableDisableLHSimple );
+                                                            simplePresets.addEventListener("click", enableDisableLHSimple);
                                                         </script>
                                                     </div>
                                                     <?php if ($is_paid) : ?>
@@ -785,19 +792,19 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
                                                     ?>
-                                                <li>
-                                                    <label for="extensions">
-                                                        Enable extension<br>
-                                                    </label>
-                                                    <select name="extensions" id="extensions">
-                                                        <option>Pick an extension...</option>
-                                                        <?php
-                                                        foreach ($extensions as $id => $name) {
-                                                            echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
-                                                        }
-                                                        ?>
-                                                    <select>
-                                                </li>
+                                                    <li>
+                                                        <label for="extensions">
+                                                            Enable extension<br>
+                                                        </label>
+                                                        <select name="extensions" id="extensions">
+                                                            <option>Pick an extension...</option>
+                                                            <?php
+                                                            foreach ($extensions as $id => $name) {
+                                                                echo '<option value="' . $id . '">' . htmlspecialchars($name) . '</option>';
+                                                            }
+                                                            ?>
+                                                            <select>
+                                                    </li>
                                                     <?php
                                                 }
                                                 ?>

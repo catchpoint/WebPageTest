@@ -7,6 +7,10 @@
     const table = document.getElementById("historyBody");
     const rows = table.getElementsByTagName("tr");
 
+    if (filter === '') {
+      return;
+    }
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       if (row) {
@@ -25,9 +29,11 @@
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       handleDaySelector();
+      filterHistory();
     });
   } else {
     handleDaySelector();
+    filterHistory();
   }
 
   function handleDaySelector() {
