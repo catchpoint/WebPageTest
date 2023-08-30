@@ -6,7 +6,7 @@
 if (array_key_exists("HTTP_IF_MODIFIED_SINCE", $_SERVER) && strlen(trim($_SERVER['HTTP_IF_MODIFIED_SINCE']))) {
     header("HTTP/1.0 304 Not Modified");
 } else {
-    require_once 'common.inc';
+    include_once 'common.inc';
     $ok = false;
     if (isset($testPath) && is_dir($testPath)) {
         if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
