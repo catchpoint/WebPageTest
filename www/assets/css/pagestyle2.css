@@ -8988,8 +8988,7 @@ wpt-header .wptheader_nav_menu_section a.banner_lfwp:hover {
 }
 
 .scrollableLine {
-  overflow: scroll;
-  height: 2em;
+  overflow: auto;
   white-space: nowrap;
 }
 
