@@ -659,7 +659,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             Minimum test duration<br>
                                                             <small>Capture data for at least...</small>
                                                         </label>
-                                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
+                                                        <input id="time" type="number" class="text short" name="time" min="1" value=""> seconds
                                                     </li>
                                                     <li>
                                                         <label for="customHeaders" class="full">Custom headers</label>
