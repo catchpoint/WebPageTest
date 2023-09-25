@@ -44,8 +44,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./docker/local/server/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-      - ./docker/local/server/xdebug/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
       - ./data/results:/var/www/webpagetest/www/results
       - ./data:/data
       - ./www:/var/www/webpagetest/www
@@ -94,8 +92,6 @@ services:
     init: true
     cap_add:
       - NET_ADMIN
-    extra_hosts:
-      - "frontend:"
     networks:
       - wpt_net
 
