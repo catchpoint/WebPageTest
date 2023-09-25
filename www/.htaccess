@@ -35,6 +35,13 @@
     RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/domains/cached/$ /domains.php?test=$1&run=$2&cached=1 [qsa]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization_report/$ /optimization_report.php?test=$1&run=$2 [qsa]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization_report/cached/$ /optimization_report.php?test=$1&run=$2&cached=1 [qsa]
+
+
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/experiments/$ /experiments.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/consolelog/$ /consolelog.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/technologies/$ /technologies.php?test=$1&run=$2 [qsa]
+
+
     RewriteRule ^testlog/([0-9]+)$ /testlog/$1/ [R] 
     RewriteRule ^testlog/([0-9]+)/$ /testlog.php?days=$1 [qsa]
     RewriteRule ^xmlResult/([a-zA-Z0-9_]+)/$ /xmlResult.php?test=$1 [qsa]

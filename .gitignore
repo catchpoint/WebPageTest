@@ -107,7 +107,6 @@ www/.vscode/launch.json
 www/settings/getkey.html
 www/forums
 www/settings/custom_metrics/iframeCount.js
-.gitignore
 www/settings/custom_metrics/scriptTagCount.js
 www/settings/common
 www/settings/server
@@ -121,3 +120,5 @@ vendor/bin/.phpunit.result.cache
 
 # developer settings
 www/dev.php
+
+data

@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /var/www/html/cron/
+cd /var/www/cron/
 if [ ! -f "${1}" ]; then
   echo "Script name '${1}' is not a valid WPT cron script." >> /var/log/supervisor/cron_stdout.log
   exit 1

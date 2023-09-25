@@ -2,72 +2,116 @@
 version: '3.6'
 # READ THE DOCKER/LOCAL/README FOR MORE INFORMATION
 services:
-
-  web:
+  web_debug:
+    profiles: ["web_debug", "all_debug"]
     build: 
       context: .
-      dockerfile: docker/local/Dockerfile-nginx
-    # privileged: true
-    ports:
-      - target: 80
-        published: 80
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - 'node.labels.upgrade-test == true'
-    volumes:
-      - .:/var/www/webpagetest
-    secrets:
-      - source: wpt_settings_ini
-        target: /var/www/webpagetest/settings/settings.ini
-      - source: wpt_keys_ini
-        target: /var/www/webpagetest/settings/keys.ini
-
-  php:
-    build: 
-      context: .
-      dockerfile: docker/local/Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    # user: "1000:1000"
-    # privileged: true
-    extra_hosts: # Needed for xdebug 
+      dockerfile: Dockerfile
+      target: debug
+    extra_hosts: # Needed for xdebug
       - "host.docker.internal:host-gateway"
-    expose:
-      - 9000
+    ports:
+      - "80:80"
+      - "9000:9000"
     volumes:
-      - .:/var/www/webpagetest
       - ./docker/local/server/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       - ./docker/local/server/xdebug/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - 'node.labels.upgrade-test == true'
+      - ./data/results:/var/www/webpagetest/www/results
+      - ./data:/data
+      - ./www:/var/www/webpagetest/www
     secrets:
+      - source: wpt_devices_ini
+        target: /var/www/webpagetest/www/settings/mobile_devices.ini
+      - source: wpt_profiles_ini
+        target: /var/www/webpagetest/www/settings/profiles.ini
       - source: wpt_settings_ini
         target: /var/www/webpagetest/www/settings/settings.ini
       - source: wpt_keys_ini
         target: /var/www/webpagetest/www/settings/keys.ini
       - source: wpt_locations_ini
         target: /var/www/webpagetest/www/settings/locations.ini
+    networks:
+      wpt_net:
+        aliases:
+          - wpt
 
-  #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
-  agent:
-    cap_add: #### Allows traffic shapping
-      - NET_ADMIN
-    build:
+  web:
+    profiles: ["web", "all", "agent_debug"]
+    build: 
       context: .
-      dockerfile: docker/local/Dockerfile-wptagent
-    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
-  #### ####
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/local/server/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./docker/local/server/xdebug/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
+      - ./data/results:/var/www/webpagetest/www/results
+      - ./data:/data
+      - ./www:/var/www/webpagetest/www
+    secrets:
+      - source: wpt_devices_ini
+        target: /var/www/webpagetest/www/settings/mobile_devices.ini
+      - source: wpt_profiles_ini
+        target: /var/www/webpagetest/www/settings/profiles.ini
+      - source: wpt_settings_ini
+        target: /var/www/webpagetest/www/settings/settings.ini
+      - source: wpt_keys_ini
+        target: /var/www/webpagetest/www/settings/keys.ini
+      - source: wpt_locations_ini
+        target: /var/www/webpagetest/www/settings/locations.ini
+    networks:
+      wpt_net:
+        aliases:
+          - wpt
+
+  agent_debug:
+    profiles: ["agent_debug", "all_debug"]
+    build:
+      context: https://github.com/FedericoMulas/wptagent.git
+      target: debug
+    environment:
+      - SERVER_URL=http://wpt:80/work/
+      - LOCATION=Scheduler
+      - KEY=12345-54321
+    init: true
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "50000:50000"
+    networks:
+      - wpt_net
+
+  agent:
+    profiles: ["all", "web_debug"]
+    build:
+      context: https://github.com/FedericoMulas/wptagent.git
+      target: production
+    environment:
+      - SERVER_URL=http://wpt:80/work/
+      - LOCATION=Scheduler
+      - KEY=12345-54321
+    init: true
+    cap_add:
+      - NET_ADMIN
+    extra_hosts:
+      - "frontend:"
+    networks:
+      - wpt_net
 
 secrets:
+  wpt_devices_ini:
+    file: ./docker/local/server/config/mobile_devices.ini
+  wpt_profiles_ini:
+    file: ./docker/local/wptconfig/profiles.ini
   wpt_settings_ini:
     file: ./docker/local/wptconfig/settings.ini
   wpt_keys_ini:
     file: ./docker/local/wptconfig/keys.ini
   wpt_locations_ini:
     file: ./docker/local/wptconfig/locations.ini
+
+networks:
+  wpt_net:
+    name: wpt_net
+    driver: bridge

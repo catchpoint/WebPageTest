@@ -20,7 +20,7 @@ function loadAllPageData($testPath)
 {
     $ret = array();
 
-  // go in order for the number of runs there are supposed to be
+    // go in order for the number of runs there are supposed to be
     if (is_file("$testPath/testinfo.ini")) {
         $ini = parse_ini_file("$testPath/testinfo.ini", true);
         $runs = $ini['test']['runs'];

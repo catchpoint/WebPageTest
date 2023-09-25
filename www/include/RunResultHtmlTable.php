@@ -85,7 +85,7 @@ class RunResultHtmlTable
         }
 
 
-      // If strict_video = 1, only show if metric is present, otherwise alway show
+        // If strict_video = 1, only show if metric is present, otherwise alway show
         if (GetSetting('strict_video')) {
             array_push($this->leftOptionalColumns, self::COL_START_RENDER);
             $this->enabledColumns[self::COL_START_RENDER] = $runResults->hasValidMetric(self::COL_START_RENDER) ||
