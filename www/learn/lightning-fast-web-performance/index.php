@@ -480,8 +480,8 @@ EOT;
                         <img src="/learn/lightning-fast-web-performance/lfwp-assets/lfwp-profile-sj.png" alt="headshot of Scott">
                     </div>
                     <div class="bio_text">
-                        <p>Scott Jehl is a Senior Experience Engineer at <a href="https://www.webpagetest.org">WebPageTest</a> (by <a href="https://www.catchpoint.com">Catchpoint</a>) who lives in New York City. Scott is a tireless advocate of practices that ensure web access for all. He is a frequent presenter at conferences throughout the world.</p>
-                        <p>Scott is the author of <a href="https://abookapart.com/products/responsible-responsive-design">Responsible Responsive Design</a> (2014, A Book Apart), and co-author of Designing with Progressive Enhancement (2010, New Riders). Scott also loves to surf.</p>
+                        <p>Scott Jehl is an experienced professional with over two decades of expertise in creative design and front-end technology. He has led web design and development projects for numerous iconic brands. He enjoys writing and speaking for various publications and conferences around the world.</p>
+                        <p>Scott has authored <a href="https://abookapart.com/products/responsible-responsive-design">Responsible Responsive Design</a> (2014, A Book Apart) and co-authored Designing with Progressive Enhancement (2010, New Riders). In his free time, he enjoys surfing.                            
                     </div>
                     <div class="bio_else">
                         <h4>Find Scott</h4>
