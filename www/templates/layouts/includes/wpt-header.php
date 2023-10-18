@@ -164,7 +164,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                     if ($supportsAuth && !EMBED) {
                         if ($supportsCPAuth) {
                             $is_logged_in = isset($request_context) && !is_null($request_context->getUser()) && !is_null($request_context->getUser()->getAccessToken());
-                    ?>
+                            ?>
                             <?php if ($is_logged_in) : ?>
                                 <li><a href='/account'>
                                         <?php
@@ -175,7 +175,8 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                         My Account</a></li>
                                 <li>
                                     <form method='POST' action='/logout' class='logout-form'>
-                                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" /> <button type='submit'>Logout</button>
+					<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" /> 
+                                        <button type='submit'>Logout</button>
                                     </form>
                                 </li>
                             <?php else : ?>
@@ -185,7 +186,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                 <?php endif; ?>
                             <?php endif; //$is_logged_in
                             ?>
-                    <?php
+                            <?php
                         } elseif (isset($user)) {
                             $logoutUrl = 'https://www.webpagetest.org/forums/member.php?action=logout';
                             echo "<li>Welcome, " . htmlspecialchars($user) . "</li><li><a href=\"$logoutUrl\">Logout</a></li>";
