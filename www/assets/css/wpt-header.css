@@ -357,7 +357,7 @@ wpt-header .wptheader_nav_title {
   font-weight: bold;
   -webkit-text-stroke: 1px;
   font-size: 1rem;
-  margin-bottom: 0.5em;
+  margin: unset;
 }
 
 wpt-header .secondary_underline > p {

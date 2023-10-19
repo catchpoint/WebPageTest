@@ -92,8 +92,8 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                         <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
                                     </ul>
                                 </div>
-                                <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0 1rem;">
-                                    <img src="/assets/images/header-menu-arrow.svg" width="20" height="20" style="padding-bottom:5px;">
+                                <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0;">
+                                    <img src="/assets/images/header-menu-arrow.svg" width="20" height="20">
                                     <p class="wptheader_nav_title">For Enterprise:<br>Internet Performance Monitoring</p>
                                 </div>
                                 <div class="wptheader_nav_menu_section nested secondary_underline">
