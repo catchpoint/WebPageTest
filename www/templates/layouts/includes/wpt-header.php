@@ -93,8 +93,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                     </ul>
                                 </div>
                                 <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0 1rem;">
-                                    <p class="wptheader_nav_title">Enterprise Monitoring</p>
-                                    <div class="wptheader_top_right_arrow"></div>
+                                    <p class="wptheader_nav_title">For Enterprise:<br>Internet Performance Monitoring</p>
                                 </div>
                                 <div class="wptheader_nav_menu_section nested">
                                     <p class="wptheader_nav_title" style="font-weight:unset;">By Team</p>
