@@ -175,7 +175,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                         My Account</a></li>
                                 <li>
                                     <form method='POST' action='/logout' class='logout-form'>
-					<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" /> 
+					<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />
                                         <button type='submit'>Logout</button>
                                     </form>
                                 </li>

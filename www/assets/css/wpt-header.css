@@ -360,7 +360,7 @@ wpt-header .wptheader_nav_title {
   margin: unset;
 }
 
-wpt-header .secondary_underline > p {
+wpt-header .wptheader_nav_menu_section.nested.secondary_underline > p {
   font-weight: unset;
   text-decoration: underline;
   text-underline-position: under;
