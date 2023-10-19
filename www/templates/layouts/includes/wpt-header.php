@@ -93,15 +93,16 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                     </ul>
                                 </div>
                                 <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0 1rem;">
+                                    <img src="/assets/images/header-menu-arrow.svg" width="20" height="20" style="padding-bottom:5px;">
                                     <p class="wptheader_nav_title">For Enterprise:<br>Internet Performance Monitoring</p>
                                 </div>
-                                <div class="wptheader_nav_menu_section nested">
-                                    <p class="wptheader_nav_title" style="font-weight:unset;">By Team</p>
+                                <div class="wptheader_nav_menu_section nested secondary_underline">
+                                    <p class="wptheader_nav_title">By Team</p>
                                         <ul>
                                             <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/web-teams?utm_source=wpt&utm_medium=navbar&utm_content=webteams">Web/SEO Teams</a></li>
                                             <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/it-teams?utm_source=WPT&utm_medium=NavBar&utm_content=ItTeams">IT/DevOps Teams</a></li>
                                         </ul>
-                                    <p class="wptheader_nav_title" style="font-weight:unset;">By Use Case</p>
+                                    <p class="wptheader_nav_title">By Use Case</p>
                                         <ul>
                                             <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
                                             <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>

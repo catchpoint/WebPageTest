@@ -360,6 +360,12 @@ wpt-header .wptheader_nav_title {
   margin-bottom: 0.5em;
 }
 
+wpt-header .secondary_underline > p {
+  font-weight: unset;
+  text-decoration: underline;
+  text-underline-position: under;
+}
+
 wpt-header .wptheader_top_right_arrow{
   display: block;
   width: 11px;
