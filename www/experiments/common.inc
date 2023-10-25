@@ -232,8 +232,8 @@ foreach ($assessment as $key => $cat) {
             $summary .= " It had $num_violations accessibility issues, ";
             if ($num_critical > 0) {
                 $summary .= " $num_critical critical";
-            } elseif ($$num_serious > 0) {
-                $summary .= "$num_critical serious";
+            } elseif ($num_serious > 0) {
+                $summary .= "$num_serious serious";
             } else {
                 $summary .= " none serious";
             }
