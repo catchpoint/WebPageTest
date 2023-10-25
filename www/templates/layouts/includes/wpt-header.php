@@ -80,31 +80,37 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
 
                     <li class="wptheader_nav_menu">
                         <details>
-                            <summary><span>Features</span></summary>
+                            <summary><span>Solutions</span></summary>
                             <div class="wptheader_nav_menu_content">
                                 <div class="wptheader_nav_menu_section">
                                     <img src="/assets/images/wpt-logo-pro-dark.svg" width="143" height="17" alt="WebPageTest Pro">
                                 </div>
-                                <div class="wptheader_nav_menu_section">
+                                <div class="wptheader_nav_menu_section nested">
                                     <ul>
                                         <li class="wptheader_nav_menu_link"><a target="_blank" href="https://product.webpagetest.org/experiments">Opportunities & Experiments</a></li>
                                         <li class="wptheader_nav_menu_link"><a target="_blank" href="https://product.webpagetest.org/api">API</a></li>
                                         <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
                                     </ul>
                                 </div>
-                                <div class="wptheader_nav_menu_section wptheader_nav_cta">
-				    <p class="wptheader_nav_title" >Enterprise Monitoring</p> 
-                                    <div class="wptheader_top_right_arrow"></div>
+                                <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0;">
+                                    <img src="/assets/images/header-menu-arrow.svg" width="20" height="20">
+                                    <p class="wptheader_nav_title">For Enterprise:<br>Internet Performance Monitoring</p>
                                 </div>
-                                <div class="wptheader_nav_menu_section">
-                                    <ul>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/website-performance-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=websitePerformanceMonitoring">Website Performance Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/dns?utm_source=WPT&utm_medium=NavBar&utm_content=dns">DNS Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/bgp?utm_source=WPT&utm_medium=NavBar&utm_content=bgp">BGP Monitoring</a></li>
-                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/cdn?utm_source=WPT&utm_medium=NavBar&utm_content=cdn">CDN Monitoring</a></li>
-                                    </ul>
+                                <div class="wptheader_nav_menu_section nested secondary_underline">
+                                    <p class="wptheader_nav_title">By Team</p>
+                                        <ul>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/web-teams?utm_source=wpt&utm_medium=navbar&utm_content=webteams">Web/SEO Teams</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/it-teams?utm_source=WPT&utm_medium=NavBar&utm_content=ItTeams">IT/DevOps Teams</a></li>
+                                        </ul>
+                                    <p class="wptheader_nav_title">By Use Case</p>
+                                        <ul>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/real-user-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=rum">Real User Monitoring (RUM)</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/application-experience/api-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=apiMonitoring">API Monitoring</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/dns?utm_source=WPT&utm_medium=NavBar&utm_content=dns">DNS Monitoring</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/bgp?utm_source=WPT&utm_medium=NavBar&utm_content=bgp">BGP Monitoring</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/network-experience/cdn?utm_source=WPT&utm_medium=NavBar&utm_content=cdn">CDN Monitoring</a></li>
+                                            <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/website-experience/website-performance-monitoring?utm_source=WPT&utm_medium=NavBar&utm_content=websitePerformanceMonitoring">Website Performance Monitoring</a></li>
+                                        </ul>
                                 </div>
                             </div>
                         </details>
@@ -169,7 +175,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getCl
                                         My Account</a></li>
                                 <li>
                                     <form method='POST' action='/logout' class='logout-form'>
-                                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />
+					<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>" />
                                         <button type='submit'>Logout</button>
                                     </form>
                                 </li>
