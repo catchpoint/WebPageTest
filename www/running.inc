@@ -39,9 +39,9 @@
             <div id="runningHeader" class="box">
                 <?php
                 $status = GetTestStatus($id, true);
-                if (!array_key_exists('startTime', $status) || !$status['startTime']) {
+                if ($status['statusCode'] < 400 && (!array_key_exists('startTime', $status) || !$status['startTime'])) {
                     ?>
-                    <form action="/cancelTest.php" method="get">
+                    <form class="cancel_form" action="/cancelTest.php" method="get">
                     <input type="hidden" name="test" value="<?php echo $id;?>">
                     <input type="submit" value="Cancel Test"/>
                     </form>
@@ -137,9 +137,11 @@
                           if (response['statusCode'] != undefined &&
                               response['statusCode'] != lastStatusCode) {
                               lastStatusCode = response['statusCode'];
+                              var showCancelButton = false;
                               if (lastStatusCode == 101) {
                                   document.getElementById('waiting').classList.add('is-active');
                                   document.getElementById('testing').classList.remove('is-active');
+                                  showCancelButton = true;
                               } else if (lastStatusCode == 100) {
                                   document.getElementById('waiting').classList.remove('is-active');
                                   document.getElementById('testing').classList.add('is-active');
@@ -148,7 +150,14 @@
                               } else {
                                   reload = true;
                               }
+
+                              if (!showCancelButton) {
+                                $('.cancel_form').hide();
+                              } else {
+                                $('.cancel_form').show();
+                              }
                           }
+
                           if (response['statusText'] != undefined &&
                               response['statusText'] != lastStatusText) {
                               lastStatusText = response['statusText'];

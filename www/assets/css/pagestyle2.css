@@ -192,7 +192,7 @@ details.metrics_shown {
   top: 4rem;
   right: 3rem;
   list-style: none;
-  z-index: 10;
+  z-index: 9;
 }
 
 details.metrics_shown p {
