@@ -839,7 +839,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 <p>
                                                     <label for="enter_script">Enter Script</label>
                                                     <small>
-                                                        (or read it <label for="script_file" class="linklike">from a text file</label>)
+                                                        (or read it <label for="script_file" class="linklike">from a text file</label>). Lighthouse does not perform per step reports for custom scripting, but will run a report on the final step
                                                     </small>
                                                     <input type="file" id="script_file" accept="text/*" class="a11y-hidden">
                                                     <script>
