@@ -32,10 +32,10 @@
             <input type="hidden" name="type" value="contact-info" />
             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>" />
             <div class="section">
-				<div class="save-button">
-					<button type="submit" class="pill-button blue">Save</button>
-				</div>
-			</div>
+                <div class="save-button">
+                    <button type="submit" class="pill-button blue">Save</button>
+                </div>
+            </div>
         </div>
     </form>
 </fg-modal>
