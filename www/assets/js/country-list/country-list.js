@@ -25,12 +25,30 @@
 
       // Fill in subdivisions
       this.fillSubdivision(this.countries[0].code);
-
+      var intervalId = null;
       // Attach listener
       this.countrySelector.addEventListener("change", (e) => {
         const code = e.target.value;
         this.fillSubdivision(code);
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
       });
+      
+      // form automcomplete event doesnt trigger change event 
+      // so we must check for value changes when loading
+      var previousValue = this.countrySelector.value;
+      var self = this;
+
+      intervalId = setInterval(function () {
+        if (previousValue !== self.countrySelector.value) {
+          self.fillSubdivision(self.countrySelector.value);
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+      }, 100);
     }
 
     getSubdivisions(countryCode) {
