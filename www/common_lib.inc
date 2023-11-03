@@ -1273,10 +1273,10 @@ function FixUrlSlash($url)
 */
 function RestoreTest($id)
 {
-    // [lb]: Do we need this for instant tests?
     global $userIsBot;
     global $DISABLE_RESTORE;
     $isSaaSTest = (stripos($id, '_saas_') !== false);
+    $isInstantTest = (stripos($id, '_instant_') !== false);
     $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
 
     $ret = false;
@@ -1294,7 +1294,7 @@ function RestoreTest($id)
             }
         }
 
-        if ($isSaaSTest) {
+        if ($isSaaSTest || $isInstantTest) {
             $capture_server = GetSetting("cp_capture_$saas_capture_prefix");
             $capture_salt = GetSetting("cp_capture_salt_$saas_capture_prefix");
         }
