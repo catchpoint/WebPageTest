@@ -66,13 +66,13 @@ if (navigator.clipboard) {
                     Lighthouse Report
                 </h2>
                 <p>
-
                     Lighthouse is an open-source, automated tool for improving the quality of web pages.
                     You can run it against any web page, public or requiring authentication. Overall scoring color key:
                     (<span class="lh_score_grade-fail">0-49</span>
                     <span class="lh_score_grade-average">50-89</span>
                     <span class="lh_score_grade-pass">90-100</span>).
                 </p>
+                <p>For scripted tests, Lighthouse report will only be available on the final step.</p>
             </div>
             <div class="opps_note">
                 <p><strong>Did you know?</strong> Lighthouse runs in Chrome and provides a great complementary analysis alongside the many browsers, devices, and locations WebPageTest offers. To see how this site performs in more environments: <a href="/?url={{ $test_url }}">Start a new test</a></p>

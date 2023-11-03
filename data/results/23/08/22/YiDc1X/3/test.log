@@ -1,0 +1,17 @@
+2023/08/22 08:16:32 - Test Created
+2023/08/22 08:17:23 - Starting test
+2023/08/22 08:17:50 - Extracting 567910 byte uploaded file '/tmp/phpmz71m6' to './results/23/08/22/YiDc1X/3'
+2023/08/22 08:17:50 - Test Run Complete. Run: 1, Cached: 0, Done: 1, Tester: wpt_stage_usw2_instance-10.10.1.202-44.228.143.107
+2023/08/22 08:17:50 - 1 of 3 tests complete
+2023/08/22 08:17:50 - Done Processing. Run: 1, Cached: 0, Done: 1, Tester: wpt_stage_usw2_instance-10.10.1.202-44.228.143.107
+2023/08/22 08:18:18 - Extracting 553886 byte uploaded file '/tmp/phplsXUCl' to './results/23/08/22/YiDc1X/3'
+2023/08/22 08:18:18 - Test Run Complete. Run: 2, Cached: 0, Done: 1, Tester: wpt_stage_usw2_instance-10.10.1.202-44.228.143.107
+2023/08/22 08:18:18 - 2 of 3 tests complete
+2023/08/22 08:18:18 - Done Processing. Run: 2, Cached: 0, Done: 1, Tester: wpt_stage_usw2_instance-10.10.1.202-44.228.143.107
+2023/08/22 08:18:20 - Extracting 641570 byte uploaded file '/tmp/phpWoUDS5' to './results/23/08/22/YiDc1X/3'
+2023/08/22 08:18:20 - Test Run Complete. Run: 3, Cached: 0, Done: 1, Tester: ca-yyz-aws-s01-10.10.0.205-3.97.204.58
+2023/08/22 08:18:20 - 3 of 3 tests complete
+2023/08/22 08:18:20 - All done
+2023/08/22 08:18:20 - Done Processing. Run: 3, Cached: 0, Done: 1, Tester: ca-yyz-aws-s01-10.10.0.205-3.97.204.58
+2023/08/22 08:18:20 - Test Complete
+2023/08/22 08:18:20 - Test post-processing complete
