@@ -1273,6 +1273,7 @@ function FixUrlSlash($url)
 */
 function RestoreTest($id)
 {
+    // [lb]: Do we need this for instant tests?
     global $userIsBot;
     global $DISABLE_RESTORE;
     $isSaaSTest = (stripos($id, '_saas_') !== false);

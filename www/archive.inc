@@ -53,6 +53,7 @@ function ArchiveFilterLargeFile($file)
 */
 function ArchiveTest($id, $delete = false)
 {
+    // [lb]: Do we need this for instant tests?
     $isSaaSTest = (stripos($id, '_saas_') !== false);
     $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
 
