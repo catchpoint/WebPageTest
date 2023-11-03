@@ -19,7 +19,7 @@ require_once __DIR__ . '/../include/ResultProcessing.php';
 require_once __DIR__ . '/../include/JsonResultGenerator.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
-$key  = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
+$key = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
 $location = isset($_REQUEST['location']) ? $_REQUEST['location'] : null;
 if (!ValidateLocation($location, $key)) {
     header("HTTP/1.1 403 Unauthorized");
@@ -34,7 +34,7 @@ if (!isset($included)) {
 }
 set_time_limit(3600);
 ignore_user_abort(true);
-$id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
+$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
 // if (strpos($id, 'SaaS')) {
 //   $id = null;
 // }
@@ -88,15 +88,15 @@ $flattenUploadedZippedHar =
 // see what the agent uploaded after the fact.  Consider writing them to a
 // file that gets uploaded.
 
-$runNumber     = arrayLookupWithDefault('_runNumber', $_REQUEST, null);
-$runNumber     = arrayLookupWithDefault('run', $_REQUEST, $runNumber);
-$runIndex      = arrayLookupWithDefault('index', $_REQUEST, null);
-$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed', $_REQUEST, null);
-$cacheWarmed   = arrayLookupWithDefault('cached', $_REQUEST, $cacheWarmed);
-$docComplete   = arrayLookupWithDefault('_docComplete', $_REQUEST, null);
+$runNumber = arrayLookupWithDefault('_runNumber', $_REQUEST, null);
+$runNumber = arrayLookupWithDefault('run', $_REQUEST, $runNumber);
+$runIndex = arrayLookupWithDefault('index', $_REQUEST, null);
+$cacheWarmed = arrayLookupWithDefault('_cacheWarmed', $_REQUEST, null);
+$cacheWarmed = arrayLookupWithDefault('cached', $_REQUEST, $cacheWarmed);
+$docComplete = arrayLookupWithDefault('_docComplete', $_REQUEST, null);
 $onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, null);
-$onRender      = arrayLookupWithDefault('_onRender', $_REQUEST, null);
-$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest', $_REQUEST, null);
+$onRender = arrayLookupWithDefault('_onRender', $_REQUEST, null);
+$urlUnderTest = arrayLookupWithDefault('_urlUnderTest', $_REQUEST, null);
 $testInfo_dirty = false;
 if (ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
@@ -308,6 +308,31 @@ if (ValidateTestId($id)) {
             }
         }
 
+        if (isset($testInfo) && is_array($testInfo) && isset($testInfo['instant_test_id'])) {
+            $ret = array('data' => GetTestStatus($id));
+            $ret['statusCode'] = $ret['data']['statusCode'];
+            $ret['statusText'] = $ret['data']['statusText'];
+            $ret['instant_test_id'] = $testInfo['instant_test_id'];
+            $ret['instant_division_id'] = $testInfo['instant_division_id'];
+            $ret['saas_node_id'] = $testInfo['saas_node_id'];
+            $ret['saas_device_type_id'] = $testInfo['saas_device_type_id'];
+            if ($ret['statusCode'] == 200) {
+                if (defined("VER_WEBPAGETEST")) {
+                    $ret["webPagetestVersion"] = VER_WEBPAGETEST;
+                }
+
+                $instantTestInfo = TestInfo::fromFiles($testPath);
+                $instantTestResults = TestResults::fromFiles($instantTestInfo);
+                $infoFlags = [];
+                $jsonResultGenerator = new JsonResultGenerator($instantTestInfo, null, new FileHandler(), $infoFlags, FRIENDLY_URLS);
+                $ret['data'] = $jsonResultGenerator->resultDataArray($instantTestResults, $median_metric);
+                if (isset($ret) && is_array($ret)) {
+                    $txt = json_encode($ret);
+                    ReportSaaSTest($txt, $ret['saas_node_id'], $ret['data']['id']);
+                }
+            }
+        }
+
         // send an async request to the post-processing code so we don't block
         SendAsyncRequest("/work/postprocess.php?test=$id");
     }
@@ -336,7 +361,7 @@ function KeepVideoForRun($testPath, $run)
         $dir = opendir($testPath);
         if ($dir) {
             while ($file = readdir($dir)) {
-                $path = $testPath  . "/$file/";
+                $path = $testPath . "/$file/";
                 if (is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run") {
                     delTree("$path/");
                 } elseif (is_file("$testPath/$file")) {
