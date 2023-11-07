@@ -76,7 +76,7 @@ function ArchiveTest($id, $delete = false)
             $capture_salt = GetSetting("cp_capture_salt_$capture_prefix");
         }
     }
-    //saas tests do not specify the capture server, so we hardcode
+    //saas/instant tests do not specify the capture server, so we hardcode
     if ($isSaaSTest || $isInstantTest) {
         $capture_server = GetSetting("cp_capture_$saas_capture_prefix");
         $capture_salt = GetSetting("cp_capture_salt_$saas_capture_prefix");
