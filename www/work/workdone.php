@@ -47,7 +47,7 @@ if (!isset($id)) {
     if (!is_dir($testPath)) {
         mkdir($testPath, 0777, true);
     }
-} elseif (isset($id) && strpos($id, 'SaaS')) {
+} elseif (isset($id) && (strpos($id, 'SaaS') || strpos($id, 'instant'))) {
     $uploaded = true;
     $testPath = './' . GetTestPath($id);
     if (!is_dir($testPath)) {
