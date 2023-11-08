@@ -35,7 +35,7 @@ wpt-header {
   width: 100%;
   grid-column: 1 / 13;
   position: relative;
-  z-index: 9999999;
+  z-index: 1000;
   background: none;
   border: none;
 }
@@ -416,7 +416,7 @@ wpt-header .wptheader_nav_menu details[open] summary span:after {
 
 @media (min-width: 86em) {
   wpt-header {
-    z-index: 999999;
+    z-index: 1000;
   }
   cp-header a {
     padding-left: 1.5rem;

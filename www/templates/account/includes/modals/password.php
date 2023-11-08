@@ -1,5 +1,5 @@
 <fg-modal id="password-modal" class="password-modal fg-modal">
-    <form method="POST" action="/account">
+    <form method="POST" class="password-modal-form" action="/account">
         <h3 class="modal_title">Change your password</h3>
         <p class="details">The requirements are at least 8 characters, including a number, lowercase letter, uppercase letter and symbol. No &lt;, &gt;.</p>
         <div class="input-set">
