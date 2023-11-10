@@ -29,7 +29,7 @@
                     <div class="info-container state">
                         <label for="state">State</label>
                         <div>
-                            <select name="state" data-country-selector="state-selector" required>
+                            <select autocomplete="off" name="state" data-country-selector="state-selector" required>
 
                                 <?php foreach ($state_list as $state) : ?>
                                     <option value="<?= $state['code'] ?>" <?php if ($state['code'] == $state_code) {
@@ -43,7 +43,7 @@
                     </div>
                     <div class="info-container country">
                         <label for="country">Country</label>
-                        <select name="country" data-country-selector="selector" required>
+                        <select autocomplete="off" name="country" data-country-selector="selector" required>
                             <?php foreach ($country_list as $country) : ?>
                                 <?php
                                   $current_code = $country["code"];
@@ -78,4 +78,25 @@
         <input type="hidden" name="type" value="update-payment-method-confirm-billing" />
         <button class="yellow pill-button" type="submit">Confirm Billing Address</button>
     </form>
+    <script src="/assets/js/country-list/country-list.js"></script>
+    <?php ?>
+        <script>
+        (() => {
+            const countryList = <?= $country_list_json_blob ?>;
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", () => {
+                    const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                    const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+                    new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+                });
+            } else {
+                const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+                new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+            }
+        })();
+        </script>
+    <?php endif; ?>
 </div>
