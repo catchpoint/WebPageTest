@@ -6643,8 +6643,11 @@ div.overflow-container > *,
   position: relative;
 }
 
-.scrollableWideCell {
-  overflow-x: scroll;
+#scrollable-wide-wrap {
+    overflow-x: auto;
+}
+#scrollable-wide-cell {
+    overflow-x: auto;
 }
 
 span.units {
