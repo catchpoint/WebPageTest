@@ -73,6 +73,7 @@ if (navigator.clipboard) {
                     <span class="lh_score_grade-average">50-89</span>
                     <span class="lh_score_grade-pass">90-100</span>).
                 </p>
+                <p>For scripted tests, Lighthouse report will only be available on the final step.</p>
             </div>
             <div class="opps_note">
                 <p><strong>Did you know?</strong> Lighthouse runs in Chrome and provides a great complementary analysis alongside the many browsers, devices, and locations WebPageTest offers. To see how this site performs in more environments: <a href="/?url={{ $test_url }}">Start a new test</a></p>
