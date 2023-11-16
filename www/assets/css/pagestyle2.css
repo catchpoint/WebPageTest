@@ -6646,6 +6646,7 @@ div.overflow-container > *,
 .scrollable-location {
     padding: unset;
 }
+
 .scrollable-location-content {
     overflow-x: auto;
     padding: 1em;

@@ -52,9 +52,7 @@
                             <th><input type="checkbox" name="t[]" value="{{ $record->getTestId() }}" aria-label="Select this test" /></th>
                             <td class="url"><a href="/result/{{ $record->getTestId() }}/">{{ $record->getUrl() }}</a></td>
                             <td class="date">{{ date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') }}</td>
-                            <td class="location scrollable-location">
-							    <div class="scrollable-location-content">{{ $record->getLocation() }}</div>
-					        </td>
+                            <td class="location scrollable-location"><div class="scrollable-location-content">{{ $record->getLocation() }}</div></td>
                             <td class="label">{{ $record->getLabel() }}</td>
                         </tr>
                     @endforeach
