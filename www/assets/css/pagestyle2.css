@@ -6643,6 +6643,15 @@ div.overflow-container > *,
   position: relative;
 }
 
+.scrollable-location {
+    padding: unset;
+}
+
+.scrollable-location-content {
+    overflow-x: auto;
+    padding: 1em;
+}
+
 span.units {
   font-size: 0.5em;
   font-weight: 300;
