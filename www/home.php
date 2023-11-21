@@ -281,7 +281,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
                                                     </div>
                                                     <div class="fieldrow">
-                                                        <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast connection)</small></label>
+                                                        <label for="lighthouse-simple"><input type="checkbox" name="lighthouse" id="lighthouse-simple" class="checkbox"> Run Lighthouse Audit <small>(Runs on Chrome, emulated Moto G4 device, over simulated 3G Fast or 4G Fast connection)</small></label>
                                                         <script>
                                                             // show or hide simple lighthouse and cc fields depending on whether chrome test is running
                                                             let simplePresets = document.querySelector('.test_presets_easy');
@@ -699,7 +699,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 </li>
                                                 <li>
                                                     <label for="lighthouse-advanced" class="auto_width">
-                                                        <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection independent of test settings)</small>
+                                                        <input type="checkbox" name="lighthouse" id="lighthouse-advanced" class="checkbox" style="float: left;width: auto;"> Run Lighthouse Audit <small>(Uses a "3G Fast" connection for mobile or "4G Fast" connection for desktop independent of test settings)</small>
                                                     </label>
                                                 </li>
                                                 <li>
