@@ -135,16 +135,6 @@
         }
     }
 </style>
-<?php
-$quotes = array(
-    array(
-        'quote' => 'The best professional web performance investigators I know use WPT as a critical part of theyr workflows, and it\'s the center or mine.',
-        'author' => 'Alex Russel <span>Program Manager, Microsoft Edge</span>'
-    ),
-);
-$quote = $quotes[array_rand($quotes)];
-?>
-
 <div class="container">
     <div class="absolute-carousel-container">
         <img src="/assets/images/carousel/top-wave.png" loading="lazy" class="top-wave">
@@ -192,9 +182,3 @@ $quote = $quotes[array_rand($quotes)];
         <img src="/assets/images/carousel/bottom-wave.png" loading="lazy" class="bottom-wave">
     </div>
 </div>
-<figure class="testimonial">
-    <blockquote>
-        <p>“<?php echo $quote['quote']; ?>”</p>
-    </blockquote>
-    <figcaption><cite><?php echo $quote['author']; ?></cite></figcaption>
-</figure>
