@@ -6643,6 +6643,20 @@ div.overflow-container > *,
   position: relative;
 }
 
+.history_checkbox {
+    vertical-align: baseline;
+}
+
+.scrollable-td {
+    padding: unset;
+}
+
+.scrollable-td-content {
+    overflow-x: auto;
+    padding: 1em;
+    padding-top: 0em;
+}
+
 span.units {
   font-size: 0.5em;
   font-weight: 300;
