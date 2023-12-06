@@ -35,34 +35,31 @@
         <div class="history-controls">
             <input id="CompareBtn" type="submit" value="Compare Selected Tests">
         </div>
-        <div class="scrollableTable">
-            <table id="history" class="history pretty" border="0" cellpadding="5px" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th><span>Select to compare</span></th>
-                        <th class="url">URL</th>
-                        <th class="date">Run Date</th>
-                        <th class="location">Run From</th>
-                        <th class="label">Label</th>
-                    </tr>
-                </thead>
-                @if ($is_logged_in)
-                    <tbody id="historyBody">
-                        @foreach ($test_history as $record)
-                            <tr>
-                                <th class="history_checkbox"><input type="checkbox" name="t[]" value="{{ $record->getTestId() }}" aria-label="Select this test" /></th>
-                                <td class="url scrollable-td"><div class="scrollable-td-content"><a href="/result/{{ $record->getTestId() }}/">{{ $record->getUrl() }}</a></div></td>
-                                <td class="date">{{ date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') }}</td>
-                                <td class="location scrollable-td"><div class="scrollable-td-content">{{ $record->getLocation() }}</div></td>
-                                <td class="label">{{ $record->getLabel() }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                @endif
-            </table>
-        </div>
-
-
+        <table id="history" class="history pretty" border="0" cellpadding="5px" cellspacing="0">
+            <thead>
+                <tr>
+                    <th><span>Select to compare</span></th>
+                    <th class="url">URL</th>
+                    <th class="date">Run Date</th>
+                    <th class="location">Run From</th>
+                    <th class="label">Label</th>
+                </tr>
+            </thead>
+            @if ($is_logged_in)
+                <tbody id="historyBody">
+                    @foreach ($test_history as $record)
+                        <tr>
+                            <th class="history_checkbox"><input type="checkbox" name="t[]" value="{{ $record->getTestId() }}" aria-label="Select this test" /></th>
+                            <td class="url scrollable-td"><div class="scrollable-td-content"><a href="/result/{{ $record->getTestId() }}/">{{ $record->getUrl() }}</a></div></td>
+                            <td class="date">{{ date_format(date_create($record->getStartTime()), 'M d, Y g:i:s A e') }}</td>
+                            <td class="location scrollable-td"><div class="scrollable-td-content">{{ $record->getLocation() }}</div></td>
+                            <td class="label">{{ $record->getLabel() }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            @endif
+        </table>
+        
         @if ($local)
             <input type="hidden" name="local" value="1">
         @endif
