@@ -677,7 +677,7 @@ function BuildLocations(&$locations)
                                     foreach ($parts as $browser) {
                                         $browsers[] = trim($browser);
                                     }
-                                    if (count($browsers) > 1) {
+                                    if (count($browsers)) {
                                         // default to the first browser in the list
                                         if ($default == $value) {
                                             $default .= ':' . $browsers[0];
@@ -704,10 +704,6 @@ function BuildLocations(&$locations)
 
                                             $locations[$label] = $cfg;
                                         }
-                                    } else {
-                                        // for single-browser locations, just copy it over as it exists
-                                        $location[$index] = $value;
-                                        $index++;
                                     }
                                 }
                             }
