@@ -1138,7 +1138,7 @@ function GetScriptBlock()
         }
         if ($show) {
             $html .= 'Scripted Test:';
-            $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
+            $html .= '<pre class="scriptedTestContent">' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
         }
     }
     return $html;
