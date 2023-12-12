@@ -189,20 +189,6 @@ body.theme-b {
   border: 0;
 }
 
-.contact-info-modal {
-    height: 38rem !important;
-}
-.contact-info-modal-form {
-    height: 26rem !important;
-}
-
-.password-modal {
-    height: 34rem !important;
-}
-.password-modal-form {
-    height: 22rem !important;
-}
-
 .modal,
 .modal_screen {
   position: fixed;
