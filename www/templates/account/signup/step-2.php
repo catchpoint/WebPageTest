@@ -39,19 +39,17 @@
                 </div>
                 <div class="form-input state">
                     <label for="state">State</label>
-
-                    <select name="state" data-country-selector="state-selector" required>
+                    <select autocomplete="off" name="state" data-country-selector="state-selector" required>
                         <?php foreach ($state_list as $state) : ?>
                             <option value="<?= $state['code'] ?>">
                                 <?= $state['name']; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-
                 </div>
                 <div class="form-input country">
                     <label for="country">Country</label>
-                    <select name="country" data-country-selector="selector" required>
+                    <select autocomplete="off" name="country" data-country-selector="selector" required>
                         <?php foreach ($country_list as $country) : ?>
                             <option value="<?= $country["code"] ?>" <?php ($country["code"] === "US") ? 'selected' : '' ?>>
                                 <?= $country["name"]; ?>
