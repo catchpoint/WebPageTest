@@ -6647,6 +6647,10 @@ div.overflow-container > *,
     vertical-align: baseline;
 }
 
+.scrollableHistoryTable {
+    overflow: auto;
+}
+
 .scrollable-td {
     padding: unset;
 }
