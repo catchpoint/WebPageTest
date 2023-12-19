@@ -78,7 +78,7 @@
         <input type="hidden" name="type" value="update-payment-method-confirm-billing" />
         <button class="yellow pill-button" type="submit">Confirm Billing Address</button>
     </form>
-    <script src="/assets/js/country-list/country-list.js"></script>
+    <script defer src="/assets/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
     <?php ?>
         <script>
         (() => {
