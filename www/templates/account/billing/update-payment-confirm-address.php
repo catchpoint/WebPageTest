@@ -79,24 +79,22 @@
         <button class="yellow pill-button" type="submit">Confirm Billing Address</button>
     </form>
     <script defer src="/assets/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
-    <?php ?>
-        <script>
-        (() => {
-            const countryList = <?= $country_list_json_blob ?>;
-            if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", () => {
-                    const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
-                    const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
-
-                    new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-                });
-            } else {
+    <script>
+    (() => {
+        const countryList = <?= $country_list_json_blob ?>;
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
                 const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
                 const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
 
                 new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-            }
-        })();
-        </script>
-    <?php endif; ?>
+            });
+        } else {
+            const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+            const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+            new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+        }
+    })();
+    </script>
 </div>
