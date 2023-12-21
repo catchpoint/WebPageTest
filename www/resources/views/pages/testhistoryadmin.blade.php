@@ -89,10 +89,12 @@
                             </b>
                         @endif
                     </td>
-                    <td class="location scrollable-td"><div class="scrollable-td-content">{!! $location !!}</div>
-                        @if ($video)
-                            <span>(video)</span>
-                        @endif
+                    <td class="location scrollable-td">
+                        <div class="scrollable-td-content">{!! $location !!}
+                            @if ($video)
+                                <span>(video)</span>
+                            @endif
+                        </div>
                     </td>
                     @if ($includeip)
                         <td class="ip">{{ $ip }}</td>
