@@ -72,7 +72,7 @@
                         'labelTxt' => $labelTxt,
                     ])
                 <tr>
-                    <th class="history_checkbox">
+                    <th class="idSelect">
                         @if (isset($guid) && $video && !($url == "Bulk Test" || $url == "Multiple Locations test"))
                             <input type="checkbox" name="t[]" value="{{ $guid }}" title="First View">
                             @if ($repeat)
