@@ -9,6 +9,8 @@
  */
 namespace PHPUnit\Framework\MockObject;
 
+use function sprintf;
+
 /**
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
@@ -20,8 +22,8 @@ final class ReturnValueNotConfiguredException extends \PHPUnit\Framework\Excepti
             sprintf(
                 'Return value inference disabled and no expectation set up for %s::%s()',
                 $invocation->getClassName(),
-                $invocation->getMethodName()
-            )
+                $invocation->getMethodName(),
+            ),
         );
     }
 }

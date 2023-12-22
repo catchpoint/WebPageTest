@@ -46,4 +46,14 @@ final class Context
 	{
 		return $this->warnings[] = new Message($message, $code, $this->path, $variables);
 	}
+
+
+	/** @return \Closure(): bool */
+	public function createChecker(): \Closure
+	{
+		$count = count($this->errors);
+		return function () use ($count): bool {
+			return $count === count($this->errors);
+		};
+	}
 }

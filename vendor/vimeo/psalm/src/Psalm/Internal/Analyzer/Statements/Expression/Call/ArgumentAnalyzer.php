@@ -17,7 +17,6 @@ use Psalm\Internal\Analyzer\Statements\Expression\ExpressionIdentifier;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
 use Psalm\Internal\Analyzer\TraitAnalyzer;
 use Psalm\Internal\Codebase\ConstantTypeResolver;
-use Psalm\Internal\Codebase\InternalCallMapHandler;
 use Psalm\Internal\Codebase\TaintFlowGraph;
 use Psalm\Internal\Codebase\VariableUseGraph;
 use Psalm\Internal\DataFlow\DataFlowNode;
@@ -61,6 +60,7 @@ use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 
+use function array_merge;
 use function count;
 use function explode;
 use function implode;
@@ -71,13 +71,15 @@ use function reset;
 use function strpos;
 use function strtolower;
 use function substr;
+use function substr_count;
 
+use const DIRECTORY_SEPARATOR;
 use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * @internal
  */
-class ArgumentAnalyzer
+final class ArgumentAnalyzer
 {
     /**
      * @param  array<string, array<string, Union>> $class_generic_params
@@ -174,7 +176,9 @@ class ArgumentAnalyzer
                     $prev_ord = $ord;
                 }
 
-                if (count($values) < 12 || ($gt_count / count($values)) < 0.8) {
+                if (substr_count($arg_value_type->getSingleStringLiteral()->value, DIRECTORY_SEPARATOR) <= 2
+                    && (count($values) < 12 || ($gt_count / count($values)) < 0.8)
+                ) {
                     IssueBuffer::maybeAdd(
                         new InvalidLiteralArgument(
                             'Argument ' . ($argument_offset + 1) . ' of ' . $cased_method_id
@@ -801,13 +805,16 @@ class ArgumentAnalyzer
         }
 
         if ($input_type->isNever()) {
-            IssueBuffer::maybeAdd(
+            if (!IssueBuffer::accepts(
                 new NoValue(
                     'All possible types for this argument were invalidated - This may be dead code',
                     $arg_location,
                 ),
                 $statements_analyzer->getSuppressedIssues(),
-            );
+            )) {
+                // if the error is suppressed, do not treat it as exited anymore
+                $context->has_returned = false;
+            }
 
             return null;
         }
@@ -832,21 +839,55 @@ class ArgumentAnalyzer
             // $statements_analyzer, which is necessary to understand string function names
             $input_type = $input_type->getBuilder();
             foreach ($input_type->getAtomicTypes() as $key => $atomic_type) {
-                if (!$atomic_type instanceof TLiteralString
-                    || InternalCallMapHandler::inCallMap($atomic_type->value)
-                ) {
-                    continue;
-                }
+                $container_callable_type = $param_type->getSingleAtomic();
+                $container_callable_type = $container_callable_type instanceof TCallable
+                    ? $container_callable_type
+                    : null;
 
                 $candidate_callable = CallableTypeComparator::getCallableFromAtomic(
                     $codebase,
                     $atomic_type,
-                    null,
+                    $container_callable_type,
                     $statements_analyzer,
                     true,
                 );
 
-                if ($candidate_callable) {
+                if ($candidate_callable && $candidate_callable !== $atomic_type) {
+                    // if we had an array callable, mark it as used now, since it's not possible later
+                    $potential_method_id = null;
+                    if ($atomic_type instanceof TList) {
+                        $atomic_type = $atomic_type->getKeyedArray();
+                    }
+
+                    if ($atomic_type instanceof TKeyedArray) {
+                        $potential_method_id = CallableTypeComparator::getCallableMethodIdFromTKeyedArray(
+                            $atomic_type,
+                            $codebase,
+                            $context->calling_method_id,
+                            $statements_analyzer->getFilePath(),
+                        );
+                    } elseif ($atomic_type instanceof TLiteralString
+                              && strpos($atomic_type->value, '::')
+                    ) {
+                        $parts = explode('::', $atomic_type->value);
+                        $potential_method_id = new MethodIdentifier(
+                            $parts[0],
+                            strtolower($parts[1]),
+                        );
+                    }
+
+                    if ($potential_method_id && $potential_method_id !== 'not-callable') {
+                        $codebase->methods->methodExists(
+                            $potential_method_id,
+                            $context->calling_method_id,
+                            $arg_location,
+                            $statements_analyzer,
+                            $statements_analyzer->getFilePath(),
+                            true,
+                            $context->insideUse(),
+                        );
+                    }
+
                     $input_type->removeType($key);
                     $input_type->addType($candidate_callable);
                 }
@@ -861,7 +902,7 @@ class ArgumentAnalyzer
             $input_type,
             $param_type,
             true,
-            true,
+            !isset($param_type->getAtomicTypes()['true']),
             $union_comparison_results,
         );
 
@@ -918,6 +959,7 @@ class ArgumentAnalyzer
                     && strpos($input_type_part->value, '::')
                 ) {
                     $parts = explode('::', $input_type_part->value);
+                    /** @psalm-suppress PossiblyUndefinedIntArrayOffset */
                     $potential_method_ids[] = new MethodIdentifier(
                         $parts[0],
                         strtolower($parts[1]),
@@ -929,7 +971,7 @@ class ArgumentAnalyzer
                 $codebase->methods->methodExists(
                     $potential_method_id,
                     $context->calling_method_id,
-                    null,
+                    $arg_location,
                     $statements_analyzer,
                     $statements_analyzer->getFilePath(),
                     true,
@@ -1486,18 +1528,18 @@ class ArgumentAnalyzer
             return;
         }
 
-        // numeric types can't be tainted, neither can bool
-        if ($statements_analyzer->data_flow_graph instanceof TaintFlowGraph
-            && $input_type->isSingle()
-            && ($input_type->isInt() || $input_type->isFloat() || $input_type->isBool())
-        ) {
-            return;
-        }
-
         $event = new AddRemoveTaintsEvent($expr, $context, $statements_analyzer, $codebase);
 
         $added_taints = $codebase->config->eventDispatcher->dispatchAddTaints($event);
         $removed_taints = $codebase->config->eventDispatcher->dispatchRemoveTaints($event);
+
+        // numeric types can't be tainted html or has_quotes, neither can bool
+        if ($statements_analyzer->data_flow_graph instanceof TaintFlowGraph
+            && $input_type->isSingle()
+            && ($input_type->isInt() || $input_type->isFloat() || $input_type->isBool())
+        ) {
+            $removed_taints = array_merge($removed_taints, array('html', 'has_quotes'));
+        }
 
         if ($function_param->type && $function_param->type->isString() && !$input_type->isString()) {
             $input_type = CastAnalyzer::castStringAttempt(

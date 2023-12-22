@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Squiz\Tests\Formatting;
@@ -73,7 +73,7 @@ class OperatorBracketUnitTest extends AbstractSniffUnitTest
                 193 => 1,
                 194 => 2,
             ];
-            break;
+
         case 'OperatorBracketUnitTest.js':
             return [
                 5   => 1,
@@ -90,10 +90,9 @@ class OperatorBracketUnitTest extends AbstractSniffUnitTest
                 63  => 1,
                 108 => 1,
             ];
-             break;
+
         default:
             return [];
-            break;
         }//end switch
 
     }//end getErrorList()

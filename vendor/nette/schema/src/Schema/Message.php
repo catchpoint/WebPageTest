@@ -17,28 +17,38 @@ final class Message
 	use Nette\SmartObject;
 
 	/** variables: {value: mixed, expected: string} */
-	public const TYPE_MISMATCH = 'schema.typeMismatch';
+	public const TypeMismatch = 'schema.typeMismatch';
 
 	/** variables: {value: mixed, expected: string} */
-	public const VALUE_OUT_OF_RANGE = 'schema.valueOutOfRange';
+	public const ValueOutOfRange = 'schema.valueOutOfRange';
 
 	/** variables: {value: mixed, length: int, expected: string} */
-	public const LENGTH_OUT_OF_RANGE = 'schema.lengthOutOfRange';
+	public const LengthOutOfRange = 'schema.lengthOutOfRange';
 
 	/** variables: {value: string, pattern: string} */
-	public const PATTERN_MISMATCH = 'schema.patternMismatch';
+	public const PatternMismatch = 'schema.patternMismatch';
 
 	/** variables: {value: mixed, assertion: string} */
-	public const FAILED_ASSERTION = 'schema.failedAssertion';
+	public const FailedAssertion = 'schema.failedAssertion';
 
 	/** no variables */
-	public const MISSING_ITEM = 'schema.missingItem';
+	public const MissingItem = 'schema.missingItem';
 
 	/** variables: {hint: string} */
-	public const UNEXPECTED_ITEM = 'schema.unexpectedItem';
+	public const UnexpectedItem = 'schema.unexpectedItem';
 
 	/** no variables */
-	public const DEPRECATED = 'schema.deprecated';
+	public const Deprecated = 'schema.deprecated';
+
+	/** Deprecated */
+	public const TYPE_MISMATCH = self::TypeMismatch;
+	public const VALUE_OUT_OF_RANGE = self::ValueOutOfRange;
+	public const LENGTH_OUT_OF_RANGE = self::LengthOutOfRange;
+	public const PATTERN_MISMATCH = self::PatternMismatch;
+	public const FAILED_ASSERTION = self::FailedAssertion;
+	public const MISSING_ITEM = self::MissingItem;
+	public const UNEXPECTED_ITEM = self::UnexpectedItem;
+	public const DEPRECATED = self::Deprecated;
 
 	/** @var string */
 	public $message;
@@ -66,7 +76,9 @@ final class Message
 	{
 		$vars = $this->variables;
 		$vars['label'] = empty($vars['isKey']) ? 'item' : 'key of item';
-		$vars['path'] = $this->path ? "'" . implode(' › ', $this->path) . "'" : null;
+		$vars['path'] = $this->path
+			? "'" . implode("\u{a0}›\u{a0}", $this->path) . "'"
+			: null;
 		$vars['value'] = Helpers::formatValue($vars['value'] ?? null);
 
 		return preg_replace_callback('~( ?)%(\w+)%~', function ($m) use ($vars) {

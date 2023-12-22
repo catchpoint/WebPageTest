@@ -34,6 +34,7 @@ use Psalm\Issue\DuplicateParam;
 use Psalm\Issue\InvalidDocblock;
 use Psalm\Issue\MissingDocblockType;
 use Psalm\Issue\ParseError;
+use Psalm\Issue\PrivateFinalMethod;
 use Psalm\IssueBuffer;
 use Psalm\Storage\ClassLikeStorage;
 use Psalm\Storage\FileStorage;
@@ -56,7 +57,6 @@ use function array_search;
 use function count;
 use function end;
 use function explode;
-use function implode;
 use function in_array;
 use function is_string;
 use function spl_object_id;
@@ -66,7 +66,7 @@ use function strtolower;
 /**
  * @internal
  */
-class FunctionLikeNodeScanner
+final class FunctionLikeNodeScanner
 {
     private FileScanner $file_scanner;
 
@@ -370,7 +370,7 @@ class FunctionLikeNodeScanner
                     && $function_stmt->expr->expr instanceof PhpParser\Node\Expr\FuncCall
                     && $function_stmt->expr->expr->name instanceof PhpParser\Node\Name
                 ) {
-                    $inner_function_id = implode('\\', $function_stmt->expr->expr->name->parts);
+                    $inner_function_id = $function_stmt->expr->expr->name->toString();
 
                     if ($inner_function_id === 'func_get_arg'
                         || $inner_function_id === 'func_get_args'
@@ -384,7 +384,7 @@ class FunctionLikeNodeScanner
                     && $function_stmt->cond->left->left instanceof PhpParser\Node\Expr\FuncCall
                     && $function_stmt->cond->left->left->name instanceof PhpParser\Node\Name
                 ) {
-                    $inner_function_id = implode('\\', $function_stmt->cond->left->left->name->parts);
+                    $inner_function_id = $function_stmt->cond->left->left->name->toString();
 
                     if ($inner_function_id === 'func_get_arg'
                         || $inner_function_id === 'func_get_args'
@@ -805,7 +805,7 @@ class FunctionLikeNodeScanner
         $param_type = null;
 
         $is_nullable = $param->default instanceof PhpParser\Node\Expr\ConstFetch &&
-            strtolower($param->default->name->parts[0]) === 'null';
+            strtolower($param->default->name->getFirst()) === 'null';
 
         $param_typehint = $param->type;
 
@@ -1101,7 +1101,24 @@ class FunctionLikeNodeScanner
             $storage->is_static = $stmt->isStatic();
             $storage->abstract = $stmt->isAbstract();
 
-            $storage->final = $classlike_storage->final || $stmt->isFinal();
+            if ($stmt->isPrivate() && $stmt->isFinal() && $method_name_lc !== '__construct') {
+                IssueBuffer::maybeAdd(
+                    new PrivateFinalMethod(
+                        'Private methods cannot be final',
+                        new CodeLocation($this->file_scanner, $stmt, null, true),
+                        (string) $method_id,
+                    ),
+                );
+                if ($this->codebase->analysis_php_version_id >= 8_00_00) {
+                    // ignore `final` on the method as that's what PHP does
+                    $storage->final = $classlike_storage->final;
+                } else {
+                    $storage->final = true;
+                }
+            } else {
+                $storage->final = $classlike_storage->final || $stmt->isFinal();
+            }
+
             $storage->final_from_docblock = $classlike_storage->final_from_docblock;
 
             if ($stmt->isPrivate()) {

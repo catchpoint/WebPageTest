@@ -4,7 +4,7 @@
  *
  * @author    Manuel Pichler <mapi@manuel-pichler.de>
  * @copyright 2007-2014 Manuel Pichler. All rights reserved.
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Generic\Tests\CodeAnalysis;
@@ -50,6 +50,12 @@ class UnusedFunctionParameterUnitTest extends AbstractSniffUnitTest
             117 => 1,
             121 => 2,
             125 => 2,
+            163 => 1,
+            172 => 1,
+            228 => 2,
+            232 => 2,
+            244 => 2,
+            248 => 2,
         ];
 
     }//end getWarningList()

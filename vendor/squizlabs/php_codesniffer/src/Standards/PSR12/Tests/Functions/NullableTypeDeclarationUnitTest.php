@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2018 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\PSR12\Tests\Functions;
@@ -41,6 +41,9 @@ class NullableTypeDeclarationUnitTest extends AbstractSniffUnitTest
             58 => 2,
             59 => 2,
             87 => 1,
+            90 => 1,
+            91 => 1,
+            95 => 1,
         ];
 
     }//end getErrorList()

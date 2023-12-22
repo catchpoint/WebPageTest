@@ -4,13 +4,12 @@
  *
  * @author    Alessandro Chitolina <alekitto@gmail.com>
  * @copyright 2019 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Tokenizer;
 
 use PHP_CodeSniffer\Tests\Core\AbstractMethodUnitTest;
-use PHP_CodeSniffer\Util\Tokens;
 
 class AttributesTest extends AbstractMethodUnitTest
 {
@@ -289,7 +288,7 @@ class AttributesTest extends AbstractMethodUnitTest
 
 
     /**
-     * Test that attribute followed by a line comment is parsed correctly.
+     * Test that attributes on function declaration parameters are parsed correctly.
      *
      * @param string $testMarker The comment which prefaces the target token in the test file.
      * @param int    $position   The token position (starting from T_FUNCTION) of T_ATTRIBUTE token.

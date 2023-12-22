@@ -15,6 +15,7 @@ use Nette\MemberAccessException;
 
 /**
  * Nette\SmartObject helpers.
+ * @internal
  */
 final class ObjectHelpers
 {

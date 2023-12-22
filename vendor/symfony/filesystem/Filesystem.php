@@ -170,7 +170,7 @@ class Filesystem
                 }
             } elseif (is_dir($file)) {
                 if (!$isRecursive) {
-                    $tmpName = \dirname(realpath($file)).'/.'.strrev(strtr(base64_encode(random_bytes(2)), '/=', '-.'));
+                    $tmpName = \dirname(realpath($file)).'/.'.strrev(strtr(base64_encode(random_bytes(2)), '/=', '-_'));
 
                     if (file_exists($tmpName)) {
                         try {
@@ -668,6 +668,12 @@ class Filesystem
         }
 
         $dir = \dirname($filename);
+
+        if (is_link($filename) && $linkTarget = $this->readlink($filename)) {
+            $this->dumpFile(Path::makeAbsolute($linkTarget, $dir), $content);
+
+            return;
+        }
 
         if (!is_dir($dir)) {
             $this->mkdir($dir);

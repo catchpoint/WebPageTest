@@ -15,7 +15,10 @@ use IteratorAggregate;
 
 /**
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
+ *
  * @psalm-immutable
+ *
+ * @template-implements IteratorAggregate<int, TestFile>
  */
 final class TestFileCollection implements Countable, IteratorAggregate
 {

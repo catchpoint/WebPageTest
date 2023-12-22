@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Squiz\Tests\WhiteSpace;
@@ -43,7 +43,7 @@ class SemicolonSpacingUnitTest extends AbstractSniffUnitTest
                 30 => 2,
                 36 => 1,
             ];
-            break;
+
         case 'SemicolonSpacingUnitTest.js':
             return [
                 3  => 1,
@@ -56,10 +56,9 @@ class SemicolonSpacingUnitTest extends AbstractSniffUnitTest
                 22 => 1,
                 25 => 1,
             ];
-            break;
+
         default:
             return [];
-            break;
         }//end switch
 
     }//end getErrorList()

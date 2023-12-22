@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Sniffs;
@@ -104,9 +104,9 @@ abstract class AbstractArraySniff implements Sniff
     /**
      * Find next separator in array - either: comma or double arrow.
      *
-     * @param File $phpcsFile The current file being checked.
-     * @param int  $ptr       The position of current token.
-     * @param int  $arrayEnd  The token that ends the array definition.
+     * @param \PHP_CodeSniffer\Files\File $phpcsFile The current file being checked.
+     * @param int                         $ptr       The position of current token.
+     * @param int                         $arrayEnd  The token that ends the array definition.
      *
      * @return int
      */

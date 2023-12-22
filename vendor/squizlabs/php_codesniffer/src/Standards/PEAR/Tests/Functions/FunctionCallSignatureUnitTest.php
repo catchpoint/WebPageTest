@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\PEAR\Tests\Functions;
@@ -131,6 +131,11 @@ class FunctionCallSignatureUnitTest extends AbstractSniffUnitTest
             546 => 1,
             547 => 1,
             548 => 1,
+            559 => 1,
+            567 => 1,
+            568 => 1,
+            573 => 1,
+            574 => 1,
         ];
 
     }//end getErrorList()

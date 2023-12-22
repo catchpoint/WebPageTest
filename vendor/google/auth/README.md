@@ -257,6 +257,18 @@ print_r((string) $response->getBody());
 
 [iap-proxy-header]: https://cloud.google.com/iap/docs/authentication-howto#authenticating_from_proxy-authorization_header
 
+#### External credentials (Workload identity federation)
+
+Using workload identity federation, your application can access Google Cloud resources from Amazon Web Services (AWS),
+Microsoft Azure or any identity provider that supports OpenID Connect (OIDC).
+
+Traditionally, applications running outside Google Cloud have used service account keys to access Google Cloud
+resources. Using identity federation, you can allow your workload to impersonate a service account. This lets you access
+Google Cloud resources directly, eliminating the maintenance and security burden associated with service account keys.
+
+Follow the detailed instructions on how to
+[Configure Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds).
+
 #### Verifying JWTs
 
 If you are [using Google ID tokens to authenticate users][google-id-tokens], use

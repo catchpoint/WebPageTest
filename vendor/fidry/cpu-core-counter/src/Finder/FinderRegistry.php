@@ -25,15 +25,17 @@ final class FinderRegistry
             new DummyCpuCoreFinder(1),
             new HwLogicalFinder(),
             new HwPhysicalFinder(),
+            new LscpuLogicalFinder(),
+            new LscpuPhysicalFinder(),
             new _NProcessorFinder(),
             new NProcessorFinder(),
             new NProcFinder(true),
             new NProcFinder(false),
             new NullCpuCoreFinder(),
-            new OnlyOnWindowsFinder(
+            SkipOnOSFamilyFinder::forWindows(
                 new DummyCpuCoreFinder(1)
             ),
-            new SkipOnWindowsFinder(
+            OnlyOnOSFamilyFinder::forWindows(
                 new DummyCpuCoreFinder(1)
             ),
             new WmicPhysicalFinder(),
@@ -47,11 +49,12 @@ final class FinderRegistry
     public static function getDefaultLogicalFinders(): array
     {
         return [
-            new OnlyOnWindowsFinder(new WmicLogicalFinder()),
+            OnlyOnOSFamilyFinder::forWindows(new WmicLogicalFinder()),
             new NProcFinder(),
             new HwLogicalFinder(),
             new _NProcessorFinder(),
             new NProcessorFinder(),
+            new LscpuLogicalFinder(),
             new CpuInfoFinder(),
         ];
     }
@@ -62,8 +65,9 @@ final class FinderRegistry
     public static function getDefaultPhysicalFinders(): array
     {
         return [
-            new OnlyOnWindowsFinder(new WmicPhysicalFinder()),
+            OnlyOnOSFamilyFinder::forWindows(new WmicPhysicalFinder()),
             new HwPhysicalFinder(),
+            new LscpuPhysicalFinder(),
         ];
     }
 

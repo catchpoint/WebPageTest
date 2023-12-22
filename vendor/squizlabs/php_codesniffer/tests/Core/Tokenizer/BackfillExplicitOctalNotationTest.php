@@ -4,7 +4,7 @@
  *
  * @author    Mark Baker <mark@demon-angel.eu>
  * @copyright 2019 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Tokenizer;
@@ -105,6 +105,12 @@ class BackfillExplicitOctalNotationTest extends AbstractMethodUnitTest
                 'value'       => '0o2',
                 'nextToken'   => T_STRING,
                 'nextContent' => '_82',
+            ],
+            [
+                'marker'      => '/* testInvalid7 */',
+                'value'       => '0',
+                'nextToken'   => T_STRING,
+                'nextContent' => 'o',
             ],
         ];
 

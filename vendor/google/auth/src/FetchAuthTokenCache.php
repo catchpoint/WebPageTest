@@ -26,6 +26,7 @@ use Psr\Cache\CacheItemPoolInterface;
 class FetchAuthTokenCache implements
     FetchAuthTokenInterface,
     GetQuotaProjectInterface,
+    GetUniverseDomainInterface,
     SignBlobInterface,
     ProjectIdProviderInterface,
     UpdateMetadataInterface
@@ -36,6 +37,11 @@ class FetchAuthTokenCache implements
      * @var FetchAuthTokenInterface
      */
     private $fetcher;
+
+    /**
+     * @var int
+     */
+    private $eagerRefreshThresholdSeconds = 10;
 
     /**
      * @param FetchAuthTokenInterface $fetcher A credentials fetcher
@@ -53,6 +59,14 @@ class FetchAuthTokenCache implements
             'lifetime' => 1500,
             'prefix' => '',
         ], (array) $cacheConfig);
+    }
+
+    /**
+     * @return FetchAuthTokenInterface
+     */
+    public function getFetcher()
+    {
+        return $this->fetcher;
     }
 
     /**
@@ -136,7 +150,7 @@ class FetchAuthTokenCache implements
         // This saves a call to the metadata server when a cached token exists.
         if ($this->fetcher instanceof Credentials\GCECredentials) {
             $cached = $this->fetchAuthTokenFromCache();
-            $accessToken = isset($cached['access_token']) ? $cached['access_token'] : null;
+            $accessToken = $cached['access_token'] ?? null;
             return $this->fetcher->signBlob($stringToSign, $forceOpenSsl, $accessToken);
         }
 
@@ -176,6 +190,20 @@ class FetchAuthTokenCache implements
         }
 
         return $this->fetcher->getProjectId($httpHandler);
+    }
+
+    /*
+     * Get the Universe Domain from the fetcher.
+     *
+     * @return string
+     */
+    public function getUniverseDomain(): string
+    {
+        if ($this->fetcher instanceof GetUniverseDomainInterface) {
+            return $this->fetcher->getUniverseDomain();
+        }
+
+        return GetUniverseDomainInterface::DEFAULT_UNIVERSE_DOMAIN;
     }
 
     /**
@@ -250,7 +278,7 @@ class FetchAuthTokenCache implements
                 // (for JwtAccess and ID tokens)
                 return $cached;
             }
-            if (time() < $cached['expires_at']) {
+            if ((time() + $this->eagerRefreshThresholdSeconds) < $cached['expires_at']) {
                 // access token is not expired
                 return $cached;
             }

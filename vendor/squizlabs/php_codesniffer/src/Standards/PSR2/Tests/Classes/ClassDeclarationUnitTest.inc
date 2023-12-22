@@ -239,3 +239,21 @@ C8
 
 foo(new class {
 });
+
+readonly
+class Test
+{
+}
+
+readonly    class Test
+{
+}
+
+if (!class_exists('IndentedDeclaration')) {
+    class IndentedDeclaration
+    {
+        function foo() {}
+
+
+    }
+}

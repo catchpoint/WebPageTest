@@ -16,6 +16,7 @@ use function array_merge;
 use function array_reduce;
 use function array_values;
 use function get_loaded_extensions;
+use function htmlspecialchars;
 use function implode;
 use function ksort;
 use function min;
@@ -117,7 +118,7 @@ final class ErrorBaseline
 
                 foreach ($codeSamples as $codeSample) {
                     $files[$fileName][$issueType]['o'] += 1;
-                    $files[$fileName][$issueType]['s'][] = trim($codeSample->textContent);
+                    $files[$fileName][$issueType]['s'][] = str_replace("\r\n", "\n", trim($codeSample->textContent));
                 }
 
                 // TODO: Remove in Psalm 6
@@ -266,7 +267,12 @@ final class ErrorBaseline
 
                 foreach ($existingIssueType['s'] as $selection) {
                     $codeNode = $baselineDoc->createElement('code');
-                    $codeNode->textContent = trim($selection);
+                    $textContent = trim($selection);
+                    if ($textContent !== htmlspecialchars($textContent)) {
+                        $codeNode->appendChild($baselineDoc->createCDATASection($textContent));
+                    } else {
+                        $codeNode->textContent = trim($textContent);
+                    }
                     $issueNode->appendChild($codeNode);
                 }
                 $fileNode->appendChild($issueNode);

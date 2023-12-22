@@ -7,6 +7,7 @@ use Psalm\CodeLocation;
 use Psalm\Codebase;
 use Psalm\Internal\Codebase\ClassConstantByWildcardResolver;
 use Psalm\Internal\Codebase\InternalCallMapHandler;
+use Psalm\Internal\Type\Comparator\CallableTypeComparator;
 use Psalm\Storage\Assertion;
 use Psalm\Storage\Assertion\Any;
 use Psalm\Storage\Assertion\ArrayKeyExists;
@@ -28,6 +29,7 @@ use Psalm\Storage\Assertion\NonEmpty;
 use Psalm\Storage\Assertion\NonEmptyCountable;
 use Psalm\Storage\Assertion\Truthy;
 use Psalm\Type;
+use Psalm\Type\Atomic;
 use Psalm\Type\Atomic\Scalar;
 use Psalm\Type\Atomic\TArray;
 use Psalm\Type\Atomic\TArrayKey;
@@ -39,7 +41,6 @@ use Psalm\Type\Atomic\TCallableObject;
 use Psalm\Type\Atomic\TCallableString;
 use Psalm\Type\Atomic\TClassConstant;
 use Psalm\Type\Atomic\TClassString;
-use Psalm\Type\Atomic\TEmptyMixed;
 use Psalm\Type\Atomic\TFalse;
 use Psalm\Type\Atomic\TFloat;
 use Psalm\Type\Atomic\TGenericObject;
@@ -71,15 +72,19 @@ use Psalm\Type\Atomic\TScalar;
 use Psalm\Type\Atomic\TString;
 use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\Atomic\TTrue;
+use Psalm\Type\Atomic\TValueOf;
 use Psalm\Type\Reconciler;
 use Psalm\Type\Union;
 
 use function array_map;
 use function array_merge;
+use function array_values;
 use function assert;
 use function count;
 use function explode;
 use function get_class;
+use function in_array;
+use function is_int;
 use function min;
 use function strlen;
 use function strpos;
@@ -92,7 +97,7 @@ use function strtolower;
  *
  * @internal
  */
-class SimpleAssertionReconciler extends Reconciler
+final class SimpleAssertionReconciler extends Reconciler
 {
     /**
      * @param   string[]  $suppressed_issues
@@ -289,7 +294,9 @@ class SimpleAssertionReconciler extends Reconciler
 
         if ($assertion_type instanceof TObject) {
             return self::reconcileObject(
+                $codebase,
                 $assertion,
+                $assertion_type,
                 $existing_var_type,
                 $key,
                 $negated,
@@ -526,6 +533,14 @@ class SimpleAssertionReconciler extends Reconciler
             }
         }
 
+        if ($assertion_type instanceof TValueOf) {
+            return self::reconcileValueOf(
+                $codebase,
+                $assertion_type,
+                $failed_reconciliation,
+            );
+        }
+
         return null;
     }
 
@@ -671,7 +686,7 @@ class SimpleAssertionReconciler extends Reconciler
                         $existing_var_type->removeType('array');
                         $existing_var_type->addType($array_atomic_type->setProperties(
                             array_map(
-                                fn(Union $union) => $union->setPossiblyUndefined(false),
+                                static fn(Union $union) => $union->setPossiblyUndefined(false),
                                 $array_atomic_type->properties,
                             ),
                         ));
@@ -791,7 +806,7 @@ class SimpleAssertionReconciler extends Reconciler
                         $existing_var_type->removeType('array');
                         $existing_var_type->addType($array_atomic_type->setProperties(
                             array_map(
-                                fn(Union $union) => $union->setPossiblyUndefined(false),
+                                static fn(Union $union) => $union->setPossiblyUndefined(false),
                                 $array_atomic_type->properties,
                             ),
                         ));
@@ -961,9 +976,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? new Union([new TEmptyMixed()])
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1026,6 +1039,10 @@ class SimpleAssertionReconciler extends Reconciler
                 }
 
                 $redundant = false;
+            } elseif ($type instanceof TInt && $assertion instanceof IsLooselyEqual) {
+                // don't change the type of an int for non-strict comparisons
+                $string_types[] = $type;
+                $redundant = false;
             } else {
                 $redundant = false;
             }
@@ -1052,9 +1069,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? new Union([new TEmptyMixed()])
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1146,9 +1161,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? new Union([new TEmptyMixed()])
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1225,9 +1238,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1310,9 +1321,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1395,9 +1404,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1470,9 +1477,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1563,9 +1568,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1573,7 +1576,9 @@ class SimpleAssertionReconciler extends Reconciler
      * @param Reconciler::RECONCILIATION_* $failed_reconciliation
      */
     private static function reconcileObject(
+        Codebase $codebase,
         Assertion $assertion,
+        TObject $assertion_type,
         Union $existing_var_type,
         ?string $key,
         bool $negated,
@@ -1583,7 +1588,7 @@ class SimpleAssertionReconciler extends Reconciler
         bool $is_equality
     ): Union {
         if ($existing_var_type->hasMixed()) {
-            return Type::getObject();
+            return new Union([$assertion_type]);
         }
 
         $old_var_type_string = $existing_var_type->getId();
@@ -1592,11 +1597,25 @@ class SimpleAssertionReconciler extends Reconciler
         $object_types = [];
         $redundant = true;
 
+        $assertion_type_is_intersectable_type = Type::isIntersectionType($assertion_type);
         foreach ($existing_var_atomic_types as $type) {
-            if ($type->isObjectType()) {
-                $object_types[] = $type;
+            if ($assertion_type_is_intersectable_type
+                && self::areIntersectionTypesAllowed($codebase, $type)
+            ) {
+                /** @var TNamedObject|TTemplateParam|TIterable|TObjectWithProperties|TCallableObject $assertion_type */
+                $object_types[] = $type->addIntersectionType($assertion_type);
+                $redundant = false;
+            } elseif ($type->isObjectType()) {
+                if ($assertion_type_is_intersectable_type
+                    && !self::areIntersectionTypesAllowed($codebase, $type)
+                ) {
+                    $redundant = false;
+                } else {
+                    $object_types[] = $type;
+                }
             } elseif ($type instanceof TCallable) {
-                $object_types[] = new TCallableObject();
+                $callable_object = new TCallableObject($type->from_docblock, $type);
+                $object_types[] = $callable_object;
                 $redundant = false;
             } elseif ($type instanceof TTemplateParam
                 && $type->as->isMixed()
@@ -1606,8 +1625,17 @@ class SimpleAssertionReconciler extends Reconciler
                 $redundant = false;
             } elseif ($type instanceof TTemplateParam) {
                 if ($type->as->hasObject() || $type->as->hasMixed()) {
-                    $type = $type->replaceAs(self::reconcileObject(
+                    /**
+                     * @psalm-suppress PossiblyInvalidArgument This looks wrong, psalm assumes that $assertion_type
+                     *                                         can contain TNamedObject due to the reconciliation above
+                     *                                         regarding {@see Type::isIntersectionType}. Due to the
+                     *                                         native argument type `TObject`, the variable object will
+                     *                                         never be `TNamedObject`.
+                     */
+                    $reconciled_type = self::reconcileObject(
+                        $codebase,
                         $assertion,
+                        $assertion_type,
                         $type->as,
                         null,
                         false,
@@ -1615,7 +1643,8 @@ class SimpleAssertionReconciler extends Reconciler
                         $suppressed_issues,
                         $failed_reconciliation,
                         $is_equality,
-                    ));
+                    );
+                    $type = $type->replaceAs($reconciled_type);
 
                     $object_types[] = $type;
                 }
@@ -1657,9 +1686,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1715,9 +1742,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1787,9 +1812,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1850,9 +1873,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -1894,9 +1915,7 @@ class SimpleAssertionReconciler extends Reconciler
 
             $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-            return $existing_var_type->from_docblock
-                ? Type::getMixed()
-                : Type::getNever();
+            return Type::getNever();
         }
 
         return $intersection;
@@ -2000,7 +2019,7 @@ class SimpleAssertionReconciler extends Reconciler
                         $existing_var_type->addType(new TIntRange($assertion_value, $atomic_type->value));
                     }
                 }*/
-            } elseif ($atomic_type instanceof TInt) {
+            } elseif ($atomic_type instanceof TInt && is_int($assertion_value)) {
                 $redundant = false;
                 $existing_var_type->removeType($atomic_type->getKey());
                 $existing_var_type->addType(new TIntRange($assertion_value, null));
@@ -2215,9 +2234,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -2330,9 +2347,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -2405,7 +2420,9 @@ class SimpleAssertionReconciler extends Reconciler
 
                 $redundant = false;
             } elseif ($type instanceof TIterable) {
-                $array_types[] = Type::getListAtomic($type->type_params[1]);
+                $array_types[] = $is_non_empty
+                    ? Type::getNonEmptyListAtomic($type->type_params[1])
+                    : Type::getListAtomic($type->type_params[1]);
 
                 $redundant = false;
             } else {
@@ -2438,9 +2455,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -2652,6 +2667,13 @@ class SimpleAssertionReconciler extends Reconciler
                 $redundant = false;
 
                 $callable_types[] = $type;
+            } elseif ($candidate_callable = CallableTypeComparator::getCallableFromAtomic(
+                $codebase,
+                $type,
+            )) {
+                $redundant = false;
+
+                $callable_types[] = $candidate_callable;
             } else {
                 $redundant = false;
             }
@@ -2678,9 +2700,7 @@ class SimpleAssertionReconciler extends Reconciler
 
         $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-        return $existing_var_type->from_docblock
-            ? Type::getMixed()
-            : Type::getNever();
+        return Type::getNever();
     }
 
     /**
@@ -2893,19 +2913,106 @@ class SimpleAssertionReconciler extends Reconciler
         int &$failed_reconciliation
     ): Union {
         $class_name = $class_constant_expression->fq_classlike_name;
-        $constant_pattern = $class_constant_expression->const_name;
-
-        $resolver = new ClassConstantByWildcardResolver($codebase);
-        $matched_class_constant_types = $resolver->resolve($class_name, $constant_pattern);
-        if ($matched_class_constant_types === null) {
+        if (!$codebase->classlike_storage_provider->has($class_name)) {
             return $existing_type;
         }
 
-        if ($matched_class_constant_types === []) {
+        $constant_pattern = $class_constant_expression->const_name;
+
+        $resolver = new ClassConstantByWildcardResolver($codebase);
+        $matched_class_constant_types = $resolver->resolve(
+            $class_name,
+            $constant_pattern,
+        );
+
+        if ($matched_class_constant_types === null) {
             $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
             return Type::getNever();
         }
 
-        return TypeCombiner::combine($matched_class_constant_types, $codebase);
+        return TypeCombiner::combine(array_values($matched_class_constant_types), $codebase);
+    }
+
+    /**
+     * @param Reconciler::RECONCILIATION_* $failed_reconciliation
+     */
+    private static function reconcileValueOf(
+        Codebase $codebase,
+        TValueOf $assertion_type,
+        int &$failed_reconciliation
+    ): ?Union {
+        $reconciled_types = [];
+
+        // For now, only enums are supported here
+        foreach ($assertion_type->type->getAtomicTypes() as $atomic_type) {
+            $enum_case_to_assert = null;
+            if ($atomic_type instanceof TClassConstant) {
+                $class_name = $atomic_type->fq_classlike_name;
+                $enum_case_to_assert = $atomic_type->const_name;
+            } elseif ($atomic_type instanceof TNamedObject) {
+                $class_name = $atomic_type->value;
+            } else {
+                return null;
+            }
+
+            if (!$codebase->classOrInterfaceOrEnumExists($class_name)) {
+                return null;
+            }
+
+            $class_storage = $codebase->classlike_storage_provider->get($class_name);
+            if (!$class_storage->is_enum) {
+                return null;
+            }
+
+            if (!in_array($class_storage->enum_type, ['string', 'int'], true)) {
+                return null;
+            }
+
+            // For value-of<MyBackedEnum>, the assertion is meant to return *ANY* value of *ANY* enum case
+            if ($enum_case_to_assert === null) {
+                foreach ($class_storage->enum_cases as $enum_case) {
+                    assert(
+                        $enum_case->value !== null,
+                        'Verified enum type above, value can not contain `null` anymore.',
+                    );
+                    $reconciled_types[] = Type::getLiteral($enum_case->value);
+                }
+
+                continue;
+            }
+
+            $enum_case = $class_storage->enum_cases[$atomic_type->const_name] ?? null;
+            if ($enum_case === null) {
+                return null;
+            }
+
+            assert($enum_case->value !== null, 'Verified enum type above, value can not contain `null` anymore.');
+            $reconciled_types[] = Type::getLiteral($enum_case->value);
+        }
+
+        if ($reconciled_types === []) {
+            $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
+            return Type::getNever();
+        }
+
+        return TypeCombiner::combine($reconciled_types, $codebase, false, false);
+    }
+
+    /**
+     * @psalm-assert-if-true TCallableObject|TObjectWithProperties|TNamedObject $type
+     */
+    private static function areIntersectionTypesAllowed(Codebase $codebase, Atomic $type): bool
+    {
+        if ($type instanceof TObjectWithProperties || $type instanceof TCallableObject) {
+            return true;
+        }
+
+        if (!$type instanceof TNamedObject || !$codebase->classlike_storage_provider->has($type->value)) {
+            return false;
+        }
+
+        $class_storage = $codebase->classlike_storage_provider->get($type->value);
+
+        return !$class_storage->final;
     }
 }

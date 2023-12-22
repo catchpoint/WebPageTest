@@ -4,7 +4,7 @@
  *
  * @author    Juliette Reinders Folmer <phpcs_nospam@adviesenzo.nl>
  * @copyright 2019 Juliette Reinders Folmer. All rights reserved.
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Ruleset;
@@ -41,17 +41,12 @@ class RuleInclusionAbsoluteLinuxTest extends TestCase
     /**
      * Initialize the config and ruleset objects.
      *
+     * @before
+     *
      * @return void
      */
-    public function setUp()
+    public function initializeConfigAndRuleset()
     {
-        if ($GLOBALS['PHP_CODESNIFFER_PEAR'] === true) {
-            // PEAR installs test and sniff files into different locations
-            // so these tests will not pass as they directly reference files
-            // by relative location.
-            $this->markTestSkipped('Test cannot run from a PEAR install');
-        }
-
         $this->standard = __DIR__.'/'.basename(__FILE__, '.php').'.xml';
         $repoRootDir    = dirname(dirname(dirname(__DIR__)));
 
@@ -74,19 +69,21 @@ class RuleInclusionAbsoluteLinuxTest extends TestCase
         $config        = new Config(["--standard={$this->standard}"]);
         $this->ruleset = new Ruleset($config);
 
-    }//end setUp()
+    }//end initializeConfigAndRuleset()
 
 
     /**
      * Reset ruleset file.
      *
+     * @after
+     *
      * @return void
      */
-    public function tearDown()
+    public function resetRuleset()
     {
         file_put_contents($this->standard, $this->contents);
 
-    }//end tearDown()
+    }//end resetRuleset()
 
 
     /**
@@ -98,7 +95,6 @@ class RuleInclusionAbsoluteLinuxTest extends TestCase
     public function testLinuxStylePathRuleInclusion()
     {
         // Test that the sniff is correctly registered.
-        $this->assertObjectHasAttribute('sniffCodes', $this->ruleset);
         $this->assertCount(1, $this->ruleset->sniffCodes);
         $this->assertArrayHasKey('Generic.Formatting.SpaceAfterNot', $this->ruleset->sniffCodes);
         $this->assertSame(

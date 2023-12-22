@@ -7,7 +7,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer;
@@ -49,10 +49,12 @@ class Runner
     /**
      * Run the PHPCS script.
      *
-     * @return array
+     * @return int
      */
     public function runPHPCS()
     {
+        $this->registerOutOfMemoryShutdownMessage('phpcs');
+
         try {
             Util\Timing::startTiming();
             Runner::checkRequirements();
@@ -149,10 +151,12 @@ class Runner
     /**
      * Run the PHPCBF script.
      *
-     * @return array
+     * @return int
      */
     public function runPHPCBF()
     {
+        $this->registerOutOfMemoryShutdownMessage('phpcbf');
+
         if (defined('PHP_CODESNIFFER_CBF') === false) {
             define('PHP_CODESNIFFER_CBF', true);
         }
@@ -591,7 +595,7 @@ class Runner
      * @param string $file    The path of the file that raised the error.
      * @param int    $line    The line number the error was raised at.
      *
-     * @return void
+     * @return bool
      * @throws \PHP_CodeSniffer\Exceptions\RuntimeException
      */
     public function handleErrors($code, $message, $file, $line)
@@ -648,6 +652,39 @@ class Runner
             }
         } catch (\Exception $e) {
             $error = 'An error occurred during processing; checking has been aborted. The error message was: '.$e->getMessage();
+
+            // Determine which sniff caused the error.
+            $sniffStack = null;
+            $nextStack  = null;
+            foreach ($e->getTrace() as $step) {
+                if (isset($step['file']) === false) {
+                    continue;
+                }
+
+                if (empty($sniffStack) === false) {
+                    $nextStack = $step;
+                    break;
+                }
+
+                if (substr($step['file'], -9) === 'Sniff.php') {
+                    $sniffStack = $step;
+                    continue;
+                }
+            }
+
+            if (empty($sniffStack) === false) {
+                if (empty($nextStack) === false
+                    && isset($nextStack['class']) === true
+                    && substr($nextStack['class'], -5) === 'Sniff'
+                ) {
+                    $sniffCode = Common::getSniffCode($nextStack['class']);
+                } else {
+                    $sniffCode = substr(strrchr(str_replace('\\', '/', $sniffStack['file']), '/'), 1);
+                }
+
+                $error .= sprintf(PHP_EOL.'The error originated in the %s sniff on line %s.', $sniffCode, $sniffStack['line']);
+            }
+
             $file->addErrorOnLine($error, 1, 'Internal.Exception');
         }//end try
 
@@ -719,6 +756,11 @@ class Runner
             $pid = pcntl_waitpid(0, $status);
             if ($pid <= 0) {
                 continue;
+            }
+
+            $childProcessStatus = pcntl_wexitstatus($status);
+            if ($childProcessStatus !== 0) {
+                $success = false;
             }
 
             $out = $childProcs[$pid];
@@ -884,6 +926,44 @@ class Runner
         echo str_repeat(' ', $padding)." $numProcessed / $numFiles ($percent%)".PHP_EOL;
 
     }//end printProgress()
+
+
+    /**
+     * Registers a PHP shutdown function to provide a more informative out of memory error.
+     *
+     * @param string $command The command which was used to initiate the PHPCS run.
+     *
+     * @return void
+     */
+    private function registerOutOfMemoryShutdownMessage($command)
+    {
+        // Allocate all needed memory beforehand as much as possible.
+        $errorMsg    = PHP_EOL.'The PHP_CodeSniffer "%1$s" command ran out of memory.'.PHP_EOL;
+        $errorMsg   .= 'Either raise the "memory_limit" of PHP in the php.ini file or raise the memory limit at runtime'.PHP_EOL;
+        $errorMsg   .= 'using `%1$s -d memory_limit=512M` (replace 512M with the desired memory limit).'.PHP_EOL;
+        $errorMsg    = sprintf($errorMsg, $command);
+        $memoryError = 'Allowed memory size of';
+        $errorArray  = [
+            'type'    => 42,
+            'message' => 'Some random dummy string to take up memory and take up some more memory and some more',
+            'file'    => 'Another random string, which would be a filename this time. Should be relatively long to allow for deeply nested files',
+            'line'    => 31427,
+        ];
+
+        register_shutdown_function(
+            static function () use (
+                $errorMsg,
+                $memoryError,
+                $errorArray
+            ) {
+                $errorArray = error_get_last();
+                if (is_array($errorArray) === true && strpos($errorArray['message'], $memoryError) !== false) {
+                    echo $errorMsg;
+                }
+            }
+        );
+
+    }//end registerOutOfMemoryShutdownMessage()
 
 
 }//end class

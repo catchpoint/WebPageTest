@@ -157,7 +157,7 @@ final class Callback
 	 */
 	public static function isStatic(callable $callable): bool
 	{
-		return is_array($callable) ? is_string($callable[0]) : is_string($callable);
+		return is_string(is_array($callable) ? $callable[0] : $callable);
 	}
 
 
@@ -168,13 +168,14 @@ final class Callback
 	public static function unwrap(\Closure $closure)
 	{
 		$r = new \ReflectionFunction($closure);
+		$class = $r->getClosureScopeClass();
 		if (substr($r->name, -1) === '}') {
 			return $closure;
 
-		} elseif ($obj = $r->getClosureThis()) {
+		} elseif (($obj = $r->getClosureThis()) && $class && get_class($obj) === $class->name) {
 			return [$obj, $r->name];
 
-		} elseif ($class = $r->getClosureScopeClass()) {
+		} elseif ($class) {
 			return [$class->name, $r->name];
 
 		} else {

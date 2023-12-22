@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\PEAR\Tests\Functions;
@@ -99,6 +99,9 @@ class FunctionDeclarationUnitTest extends AbstractSniffUnitTest
                 371 => 1,
                 402 => 1,
                 406 => 1,
+                475 => 1,
+                483 => 1,
+                490 => 2,
             ];
         } else {
             $errors = [

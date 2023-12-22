@@ -90,6 +90,15 @@ Whether or not to use types as defined in docblocks. Defaults to `true`.
 ```
 If not using all docblock types, you can still use docblock property types. Defaults to `false` (though only relevant if `useDocblockTypes` is `false`).
 
+#### docblockPropertyTypesSealProperties
+
+```xml
+<psalm
+  docblockPropertyTypesSealProperties="[bool]"
+>
+```
+Whether using @property in class docblocks should imply @psalm-seal-properties. Defaults to `true`.
+
 #### usePhpDocMethodsWithoutMagicCall
 
 ```xml
@@ -405,6 +414,14 @@ Whether or not to allow `require`/`include` calls in your PHP. Defaults to `true
 ```
 Allows you to hard-code a serializer for Psalm to use when caching data. By default, Psalm uses `ext-igbinary` *if* the version is greater than or equal to 2.0.5, otherwise it defaults to PHP's built-in serializer.
 
+#### compressor
+```xml
+<psalm
+  compressor="['lz4'|'deflate'|'off']"
+>
+```
+Allows you to hard-code a compressor for Psalm's cache. By default, Psalm uses `ext-zlib` deflate, if it's enabled.
+
 #### threads
 ```xml
 <psalm
@@ -565,10 +582,11 @@ or interfaces defined in a stub file, this stub should be configured with attrib
 ```
 
 #### &lt;ignoreExceptions&gt;
-Optional. A list of exceptions to not report for `checkForThrowsDocblock` or `checkForThrowsInGlobalScope`. If an exception has `onlyGlobalScope` set to `true`, only `checkForThrowsInGlobalScope` is ignored for that exception, e.g.
+Optional. A list of exceptions to not report for `checkForThrowsDocblock` or `checkForThrowsInGlobalScope`. The `class` tag will make Psalm ignore only instances of the specified class, while `classAndDescendants` will make Psalm also ignore subclasses. If an exception has `onlyGlobalScope` set to `true`, only `checkForThrowsInGlobalScope` is ignored for that exception, e.g.
 ```xml
 <ignoreExceptions>
   <class name="fully\qualified\path\Exc" onlyGlobalScope="true" />
+  <classAndDescendants name="fully\qualified\path\OtherExc" />
 </ignoreExceptions>
 ```
 

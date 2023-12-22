@@ -100,6 +100,11 @@ class ServiceAccountCredentials extends CredentialsLoader implements
     private $jwtAccessCredentials;
 
     /**
+     * @var string|null
+     */
+    private ?string $universeDomain;
+
+    /**
      * Create a new ServiceAccountCredentials.
      *
      * @param string|string[]|null $scope the scope of the access request, expressed
@@ -158,9 +163,8 @@ class ServiceAccountCredentials extends CredentialsLoader implements
             'additionalClaims' => $additionalClaims,
         ]);
 
-        $this->projectId = isset($jsonKey['project_id'])
-            ? $jsonKey['project_id']
-            : null;
+        $this->projectId = $jsonKey['project_id'] ?? null;
+        $this->universeDomain = $jsonKey['universe_domain'] ?? null;
     }
 
     /**
@@ -328,6 +332,19 @@ class ServiceAccountCredentials extends CredentialsLoader implements
     public function getQuotaProject()
     {
         return $this->quotaProject;
+    }
+
+    /**
+     * Get the universe domain configured in the JSON credential.
+     *
+     * @return string
+     */
+    public function getUniverseDomain(): string
+    {
+        if (null === $this->universeDomain) {
+            return self::DEFAULT_UNIVERSE_DOMAIN;
+        }
+        return $this->universeDomain;
     }
 
     /**

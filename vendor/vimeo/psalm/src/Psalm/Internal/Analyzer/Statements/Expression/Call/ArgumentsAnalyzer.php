@@ -20,7 +20,6 @@ use Psalm\Internal\Codebase\TaintFlowGraph;
 use Psalm\Internal\DataFlow\TaintSink;
 use Psalm\Internal\MethodIdentifier;
 use Psalm\Internal\Stubs\Generator\StubsGenerator;
-use Psalm\Internal\Type\Comparator\CallableTypeComparator;
 use Psalm\Internal\Type\Comparator\UnionTypeComparator;
 use Psalm\Internal\Type\TemplateInferredTypeReplacer;
 use Psalm\Internal\Type\TemplateResult;
@@ -52,6 +51,7 @@ use Psalm\Type\Union;
 use UnexpectedValueException;
 
 use function array_map;
+use function array_reduce;
 use function array_reverse;
 use function array_slice;
 use function array_values;
@@ -67,7 +67,7 @@ use function strtolower;
 /**
  * @internal
  */
-class ArgumentsAnalyzer
+final class ArgumentsAnalyzer
 {
     /**
      * @param   list<PhpParser\Node\Arg>          $args
@@ -197,18 +197,16 @@ class ArgumentsAnalyzer
             }
 
             $high_order_template_result = null;
+            $high_order_callable_info = $param
+                ? HighOrderFunctionArgHandler::getCallableArgInfo($context, $arg->value, $statements_analyzer, $param)
+                : null;
 
-            if (($arg->value instanceof PhpParser\Node\Expr\FuncCall
-                    || $arg->value instanceof PhpParser\Node\Expr\MethodCall
-                    || $arg->value instanceof PhpParser\Node\Expr\StaticCall)
-                && $param
-                && $function_storage = self::getHighOrderFuncStorage($context, $statements_analyzer, $arg->value)
-            ) {
-                $high_order_template_result = self::handleHighOrderFuncCallArg(
+            if ($param && $high_order_callable_info) {
+                $high_order_template_result = HighOrderFunctionArgHandler::remapLowerBounds(
                     $statements_analyzer,
                     $template_result ?? new TemplateResult([], []),
-                    $function_storage,
-                    $param,
+                    $high_order_callable_info,
+                    $param->type ?? Type::getMixed(),
                 );
             } elseif (($arg->value instanceof PhpParser\Node\Expr\Closure
                     || $arg->value instanceof PhpParser\Node\Expr\ArrowFunction)
@@ -228,7 +226,6 @@ class ArgumentsAnalyzer
             }
 
             $was_inside_call = $context->inside_call;
-
             $context->inside_call = true;
 
             if (ExpressionAnalyzer::analyze(
@@ -247,6 +244,16 @@ class ArgumentsAnalyzer
 
             $context->inside_call = $was_inside_call;
 
+            if ($high_order_callable_info && $high_order_template_result) {
+                HighOrderFunctionArgHandler::enhanceCallableArgType(
+                    $context,
+                    $arg->value,
+                    $statements_analyzer,
+                    $high_order_callable_info,
+                    $high_order_template_result,
+                );
+            }
+
             if (($argument_offset === 0 && $method_id === 'array_filter' && count($args) === 2)
                 || ($argument_offset > 0 && $method_id === 'array_map' && count($args) >= 2)
             ) {
@@ -262,7 +269,12 @@ class ArgumentsAnalyzer
 
             $inferred_arg_type = $statements_analyzer->node_data->getType($arg->value);
 
-            if (null !== $inferred_arg_type && null !== $template_result && null !== $param && null !== $param->type) {
+            if (null !== $inferred_arg_type
+                && null !== $template_result
+                && null !== $param
+                && null !== $param->type
+                && !$arg->unpack
+            ) {
                 $codebase = $statements_analyzer->getCodebase();
 
                 TemplateStandinTypeReplacer::fillTemplateResult(
@@ -343,184 +355,6 @@ class ArgumentsAnalyzer
 
             $template_result->lower_bounds += $replace_template_result->lower_bounds;
         }
-    }
-
-    private static function getHighOrderFuncStorage(
-        Context $context,
-        StatementsAnalyzer $statements_analyzer,
-        PhpParser\Node\Expr\CallLike $function_like_call
-    ): ?FunctionLikeStorage {
-        $codebase = $statements_analyzer->getCodebase();
-
-        try {
-            if ($function_like_call instanceof PhpParser\Node\Expr\FuncCall &&
-                !$function_like_call->isFirstClassCallable()
-            ) {
-                $function_id = strtolower((string) $function_like_call->name->getAttribute('resolvedName'));
-
-                if (empty($function_id)) {
-                    return null;
-                }
-
-                if ($codebase->functions->dynamic_storage_provider->has($function_id)) {
-                    return $codebase->functions->dynamic_storage_provider->getFunctionStorage(
-                        $function_like_call,
-                        $statements_analyzer,
-                        $function_id,
-                        $context,
-                        new CodeLocation($statements_analyzer, $function_like_call),
-                    );
-                }
-
-                return $codebase->functions->getStorage($statements_analyzer, $function_id);
-            }
-
-            if ($function_like_call instanceof PhpParser\Node\Expr\MethodCall &&
-                $function_like_call->var instanceof PhpParser\Node\Expr\Variable &&
-                $function_like_call->name instanceof PhpParser\Node\Identifier &&
-                is_string($function_like_call->var->name) &&
-                isset($context->vars_in_scope['$' . $function_like_call->var->name])
-            ) {
-                $lhs_type = $context->vars_in_scope['$' . $function_like_call->var->name]->getSingleAtomic();
-
-                if (!$lhs_type instanceof Type\Atomic\TNamedObject) {
-                    return null;
-                }
-
-                $method_id = new MethodIdentifier(
-                    $lhs_type->value,
-                    strtolower((string)$function_like_call->name),
-                );
-
-                return $codebase->methods->getStorage($method_id);
-            }
-
-            if ($function_like_call instanceof PhpParser\Node\Expr\StaticCall &&
-                $function_like_call->name instanceof PhpParser\Node\Identifier
-            ) {
-                $method_id = new MethodIdentifier(
-                    (string)$function_like_call->class->getAttribute('resolvedName'),
-                    strtolower($function_like_call->name->name),
-                );
-
-                return $codebase->methods->getStorage($method_id);
-            }
-        } catch (UnexpectedValueException $e) {
-            return null;
-        }
-
-        return null;
-    }
-
-    /**
-     * Compiles TemplateResult for high-order functions ($func_call)
-     * by previous template args ($inferred_template_result).
-     *
-     * It's need for proper template replacement:
-     *
-     * ```
-     * * template T
-     * * return Closure(T): T
-     * function id(): Closure { ... }
-     *
-     * * template A
-     * * template B
-     * *
-     * * param list<A> $_items
-     * * param callable(A): B $_ab
-     * * return list<B>
-     * function map(array $items, callable $ab): array { ... }
-     *
-     * // list<int>
-     * $numbers = [1, 2, 3];
-     *
-     * $result = map($numbers, id());
-     * // $result is list<int> because template T of id() was inferred by previous arg.
-     * ```
-     */
-    private static function handleHighOrderFuncCallArg(
-        StatementsAnalyzer $statements_analyzer,
-        TemplateResult $inferred_template_result,
-        FunctionLikeStorage $storage,
-        FunctionLikeParameter $actual_func_param
-    ): ?TemplateResult {
-        $codebase = $statements_analyzer->getCodebase();
-
-        $input_hof_atomic = $storage->return_type && $storage->return_type->isSingle()
-            ? $storage->return_type->getSingleAtomic()
-            : null;
-
-        // Try upcast invokable to callable type.
-        if ($input_hof_atomic instanceof Type\Atomic\TNamedObject &&
-            $input_hof_atomic->value !== 'Closure' &&
-            $codebase->classExists($input_hof_atomic->value)
-        ) {
-            $callable_from_invokable = CallableTypeComparator::getCallableFromAtomic(
-                $codebase,
-                $input_hof_atomic,
-            );
-
-            if ($callable_from_invokable) {
-                $invoke_id = new MethodIdentifier($input_hof_atomic->value, '__invoke');
-                $declaring_invoke_id = $codebase->methods->getDeclaringMethodId($invoke_id);
-
-                $storage = $codebase->methods->getStorage($declaring_invoke_id ?? $invoke_id);
-                $input_hof_atomic = $callable_from_invokable;
-            }
-        }
-
-        if (!$input_hof_atomic instanceof TClosure && !$input_hof_atomic instanceof TCallable) {
-            return null;
-        }
-
-        $container_hof_atomic = $actual_func_param->type && $actual_func_param->type->isSingle()
-            ? $actual_func_param->type->getSingleAtomic()
-            : null;
-
-        if (!$container_hof_atomic instanceof TClosure && !$container_hof_atomic instanceof TCallable) {
-            return null;
-        }
-
-        $replaced_container_hof_atomic = new Union([$container_hof_atomic]);
-
-        // Replaces all input args in container function.
-        //
-        // For example:
-        // The map function expects callable(A):B as second param
-        // We know that previous arg type is list<int> where the int is the A template.
-        // Then we can replace callable(A): B to callable(int):B using $inferred_template_result.
-        $replaced_container_hof_atomic = TemplateInferredTypeReplacer::replace(
-            $replaced_container_hof_atomic,
-            $inferred_template_result,
-            $codebase,
-        );
-
-        /** @var TClosure|TCallable $container_hof_atomic */
-        $container_hof_atomic = $replaced_container_hof_atomic->getSingleAtomic();
-        $high_order_template_result = new TemplateResult($storage->template_types ?: [], []);
-
-        // We can replace each templated param for the input function.
-        // Example:
-        // map($numbers, id());
-        // We know that map expects callable(int):B because the $numbers is list<int>.
-        // We know that id() returns callable(T):T.
-        // Then we can replace templated params sequentially using the expected callable(int):B.
-        foreach ($input_hof_atomic->params ?? [] as $offset => $actual_func_param) {
-            if ($actual_func_param->type &&
-                $actual_func_param->type->getTemplateTypes() &&
-                isset($container_hof_atomic->params[$offset])
-            ) {
-                TemplateStandinTypeReplacer::fillTemplateResult(
-                    $actual_func_param->type,
-                    $high_order_template_result,
-                    $codebase,
-                    null,
-                    $container_hof_atomic->params[$offset]->type,
-                );
-            }
-        }
-
-        return $high_order_template_result;
     }
 
     /**
@@ -930,7 +764,7 @@ class ArgumentsAnalyzer
                                 IssueBuffer::maybeAdd(
                                     new InvalidNamedArgument(
                                         'Parameter $' . $key_type->value . ' does not exist on function '
-                                        . ($cased_method_id ?: $method_id),
+                                            . ($cased_method_id ?: $method_id),
                                         new CodeLocation($statements_analyzer, $arg),
                                         (string)$method_id,
                                     ),
@@ -970,7 +804,7 @@ class ArgumentsAnalyzer
                     IssueBuffer::maybeAdd(
                         new InvalidNamedArgument(
                             'Parameter $' . $arg->name->name . ' does not exist on function '
-                                . ($cased_method_id ?: $method_id),
+                            . ($cased_method_id ?: $method_id),
                             new CodeLocation($statements_analyzer, $arg->name),
                             (string) $method_id,
                         ),
@@ -1198,7 +1032,26 @@ class ArgumentsAnalyzer
             $check_null_ref = true;
 
             if ($last_param) {
-                if ($argument_offset < count($function_params)) {
+                if ($arg->name !== null) {
+                    $function_param = array_reduce(
+                        $function_params,
+                        static function (
+                            ?FunctionLikeParameter $function_param,
+                            FunctionLikeParameter $param
+                        ) use (
+                            $arg
+                        ) {
+                            if ($param->name === $arg->name->name) {
+                                return $param;
+                            }
+                            return $function_param;
+                        },
+                        null,
+                    );
+                    if ($function_param === null) {
+                        return false;
+                    }
+                } elseif ($argument_offset < count($function_params)) {
                     $function_param = $function_params[$argument_offset];
                 } else {
                     $function_param = $last_param;

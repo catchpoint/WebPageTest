@@ -39,7 +39,7 @@ use function trim;
 /**
  * @internal
  */
-class FunctionLikeDocblockParser
+final class FunctionLikeDocblockParser
 {
     /**
      * @throws DocblockParseException if there was a problem parsing the docblock
@@ -554,6 +554,8 @@ class FunctionLikeDocblockParser
         if (!empty($parsed_docblock->description)) {
             $info->description = $parsed_docblock->description;
         }
+
+        $info->public_api = isset($parsed_docblock->tags['psalm-api']) || isset($parsed_docblock->tags['api']);
 
         return $info;
     }

@@ -4,7 +4,7 @@
  *
  * @author    Matthew Peveler <matt.peveler@gmail.com>
  * @copyright 2019 Matthew Peveler
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Generic\Tests\Files;
@@ -18,14 +18,12 @@ class ExecutableFileUnitTest extends AbstractSniffUnitTest
     /**
      * Should this test be skipped for some reason.
      *
-     * @return void
+     * @return bool
      */
     protected function shouldSkipTest()
     {
-        // PEAR doesn't preserve the executable flag, so skip
-        // tests when running in a PEAR install.
-        // Also skip on Windows which doesn't have the concept of executable files.
-        return ($GLOBALS['PHP_CODESNIFFER_PEAR'] || stripos(PHP_OS, 'WIN') === 0);
+        // Skip on Windows which doesn't have the concept of executable files.
+        return (stripos(PHP_OS, 'WIN') === 0);
 
     }//end shouldSkipTest()
 

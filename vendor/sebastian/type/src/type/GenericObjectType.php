@@ -44,6 +44,9 @@ final class GenericObjectType extends Type
         return $this->allowsNull;
     }
 
+    /**
+     * @psalm-assert-if-true GenericObjectType $this
+     */
     public function isGenericObject(): bool
     {
         return true;

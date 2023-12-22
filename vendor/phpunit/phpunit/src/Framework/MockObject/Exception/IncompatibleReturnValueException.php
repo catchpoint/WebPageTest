@@ -9,6 +9,9 @@
  */
 namespace PHPUnit\Framework\MockObject;
 
+use function get_class;
+use function gettype;
+use function is_object;
 use function sprintf;
 
 /**
@@ -26,8 +29,8 @@ final class IncompatibleReturnValueException extends \PHPUnit\Framework\Exceptio
                 'Method %s may not return value of type %s, its declared return type is "%s"',
                 $method->getName(),
                 is_object($value) ? get_class($value) : gettype($value),
-                $method->getReturnTypeDeclaration()
-            )
+                $method->getReturnTypeDeclaration(),
+            ),
         );
     }
 }

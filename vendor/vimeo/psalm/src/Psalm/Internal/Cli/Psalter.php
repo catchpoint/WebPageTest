@@ -3,13 +3,13 @@
 namespace Psalm\Internal\Cli;
 
 use AssertionError;
-use Composer\XdebugHandler\XdebugHandler;
 use Psalm\Config;
 use Psalm\Exception\UnsupportedIssueToFixException;
 use Psalm\Internal\Analyzer\ProjectAnalyzer;
 use Psalm\Internal\CliUtils;
 use Psalm\Internal\Composer;
 use Psalm\Internal\ErrorHandler;
+use Psalm\Internal\Fork\PsalmRestarter;
 use Psalm\Internal\IncludeCollector;
 use Psalm\Internal\Provider\ClassLikeStorageCacheProvider;
 use Psalm\Internal\Provider\FileProvider;
@@ -43,7 +43,6 @@ use function getcwd;
 use function getopt;
 use function implode;
 use function in_array;
-use function ini_set;
 use function is_array;
 use function is_dir;
 use function is_numeric;
@@ -89,6 +88,7 @@ final class Psalter
         'add-newline-between-docblock-annotations:',
         'no-cache',
         'no-progress',
+        'memory-limit:',
     ];
 
     /** @param array<int,string> $argv */
@@ -100,14 +100,14 @@ final class Psalter
 
         ErrorHandler::install($argv);
 
-        self::setMemoryLimit();
-
         $args = array_slice($argv, 1);
 
         // get options from command line
         $options = getopt(implode('', self::SHORT_OPTIONS), self::LONG_OPTIONS);
 
         self::validateCliArguments($args);
+
+        CliUtils::setMemoryLimit($options);
 
         self::syncShortOptions($options);
 
@@ -218,10 +218,16 @@ final class Psalter
             static fn(): ?\Composer\Autoload\ClassLoader =>
                 CliUtils::requireAutoloaders($current_dir, isset($options['r']), $vendor_dir)
         );
-
+        $ini_handler = new PsalmRestarter('PSALTER');
+        $ini_handler->disableExtensions([
+            'grpc',
+            'uopz',
+            'pcov',
+            'blackfire',
+        ]);
 
         // If Xdebug is enabled, restart without it
-        (new XdebugHandler('PSALTER'))->check();
+        $ini_handler->check();
 
         $paths_to_check = CliUtils::getPathsToCheck($options['f'] ?? null);
 
@@ -434,15 +440,6 @@ final class Psalter
         }
 
         IssueBuffer::finish($project_analyzer, false, $start_time);
-    }
-
-    private static function setMemoryLimit(): void
-    {
-        $memLimit = CliUtils::getMemoryLimitInBytes();
-        // Magic number is 4096M in bytes
-        if ($memLimit > 0 && $memLimit < 8 * 1_024 * 1_024 * 1_024) {
-            ini_set('memory_limit', (string) (8 * 1_024 * 1_024 * 1_024));
-        }
     }
 
     /** @param array<int,string> $args */
