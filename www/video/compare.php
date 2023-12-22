@@ -454,7 +454,6 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                                 echo "<li><a class=\"experiment_meta-more\" href=\"" . $experimentOriginalExperimentsHref . "\">Experiment More</a></li>";
                                 echo '</ul>';
                                 echo '</div>';
-
                                 echo '<div class="experiment_meta_urls">';
 
                                 echo '<p>Links:</p>';
