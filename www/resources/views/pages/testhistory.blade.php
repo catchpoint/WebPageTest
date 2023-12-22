@@ -61,7 +61,6 @@
                 @endif
             </table>
         </div>
-        
         @if ($local)
             <input type="hidden" name="local" value="1">
         @endif
