@@ -4517,6 +4517,10 @@ table.checklist td {
   padding: 1rem;
 }
 
+.history th.idSelect {
+    vertical-align: baseline;
+}
+
 .history th.date,
 .history td.date {
   white-space: nowrap;
@@ -6658,6 +6662,20 @@ div.overflow-container > *,
 .scrollableTable tbody {
   z-index: 10;
   position: relative;
+}
+
+.scrollableHistoryTable {
+    overflow: auto;
+}
+
+.scrollable-td {
+    padding: unset;
+}
+
+.scrollable-td-content {
+    overflow-x: auto;
+    padding: 1em;
+    padding-top: 0em;
 }
 
 span.units {
