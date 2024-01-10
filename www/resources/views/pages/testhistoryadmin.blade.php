@@ -72,7 +72,7 @@
                         'labelTxt' => $labelTxt,
                     ])
                 <tr>
-                    <th class="idSelect">
+                    <th>
                         @if (isset($guid) && $video && !($url == "Bulk Test" || $url == "Multiple Locations test"))
                             <input type="checkbox" name="t[]" value="{{ $guid }}" title="First View">
                             @if ($repeat)
@@ -89,12 +89,10 @@
                             </b>
                         @endif
                     </td>
-                    <td class="location scrollable-td">
-                        <div class="scrollable-td-content">{!! $location !!}
-                            @if ($video)
-                                <span>(video)</span>
-                            @endif
-                        </div>
+                    <td class="location">{!! $location !!}
+                        @if ($video)
+                            <span>(video)</span>
+                        @endif
                     </td>
                     @if ($includeip)
                         <td class="ip">{{ $ip }}</td>
@@ -115,7 +113,7 @@
                     <td title="{{ $label }}" class="label">
                         <a href="{{ $link }}" id="label_{{ $guid }}">{{ $labelTxt }}</a>
                     </td>
-                    <td class="url scrollable-td"><div class="scrollable-td-content"><a title="{{ $url }}" href="{{ $link }}">{{ $shortURL }}</a></div></td>
+                    <td class="url"><a title="{{ $url }}" href="{{ $link }}">{{ $shortURL }}</a></td>
                 </tr>
                 @endforeach
             </table>
