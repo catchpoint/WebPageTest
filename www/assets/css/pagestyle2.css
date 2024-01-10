@@ -4529,7 +4529,7 @@ table.checklist td {
 
 .history td.location {
   white-space: nowrap;
-  max-width: 10vw;
+  max-width: 300px;
   overflow: auto;
 }
 
