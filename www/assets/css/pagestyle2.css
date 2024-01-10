@@ -4467,7 +4467,6 @@ h2.light {
 
 table.history,
 table.checklist {
-  border-collapse: collapse;
   font-size: 0.875em;
   margin: 0;
 }
@@ -4525,7 +4524,7 @@ table.checklist td {
 
 .history td.location {
   white-space: nowrap;
-  max-width: 10vw;
+  max-width: 500px;
   overflow: auto;
 }
 
@@ -6675,7 +6674,6 @@ table.pretty {
   margin-left: auto;
   margin-right: auto;
   background-color: #fff;
-  border-collapse: collapse;
   border: 0;
 }
 
