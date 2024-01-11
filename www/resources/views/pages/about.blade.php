@@ -14,7 +14,7 @@
         align-items: center;
 
         .perf-img {
-            width: 700px
+            width: 570px
         }
 
         .perf-img-description {
