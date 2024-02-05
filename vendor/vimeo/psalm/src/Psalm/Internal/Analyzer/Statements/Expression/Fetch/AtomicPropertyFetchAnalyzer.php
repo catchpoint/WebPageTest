@@ -52,7 +52,6 @@ use Psalm\Type\Atomic\TFalse;
 use Psalm\Type\Atomic\TGenericObject;
 use Psalm\Type\Atomic\TInt;
 use Psalm\Type\Atomic\TLiteralInt;
-use Psalm\Type\Atomic\TLiteralString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TNull;
@@ -77,7 +76,7 @@ use const ARRAY_FILTER_USE_KEY;
 /**
  * @internal
  */
-class AtomicPropertyFetchAnalyzer
+final class AtomicPropertyFetchAnalyzer
 {
     /**
      * @param array<string> $invalid_fetch_types $invalid_fetch_types
@@ -116,17 +115,31 @@ class AtomicPropertyFetchAnalyzer
             return;
         }
 
-        $has_valid_fetch_type = true;
+        if ($lhs_type_part instanceof TObjectWithProperties) {
+            if (!isset($lhs_type_part->properties[$prop_name])) {
+                return;
+            }
 
-        if ($lhs_type_part instanceof TObjectWithProperties
-            && isset($lhs_type_part->properties[$prop_name])
-        ) {
+            $has_valid_fetch_type = true;
+
             $stmt_type = $statements_analyzer->node_data->getType($stmt);
 
             $statements_analyzer->node_data->setType(
                 $stmt,
                 Type::combineUnionTypes(
-                    $lhs_type_part->properties[$prop_name],
+                    TypeExpander::expandUnion(
+                        $statements_analyzer->getCodebase(),
+                        $lhs_type_part->properties[$prop_name],
+                        null,
+                        null,
+                        null,
+                        true,
+                        true,
+                        false,
+                        true,
+                        false,
+                        true,
+                    ),
                     $stmt_type,
                 ),
             );
@@ -134,12 +147,22 @@ class AtomicPropertyFetchAnalyzer
             return;
         }
 
+        $intersection_types = [];
+        if (!$lhs_type_part instanceof TObject) {
+            $intersection_types = $lhs_type_part->getIntersectionTypes();
+        }
+
         // stdClass and SimpleXMLElement are special cases where we cannot infer the return types
         // but we don't want to throw an error
         // Hack has a similar issue: https://github.com/facebook/hhvm/issues/5164
         if ($lhs_type_part instanceof TObject
-            || in_array(strtolower($lhs_type_part->value), Config::getInstance()->getUniversalObjectCrates(), true)
+            || (
+                in_array(strtolower($lhs_type_part->value), Config::getInstance()->getUniversalObjectCrates(), true)
+                && $intersection_types === []
+            )
         ) {
+            $has_valid_fetch_type = true;
+
             $statements_analyzer->node_data->setType($stmt, Type::getMixed());
 
             return;
@@ -149,8 +172,6 @@ class AtomicPropertyFetchAnalyzer
             $statements_analyzer->node_data->setType($stmt, Type::getMixed());
             return;
         }
-
-        $intersection_types = $lhs_type_part->getIntersectionTypes() ?: [];
 
         $fq_class_name = $lhs_type_part->value;
 
@@ -194,6 +215,7 @@ class AtomicPropertyFetchAnalyzer
 
         if ($class_storage->is_enum || in_array('UnitEnum', $codebase->getParentInterfaces($fq_class_name))) {
             if ($prop_name === 'value' && !$class_storage->is_enum) {
+                $has_valid_fetch_type = true;
                 $statements_analyzer->node_data->setType(
                     $stmt,
                     new Union([
@@ -202,9 +224,11 @@ class AtomicPropertyFetchAnalyzer
                     ]),
                 );
             } elseif ($prop_name === 'value' && $class_storage->enum_type !== null && $class_storage->enum_cases) {
+                $has_valid_fetch_type = true;
                 self::handleEnumValue($statements_analyzer, $stmt, $stmt_var_type, $class_storage);
             } elseif ($prop_name === 'name') {
-                self::handleEnumName($statements_analyzer, $stmt, $lhs_type_part);
+                $has_valid_fetch_type = true;
+                self::handleEnumName($statements_analyzer, $stmt, $stmt_var_type, $class_storage);
             } else {
                 self::handleNonExistentProperty(
                     $statements_analyzer,
@@ -221,6 +245,7 @@ class AtomicPropertyFetchAnalyzer
                     $stmt_var_id,
                     $has_magic_getter,
                     $var_id,
+                    $has_valid_fetch_type,
                 );
             }
 
@@ -238,39 +263,60 @@ class AtomicPropertyFetchAnalyzer
         // add method before changing fq_class_name
         $get_method_id = new MethodIdentifier($fq_class_name, '__get');
 
-        if (!$naive_property_exists
-            && $class_storage->namedMixins
-        ) {
-            foreach ($class_storage->namedMixins as $mixin) {
-                $new_property_id = $mixin->value . '::$' . $prop_name;
+        if (!$naive_property_exists) {
+            if ($class_storage->namedMixins) {
+                foreach ($class_storage->namedMixins as $mixin) {
+                    $new_property_id = $mixin->value . '::$' . $prop_name;
 
-                try {
-                    $new_class_storage = $codebase->classlike_storage_provider->get($mixin->value);
-                } catch (InvalidArgumentException $e) {
-                    $new_class_storage = null;
-                }
-
-                if ($new_class_storage
-                    && ($codebase->properties->propertyExists(
-                        $new_property_id,
-                        !$in_assignment,
-                        $statements_analyzer,
-                        $context,
-                        $codebase->collect_locations
-                                ? new CodeLocation($statements_analyzer->getSource(), $stmt)
-                                : null,
-                    )
-                        || isset($new_class_storage->pseudo_property_get_types['$' . $prop_name]))
-                ) {
-                    $fq_class_name = $mixin->value;
-                    $lhs_type_part = $mixin;
-                    $class_storage = $new_class_storage;
-
-                    if (!isset($new_class_storage->pseudo_property_get_types['$' . $prop_name])) {
-                        $naive_property_exists = true;
+                    try {
+                        $new_class_storage = $codebase->classlike_storage_provider->get($mixin->value);
+                    } catch (InvalidArgumentException $e) {
+                        $new_class_storage = null;
                     }
 
-                    $property_id = $new_property_id;
+                    if ($new_class_storage
+                        && ($codebase->properties->propertyExists(
+                            $new_property_id,
+                            !$in_assignment,
+                            $statements_analyzer,
+                            $context,
+                            $codebase->collect_locations
+                                    ? new CodeLocation($statements_analyzer->getSource(), $stmt)
+                                    : null,
+                        )
+                            || isset($new_class_storage->pseudo_property_get_types['$' . $prop_name]))
+                    ) {
+                        $fq_class_name = $mixin->value;
+                        $lhs_type_part = $mixin;
+                        $class_storage = $new_class_storage;
+
+                        if (!isset($new_class_storage->pseudo_property_get_types['$' . $prop_name])) {
+                            $naive_property_exists = true;
+                        }
+
+                        $property_id = $new_property_id;
+                    }
+                }
+            } elseif ($intersection_types !== [] && !$class_storage->final) {
+                foreach ($intersection_types as $intersection_type) {
+                    self::analyze(
+                        $statements_analyzer,
+                        $stmt,
+                        $context,
+                        $in_assignment,
+                        $var_id,
+                        $stmt_var_id,
+                        $stmt_var_type,
+                        $intersection_type,
+                        $prop_name,
+                        $has_valid_fetch_type,
+                        $invalid_fetch_types,
+                        $is_static_access,
+                    );
+
+                    if ($has_valid_fetch_type) {
+                        return;
+                    }
                 }
             }
         }
@@ -351,6 +397,7 @@ class AtomicPropertyFetchAnalyzer
                 $stmt_var_id,
                 $has_magic_getter,
                 $var_id,
+                $has_valid_fetch_type,
             );
 
             return;
@@ -486,6 +533,8 @@ class AtomicPropertyFetchAnalyzer
         }
 
         $stmt_type = $statements_analyzer->node_data->getType($stmt);
+
+        $has_valid_fetch_type = true;
         $statements_analyzer->node_data->setType(
             $stmt,
             Type::combineUnionTypes($class_property_type, $stmt_type),
@@ -664,7 +713,7 @@ class AtomicPropertyFetchAnalyzer
              * If we have an explicit list of all allowed magic properties on the class, and we're
              * not in that list, fall through
              */
-            if (!($class_storage->sealed_properties || $codebase->config->seal_all_properties)
+            if (!($class_storage->hasSealedProperties($codebase->config))
                 && !$override_property_visibility
             ) {
                 return false;
@@ -739,6 +788,7 @@ class AtomicPropertyFetchAnalyzer
                             $position = array_search(
                                 $param_name,
                                 array_keys($property_class_storage->template_types),
+                                true,
                             );
                         }
 
@@ -930,16 +980,31 @@ class AtomicPropertyFetchAnalyzer
     private static function handleEnumName(
         StatementsAnalyzer $statements_analyzer,
         PropertyFetch $stmt,
-        Atomic $lhs_type_part
+        Union $stmt_var_type,
+        ClassLikeStorage $class_storage
     ): void {
-        if ($lhs_type_part instanceof TEnumCase) {
-            $statements_analyzer->node_data->setType(
-                $stmt,
-                new Union([new TLiteralString($lhs_type_part->case_name)]),
-            );
-        } else {
-            $statements_analyzer->node_data->setType($stmt, Type::getNonEmptyString());
+        $relevant_enum_cases = array_filter(
+            $stmt_var_type->getAtomicTypes(),
+            static fn(Atomic $type): bool => $type instanceof TEnumCase,
+        );
+        $relevant_enum_case_names = array_map(
+            static fn(TEnumCase $enumCase): string => $enumCase->case_name,
+            $relevant_enum_cases,
+        );
+
+        if (empty($relevant_enum_case_names)) {
+            $relevant_enum_case_names = array_keys($class_storage->enum_cases);
         }
+
+        $statements_analyzer->node_data->setType(
+            $stmt,
+            empty($relevant_enum_case_names)
+                ? Type::getNonEmptyString()
+                : new Union(array_map(
+                    static fn(string $name): TString => Type::getAtomicStringFromLiteral($name),
+                    $relevant_enum_case_names,
+                )),
+        );
     }
 
     private static function handleEnumValue(
@@ -971,7 +1036,7 @@ class AtomicPropertyFetchAnalyzer
 
         foreach ($enum_cases as $enum_case) {
             if (is_string($enum_case->value)) {
-                $case_values[] = new TLiteralString($enum_case->value);
+                $case_values[] = Type::getAtomicStringFromLiteral($enum_case->value);
             } elseif (is_int($enum_case->value)) {
                 $case_values[] = new TLiteralInt($enum_case->value);
             } else {
@@ -1145,9 +1210,11 @@ class AtomicPropertyFetchAnalyzer
         bool $in_assignment,
         ?string $stmt_var_id,
         bool $has_magic_getter,
-        ?string $var_id
+        ?string $var_id,
+        bool &$has_valid_fetch_type
     ): void {
-        if ($config->use_phpdoc_property_without_magic_or_parent
+        if (($config->use_phpdoc_property_without_magic_or_parent
+            || $class_storage->hasAttributeIncludingParents('AllowDynamicProperties', $codebase))
             && isset($class_storage->pseudo_property_get_types['$' . $prop_name])
         ) {
             $stmt_type = $class_storage->pseudo_property_get_types['$' . $prop_name];
@@ -1179,6 +1246,7 @@ class AtomicPropertyFetchAnalyzer
                 $context,
             );
 
+            $has_valid_fetch_type = true;
             $statements_analyzer->node_data->setType($stmt, $stmt_type);
 
             return;

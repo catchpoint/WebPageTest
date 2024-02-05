@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\File;
@@ -59,6 +59,87 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
 
     }//end testArrayHint()
+
+
+    /**
+     * Verify variable.
+     *
+     * @return void
+     */
+    public function testVariable()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var',
+            'content'           => '$var',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testVariable()
+
+
+    /**
+     * Verify default value parsing with a single function param.
+     *
+     * @return void
+     */
+    public function testSingleDefaultValue()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var1',
+            'content'           => '$var1=self::CONSTANT',
+            'default'           => 'self::CONSTANT',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testSingleDefaultValue()
+
+
+    /**
+     * Verify default value parsing.
+     *
+     * @return void
+     */
+    public function testDefaultValues()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var1',
+            'content'           => '$var1=1',
+            'default'           => '1',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '',
+            'nullable_type'     => false,
+        ];
+        $expected[1] = [
+            'name'              => '$var2',
+            'content'           => "\$var2='value'",
+            'default'           => "'value'",
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testDefaultValues()
 
 
     /**
@@ -148,87 +229,6 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
 
     }//end testNullableTypeHint()
-
-
-    /**
-     * Verify variable.
-     *
-     * @return void
-     */
-    public function testVariable()
-    {
-        $expected    = [];
-        $expected[0] = [
-            'name'              => '$var',
-            'content'           => '$var',
-            'has_attributes'    => false,
-            'pass_by_reference' => false,
-            'variable_length'   => false,
-            'type_hint'         => '',
-            'nullable_type'     => false,
-        ];
-
-        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
-
-    }//end testVariable()
-
-
-    /**
-     * Verify default value parsing with a single function param.
-     *
-     * @return void
-     */
-    public function testSingleDefaultValue()
-    {
-        $expected    = [];
-        $expected[0] = [
-            'name'              => '$var1',
-            'content'           => '$var1=self::CONSTANT',
-            'has_attributes'    => false,
-            'default'           => 'self::CONSTANT',
-            'pass_by_reference' => false,
-            'variable_length'   => false,
-            'type_hint'         => '',
-            'nullable_type'     => false,
-        ];
-
-        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
-
-    }//end testSingleDefaultValue()
-
-
-    /**
-     * Verify default value parsing.
-     *
-     * @return void
-     */
-    public function testDefaultValues()
-    {
-        $expected    = [];
-        $expected[0] = [
-            'name'              => '$var1',
-            'content'           => '$var1=1',
-            'has_attributes'    => false,
-            'default'           => '1',
-            'pass_by_reference' => false,
-            'variable_length'   => false,
-            'type_hint'         => '',
-            'nullable_type'     => false,
-        ];
-        $expected[1] = [
-            'name'              => '$var2',
-            'content'           => "\$var2='value'",
-            'has_attributes'    => false,
-            'default'           => "'value'",
-            'pass_by_reference' => false,
-            'variable_length'   => false,
-            'type_hint'         => '',
-            'nullable_type'     => false,
-        ];
-
-        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
-
-    }//end testDefaultValues()
 
 
     /**
@@ -847,6 +847,43 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
 
 
     /**
+     * Verify recognition of PHP8 constructor with property promotion using PHP 8.1 readonly
+     * keyword without explicit visibility.
+     *
+     * @return void
+     */
+    public function testPHP81ConstructorPropertyPromotionWithOnlyReadOnly()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'                => '$promotedProp',
+            'content'             => 'readonly Foo&Bar $promotedProp',
+            'has_attributes'      => false,
+            'pass_by_reference'   => false,
+            'variable_length'     => false,
+            'type_hint'           => 'Foo&Bar',
+            'nullable_type'       => false,
+            'property_visibility' => 'public',
+            'property_readonly'   => true,
+        ];
+        $expected[1] = [
+            'name'                => '$promotedToo',
+            'content'             => 'readonly ?bool $promotedToo',
+            'has_attributes'      => false,
+            'pass_by_reference'   => false,
+            'variable_length'     => false,
+            'type_hint'           => '?bool',
+            'nullable_type'       => true,
+            'property_visibility' => 'public',
+            'property_readonly'   => true,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP81ConstructorPropertyPromotionWithOnlyReadOnly()
+
+
+    /**
      * Verify behaviour when a non-constructor function uses PHP 8 property promotion syntax.
      *
      * @return void
@@ -863,6 +900,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '',
             'nullable_type'       => false,
             'property_visibility' => 'private',
+            'property_readonly'   => false,
         ];
 
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
@@ -887,6 +925,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => 'callable',
             'nullable_type'       => false,
             'property_visibility' => 'public',
+            'property_readonly'   => false,
         ];
         $expected[1] = [
             'name'                => '$x',
@@ -897,6 +936,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => '',
             'nullable_type'       => false,
             'property_visibility' => 'private',
+            'property_readonly'   => false,
         ];
 
         $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
@@ -916,6 +956,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'name'              => '$param',
             'content'           => '// Leading comment.
     ?MyClass /*-*/ & /*-*/.../*-*/ $param /*-*/ = /*-*/ \'default value\' . /*-*/ \'second part\' // Trailing comment.',
+            'default'           => '\'default value\' . /*-*/ \'second part\' // Trailing comment.',
             'has_attributes'    => false,
             'pass_by_reference' => true,
             'variable_length'   => true,
@@ -945,6 +986,7 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
             'type_hint'           => 'string',
             'nullable_type'       => false,
             'property_visibility' => 'private',
+            'property_readonly'   => false,
         ];
         $expected[1] = [
             'name'              => '$typedParamSingleAttribute',
@@ -1125,6 +1167,54 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
 
 
     /**
+     * Verify recognition of PHP 8.2 stand-alone `true` type.
+     *
+     * @return void
+     */
+    public function testPHP82PseudoTypeTrue()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var',
+            'content'           => '?true $var = true',
+            'default'           => 'true',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => '?true',
+            'nullable_type'     => true,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP82PseudoTypeTrue()
+
+
+    /**
+     * Verify recognition of PHP 8.2 type declaration with (illegal) type false combined with type true.
+     *
+     * @return void
+     */
+    public function testPHP82PseudoTypeFalseAndTrue()
+    {
+        $expected    = [];
+        $expected[0] = [
+            'name'              => '$var',
+            'content'           => 'true|false $var = true',
+            'default'           => 'true',
+            'has_attributes'    => false,
+            'pass_by_reference' => false,
+            'variable_length'   => false,
+            'type_hint'         => 'true|false',
+            'nullable_type'     => false,
+        ];
+
+        $this->getMethodParametersTestHelper('/* '.__FUNCTION__.' */', $expected);
+
+    }//end testPHP82PseudoTypeFalseAndTrue()
+
+
+    /**
      * Test helper.
      *
      * @param string $commentString The comment which preceeds the test.
@@ -1137,7 +1227,23 @@ class GetMethodParametersTest extends AbstractMethodUnitTest
         $function = $this->getTargetToken($commentString, [T_FUNCTION, T_CLOSURE, T_FN]);
         $found    = self::$phpcsFile->getMethodParameters($function);
 
-        $this->assertArraySubset($expected, $found, true);
+        // Unset those indexes which are not being tested.
+        foreach ($found as $i => $param) {
+            unset(
+                $found[$i]['token'],
+                $found[$i]['reference_token'],
+                $found[$i]['variadic_token'],
+                $found[$i]['type_hint_token'],
+                $found[$i]['type_hint_end_token'],
+                $found[$i]['comma_token'],
+                $found[$i]['default_token'],
+                $found[$i]['default_equal_token'],
+                $found[$i]['visibility_token'],
+                $found[$i]['readonly_token']
+            );
+        }
+
+        $this->assertSame($expected, $found);
 
     }//end getMethodParametersTestHelper()
 

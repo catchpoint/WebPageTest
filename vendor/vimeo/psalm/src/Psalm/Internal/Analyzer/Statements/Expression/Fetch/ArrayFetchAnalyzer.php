@@ -100,7 +100,7 @@ use function strtolower;
 /**
  * @internal
  */
-class ArrayFetchAnalyzer
+final class ArrayFetchAnalyzer
 {
     public static function analyze(
         StatementsAnalyzer $statements_analyzer,
@@ -480,8 +480,22 @@ class ArrayFetchAnalyzer
 
         $key_values = [];
 
+        if ($codebase->store_node_types
+            && !$context->collect_initializations
+            && !$context->collect_mutations
+        ) {
+            $codebase->analyzer->addNodeType(
+                $statements_analyzer->getFilePath(),
+                $stmt->var,
+                $array_type->getId(),
+            );
+        }
+
         if ($stmt->dim instanceof PhpParser\Node\Scalar\String_) {
-            $key_values[] = new TLiteralString($stmt->dim->value);
+            $value_type = Type::getAtomicStringFromLiteral($stmt->dim->value);
+            if ($value_type instanceof TLiteralString) {
+                $key_values[] = $value_type;
+            }
         } elseif ($stmt->dim instanceof PhpParser\Node\Scalar\LNumber) {
             $key_values[] = new TLiteralInt($stmt->dim->value);
         } elseif ($stmt->dim && ($stmt_dim_type = $statements_analyzer->node_data->getType($stmt->dim))) {
@@ -514,7 +528,7 @@ class ArrayFetchAnalyzer
 
             if ($in_assignment) {
                 $offset_type->removeType('null');
-                $offset_type->addType(new TLiteralString(''));
+                $offset_type->addType(Type::getAtomicStringFromLiteral(''));
             }
         }
 
@@ -534,7 +548,7 @@ class ArrayFetchAnalyzer
                 $offset_type->removeType('null');
 
                 if (!$offset_type->ignore_nullable_issues) {
-                    $offset_type->addType(new TLiteralString(''));
+                    $offset_type->addType(Type::getAtomicStringFromLiteral(''));
                 }
             }
         }
@@ -1734,8 +1748,12 @@ class ArrayFetchAnalyzer
         ?Union &$array_access_type,
         bool &$has_array_access
     ): void {
-        if (strtolower($type->value) === 'simplexmlelement') {
-            $call_array_access_type = new Union([new TNamedObject('SimpleXMLElement')]);
+        $codebase = $statements_analyzer->getCodebase();
+        if (strtolower($type->value) === 'simplexmlelement'
+            || ($codebase->classExists($type->value)
+                && $codebase->classExtendsOrImplements($type->value, 'SimpleXMLElement'))
+        ) {
+            $call_array_access_type = new Union([new TNull(), new TNamedObject('SimpleXMLElement')]);
         } elseif (strtolower($type->value) === 'domnodelist' && $stmt->dim) {
             $old_data_provider = $statements_analyzer->node_data;
 

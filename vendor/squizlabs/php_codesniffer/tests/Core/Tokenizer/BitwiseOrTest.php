@@ -4,7 +4,7 @@
  *
  * @author    Juliette Reinders Folmer <phpcs_nospam@adviesenzo.nl>
  * @copyright 2020 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Tokenizer;
@@ -110,6 +110,7 @@ class BitwiseOrTest extends AbstractMethodUnitTest
             ['/* testTypeUnionPropertyWithStaticAndReadOnlyKeywords */'],
             ['/* testTypeUnionPropertyWithVarAndReadOnlyKeywords */'],
             ['/* testTypeUnionPropertyWithOnlyReadOnlyKeyword */'],
+            ['/* testTypeUnionPropertyWithOnlyStaticKeyword */'],
             ['/* testTypeUnionParam1 */'],
             ['/* testTypeUnionParam2 */'],
             ['/* testTypeUnionParam3 */'],
@@ -130,6 +131,9 @@ class BitwiseOrTest extends AbstractMethodUnitTest
             ['/* testTypeUnionArrowParam */'],
             ['/* testTypeUnionArrowReturnType */'],
             ['/* testTypeUnionNonArrowFunctionDeclaration */'],
+            ['/* testTypeUnionPHP82TrueFirst */'],
+            ['/* testTypeUnionPHP82TrueMiddle */'],
+            ['/* testTypeUnionPHP82TrueLast */'],
         ];
 
     }//end dataTypeUnion()

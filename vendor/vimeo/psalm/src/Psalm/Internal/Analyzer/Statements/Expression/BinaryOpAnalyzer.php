@@ -32,13 +32,14 @@ use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 use UnexpectedValueException;
 
+use function array_merge;
 use function in_array;
 use function strlen;
 
 /**
  * @internal
  */
-class BinaryOpAnalyzer
+final class BinaryOpAnalyzer
 {
     public static function analyze(
         StatementsAnalyzer $statements_analyzer,
@@ -170,6 +171,14 @@ class BinaryOpAnalyzer
                 $removed_taints = $codebase->config->eventDispatcher->dispatchRemoveTaints($event);
 
                 if ($stmt_left_type && $stmt_left_type->parent_nodes) {
+                    // numeric types can't be tainted html or has_quotes, neither can bool
+                    if ($statements_analyzer->data_flow_graph instanceof TaintFlowGraph
+                        && $stmt_left_type->isSingle()
+                        && ($stmt_left_type->isInt() || $stmt_left_type->isFloat() || $stmt_left_type->isBool())
+                    ) {
+                        $removed_taints = array_merge($removed_taints, array('html', 'has_quotes'));
+                    }
+
                     foreach ($stmt_left_type->parent_nodes as $parent_node) {
                         $statements_analyzer->data_flow_graph->addPath(
                             $parent_node,
@@ -182,6 +191,14 @@ class BinaryOpAnalyzer
                 }
 
                 if ($stmt_right_type && $stmt_right_type->parent_nodes) {
+                    // numeric types can't be tainted html or has_quotes, neither can bool
+                    if ($statements_analyzer->data_flow_graph instanceof TaintFlowGraph
+                        && $stmt_right_type->isSingle()
+                        && ($stmt_right_type->isInt() || $stmt_right_type->isFloat() || $stmt_right_type->isBool())
+                    ) {
+                        $removed_taints = array_merge($removed_taints, array('html', 'has_quotes'));
+                    }
+
                     foreach ($stmt_right_type->parent_nodes as $parent_node) {
                         $statements_analyzer->data_flow_graph->addPath(
                             $parent_node,
@@ -261,7 +278,7 @@ class BinaryOpAnalyzer
                     || $stmt instanceof PhpParser\Node\Expr\BinaryOp\NotIdentical)
                 && $stmt->left instanceof PhpParser\Node\Expr\FuncCall
                 && $stmt->left->name instanceof PhpParser\Node\Name
-                && $stmt->left->name->parts === ['substr']
+                && $stmt->left->name->getParts() === ['substr']
                 && isset($stmt->left->getArgs()[1])
                 && $stmt_right_type
                 && $stmt_right_type->hasLiteralString()

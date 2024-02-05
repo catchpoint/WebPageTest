@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Squiz\Tests\ControlStructures;
@@ -77,6 +77,8 @@ class ControlSignatureUnitTest extends AbstractSniffUnitTest
             $errors[279] = 1;
             $errors[283] = 1;
             $errors[306] = 3;
+            $errors[309] = 1;
+            $errors[315] = 1;
         }//end if
 
         return $errors;

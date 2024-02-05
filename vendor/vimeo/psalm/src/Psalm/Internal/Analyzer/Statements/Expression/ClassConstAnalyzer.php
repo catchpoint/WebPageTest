@@ -25,6 +25,7 @@ use Psalm\Issue\InaccessibleClassConstant;
 use Psalm\Issue\InternalClass;
 use Psalm\Issue\InvalidClassConstantType;
 use Psalm\Issue\InvalidConstantAssignmentValue;
+use Psalm\Issue\InvalidStringClass;
 use Psalm\Issue\LessSpecificClassConstantType;
 use Psalm\Issue\NonStaticSelfCall;
 use Psalm\Issue\OverriddenFinalConstant;
@@ -41,6 +42,7 @@ use Psalm\Type\Atomic\TLiteralClassString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TObject;
+use Psalm\Type\Atomic\TString;
 use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\Atomic\TTemplateParamClass;
 use Psalm\Type\Union;
@@ -54,7 +56,7 @@ use function strtolower;
 /**
  * @internal
  */
-class ClassConstAnalyzer
+final class ClassConstAnalyzer
 {
     /**
      * @psalm-suppress ComplexMethod to be refactored. We should probably regroup the two big if about $stmt->class and
@@ -70,7 +72,7 @@ class ClassConstAnalyzer
         $statements_analyzer->node_data->setType($stmt, Type::getMixed());
 
         if ($stmt->class instanceof PhpParser\Node\Name) {
-            $first_part_lc = strtolower($stmt->class->parts[0]);
+            $first_part_lc = strtolower($stmt->class->getFirst());
 
             if ($first_part_lc === 'self' || $first_part_lc === 'static') {
                 if (!$context->self) {
@@ -126,7 +128,7 @@ class ClassConstAnalyzer
             $moved_class = false;
 
             if ($codebase->alter_code
-                && !in_array($stmt->class->parts[0], ['parent', 'static'])
+                && !in_array($stmt->class->getFirst(), ['parent', 'static'])
             ) {
                 $moved_class = $codebase->classlikes->handleClassLikeReferenceInMigration(
                     $codebase,
@@ -135,7 +137,7 @@ class ClassConstAnalyzer
                     $fq_class_name,
                     $context->calling_method_id,
                     false,
-                    $stmt->class->parts[0] === 'self',
+                    $stmt->class->getFirst() === 'self',
                 );
             }
 
@@ -257,7 +259,7 @@ class ClassConstAnalyzer
                     $class_visibility,
                     $statements_analyzer,
                     [],
-                    $stmt->class->parts[0] === "static",
+                    $stmt->class->getFirst() === "static",
                 );
             } catch (InvalidArgumentException $_) {
                 return true;
@@ -383,7 +385,11 @@ class ClassConstAnalyzer
                 );
             }
 
-            if ($first_part_lc !== 'static' || $const_class_storage->final || $class_constant_type->from_docblock) {
+            if ($first_part_lc !== 'static' || $const_class_storage->final || $class_constant_type->from_docblock
+                || (isset($const_class_storage->constants[$stmt->name->name])
+                    && $const_class_storage->constants[$stmt->name->name]->final
+                )
+            ) {
                 $stmt_type = $class_constant_type;
 
                 $statements_analyzer->node_data->setType($stmt, $stmt_type);
@@ -467,6 +473,17 @@ class ClassConstAnalyzer
                 } elseif ($atomic_type instanceof TLiteralClassString) {
                     $fq_class_name = $atomic_type->value;
                     $lhs_type_definite_class = $atomic_type->definite_class;
+                } elseif ($atomic_type instanceof TString
+                    && !$atomic_type instanceof TClassString
+                    && !$codebase->config->allow_string_standin_for_class
+                ) {
+                    IssueBuffer::maybeAdd(
+                        new InvalidStringClass(
+                            'String cannot be used as a class',
+                            new CodeLocation($statements_analyzer->getSource(), $stmt->class),
+                        ),
+                        $statements_analyzer->getSuppressedIssues(),
+                    );
                 }
             }
 
@@ -831,6 +848,7 @@ class ClassConstAnalyzer
                     assert($parent_classlike_storage !== null);
                     if (!isset($parent_classlike_storage->parent_interfaces[strtolower($interface)])
                         && !isset($interface_storage->parent_interfaces[strtolower($parent_classlike_storage->name)])
+                        && $interface_const_storage !== $parent_const_storage
                     ) {
                         IssueBuffer::maybeAdd(
                             new AmbiguousConstantInheritance(

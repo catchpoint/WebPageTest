@@ -3,7 +3,7 @@
 /*
  * This file is part of Respect/Validation.
  *
- * (c) Alexandre Gomes Gaigalas <alexandre@gaigalas.net>
+ * (c) Alexandre Gomes Gaigalas <alganet@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE file
  * that was distributed with this source code.
@@ -102,7 +102,7 @@ final class PostalCode extends AbstractEnvelope
         'JP' => '/^\d{3}-\d{4}$/',
         'KE' => '/^(\d{5})$/',
         'KG' => '/^(\d{6})$/',
-        'KH' => '/^(\d{5})$/',
+        'KH' => '/^(\d{5,6})$/',
         'KP' => '/^(\d{6})$/',
         'KR' => '/^(\d{5})$/',
         'KW' => '/^(\d{5})$/',

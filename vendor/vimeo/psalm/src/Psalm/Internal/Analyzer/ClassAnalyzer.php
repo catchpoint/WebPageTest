@@ -36,9 +36,11 @@ use Psalm\Issue\DuplicateEnumCaseValue;
 use Psalm\Issue\ExtensionRequirementViolation;
 use Psalm\Issue\ImplementationRequirementViolation;
 use Psalm\Issue\InaccessibleMethod;
+use Psalm\Issue\InheritorViolation;
 use Psalm\Issue\InternalClass;
 use Psalm\Issue\InvalidEnumCaseValue;
 use Psalm\Issue\InvalidExtendClass;
+use Psalm\Issue\InvalidInterfaceImplementation;
 use Psalm\Issue\InvalidTraversableImplementation;
 use Psalm\Issue\MethodSignatureMismatch;
 use Psalm\Issue\MismatchingDocblockPropertyType;
@@ -104,7 +106,7 @@ use function substr;
 /**
  * @internal
  */
-class ClassAnalyzer extends ClassLikeAnalyzer
+final class ClassAnalyzer extends ClassLikeAnalyzer
 {
     /**
      * @var array<string, Union>
@@ -270,6 +272,22 @@ class ClassAnalyzer extends ClassLikeAnalyzer
             );
         }
 
+        $class_union = new Union([new TNamedObject($fq_class_name)]);
+        foreach ($storage->parent_classes + $storage->direct_class_interfaces as $parent_class) {
+            $parent_storage = $codebase->classlikes->getStorageFor($parent_class);
+            if ($parent_storage && $parent_storage->inheritors) {
+                if (!UnionTypeComparator::isContainedBy($codebase, $class_union, $parent_storage->inheritors)) {
+                    IssueBuffer::maybeAdd(
+                        new InheritorViolation(
+                            'Class ' . $fq_class_name . ' is not an allowed inheritor of parent class ' . $parent_class,
+                            new CodeLocation($this, $this->class),
+                        ),
+                        $this->getSuppressedIssues(),
+                    );
+                }
+            }
+        }
+
 
         if ($storage->template_types) {
             foreach ($storage->template_types as $param_name => $_) {
@@ -359,16 +377,6 @@ class ClassAnalyzer extends ClassLikeAnalyzer
 
         if ($storage->invalid_dependencies) {
             return;
-        }
-
-        if ($this->leftover_stmts) {
-            (new StatementsAnalyzer(
-                $this,
-                new NodeDataProvider(),
-            ))->analyze(
-                $this->leftover_stmts,
-                $class_context,
-            );
         }
 
         if (!$storage->abstract) {
@@ -711,7 +719,7 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                             new OverriddenPropertyAccess(
                                 'Property ' . $fq_class_name . '::$' . $property_name
                                     . ' has different access level than '
-                                    . $storage->name . '::$' . $property_name,
+                                    . $guide_class_name . '::$' . $property_name,
                                 $property_storage->location,
                             ),
                         );
@@ -811,7 +819,20 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                         $codebase,
                     );
 
-                    if ($property_storage->location
+                    if ($guide_property_storage->readonly
+                        && UnionTypeComparator::isContainedBy(
+                            $codebase,
+                            $property_type,
+                            $guide_property_type,
+                            false,
+                            false,
+                            null,
+                            false,
+                            false,
+                        )) {
+                        // if the original property is readonly, it cannot be written
+                        // therefore invariance is not a problem, if the parent type contains the child type
+                    } elseif ($property_storage->location
                         && !$property_type->equals($guide_property_type, false)
                         && $guide_class_storage->user_defined
                     ) {
@@ -1005,6 +1026,11 @@ class ClassAnalyzer extends ClassLikeAnalyzer
         if (!isset($storage->declaring_method_ids['__construct'])
             && !$config->reportIssueInFile('MissingConstructor', $this->getFilePath())
         ) {
+            return;
+        }
+
+        // abstract constructors do not have any code, therefore cannot set any properties either
+        if (isset($storage->methods['__construct']) && $storage->methods['__construct']->abstract) {
             return;
         }
 
@@ -1780,8 +1806,6 @@ class ClassAnalyzer extends ClassLikeAnalyzer
         $method_context = clone $class_context;
 
         foreach ($method_context->vars_in_scope as $context_var_id => $context_type) {
-            $method_context->vars_in_scope[$context_var_id] = $context_type;
-
             if ($context_type->from_property && $stmt->name->name !== '__construct') {
                 $method_context->vars_in_scope[$context_var_id] =
                     $method_context->vars_in_scope[$context_var_id]->setProperties(['initialized' => true]);
@@ -2014,7 +2038,7 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                         . ($interface_name instanceof PhpParser\Node\Name\FullyQualified
                             ? '\\'
                             : $this->getNamespace() . '-')
-                        . implode('\\', $interface_name->parts),
+                        . $interface_name->toString(),
             );
 
             $interface_location = new CodeLocation($this, $interface_name);
@@ -2108,6 +2132,35 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                 IssueBuffer::maybeAdd(
                     new InvalidTraversableImplementation(
                         'Traversable should be implemented by implementing IteratorAggregate or Iterator',
+                        $code_location,
+                        $fq_class_name,
+                    ),
+                );
+            }
+
+            if ($fq_interface_name_lc === 'throwable'
+                && $codebase->analysis_php_version_id >= 7_00_00
+                && !$storage->abstract
+                && !isset($storage->parent_classes['exception'])
+                && !isset($storage->parent_classes['error'])
+            ) {
+                IssueBuffer::maybeAdd(
+                    new InvalidInterfaceImplementation(
+                        'Classes implementing Throwable should extend Exception or Error',
+                        $code_location,
+                        $fq_class_name,
+                    ),
+                );
+            }
+
+            if (($fq_interface_name_lc === 'unitenum'
+                    || $fq_interface_name_lc === 'backedenum')
+                && !$storage->is_enum
+                && $codebase->analysis_php_version_id >= 8_01_00
+            ) {
+                IssueBuffer::maybeAdd(
+                    new InvalidInterfaceImplementation(
+                        $fq_interface_name . ' cannot be implemented by classes',
                         $code_location,
                         $fq_class_name,
                     ),
@@ -2330,6 +2383,18 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                 );
             }
 
+            if ($parent_class_storage->readonly && !$storage->readonly) {
+                IssueBuffer::maybeAdd(
+                    new InvalidExtendClass(
+                        'Non-readonly class ' . $fq_class_name . ' may not inherit from '
+                        . 'readonly class ' . $parent_fq_class_name,
+                        $code_location,
+                        $fq_class_name,
+                    ),
+                    $storage->suppressed_issues + $this->getSuppressedIssues(),
+                );
+            }
+
             if ($parent_class_storage->deprecated) {
                 IssueBuffer::maybeAdd(
                     new DeprecatedClass(
@@ -2389,7 +2454,7 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                             . ($extended_class instanceof PhpParser\Node\Name\FullyQualified
                                 ? '\\'
                                 : $this->getNamespace() . '-')
-                            . implode('\\', $extended_class->parts),
+                            . $extended_class->toString(),
                 );
             }
 
@@ -2434,7 +2499,7 @@ class ClassAnalyzer extends ClassLikeAnalyzer
                         $storage->name,
                     ),
                 );
-            } elseif ($case_storage->value !== null && $storage->enum_type !== null) {
+            } elseif ($case_storage->value !== null) {
                 if ((is_int($case_storage->value) && $storage->enum_type === 'string')
                     || (is_string($case_storage->value) && $storage->enum_type === 'int')
                 ) {

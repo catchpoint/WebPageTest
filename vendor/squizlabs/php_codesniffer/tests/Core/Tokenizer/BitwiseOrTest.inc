@@ -48,6 +48,9 @@ class TypeUnion
     /* testTypeUnionPropertyWithOnlyReadOnlyKeyword */
     readonly string|null $nullableString;
 
+    /* testTypeUnionPropertyWithOnlyStaticKeyword */
+    static Foo|Bar $obj;
+
     public function paramTypes(
         /* testTypeUnionParam1 */
         int|float $paramA /* testBitwiseOrParamDefaultValue */ = CONSTANT_A | CONSTANT_B,
@@ -128,6 +131,15 @@ $obj->fn($something | $else);
 
 /* testTypeUnionNonArrowFunctionDeclaration */
 function &fn(int|false $something) {}
+
+/* testTypeUnionPHP82TrueFirst */
+function trueTypeParam(true|null $param) {}
+
+/* testTypeUnionPHP82TrueMiddle */
+function trueTypeReturn($param): array|true|null {}
+
+/* testTypeUnionPHP82TrueLast */
+$closure = function ($param): array|true {}
 
 /* testLiveCoding */
 // Intentional parse error. This has to be the last test in the file.

@@ -58,7 +58,7 @@ use function strtolower;
 /**
  * @internal
  */
-class CastAnalyzer
+final class CastAnalyzer
 {
     /** @var string[] */
     private const PSEUDO_CASTABLE_CLASSES = [
@@ -142,14 +142,9 @@ class CastAnalyzer
                 }
             }
 
-            if ($statements_analyzer->data_flow_graph instanceof VariableUseGraph
-            ) {
-                $type = new Union([new TBool()], [
-                    'parent_nodes' => $maybe_type->parent_nodes ?? [],
-                ]);
-            } else {
-                $type = Type::getBool();
-            }
+            $type = new Union([new TBool()], [
+                'parent_nodes' => $maybe_type->parent_nodes ?? [],
+            ]);
 
             $statements_analyzer->node_data->setType($stmt, $type);
 
@@ -328,11 +323,7 @@ class CastAnalyzer
 
         $atomic_types = $stmt_type->getAtomicTypes();
 
-        $parent_nodes = [];
-
-        if ($statements_analyzer->data_flow_graph instanceof VariableUseGraph) {
-            $parent_nodes = $stmt_type->parent_nodes;
-        }
+        $parent_nodes = $stmt_type->parent_nodes;
 
         while ($atomic_types) {
             $atomic_type = array_pop($atomic_types);
@@ -485,7 +476,7 @@ class CastAnalyzer
             // todo: emit error here
         }
 
-        $valid_types = array_merge($valid_ints, $castable_types);
+        $valid_types = [...$valid_ints, ...$castable_types];
 
         if (!$valid_types) {
             $int_type = Type::getInt();
@@ -518,11 +509,7 @@ class CastAnalyzer
 
         $atomic_types = $stmt_type->getAtomicTypes();
 
-        $parent_nodes = [];
-
-        if ($statements_analyzer->data_flow_graph instanceof VariableUseGraph) {
-            $parent_nodes = $stmt_type->parent_nodes;
-        }
+        $parent_nodes = $stmt_type->parent_nodes;
 
         while ($atomic_types) {
             $atomic_type = array_pop($atomic_types);
@@ -674,7 +661,7 @@ class CastAnalyzer
             // todo: emit error here
         }
 
-        $valid_types = array_merge($valid_floats, $castable_types);
+        $valid_types = [...$valid_floats, ...$castable_types];
 
         if (!$valid_types) {
             $float_type = Type::getFloat();
@@ -721,7 +708,7 @@ class CastAnalyzer
                 || $atomic_type instanceof TNumeric
             ) {
                 if ($atomic_type instanceof TLiteralInt || $atomic_type instanceof TLiteralFloat) {
-                    $castable_types[] = new TLiteralString((string) $atomic_type->value);
+                    $castable_types[] = Type::getAtomicStringFromLiteral((string) $atomic_type->value);
                 } elseif ($atomic_type instanceof TNonspecificLiteralInt) {
                     $castable_types[] = new TNonspecificLiteralString();
                 } else {
@@ -740,20 +727,20 @@ class CastAnalyzer
             if ($atomic_type instanceof TNull
                 || $atomic_type instanceof TFalse
             ) {
-                $valid_strings[] = new TLiteralString('');
+                $valid_strings[] = Type::getAtomicStringFromLiteral('');
                 continue;
             }
 
             if ($atomic_type instanceof TTrue
             ) {
-                $valid_strings[] = new TLiteralString('1');
+                $valid_strings[] = Type::getAtomicStringFromLiteral('1');
                 continue;
             }
 
             if ($atomic_type instanceof TBool
             ) {
-                $valid_strings[] = new TLiteralString('1');
-                $valid_strings[] = new TLiteralString('');
+                $valid_strings[] = Type::getAtomicStringFromLiteral('1');
+                $valid_strings[] = Type::getAtomicStringFromLiteral('');
                 continue;
             }
 
@@ -817,10 +804,7 @@ class CastAnalyzer
                                 $parent_nodes = array_merge($return_type->parent_nodes, $parent_nodes);
                             }
 
-                            $castable_types = array_merge(
-                                $castable_types,
-                                array_values($return_type->getAtomicTypes()),
-                            );
+                            $castable_types = [...$castable_types, ...array_values($return_type->getAtomicTypes())];
 
                             continue 2;
                         }

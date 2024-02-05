@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Fidry\CpuCoreCounter\Finder;
 
-use Fidry\CpuCoreCounter\Exec\ProcOpen;
+use Fidry\CpuCoreCounter\Executor\ProcessExecutor;
+use Fidry\CpuCoreCounter\Executor\ProcOpenExecutor;
 use function filter_var;
 use function function_exists;
 use function is_int;
@@ -24,6 +25,16 @@ use const PHP_EOL;
 
 abstract class ProcOpenBasedFinder implements CpuCoreFinder
 {
+    /**
+     * @var ProcessExecutor
+     */
+    private $executor;
+
+    public function __construct(?ProcessExecutor $executor = null)
+    {
+        $this->executor = $executor ?? new ProcOpenExecutor();
+    }
+
     public function diagnose(): string
     {
         if (!function_exists('proc_open')) {
@@ -31,7 +42,7 @@ abstract class ProcOpenBasedFinder implements CpuCoreFinder
         }
 
         $command = $this->getCommand();
-        $output = ProcOpen::execute($command);
+        $output = $this->executor->execute($command);
 
         if (null === $output) {
             return sprintf(
@@ -63,11 +74,7 @@ abstract class ProcOpenBasedFinder implements CpuCoreFinder
      */
     public function find(): ?int
     {
-        if (!function_exists('proc_open')) {
-            return null;
-        }
-
-        $output = ProcOpen::execute($this->getCommand());
+        $output = $this->executor->execute($this->getCommand());
 
         if (null === $output) {
             return null;
@@ -78,7 +85,7 @@ abstract class ProcOpenBasedFinder implements CpuCoreFinder
 
         return $failed
             ? null
-            : static::countCpuCores($stdout);
+            : $this->countCpuCores($stdout);
     }
 
     /**
@@ -86,7 +93,7 @@ abstract class ProcOpenBasedFinder implements CpuCoreFinder
      *
      * @return positive-int|null
      */
-    public static function countCpuCores(string $process): ?int
+    protected function countCpuCores(string $process): ?int
     {
         $cpuCount = filter_var($process, FILTER_VALIDATE_INT);
 

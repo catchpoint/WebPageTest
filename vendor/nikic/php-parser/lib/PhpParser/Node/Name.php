@@ -6,7 +6,10 @@ use PhpParser\NodeAbstract;
 
 class Name extends NodeAbstract
 {
-    /** @var string[] Parts of the name */
+    /**
+     * @var string[] Parts of the name
+     * @deprecated Use getParts() instead
+     */
     public $parts;
 
     private static $specialClassNames = [
@@ -28,6 +31,15 @@ class Name extends NodeAbstract
 
     public function getSubNodeNames() : array {
         return ['parts'];
+    }
+
+    /**
+     * Get parts of name (split by the namespace separator).
+     *
+     * @return string[] Parts of name
+     */
+    public function getParts(): array {
+        return $this->parts;
     }
 
     /**
@@ -162,7 +174,7 @@ class Name extends NodeAbstract
             $realLength = $numParts - $realOffset;
         } else {
             $realLength = $length < 0 ? $length + $numParts - $realOffset : $length;
-            if ($realLength < 0 || $realLength > $numParts) {
+            if ($realLength < 0 || $realLength > $numParts - $realOffset) {
                 throw new \OutOfBoundsException(sprintf('Length %d is out of bounds', $length));
             }
         }

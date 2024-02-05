@@ -13,7 +13,6 @@ use Psalm\Internal\Analyzer\Statements\Expression\AssignmentAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\BinaryOpAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\BitwiseNotAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\BooleanNotAnalyzer;
-use Psalm\Internal\Analyzer\Statements\Expression\Call\ArgumentAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Call\FunctionCallAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Call\MethodCallAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Call\NewAnalyzer;
@@ -43,19 +42,18 @@ use Psalm\Internal\Analyzer\Statements\Expression\UnaryPlusMinusAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\YieldAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\YieldFromAnalyzer;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
-use Psalm\Internal\Codebase\TaintFlowGraph;
-use Psalm\Internal\DataFlow\DataFlowNode;
-use Psalm\Internal\DataFlow\TaintSink;
 use Psalm\Internal\FileManipulation\FileManipulationBuffer;
 use Psalm\Internal\Type\TemplateResult;
-use Psalm\Issue\ForbiddenCode;
 use Psalm\Issue\UnrecognizedExpression;
 use Psalm\Issue\UnsupportedReferenceUsage;
 use Psalm\IssueBuffer;
+use Psalm\Node\Expr\VirtualFuncCall;
+use Psalm\Node\Scalar\VirtualEncapsed;
+use Psalm\Node\VirtualArg;
+use Psalm\Node\VirtualName;
 use Psalm\Plugin\EventHandler\Event\AfterExpressionAnalysisEvent;
-use Psalm\Storage\FunctionLikeParameter;
+use Psalm\Plugin\EventHandler\Event\BeforeExpressionAnalysisEvent;
 use Psalm\Type;
-use Psalm\Type\TaintKind;
 
 use function get_class;
 use function in_array;
@@ -64,7 +62,7 @@ use function strtolower;
 /**
  * @internal
  */
-class ExpressionAnalyzer
+final class ExpressionAnalyzer
 {
     /**
      * @param bool $assigned_to_reference This is set to true when the expression being analyzed
@@ -80,6 +78,10 @@ class ExpressionAnalyzer
         ?TemplateResult $template_result = null,
         bool $assigned_to_reference = false
     ): bool {
+        if (self::dispatchBeforeExpressionAnalysis($stmt, $context, $statements_analyzer) === false) {
+            return false;
+        }
+
         $codebase = $statements_analyzer->getCodebase();
 
         if (self::handleExpression(
@@ -126,22 +128,8 @@ class ExpressionAnalyzer
             }
         }
 
-        $event = new AfterExpressionAnalysisEvent(
-            $stmt,
-            $context,
-            $statements_analyzer,
-            $codebase,
-            [],
-        );
-
-        if ($codebase->config->eventDispatcher->dispatchAfterExpressionAnalysis($event) === false) {
+        if (self::dispatchAfterExpressionAnalysis($stmt, $context, $statements_analyzer) === false) {
             return false;
-        }
-
-        $file_manipulations = $event->getFileReplacements();
-
-        if ($file_manipulations) {
-            FileManipulationBuffer::add($statements_analyzer->getFilePath(), $file_manipulations);
         }
 
         return true;
@@ -280,7 +268,7 @@ class ExpressionAnalyzer
         }
 
         if ($stmt instanceof PhpParser\Node\Expr\New_) {
-            return NewAnalyzer::analyze($statements_analyzer, $stmt, $context);
+            return NewAnalyzer::analyze($statements_analyzer, $stmt, $context, $template_result);
         }
 
         if ($stmt instanceof PhpParser\Node\Expr\Array_) {
@@ -387,80 +375,20 @@ class ExpressionAnalyzer
         }
 
         if ($stmt instanceof PhpParser\Node\Expr\ShellExec) {
-            if ($statements_analyzer->data_flow_graph) {
-                $call_location = new CodeLocation($statements_analyzer->getSource(), $stmt);
-
-                if ($statements_analyzer->data_flow_graph instanceof TaintFlowGraph) {
-                    $sink = TaintSink::getForMethodArgument(
-                        'shell_exec',
-                        'shell_exec',
-                        0,
-                        null,
-                        $call_location,
-                    );
-
-                    $sink->taints = [TaintKind::INPUT_SHELL];
-
-                    $statements_analyzer->data_flow_graph->addSink($sink);
-                }
-
-                foreach ($stmt->parts as $part) {
-                    if ($part instanceof PhpParser\Node\Expr\Variable) {
-                        if (self::analyze($statements_analyzer, $part, $context) === false) {
-                            break;
-                        }
-
-                        $expr_type = $statements_analyzer->node_data->getType($part);
-                        if ($expr_type === null) {
-                            break;
-                        }
-
-                        $shell_exec_param = new FunctionLikeParameter(
-                            'var',
-                            false,
-                        );
-
-                        if (ArgumentAnalyzer::verifyType(
-                            $statements_analyzer,
-                            $expr_type,
-                            Type::getString(),
-                            null,
-                            'shell_exec',
-                            null,
-                            0,
-                            $call_location,
-                            $stmt,
-                            $context,
-                            $shell_exec_param,
-                            false,
-                            null,
-                            true,
-                            true,
-                            new CodeLocation($statements_analyzer, $stmt),
-                        ) === false) {
-                            return false;
-                        }
-
-                        foreach ($expr_type->parent_nodes as $parent_node) {
-                            $statements_analyzer->data_flow_graph->addPath(
-                                $parent_node,
-                                new DataFlowNode('variable-use', 'variable use', null),
-                                'variable-use',
-                            );
-                        }
-                    }
-                }
-            }
-
-            IssueBuffer::maybeAdd(
-                new ForbiddenCode(
-                    'Use of shell_exec',
-                    new CodeLocation($statements_analyzer->getSource(), $stmt),
-                ),
-                $statements_analyzer->getSuppressedIssues(),
+            $concat = new VirtualEncapsed($stmt->parts, $stmt->getAttributes());
+            $virtual_call = new VirtualFuncCall(new VirtualName(['shell_exec']), [
+                new VirtualArg($concat),
+            ], $stmt->getAttributes());
+            return self::handleExpression(
+                $statements_analyzer,
+                $virtual_call,
+                $context,
+                $array_assignment,
+                $global_context,
+                $from_stmt,
+                $template_result,
+                $assigned_to_reference,
             );
-
-            return true;
         }
 
         if ($stmt instanceof PhpParser\Node\Expr\Print_) {
@@ -553,5 +481,61 @@ class ExpressionAnalyzer
         }
 
         return true;
+    }
+
+    private static function dispatchBeforeExpressionAnalysis(
+        PhpParser\Node\Expr $expr,
+        Context $context,
+        StatementsAnalyzer $statements_analyzer
+    ): ?bool {
+        $codebase = $statements_analyzer->getCodebase();
+
+        $event = new BeforeExpressionAnalysisEvent(
+            $expr,
+            $context,
+            $statements_analyzer,
+            $codebase,
+            [],
+        );
+
+        if ($codebase->config->eventDispatcher->dispatchBeforeExpressionAnalysis($event) === false) {
+            return false;
+        }
+
+        $file_manipulations = $event->getFileReplacements();
+
+        if ($file_manipulations !== []) {
+            FileManipulationBuffer::add($statements_analyzer->getFilePath(), $file_manipulations);
+        }
+
+        return null;
+    }
+
+    private static function dispatchAfterExpressionAnalysis(
+        PhpParser\Node\Expr $expr,
+        Context $context,
+        StatementsAnalyzer $statements_analyzer
+    ): ?bool {
+        $codebase = $statements_analyzer->getCodebase();
+
+        $event = new AfterExpressionAnalysisEvent(
+            $expr,
+            $context,
+            $statements_analyzer,
+            $codebase,
+            [],
+        );
+
+        if ($codebase->config->eventDispatcher->dispatchAfterExpressionAnalysis($event) === false) {
+            return false;
+        }
+
+        $file_manipulations = $event->getFileReplacements();
+
+        if ($file_manipulations !== []) {
+            FileManipulationBuffer::add($statements_analyzer->getFilePath(), $file_manipulations);
+        }
+
+        return null;
     }
 }

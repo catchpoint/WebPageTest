@@ -41,7 +41,7 @@ use function strtolower;
 /**
  * @internal
  */
-class NegatedAssertionReconciler extends Reconciler
+final class NegatedAssertionReconciler extends Reconciler
 {
     /**
      * @param  string[]   $suppressed_issues
@@ -59,6 +59,11 @@ class NegatedAssertionReconciler extends Reconciler
         int &$failed_reconciliation,
         bool $inside_loop
     ): Union {
+        $existing_var_type = ClosedInheritanceToUnion::map(
+            $existing_var_type,
+            $statements_analyzer->getCodebase(),
+        );
+
         $is_equality = $assertion->hasEquality();
 
         $assertion_type = $assertion->getAtomicType();
@@ -115,6 +120,11 @@ class NegatedAssertionReconciler extends Reconciler
             || $assertion instanceof IsNotCountable
         ) {
             $existing_var_type->removeType('array');
+        }
+
+        if ($assertion instanceof IsNotType && $assertion_type instanceof TClassString) {
+            $existing_var_type->removeType(TClassString::class);
+            $existing_var_type->addType(new TString);
         }
 
         if (!$is_equality
@@ -182,6 +192,10 @@ class NegatedAssertionReconciler extends Reconciler
         ) {
             $existing_var_type->removeType('array-key');
             $existing_var_type->addType(new TString);
+        } elseif ($assertion_type instanceof TNonEmptyString
+            && $existing_var_type->hasString()
+        ) {
+            // do nothing
         } elseif ($assertion instanceof IsClassNotEqual) {
             // do nothing
         } elseif ($assertion_type instanceof TClassString && $assertion_type->is_loaded) {
@@ -290,9 +304,7 @@ class NegatedAssertionReconciler extends Reconciler
 
             $failed_reconciliation = Reconciler::RECONCILIATION_EMPTY;
 
-            return $existing_var_type->from_docblock
-                ? Type::getMixed()
-                : Type::getNever();
+            return Type::getNever();
         }
 
         return $existing_var_type;

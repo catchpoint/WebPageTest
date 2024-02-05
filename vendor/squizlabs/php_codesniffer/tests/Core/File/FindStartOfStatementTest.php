@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\File;
@@ -469,7 +469,7 @@ class FindStartOfStatementTest extends AbstractMethodUnitTest
 
 
     /**
-     * Test nested match expressions.
+     * Test PHP open tag.
      *
      * @return void
      */
@@ -485,7 +485,7 @@ class FindStartOfStatementTest extends AbstractMethodUnitTest
 
 
     /**
-     * Test nested match expressions.
+     * Test PHP short open echo tag.
      *
      * @return void
      */
