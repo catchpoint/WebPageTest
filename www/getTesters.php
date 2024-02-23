@@ -8,7 +8,8 @@ if (!$privateInstall && !$admin) {
     //header("HTTP/1.1 403 Unauthorized");
     //exit;
 }
-if (isset($_REQUEST['k'])) {
+$user_api_key = $request_context->getApiKeyInUse();
+if (strlen($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
@@ -17,7 +18,7 @@ if (isset($_REQUEST['k'])) {
         $keys_file = SETTINGS_PATH . '/server/keys.ini';
     }
     $keys = parse_ini_file($keys_file, true);
-    if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {
+    if (isset($keys['server']['key']) && $user_api_key == $keys['server']['key']) {
         $admin = true;
     }
 }

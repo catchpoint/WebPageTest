@@ -201,7 +201,8 @@ function LoadLocations($isPaid = false)
     $isPaid = false;
     $locations = array();
     $loc = LoadLocationsIni();
-    if (isset($_REQUEST['k'])) {
+    $user_api_key = $request_context->getApiKeyInUse();
+    if (strlen($user_api_key)) {
         foreach ($loc as $name => $location) {
             if (isset($location['browser']) && isset($location['noapi'])) {
                 unset($loc[$name]);

@@ -131,7 +131,7 @@ class RequestContext
 
     public function setEnvironment(?string $env = ''): void
     {
-      // This should really be a match, but we're on 7.4
+        // This should really be a match, but we're on 7.4
         switch ($env) {
             case 'development':
                 $this->environment = Environment::$Development;
@@ -161,21 +161,17 @@ class RequestContext
     public function getApiKeyInUse(): string
     {
         if (empty($this->api_key_in_use)) {
-            $user_api_key = $this->getRaw()['k'] ?? "";
-            if (empty($user_api_key)) {
-                $user_api_key_header = $this->user_api_key_header;
-                $request_headers = getallheaders();
-                $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
-                    return strtolower($k) == strtolower($user_api_key_header);
-                }, ARRAY_FILTER_USE_KEY);
-                if (!empty($matching_headers)) {
-                    $user_api_key = array_values($matching_headers)[0];
-                }
+            $user_api_key_header = $this->user_api_key_header;
+            $request_headers = getallheaders();
+            $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
+                return strtolower($k) == strtolower($user_api_key_header);
+            }, ARRAY_FILTER_USE_KEY);
+            if (!empty($matching_headers)) {
+                $user_api_key = array_values($matching_headers)[0];
             }
-
-            $this->api_key_in_use = $user_api_key;
+            $this->api_key_in_use = $user_api_key ?? "";
         }
 
-        return $this->api_key_in_use;
+        return $this->api_key_in_use ?? "";
     }
 }

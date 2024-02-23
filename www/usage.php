@@ -26,8 +26,9 @@ if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
 ?>
 
 <?php
-if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
-    $key = trim($_REQUEST['k']);
+$user_api_key = $request_context->getApiKeyInUse();
+if (strlen($user_api_key)) {
+    $key = trim($user_api_key);
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
