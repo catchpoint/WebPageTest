@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python3
 #
 # Copyright 2010 Google Inc. All Rights Reserved.
 
@@ -95,11 +95,9 @@ def RunBatch(options):
     test_params['tcpdump'] = options.tcpdump
   if options.script:
     test_params['script'] = open(options.script, 'rb').read()
-  if options.key:
-    test_params['k'] = options.key
 
   requested_urls = wpt_batch_lib.ImportUrls(options.urlfile)
-  id_url_dict = wpt_batch_lib.SubmitBatch(requested_urls, test_params,
+  id_url_dict = wpt_batch_lib.SubmitBatch(requested_urls, test_params, options.key,
                                           options.server)
 
   submitted_urls = set(id_url_dict.values())

@@ -169,9 +169,10 @@ class RequestContext
             if (!empty($matching_headers)) {
                 $user_api_key = array_values($matching_headers)[0];
             }
-            $this->api_key_in_use = $user_api_key ?? "";
+
+            $this->api_key_in_use = $user_api_key;
         }
 
-        return $this->api_key_in_use ?? "";
+        return $this->api_key_in_use;
     }
 }
