@@ -6,7 +6,7 @@
 require_once __DIR__ . '/common.inc';
 
 $user_api_key = $request_context->getApiKeyInUse();
-if (strlen($user_api_key)) {
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';

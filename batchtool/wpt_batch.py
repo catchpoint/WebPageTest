@@ -103,7 +103,7 @@ def RunBatch(options):
   submitted_urls = set(id_url_dict.values())
   for url in requested_urls:
     if url not in submitted_urls:
-      logging.warn('URL submission failed: %s', url)
+      logging.warning('URL submission failed: %s', url)
 
   pending_test_ids = id_url_dict.keys()
   if not os.path.isdir(options.outputdir):
@@ -127,13 +127,13 @@ def RunBatch(options):
         if test_status == '200':
           completed_test_ids.append(test_id)
         else:
-          logging.warn('Tests failed with status $s: %s', test_status, test_id)
+          logging.warning('Tests failed with status $s: %s', test_status, test_id)
     test_results = wpt_batch_lib.GetXMLResult(completed_test_ids,
                                               server_url=options.server)
     result_test_ids = set(test_results.keys())
     for test_id in completed_test_ids:
       if test_id not in result_test_ids:
-        logging.warn('The XML failed to retrieve: %s', test_id)
+        logging.warning('The XML failed to retrieve: %s', test_id)
 
     for test_id, dom in test_results.iteritems():
       SaveTestResult(options.outputdir, id_url_dict[test_id], test_id,

@@ -202,7 +202,7 @@ function LoadLocations($isPaid = false)
     $locations = array();
     $loc = LoadLocationsIni();
     $user_api_key = $request_context->getApiKeyInUse();
-    if (strlen($user_api_key)) {
+    if (!empty($user_api_key)) {
         foreach ($loc as $name => $location) {
             if (isset($location['browser']) && isset($location['noapi'])) {
                 unset($loc[$name]);
@@ -215,7 +215,7 @@ function LoadLocations($isPaid = false)
             }
         }
     }
-    $isPaid =  !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+    $isPaid = !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
     $includePaid = $isPaid || $admin;
 
     FilterLocations($loc, $includePaid);
