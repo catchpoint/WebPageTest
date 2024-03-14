@@ -6,33 +6,42 @@
 chdir('..');
 include 'common.inc';
 RestoreTest($id);
-$token = GetSetting('trace_viewer_token', '');
-if (strlen($token)) {
-    header("Origin-Trial: $token");
-}
+
 if ($_REQUEST['run'] == 'lighthouse') {
     $fileBase = 'lighthouse';
 } else {
     $stepSuffix = $step > 1 ? ("_" . $step) : "";
     $fileBase = "$run{$cachedText}{$stepSuffix}";
-    $url = "../getgzip.php?test={$id}&file={$fileBase}_trace.json";
 }
-
-$traceFile = "$testPath/{$fileBase}_trace.json.gz";
-if (!is_file($traceFile) && is_file("$testPath/{$fileBase}_trace.json")) {
-    if (gz_compress("$testPath/{$fileBase}_trace.json")) {
-        unlink("$testPath/{$fileBase}_trace.json");
+$url = "../getgzip.php?test={$id}&file={$fileBase}_trace.json";
+?>
+<!DOCTYPE html>
+<head>
+<link rel="apple-touch-icon" sizes="192x192" href="/images/icons-192.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <script>
+    async function PerfettoLoaded() {
+      <?php
+      echo "const traceUrl = new URL('$url', window.location).href;\n";
+      ?>
+      const resp = await fetch(traceUrl);
+      const blob = await resp.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const ORIGIN = 'https://ui.perfetto.dev';
+      document.getElementById('perfetto').contentWindow.postMessage({
+            perfetto: {
+                buffer: arrayBuffer,
+                title: 'WebPageTest Trace',
+                url: window.location.toString(),
+            }}, ORIGIN);
     }
-}
-
-$preamble = __DIR__ . "/trace-viewer/preamble.html";
-$conclusion = __DIR__ . "/trace-viewer/conclusion.html";
-if (is_file($traceFile) && is_file($preamble) && is_file($conclusion)) {
-    readfile($preamble);
-    if (isset($traceFile) && $traceFile !== false) {
-        echo "<script>var url='{$url}';</script>";
-    }
-    readfile($conclusion);
-} else {
-    header("HTTP/1.0 404 Not Found");
-}
+  </script>
+</head>
+<body style="margin:0px;padding:0px;overflow:hidden">
+  <?php
+    echo '<iframe id="perfetto" src="https://ui.perfetto.dev" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%" onload="PerfettoLoaded();"></iframe>';
+    ?>
+</body>
+</html>
