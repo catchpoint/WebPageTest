@@ -26,8 +26,8 @@ if (isset($_REQUEST['f']) && $_REQUEST['f'] == 'json') {
 ?>
 
 <?php
-if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
-    $key = trim($_REQUEST['k']);
+$user_api_key = $request_context->getApiKeyInUse();
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
@@ -37,7 +37,7 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
     }
     $keys = parse_ini_file($keys_file, true);
 
-    if ($admin && $key == 'all') {
+    if ($admin && $user_api_key == 'all') {
         if (!isset($_REQUEST['days'])) {
             $days = 1;
         }
@@ -65,7 +65,7 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
         }
         $used = array();
         foreach ($keys as $key => &$keyUser) {
-            $u = isset($usage[$key]) ? (int)$usage[$key] : 0;
+            $u = isset($usage[$key]) ? (int) $usage[$key] : 0;
             if ($u) {
                 $used[] = array('used' => $u, 'description' => $keyUser['description'], 'contact' => $keyUser['contact'], 'limit' => $keyUser['limit']);
             }
@@ -100,9 +100,9 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
             }
         }
     } else {
-        if (isset($keys[$key])) {
+        if (isset($keys[$user_api_key])) {
             $out = array();
-            $limit = (int)@$keys[$key]['limit'];
+            $limit = (int) @$keys[$user_api_key]['limit'];
             if (!$json) {
                 echo "<table class=\"table\"><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
             }
@@ -113,7 +113,7 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
                 $used = 0;
                 if (is_file($keyfile)) {
                     $usage = json_decode(file_get_contents($keyfile), true);
-                    $used = (int)@$usage[$key];
+                    $used = (int) @$usage[$user_api_key];
                 }
                 $date = $targetDate->format("Y/m/d");
                 if ($json) {
@@ -127,9 +127,9 @@ if (array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])) {
                 echo '</table>';
             }
 
-            $limit = (int)$keys[$key]['limit'];
-            if (isset($usage[$key])) {
-                $used = (int)$usage[$key];
+            $limit = (int) $keys[$user_api_key]['limit'];
+            if (isset($usage[$user_api_key])) {
+                $used = (int) $usage[$user_api_key];
             } else {
                 $used = 0;
             }
