@@ -223,6 +223,7 @@ if (!isset($test)) {
 
     if ($is_private_api_call || $is_private_web_call) {
         $is_private = 1;
+        $test['private'] = 1;
     }
 
     if (isset($req_carbon_control)) {

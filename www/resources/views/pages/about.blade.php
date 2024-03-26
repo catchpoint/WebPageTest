@@ -2,36 +2,42 @@
 
 @section('content')
 
+<style>
+    .box.padded {
+        padding: 6rem;
+    }
+
+    .centered-content {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .perf-img {
+            width: 570px
+        }
+
+        .perf-img-description {
+            font-style: italic;
+        }
+    }
+</style>
+
 <div class="about">
     <h1>About WebPageTest</h1>
-    <div class="box">
-        <p>Building high quality web experiences for users is at the core of all our efforts. With WebPageTest,
-            we strive to provide performance products and resources to our global and growing community of developers,
-            third-party platforms, technical consultants and others. WebPage as a tool was originally developed by
-            Patrick Meenan while he was at AOL for use internally and was open-sourced in 2008 under a BSD license.
-            The online version at <a href="https://www.webpagetest.org/">www.webpagetest.org</a> is run for the benefit
-            of the performance community.</p>
-
-        <p>WebPageTest was acquired in September of 2020 by <a href="https://www.catchpoint.com/">Catchpoint</a>, the leading Digital Experience Monitoring
-            platform providing <a href="https://www.catchpoint.com/guide-to-synthetic-monitoring">Synthetic Monitoring</a>, Real User Measurement, Network Monitoring, and Endpoint Monitoring products.</p>
-
-        <p>The acquisition starts a new and exciting chapter as we plan to expand WebPageTest's capabilities and WebPageTest.org's
-            geographical performance testing footprint, leveraging Catchpoint's best-in-class infrastructure, adding capacity and
-            improving consistency and quality of analytics. You can read more about Catchpoint's acquisition of
-            WebPageTest <a href="https://www.catchpoint.com/webpagetest-joins-catchpoint">here</a>.
+    <div class="box padded">
         <p>
-
-        <p>The WebPageTest code is free to use under the Polyform Shield license, a source-available license. As
-            long as you are not creating a product or service that competes with Catchpoint's offerings then you
-            are free to do whatever you like with the WebPageTest code, including using it for your own internal
-            use or creating non-competing commercial products from it. In fact, we encourage using the WebPageTest
-            code to build your own value-added applications. Read
-            more <a href="https://github.com/WPO-Foundation/webpagetest/blob/master/LICENSE_FAQ.md">here</a>.</p>
-
-        <p>If you are having any problems or just have questions about the site, please feel free to
-            <a href="https://www.product.webpagetest.org/contact">contact us</a>. If you are considering sending advertising opportunities,
-            SEO/SEM solicitations, link sharing, etc....don't. We won't respond and will mark it as spam.
+            At Catchpoint, we believe that slow is the new down, and our mission is to empower you to deliver the best experiences to your users, regardless of their location in the world. The world’s leading companies,
+            including Forbes' top digital companies, rely on <a href="https://www.catchpoint.com/?utm_source=WPT&utm_medium=website&utm_campaign=about">Catchpoint’s enterprise Internet Performance Monitoring (IPM) platform</a> to increase their resilience by catching any issues in the Internet Stack before they impact customers, workforce, networks, website performance, applications, and APIs.
         </p>
+        <p>
+            At the heart of Internet Performance Management (IPM) lies the performance experienced by end users as they interact with websites and web applications. Poor user experiences drive users away, directly impacting both revenue and brand reputation. Catchpoint's 2020 acquisition of WebPageTest, created and open-sourced by Patrick Meenan in 2008, marked a significant milestone in our journey. This strategic move united the best of both worlds, merging WebPageTest's gold-standard web performance testing capabilities with Catchpoint's market-leading Internet Performance Monitoring Platform, complete with AI-powered analytics, comprehensive dashboards, and real user monitoring (RUM).
+        </p>
+        <div class="centered-content">
+            <img class="perf-img" src="/assets/images/pat.jpg" loading="lazy" alt="Patrick Meenan at PerNow 2023">
+            <p class="perf-img-description">Patrick Meenan at PerNow 2023</p>
+        </div>
+        <p>The WebPageTest code remains freely accessible under the Polyform Shield license, permitting its use for internal or non-competing commercial projects. Feel free to <a href="https://www.product.webpagetest.org/contact">contact us</a> if you have any questions or encounter issues. Let’s achieve internet resilience and deliver outstanding digital experiences!</p>
     </div>
 </div>
 
