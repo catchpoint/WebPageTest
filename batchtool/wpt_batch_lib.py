@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python3
 #
 # Copyright 2011 Google Inc. All Rights Reserved.
 
@@ -13,12 +13,12 @@ A sample usage of this library can be found in wpt_batch.py.
 
 __author__ = 'zhaoq@google.com (Qi Zhao)'
 
-import re
-import urllib
+import urllib.request
+import urllib.parse
 from xml.dom import minidom
 
 
-def __LoadEntity(url, urlopen=urllib.urlopen):
+def __LoadEntity(url, apiKey, urlopen=urllib.request.urlopen):
   """A helper function to load an entity such as an URL.
 
   Args:
@@ -28,7 +28,15 @@ def __LoadEntity(url, urlopen=urllib.urlopen):
   Returns:
     The response message
   """
-  response = urlopen(url)
+  headers = {}
+
+  if apiKey:
+    headers = {
+      "X-WPT-API-KEY" : apiKey
+    }
+
+  request = urllib.request.Request(url, headers=headers)
+  response = urlopen(request)
   return response
 
 
@@ -44,14 +52,14 @@ def ImportUrls(url_filename):
   url_list = []
   for line in open(url_filename, 'rb'):
     # Remove newline and trailing whitespaces
-    url = line.rstrip(' \r\n')
+    url = line.rstrip(b' \r\n')
     if url:
       url_list.append(url)
   return url_list
 
 
-def SubmitBatch(url_list, test_params, server_url='http://www.webpagetest.org/',
-                urlopen=urllib.urlopen):
+def SubmitBatch(url_list, test_params, apiKey, server_url='http://www.webpagetest.org/',
+                urlopen=urllib.request.urlopen,):
   """Submit the tests to WebPageTest server.
 
   Args:
@@ -67,8 +75,8 @@ def SubmitBatch(url_list, test_params, server_url='http://www.webpagetest.org/',
   id_url_dict = {}
   for url in url_list:
     test_params['url'] = url
-    request = server_url + 'runtest.php?%s' % urllib.urlencode(test_params)
-    response = __LoadEntity(request, urlopen)
+    request = server_url + 'runtest.php?%s' % urllib.parse.urlencode(test_params)
+    response = __LoadEntity(request, apiKey, urlopen)
     return_code = response.getcode()
     if return_code == 200:
       dom = minidom.parseString(response.read())
@@ -81,7 +89,7 @@ def SubmitBatch(url_list, test_params, server_url='http://www.webpagetest.org/',
 
 
 def CheckBatchStatus(test_ids, server_url='http://www.webpagetest.org/',
-                     urlopen=urllib.urlopen):
+                     urlopen=urllib.request.urlopen):
   """Check the status of tests.
 
   Args:
@@ -105,7 +113,7 @@ def CheckBatchStatus(test_ids, server_url='http://www.webpagetest.org/',
 
 
 def GetXMLResult(test_ids, server_url='http://www.webpagetest.org/',
-                 urlopen=urllib.urlopen):
+                 urlopen=urllib.request.urlopen):
   """Obtain the test result in XML format.
 
   Args:

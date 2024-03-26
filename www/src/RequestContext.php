@@ -25,7 +25,7 @@ class RequestContext
     private ?BannerMessageManager $banner_message_manager;
     // Should use an enum, TODO
     private string $environment;
-    private string $api_key_in_use;
+    private ?string $api_key_in_use;
 
     private string $user_api_key_header = 'X-WPT-API-KEY';
 
@@ -49,7 +49,7 @@ class RequestContext
         $this->host = $options['host'] ?? Util::getSetting('host', "");
 
         $this->environment = Environment::$Production;
-        $this->api_key_in_use = "";
+        $this->api_key_in_use = null;
     }
 
     public function getRaw(): array
@@ -131,7 +131,7 @@ class RequestContext
 
     public function setEnvironment(?string $env = ''): void
     {
-      // This should really be a match, but we're on 7.4
+        // This should really be a match, but we're on 7.4
         switch ($env) {
             case 'development':
                 $this->environment = Environment::$Development;
@@ -160,22 +160,20 @@ class RequestContext
      * */
     public function getApiKeyInUse(): string
     {
-        if (empty($this->api_key_in_use)) {
-            $user_api_key = $this->getRaw()['k'] ?? "";
-            if (empty($user_api_key)) {
-                $user_api_key_header = $this->user_api_key_header;
-                $request_headers = getallheaders();
-                $matching_headers = array_filter($request_headers, function ($k) use ($user_api_key_header) {
-                    return strtolower($k) == strtolower($user_api_key_header);
-                }, ARRAY_FILTER_USE_KEY);
-                if (!empty($matching_headers)) {
-                    $user_api_key = array_values($matching_headers)[0];
-                }
-            }
-
-            $this->api_key_in_use = $user_api_key;
+        if ($this->api_key_in_use == null) {
+            $this->api_key_in_use = $this->readApiKey();
         }
-
         return $this->api_key_in_use;
+    }
+
+    private function readApiKey()
+    {
+        $request_headers = getallheaders();
+        foreach ($request_headers as $k => $value) {
+            if (strtolower($k) == strtolower($this->user_api_key_header)) {
+                return trim($value);
+            }
+        }
+        return '';
     }
 }

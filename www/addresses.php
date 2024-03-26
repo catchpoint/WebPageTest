@@ -5,7 +5,8 @@
 // found in the LICENSE.md file.
 require_once __DIR__ . '/common.inc';
 
-if (isset($_REQUEST['k'])) {
+$user_api_key = $request_context->getApiKeyInUse();
+if (!empty($user_api_key)) {
     $keys_file = SETTINGS_PATH . '/keys.ini';
     if (file_exists(SETTINGS_PATH . '/common/keys.ini')) {
         $keys_file = SETTINGS_PATH . '/common/keys.ini';
@@ -14,7 +15,7 @@ if (isset($_REQUEST['k'])) {
         $keys_file = SETTINGS_PATH . '/server/keys.ini';
     }
     $keys = parse_ini_file($keys_file, true);
-    if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {
+    if (isset($keys['server']['key']) && $user_api_key == $keys['server']['key']) {
         $admin = true;
     }
 }
