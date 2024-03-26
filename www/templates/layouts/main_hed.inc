@@ -32,12 +32,13 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
 
         //if not logged in, let's encourage sign-up
         if ($supportsCPAuth && isset($request_context) && is_null($request_context->getUser()->getEmail())) {
-            ?>
-                <div class="cta-banner">
-                    <p><strong>Save Test Results</strong> with a <strong>Free Account</strong>
-                    <a class="btn-primary btn-primary-compact" href="/signup">Sign Up &amp; Save Test Result</a></p>
-                </div>
-                <?php
+?>
+            <div class="cta-banner">
+                <p><strong>Save Test Results</strong> with a <strong>Free Account</strong>
+                    <a class="btn-primary btn-primary-compact" href="/signup">Sign Up &amp; Save Test Result</a>
+                </p>
+            </div>
+        <?php
         }
 
         echo '<div id="header_container">';
@@ -46,13 +47,13 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $data_class = '';
         if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
             echo '<div id="optimization">';
-              echo '<div id="optimization_header">';
-              $localPaths = new TestPaths($testPath, $gradeRun, false);
-              $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
+            echo '<div id="optimization_header">';
+            $localPaths = new TestPaths($testPath, $gradeRun, false);
+            $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
 
-              echo '</div>';
-              echo '<div id="grades">';
-                  $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);
+            echo '</div>';
+            echo '<div id="grades">';
+            $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);
             if (count($grades)) {
                 $smaller = '';
                 if (count($grades) > 6) {
@@ -65,15 +66,14 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
                         $lighthouse = $urlGenerator->resultPage("lighthouse");
                         echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                     } elseif ($check == 'security') {
-                        $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
-                        echo "<li class=\"$check\"><a href=\"$snykUrl\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                        echo "<li class=\"$check\"><a><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                     } else {
                         echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                     }
                 }
                 echo '</ul>';
             }
-              echo '</div>';
+            echo '</div>';
             echo '</div>';
         } else {
             $data_class = ' class="header_data_full"';
@@ -86,20 +86,20 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $shortUrl = str_replace('http://', '', FitText($showUrl, 180));
         $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
 
-            echo "<h2>Web page performance test result for<br>";
+        echo "<h2>Web page performance test result for<br>";
         if (GetSetting('nolinks')) {
             echo "<span class=\"page-tested\">$shortUrl</span>";
         } else {
             echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
         }
-            echo "</h2>";
+        echo "</h2>";
 
-            echo "<p class=\"heading_details\">";
-            echo "<strong>From:</strong> {$test['test']['location']}";
+        echo "<p class=\"heading_details\">";
+        echo "<strong>From:</strong> {$test['test']['location']}";
         if (isset($test['testinfo']['mobile']) && $test['testinfo']['mobile'] === 1) {
             echo " - Mobile";
         }
-            echo "<br />\n";
+        echo "<br />\n";
         if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started']))) {
             if (isset($test['testinfo']['completed'])) {
                 $timeStr = $test['testinfo']['completed'];
@@ -118,7 +118,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
             echo '<b>Authenticated: ' . $login . '</b><br>';
         }
         if ((int)$test['test']['connections'] !== 0) {
-             echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
+            echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
         }
         if (array_key_exists('script', $test['test']) && strlen($test['test']['script'])) {
             echo '<b>Scripted test</b><br>';
@@ -162,8 +162,10 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $run, !empty($cached));
         $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
-        $tabs = array( 'Summary' => $menuUrlGenerator->resultSummary($endParams),
-                       'Details' => $menuUrlGenerator->resultPage("details", $endParams));
+        $tabs = array(
+            'Summary' => $menuUrlGenerator->resultSummary($endParams),
+            'Details' => $menuUrlGenerator->resultPage("details", $endParams)
+        );
         $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
 
         if ($gradedRunResults->hasWebVitals()) {
@@ -177,7 +179,7 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         $tabs['Content'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
         $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
         if ($gradedRunResults->hasBreakdownTimeline()) {
-          // currently only supported by standard urls
+            // currently only supported by standard urls
             $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
             $tabs['Processing'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
@@ -224,12 +226,12 @@ if (!strcasecmp('Test Result', $tab) && (!isset($nosubheader) || !@$nosubheader)
         <div id="test_results_running-container">
             <div id="test-1" class="test_results">
                 <div class="test_results-content">
-        <?php
+            <?php
+        }
     }
-}
 
-// include the comparison UI pop-up dialog
-/*
+    // include the comparison UI pop-up dialog
+    /*
 if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) && strlen($_COOKIE['compare']))) {
     echo '<div id="compare-dlg">';
     echo 'Compare';
@@ -237,67 +239,67 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 }
 */
 
-/**
-* Calculate the grades for the given test
-* @param TestInfo $testInfo Information about the test
-* @param TestRunResults $testRunResults Run results to compute the grades for
-* @return array An array with the different grades
-*/
-function GetGrades($testInfo, $testRunResults, $firstRunResults)
-{
-    $grades = array();
-    $infoArray = $testInfo->getInfoArray();
-    if (isset($firstRunResults)) {
-        $lighthouse = $firstRunResults->getLighthouseScore();
-    }
-    if (isset($lighthouse)) {
-        $class = 'F';
-        if ($lighthouse >= 90) {
-            $class = 'A';
-        } elseif ($lighthouse >= 50) {
-            $class = 'C';
+    /**
+     * Calculate the grades for the given test
+     * @param TestInfo $testInfo Information about the test
+     * @param TestRunResults $testRunResults Run results to compute the grades for
+     * @return array An array with the different grades
+     */
+    function GetGrades($testInfo, $testRunResults, $firstRunResults)
+    {
+        $grades = array();
+        $infoArray = $testInfo->getInfoArray();
+        if (isset($firstRunResults)) {
+            $lighthouse = $firstRunResults->getLighthouseScore();
         }
-        $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse Perf');
-    } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
-        $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse Perf');
-    }
+        if (isset($lighthouse)) {
+            $class = 'F';
+            if ($lighthouse >= 90) {
+                $class = 'A';
+            } elseif ($lighthouse >= 50) {
+                $class = 'C';
+            }
+            $grades['lighthouse'] = array('class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse Perf');
+        } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
+            $grades['lighthouse'] = array('class' => 'F', 'grade' => '?', 'description' => 'Lighthouse Perf');
+        }
 
-    if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
-        // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
-        $securityScoreIncludesVulnerabilities = true;
-        $testResults = $testRunResults->getstepResult(1);
-        if ($testResults) {
-            $detected = $testResults->getRawResults()['detected'];
-            if (isset($detected) && isset($detected['CMS'])) {
-                if (stripos($detected['CMS'], "WordPress") >= 0) {
-                    $securityScoreIncludesVulnerabilities = false;
+        if (GetSetting('securityInsights') || isset($_REQUEST['securityInsights'])) {
+            // Disable the security check for WordPress sites because it has a false-positive for JQuery issues.
+            $securityScoreIncludesVulnerabilities = true;
+            $testResults = $testRunResults->getstepResult(1);
+            if ($testResults) {
+                $detected = $testResults->getRawResults()['detected'];
+                if (isset($detected) && isset($detected['CMS'])) {
+                    if (stripos($detected['CMS'], "WordPress") >= 0) {
+                        $securityScoreIncludesVulnerabilities = false;
+                    }
                 }
+            }
+
+            require_once(INCLUDES_PATH . '/security_checks.php');
+            $securityGrade = getSecurityGrade($testInfo, $testRunResults, $securityScoreIncludesVulnerabilities);
+            if (isset($securityGrade)) {
+                $grades['security'] = array('class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
             }
         }
 
-        require_once(INCLUDES_PATH . '/security_checks.php');
-        $securityGrade = getSecurityGrade($testInfo, $testRunResults, $securityScoreIncludesVulnerabilities);
-        if (isset($securityGrade)) {
-            $grades['security'] = array( 'class' => $securityGrade['class'], 'grade' => $securityGrade['grade'], 'description' => $securityGrade['description']);
+        if ($testRunResults->isOptimizationChecked()) {
+            require_once(INCLUDES_PATH . '/optimization_detail.inc.php');
+
+            $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
+            if (!isset($infoArray['view']) || ($infoArray['view'] != 'simple' && $infoArray['view'] != 'pss')) {
+                $grades['first_byte_time'] = array('class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
+            }
+            $grades['keep_alive_enabled'] = array('class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
+            $grades['compress_text'] = array('class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
+            $grades['compress_images'] = array('class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => $opt['image_compression']['label']);
+            //if (array_key_exists('progressive_jpeg', $opt))
+            //  $grades['progressive_jpeg'] = array( 'class' => $opt['progressive_jpeg']['class'], 'grade' => $opt['progressive_jpeg']['grade'], 'description' => $opt['progressive_jpeg']['label']);
+            $grades['cache_static_content'] = array('class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => $opt['caching']['label']);
+            $grades['use_of_cdn'] = array('class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => $opt['cdn']['label']);
         }
+
+        return $grades;
     }
-
-    if ($testRunResults->isOptimizationChecked()) {
-        require_once(INCLUDES_PATH . '/optimization_detail.inc.php');
-
-        $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
-        if (!isset($infoArray['view']) || ($infoArray['view'] != 'simple' && $infoArray['view'] != 'pss')) {
-            $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
-        }
-        $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
-        $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
-        $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => $opt['image_compression']['label']);
-        //if (array_key_exists('progressive_jpeg', $opt))
-        //  $grades['progressive_jpeg'] = array( 'class' => $opt['progressive_jpeg']['class'], 'grade' => $opt['progressive_jpeg']['grade'], 'description' => $opt['progressive_jpeg']['label']);
-        $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => $opt['caching']['label']);
-        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => $opt['cdn']['label']);
-    }
-
-    return $grades;
-}
-?>
+            ?>

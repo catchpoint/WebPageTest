@@ -98,7 +98,7 @@ function wptLogout(redirectUrl) {
         if (t.hasClass("keep_alive_enabled")) {
           return "Click the grade to see the requests that did not have keep-alives enabled";
         } else if (t.hasClass("security")) {
-          return "Click the grade to see the full security score detailed report";
+          return "Security score";
         } else if (t.hasClass("compress_text")) {
           return "Click the grade to see the requests that should be gzipped but were not";
         } else if (t.hasClass("compress_images")) {
