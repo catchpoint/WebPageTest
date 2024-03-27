@@ -40,12 +40,16 @@ Since the Webpagetest container is packaged with an agent, we first need to stop
 ```docker-compose.yml
   #### DOCKER WPTAGENT - comment this out to run a standalone agent ####
   agent:
-    cap_add:
+    cap_add: #### Allows traffic shapping
       - NET_ADMIN
     build:
       context: .
       dockerfile: docker/local/Dockerfile-wptagent
-    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+    environment:
+      - SERVER_URL=http://web/work/
+      - LOCATION=Test
+      - KEY=123456789
+    init: true
   #### ####
 ```
 
