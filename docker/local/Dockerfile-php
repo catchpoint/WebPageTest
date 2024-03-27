@@ -1,4 +1,4 @@
-FROM alpine:3.13 as build
+FROM alpine:3.18 as build
 
 ARG FFMPEG_VERSION=4.3.2
 ARG PREFIX=/opt/ffmpeg
@@ -104,11 +104,13 @@ RUN apk add --no-cache supervisor beanstalkd zip libzip python3 libtheora rtmpdu
     && rm -rf /var/cache/apk/*
 
 COPY --from=build /opt/ffmpeg /opt/ffmpeg
-COPY --from=build /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
-COPY --from=build /usr/lib/librav1e.so.0 /usr/lib/librav1e.so.0
-COPY --from=build /usr/lib/libx264.so.157 /usr/lib/libx264.so.157
-COPY --from=build /usr/lib/libvpx.so.6 /usr/lib/libvpx.so.6
-COPY --from=build /usr/lib/libx265.so.192 /usr/lib/libx265.so.192
+COPY --from=build /usr/lib/libssl.so* /usr/lib/
+COPY --from=build /usr/lib/libcrypto.so* /usr/lib/
+COPY --from=build /usr/lib/libfdk-aac.so* /usr/lib/
+COPY --from=build /usr/lib/librav1e.so* /usr/lib/
+COPY --from=build /usr/lib/libx264.so* /usr/lib/
+COPY --from=build /usr/lib/libvpx.so* /usr/lib/
+COPY --from=build /usr/lib/libx265.so* /usr/lib/
 
 COPY docker/local/server/config/fpm-pool.conf /etc/php7/php-fpm.d/www.conf
 COPY docker/local/server/config/php.ini /usr/local/etc/php/
