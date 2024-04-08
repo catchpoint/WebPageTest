@@ -292,7 +292,7 @@
             </dt>
             <dd>
                 <div id="faq3_desc" class="desc">
-                    <p><strong>WebPageTest Starter</strong> gives you access to 30 locations worldwide, including mainland China. With WebPageTest Pro, you get access to 11 more premium locations. </p>
+                    <p><strong>WebPageTest Starter</strong> gives you access to 30 locations worldwide, including mainland China. With WebPageTest Pro, you get access to 10 more premium locations. </p>
                     <p>WebPageTest is always up-to-date on the current version of every browser and you can test on Chrome (stable, beta, canary), Firefox (stable, beta, ESR), Microsoft Edge (dev) and Brave. </p>
                     <p><strong>WebPageTest Pro</strong> also supports mobile emulation testing. You can test mobile content by emulating an Android browser by passing “mobile=1” as an API option.</p>
 
