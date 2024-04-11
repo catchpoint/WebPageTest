@@ -8474,7 +8474,7 @@ div.bar {
 
   .details_panel_content {
     overflow: auto;
-    max-height: 65vh;
+    max-height: 75vh;
     min-height: 20rem;
   }
 }

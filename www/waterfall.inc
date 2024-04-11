@@ -326,7 +326,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $data_width = $width - $data_x - 3;
 
     // Figure out the scale.
+    $min_ms = 0;
     $max_ms = 0;
+    if (@$_REQUEST['min'] > 0) {
+        $min_ms = (int)($_REQUEST['min'] * 1000.0);
+    }
     if (@$_REQUEST['max'] > 0) {
         $max_ms = (int)($_REQUEST['max'] * 1000.0);
     } else {
@@ -342,7 +346,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             }
         }
     }
-    $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
+    $x_scaler = new XScaler($min_ms, $max_ms, $data_x, $data_width);
 
     // get any user timings
     if (!isset($options['show_user_timing']) || $options['show_user_timing']) {
@@ -530,7 +534,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             foreach ($perfs as $key => $p) {
                 if (array_key_exists('count', $p) && $p['count'] > 0) {
                     if (!$is_thumbnail && $show_labels) {
-                        DrawPerfLabel($im, $key, $p, $font, $black);
+                        DrawPerfLabel($im, $key, $p, $font, $black, $border_color);
                     }
                     DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
                 }
@@ -540,7 +544,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         // Draw pcap-based bandwidth backgrounds, labels and borders
         if (isset($pcap_slices)) {
             if (!$is_thumbnail && $show_labels) {
-                DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black);
+                DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black, $border_color);
             }
             DrawPerfBackground($im, $pcap_slices, $data_x, $border_color, $bg_colors['alt']);
         }
@@ -550,7 +554,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             foreach ($cpu_slice_info as $thread => $p) {
                 if (!$is_thumbnail && $show_labels) {
                     $label = $thread ? 'Browser Background Thread' : 'Browser Main Thread';
-                    DrawPerfLabel($im, $label, $p, $font, $black);
+                    DrawPerfLabel($im, $label, $p, $font, $black, $border_color);
                 }
                 DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
             }
@@ -558,30 +562,27 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
         if (isset($interactive)) {
             $iTop = $height - $row_height - 1;
-            imagerectangle($im, 0, $iTop, $width - 1, $height - 1, $border_color);  // border
-            imageline($im, $data_x, $iTop, $data_x, $height - 1, $border_color);
-            if (!$is_thumbnail) {
-                $font_height = imagefontheight($font);
-                $label_y = $iTop + ($row_height / 2) - ($font_height / 2);
-                imagestring($im, $font, 50, $label_y, "Long Tasks", $black);
-            }
+            imagerectangle($im, $data_x, $iTop, $width - 1, $height - 1, $border_color);  // border
         }
 
         // Draw the time scale.
-        // $max_ms, $width, $data_x, $black, $time_scale_color, $row_height, $data_height
+        // $min_ms, $max_ms, $width, $data_x, $black, $time_scale_color, $row_height, $data_height
         // $im, $x, $y, $font, $font_width
-        if ($max_ms > 0) {
+        if ($min_ms > 0 || $max_ms > 0) {
             if ($is_thumbnail) {
                 $target_spacing_px = 20;
             } else {
                 $target_spacing_px = 40;
             }
             $target_count = ($width - $data_x) / $target_spacing_px;
-            $interval = TimeScaleInterval($max_ms, $target_count);
+             $interval = TimeScaleInterval($max_ms-$min_ms, $target_count);
 
             // Draw the gridlines and labels.
             for ($ms = $interval; $ms < $max_ms; $ms += $interval) {
                 $x = $x_scaler($ms);
+                if ($ms <= $min_ms) {
+                    continue;
+                }
                 imageline(
                     $im,
                     $x,
@@ -730,7 +731,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             if (isset($layout_shifts)) {
                 $layout_shift_color = GetColor($im, 255, 128, 0);
                 foreach ($layout_shifts as $shift_time) {
-                    if ($shift_time > 0 && $shift_time <= $max_ms) {
+                    if ($shift_time > $min_ms && $shift_time <= $max_ms) {
                         $x = $x_scaler($shift_time);
                         imagedashedline($im, $x, $top + $row_height + 5, $x, $top + $height - 1, $layout_shift_color);
                         if (!$is_thumbnail) {
@@ -743,6 +744,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
             // Draw the performance data.
             if (isset($perfs) && is_array($perfs)) {
+                $ensureDividerLineIsVisible = false;
                 foreach ($perfs as $p) {
                     $x1 = $x_scaler(0);
                     $y1 = null;
@@ -751,7 +753,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                         if (array_key_exists('max', $p) && $p['max'] != 0) {
                             $y2 = ($p['y1'] + $p['height'] - 2 - (int)((float)($p['height'] - 3) * (float)$value / $p['max']));
                             if ($x2 <= $data_x) {
-                                $x2 = $data_x + 1;
+                                $x2 = $data_x;
+                                $ensureDividerLineIsVisible = true;
                             }
                             if ($x2 >= $width - 1 && $x1 < $x2) {
                                 // Point goes off the graph.
@@ -760,15 +763,18 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                                 $y2 = $y1 + (($y2 - $y1) * $r);
                                 $x2 = $width - 2;
                             }
-                            if ($x2 > $x1 + 1) {
-                                // If the data spans multiple columns, draw a flat line at the
-                                // current value size it is really an average for the last time bucket.
-                                if (isset($y1)) {
-                                    imageline($im, $x1, $y1, $x1, $y2, $p['color']);
+                            // Only draw data that is past the original data_x
+                            if ($x2 > $data_x) {
+                                if ($x2 > $x1 + 1) {
+                                    // If the data spans multiple columns, draw a flat line at the
+                                    // current value size it is really an average for the last time bucket.
+                                    if (isset($y1)) {
+                                        imageline($im, $x1, $y1, $x1, $y2, $p['color']);
+                                    }
+                                    imageline($im, $x1, $y2, $x2, $y2, $p['color']);
+                                } elseif (isset($x1) && isset($y1)) {
+                                    imageline($im, $x1, $y1, $x2, $y2, $p['color']);
                                 }
-                                imageline($im, $x1, $y2, $x2, $y2, $p['color']);
-                            } elseif (isset($x1) && isset($y1)) {
-                                imageline($im, $x1, $y1, $x2, $y2, $p['color']);
                             }
                             if ($x2 >= ($width - 2)) {
                                 break;
@@ -779,24 +785,31 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                         }
                     }
                 }
+
+                // If we drawing over the divider, fix it up here
+                if ($ensureDividerLineIsVisible) {
+                    imageline($im, $data_x, $top, $data_x, $height, $black);
+                }
             }
 
             // Draw the pcap-based bandwidth data
             if (isset($pcap_slices)) {
                 // go through each pixel and draw bars individually
-                $x1 = $data_x + 1;
+                $x1 = $x_scaler(0) + 1;
                 $x2 = $data_x + $data_width;
                 $pcap_top = $pcap_slices['y1'] + 1;
                 $pcap_bottom = $pcap_slices['y2'] - 1;
                 $pcap_height = $pcap_bottom - $pcap_top + 1;
                 $max_val = $pcap_slices['max'];
-                $end_slice_time = floatval($max_ms) / 1000.0;
                 $slice_time = $end_slice_time / floatval($data_width);
                 if ($x1 < $x2) {
                     $slices = array('in', 'in_dup');
                     foreach ($slices as $slice) {
                         $index = 0;
                         for ($x = $x1; $x <= $x2; $x++) {
+                            if ($x <= $data_x) {
+                                continue;
+                            }
                             $start_time = (floatval($x - $x1) / floatval($data_width)) * $end_slice_time;
                             $value = GetAverageSliceValue($pcap_slices[$slice], $start_time, $start_time + $slice_time);
                             $pixels = min(intval((floatval($value) / floatval($max_val)) * floatval($pcap_height)), $pcap_height);
@@ -814,7 +827,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             if (isset($cpu_slice_info) && $max_ms) {
                 foreach ($cpu_slice_info as $p) {
                     // go through each pixel and draw bars individually
-                    $x1 = $data_x + 1;
+                    $x1 = $x_scaler(0) + 1;
                     $x2 = $data_x + $data_width;
                     $cpu_top = $p['y1'] + 1;
                     $cpu_bottom = $p['y2'] - 1;
@@ -822,9 +835,12 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     $slices = $cpu_slices['slices'][$p['thread']];
                     $slice_usecs = $cpu_slices['slice_usecs'];
                     if ($slice_usecs > 0) {
-                        $end_slice = intval($max_ms * 1000 / $slice_usecs);
+                        $end_slice = intval(($max_ms - $min_ms) * 1000 / $slice_usecs);
                         if ($x1 < $x2) {
                             for ($x = $x1; $x <= $x2; $x++) {
+                                if ($x <= $data_x) {
+                                    continue;
+                                }
                                 $first_slice = intval(floor(((($x - $x1) / $data_width) * $end_slice)));
                                 $last_slice = intval(floor(((($x + 1 - $x1) / $data_width) * $end_slice)));
                                 $cpu_times = AverageCpuSlices($slices, $first_slice, $last_slice, $slice_usecs, $cpu_slice_colors);
@@ -850,7 +866,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             if (isset($interactive) && isset($iTop) && $max_ms) {
                 $iBottom = $iTop + $row_height - 1;
                 $iTop += 1;
-                $iLeft = $data_x + 1;
+                $iLeft = $x_scaler(0) + 1;
                 $iRight = $width - 2;
                 $iWidth = $iRight - $iLeft;
                 $iScale = $iWidth / $max_ms;
@@ -885,12 +901,19 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                         imagefilledrectangle($im, $iLeft, $iTop, $r, $iBottom, $white);
                     }
                 }
+                imagefilledrectangle($im, $iLeft, $iTop, $data_x, $iBottom, $white);
+                imagerectangle($im, 0, $iTop -1, $data_x, $iBottom + 1, $border_color);
+                if (!$is_thumbnail) {
+                    $font_height = imagefontheight($font);
+                    $label_y = $iTop + ($row_height / 2) - ($font_height / 2);
+                    imagestring($im, $font, 50, $label_y, "Long Tasks", $black);
+                }
             }
 
             // Draw the user timings
             if (isset($user_times)) {
                 foreach ($user_times as $name => $value) {
-                    if ($name != 'srt' && $value > 0 && $value <= $max_ms) {
+                    if ($name != 'srt' && $value > $min_ms && $value <= $max_ms) {
                         $x = $x_scaler($value);
                         if (!$is_thumbnail) {
                             $triangle_coords = array(
@@ -906,6 +929,91 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             }
         }
     }
+    if (($min_ms > 0 || $max_ms > 0) && !$is_image_map) {
+        // Draw requests.
+        foreach ($rows as $index => $row) {
+            $is_connection = $row['is_connection'];
+            for ($pass = 1; $pass <= 2; $pass++) {
+                foreach ($row['requests'] as $request) {
+                    $y1 = $top + $row['y1'];
+                    $y2 = $top + $row['y2'];
+                    if (!$is_thumbnail && !$is_connection) {
+                        $label_x1 = $x_scaler($request['all_start']);
+                        $label_x2 = $x_scaler($request['all_end']);
+                        $label_y1 = $y1;
+                        $label_y2 = $y2;
+                        $bg_color = $row['bg_color'];
+                        DrawRequestTimeLabelBackground(
+                            $im,
+                            $request,
+                            $label_x1,
+                            $label_y1,
+                            $label_x2,
+                            $label_y2,
+                            $data_x,
+                            $width - 1,
+                            $font_width,
+                            $bg_color
+                        );
+                    }
+                    if (!$is_thumbnail) {
+                        $y1 += 1;
+                        $y2 -= 1;
+                    }
+                    $request['colors'] = GetRequestColors(
+                        @$request['contentType'],
+                        $is_thumbnail,
+                        $is_mime,
+                        $is_state,
+                        $request['url']
+                    );
+                    $bars = GetBars(
+                        $request,
+                        $x_scaler,
+                        $y1,
+                        $y2,
+                        $is_thumbnail,
+                        $is_mime,
+                        $is_state,
+                        $include_js,
+                        $max_bw,
+                        $pass,
+                        $show_chunks,
+                        $include_wait
+                    );
+                    foreach ($bars as $bar) {
+                        list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
+                        DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
+                    }
+                    if (!$is_thumbnail && !$is_connection) {
+                        DrawRequestTimeLabel(
+                            $im,
+                            $request,
+                            $label_x1,
+                            $label_y1,
+                            $label_x2,
+                            $label_y2,
+                            $data_x,
+                            $width - 1,
+                            $font,
+                            $font_width,
+                            $black,
+                            $bg_color
+                        );
+                    }
+                }
+            }
+    imagefilledrectangle(
+        $im,
+        0,
+        $top + $row['y1'],
+        $data_x,
+        $top + $row['y2'],
+        $row['bg_color']
+    );
+        }
+    }
+    imagerectangle($im, 0, $top, $data_x, $top + $data_height - 1, $border_color);
 
     // Draw the left-hand column labels.
     if (!$is_image_map) {
@@ -997,82 +1105,6 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     FitText($request_label, $label_max_len),
                     $text_color
                 );
-            }
-        }
-    }
-    if ($max_ms > 0 && !$is_image_map) {
-        // Draw requests.
-        foreach ($rows as $row) {
-            $is_connection = $row['is_connection'];
-            for ($pass = 1; $pass <= 2; $pass++) {
-                foreach ($row['requests'] as $request) {
-                    $y1 = $top + $row['y1'];
-                    $y2 = $top + $row['y2'];
-                    if (!$is_thumbnail && !$is_connection) {
-                        $label_x1 = $x_scaler($request['all_start']);
-                        $label_x2 = $x_scaler($request['all_end']);
-                        $label_y1 = $y1;
-                        $label_y2 = $y2;
-                        $bg_color = $row['bg_color'];
-                        DrawRequestTimeLabelBackground(
-                            $im,
-                            $request,
-                            $label_x1,
-                            $label_y1,
-                            $label_x2,
-                            $label_y2,
-                            $data_x,
-                            $width - 1,
-                            $font_width,
-                            $bg_color
-                        );
-                    }
-                    if (!$is_thumbnail) {
-                        $y1 += 1;
-                        $y2 -= 1;
-                    }
-                    $request['colors'] = GetRequestColors(
-                        @$request['contentType'],
-                        $is_thumbnail,
-                        $is_mime,
-                        $is_state,
-                        $request['url']
-                    );
-                    $bars = GetBars(
-                        $request,
-                        $x_scaler,
-                        $y1,
-                        $y2,
-                        $is_thumbnail,
-                        $is_mime,
-                        $is_state,
-                        $include_js,
-                        $max_bw,
-                        $pass,
-                        $show_chunks,
-                        $include_wait
-                    );
-                    foreach ($bars as $bar) {
-                        list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
-                        DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
-                    }
-                    if (!$is_thumbnail && !$is_connection) {
-                        DrawRequestTimeLabel(
-                            $im,
-                            $request,
-                            $label_x1,
-                            $label_y1,
-                            $label_x2,
-                            $label_y2,
-                            $data_x,
-                            $width - 1,
-                            $font,
-                            $font_width,
-                            $black,
-                            $bg_color
-                        );
-                    }
-                }
             }
         }
     }
@@ -1233,12 +1265,14 @@ class ColorAlternator
 
 class XScaler
 {
+    public $value_min;
     public $value_max;
     public $x_start;
     public $x_width;
 
-    function __construct($value_max, $x_start, $x_width)
+    function __construct($value_min, $value_max, $x_start, $x_width)
     {
+        $this->value_min = $value_min;
         $this->value_max = $value_max;
         $this->x_start = $x_start;
         $this->x_width = $x_width;
@@ -1246,13 +1280,14 @@ class XScaler
 
     public function __invoke($value)
     {
-        return $this->value_max ? $this->x_start + (int)((float)$this->x_width * (float)$value /
-            $this->value_max) : 0;
+        return $this->value_max ?
+        $this->x_start + (int)($this->x_width * ($value - $this->value_min) / ($this->value_max - $this->value_min)) :
+        0;
     }
 
     public function bar_width_ms()
     {
-        return ((float)$this->value_max / (float)$this->x_width);
+        return ((float)($this->value_max - $this->value_min) / (float)$this->x_width);
     }
 }
 
@@ -1334,9 +1369,10 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors)
  * @param string $key is which performance chart (e.g. 'cpu' or 'bw').
  * @param mixed $perf is an array of performance parameters.
  * @param int $font is the label's font indentifier.
- * @param int $label_color color identifier
+ * @param int $label_color color identifier.
+ * @param int $border_color border color identifier.
  */
-function DrawPerfLabel($im, $key, $perf, $font, $label_color)
+function DrawPerfLabel($im, $key, $perf, $font, $label_color, $border_color)
 {
     $x = $perf['x1'];
     $height = $perf['height'];
@@ -1344,6 +1380,7 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color)
     if (isset($perf['color'])) {
         imageline($im, $x + 10, $line_y, $x + 45, $line_y, $perf['color']);
     }
+    imagerectangle($im, 0, $perf['y1'], $perf['x2'], $perf['y2'], $border_color);
 
     $label = $key;
     if ($key == 'cpu') {
