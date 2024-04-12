@@ -28,8 +28,7 @@
                                     $lighthouse = $urlGenerator->resultPage("lighthouse");
                                     echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                                 } elseif ($check == 'security') {
-                                    $snykUrl = "https://snyk.io/test/website-scanner/?test={$id}&utm_medium=referral&utm_source=webpagetest&utm_campaign=website-scanner";
-                                    echo "<li class=\"$check\"><a href=\"$snykUrl\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                                    echo "<li class=\"$check\"><a><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                                 } else {
                                     echo "<li class=\"$check\"><a href=\"#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                                 }
