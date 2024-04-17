@@ -218,7 +218,7 @@ body.theme-b {
 .modal-open {
   visibility: visible;
   display: block;
-  z-index: 1001;
+  z-index: 10000001;
   background: rgb(244, 244, 244);
   box-sizing: border-box;
   padding: 5vh;
