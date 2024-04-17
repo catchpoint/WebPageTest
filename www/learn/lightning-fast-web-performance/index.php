@@ -443,32 +443,24 @@ EOT;
                             </div>
                         </details>
                     </li>
-                    <?php if ($experiments_logged_in) {
-                        $thisUser = $request_context->getUser();
-                        $name = $thisUser->getFirstName() . " " . $thisUser->getLastName();
-                        $CertimgURL = "https://wpt-screenshot.netlify.app/" . rawurlencode("https://www.webpagetest.org/learn/lightning-fast-web-performance/certificate.php?name=" . $name . "&screenshot=1") . "/opengraph/20220913";
-                    ?>
-                        <li class="cert-li">
-                            <details>
-                                <summary><span>Certificate of Completion</span></summary>
-                                <div class="chapter_inner">
-                                    <div class="video video-cert">
-                                        <img src="<?= $CertimgURL ?>" loading="lazy" alt="Certificate image acknowledging completion">
-                                    </div>
-
-                                    <div class="chapter_extra">
-
-                                        <h3>Your Certificate</h3>
-                                        <p>Congratulations on completing the course. Use this certificate to share your achievement!</p>
-                                        <ul>
-                                            <li><a href="<?= $CertimgURL ?>" download>Download Image</a></li>
-                                        </ul>
-
-                                    </div>
+                    <li class="cert-li">
+                        <details>
+                            <summary><span>Certificate of Completion</span></summary>
+                            <div class="chapter_inner">
+                                <div class="video video-cert">
+                                    <img src="/learn/lightning-fast-web-performance/certificate.png" loading="lazy" alt="Certificate image acknowledging completion">
                                 </div>
-                            </details>
-                        </li>
-                    <?php } ?>
+                                <div class="chapter_extra">
+                                    <h3>Your Certificate</h3>
+                                    <p>Congratulations on completing the course. Use this certificate to share your achievement!</p>
+                                    <ul>
+                                        <li><a href="/learn/lightning-fast-web-performance/certificate.png" download>Download Image</a></li>
+                                    </ul>
+
+                                </div>
+                            </div>
+                        </details>
+                    </li> 
                 </ol>
             </section>
 
