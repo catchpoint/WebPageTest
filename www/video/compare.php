@@ -446,7 +446,7 @@ if (!isset($_REQUEST['tests']) && isset($_REQUEST['t'])) {
                             } else {
                                 echo '<h2>Experiment Results</h2>';
                                 echo '<div class="experiment_meta">';
-                                echo '<div class="experiment_meta_included">';
+                                echo '<div class="experiment_meta_included" id="experimentsAppliedSection">';
                                 echo '<p>Experiments Applied:</p>';
                                 echo '<ul>';
                                 include __DIR__ . '/../experiments/list_applied.inc';
@@ -1451,6 +1451,17 @@ function DisplayGraphs()
             }
             ?>
         }
+    </script>
+    <script>
+        const experimentsAppliedContainer = document.querySelector("#experimentsAppliedSection");
+        const experimentsAppliedDetails = experimentsAppliedContainer.querySelectorAll('details');
+        Array.from(experimentsAppliedDetails).forEach((targetDetail) => {
+	        targetDetail.addEventListener("click", () => {
+	        experimentsAppliedDetails.forEach((detail) => {
+		        if (detail !== targetDetail) { detail.removeAttribute("open"); }
+	        });
+	        });
+        });
     </script>
     <?php
     if ($stickyFilmstrip) {

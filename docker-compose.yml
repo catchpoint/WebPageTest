@@ -61,7 +61,11 @@ services:
     build:
       context: .
       dockerfile: docker/local/Dockerfile-wptagent
-    command: python3 wptagent.py -vvvv --xvfb --dockerized --server  http://web/work/ --location Test --key 123456789
+    environment:
+      - SERVER_URL=http://web/work/
+      - LOCATION=Test
+      - KEY=123456789
+    init: true
   #### ####
 
 secrets:

@@ -51,6 +51,12 @@ bwIn=9000000
 bwOut=9000000
 latency=170
 
+[4GFast]
+label="4G Fast (10 Mbps, 40ms RTT)"
+bwIn=10240000
+bwOut=10240000
+latency=40
+
 [LTE]
 label="LTE (12 Mbps, 70ms RTT)"
 bwIn=12000000
