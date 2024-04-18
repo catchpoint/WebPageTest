@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2020 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Sniffs;
@@ -31,14 +31,16 @@ class AbstractArraySniffTest extends AbstractMethodUnitTest
      * The test case file for a unit test class has to be in the same directory
      * directory and use the same file name as the test class, using the .inc extension.
      *
+     * @beforeClass
+     *
      * @return void
      */
-    public static function setUpBeforeClass()
+    public static function initializeFile()
     {
         self::$sniff = new AbstractArraySniffTestable();
-        parent::setUpBeforeClass();
+        parent::initializeFile();
 
-    }//end setUpBeforeClass()
+    }//end initializeFile()
 
 
     /**

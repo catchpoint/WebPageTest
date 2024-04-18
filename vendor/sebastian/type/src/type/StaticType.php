@@ -58,6 +58,9 @@ final class StaticType extends Type
         return $this->allowsNull;
     }
 
+    /**
+     * @psalm-assert-if-true StaticType $this
+     */
     public function isStatic(): bool
     {
         return true;

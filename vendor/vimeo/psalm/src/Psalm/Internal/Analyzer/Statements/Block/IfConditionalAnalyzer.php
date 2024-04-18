@@ -29,7 +29,7 @@ use function count;
 /**
  * @internal
  */
-class IfConditionalAnalyzer
+final class IfConditionalAnalyzer
 {
     public static function analyze(
         StatementsAnalyzer $statements_analyzer,
@@ -238,13 +238,13 @@ class IfConditionalAnalyzer
             || $stmt instanceof PhpParser\Node\Expr\BinaryOp\Identical
         ) {
             if ($stmt->left instanceof PhpParser\Node\Expr\ConstFetch
-                && $stmt->left->name->parts === ['true']
+                && $stmt->left->name->getParts() === ['true']
             ) {
                 return self::getDefinitelyEvaluatedExpressionAfterIf($stmt->right);
             }
 
             if ($stmt->right instanceof PhpParser\Node\Expr\ConstFetch
-                && $stmt->right->name->parts === ['true']
+                && $stmt->right->name->getParts() === ['true']
             ) {
                 return self::getDefinitelyEvaluatedExpressionAfterIf($stmt->left);
             }
@@ -282,13 +282,13 @@ class IfConditionalAnalyzer
             || $stmt instanceof PhpParser\Node\Expr\BinaryOp\Identical
         ) {
             if ($stmt->left instanceof PhpParser\Node\Expr\ConstFetch
-                && $stmt->left->name->parts === ['true']
+                && $stmt->left->name->getParts() === ['true']
             ) {
                 return self::getDefinitelyEvaluatedExpressionInsideIf($stmt->right);
             }
 
             if ($stmt->right instanceof PhpParser\Node\Expr\ConstFetch
-                && $stmt->right->name->parts === ['true']
+                && $stmt->right->name->getParts() === ['true']
             ) {
                 return self::getDefinitelyEvaluatedExpressionInsideIf($stmt->left);
             }

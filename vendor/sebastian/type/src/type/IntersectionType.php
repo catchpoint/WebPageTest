@@ -9,16 +9,16 @@
  */
 namespace SebastianBergmann\Type;
 
-use function array_unique;
 use function assert;
 use function count;
 use function implode;
+use function in_array;
 use function sort;
 
 final class IntersectionType extends Type
 {
     /**
-     * @psalm-var list<Type>
+     * @psalm-var non-empty-list<Type>
      */
     private $types;
 
@@ -62,9 +62,20 @@ final class IntersectionType extends Type
         return false;
     }
 
+    /**
+     * @psalm-assert-if-true IntersectionType $this
+     */
     public function isIntersection(): bool
     {
         return true;
+    }
+
+    /**
+     * @psalm-return non-empty-list<Type>
+     */
+    public function types(): array
+    {
+        return $this->types;
     }
 
     /**
@@ -103,13 +114,13 @@ final class IntersectionType extends Type
         foreach ($types as $type) {
             assert($type instanceof ObjectType);
 
-            $names[] = $type->className()->qualifiedName();
-        }
+            $classQualifiedName = $type->className()->qualifiedName();
 
-        if (count(array_unique($names)) < count($names)) {
-            throw new RuntimeException(
-                'An intersection type must not contain duplicate types'
-            );
+            if (in_array($classQualifiedName, $names, true)) {
+                throw new RuntimeException('An intersection type must not contain duplicate types');
+            }
+
+            $names[] = $classQualifiedName;
         }
     }
 }

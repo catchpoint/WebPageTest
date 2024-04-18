@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Generic\Tests\PHP;
@@ -66,6 +66,8 @@ class LowerCaseTypeUnitTest extends AbstractSniffUnitTest
             78 => 3,
             82 => 2,
             85 => 1,
+            94 => 5,
+            96 => 4,
         ];
 
     }//end getErrorList()
@@ -81,7 +83,8 @@ class LowerCaseTypeUnitTest extends AbstractSniffUnitTest
      */
     public function getWarningList()
     {
-        return [];
+        // Warning from getMemberProperties() about parse error.
+        return [100 => 1];
 
     }//end getWarningList()
 

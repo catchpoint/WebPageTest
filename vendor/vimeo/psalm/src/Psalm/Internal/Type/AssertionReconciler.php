@@ -68,7 +68,7 @@ use function is_string;
 /**
  * @internal
  */
-class AssertionReconciler extends Reconciler
+final class AssertionReconciler extends Reconciler
 {
     /**
      * Reconciles types
@@ -771,12 +771,25 @@ class AssertionReconciler extends Reconciler
                 }
 
                 if ($type_1_param->getId() !== $type_2_param->getId()) {
-                    $type_1_param = $type_2_param;
+                    $type_1_param = $type_2_param->setPossiblyUndefined($type_1_param->possibly_undefined);
                 }
             }
             unset($type_1_param);
 
-            $matching_atomic_type = $type_1_atomic->setProperties($type_1_properties);
+            if ($type_1_atomic->fallback_params === null) {
+                $fallback_types = null;
+            } else {
+                //any fallback type is now the value of iterable
+                $fallback_types = [$type_1_atomic->fallback_params[0], $type_2_param];
+            }
+
+            $matching_atomic_type = new TKeyedArray(
+                $type_1_properties,
+                $type_1_atomic->class_strings,
+                $fallback_types,
+                $type_1_atomic->is_list,
+                $type_1_atomic->from_docblock,
+            );
             $atomic_comparison_results->type_coerced = true;
         }
 
@@ -943,6 +956,15 @@ class AssertionReconciler extends Reconciler
                 ) {
                     $can_be_equal = true;
                     $redundant = false;
+                    $existing_var_type->removeType($atomic_key);
+                    $existing_var_type->addType(new TEnumCase($fq_enum_name, $case_name));
+                } elseif (AtomicTypeComparator::canBeIdentical(
+                    $statements_analyzer->getCodebase(),
+                    $atomic_type,
+                    $assertion_type,
+                )) {
+                    $can_be_equal = true;
+                    $redundant = $atomic_key === $assertion_type->getKey();
                     $existing_var_type->removeType($atomic_key);
                     $existing_var_type->addType(new TEnumCase($fq_enum_name, $case_name));
                 } elseif ($atomic_key !== $assertion_type->getKey()) {

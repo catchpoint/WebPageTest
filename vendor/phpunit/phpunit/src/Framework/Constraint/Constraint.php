@@ -82,6 +82,7 @@ abstract class Constraint implements Countable, SelfDescribing
      * This method can be overridden to implement the evaluation algorithm.
      *
      * @param mixed $other value or object to evaluate
+     *
      * @codeCoverageIgnore
      */
     protected function matches($other): bool
@@ -92,9 +93,8 @@ abstract class Constraint implements Countable, SelfDescribing
     /**
      * Throws an exception for the given compared value and test description.
      *
-     * @param mixed             $other             evaluated value or object
-     * @param string            $description       Additional information about the test
-     * @param ComparisonFailure $comparisonFailure
+     * @param mixed  $other       evaluated value or object
+     * @param string $description Additional information about the test
      *
      * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
      * @throws ExpectationFailedException
@@ -105,7 +105,7 @@ abstract class Constraint implements Countable, SelfDescribing
     {
         $failureDescription = sprintf(
             'Failed asserting that %s.',
-            $this->failureDescription($other)
+            $this->failureDescription($other),
         );
 
         $additionalFailureDescription = $this->additionalFailureDescription($other);
@@ -120,7 +120,7 @@ abstract class Constraint implements Countable, SelfDescribing
 
         throw new ExpectationFailedException(
             $failureDescription,
-            $comparisonFailure
+            $comparisonFailure,
         );
     }
 

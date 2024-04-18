@@ -23,6 +23,7 @@ use function sprintf;
 use function str_pad;
 use function str_repeat;
 use function strlen;
+use function trim;
 use function vsprintf;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Exception;
@@ -46,23 +47,15 @@ use Throwable;
  */
 class DefaultResultPrinter extends Printer implements ResultPrinter
 {
-    public const EVENT_TEST_START = 0;
-
-    public const EVENT_TEST_END = 1;
-
+    public const EVENT_TEST_START      = 0;
+    public const EVENT_TEST_END        = 1;
     public const EVENT_TESTSUITE_START = 2;
-
-    public const EVENT_TESTSUITE_END = 3;
-
-    public const COLOR_NEVER = 'never';
-
-    public const COLOR_AUTO = 'auto';
-
-    public const COLOR_ALWAYS = 'always';
-
-    public const COLOR_DEFAULT = self::COLOR_NEVER;
-
-    private const AVAILABLE_COLORS = [self::COLOR_NEVER, self::COLOR_AUTO, self::COLOR_ALWAYS];
+    public const EVENT_TESTSUITE_END   = 3;
+    public const COLOR_NEVER           = 'never';
+    public const COLOR_AUTO            = 'auto';
+    public const COLOR_ALWAYS          = 'always';
+    public const COLOR_DEFAULT         = self::COLOR_NEVER;
+    private const AVAILABLE_COLORS     = [self::COLOR_NEVER, self::COLOR_AUTO, self::COLOR_ALWAYS];
 
     /**
      * @var int
@@ -149,7 +142,7 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
         if (!in_array($colors, self::AVAILABLE_COLORS, true)) {
             throw InvalidArgumentException::create(
                 3,
-                vsprintf('value from "%s", "%s" or "%s"', self::AVAILABLE_COLORS)
+                vsprintf('value from "%s", "%s" or "%s"', self::AVAILABLE_COLORS),
             );
         }
 
@@ -278,8 +271,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
             $this->write(
                 sprintf(
                     "Test '%s' started\n",
-                    \PHPUnit\Util\Test::describeAsString($test)
-                )
+                    \PHPUnit\Util\Test::describeAsString($test),
+                ),
             );
         }
     }
@@ -293,8 +286,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
             $this->write(
                 sprintf(
                     "Test '%s' ended\n",
-                    \PHPUnit\Util\Test::describeAsString($test)
-                )
+                    \PHPUnit\Util\Test::describeAsString($test),
+                ),
             );
         }
 
@@ -333,8 +326,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
                 ($count == 1) ? 'was' : 'were',
                 $count,
                 $type,
-                ($count == 1) ? '' : 's'
-            )
+                ($count == 1) ? '' : 's',
+            ),
         );
 
         $i = 1;
@@ -362,8 +355,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
             sprintf(
                 "\n%d) %s\n",
                 $count,
-                $defect->getTestName()
-            )
+                $defect->getTestName(),
+            ),
         );
     }
 
@@ -374,7 +367,7 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
         $this->write((string) $e);
 
         while ($e = $e->getPrevious()) {
-            $this->write("\nCaused by\n" . $e);
+            $this->write("\nCaused by\n" . trim((string) $e) . "\n");
         }
     }
 
@@ -420,7 +413,7 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
         if (count($result) === 0) {
             $this->writeWithColor(
                 'fg-black, bg-yellow',
-                'No tests executed!'
+                'No tests executed!',
             );
 
             return;
@@ -434,8 +427,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
                     count($result),
                     (count($result) === 1) ? '' : 's',
                     $this->numAssertions,
-                    ($this->numAssertions === 1) ? '' : 's'
-                )
+                    ($this->numAssertions === 1) ? '' : 's',
+                ),
             );
 
             return;
@@ -450,7 +443,7 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
 
             $this->writeWithColor(
                 $color,
-                'OK, but incomplete, skipped, or risky tests!'
+                'OK, but incomplete, skipped, or risky tests!',
             );
         } else {
             $this->write("\n");
@@ -460,21 +453,21 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
 
                 $this->writeWithColor(
                     $color,
-                    'ERRORS!'
+                    'ERRORS!',
                 );
             } elseif ($result->failureCount()) {
                 $color = 'fg-white, bg-red';
 
                 $this->writeWithColor(
                     $color,
-                    'FAILURES!'
+                    'FAILURES!',
                 );
             } elseif ($result->warningCount()) {
                 $color = 'fg-black, bg-yellow';
 
                 $this->writeWithColor(
                     $color,
-                    'WARNINGS!'
+                    'WARNINGS!',
                 );
             }
         }
@@ -511,8 +504,8 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
                     $this->numTestsWidth . 'd (%3s%%)',
                     $this->numTestsRun,
                     $this->numTests,
-                    floor(($this->numTestsRun / $this->numTests) * 100)
-                )
+                    floor(($this->numTestsRun / $this->numTests) * 100),
+                ),
             );
 
             if ($this->column == $this->maxColumn) {
@@ -581,9 +574,9 @@ class DefaultResultPrinter extends Printer implements ResultPrinter
                     '%s%s: %d',
                     !$first ? ', ' : '',
                     $name,
-                    $count
+                    $count,
                 ),
-                false
+                false,
             );
 
             $first = false;

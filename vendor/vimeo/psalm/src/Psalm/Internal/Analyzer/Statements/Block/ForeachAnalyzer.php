@@ -21,6 +21,7 @@ use Psalm\Internal\Analyzer\Statements\ExpressionAnalyzer;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
 use Psalm\Internal\FileManipulation\FileManipulationBuffer;
 use Psalm\Internal\Scope\LoopScope;
+use Psalm\Internal\Type\AssertionReconciler;
 use Psalm\Internal\Type\Comparator\AtomicTypeComparator;
 use Psalm\Internal\Type\TypeExpander;
 use Psalm\Issue\ImpureMethodCall;
@@ -36,10 +37,12 @@ use Psalm\Issue\UnnecessaryVarAnnotation;
 use Psalm\IssueBuffer;
 use Psalm\Node\Expr\VirtualMethodCall;
 use Psalm\Node\VirtualIdentifier;
+use Psalm\Storage\Assertion;
 use Psalm\Type;
 use Psalm\Type\Atomic;
 use Psalm\Type\Atomic\Scalar;
 use Psalm\Type\Atomic\TArray;
+use Psalm\Type\Atomic\TCallableObject;
 use Psalm\Type\Atomic\TFalse;
 use Psalm\Type\Atomic\TGenericObject;
 use Psalm\Type\Atomic\TIterable;
@@ -71,7 +74,7 @@ use function strtolower;
 /**
  * @internal
  */
-class ForeachAnalyzer
+final class ForeachAnalyzer
 {
     /**
      * @return  false|null
@@ -188,7 +191,7 @@ class ForeachAnalyzer
                     && $type_location
                     && isset($context->vars_in_scope[$var_comment->var_id])
                     && $context->vars_in_scope[$var_comment->var_id]->getId() === $comment_type->getId()
-                    && !$comment_type->isMixed()
+                    && !$comment_type->isMixed(true)
                 ) {
                     $project_analyzer = $statements_analyzer->getProjectAnalyzer();
 
@@ -264,8 +267,17 @@ class ForeachAnalyzer
 
         $foreach_context = clone $context;
 
-        foreach ($foreach_context->vars_in_scope as $context_var_id => $context_type) {
-            $foreach_context->vars_in_scope[$context_var_id] = $context_type;
+        if ($var_id && $foreach_context->hasVariable($var_id)) {
+            // refine the type of the array variable we iterate over
+            // if we entered loop body, the array cannot be empty
+            $foreach_context->vars_in_scope[$var_id] = AssertionReconciler::reconcile(
+                new Assertion\NonEmpty(),
+                $foreach_context->vars_in_scope[$var_id],
+                null,
+                $statements_analyzer,
+                true, // inside loop ?
+                $statements_analyzer->getTemplateTypeMap() ?? [],
+            );
         }
 
         $foreach_context->inside_loop = true;
@@ -735,26 +747,13 @@ class ForeachAnalyzer
         foreach ($iterator_atomic_types as $iterator_atomic_type) {
             if ($iterator_atomic_type instanceof TTemplateParam
                 || $iterator_atomic_type instanceof TObjectWithProperties
+                || $iterator_atomic_type instanceof TCallableObject
             ) {
                 throw new UnexpectedValueException('Shouldn’t get a generic param here');
             }
 
 
             $has_valid_iterator = true;
-
-            if ($iterator_atomic_type instanceof TNamedObject
-                && strtolower($iterator_atomic_type->value) === 'simplexmlelement'
-            ) {
-                $value_type = Type::combineUnionTypes(
-                    $value_type,
-                    new Union([$iterator_atomic_type]),
-                );
-
-                $key_type = Type::combineUnionTypes(
-                    $key_type,
-                    Type::getString(),
-                );
-            }
 
             if ($iterator_atomic_type instanceof TIterable
                 || (strtolower($iterator_atomic_type->value) === 'traversable'
@@ -1097,7 +1096,7 @@ class ForeachAnalyzer
     ): ?Union {
         if ($calling_class === $template_class) {
             if (isset($class_template_types[$template_name]) && $calling_type_params) {
-                $offset = array_search($template_name, array_keys($class_template_types));
+                $offset = array_search($template_name, array_keys($class_template_types), true);
 
                 if ($offset !== false && isset($calling_type_params[$offset])) {
                     return $calling_type_params[$offset];

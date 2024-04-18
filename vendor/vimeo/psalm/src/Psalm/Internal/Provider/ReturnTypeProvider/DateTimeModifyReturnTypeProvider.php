@@ -8,13 +8,12 @@ use Psalm\Plugin\EventHandler\Event\MethodReturnTypeProviderEvent;
 use Psalm\Plugin\EventHandler\MethodReturnTypeProviderInterface;
 use Psalm\Type;
 use Psalm\Type\Atomic\TLiteralString;
-use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 
 /**
  * @internal
  */
-class DateTimeModifyReturnTypeProvider implements MethodReturnTypeProviderInterface
+final class DateTimeModifyReturnTypeProvider implements MethodReturnTypeProviderInterface
 {
     public static function getClassLikeNames(): array
     {
@@ -57,11 +56,7 @@ class DateTimeModifyReturnTypeProvider implements MethodReturnTypeProviderInterf
             return Type::getFalse();
         }
         if ($has_date_time && !$has_false) {
-            return Type::intersectUnionTypes(
-                Type::parseString($event->getCalledFqClasslikeName() ?? $event->getFqClasslikeName()),
-                new Union([new TNamedObject('static')]),
-                $statements_source->getCodebase(),
-            );
+            return Type::parseString($event->getCalledFqClasslikeName() ?? $event->getFqClasslikeName());
         }
 
         return null;

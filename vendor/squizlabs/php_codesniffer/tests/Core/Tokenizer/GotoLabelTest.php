@@ -4,7 +4,7 @@
  *
  * @author    Juliette Reinders Folmer <phpcs_nospam@adviesenzo.nl>
  * @copyright 2020 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Tests\Core\Tokenizer;
@@ -32,7 +32,7 @@ class GotoLabelTest extends AbstractMethodUnitTest
 
         $label = $this->getTargetToken($testMarker, T_STRING);
 
-        $this->assertInternalType('int', $label);
+        $this->assertTrue(is_int($label));
         $this->assertSame($testContent, $tokens[$label]['content']);
 
     }//end testGotoStatement()
@@ -78,7 +78,7 @@ class GotoLabelTest extends AbstractMethodUnitTest
 
         $label = $this->getTargetToken($testMarker, T_GOTO_LABEL);
 
-        $this->assertInternalType('int', $label);
+        $this->assertTrue(is_int($label));
         $this->assertSame($testContent, $tokens[$label]['content']);
 
     }//end testGotoDeclaration()

@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Squiz\Tests\WhiteSpace;
@@ -37,7 +37,7 @@ class FunctionClosingBraceSpaceUnitTest extends AbstractSniffUnitTest
                 31 => 1,
                 39 => 1,
             ];
-            break;
+
         case 'FunctionClosingBraceSpaceUnitTest.js':
             return [
                 13  => 1,
@@ -49,10 +49,9 @@ class FunctionClosingBraceSpaceUnitTest extends AbstractSniffUnitTest
                 84  => 1,
                 128 => 1,
             ];
-            break;
+
         default:
             return [];
-            break;
         }//end switch
 
     }//end getErrorList()

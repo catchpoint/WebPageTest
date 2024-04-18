@@ -2,6 +2,12 @@
 
 All notable changes are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [4.0.5] - 2022-09-14
+
+### Fixed
+
+* [#47](https://github.com/sebastianbergmann/exporter/pull/47): Fix `float` export precision
+
 ## [4.0.4] - 2021-11-11
 
 ### Changed
@@ -32,6 +38,12 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 * This component is no longer supported on PHP 7.0, PHP 7.1, and PHP 7.2
 
+## [3.1.5] - 2022-09-14
+
+### Fixed
+
+* [#47](https://github.com/sebastianbergmann/exporter/pull/47): Fix `float` export precision
+
 ## [3.1.4] - 2021-11-11
 
 ### Changed
@@ -54,11 +66,13 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 * Remove HHVM-specific code that is no longer needed
 
+[4.0.5]: https://github.com/sebastianbergmann/exporter/compare/4.0.4...4.0.5
 [4.0.4]: https://github.com/sebastianbergmann/exporter/compare/4.0.3...4.0.4
 [4.0.3]: https://github.com/sebastianbergmann/exporter/compare/4.0.2...4.0.3
 [4.0.2]: https://github.com/sebastianbergmann/exporter/compare/4.0.1...4.0.2
 [4.0.1]: https://github.com/sebastianbergmann/exporter/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/sebastianbergmann/exporter/compare/3.1.2...4.0.0
+[3.1.5]: https://github.com/sebastianbergmann/exporter/compare/3.1.4...3.1.5
 [3.1.4]: https://github.com/sebastianbergmann/exporter/compare/3.1.3...3.1.4
 [3.1.3]: https://github.com/sebastianbergmann/exporter/compare/3.1.2...3.1.3
 [3.1.2]: https://github.com/sebastianbergmann/exporter/compare/3.1.1...3.1.2

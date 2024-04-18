@@ -35,7 +35,6 @@ use Psalm\Type\Atomic\TDependentGetDebugType;
 use Psalm\Type\Atomic\TDependentGetType;
 use Psalm\Type\Atomic\TFloat;
 use Psalm\Type\Atomic\TInt;
-use Psalm\Type\Atomic\TLiteralString;
 use Psalm\Type\Atomic\TLowercaseString;
 use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNamedObject;
@@ -57,7 +56,7 @@ use function strtolower;
 /**
  * @internal
  */
-class NamedFunctionCallHandler
+final class NamedFunctionCallHandler
 {
     /**
      * @param lowercase-string $function_id
@@ -226,7 +225,38 @@ class NamedFunctionCallHandler
         }
 
         if ($function_id === 'defined') {
-            $context->check_consts = false;
+            if ($first_arg && !$context->inside_negation) {
+                $fq_const_name = ConstFetchAnalyzer::getConstName(
+                    $first_arg->value,
+                    $statements_analyzer->node_data,
+                    $codebase,
+                    $statements_analyzer->getAliases(),
+                );
+
+                if ($fq_const_name !== null) {
+                    $const_type = ConstFetchAnalyzer::getConstType(
+                        $statements_analyzer,
+                        $fq_const_name,
+                        true,
+                        $context,
+                    );
+
+                    if (!$const_type) {
+                        ConstFetchAnalyzer::setConstType(
+                            $statements_analyzer,
+                            $fq_const_name,
+                            Type::getMixed(),
+                            $context,
+                        );
+
+                        $context->check_consts = false;
+                    }
+                } else {
+                    $context->check_consts = false;
+                }
+            } else {
+                $context->check_consts = false;
+            }
             return;
         }
 
@@ -514,6 +544,42 @@ class NamedFunctionCallHandler
                 }
             }
         }
+
+        if ($first_arg
+            && $function_id === 'is_a'
+            // assertion reconsiler already emits relevant (but different) issues
+            && !$context->inside_conditional
+        ) {
+            $first_arg_type = $statements_analyzer->node_data->getType($first_arg->value);
+
+            if ($first_arg_type && $first_arg_type->isString()) {
+                $third_arg = $stmt->getArgs()[2] ?? null;
+                if ($third_arg) {
+                    $third_arg_type = $statements_analyzer->node_data->getType($third_arg->value);
+                } else {
+                    $third_arg_type = Type::getFalse();
+                }
+
+                if ($third_arg_type
+                    && $third_arg_type->isSingle()
+                    && $third_arg_type->isFalse()
+                ) {
+                    if ($first_arg_type->from_docblock) {
+                        IssueBuffer::maybeAdd(new RedundantFunctionCallGivenDocblockType(
+                            'Call to is_a always return false when first argument is string '
+                            . 'unless third argument is true',
+                            new CodeLocation($statements_analyzer, $function_name),
+                        ));
+                    } else {
+                        IssueBuffer::maybeAdd(new RedundantFunctionCall(
+                            'Call to is_a always return false when first argument is string '
+                            . 'unless third argument is true',
+                            new CodeLocation($statements_analyzer, $function_name),
+                        ));
+                    }
+                }
+            }
+        }
     }
 
     private static function handleDependentTypeFunction(
@@ -589,17 +655,17 @@ class NamedFunctionCallHandler
                         $class_string_types[] = new TClassString();
                     } else {
                         if ($class_type instanceof TInt) {
-                            $class_string_types[] = new TLiteralString('int');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('int');
                         } elseif ($class_type instanceof TString) {
-                            $class_string_types[] = new TLiteralString('string');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('string');
                         } elseif ($class_type instanceof TFloat) {
-                            $class_string_types[] = new TLiteralString('float');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('float');
                         } elseif ($class_type instanceof TBool) {
-                            $class_string_types[] = new TLiteralString('bool');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('bool');
                         } elseif ($class_type instanceof TClosedResource) {
-                            $class_string_types[] = new TLiteralString('resource (closed)');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('resource (closed)');
                         } elseif ($class_type instanceof TNull) {
-                            $class_string_types[] = new TLiteralString('null');
+                            $class_string_types[] = Type::getAtomicStringFromLiteral('null');
                         } else {
                             $class_string_types[] = new TString();
                         }

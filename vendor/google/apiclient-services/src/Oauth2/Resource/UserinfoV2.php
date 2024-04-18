@@ -22,7 +22,7 @@ namespace Google\Service\Oauth2\Resource;
  * Typical usage is:
  *  <code>
  *   $oauth2Service = new Google\Service\Oauth2(...);
- *   $v2 = $oauth2Service->v2;
+ *   $v2 = $oauth2Service->userinfo_v2;
  *  </code>
  */
 class UserinfoV2 extends \Google\Service\Resource

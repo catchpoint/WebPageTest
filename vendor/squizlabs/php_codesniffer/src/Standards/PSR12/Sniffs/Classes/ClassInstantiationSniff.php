@@ -4,7 +4,7 @@
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\PSR12\Sniffs\Classes;
@@ -48,6 +48,7 @@ class ClassInstantiationSniff implements Sniff
             T_NS_SEPARATOR             => T_NS_SEPARATOR,
             T_SELF                     => T_SELF,
             T_STATIC                   => T_STATIC,
+            T_PARENT                   => T_PARENT,
             T_VARIABLE                 => T_VARIABLE,
             T_DOLLAR                   => T_DOLLAR,
             T_OBJECT_OPERATOR          => T_OBJECT_OPERATOR,

@@ -5,7 +5,7 @@
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Blaine Schmeisser <blainesch@gmail.com>
  * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * @license   https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
 namespace PHP_CodeSniffer\Standards\Generic\Tests\PHP;
@@ -32,10 +32,9 @@ class SyntaxUnitTest extends AbstractSniffUnitTest
         case 'SyntaxUnitTest.1.inc':
         case 'SyntaxUnitTest.2.inc':
             return [3 => 1];
-            break;
+
         default:
             return [];
-            break;
         }
 
     }//end getErrorList()

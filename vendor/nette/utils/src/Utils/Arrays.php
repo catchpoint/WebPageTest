@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Nette\Utils;
 
+use JetBrains\PhpStorm\Language;
 use Nette;
 use function is_array, is_int, is_object, count;
 
@@ -203,7 +204,12 @@ class Arrays
 	 * @param  string[]  $array
 	 * @return string[]
 	 */
-	public static function grep(array $array, string $pattern, int $flags = 0): array
+	public static function grep(
+		array $array,
+		#[Language('RegExp')]
+		string $pattern,
+		int $flags = 0
+	): array
 	{
 		return Strings::pcre('preg_grep', [$pattern, $array, $flags]);
 	}
