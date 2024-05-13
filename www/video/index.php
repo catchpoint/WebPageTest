@@ -25,6 +25,11 @@ if (file_exists(__DIR__ . '/../settings/server/profiles.ini')) {
 if (is_file($profile_file)) {
     $profiles = parse_ini_file($profile_file, true);
 }
+// load the secret key (if there is one)
+$secret = GetServerSecret();
+if (!isset($secret)) {
+    $secret = '';
+}
 ?>
 
 <!DOCTYPE html>
@@ -47,7 +52,21 @@ if (is_file($profile_file)) {
 
             <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
+                <?php
+                    echo '<input type="hidden" name="vo" value="'.htmlspecialchars($owner).'">';
+                    if (strlen($secret)) {
+                        $hashStr = $secret;
+                        $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                        $hashStr .= $owner;
 
+                        $now = gmdate('c');
+                        echo '<input type="hidden" name="vd" value="'.$now.'">';
+                        $hashStr .= $now;
+
+                        $hmac = sha1($hashStr);
+                        echo '<input type="hidden" name="vh" value="'.$hmac.'">';
+                    }
+                ?>
             <div id="test_box-container" class="home_responsive_test">
                 <?php
                 $currNav = "Visual Comparison";

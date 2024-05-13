@@ -4,21 +4,14 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 chdir('..');
+use WebPageTest\Util;
+use WebPageTest\Util\OAuth as CPOauth;
 include 'common.inc';
 
 $urls = $_REQUEST['url'];
 $labels = $_REQUEST['label'];
 $ids = array();
 $ip = $_SERVER['REMOTE_ADDR'];
-$key = '';
-$keys_file = __DIR__ . '/../settings/keys.ini';
-if (file_exists(__DIR__ . '/../settings/common/keys.ini')) {
-    $keys_file = __DIR__ . '/../settings/common/keys.ini';
-}
-if (file_exists(__DIR__ . '/../settings/server/keys.ini')) {
-    $keys_file = __DIR__ . '/../settings/server/keys.ini';
-}
-$key = GetServerKey();
 $headless = false;
 if (GetSetting('headless')) {
     $headless = true;
@@ -41,7 +34,7 @@ if (!$duplicates && !$headless) {
     foreach ($urls as $index => $url) {
         $url = trim($url);
         if (strlen($url)) {
-            $id = SubmitTest($url, $labels[$index], $key);
+            $id = SubmitTest($url, $labels[$index]);
             if ($id && strlen($id)) {
                 $ids[] = $id;
             }
@@ -88,7 +81,7 @@ if (count($ids)) {
 * @param mixed $url
 * @param mixed $label
 */
-function SubmitTest($url, $label, $key)
+function SubmitTest($url, $label)
 {
     global $uid;
     global $user;
@@ -118,13 +111,29 @@ function SubmitTest($url, $label, $key)
     if ($user) {
         $testUrl .= '&user=' . urlencode($uid);
     }
-    if (strlen($key)) {
-        $testUrl .= '&k=' . urlencode($key);
-    }
     $saml_cookie = GetSetting('saml_cookie', 'samlu');
     if (isset($_COOKIE[$saml_cookie])) {
         $testUrl .= '&samlu=' . urlencode($_COOKIE[$saml_cookie]);
     }
+
+    if ($_REQUEST['vo']) {
+        $testUrl .= "&vo={$_REQUEST['vo']}";
+    }
+    if ($_REQUEST['vd']) {
+        $testUrl .= "&vd=".urlencode($_REQUEST['vd']);
+    }
+    if ($_REQUEST['vh']) {
+        $testUrl .= "&vh={$_REQUEST['vh']}";
+    }
+
+    $token_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
+    $token_value = $_COOKIE[$token_name];
+    if(isset($token_name) && isset($token_value)){
+       $context = stream_context_create(array("http" => array("header" => 'Cookie: '.$token_name.'='.$token_value."\r\n"),  "ignore_errors" => true,) );
+       libxml_set_streams_context($context);
+    }
+
+    ini_set('user_agent', $_SERVER['HTTP_USER_AGENT']);
 
     // submit the request
     $result = simplexml_load_file($testUrl, 'SimpleXMLElement', LIBXML_NOERROR);
