@@ -40,8 +40,6 @@ $url = "../getgzip.php?test={$id}&file={$fileBase}_trace.json";
   </script>
 </head>
 <body style="margin:0px;padding:0px;overflow:hidden">
-  <?php
-    echo '<iframe id="perfetto" src="https://ui.perfetto.dev" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%" onload="PerfettoLoaded();"></iframe>';
-    ?>
+   <iframe id="perfetto" src="https://ui.perfetto.dev" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%" onload="PerfettoLoaded();"></iframe>
 </body>
 </html>
