@@ -102,7 +102,7 @@ class Signup
         $ch_security_token = $request_context->getSignupClient()->GetChargifySecurityToken($email);
 
         $vars['ch_client_token'] = $ch_client_token;
-        $vars['ch_security_token'] = $ch_security_token;        
+        $vars['ch_security_token'] = $ch_security_token;
         $vars['ch_site'] = Util::getSetting('ch_site');
 
         $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";

@@ -289,7 +289,7 @@ class CPSignupClient
         }
     }
 
-    private function cp_http_get_cjs_token($endpoint, $identifier)
+    private function httpGetCjsToken($endpoint, $identifier)
     {
         $result = null;
         if (!isset($identifier) || strlen($identifier) === 0) {
@@ -328,7 +328,7 @@ class CPSignupClient
     function GetChargifySecurityToken($identifier)
     {
         $url = Util::getSetting('cp_security_token_url');
-        $result = $this->cp_http_get_cjs_token($url, $identifier);
+        $result = $this->httpGetCjsToken($url, $identifier);
         $ret = null;
         if (isset($result)) {
             $ret = $result;
