@@ -550,7 +550,12 @@ class Account
             $results['renewaldate'] = $body->renewaldate;
         }
 
-        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+        $contact_id = $request_context->getUser()->getContactId();
+        $ch_client_token = Util::getSetting('ch_key_public');
+        $ch_security_token = $request_context->getSignupClient()->GetChargifySecurityToken($contact_id);
+        
+        $results['ch_security_token'] = $ch_security_token;
+        $results['ch_client_token'] = $ch_client_token;        
         $results['ch_site'] = Util::getSetting('ch_site');
         $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
         return $tpl->render('billing/update-payment', $results);

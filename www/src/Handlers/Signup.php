@@ -97,13 +97,18 @@ class Signup
             $vars['billing_frequency'] = $plan->getBillingFrequency();
         }
 
-        $vars['ch_client_token'] = Util::getSetting('ch_key_public');
+        $email = htmlentities($_SESSION['signup-email']);
+        $ch_client_token = Util::getSetting('ch_key_public');
+        $ch_security_token = $request_context->getSignupClient()->GetChargifySecurityToken($email);
+
+        $vars['ch_client_token'] = $ch_client_token;
+        $vars['ch_security_token'] = $ch_security_token;        
         $vars['ch_site'] = Util::getSetting('ch_site');
 
         $vars['first_name'] = isset($_SESSION['signup-first-name']) ? htmlentities($_SESSION['signup-first-name']) : "";
         $vars['last_name'] = isset($_SESSION['signup-last-name']) ? htmlentities($_SESSION['signup-last-name']) : "";
         $vars['company_name'] = htmlentities($_SESSION['signup-company-name']);
-        $vars['email'] = htmlentities($_SESSION['signup-email']);
+        $vars['email'] = $email;
         $vars['password'] = htmlentities($_SESSION['signup-password']);
 
         $vars['street_address'] = htmlentities($_SESSION['signup-street-address']);

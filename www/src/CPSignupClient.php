@@ -288,4 +288,51 @@ class CPSignupClient
             throw $e;
         }
     }
+
+    private function cp_http_get_cjs_token($endpoint, $identifier)
+    {
+        $result = null;
+        if (!isset($identifier) || strlen($identifier) === 0) {
+            return $result;
+        }
+        $params = array('identifier' => $identifier);
+        $url = $endpoint . '?' . http_build_query($params);
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            $headers = array();
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FAILONERROR, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$headers) {
+                $len = strlen($header);
+                $header = explode(':', $header, 2);
+                if (count($header) < 2) { // ignore invalid headers
+                    return $len;
+                }
+                $headers[strtolower(trim($header[0]))] = trim($header[1]);
+                return $len;
+            });
+            $response = curl_exec($ch);
+            curl_close($ch);
+            if ($response !== false) {
+                $result = $response;
+            }
+        }
+        return $result;
+    }
+
+
+    function GetChargifySecurityToken($identifier)
+    {
+        $url = Util::getSetting('cp_security_token_url');
+        $result = $this->cp_http_get_cjs_token($url, $identifier);
+        $ret = null;
+        if (isset($result)) {
+            $ret = $result;
+        }
+        return $ret;
+    }
 }
