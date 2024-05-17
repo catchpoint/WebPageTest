@@ -550,7 +550,7 @@ class Account
             $results['renewaldate'] = $body->renewaldate;
         }
 
-        $contact_id = $request_context->getUser()->getContactId();
+        $contact_id = strval($request_context->getUser()->getContactId());
         $ch_client_token = Util::getSetting('ch_key_public');
         $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($contact_id);
 
