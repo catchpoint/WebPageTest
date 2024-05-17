@@ -5,6 +5,48 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
+use WebPageTest\Util;
+
+if(!GetSetting('traceroute_enabled')):
+?>
+
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>WebPageTest - Traceroute diagnostic</title>
+    <?php include('head.inc'); ?>
+</head>
+
+<body class="home feature-pro">
+    
+<body class="home feature-pro">
+    <?php
+    $tab = 'Traceroute';
+    include 'header.inc';
+    ?>
+
+    <?php include("home_header.php"); ?>
+
+    <div class="home_content_contain">
+        <div class="home_content">
+            <div id="test_box-container" class="home_responsive_test">
+                <h2>
+                    <span>
+                        Traceroute test type not supported
+                    </span>
+                </h2>
+            </div>
+
+            <div style="position: absolute; bottom: 0">
+                <?php include('footer.inc'); ?>
+            </div>
+        </div><!--home_content_contain-->
+    </div><!--home_content-->
+</body>
+<?php die(); endif; ?>
+
+<?php
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
 
