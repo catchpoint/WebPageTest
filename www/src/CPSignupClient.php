@@ -325,7 +325,7 @@ class CPSignupClient
     }
 
 
-    function GetChargifySecurityToken($identifier)
+    public function GetChargifySecurityToken($identifier)
     {
         $url = Util::getSetting('cp_security_token_url');
         $result = $this->httpGetCjsToken($url, $identifier);
