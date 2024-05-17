@@ -552,7 +552,7 @@ class Account
 
         $contact_id = $request_context->getUser()->getContactId();
         $ch_client_token = Util::getSetting('ch_key_public');
-        $ch_security_token = $request_context->getSignupClient()->GetChargifySecurityToken($contact_id);
+        $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($contact_id);
 
         $results['ch_security_token'] = $ch_security_token;
         $results['ch_client_token'] = $ch_client_token;

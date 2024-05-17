@@ -99,7 +99,7 @@ class Signup
 
         $email = htmlentities($_SESSION['signup-email']);
         $ch_client_token = Util::getSetting('ch_key_public');
-        $ch_security_token = $request_context->getSignupClient()->GetChargifySecurityToken($email);
+        $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($email);
 
         $vars['ch_client_token'] = $ch_client_token;
         $vars['ch_security_token'] = $ch_security_token;
