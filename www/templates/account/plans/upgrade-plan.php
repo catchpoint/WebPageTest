@@ -97,7 +97,9 @@
                 <li>All Connection Speeds</li>
                 <li>Filmstrip and Video</li>
                 <li>Google Lighthouse</li>
+                <?php if (GetSetting('traceroute_enabled')): ?>
                 <li>Traceroute</li>
+                <?php endif; ?>
                 <li>13 month Test History</li>
                 <li>Priority Tests</li>
                 <li>API Access</li>
