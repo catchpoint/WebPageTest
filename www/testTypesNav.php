@@ -19,7 +19,10 @@ if (
 
 $testTypes['Lighthouse'] = '/lighthouse';
 $testTypes['Visual Comparison'] = '/video';
-$testTypes['Traceroute'] = '/traceroute';
+
+if (GetSetting('traceroute_enabled')) {
+    $testTypes['Traceroute'] = '/traceroute';
+}
 
 unset($testTypes[$currNav]);
 ?>

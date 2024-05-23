@@ -1923,6 +1923,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
 
                 if (isset($test['type']) && strlen($test['type']) && $test['type'] === 'traceroute') {
+                    if (!GetSetting('traceroute_enabled')) {
+                        $error = "traceroute test type not supported";
+                    }
                     // make sure we're just passing a host name
                     $parts = parse_url($test['url']);
                     $test['url'] = $parts['host'];
