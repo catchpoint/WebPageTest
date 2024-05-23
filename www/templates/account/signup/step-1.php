@@ -128,6 +128,7 @@
                 </td>
             </tr>
 
+            <?php if (GetSetting('traceroute_enabled')): ?>
             <tr>
                 <th scope="col">Traceroute</th>
                 <td>
@@ -139,6 +140,7 @@
                     <span class="visually-hidden">Yes</span>
                 </td>
             </tr>
+            <?php endif; ?>
 
             <tr>
                 <th scope="col">Test History</th>
