@@ -53,7 +53,7 @@
                 if (GetSetting('nolinks')) {
                     echo "URL: $url<br>\n";
                 } else {
-                    if (GetSetting('traceroute_enabled') && $test['testinfo']['type'] === "traceroute") {
+                    if ($test['testinfo']['type'] === "traceroute") {
                         echo "Host/IP: <a class=\"urlLinkWrap\" rel=\"nofollow\" href=\"http://$url\" target=\"_blank\">$url</a><br>\n";
                     } else {
                         echo "URL: <a class=\"urlLinkWrap\" rel=\"nofollow\" href=\"$url\" target=\"_blank\">$url</a><br>\n";

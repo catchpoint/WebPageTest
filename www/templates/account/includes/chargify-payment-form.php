@@ -38,7 +38,6 @@
         var textColor = document.querySelectorAll('.my-account-page').length > 0 ? '#111111' : '#ffffff';
         chargify.load({
             publicKey: "<?= $ch_client_token ?>",
-            securityToken: "<?= $ch_security_token ?>",
             type: 'card',
             serverHost: "<?= $ch_site ?>", //'https://acme.chargify.com'
             hideCardImage: false,
