@@ -104,7 +104,7 @@ if (!EMBED) {
             $showUrl = $numSteps > 1 || !$url ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
             echo "<ul class=\"header_data_urltime\">";
 
-            if ($test['testinfo']['type'] === "traceroute") {
+            if (GetSetting('traceroute_enabled') && $test['testinfo']['type'] === "traceroute") {
                 $showUrl = "http://" . $showUrl;
                 echo "<li><strong>HOST/IP: </strong>";
             } else {

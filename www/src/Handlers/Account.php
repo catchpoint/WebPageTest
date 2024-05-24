@@ -550,7 +550,12 @@ class Account
             $results['renewaldate'] = $body->renewaldate;
         }
 
-        $results['ch_client_token'] = Util::getSetting('ch_key_public');
+        $contact_id = strval($request_context->getUser()->getContactId());
+        $ch_client_token = Util::getSetting('ch_key_public');
+        $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($contact_id);
+
+        $results['ch_security_token'] = $ch_security_token;
+        $results['ch_client_token'] = $ch_client_token;
         $results['ch_site'] = Util::getSetting('ch_site');
         $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
         return $tpl->render('billing/update-payment', $results);
@@ -1051,6 +1056,10 @@ class Account
                         $oldPlan = $all_plans->getPlanById($customer->getWptPlanId());
                         $results['is_pending'] = $is_pending;
 
+                        $contact_id = strval($request_context->getUser()->getContactId());
+                        $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($contact_id);
+                        $results['ch_security_token'] = $ch_security_token;
+
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
                         $results['is_upgrade'] = $plan->isUpgrade($oldPlan);
@@ -1059,6 +1068,10 @@ class Account
                         $content = $tpl->render('plans/plan-summary', $results);
                         return new Response($content, Response::HTTP_OK);
                     } else {
+                        $contact_id = strval($request_context->getUser()->getContactId());
+                        $ch_security_token = $request_context->getSignupClient()->getChargifySecurityToken($contact_id);
+                        $results['ch_security_token'] = $ch_security_token;
+
                         $results['ch_client_token'] = Util::getSetting('ch_key_public');
                         $results['ch_site'] = Util::getSetting('ch_site');
 
