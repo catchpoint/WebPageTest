@@ -38,7 +38,6 @@
         var textColor = document.querySelectorAll('.my-account-page').length > 0 ? '#111111' : '#ffffff';
         chargify.load({
             publicKey: "<?= $ch_client_token ?>",
-            securityToken: "<?= $ch_security_token ?>",
             type: 'card',
             serverHost: "<?= $ch_site ?>", //'https://acme.chargify.com'
             hideCardImage: false,
@@ -50,7 +49,8 @@
                     border: '1px solid #999999',
                     padding: '.375rem 0.75rem',
                     lineHeight: '1.5',
-                    backgroundColor: "#ffffff"
+                    backgroundColor: "#ffffff",
+                    width: '99%'
                 },
                 label: {
                     backgroundColor: 'transparent',
@@ -81,7 +81,6 @@
                     style: {
                         input: {
                             padding: '8px 48px',
-                            width: '494px'
                         }
                     }
                 },
