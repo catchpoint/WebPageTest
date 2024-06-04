@@ -328,7 +328,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     // Figure out the scale.
     $min_ms = 0;
     $max_ms = 0;
-    if (@$_REQUEST['min'] > 0) {
+    if (@$_REQUEST['min'] > 0 && @$_REQUEST['min'] < @$_REQUEST['max']) {
         $min_ms = (int)($_REQUEST['min'] * 1000.0);
     }
     if (@$_REQUEST['max'] > 0) {
