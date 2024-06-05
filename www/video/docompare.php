@@ -163,14 +163,14 @@ function DisplayError($message = 'There was an error running the test(s).')
         <title>WebPageTest - Visual Comparison</title>
         <?php include ('head.inc'); ?>
     </head>
-    <body>
+    <body class='history'>
         <?php
         $tab = null;
         include 'header.inc';
         ?>
 
         <h1>
-            <?php $message ?>
+            <?php echo $message ?>
         </h1>
 
         <?php include ('footer.inc'); ?>
