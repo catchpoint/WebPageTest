@@ -328,7 +328,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     // Figure out the scale.
     $min_ms = 0;
     $max_ms = 0;
-    if (@$_REQUEST['min'] > 0 && @$_REQUEST['min'] < @$_REQUEST['max']) {
+    if (@$_REQUEST['min'] > 0  && (is_null(@$_REQUEST['max']) || @$_REQUEST['min'] < @$_REQUEST['max'])) {
         $min_ms = (int)($_REQUEST['min'] * 1000.0);
     }
     if (@$_REQUEST['max'] > 0) {
@@ -687,7 +687,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     $y2 = $y1y2['y2'];
                     if (is_array($event)) {
                         list($start_ms, $end_ms) = $event;
-                        if ($end_ms > 0) {
+                        if ($end_ms > 0 && $start_ms > $min_ms) {
                             $x1 = $x_scaler($start_ms);
                             $x2 = $x_scaler($end_ms);
                             if (
@@ -707,7 +707,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                         }
                     } else {
                         $ms = $event;
-                        if ($ms > 0) {
+                        if ($ms > 0 && $ms > $min_ms) {
                             $x = $x_scaler($ms);
                             if ($event_name == 'lcp') {
                                 imagedashedline($im, $x, $y1, $x, $y2, $color);
