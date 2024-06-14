@@ -148,7 +148,7 @@ if (!isset($secret)) {
 
 
                     </div>
-                    <p class="footnote">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.
+                    <p class="footnote">For each URL, 3 first-view tests will be run from selected location and the median run will be used for comparison.
                         If you would like to test with different settings, submit your tests individually from the
                         <a href="/">main test page</a>.</p>
                 </div>
