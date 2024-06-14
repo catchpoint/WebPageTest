@@ -143,7 +143,6 @@ if (!EMBED) {
                 echo "<h1>Webpage Performance Test Result</h1>";
             }
 
-
             $flags = array(
                 'ec2-us-east-1' => 'US',
                 'gce-us-west3' => 'US',
@@ -176,9 +175,50 @@ if (!EMBED) {
                 'ec2-ap-southeast-2' => 'AU',
                 'LosAngeles_M1MacMini' => 'US',
                 'NewYork_M1MacMini' => 'US',
-                'LosAngeles_M1MacMini' => 'US',
                 'NYC_Android' => 'US',
-                'Dulles_Android' => 'US'
+                'Dulles_Android' => 'US',
+                'SIN_SG_01' => 'SG',
+                'MXP_IT_01' => 'IT',
+                'HKG_CN_01' => 'HK',
+                'QVZ_FI_01' => 'SE',
+                'IAD_US_01' => 'US',
+                'LAX_US_01' => 'US',
+                'YYZ_CA_01' => 'CA',
+                'GRU_BR_01' => 'BR',
+                'LHR_GB_01' => 'UK',
+                'FRA_DE_02' => 'DE',
+                'NRT_JP_01' => 'JP',
+                'SYD_AU_01' => 'AU',
+                'FRA_DE_01' => 'DE',
+                'DXB_AE_01' => 'AE',
+                'BOM_IN_01' => 'IN',
+                'CGK_ID_01' => 'MC',
+                'PVG_CN_04' => 'CN',
+                'BJS_CN_04' => 'CN',
+                'TPE_TW_01' => 'TW',
+                'CPT_ZA_01' => 'ZA',
+                'BAH_BH_01' => 'BS',
+                'SLC_US_02' => 'US',
+                'DUB_IE_01' => 'IE',
+                'CDG_FR_01' => 'FR',
+                'AMS_NL_02' => 'NL',
+                'ITM_JP_01' => 'JP',
+                'MEL_AU_03' => 'AU',
+                'LAX_US_05' => 'US',
+                'NYC_US_05' => 'US',
+                'CBF_US_P02' => 'US',
+                'ATL_US_P01' => 'US',
+                'BOS_US_P01' => 'US',
+                'CHI_US_P01' => 'US',
+                'DFW_US_P01' => 'US',
+                'MIA_US_P01' => 'US',
+                'NYC_US_P01' => 'US',
+                'LAX_US_P01' => 'US',
+                'SEA_US_P01' => 'US',
+                'PDX_US_P01' => 'US',
+                'HET_CN_01' => 'CN',
+                'ICN_KR_01' => 'KR',
+                'BKK_TH_01' => 'TH'
             );
 
             $locationSimple = explode("-", $test['testinfo']['locationLabel'])[0];
