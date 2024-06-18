@@ -30,6 +30,16 @@ if (strlen($ec2)) {
     $tester = trim($_SERVER['REMOTE_ADDR']);
 }
 
+$allowed_version = GetSetting('allowed_versions');
+if ($allowed_version) {
+    $allowed_version = explode(',', $allowed_version);
+    $version = array_key_exists('version', $_GET) ? $_GET['version'] : '';
+    if (!in_array($version, $allowed_version)) {
+        header("HTTP/1.1 403 Unauthorized");
+        exit();
+    }
+}
+
 $block_list = GetSetting('block_pc');
 if ($block_list && strlen($block_list) && strlen($pc)) {
     $block = explode(',', $block_list);
