@@ -30,16 +30,6 @@ if (strlen($ec2)) {
     $tester = trim($_SERVER['REMOTE_ADDR']);
 }
 
-$allowed_version = GetSetting('allowed_versions');
-if ($allowed_version) {
-    $allowed_version = explode(',', $allowed_version);
-    $version = array_key_exists('version', $_GET) ? $_GET['version'] : '';
-    if (!in_array($version, $allowed_version)) {
-        header("HTTP/1.1 403 Unauthorized");
-        exit();
-    }
-}
-
 $block_list = GetSetting('block_pc');
 if ($block_list && strlen($block_list) && strlen($pc)) {
     $block = explode(',', $block_list);
@@ -57,7 +47,7 @@ $is_done = false;
 $work_servers = GetSetting('work_servers');
 if (
     isset($locations) && is_array($locations) && count($locations) &&
-    (!array_key_exists('freedisk', $_GET) || (float) $_GET['freedisk'] > 0.1)
+    (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1)
 ) {
     shuffle($locations);
     $location = trim($locations[0]);
@@ -70,7 +60,7 @@ if (
         if (!$is_done && strlen($location)) {
             $is_done = GetJob();
         }
-        // see if there are fallbacks specified for the given location (for idle)
+      // see if there are fallbacks specified for the given location (for idle)
         if (!$is_done) {
             $fallbacks = GetLocationFallbacks($location);
             if (is_array($fallbacks) && count($fallbacks)) {
@@ -83,7 +73,7 @@ if (
             }
         }
     }
-} elseif (isset($_GET['freedisk']) && (float) $_GET['freedisk'] <= 0.1) {
+} elseif (isset($_GET['freedisk']) && (float)$_GET['freedisk'] <= 0.1) {
     if (isset($_GET['reboot']) && GetSetting("lowDiskReboot")) {
         header('Content-type: text/plain');
         header("Cache-Control: no-cache, must-revalidate");
@@ -133,7 +123,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline)
     global $location;
     $now = time();
 
-    // get the count of testers for this lication and the index of the current tester for affinity checking
+  // get the count of testers for this lication and the index of the current tester for affinity checking
     $testerIndex = null;
     if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
         $testers = CacheFetch("testers_$location");
@@ -158,12 +148,12 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline)
         CacheStore("testers_$location", $testers);
     }
 
-    // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline
+  // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline
     $offline = false;
     if (GetSetting('ec2_key') && !isset($testerIndex) || isset($locInfo['ami'])) {
         $testers = GetTesters($location, true);
 
-        // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)
+      // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)
         $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
         if ($testerCount) {
             if (strlen($ec2)) {
@@ -195,7 +185,7 @@ function StartTest($testId, $time)
     }
     @unlink("$testPath/test.waiting");
 
-    // flag the test with the start time
+  // flag the test with the start time
     $ini = file_get_contents("$testPath/testinfo.ini");
     if (stripos($ini, 'startTime=') === false) {
         $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
@@ -260,9 +250,9 @@ function TestToJSON($testInfo)
 }
 
 /**
- * Get an actual task to complete
- *
- */
+* Get an actual task to complete
+*
+*/
 function GetJob()
 {
     $is_done = false;
@@ -323,7 +313,7 @@ function GetJob()
                         $testId = $testJson['Test ID'];
                     }
                 } else {
-                    // extract the test ID from the job file
+              // extract the test ID from the job file
                     if (preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches)) {
                         $testId = trim($matches[1]);
                     }
@@ -397,7 +387,7 @@ function GetJob()
                 }
             }
 
-            // keep track of the last time this location reported in
+        // keep track of the last time this location reported in
             $testerInfo = array();
             $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
             $testerInfo['pc'] = $pc;
@@ -429,15 +419,15 @@ function GetJob()
 }
 
 /**
- * See if there is a software update
- *
- */
+* See if there is a software update
+*
+*/
 function GetUpdate()
 {
     global $location;
     $ret = false;
 
-    // see if the client sent a version number
+  // see if the client sent a version number
     if ($_GET['ver']) {
         $fileBase = '';
         if (isset($_GET['software']) && strlen($_GET['software'])) {
@@ -452,7 +442,7 @@ function GetUpdate()
         }
 
         if (!isset($update)) {
-            // see if we have any software updates
+          // see if we have any software updates
             if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
                 $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
             }
@@ -460,7 +450,7 @@ function GetUpdate()
         }
 
         if (isset($update)) {
-            // Check for inequality allows both upgrade and quick downgrade
+          // Check for inequality allows both upgrade and quick downgrade
             if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
                 header('Content-Type: application/zip');
                 header("Cache-Control: no-cache, must-revalidate");
@@ -476,9 +466,9 @@ function GetUpdate()
 }
 
 /**
- * See if we need to reboot this tester
- *
- */
+* See if we need to reboot this tester
+*
+*/
 function GetReboot()
 {
     global $location;
@@ -504,9 +494,9 @@ function GetReboot()
 }
 
 /**
- * Parse browser and version info
- *
- */
+* Parse browser and version info
+*
+*/
 function ParseBrowserInfo($browerString)
 {
     $browserInfo = array();
