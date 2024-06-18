@@ -67,7 +67,9 @@ $options = array(
     'include_js' => $include_js,
     'include_wait' => $include_wait,
     'show_user_timing' => (isset($_REQUEST['ut']) ? $_REQUEST['ut'] : GetSetting('waterfall_show_user_timing')),
-    'rowcount' => $rowcount
+    'rowcount' => $rowcount,
+    'min' => isset($_REQUEST['min']) ? $_REQUEST['min'] : 0,
+    'max' => isset($_REQUEST['max']) ? $_REQUEST['max'] : null
 );
 
 $url = $testStepResult->readableIdentifier($url);

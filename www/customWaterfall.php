@@ -50,6 +50,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 </fieldset>
                 <fieldset>
                     <label>Image Width <em>(Pixels, 300-2000)</em>: <input id="width" type="text" name="width" style="width:3em" value="1012"></label>
+                    <label>Minimum Time <em>(In seconds, leave blank for automatic)</em>: <input id="min" type="text" name="min" style="width:2em" value=""></label>
                     <label>Maximum Time <em>(In seconds, leave blank for automatic)</em>: <input id="max" type="text" name="max" style="width:2em" value=""></label>
                     <label>Requests <em>(i.e. 1,2,3,4-9,8)</em>: <input id="requests" type="text" name="requests" value=""></label>
                 </fieldset>
@@ -73,6 +74,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
         <?php
         $uri_params = [
+            'min' => '',
             'max' => '',
             'width' => 1012,
             'type' => 'waterfall',
@@ -178,7 +180,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
             const extension = '<?php echo $extension; ?>';
             const src = '/waterfall.' + extension + search;
-            document.getElementById('waterfallImage').src = src;
+            const waterfallImage = document.getElementById('waterfallImage') ?? document.querySelector('[id^="waterfall_step"]');
+            if (waterfallImage) {
+                waterfallImage.src = src;
+            }
             document.getElementById('waterfallImageLink').href = src;
             permalink.href = location.origin + location.pathname + search;
         };
