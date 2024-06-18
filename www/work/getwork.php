@@ -30,11 +30,11 @@ if (strlen($ec2)) {
     $tester = trim($_SERVER['REMOTE_ADDR']);
 }
 
-$allowed_version = GetSetting('allowed_versions');
-if ($allowed_version) {
-    $allowed_version = explode(',', $allowed_version);
+$allowed_versions = GetSetting('allowed_versions');
+if ($allowed_versions) {
+    $allowed_versions = explode(',', $allowed_versions);
     $version = array_key_exists('version', $_GET) ? $_GET['version'] : '';
-    if (!in_array($version, $allowed_version)) {
+    if (!in_array($version, $allowed_versions)) {
         header("HTTP/1.1 403 Unauthorized");
         exit();
     }
