@@ -638,12 +638,6 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <small>Firefox and Chromium-based browsers only</small>
                                                     </label>
                                                 </li>
-                                                <li>
-                                                    <input type="checkbox" name="disableJXL" id="disableJXL" class="checkbox" style="float: left;width: auto;">
-                                                    <label for="disableJXL" class="auto_width">Disable JPEG XL image support<br />
-                                                        <small>Firefox and Chromium-based browsers only</small>
-                                                    </label>
-                                                </li>
                                                 <?php if (GetSetting('fullSizeVideoOn')) { ?>
                                                     <li>
                                                         <label for="full_size_video" class="auto_width">
