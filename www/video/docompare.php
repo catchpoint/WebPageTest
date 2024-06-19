@@ -30,6 +30,12 @@ foreach ($urls as $index => $url) {
     }
 }
 
+// Found duplicated url, display error
+if ($duplicates) {
+    DisplayError('Compared urls must be different.');
+    exit();
+}
+
 if (!$duplicates && !$headless) {
     foreach ($urls as $index => $url) {
         $url = trim($url);
@@ -41,7 +47,7 @@ if (!$duplicates && !$headless) {
         }
     }
 
-  // now add the industry URLs
+    // now add the industry URLs
     if (isset($_REQUEST['t']) && is_array($_REQUEST['t']) && count($_REQUEST['t'])) {
         foreach ($_REQUEST['t'] as $tid) {
             $tid = trim($tid);
@@ -76,11 +82,11 @@ if (count($ids)) {
 }
 
 /**
-* Submit a video test request with the appropriate parameters
-*
-* @param mixed $url
-* @param mixed $label
-*/
+ * Submit a video test request with the appropriate parameters
+ *
+ * @param mixed $url
+ * @param mixed $label
+ */
 function SubmitTest($url, $label)
 {
     global $uid;
@@ -97,8 +103,8 @@ function SubmitTest($url, $label)
     if (
         isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) &&
         (file_exists(__DIR__ . '/../settings/profiles.ini') ||
-         file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
-         file_exists(__DIR__ . '/../settings/server/profiles.ini'))
+            file_exists(__DIR__ . '/../settings/common/profiles.ini') ||
+            file_exists(__DIR__ . '/../settings/server/profiles.ini'))
     ) {
         $testUrl .= "&profile={$_REQUEST['profile']}";
     }
@@ -120,7 +126,7 @@ function SubmitTest($url, $label)
         $testUrl .= "&vo={$_REQUEST['vo']}";
     }
     if ($_REQUEST['vd']) {
-        $testUrl .= "&vd=".urlencode($_REQUEST['vd']);
+        $testUrl .= "&vd=" . urlencode($_REQUEST['vd']);
     }
     if ($_REQUEST['vh']) {
         $testUrl .= "&vh={$_REQUEST['vh']}";
@@ -128,9 +134,9 @@ function SubmitTest($url, $label)
 
     $token_name = Util::getCookieName(CPOauth::$cp_access_token_cookie_key);
     $token_value = $_COOKIE[$token_name];
-    if(isset($token_name) && isset($token_value)){
-       $context = stream_context_create(array("http" => array("header" => 'Cookie: '.$token_name.'='.$token_value."\r\n"),  "ignore_errors" => true,) );
-       libxml_set_streams_context($context);
+    if (isset($token_name) && isset($token_value)) {
+        $context = stream_context_create(array("http" => array("header" => 'Cookie: ' . $token_name . '=' . $token_value . "\r\n"), "ignore_errors" => true, ));
+        libxml_set_streams_context($context);
     }
 
     ini_set('user_agent', $_SERVER['HTTP_USER_AGENT']);
@@ -138,37 +144,39 @@ function SubmitTest($url, $label)
     // submit the request
     $result = simplexml_load_file($testUrl, 'SimpleXMLElement', LIBXML_NOERROR);
     if ($result && $result->data) {
-        $id = (string)$result->data->testId;
+        $id = (string) $result->data->testId;
     }
 
     return $id;
 }
 
 /**
-* Something went wrong, give them an error message
-*
-*/
-function DisplayError()
+ * Something went wrong, give them an error message
+ *
+ */
+function DisplayError($message = 'There was an error running the test(s).')
 {
     ?>
-<!DOCTYPE html>
-<html lang="en-us">
+    <!DOCTYPE html>
+    <html lang="en-us">
     <head>
         <title>WebPageTest - Visual Comparison</title>
-        <?php include('head.inc'); ?>
+        <?php include ('head.inc'); ?>
     </head>
-    <body>
-            <?php
-            $tab = null;
-            include 'header.inc';
-            ?>
+    <body class='history'>
+        <?php
+        $tab = null;
+        include 'header.inc';
+        ?>
 
-            <h1>There was an error running the test(s).</h1>
+        <h1>
+            <?php echo $message ?>
+        </h1>
 
-            <?php include('footer.inc'); ?>
+        <?php include ('footer.inc'); ?>
         </div>
     </body>
-</html>
+    </html>
     <?php
 }
 ?>

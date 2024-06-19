@@ -47,7 +47,7 @@ if ($id) {
 }
 
 // login status
-$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context)) && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 
 ?>
 
