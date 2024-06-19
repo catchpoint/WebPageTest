@@ -2361,11 +2361,17 @@ form:invalid button[type="submit"] {
   margin-bottom: 1rem;
 }
 
+.signup-flow-layout .notification-banner__error {
+  color: rgb(14, 30, 56);
+}
+
+/** Chargify form **/
 .cc-detail-container,
 .cardholder-name-container {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .vat-number-container label {
@@ -2378,11 +2384,6 @@ form:invalid button[type="submit"] {
   border: 1px solid;
 }
 
-.signup-flow-layout .notification-banner__error {
-  color: rgb(14, 30, 56);
-}
-
-/** Chargify form **/
 .signup-card-container {
   border: 1px solid #334870;
   border-radius: 8px;

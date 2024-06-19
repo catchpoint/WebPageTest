@@ -50,7 +50,8 @@
                     border: '1px solid #999999',
                     padding: '.375rem 0.75rem',
                     lineHeight: '1.5',
-                    backgroundColor: "#ffffff"
+                    backgroundColor: "#ffffff",
+                    width: '99%'
                 },
                 label: {
                     backgroundColor: 'transparent',
@@ -81,7 +82,6 @@
                     style: {
                         input: {
                             padding: '8px 48px',
-                            width: '494px'
                         }
                     }
                 },
