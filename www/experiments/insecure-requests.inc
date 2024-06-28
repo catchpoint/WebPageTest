@@ -1,5 +1,27 @@
 <?php
 
+function isCertificateUrl($url, $contentType) {
+    $certificateContentTypes = [
+        'application/pkcs8',
+        'application/pkcs10',
+        'application/pkix-cert',
+        'application/pkix-crl',
+        'application/pkcs7-mime',
+        'application/x-x509-ca-cert',
+        'application/x-x509-user-cert',
+        'application/x-pem-file',
+        'application/x-pkcs12',
+        'application/x-pkcs7-certificates',
+        'application/x-pkcs7-certreqresp'
+    ];
+
+    if (in_array($contentType, $certificateContentTypes)) {
+        return true;
+    }
+
+    return false;
+}
+
 (function () {
 
     global $testStepResult;
@@ -7,8 +29,10 @@
     $insecureRequests = array();
 
     foreach ($requests as $request) {
-        if (isset($request['is_secure']) &&  $request['is_secure'] == 0) {
-            array_push($insecureRequests, $request['full_url']);
+        if (isset($request['is_secure']) && $request['is_secure'] == 0) {
+            if (!isCertificateUrl($request['full_url'], $request['contentType'])) {
+                array_push($insecureRequests, $request['full_url']);
+            }
         }
     }
     $insecureRequests = array_unique($insecureRequests);
