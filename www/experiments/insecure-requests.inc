@@ -1,6 +1,6 @@
 <?php
 
-function isCertificateUrl($url, $contentType) {
+function isCertificateUrl($contentType) {
     $certificateContentTypes = [
         'application/pkcs8',
         'application/pkcs10',
@@ -30,7 +30,7 @@ function isCertificateUrl($url, $contentType) {
 
     foreach ($requests as $request) {
         if (isset($request['is_secure']) && $request['is_secure'] == 0) {
-            if (!isCertificateUrl($request['full_url'], $request['contentType'])) {
+            if (!isCertificateUrl($request['contentType'])) {
                 array_push($insecureRequests, $request['full_url']);
             }
         }
