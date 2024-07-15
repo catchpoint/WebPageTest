@@ -411,20 +411,17 @@ body.theme-b {
 }
 /** feature list on upgrade plans **/
 .upgrade-plan-feature-list {
-  columns: 3;
-  -webkit-columns: 3;
-  -moz-columns: 3;
-  column-gap: 0px;
   border-bottom: 1px solid rgb(204, 204, 204);
-  -webkit-column-rule: 1px solid rgb(204, 204, 204);
-  -moz-column-rule: 1px solid rgb(204, 204, 204);
-  column-rule: 1px solid rgb(204, 204, 204);
+  flex-direction: column;
+  flex-wrap: wrap;
+  display: flex;
+  height: 372px;
 }
 .upgrade-plan-feature-list li {
   padding: 1rem;
   min-height: 30px;
+  border-right: 1px solid rgb(204, 204, 204);
 }
-
 .upgrade-plan-feature-list li:nth-child(odd) {
   background-color: #f4f4f4;
 }
