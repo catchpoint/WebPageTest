@@ -386,8 +386,7 @@ class TestResultsHtmlTables
         $filenamePaths = $stepResult->createTestPaths("");
         $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
         $zipUrl = $urlGenerator->getGZip($filenamePaths->devtoolsTraceFile());
-        $protocol = getUrlProtocol();
-        $viewUrl = '/chrome/perfetto/index.html#!/viewer?url=' . urlencode($protocol . "://{$_SERVER['HTTP_HOST']}" . $zipUrl);
+        $viewUrl = $urlGenerator->stepDetailPage("chrome/trace");
 
         $out = "<br><br><a href=\"$zipUrl\" title=\"Download Chrome Trace\">Trace</a>\n";
         $out .= " (<a href=\"$viewUrl\" target=\"_blank\" title=\"View Chrome Trace\">view</a>)\n";
