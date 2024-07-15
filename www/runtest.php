@@ -2072,10 +2072,7 @@ function ValidateScript(&$script, &$error)
 
         $test['navigateCount'] = $navigateCount;
 
-        $maxNavigateCount = Util::getSetting("maxNavigateCount");
-        if (!$maxNavigateCount) {
-            $maxNavigateCount = 20;
-        }
+        $maxNavigateCount = Util::getSetting("maxNavigateCount", 25);
 
         if (!$ok) {
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
