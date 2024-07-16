@@ -1,0 +1,17 @@
+[Mobile]
+label="Mobile - 4G"
+description="Chrome mobile tested on a 4G connection."
+location="Test:Chrome;MotoG4.4G"
+runs=3
+video=1
+timeline=1
+fvonly=1
+
+[Desktop]
+label="Desktop - Cable"
+description="Chrome Desktop tested on a cable connection."
+location="Test:Chrome.Cable"
+runs=3
+video=1
+timeline=1
+fvonly=1

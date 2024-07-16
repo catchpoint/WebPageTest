@@ -420,7 +420,6 @@ if (!isset($test)) {
     $test['debug'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] ? 1 : 0;
     $test['disableAVIF'] = isset($_REQUEST['disableAVIF']) && $_REQUEST['disableAVIF'] ? 1 : 0;
     $test['disableWEBP'] = isset($_REQUEST['disableWEBP']) && $_REQUEST['disableWEBP'] ? 1 : 0;
-    $test['disableJXL'] = isset($_REQUEST['disableJXL']) && $_REQUEST['disableJXL'] ? 1 : 0;
     $test['dtShaper'] = isset($_REQUEST['dtShaper']) && $_REQUEST['dtShaper'] ? 1 : 0;
     $test['axe'] = isset($_REQUEST['axe']) && $_REQUEST['axe'] ? 1 : 0;
     if (isset($_REQUEST['warmup']) && $_REQUEST['warmup'] > 0) {
@@ -2073,10 +2072,7 @@ function ValidateScript(&$script, &$error)
 
         $test['navigateCount'] = $navigateCount;
 
-        $maxNavigateCount = Util::getSetting("maxNavigateCount");
-        if (!$maxNavigateCount) {
-            $maxNavigateCount = 20;
-        }
+        $maxNavigateCount = Util::getSetting("maxNavigateCount", 25);
 
         if (!$ok) {
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
@@ -3027,9 +3023,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if (isset($test['disableWEBP']) && $test['disableWEBP']) {
                 $job['disableWEBP'] = 1;
-            }
-            if (isset($test['disableJXL']) && $test['disableJXL']) {
-                $job['disableJXL'] = 1;
             }
             if (isset($test['dtShaper']) && $test['dtShaper']) {
                 $job['dtShaper'] = 1;
