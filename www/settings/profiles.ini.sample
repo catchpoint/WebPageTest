@@ -1,0 +1,19 @@
+[Mobile_4G]
+label='<strong><b>Mobile</b></strong> <img src="/assets/images/test_icons/chrome.svg" alt="chrome"> <span class="test_presets_tag"><img src="/assets/images/test_icons/signal.svg" alt="">4G</span> <span class="test_presets_tag"><img src="/assets/images/test_icons/flags/US.svg" alt="Test" title="Test">Test Location</span>'
+description="Chrome on an Emulated Motorola G (gen 4) on a 9 Mbps 4G connection with 170ms of latency."
+location="Test:Chrome;MotoG4.4G"
+runs=3
+video=1
+timeline=1
+fvonly=1
+lighthouseTrace=1
+
+[Desktop_Chrome]
+label='<strong><b>Desktop</b></strong><img src="/assets/images/test_icons/chrome.svg" alt="chrome"> <span class="test_presets_tag"><img src="/assets/images/test_icons/signal.svg" alt="">Cable</span> <span class="test_presets_tag"><img src="/assets/images/test_icons/flags/US.svg" alt="Test" title="Test">Test Location</span>'
+description="Chrome Desktop on a 5 Mbps cable connection with 28ms of latency."
+location="Test:Chrome.Cable"
+runs=3
+video=1
+timeline=1
+fvonly=1
+lighthouseTrace=1
