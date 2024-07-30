@@ -8,6 +8,7 @@ use WebPageTest\TestResults\CustomMetrics;
 use WebPageTest\TestResults\Timings;
 
 require_once INCLUDES_PATH . '/common_lib.inc';
+require_once INCLUDES_PATH . '/include/thresholds.inc';
 
 class RunResultHtmlTable
 {
@@ -35,9 +36,9 @@ class RunResultHtmlTable
     const COL_ENV_IMP = 'carbon-footprint';
 
 
-  /* @var TestInfo */
+    /* @var TestInfo */
     private $testInfo;
-  /* @var TestRunResults */
+    /* @var TestRunResults */
     private $runResults;
     private $rvRunResults;
 
@@ -50,12 +51,12 @@ class RunResultHtmlTable
 
     private $showCustomMetrics = true;
 
-  /**
-   * RunResultHtmlTable constructor.
-   * @param TestInfo $testInfo
-   * @param TestRunResults $runResults
-   * @param TestRunResults $rvRunResults Optional. Run results of the repeat view
-   */
+    /**
+     * RunResultHtmlTable constructor.
+     * @param TestInfo $testInfo
+     * @param TestRunResults $runResults
+     * @param TestRunResults $rvRunResults Optional. Run results of the repeat view
+     */
     public function __construct($testInfo, $runResults, $rvRunResults = null, $useShortNames = true, $useDescs = false)
     {
         $this->testInfo = $testInfo;
@@ -67,45 +68,46 @@ class RunResultHtmlTable
         $this->useShortNames = $useShortNames;
         $this->useDescs = $useDescs;
         $this->enabledColumns = array();
-      // optional columns default setting based on data
+        // optional columns default setting based on data
         $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
         $this->enabledColumns[self::COL_RESULT] = true;
         $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
-        $checkByMetric = array(self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
-                           self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME, self::COL_ENV_IMP);
+        $checkByMetric = array(
+            self::COL_FIRST_CONTENTFUL_PAINT, self::COL_SPEED_INDEX, self::COL_TIME_TO_INTERACTIVE,
+            self::COL_LARGEST_CONTENTFUL_PAINT, self::COL_CUMULATIVE_LAYOUT_SHIFT, self::COL_TOTAL_BLOCKING_TIME, self::COL_ENV_IMP
+        );
         foreach ($checkByMetric as $col) {
             $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
-                                   ($rvRunResults && $rvRunResults->hasValidMetric($col));
+                ($rvRunResults && $rvRunResults->hasValidMetric($col));
         }
 
-
         // disable env impact if not collected
-        if (count($this->runResults->getStepResult(1)->getMetric(self::COL_ENV_IMP)) === 0) {
+        $m = $this->runResults->getStepResult(1)->getMetric(self::COL_ENV_IMP);
+        if ($m != null && count($m) === 0) {
             $this->enabledColumns[self::COL_ENV_IMP] = false;
         }
 
-
-      // If strict_video = 1, only show if metric is present, otherwise alway show
+        // If strict_video = 1, only show if metric is present, otherwise alway show
         if (GetSetting('strict_video')) {
             array_push($this->leftOptionalColumns, self::COL_START_RENDER);
             $this->enabledColumns[self::COL_START_RENDER] = $runResults->hasValidMetric(self::COL_START_RENDER) ||
-                                                      ($rvRunResults && $rvRunResults->hasValidMetric(self::COL_START_RENDER));
+                ($rvRunResults && $rvRunResults->hasValidMetric(self::COL_START_RENDER));
         } else {
             $this->enabledColumns[self::COL_START_RENDER] = true;
         }
     }
 
-  /**
-   * @param bool $use True to use links for the labels, false otherwise
-   */
+    /**
+     * @param bool $use True to use links for the labels, false otherwise
+     */
     public function useLabelLinks($use)
     {
         $this->enableLabelLinks = $use;
     }
 
-  /**
-   * @param string[] $columns The columns to enable (one of the COL_ constants)
-   */
+    /**
+     * @param string[] $columns The columns to enable (one of the COL_ constants)
+     */
     public function enableColumns($columns)
     {
         foreach ($columns as $column) {
@@ -113,9 +115,9 @@ class RunResultHtmlTable
         }
     }
 
-  /**
-   * @param string[] $columns The columns to disable (one of the COL_ constants)
-   */
+    /**
+     * @param string[] $columns The columns to disable (one of the COL_ constants)
+     */
     public function disableColumns($columns)
     {
         foreach ($columns as $column) {
@@ -123,10 +125,10 @@ class RunResultHtmlTable
         }
     }
 
-  /**
-   * @param string $column The column to show or not show (one of the COL_ comnstants)
-   * @return bool True if the column is enabled, false otherwise
-   */
+    /**
+     * @param string $column The column to show or not show (one of the COL_ comnstants)
+     * @return bool True if the column is enabled, false otherwise
+     */
     public function isColumnEnabled($column)
     {
         return !empty($this->enabledColumns[$column]);
@@ -163,7 +165,7 @@ class RunResultHtmlTable
                 // TODO test multistep
                 //$out .= $this->_headCell("Step");
             } else {
-              //$out .= $this->_headCell("", "empty pin", 1);
+                //$out .= $this->_headCell("", "empty pin", 1);
             }
         }
         if ($this->useShortNames) {
@@ -188,7 +190,7 @@ class RunResultHtmlTable
             $out .= $this->_headCell("Result (error&nbsp;code)");
         }
         $vitalsBorder = "border";
-      //for now, only provide a link to vitals if all metrics are collected
+        //for now, only provide a link to vitals if all metrics are collected
         if (
             $this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT) &&
             $this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT) &&
@@ -281,7 +283,7 @@ class RunResultHtmlTable
                 // TODO test multistep
                 //$out .= $this->_headCell("Step");
             } else {
-              //$out .= $this->_headCell("", "empty pin", 1);
+                //$out .= $this->_headCell("", "empty pin", 1);
             }
         }
         $out .= $this->_bodyCell(null, "When did the content start downloading?");
@@ -302,7 +304,7 @@ class RunResultHtmlTable
             $out .= $this->_bodyCell(null, "What error code was shown?");
         }
         $vitalsBorder = "border";
-      //for now, only provide a link to vitals if all metrics are collected
+        //for now, only provide a link to vitals if all metrics are collected
         if (
             $this->isColumnEnabled(self::COL_LARGEST_CONTENTFUL_PAINT) &&
             $this->isColumnEnabled(self::COL_CUMULATIVE_LAYOUT_SHIFT) &&
@@ -364,7 +366,7 @@ class RunResultHtmlTable
         }
 
         if ($this->isColumnEnabled(self::COL_COST)) {
-           // $out .= $this->_headCell("Cost");
+            // $out .= $this->_headCell("Cost");
             $out .= $this->_bodyCell("", "What was the avg. download cost?");
         }
         if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
@@ -408,13 +410,14 @@ class RunResultHtmlTable
         return $label;
     }
 
-  /**
-   * @param TestStepResult $stepResult
-   * @param int $row Row number
-   * @return string HTML Table row
-   */
+    /**
+     * @param TestStepResult $stepResult
+     * @param int $row Row number
+     * @return string HTML Table row
+     */
     private function _createRow($stepResult, $row, $repeatMetricLabels = false)
     {
+        global $MetricThresholds;
         $stepNum = $stepResult->getStepNumber();
         $cachedRun = $stepResult->isCachedRun();
         $idPrefix = "";
@@ -468,9 +471,9 @@ class RunResultHtmlTable
             $value = $this->_getIntervalMetric($stepResult, self::COL_LARGEST_CONTENTFUL_PAINT);
             $rawValue = $stepResult->getMetric(self::COL_LARGEST_CONTENTFUL_PAINT);
             $scoreClass = 'good';
-            if ($rawValue >= 4000) {
+            if ($rawValue >= $MetricThresholds['LCP_POOR']) {
                 $scoreClass = 'poor';
-            } elseif ($rawValue >= 2500) {
+            } elseif ($rawValue >= $MetricThresholds['LCP_OK']) {
                 $scoreClass = 'ok';
             }
             $vclass = $vitalsClass ? ($vitalsClass . ' ' . $scoreClass) : $scoreClass;
@@ -482,9 +485,9 @@ class RunResultHtmlTable
             $value = round($this->_getSimpleMetric($stepResult, self::COL_CUMULATIVE_LAYOUT_SHIFT), 3);
             $rawValue = $stepResult->getMetric(self::COL_CUMULATIVE_LAYOUT_SHIFT);
             $scoreClass = 'good';
-            if ($rawValue >= 0.25) {
+            if ($rawValue >= $MetricThresholds['CLS_POOR']) {
                 $scoreClass = 'poor';
-            } elseif ($rawValue >= 0.1) {
+            } elseif ($rawValue >= $MetricThresholds['CLS_OK']) {
                 $scoreClass = 'ok';
             }
             $vclass = $vitalsClass ? ($vitalsClass . ' ' . $scoreClass) : $scoreClass;
@@ -500,9 +503,9 @@ class RunResultHtmlTable
             }
             $rawValue = $stepResult->getMetric(self::COL_TOTAL_BLOCKING_TIME);
             $scoreClass = 'good';
-            if ($rawValue >= 600) {
+            if ($rawValue >= $MetricThresholds['TBT_POOR']) {
                 $scoreClass = 'poor';
-            } elseif ($rawValue >= 300) {
+            } elseif ($rawValue >=  $MetricThresholds['TBT_OK']) {
                 $scoreClass = 'ok';
             }
             $vclass = $vitalsClass ? ($vitalsClass . ' ' . $scoreClass) : $scoreClass;
@@ -539,7 +542,7 @@ class RunResultHtmlTable
             }
         }
         if ($this->isColumnEnabled(self::COL_ENV_IMP)) {
-                $out .= $this->_bodyCell($idPrefix . "Footprint" . $idSuffix, $this->_getSimpleMetric($stepResult, "carbon-footprint")['sustainable-web-design'] . '<span class="units">g</span>', $class);
+            $out .= $this->_bodyCell($idPrefix . "Footprint" . $idSuffix, $this->_getSimpleMetric($stepResult, "carbon-footprint")['sustainable-web-design'] . '<span class="units">g</span>', $class);
         }
 
         $out .= "</tr>\n";
@@ -576,10 +579,10 @@ class RunResultHtmlTable
         return $out;
     }
 
-  /**
-   * @param TestStepResult $stepResult
-   * @return string|null The $_REQUEST["end"] parameter if set and the run is the first view median run, null otherwise
-   */
+    /**
+     * @param TestStepResult $stepResult
+     * @return string|null The $_REQUEST["end"] parameter if set and the run is the first view median run, null otherwise
+     */
     private function getRequestEndParam($stepResult)
     {
         if (!$stepResult->isCachedRun() && array_key_exists('end', $_REQUEST)) {
@@ -646,10 +649,10 @@ class RunResultHtmlTable
         return $value !== null ? number_format($value / 1024, 0) . "<span class=\"units\">KB</span>" : "-";
     }
 
-  /**
-   * @param TestStepResult $stepResult
-   * @return string
-   */
+    /**
+     * @param TestStepResult $stepResult
+     * @return string
+     */
     private function _labelColumnText($stepResult)
     {
         $runNumber = $stepResult->getRunNumber();
