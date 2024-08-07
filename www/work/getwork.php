@@ -45,6 +45,7 @@ if ($block_list && strlen($block_list) && strlen($pc)) {
     $block = explode(',', $block_list);
     if (in_array($pc, $block)) {
         header("HTTP/1.1 403 Unauthorized");
+        exit();
     }
 }
 
