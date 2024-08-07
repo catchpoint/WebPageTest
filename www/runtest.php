@@ -146,6 +146,9 @@ if (isset($test)) {
 }
 if (array_key_exists('resubmit', $_POST)) {
     $test = GetTestInfo(trim($_POST['resubmit']));
+    if (array_key_exists('key', $test)){
+        $test['key'] = null;
+    }
     if ($test) {
         unset($test['completed']);
         unset($test['started']);
