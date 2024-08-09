@@ -207,7 +207,7 @@ foreach ($assessment as $key => $cat) {
         if (isset($cls)) {
             if ($cls > .25) {
                 $summary .= "had major layout shifts";
-            } elseif ($cls > 0) {
+            } elseif ($cls > 0.1) {
                 $summary .= "had minor layout shifts";
             } else {
                 $summary .= "had good layout stability";
