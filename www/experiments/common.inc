@@ -297,7 +297,7 @@ foreach ($assessment as $key => $cat) {
     } elseif (
         $numRecommended > 2
         // and it's the quickness category and fcp is reasonably slow
-        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
+        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3000 )
         && ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
         && ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2))  )
     ) {
