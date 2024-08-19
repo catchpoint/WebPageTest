@@ -19,6 +19,7 @@ require_once INCLUDES_PATH . '/include/ConnectionViewHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/RequestDetailsHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/RequestHeadersHtmlSnippet.php';
 require_once INCLUDES_PATH . '/include/AccordionHtmlHelper.php';
+require_once INCLUDES_PATH . '/include/thresholds.inc';
 
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
@@ -171,6 +172,7 @@ function InsertWebVitalsHTML($stepResult)
 function InsertWebVitalsHTML_Summary($stepResult)
 {
     global $testRunResults;
+    global $MetricThresholds;
     echo '<div class="summary-container">';
     // LCP
     $events = $stepResult->getMetric('largestPaints');
@@ -188,9 +190,9 @@ function InsertWebVitalsHTML_Summary($stepResult)
     }
     if (isset($lcp)) {
         $scoreClass = 'good';
-        if ($lcp['time'] >= 4000) {
+        if ($lcp['time'] >= $MetricThresholds['LCP_POOR']) {
             $scoreClass = 'poor';
-        } elseif ($lcp['time'] >= 2500) {
+        } elseif ($lcp['time'] >= $MetricThresholds['LCP_OK']) {
             $scoreClass = 'ok';
         }
         echo "<a href='#lcp'><div class='summary-metric $scoreClass'>";
@@ -229,9 +231,9 @@ function InsertWebVitalsHTML_Summary($stepResult)
         });
         $cls = round($cls, 3);
         $scoreClass = 'good';
-        if ($cls >= 0.25) {
+        if ($cls >= $MetricThresholds['CLS_POOR']) {
             $scoreClass = 'poor';
-        } elseif ($cls >= 0.1) {
+        } elseif ($cls >= $MetricThresholds['CLS_OK']) {
             $scoreClass = 'ok';
         }
         echo "<a href='#cls'><div class='summary-metric $scoreClass'>";
@@ -243,9 +245,9 @@ function InsertWebVitalsHTML_Summary($stepResult)
     $tbt = $stepResult->getMetric('TotalBlockingTime');
     if (isset($tbt)) {
         $scoreClass = 'good';
-        if ($tbt >= 600) {
+        if ($tbt >= $MetricThresholds['TBT_POOR']) {
             $scoreClass = 'poor';
-        } elseif ($tbt >= 300) {
+        } elseif ($tbt >= $MetricThresholds['TBT_OK']) {
             $scoreClass = 'ok';
         }
         echo "<a href='#tbt'><div class='summary-metric $scoreClass'>";
