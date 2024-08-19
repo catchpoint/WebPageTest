@@ -1,5 +1,6 @@
 <?php
 
+require_once INCLUDES_PATH . '/include/thresholds.inc';
 // container for assessment including opportunities, experiments to recommend
 
 // initial host is used by a few opps, so we'll calculate it here
@@ -27,6 +28,7 @@ function documentRelativePath($url, $path)
     return $url;
 }
 
+global $MetricThresholds;
 // globals to be set by assessment includes and used here too
 $blockingJSReqs = null;
 $blockingCSSReqs = null;
@@ -51,7 +53,6 @@ $carbonFootprint = null;
 $avgSiteCarbon = 0.6;
 $hostsGreen = null;
 $carbonCompare = null;
-
 
 if ($metaInfo) {
     $assessmentData = $metaInfo['experiment']['assessment'];
@@ -160,15 +161,13 @@ foreach ($assessment as $key => $cat) {
     $assessment[$key]["num_good"] = $numGood;
     $assessment[$key]["num_bad"] = $numChecks - $numGood;
 
-
-
     if ($key === "Quick") {
         // build sentiment
         $summary = "This site ";
         $ttfbCheck = $testStepResult->getMetric('TTFB');
-        if ($ttfbCheck > 2000) {
+        if ($ttfbCheck > $MetricThresholds['TTBF_POOR']) {
             $summary .= "was very slow";
-        } elseif ($ttfbCheck > 1000) {
+        } elseif ($ttfbCheck > $MetricThresholds['TTBF_OK']) {
             $summary .= "took little time";
         } else {
             $summary .= "was quick";
@@ -176,10 +175,9 @@ foreach ($assessment as $key => $cat) {
         $summary .= " to connect and deliver initial code. It began rendering content";
 
         $fcpCheck = $testStepResult->getMetric('firstContentfulPaint');
-        $fcpCheck = $fcpCheck / 1000;
-        if ($fcpCheck > 5) {
+        if ($fcpCheck > $MetricThresholds['FCP_POOR']) {
             $summary .= " with considerable delay.";
-        } elseif ($fcpCheck > 2) {
+        } elseif ($fcpCheck > $MetricThresholds['FCP_OK']) {
             $summary .= " with little delay.";
         } else {
             $summary .= " very quickly.";
@@ -193,9 +191,9 @@ foreach ($assessment as $key => $cat) {
 
         if (isset($lcp)) {
             $summary .= " The largest content rendered ";
-            if ($lcp['time'] > 3500) {
+            if ($lcp['time'] > $MetricThresholds['LCP_POOR']) {
                 $summary .= " later than ideal.";
-            } elseif ($lcp['time'] > 2500) {
+            } elseif ($lcp['time'] > $MetricThresholds['LCP_OK']) {
                 $summary .= " a little late.";
             } else {
                 $summary .= " quickly.";
@@ -205,9 +203,9 @@ foreach ($assessment as $key => $cat) {
         // build sentiment
         $summary = "This site ";
         if (isset($cls)) {
-            if ($cls > .25) {
+            if ($cls > $MetricThresholds['CLS_POOR']) {
                 $summary .= "had major layout shifts";
-            } elseif ($cls > 0) {
+            } elseif ($cls > $MetricThresholds['CLS_OK']) {
                 $summary .= "had minor layout shifts";
             } else {
                 $summary .= "had good layout stability";
@@ -218,9 +216,9 @@ foreach ($assessment as $key => $cat) {
         $tbtCheck = $testStepResult->getMetric('TotalBlockingTime');
         if (isset($tbtCheck)) {
             (isset($cls)) ? $summary .= " It took" : $summary .= "took";
-            if ($tbtCheck > 1000) {
+            if ($tbtCheck > $MetricThresholds['TBT_POOR']) {
                 $summary .= " a long time";
-            } elseif ($tbtCheck > 500) {
+            } elseif ($tbtCheck > $MetricThresholds['TBT_OK']) {
                 $summary .= " some time";
             } else {
                 $summary .= " little time";
@@ -243,7 +241,7 @@ foreach ($assessment as $key => $cat) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
 
-            if ($genContentSize > .5 || $genContentPercent > 1) {
+            if ($genContentSize > $MetricThresholds['RenderBlockingContentSizeCheck'] || $genContentPercent > $MetricThresholds['RenderBlockingContentPercentCheck']) {
                 $summary .= " Some HTML was generated after delivery, potentially delaying usability.";
             } else {
                 $summary .= " HTML content was mostly generated server-side.";
@@ -253,7 +251,7 @@ foreach ($assessment as $key => $cat) {
         // build sentiment
         $summary = "This site ";
         if (isset($blocking3pReqs)) {
-            if (count($blocking3pReqs) > 2) {
+            if (count($blocking3pReqs) > $MetricThresholds['RenderBlockingThirdPartyRequestsCheck']) {
                 $summary .= "had many";
             } elseif (count($blocking3pReqs) > 0) {
                 $summary .= "had";
@@ -280,7 +278,7 @@ foreach ($assessment as $key => $cat) {
             $genContentSize = floatval($genContentSize);
             $genContentPercent = floatval($genContentPercent);
 
-            if ($genContentSize > .5 || $genContentPercent > 1) {
+            if ($genContentSize > $MetricThresholds['RenderBlockingContentSizeCheck'] || $genContentPercent > $MetricThresholds['RenderBlockingContentPercentCheck']) {
                 $summary .= " Some HTML was generated after delivery, which can cause fragility.";
             } else {
                 $summary .= " HTML content was mostly generated server-side.";
@@ -299,7 +297,7 @@ foreach ($assessment as $key => $cat) {
     } elseif (
         $numRecommended > 2
         // and it's the quickness category and fcp is reasonably slow
-        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3 )
+        && ($key !== "Quick" || $key === "Quick" && $fcpCheck > 3000 )
         && ($key !== "Resilient" || $key === "Resilient" && $blocking3pReqs > 0  )
         && ($key !== "Usable" || $key === "Usable" && ((isset($cls) && $cls > 0) || (isset($tbtCheck) && $tbtCheck > 2))  )
     ) {
