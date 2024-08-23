@@ -91,10 +91,6 @@
             }
 
             if (document.body.querySelector(".home_feature_hed-main")) {
-                // if (document.body.classList.contains("feature-pro")) {
-                // document.body.classList.remove("feature-pro");
-                // document.body.classList.add("feature-lfwp");
-                // } else 
                 if (document.body.classList.contains("feature-lfwp")) {
                     document.body.classList.remove("feature-lfwp");
                     document.body.classList.add("feature-cc");
