@@ -2898,7 +2898,7 @@ body.result #main {
 
 @media (min-width: 70em) {
   .home_feature_hed_contain {
-    background-position: bottom -32px left 50%, bottom -50px left 50%;
+    background-position: bottom -32px left 50%, bottom -15px left 50%;
   }
 }
 
@@ -2952,13 +2952,15 @@ body.result #main {
 @media (prefers-reduced-motion: no-preference) {
   .home_feature_hed,
   .home_feature_hed-pro,
-  .home_feature_hed-cc {
+  .home_feature_hed-cc,
+  .home_feature_hed-sonar {
     transition: opacity 1.5s ease-out, transform 1.5s ease-out;
   }
 }
 
 .home_feature_hed-main,
 .home_feature_hed-lfwp,
+.home_feature_hed-sonar,
 .home_feature_hed-cc {
   position: absolute;
   top: 0;
@@ -3002,8 +3004,10 @@ body.result #main {
 }
 
 .home:not(.feature-pro) .home_feature_hed-pro,
+.home:not(.feature-sonar) .home_feature_hed-sonar,
 .home:not(.feature-cc) .home_feature_hed-cc,
 .home:not(.feature-lfwp) .home_feature_hed-lfwp,
+.home.feature-sonar .home_feature_hed-main,
 .home.feature-lfwp .home_feature_hed-main,
 .home.feature-pro .home_feature_hed-main,
 .home.feature-cc .home_feature_hed-main {
@@ -3015,6 +3019,7 @@ body.result #main {
 .home_feature_hed_contain {
   overflow: hidden;
 }
+
 
 .home.feature-lfwp .home_feature_hed_contain {
   background-color: #352a20;
@@ -3125,6 +3130,7 @@ header .pro-flag {
 .home_feature_hed,
 .home_feature_hed-pro,
 .home_feature_hed-cc,
+.home_feature_hed-sonar,
 .home_feature_main {
   display: flex;
   margin: 0 auto;
@@ -3134,12 +3140,22 @@ header .pro-flag {
   align-items: flex-start;
 }
 
+@media (max-width: 60em) {
+  .home_feature_hed,
+  .home_feature_hed-pro,
+  .home_feature_hed-cc,
+  .home_feature_hed-sonar,
+  .home_feature_main {
+    padding-bottom: 11rem;
+  }
+}
 @media (min-width: 60em) {
   .home_feature_hed,
   .home_feature_hed-pro,
   .home_feature_hed-cc,
+  .home_feature_hed-sonar,
   .home_feature_main {
-    padding-bottom: 3rem;
+    padding-bottom: 11rem;
   }
 }
 
@@ -3364,6 +3380,12 @@ header .pro-flag {
   object-fit: contain;
   height: auto;
 }
+
+.home_feature_hed-sonar .home_feature_hed_visual {
+  border: 0px;
+  background: #000;
+}
+
 .home_feature_hed-cc .home_feature_hed_visual {
   box-shadow: 0px 0px 5px 3px #d3dfef;
 }
@@ -3426,7 +3448,7 @@ header .pro-flag {
 
   .home_feature_hed {
     display: block;
-    padding: 2rem 0;
+    padding: 2rem 0 5rem;
   }
 
   .home_feature .home_feature_hed .attention {
@@ -3483,14 +3505,19 @@ header .pro-flag {
 
 @media (min-width: 40em) {
   .home_feature_hed-pro-loggedin {
-    padding-bottom: 5rem;
-  }
+    padding-bottom: 8rem;
+  }  
 }
 
 @media (min-width: 60em) {
   .home_feature_hed-pro-loggedin {
-    padding-bottom: 9rem;
-    padding-top: 2rem;
+    padding-bottom: 13rem;
+  }
+}
+
+@media (max-width: 70em) {
+  .home_feature_hed-pro-loggedin .home_feature_hed_visual {
+    display: none;
   }
 }
 
@@ -6500,6 +6527,11 @@ th.header {
   margin-top: -1em;
 }
 
+.alert-banner-promo img {
+  margin: unset;
+  top: 0.5em;
+}
+
 .alert-banner a,
 .alert-banner-twitch a {
   display: block;
@@ -6507,6 +6539,17 @@ th.header {
 
 .alert-banner a {
   color: #fff;
+}
+
+.alert-banner-promo {
+  font-size: 1.0em;
+  padding: 1em;
+  color: #154281;
+  background: #79cdfb;
+}
+
+.alert-banner-promo a {
+  color: #154281;
 }
 
 @media screen and (min-width: 35em) {
