@@ -92,6 +92,15 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context)) && (
                                         <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.webpagetest.org/carbon-control/">Carbon Control (NEW)</a></li>
                                     </ul>
                                 </div>
+                                <div class="wptheader_nav_menu_section wptheader_nav_cta">
+                                    <img src="/assets/images/header-menu-arrow.svg" width="20" height="20">
+                                    <p class="wptheader_nav_title">Live Internet Outages Map (NEW)</p>
+                                </div>
+                                <div class="wptheader_nav_menu_section nested">
+                                    <ul>
+                                        <li class="wptheader_nav_menu_link"><a target="_blank" href="https://www.catchpoint.com/outages?utm_source=WPT&utm_medium=NavBar&utm_content=sonar-map ">See Outages Affecting Your Sites</a></li>
+                                    </ul>
+                                </div>
                                 <div class="wptheader_nav_menu_section wptheader_nav_cta" style="padding: 1.5rem 0;">
                                     <img src="/assets/images/header-menu-arrow.svg" width="20" height="20">
                                     <p class="wptheader_nav_title">For Enterprise:<br>Internet Performance Monitoring</p>

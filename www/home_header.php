@@ -11,13 +11,21 @@
                         <p><b>You're ready to go!</b> Enjoy premium locations, bulk runs, test priority, our API, & No-Code Experiments!</p>
                     </div>
                 </div>
-
+                <div class="home_feature_hed home_feature_hed-sonar home_feature_hed-pro-loggedin">
+                    <div class="home_feature_hed_text">
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Live Internet Outages Map (NEW)</h1>
+                        <p>Gain visibility into internet outages and pinpoint the root cause of poor web performance.</p>
+                        <a class="pill" href="https://www.catchpoint.com/outages?utm_source=WPT&utm_medium=carousel&utm_content=sonar-map" style="padding: .9em 1.5em;">Try Internet Sonar for Free &gt;&gt;</a>
+                    </div>
+                    <div class="home_feature_hed_visual">
+                        <img src="/assets/images/wpt_home_featureimg-sonar.webp" width="1101" height="807" alt="Gain visibility into internet outages and pinpoint the root cause of poor web performance.">
+                    </div>
+                </div>
             <?php } else { ?>
                 <div class="home_feature_hed home_feature_hed-main">
                     <div class="home_feature_hed_text">
                         <h1 class="attention">Test. Experiment. Improve!</h1>
                         <p><strong>WebPageTest.</strong> <span class="home_feature_hed_highlighter">The gold standard in web performance testing. </span></p>
-
                     </div>
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
@@ -32,16 +40,24 @@
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_lfwp_featureimg.jpg" width="1414" height="843" alt="screenshot of wpt results page">
                     </div>
-
                 </div>
                 <div class="home_feature_hed home_feature_hed-cc">
                     <div class="home_feature_hed_text">
                         <h1 class="attention"><span class="home_feature_hed_text_leadin">Introducing <b>Carbon Control <span class="flag">Experimental</span></b></span> </h1>
                         <p><b>New in WebPageTest!</b> Measure your site's carbon footprint and run No-Code Experiments to find ways to improve. </p>
-
                     </div>
                     <div class="home_feature_hed_visual">
                         <img src="/assets/images/wpt_home_featureimg-cc.jpg" width="1414" height="843" alt="screenshot of wpt results page">
+                    </div>
+                </div>
+                <div class="home_feature_hed home_feature_hed-sonar">
+                    <div class="home_feature_hed_text">
+                        <h1 class="attention"><span class="home_feature_hed_text_leadin">Live Internet Outages Map (NEW)</h1>
+                        <p>Gain visibility into internet outages and pinpoint the root cause of poor web performance.</p>
+                        <a class="pill" href="https://www.catchpoint.com/outages?utm_source=WPT&utm_medium=carousel&utm_content=sonar-map" style="padding: .9em 1.5em;">Try Internet Sonar for Free &gt;&gt;</a>
+                    </div>
+                    <div class="home_feature_hed_visual">
+                        <img src="/assets/images/wpt_home_featureimg-sonar.webp" width="1101" height="807" alt="Gain visibility into internet outages and pinpoint the root cause of poor web performance.">
                     </div>
                 </div>
                 <div class="home_feature_hed home_feature_hed-pro">
@@ -59,39 +75,52 @@
                         <button class="play" id="playbtn">Play/Pause Video</button>
                     </div>
                 </div>
-
             <?php } ?>
         </div>
-
-
-
-
-
         </div>
     </div>
 
     <script>
         let featureSlides = setInterval(() => {
-            if( document.body.querySelector(".home_feature_hed-main") && !document.body.classList.contains("playing") && ( !document.activeElement || document.activeElement.tagName !== 'IFRAME' ) && matchMedia("(prefers-reduced-motion: no-preference)").matches ){
-                if( document.body.classList.contains("feature-pro") ){
-                    document.body.classList.remove("feature-pro");
-                    document.body.classList.add("feature-lfwp");
-                } else if( document.body.classList.contains("feature-lfwp") ){
+            if (!matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+                return;
+            }
+
+            if (document.body.classList.contains("playing") || (document.activeElement && document.activeElement.tagName === 'IFRAME')) {
+                return;
+            }
+
+            if (document.body.querySelector(".home_feature_hed-main")) {
+                // if (document.body.classList.contains("feature-pro")) {
+                // document.body.classList.remove("feature-pro");
+                // document.body.classList.add("feature-lfwp");
+                // } else 
+                if (document.body.classList.contains("feature-lfwp")) {
                     document.body.classList.remove("feature-lfwp");
                     document.body.classList.add("feature-cc");
-                } else if( document.body.classList.contains("feature-cc") ){
+                } else if (document.body.classList.contains("feature-cc")) {
                     document.body.classList.remove("feature-cc");
+                    document.body.classList.add("feature-sonar");
+                } else if (document.body.classList.contains("feature-sonar")) {
+                    document.body.classList.remove("feature-sonar");
+                    document.body.classList.add("feature-lfwp");
                 } else {
+                    document.body.classList.add("feature-lfwp");
+                }
+            } else {
+                if (document.body.classList.contains("feature-pro")) {
+                    document.body.classList.remove("feature-pro");
+                    document.body.classList.add("feature-sonar");
+                } else {
+                    document.body.classList.remove("feature-sonar");
                     document.body.classList.add("feature-pro");
                 }
-
             }
-        },8000);
+        }, 8000);
 
         <?php if (isset($req_cc)) {?>
             clearTimeout(featureSlides);
         <?php } ?>
-
 
         (function(){
                 var intro = document.querySelector("video");
@@ -132,14 +161,13 @@
                     }
                 });
 
-
-
                 document.body.addEventListener("mousedown",function( e ){
                     if( this.classList.contains("playing") && e.target !== intro && e.target !== playbtn  ){
                         e.preventDefault();
                         deactivate();
                     }
                 });
+
                 document.body.addEventListener("keydown",function( e ){
                     if( this.classList.contains("playing") && e.keyCode === 27 ){
                         e.preventDefault();
@@ -147,7 +175,4 @@
                     }
                 });
             }());
-
     </script>
-
-
