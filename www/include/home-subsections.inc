@@ -3,7 +3,7 @@
 $quotes = array(
     array(
         'quote' => 'The best professional web performance investigators I know use WPT as a critical part of their workflows, and it\'s the center or mine.',
-        'author' => 'Alex Russel <span>Program Manager, Microsoft Edge</span>'
+        'author' => 'Alex Russell <span>Program Manager, Microsoft Edge</span>'
     ),
     /* array('quote' => '<a href="https://product.webpagetest.org/experiments">Experiments</a> are a game changer for quantifying the speed impact of performance optimizations. What took days of technical work is now just a few clicks. Not only will this save tons of time, it will let us test and iterate ideas to find the right mix of recommendations efficiently.<br><b>I’m blown away this exists, it feels like magic.</b>',
            'author' => 'Todd Parker <span>Partner, Filament Group</span>'),
