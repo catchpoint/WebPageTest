@@ -455,6 +455,11 @@ if (strlen($id)) {
             throw new ForbiddenException();
         }
 
+        $test_is_instant = (stripos($id, '_instant_') !== false);
+        if ($test_is_instant && !(isset($request_context) && $request_context->getUser()->isAdmin())) {
+            throw new ForbiddenException();
+        }
+
         $url = array_key_exists('url', $test['testinfo']) ? htmlspecialchars($test['testinfo']['url']) : null;
         $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
         $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
