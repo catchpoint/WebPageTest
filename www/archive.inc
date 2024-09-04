@@ -281,6 +281,7 @@ function RestoreArchive($id)
 {
     $isSaaSTest = (stripos($id, '_saas_') !== false);
     $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
+    $isInstantTest = (stripos($id, '_instant_') !== false);
 
     $ret = false;
     if (TestArchiveExpired($id)) {
@@ -309,7 +310,7 @@ function RestoreArchive($id)
                 }
             }
             //saas tests do not specifiy capture server in the URL, so we'll hardcode it
-            if ($isSaaSTest) {
+            if ($isSaaSTest || $isInstantTest) {
                 $capture_server = GetSetting("cp_capture_$saas_capture_prefix");
                 $capture_salt = GetSetting("cp_capture_salt_$saas_capture_prefix");
             }
@@ -416,6 +417,9 @@ function RestoreArchive($id)
                     }
                     if ($deleteZip) {
                         @unlink($zipfile);
+                    }
+                    if ($isInstantTest) {
+                        ProcessUploadedTest($id);
                     }
                 }
             } else {
