@@ -279,8 +279,6 @@ function DownloadArchive($id, $testServer)
 */
 function RestoreArchive($id)
 {
-    global $request_context;
-
     $isSaaSTest = (stripos($id, '_saas_') !== false);
     $saas_capture_prefix = GetSetting("cp_saas_capture_prefix");
     $isInstantTest = (stripos($id, '_instant_') !== false);

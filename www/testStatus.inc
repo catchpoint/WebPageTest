@@ -15,7 +15,6 @@ $testInfoJson = null;
 */
 function GetTestStatus($id, $includePosition = true)
 {
-    global $request_context;
     $testServer = GetServerForTest($id);
     if (isset($testServer)) {
       // Proxy the status through the server that actually owns the test
