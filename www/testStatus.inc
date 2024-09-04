@@ -16,12 +16,6 @@ $testInfoJson = null;
 function GetTestStatus($id, $includePosition = true)
 {
     global $request_context;
-    $isInstantTest = (stripos($id, '_instant_') !== false);
-    $isAdmin = isset($request_context) && $request_context->getUser()->isAdmin();
-    if ($isInstantTest && !$isAdmin) {
-        return array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
-    }
-
     $testServer = GetServerForTest($id);
     if (isset($testServer)) {
       // Proxy the status through the server that actually owns the test
