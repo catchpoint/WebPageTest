@@ -142,9 +142,7 @@ $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context)) && (
                                             <li class="wptheader_nav_menu_link"><a href="https://product.webpagetest.org/events/">Events</a></li>
                                             <?php if (Util::getSetting('forums_url')) : ?>
                                                 <li class="wptheader_nav_menu_link"><a href="<?= Util::getSetting('forums_url') ?>">Forums</a></li>
-                                            <?php endif; //(Util::getSetting('forums_url')):
-                                            ?>
-                                            <li class="wptheader_nav_menu_link"><a href="https://store-catchpoint.myshopify.com/collections/webpagetest">Shop Gear</a></li>
+                                            <?php endif; ?>
                                         </ul>
                                         <a href="/learn/lightning-fast-web-performance/" class="banner_lfwp">
                                             <span class="banner_lfwp_line">Lightning-Fast <b>Web Performance</b></span>
