@@ -40,6 +40,11 @@ if ($allowed_versions) {
     }
 }
 
+if (!CheckAgentVersion()) {
+    header("HTTP/1.1 403 Unauthorized");
+    exit();
+}
+
 $block_list = GetSetting('block_pc');
 if ($block_list && strlen($block_list) && strlen($pc)) {
     $block = explode(',', $block_list);
@@ -258,6 +263,23 @@ function TestToJSON($testInfo)
         $testJson['script'] = $script;
     }
     return $testJson;
+}
+
+/**
+ * Used to enforce version limitation for specific locaitons
+ *
+ */
+function CheckAgentVersion()
+{
+    global $locations;
+    $location = trim($locations[0]);
+    $locInfo = GetLocationInfo($location);
+    $agent_version = $_GET['version'];
+    if (isset($locInfo) && is_array($locInfo) && array_key_exists('version', $locInfo)) {
+        return $locInfo['version'] === $agent_version;
+    }
+
+    return true;
 }
 
 /**
