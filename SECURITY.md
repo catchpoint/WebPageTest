@@ -1,5 +1,6 @@
 # Reporting Security Issues 
 We at WebPageTest value the security community and believe that responsible disclosure of security vulnerabilities in our tool is critical to helping ensure the privacy and safety of our users. 
+We at WebPageTest value the security community and believe that responsible disclosure of security vulnerabilities in our tool is critical to helping ensure the privacy and safety of our users. 
 
 If you believe you have found a security vulnerability in WebPageTest, we encourage you to let us know right away. We will investigate all legitimate reports and do our best to quickly fix the problem. Before reporting though, please review our responsible disclosure policy, and those things that should not be reported. 
 
