@@ -83,37 +83,444 @@
 
         <input type='hidden' name='csrf_token' value='<?= $csrf_token ?>' />
     </form>
+
+
     <div class="card-section">
-        <div class="upgrade-plan-feature-list-info">
-            <h3>What's included in Pro?</h3>
+        <table class="comparison-table">
+            <thead>
+                <tr style="height: 1px">
+                    <th>
+                    </th>
+                    <th scope="col">
+                        <span>Starter Plan</span>
+                    </th>
+                    <th scope="col" class="pro-plans">
+                        <div class="pro-plans-header">
+                            <div class="heading wpt-pro-logo"> <span class="visually-hidden">WebPageTest <em class="new-banner">Pro</em></span></div>
+                            <span class="upsell">Save 20% with Annual Plans</span>
+                        </div>
+                    </th>
+                    <th scope="col" class="expert-plan">
+                        <div class="expert-plan-header">
+                            <div class="signup-special-price">Limited-time <br/>special price</div>
+                            <div>
+                                <div class="heading"><span>Expert</span></div>
+                                <span class="upsell">Starting from 10M pageviews (RUM) + 30K runs/month</span>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
 
-            <ul class="upgrade-plan-feature-list">
-                <li>Bulk Testing <em class="new-banner">NEW</em></li>
-                <li>Opportunities <em class="new-banner">NEW</em></li>
-                <li>Experiments <em class="new-banner">NEW</em></li>
-                <li>300+ manual tests</li>
-                <li>40 Locations <sup><a href="#fn1" id="ref1">*</a></sup></li>
-                <li>All Browsers</li>
-                <li>All Connection Speeds</li>
-                <li>Filmstrip and Video</li>
-                <li>Google Lighthouse</li>
+            <tbody>
+                <tr>
+                    <th scope="col">Monthly Test Runs</th>
+                    <td>300</td>
+                    <td>As per plan</td>
+                    <td>As per contract</td>
+                </tr>
+
+                <tr>
+                    <th scope="col">New User Experience</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Real User Monitoring (RUM)</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Single Sign On (SSO)</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">DNS Monitoring</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        Ask your account team
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">CDN Monitoring</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        Ask your account team
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Locations</th>
+                    <td>30</td>
+                    <td>40<sup><a href="#fn1" id="ref1">*</a></sup></td>
+                    <td>40<sup><a href="#fn1" id="ref2">*</a></sup></td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Browser</th>
+                    <td>All</td>
+                    <td>All</td>
+                    <td>All</td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Connection Speeds</th>
+                    <td>All</td>
+                    <td>All</td>
+                    <td>All</td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Filmstrip and Video</th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Google Lighthouse</th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
                 <?php if (GetSetting('traceroute_enabled')): ?>
-                <li>Traceroute</li>
+                <tr>
+                    <th scope="col">Traceroute</th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
                 <?php endif; ?>
-                <li>13 month Test History</li>
-                <li>Priority Tests</li>
-                <li>API Access</li>
-                <li>Integrations</li>
-                <li>Private Tests <em class="new-banner">NEW</em></li>
-                <li>
-                    Dedicated Support
-                </li>
-                <li></li>
-                <li></li>
-            </ul>
-            <p><sup id="fn1">* Our list of available test locations is continually growing.</sup></p>
 
+                <tr>
+                    <th scope="col">Test History</th>
+                    <td>13 Months</td>
+                    <td>13 Months</td>
+                    <td>Up to 7 years</td>
+                </tr>
 
-        </div>
+                <tr>
+                    <th scope="col">Priority Tests</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">API Access</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Integrations</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        Coming Soon
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Private Tests</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Bulk Testing</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        Coming Soon
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Opportunities</th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Experiments</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Custom Metrics</em></th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        Coming soon
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Scripted Test</th>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i><small>(limited to 3 steps)</small>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Carbon Control</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">AI-powered dashboards</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Scheduled Tests</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">BGP Monitoring</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        Ask your account team
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Internet Sonar</th>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                        <span class="visually-hidden">No</span>
+                    </td>
+                    <td>
+                        Ask your account team
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col">Support</th>
+                    <td>
+                        Forums
+                    </td>
+                    <td>
+                        Dedicated Support
+                    </td>
+                    <td>
+                        Assigned CSM team
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="col"></th>
+                    <td></td>
+                    <td>
+                        <div class="need-help">Need a custom plan?</div>
+                        <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
+                    </td>
+                    <td>
+                        <a class="button signup-button" href="https://www.product.webpagetest.org/expert-plan">Talk to Us</a>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
     </div>
 </div>

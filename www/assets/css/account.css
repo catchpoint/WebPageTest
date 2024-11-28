@@ -1439,8 +1439,8 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 
 /* Comparison table */
 .comparison-table {
-  border-spacing: 0;
-  font-size: 1.15rem;
+  border-spacing: 4px 0;
+  font-size: 1.3rem;
   width: 100%;
   border-radius: 10px;
   margin-bottom: 15px;
@@ -1470,7 +1470,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 .comparison-table thead th:first-child,
 .comparison-table tbody th {
-  text-align: right;
+  text-align: left;
 }
 
 .comparison-table th.custom-plan {
@@ -1482,19 +1482,27 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   vertical-align: bottom;
 }
 
-.comparison-table tr td:last-child {
-  border: 1px solid #ddd;
-  border-bottom: none;
-  border-top: none;
-}
-.comparison-table tr:last-child td:last-child {
-  border-radius: 0 0 10px 10px;
-  border-bottom: 1px solid #ddd;
+.comparison-table tr td {
+  border: none;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
 }
 
-.comparison-table thead th.section:not(:first-child),
-.comparison-table tbody td {
-  border-left: 4px solid white;
+.comparison-table tr td:first-of-type {
+  border: none;
+}
+
+.comparison-table tr:last-child td {
+  /* border-radius: 0 0 10px 10px; */
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-bottom: 1px solid #ddd;
+  vertical-align: bottom;
+}
+
+.comparison-table tr:last-child td:first-of-type {
+  border: none;
+  border-radius: 0;
 }
 
 .comparison-table tr td,
@@ -1518,6 +1526,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 .account-upgrade-comparison-table tr td:not(:first-child):not(:last-child) {
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;
+}
+
+.need-help {
+  padding: 0 1rem 0.75rem;
 }
 
 .account-upgrade-comparison-table thead th:first-child {
@@ -1546,7 +1558,7 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   .comparison-table tbody td,
   .comparison-table thead th {
     display: block;
-    width: 50%;
+    width: 33%;
     font-size: 1rem;
     box-sizing: border-box;
     position: relative;
@@ -1591,6 +1603,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     font-size: 0.9rem;
     box-sizing: border-box;
   }
+}
+
+.card-section .comparison-table {
+  font-size: 1.0rem;
 }
 
 /* comparison table content */
@@ -1666,6 +1682,14 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   font-size: 1.15rem;
   font-weight: 700;
 }
+
+.comparison-table .signup-button > div {
+  line-height: 0.5;
+}
+.comparison-table .signup-button > div > small {
+  font-weight: 400;
+  font-size: small;
+}
 .comparison-table .signup-button .unit,
 span.unit {
   font-weight: 400;
@@ -1702,13 +1726,50 @@ tr.custom-plan-mobile {
   display: inline-block;
   width: auto;
 }
-.pro-plans .pro-plans-header {
+#pro-plan-form label {
+  width: 75px;
+  margin-right: 0.2rem;
+  text-align: right;
+}
+#pro-plan-form select {
+  width: 150px;
+  margin-bottom: 0.2rem;
+}
+
+.pro-plans .pro-plans-header,
+.expert-plan .expert-plan-header {
   color: #fff;
   background-color: #111a2a;
   border-radius: 10px;
   border: 1px solid #fff;
   padding: 1em;
+  vertical-align: top;
 }
+.card-section .pro-plans-header,
+.card-section .expert-plan-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.card-section .pro-plans-header {
+  height: calc(100% - 2em - 2px);
+}
+
+thead th.pro-plans,
+thead th.expert-plan {
+  vertical-align: top;
+  height: inherit;
+}
+.expert-plan-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.expert-plan-header .heading {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
 .pro-plans-header .heading > * {
   float: none;
 }
@@ -1718,6 +1779,12 @@ span.upsell {
 }
 
 th.pro-plans {
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(255, 255, 255, 0.3);
+}
+th.expert-plan {
   border: 1px solid #ddd;
   border-bottom: none;
   border-radius: 10px 10px 0 0;
@@ -1856,6 +1923,14 @@ p sup {
   font-size: 2rem;
 }
 
+.signup-special-price {
+  color: #ffc830;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
 ul.bulleted-list {
   list-style: disc;
   margin-left: 2rem;
@@ -1901,7 +1976,7 @@ ul.bulleted-list {
     display: block;
     margin-top: 1rem;
   }
-  sup,
+
   .FAQ {
     padding: 0 1.5rem 1.5rem;
   }

@@ -36,6 +36,9 @@ class Signup
         $wpt_plans = $request_context->getSignupClient()->getWptPlans();
         $vars['annual_plans'] = $wpt_plans->getAnnualPlans();
         $vars['monthly_plans'] = $wpt_plans->getMonthlyPlans();
+        $vars['expert_plan'] = [
+            'monthly' => Util::getSetting('expert_monthly_cost', 999)
+        ];
 
         $content = $tpl->render('step-1', $vars);
         $response->setContent($content);
