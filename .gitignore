@@ -40,6 +40,7 @@ agent/js/lib/ios/DeviceSupport
 /www/installers/browsers/nightly.dat
 /www/cli/archive-ia.php
 /www/cli/ec2-keys.inc.php
+/www/15
 
 agent/js/5c.sh
 

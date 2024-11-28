@@ -6,8 +6,15 @@
 //$REDIRECT_HTTPS = true;
 include 'common.inc';
 
+use WebPageTest\Util;
+
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 0;
+$hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
+
+
 
 $headless = false;
 if (GetSetting('headless')) {
@@ -34,145 +41,158 @@ $profiles = parse_ini_file($profile_file, true);
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title>WebPageTest - Website Performance and Optimization Test</title>
-        <?php include('head.inc');?>
-        <style>
+
+<head>
+    <title>WebPageTest - Website Performance and Optimization Test</title>
+    <?php include('head.inc'); ?>
+    <style>
 
 
-        </style>
-    </head>
-    <body class="home feature-pro">
-            <?php
-            $tab = 'Start Test';
-            include 'header.inc';
-            if (!$headless) {
-                ?>
-                <?php include("home_header.php"); ?>
+    </style>
+</head>
+
+<?php
+$homeclass = "feature-cc";
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
+    $homeclass = "feature-pro";
+}
+?>
+
+<body class="home <?php echo $homeclass; ?>">
+    <?php
+    $tab = 'Start Test';
+    include 'header.inc';
+    if (!$headless) {
+    ?>
+        <?php include("home_header.php"); ?>
 
         <div class="home_content_contain">
-        <div class="home_content">
+            <div class="home_content">
 
-            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+                <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
-                <?php
-                echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-                if (strlen($secret)) {
-                    $hashStr = $secret;
-                    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-                    $hashStr .= $owner;
+                    <?php
+                    echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+                    if (strlen($secret)) {
+                        $hashStr = $secret;
+                        $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                        $hashStr .= $owner;
 
-                    $now = gmdate('c');
-                    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-                    $hashStr .= $now;
+                        $now = gmdate('c');
+                        echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                        $hashStr .= $now;
 
-                    $hmac = sha1($hashStr);
-                    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-                }
-                ?>
+                        $hmac = sha1($hashStr);
+                        echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                    }
+                    ?>
 
 
-            <div id="test_box-container" class="home_responsive_test">
-                <?php
-                $currNav = "Core Web Vitals";
-                include("testTypesNav.php");
-                ?>
-
-                <div id="analytical-review" class="test_box">
-                    <ul class="input_fields home_responsive_test_top">
-                        <li>
-                        <label for="url" class="vis-hidden">Enter URL to test</label>
+                    <div id="test_box-container" class="home_responsive_test">
                         <?php
-                        if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
-                            echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
-                        } else {
-                            echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
-                        }
+                        $currNav = "Core Web Vitals";
+                        include("testTypesNav.php");
                         ?>
-                        </li>
-                        <li class="test_main_config">
 
-                          <div class="test_presets">
-                                <div class="fieldrow">
-                                  <label for="webvital_profile">Test Configuration:</label>
-                                  <select name="webvital_profile" id="webvital_profile" onchange="profileChanged()">
-                                      <?php
-                                        if (isset($profiles) && count($profiles)) {
-                                            foreach ($profiles as $name => $profile) {
-                                                $selected = '';
-                                                if ($name == $_COOKIE['wvProfile']) {
-                                                    $selected = 'selected';
+                        <div id="analytical-review" class="test_box">
+                            <ul class="input_fields home_responsive_test_top">
+                                <li>
+                                    <label for="url" class="vis-hidden">Enter URL to test</label>
+                                    <?php
+                                    if (isset($_REQUEST['url']) && strlen($_REQUEST['url'])) {
+                                        echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' value='$url' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                                    } else {
+                                        echo "<input type='text' name='url' id='url' inputmode='url' placeholder='$placeholder' class='text large' autocorrect='off' autocapitalize='off' onkeypress='if (event.keyCode == 32) {return false;}'>";
+                                    }
+                                    ?>
+                                </li>
+                                <li class="test_main_config">
+
+                                    <div class="test_presets">
+                                        <div class="fieldrow">
+                                            <label for="webvital_profile">Test Configuration:</label>
+                                            <select name="webvital_profile" id="webvital_profile" onchange="profileChanged()">
+                                                <?php
+                                                if (isset($profiles) && count($profiles)) {
+                                                    foreach ($profiles as $name => $profile) {
+                                                        $selected = '';
+                                                        if ($name == $_COOKIE['wvProfile']) {
+                                                            $selected = 'selected';
+                                                        }
+                                                        echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                                                    }
+                                                    if (isset($lastGroup)) {
+                                                        echo "</optgroup>";
+                                                    }
                                                 }
-                                                echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
-                                            }
-                                            if (isset($lastGroup)) {
-                                                echo "</optgroup>";
-                                            }
-                                        }
-                                        ?>
-                                  </select>
-                              </div>
-                              <div class="fieldrow" id="description"></div>
-                              <?php if ($is_paid) : ?>
-                                  <div class="fieldrow">
-                                      <label class="full" for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
-                                  </div>
-                              <?php endif; ?>
-                            </div>
-                            <div>
-                              <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <div class="fieldrow" id="description"></div>
+                                        <?php if ($is_paid) : ?>
+                                            <div class="fieldrow">
+                                                <label class="full" for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div>
+                                        <?php if ($is_logged_in) : ?>
+                                            <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                        <?php endif; ?>
+                                        <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
 
-            </form>
+                </form>
 
 
 
 
-                <?php
-            } // $headless
+            <?php
+        } // $headless
             ?>
 
-</div><!--home_content_contain-->
+            </div><!--home_content_contain-->
         </div><!--home_content-->
 
         <div class="home_content_contain">
-          <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3370" src="https://www.product.webpagetest.org/second"></iframe>
+            <iframe id="vitals-content" frameBorder="0" scrolling="no" height="3370" src="https://www.product.webpagetest.org/second"></iframe>
+        </div><!--home_content_contain-->
+
+        <div class="home_content_contain">
+            <div class="home_content">
+
+                <?php
+                include('footer.inc');
+                ?>
             </div><!--home_content_contain-->
-
-            <div class="home_content_contain">
-        <div class="home_content">
-
-        <?php
-          include('footer.inc');
-        ?>
-          </div><!--home_content_contain-->
         </div><!--home_content-->
         </div>
         <script>
-        <?php
-          echo "var profiles = " . json_encode($profiles) . ";\n";
-        ?>
-        var profileChanged = function() {
-          var sel = document.getElementById("webvital_profile");
-          var txt = document.getElementById("description");
-          var profile = sel.options[sel.selectedIndex].value;
-          var description = "";
-          if (profiles[profile] !== undefined) {
-            var d = new Date();
-            d.setTime(d.getTime() + (365*24*60*60*1000));
-            document.cookie = "wvProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
-            if (profiles[profile]['description'] !== undefined)
-              description = profiles[profile]['description'];
-          }
-          txt.innerHTML = description;
-        };
-        profileChanged();
+            <?php
+            echo "var profiles = " . json_encode($profiles) . ";\n";
+            ?>
+            var profileChanged = function() {
+                var sel = document.getElementById("webvital_profile");
+                var txt = document.getElementById("description");
+                var profile = sel.options[sel.selectedIndex].value;
+                var description = "";
+                if (profiles[profile] !== undefined) {
+                    var d = new Date();
+                    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+                    document.cookie = "wvProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
+                    if (profiles[profile]['description'] !== undefined)
+                        description = profiles[profile]['description'];
+                }
+                txt.innerHTML = description;
+            };
+            profileChanged();
         </script>
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
-    </body>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST; ?>"></script>
+</body>
+
 </html>
