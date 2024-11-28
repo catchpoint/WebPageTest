@@ -34,21 +34,29 @@ if (!isset($secret)) {
 
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title>WebPageTest - Visual Comparison</title>
-        <?php include('head.inc'); ?>
-    </head>
-    <body class="home feature-pro">
-       <?php
-            $tab = 'Start Test';
-            include 'header.inc';
-        ?>
+<head>
+    <title>WebPageTest - Visual Comparison</title>
+    <?php include('head.inc'); ?>
+</head>
+        
+<?php
+$homeclass = "feature-cc";
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
+    $homeclass = "feature-pro";
+}
+?>
 
-<?php include("home_header.php"); ?>
+<body class="home <?php echo $homeclass; ?>">
+    <?php
+    $tab = 'Start Test';
+    include 'header.inc';
+    ?>
+
+    <?php include("home_header.php"); ?>
 
 
-<div class="home_content_contain">
-             <div class="home_content">
+    <div class="home_content_contain">
+        <div class="home_content">
 
             <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
@@ -186,12 +194,13 @@ if (!isset($secret)) {
 
 
 
-            <?php
-            include(__DIR__ . '/../include/home-subsections.inc');
-            ?>
-            <?php include('footer.inc'); ?>
+        <?php
+        include(__DIR__ . '/../include/home-subsections.inc');
+        ?>
+        <?php include('footer.inc'); ?>
         </div>
 
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
-    </body>
+    <script src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
+</body>
+
 </html>

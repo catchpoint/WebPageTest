@@ -4,14 +4,14 @@
         <p>All the WebPageTest features you already love,
             <strong>plus API Access &amp; No-Code Experiments!</strong>
         </p>
-        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$15<span class="unit">/mo</span></span></p>
+        <p class="plan-callout">Plans start at just <span class="signup-hed-price">$18.75<span class="unit">/mo</span></span></p>
     </div> <!-- ./signup-hed -->
 </div>
 
 <div class="signup-step-1-content" id="billingcycle-tab-container">
     <table class="comparison-table">
         <thead>
-            <tr>
+            <tr style="height: 1px">
                 <th>
                     <div class="h2">Compare Plans</div>
                 </th>
@@ -58,13 +58,20 @@
                         </div>
                     </form>
                 </th>
-
+                <th scope="col" class="expert-plan">
+                    <div class="expert-plan-header">
+                        <div class="signup-special-price">Limited-time <br/>special price</div>
+                        <div>
+                            <div class="heading"><span>Expert</span></div>
+                            <span class="upsell">Starting from 10M pageviews (RUM) + 30K runs/month</span>
+                        </div>
+                    </div>
+                </th>
             </tr>
         </thead>
 
         <tbody>
             <tr>
-
                 <th scope="col">Price</th>
                 <td>
                     <form method="POST" action="/signup">
@@ -78,28 +85,120 @@
                     <span class="visually-hidden">Sign up for a Pro Plan</span>
                     <button id="submit-pro-plan" class="signup-button" type="submit" form="pro-plan-form">Start for $<span data-id="plan-price"><?= count($annual_plans) > 0 ? $annual_plans[0]->getAnnualPrice() : "" ?></span><span class="unit" data-id="plan-cycle">/year</span></button>
                 </td>
+                <td>
+                    <span class="visually-hidden">Sign up for an Expert Plan</span>
+                    <button href="https://www.product.webpagetest.org/expert-plan" id="submit-expert-plan" class="signup-button" type="submit" form="pro-plan-form">
+                        Start for $<span data-id="plan-price"><?= $expert_plan['monthly'] > 0 ? $expert_plan['monthly'] : "" ?></span><span class="unit" data-id="plan-cycle">/month</span>
+                        <div>
+                        <small>
+                            Billed at $<?= number_format($expert_plan['monthly'] > 0 ? $expert_plan['monthly'] * 12 : 0) ?>/year
+                        </small>
+                        </div>
+                    </button>
+                </td>
             </tr>
             <tr>
                 <th scope="col">Monthly Test Runs</th>
-                <td>300</td>
+                <td>150</td>
                 <td>As per plan</td>
+                <td>As per contract</td>
+            </tr>
+
+            <tr>
+                <th scope="col">New User Experience</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Real User Monitoring (RUM)</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Single Sign On (SSO)</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">DNS Monitoring</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    Ask your account team
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">CDN Monitoring</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    Ask your account team
+                </td>
             </tr>
 
             <tr>
                 <th scope="col">Locations</th>
                 <td>30</td>
-                <td>40 <sup><a href="#fn1" id="ref1">*</a></sup></td>
-
+                <td>40<sup><a href="#fn1" id="ref1">*</a></sup></td>
+                <td>40<sup><a href="#fn1" id="ref2">*</a></sup></td>
             </tr>
 
             <tr>
                 <th scope="col">Browser</th>
                 <td>All</td>
                 <td>All</td>
+                <td>All</td>
             </tr>
 
             <tr>
                 <th scope="col">Connection Speeds</th>
+                <td>All</td>
                 <td>All</td>
                 <td>All</td>
             </tr>
@@ -114,10 +213,18 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
 
             <tr>
                 <th scope="col">Google Lighthouse</th>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
                 <td>
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
@@ -139,13 +246,18 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
             <?php endif; ?>
 
             <tr>
                 <th scope="col">Test History</th>
+                <td>60 days</td>
                 <td>13 Months</td>
-                <td>13 Months</td>
+                <td>Up to 7 years</td>
             </tr>
 
             <tr>
@@ -158,9 +270,11 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
-
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
-
 
             <tr>
                 <th scope="col">API Access</th>
@@ -172,7 +286,10 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
-
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
 
             <tr>
@@ -185,11 +302,13 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
-
+                <td>
+                    Coming Soon
+                </td>
             </tr>
 
             <tr>
-                <th scope="col">Private Tests <em class="new-banner">NEW</em></th>
+                <th scope="col">Private Tests</th>
                 <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
@@ -198,11 +317,14 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
-
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
 
             <tr>
-                <th scope="col">Bulk Testing <em class="new-banner">NEW</em></th>
+                <th scope="col">Bulk Testing</th>
                 <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
@@ -211,10 +333,13 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
+                <td>
+                    Coming Soon
+                </td>
+            </tr>
 
-            </tr>
             <tr>
-                <th scope="col">Opportunities <em class="new-banner">NEW</em></th>
+                <th scope="col">Opportunities</th>
                 <td>
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
@@ -223,9 +348,14 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
             </tr>
+
             <tr>
-                <th scope="col">Experiments <em class="new-banner">NEW</em></th>
+                <th scope="col">Experiments</th>
                 <td>
                     <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                     <span class="visually-hidden">No</span>
@@ -234,7 +364,120 @@
                     <i class="icon check" aria-hidden="true"></i>
                     <span class="visually-hidden">Yes</span>
                 </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
 
+            <tr>
+                <th scope="col">Custom Metrics</em></th>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+                <td>
+                    Coming soon
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Scripted Test</th>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i><small>(limited to 3 steps)</small>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Carbon Control</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">AI-powered dashboards</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Scheduled Tests</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon check" aria-hidden="true"></i>
+                    <span class="visually-hidden">Yes</span>
+                </td>
+            </tr>
+            
+            <tr>
+                <th scope="col">BGP Monitoring</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    Ask your account team
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="col">Internet Sonar</th>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    <i class="icon x-in-circle-temp" aria-hidden="true"></i>
+                    <span class="visually-hidden">No</span>
+                </td>
+                <td>
+                    Ask your account team
+                </td>
+            </tr>
 
             <tr>
                 <th scope="col">Support</th>
@@ -244,22 +487,28 @@
                 <td>
                     Dedicated Support
                 </td>
+                <td>
+                    Assigned CSM team
+                </td>
             </tr>
 
             <tr>
                 <th scope="col"></th>
                 <td></td>
                 <td>
-                    Need a custom plan?
+                    <div class="need-help">Need a custom plan?</div>
                     <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
+                </td>
+                <td>
+                    <a class="button signup-button" href="https://www.product.webpagetest.org/expert-plan">Talk to Us</a>
                 </td>
             </tr>
 
         </tbody>
     </table>
-    <p><sup id="fn1">* Our list of available test locations is continually growing.</sup></p>
-
+    
     <div class="FAQ">
+        <p><sup id="fn1">* Our list of available test locations is continually growing.</sup></p>
         <h3>What' s included in WebPageTest Pro?</h3>
         <dl class="faq">
             <dt>
@@ -270,8 +519,6 @@
                     <p><strong>WebPageTest Pro </strong> our premium, paid subscription plan that unlocks powerful functionality and features for WebPageTest including, but not limited to: bulk testing, premium testing locations, high priority in testing queues, the WebPageTest API, experiments, dedicated support and private tests.
                     </p>
                     <p><strong>WebPageTest Starter</strong> is our free plan available to all users to run WebPageTest runs that provide all the performance metrics that WebPageTest has provided for years plus access to the new Opportunities report.
-                    </p>
-                    <p>Both WebPageTest Starter and Pro give you access to save your Test History for 13 months.
                     </p>
                 </div>
             </dd>

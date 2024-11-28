@@ -5,8 +5,13 @@
 // found in the LICENSE.md file.
 include 'common.inc';
 
+use WebPageTest\Util;
+
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 150;
+$hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 $headless = false;
 if (GetSetting('headless')) {
@@ -34,110 +39,126 @@ if (file_exists('./settings/server/lighthouse.ini')) {
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
-    <head>
-        <title>WebPageTest - Lighthouse Test</title>
-        <?php include('head.inc'); ?>
-        <style>
-        #description { min-height: 2em; padding-left: 170px; width:380px;}
-        </style>
-    </head>
-    <body class="home feature-pro">
-       <?php
-            $tab = 'Start Test';
-            include 'header.inc';
-        if (!$headless) {
-            ?>
+
+<head>
+    <title>WebPageTest - Lighthouse Test</title>
+    <?php include('head.inc'); ?>
+    <style>
+        #description {
+            min-height: 2em;
+            padding-left: 170px;
+            width: 380px;
+        }
+    </style>
+</head>
+
+<?php
+$homeclass = "feature-cc";
+if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
+    $homeclass = "feature-pro";
+}
+?>
+
+<body class="home <?php echo $homeclass; ?>">
+    <?php
+    $tab = 'Start Test';
+    include 'header.inc';
+    if (!$headless) {
+    ?>
 
 
-            <?php include("home_header.php"); ?>
+        <?php include("home_header.php"); ?>
 
-<div class="home_content_contain">
-             <div class="home_content">
+        <div class="home_content_contain">
+            <div class="home_content">
 
-            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+                <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
 
-                <?php
-                echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
-                if (strlen($secret)) {
-                    $hashStr = $secret;
-                    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-                    $hashStr .= $owner;
+                    <?php
+                    echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
+                    if (strlen($secret)) {
+                        $hashStr = $secret;
+                        $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                        $hashStr .= $owner;
 
-                    $now = gmdate('c');
-                    echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
-                    $hashStr .= $now;
+                        $now = gmdate('c');
+                        echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
+                        $hashStr .= $now;
 
-                    $hmac = sha1($hashStr);
-                    echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
-                }
-                ?>
-            <input type="hidden" name="runs" value="1">
-            <input type="hidden" name="fvonly" value="1">
-            <input type="hidden" name="mobile" value="1">
-            <input type="hidden" name="type" value="lighthouse">
-
-
+                        $hmac = sha1($hashStr);
+                        echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+                    }
+                    ?>
+                    <input type="hidden" name="runs" value="1">
+                    <input type="hidden" name="fvonly" value="1">
+                    <input type="hidden" name="mobile" value="1">
+                    <input type="hidden" name="type" value="lighthouse">
 
 
 
-            <div id="test_box-container" class="home_responsive_test">
-                <?php
-                $currNav = "Lighthouse";
-                include("testTypesNav.php");
-                ?>
-
-                <div id="analytical-review" class="test_box">
-                <p>Run <a href="https://developers.google.com/web/tools/lighthouse/" target="_blank" rel="noopener">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
-
-                    <ul class="input_fields home_responsive_test_top">
-                        <li><input type="text" name="url" id="url" class="text large" <?php echo " placeholder='$placeholder'"; ?> onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
-                        </li>
-                        <li>
-
-                        <li class="test_main_config">
-
-                          <div class="test_presets">
-                                <div class="fieldrow">
-                                <label for="location">Test Location:</label>
-                                  <select name="location" id="location" onchange="profileChanged()">
-                                  <?php
-                                    if (!empty($lighthouse['locations'])) {
-                                        foreach ($lighthouse['locations'] as $id => $label) {
-                                            $selected = '';
-                                            if ($id === $_COOKIE['lhloc']) {
-                                                $selected = 'selected';
-                                            }
-                                            echo "<option value=\"$id\" $selected>{$label}</option>";
-                                        }
-                                        if (isset($lastGroup)) {
-                                            echo "</optgroup>";
-                                        }
-                                    }
-                                    ?>
-                                  </select>
-                              </div>
-                              <?php if ($is_paid) : ?>
-                                  <div class="fieldrow">
-                                      <label class="full" for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
-                                  </div>
-                              <?php endif; ?>
-                            </div>
-                            <div>
-                              <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
-                            </div>
-                        </li>
-
-                    </ul>
-                </div>
-
-            </div>
 
 
-            </form>
+                    <div id="test_box-container" class="home_responsive_test">
+                        <?php
+                        $currNav = "Lighthouse";
+                        include("testTypesNav.php");
+                        ?>
 
-                <?php
+                        <div id="analytical-review" class="test_box">
+                            <p>Run <a href="https://developers.google.com/web/tools/lighthouse/" target="_blank" rel="noopener">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
+
+                            <ul class="input_fields home_responsive_test_top">
+                                <li><input type="text" name="url" id="url" class="text large" <?php echo " placeholder='$placeholder'"; ?> onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}">
+                                </li>
+                                <li>
+
+                                <li class="test_main_config">
+
+                                    <div class="test_presets">
+                                        <div class="fieldrow">
+                                            <label for="location">Test Location:</label>
+                                            <select name="location" id="location" onchange="profileChanged()">
+                                                <?php
+                                                if (!empty($lighthouse['locations'])) {
+                                                    foreach ($lighthouse['locations'] as $id => $label) {
+                                                        $selected = '';
+                                                        if ($id === $_COOKIE['lhloc']) {
+                                                            $selected = 'selected';
+                                                        }
+                                                        echo "<option value=\"$id\" $selected>{$label}</option>";
+                                                    }
+                                                    if (isset($lastGroup)) {
+                                                        echo "</optgroup>";
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <?php if ($is_paid) : ?>
+                                            <div class="fieldrow">
+                                                <label class="full" for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div>
+                                        <?php if ($is_logged_in) : ?>
+                                            <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                        <?php endif; ?>
+                                        <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                                    </div>
+                                </li>
+
+                            </ul>
+                        </div>
+
+                    </div>
+
+
+                </form>
+
+            <?php
         } // $headless
-        ?>
+            ?>
 
             <?php include('footer.inc'); ?>
             </div><!--home_content_contain-->
@@ -145,15 +166,16 @@ if (file_exists('./settings/server/lighthouse.ini')) {
         </div>
 
         <script>
-        var maxRuns = 3;
-        var profileChanged = function() {
-          var sel = document.getElementById("location");
-          var location = sel.options[sel.selectedIndex].value;
-          var d = new Date();
-          d.setTime(d.getTime() + (365*24*60*60*1000));
-          document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";
-        };
+            var maxRuns = 3;
+            var profileChanged = function() {
+                var sel = document.getElementById("location");
+                var location = sel.options[sel.selectedIndex].value;
+                var d = new Date();
+                d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+                document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";
+            };
         </script>
-        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
-    </body>
+        <script src="<?php echo $GLOBALS['cdnPath']; ?>/assets/js/test.js?v=<?php echo VER_JS_TEST; ?>"></script>
+</body>
+
 </html>
