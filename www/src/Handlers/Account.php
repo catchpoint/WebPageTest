@@ -1000,7 +1000,7 @@ class Account
         $results['messages'] = $request_context->getBannerMessageManager()->get();
         $results['support_link'] = Util::getSetting('support_link', 'https://support.catchpoint.com');
         $results['expert_plan'] = [
-            'monthly' => GetSetting('expert_monthly_cost', 999)
+            'monthly' => Util::getSetting('expert_monthly_cost', 999)
         ];
         if (!is_null($error_message)) {
             $results['error_message'] = $error_message;
