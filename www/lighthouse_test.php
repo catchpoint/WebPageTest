@@ -10,7 +10,7 @@ use WebPageTest\Util;
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
-$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 150;
+$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 0;
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 $headless = false;

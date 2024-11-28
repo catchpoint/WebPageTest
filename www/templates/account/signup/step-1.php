@@ -99,7 +99,7 @@
             </tr>
             <tr>
                 <th scope="col">Monthly Test Runs</th>
-                <td>150</td>
+                <td>300</td>
                 <td>As per plan</td>
                 <td>As per contract</td>
             </tr>
@@ -255,7 +255,7 @@
 
             <tr>
                 <th scope="col">Test History</th>
-                <td>60 days</td>
+                <td>13 Months</td>
                 <td>13 Months</td>
                 <td>Up to 7 years</td>
             </tr>
