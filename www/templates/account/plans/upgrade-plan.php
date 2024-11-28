@@ -420,8 +420,8 @@
                 <tr>
                     <th scope="col">Carbon Control</th>
                     <td>
-                        <i class="icon x-in-circle-temp" aria-hidden="true"></i>
-                        <span class="visually-hidden">No</span>
+                        <i class="icon check" aria-hidden="true"></i>
+                        <span class="visually-hidden">Yes</span>
                     </td>
                     <td>
                         <i class="icon check" aria-hidden="true"></i>
