@@ -87,14 +87,14 @@
                 </td>
                 <td>
                     <span class="visually-hidden">Sign up for an Expert Plan</span>
-                    <button href="https://www.product.webpagetest.org/expert-plan" id="submit-expert-plan" class="signup-button" type="submit" form="pro-plan-form">
+                    <a href="https://www.product.webpagetest.org/expert-plan" id="submit-expert-plan" class="button signup-button">
                         Start for $<span data-id="plan-price"><?= $expert_plan['monthly'] > 0 ? $expert_plan['monthly'] : "" ?></span><span class="unit" data-id="plan-cycle">/month</span>
                         <div>
                         <small>
                             Billed at $<?= number_format($expert_plan['monthly'] > 0 ? $expert_plan['monthly'] * 12 : 0) ?>/year
                         </small>
                         </div>
-                    </button>
+                    </a>
                 </td>
             </tr>
             <tr>
