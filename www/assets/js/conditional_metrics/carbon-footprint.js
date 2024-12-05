@@ -86,7 +86,7 @@ let collectHostStatuses = async function () {
 
 let calculate_carbon = async function () {
   let totalCarbon = 0;
-  const emissionsSWD = new co2.co2();
+  const emissionsSWD = new co2.co2({ model: "swd", version: 4 });
   let greenstatuses = await collectHostStatuses();
 
   $WPT_REQUESTS.forEach((req) => {
