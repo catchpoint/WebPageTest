@@ -114,11 +114,14 @@ use WebPageTest\Exception\UnauthorizedException;
         }
     }
 
-    if ($user->isPaid() || $user->isApiUser()) {
-        //calculate based on paid priority
-        $user->setUserPriority((int)Util::getSetting('paid_priority', 0));
+    if ($user->isApiUser()) {
+        $user->setUserPriority((int) Util::getSetting('api_priority', 7));
+    } else if ($user->isPaid()) {
+        $user->setUserPriority((int) Util::getSetting('paid_priority', 6));
+    } else if ($user->isFree()) {
+        $user->setUserPriority((int) Util::getSetting('user_priority', 8));
     } else {
-        $user->setUserPriority((int)Util::getSetting('user_priority', 0));
+        $user->setUserPriority((int) Util::getSetting('anon_priority', 9));
     }
 
     $user_email = $user->getEmail();
