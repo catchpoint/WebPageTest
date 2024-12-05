@@ -146,7 +146,7 @@ if (isset($test)) {
 }
 if (array_key_exists('resubmit', $_POST)) {
     $test = GetTestInfo(trim($_POST['resubmit']));
-    if (array_key_exists('key', $test)){
+    if (array_key_exists('key', $test)) {
         $test['key'] = null;
     }
     if ($test) {
@@ -221,7 +221,7 @@ if (!isset($test)) {
     $is_private = 0;
 
     $is_private_api_call = !empty($user_api_key) && !empty($req_private) &&
-      ((int)$req_private == 1 || $req_private == 'true');
+        ((int)$req_private == 1 || $req_private == 'true');
     $is_private_web_call = $isPaid && ($_POST['private'] == 'on');
 
     if ($is_private_api_call || $is_private_web_call) {
@@ -671,7 +671,7 @@ if (!isset($test)) {
         if ((isset($test['batch']) && $test['batch']) || (isset($test['batch_locations']) && $test['batch_locations'])) {
             $test['priority'] = intval(GetSetting('bulk_priority', 7));
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json) {
-            $test['priority'] =  intval(GetSetting('api_priority', 5));
+            $test['priority'] =  intval(GetSetting('api_priority', 7));
         }
     }
 
@@ -1628,7 +1628,7 @@ function ValidateKey(&$test, &$error, $key = null)
                 ) {
                     $test['location'] = $keys[$key]['default location'];
                 }
-                $api_priority = intval(GetSetting('api_priority', 5));
+                $api_priority = intval(GetSetting('api_priority', 7));
                 $test['priority'] = $api_priority;
                 if (isset($keys[$key]['priority'])) {
                     $test['priority'] = intval($keys[$key]['priority']);
@@ -1719,9 +1719,8 @@ function ValidateKey(&$test, &$error, $key = null)
                                         // Store the account info with the test
                                         $test['accountId'] = $account['accountId'];
                                         $test['contactId'] = $account['contactId'];
-                                        // success.  See if there is a priority override for redis-based API tests
-                                        if (Util::getSetting('paid_priority')) {
-                                            $test['priority'] = intval(Util::getSetting('paid_priority'));
+                                        if (Util::getSetting('api_priority')) {
+                                            $test['priority'] = intval(Util::getSetting('api_priority'));
                                         }
                                     } else {
                                         $error = 'The test request will exceed the remaining test balance for the given API key';
@@ -1827,9 +1826,24 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                 // make sure on/off options are explicitly 1 or 0
                 $values = array(
-                    'private', 'web10', 'ignoreSSL', 'tcpdump', 'standards', 'lighthouse',
-                    'timeline', 'swrender', 'netlog', 'spdy3', 'noscript', 'fullsizevideo',
-                    'blockads', 'sensitive', 'pngss', 'bodies', 'htmlbody', 'pss_advanced',
+                    'private',
+                    'web10',
+                    'ignoreSSL',
+                    'tcpdump',
+                    'standards',
+                    'lighthouse',
+                    'timeline',
+                    'swrender',
+                    'netlog',
+                    'spdy3',
+                    'noscript',
+                    'fullsizevideo',
+                    'blockads',
+                    'sensitive',
+                    'pngss',
+                    'bodies',
+                    'htmlbody',
+                    'pss_advanced',
                     'noheaders'
                 );
                 foreach ($values as $value) {
@@ -3555,7 +3569,7 @@ function CheckRateLimit($test, &$error, &$errorTitle)
 
     $errorTemplate = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
     $errorTitleTemplate = "You've reached the limit for";
-   
+
     if (!$passesMonthly) {
         $errorTitle = "{$errorTitleTemplate} this month";
         $error = $errorTemplate;

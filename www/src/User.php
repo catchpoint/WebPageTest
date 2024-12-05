@@ -89,6 +89,11 @@ class User
             ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
     }
 
+    public function isFree(): bool
+    {
+        return !$this->isPaid() && !$this->isAnon();
+    }
+
     public function setPaidClient(bool $is_paid): void
     {
         $this->is_paid_cp_client = $is_paid;
