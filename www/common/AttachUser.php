@@ -116,9 +116,9 @@ use WebPageTest\Exception\UnauthorizedException;
 
     if ($user->isApiUser()) {
         $user->setUserPriority((int) Util::getSetting('api_priority', 7));
-    } else if ($user->isPaid()) {
+    } elseif ($user->isPaid()) {
         $user->setUserPriority((int) Util::getSetting('paid_priority', 6));
-    } else if ($user->isFree()) {
+    } elseif ($user->isFree()) {
         $user->setUserPriority((int) Util::getSetting('user_priority', 8));
     } else {
         $user->setUserPriority((int) Util::getSetting('anon_priority', 9));
