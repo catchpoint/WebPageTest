@@ -900,6 +900,13 @@ function buildSelfHost($hosts)
     return $selfHostScript;
 }
 
+$isFree = !is_null($request_context->getUser()) && $request_context->getUser()->isFree();
+
+// Allow free user to run test only if email is verified
+if ($isFree && !$request_context->getUser()->isVerified()) {
+    $errorTitle = 'Email address is not verified';
+    $error = 'Please verify your email address to use WebPageTest.';
+}
 
 if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimit($test, $error, $errorTitle)) {
     $total_runs = Util::getRunCount($test['runs'], $test['fvonly'], $test['lighthouse'], $test['type']);
