@@ -146,7 +146,7 @@ if (isset($test)) {
 }
 if (array_key_exists('resubmit', $_POST)) {
     $test = GetTestInfo(trim($_POST['resubmit']));
-    if (array_key_exists('key', $test)){
+    if (array_key_exists('key', $test)) {
         $test['key'] = null;
     }
     if ($test) {
@@ -221,7 +221,7 @@ if (!isset($test)) {
     $is_private = 0;
 
     $is_private_api_call = !empty($user_api_key) && !empty($req_private) &&
-      ((int)$req_private == 1 || $req_private == 'true');
+        ((int)$req_private == 1 || $req_private == 'true');
     $is_private_web_call = $isPaid && ($_POST['private'] == 'on');
 
     if ($is_private_api_call || $is_private_web_call) {
@@ -898,6 +898,14 @@ function buildSelfHost($hosts)
     }
 
     return $selfHostScript;
+}
+
+$isFree = !is_null($request_context->getUser()) && $request_context->getUser()->isFree();
+
+// Allow free user to run test only if email is verified
+if ($isFree && !$request_context->getUser()->isVerified()) {
+    $errorTitle = 'Email address is not verified';
+    $error = 'Please verify your email address to use WebPageTest.';
 }
 
 
@@ -1827,9 +1835,24 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                 // make sure on/off options are explicitly 1 or 0
                 $values = array(
-                    'private', 'web10', 'ignoreSSL', 'tcpdump', 'standards', 'lighthouse',
-                    'timeline', 'swrender', 'netlog', 'spdy3', 'noscript', 'fullsizevideo',
-                    'blockads', 'sensitive', 'pngss', 'bodies', 'htmlbody', 'pss_advanced',
+                    'private',
+                    'web10',
+                    'ignoreSSL',
+                    'tcpdump',
+                    'standards',
+                    'lighthouse',
+                    'timeline',
+                    'swrender',
+                    'netlog',
+                    'spdy3',
+                    'noscript',
+                    'fullsizevideo',
+                    'blockads',
+                    'sensitive',
+                    'pngss',
+                    'bodies',
+                    'htmlbody',
+                    'pss_advanced',
                     'noheaders'
                 );
                 foreach ($values as $value) {
@@ -3555,7 +3578,7 @@ function CheckRateLimit($test, &$error, &$errorTitle)
 
     $errorTemplate = "<p>Don't worry! You can keep testing for free once you log in, which will give you access to other excellent features like:</p>";
     $errorTitleTemplate = "You've reached the limit for";
-   
+
     if (!$passesMonthly) {
         $errorTitle = "{$errorTitleTemplate} this month";
         $error = $errorTemplate;
