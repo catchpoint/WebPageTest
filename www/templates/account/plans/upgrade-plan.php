@@ -88,8 +88,9 @@
     <div class="card-section">
         <table class="comparison-table">
             <thead>
-                <tr style="height: 1px">
+                <tr>
                     <th>
+                        <div class="h2">Compare Plans</div>
                     </th>
                     <th scope="col">
                         <span>Starter Plan</span>
@@ -115,9 +116,9 @@
             <tbody>
                 <tr>
                     <th scope="col">Monthly Test Runs</th>
-                    <td>300</td>
-                    <td>As per plan</td>
-                    <td>As per contract</td>
+                    <td class="info">300</td>
+                    <td class="info">As per plan</td>
+                    <td class="info">As per contract</td>
                 </tr>
 
                 <tr>
@@ -178,7 +179,7 @@
                         <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                         <span class="visually-hidden">No</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Ask your account team
                     </td>
                 </tr>
@@ -193,7 +194,7 @@
                         <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                         <span class="visually-hidden">No</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Ask your account team
                     </td>
                 </tr>
@@ -201,8 +202,8 @@
                 <tr>
                     <th scope="col">Locations</th>
                     <td>30</td>
-                    <td>40<sup><a href="#fn1" id="ref1">*</a></sup></td>
                     <td>40<sup><a href="#fn1" id="ref2">*</a></sup></td>
+                    <td>40<sup><a href="#fn1" id="ref1">*</a></sup></td>
                 </tr>
 
                 <tr>
@@ -318,7 +319,7 @@
                         <i class="icon check" aria-hidden="true"></i>
                         <span class="visually-hidden">Yes</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Coming Soon
                     </td>
                 </tr>
@@ -349,7 +350,7 @@
                         <i class="icon check" aria-hidden="true"></i>
                         <span class="visually-hidden">Yes</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Coming Soon
                     </td>
                 </tr>
@@ -396,14 +397,14 @@
                         <i class="icon check" aria-hidden="true"></i>
                         <span class="visually-hidden">Yes</span>
                     </td>
-                    <td>
-                        Coming soon
+                    <td class="info">
+                        Coming Soon
                     </td>
                 </tr>
 
                 <tr>
                     <th scope="col">Scripted Test</th>
-                    <td>
+                    <td class="info">
                         <i class="icon check" aria-hidden="true"></i><small>(limited to 3 steps)</small>
                         <span class="visually-hidden">Yes</span>
                     </td>
@@ -475,7 +476,7 @@
                         <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                         <span class="visually-hidden">No</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Ask your account team
                     </td>
                 </tr>
@@ -490,20 +491,20 @@
                         <i class="icon x-in-circle-temp" aria-hidden="true"></i>
                         <span class="visually-hidden">No</span>
                     </td>
-                    <td>
+                    <td class="info">
                         Ask your account team
                     </td>
                 </tr>
 
                 <tr>
                     <th scope="col">Support</th>
-                    <td>
+                    <td class="info">
                         Forums
                     </td>
-                    <td>
+                    <td class="info">
                         Dedicated Support
                     </td>
-                    <td>
+                    <td class="info">
                         Assigned CSM team
                     </td>
                 </tr>
@@ -512,11 +513,15 @@
                     <th scope="col"></th>
                     <td></td>
                     <td>
-                        <div class="need-help">Need a custom plan?</div>
-                        <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
+                        <div class="help">
+                            <div class="need-help info">Need a custom plan?</div>
+                            <a class="button signup-button" href="https://www.product.webpagetest.org/contact">Contact Us</a>
+                        </div>
                     </td>
                     <td>
-                        <a class="button signup-button" href="https://www.product.webpagetest.org/expert-plan">Talk to Us</a>
+                        <div class="help">
+                            <a class="button signup-button" href="https://www.product.webpagetest.org/expert-plan">Talk to Us</a>
+                        </div>
                     </td>
                 </tr>
 
