@@ -422,6 +422,7 @@ body.theme-b {
   min-height: 30px;
   border-right: 1px solid rgb(204, 204, 204);
 }
+
 .upgrade-plan-feature-list li:nth-child(odd) {
   background-color: #f4f4f4;
 }
@@ -1451,6 +1452,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   text-align: left;
 }
 
+.comparison-table thead tr {
+  height: 1px;
+}
+
 .comparison-table thead th {
   vertical-align: bottom;
 }
@@ -1510,6 +1515,10 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   padding: 0.8em;
   width: 25%;
 }
+.comparison-table tr .info {
+  white-space: normal;
+  line-height: 0.9;
+}
 
 .account-upgrade-comparison-table {
   width: 100%;
@@ -1543,11 +1552,19 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   }
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 968px) {
+  .comparison-table thead tr {
+    height: unset;
+  }
+
   .comparison-table tr {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-around;
+  }
+
+  .comparison-table tr.prices td {
+    margin: auto;
   }
 
   .signup-step-1-content {
@@ -1555,11 +1572,12 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     padding: 0;
   }
 
+  .comparison-table tbody th,
   .comparison-table tbody td,
   .comparison-table thead th {
     display: block;
     width: 33%;
-    font-size: 1rem;
+    font-size: 0.9rem;
     box-sizing: border-box;
     position: relative;
   }
@@ -1570,6 +1588,11 @@ table.sortable th:not([aria-sort]) button:hover span::after {
     position: absolute;
     bottom: 10px;
     left: 22%;
+  }
+
+  .comparison-table tbody tr,
+  .comparison-table tbody tr:nth-child(odd) {
+    background-color: white;
   }
 
   .comparison-table thead th:first-child {
@@ -1594,6 +1617,13 @@ table.sortable th:not([aria-sort]) button:hover span::after {
   .comparison-table tbody tr.custom-plan-mobile {
     background-color: white;
     display: flex;
+  }
+
+  .comparison-table tbody tr:last-of-type td {
+    height: 105px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
   }
 }
 
@@ -1684,11 +1714,11 @@ table.sortable th:not([aria-sort]) button:hover span::after {
 }
 
 .comparison-table .signup-button > div {
-  line-height: 0.5;
+  line-height: 0.85;
 }
 .comparison-table .signup-button > div > small {
   font-weight: 400;
-  font-size: small;
+  font-size: smaller;
 }
 .comparison-table .signup-button .unit,
 span.unit {
@@ -1726,14 +1756,18 @@ tr.custom-plan-mobile {
   display: inline-block;
   width: auto;
 }
+#pro-plan-form {
+  margin-top: 1rem;
+}
 #pro-plan-form label {
   width: 75px;
   margin-right: 0.2rem;
   text-align: right;
 }
 #pro-plan-form select {
-  width: 150px;
+  width: 90px;
   margin-bottom: 0.2rem;
+  padding: 0.25em 0.75em;
 }
 
 .pro-plans .pro-plans-header,
@@ -1744,6 +1778,7 @@ tr.custom-plan-mobile {
   border: 1px solid #fff;
   padding: 1em;
   vertical-align: top;
+  line-height: 1.3;
 }
 .card-section .pro-plans-header,
 .card-section .expert-plan-header {
@@ -1798,17 +1833,63 @@ th.expert-plan {
   padding-top: 2%;
 }
 
-@media (max-width: 1176px) {
-  .pro-plans form > div:not(.hidden) {
-    width: 47%;
+.signup-hed-price {
+  color: #ffc830;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.signup-special-price {
+  color: #ffc830;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 700px) {
+  .signup-special-price {
+    font-size: 1.15rem;
+  }
+
+  #pro-plan-form {
+    margin-top: 0.5rem;
+  }
+
+  #submit-pro-plan {
+    white-space: normal;
+    line-height: 0.85;
   }
 }
 
-@media (max-width: 860px) {
-  .pro-plans form div > *:not(.hidden) {
-    display: block;
-    width: auto;
-    text-align: left;
+@media (max-width: 620px) {
+  .signup-special-price {
+    font-size: 0.9rem;
+  }
+
+  .expert-plan-header .heading {
+    font-size: 0.95rem;
+  }
+
+  #pro-plan-form label {
+    width: 56px;
+    font-size: 0.75rem;
+  }
+
+  #pro-plan-form select {
+    width: 70px;
+    font-size: 0.75rem;
+  }
+
+  span.upsell {
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+
+  .comparison-table tr td,
+  .comparison-table tr th {
+    padding: 0.8em 0;
   }
 }
 
@@ -1917,20 +1998,6 @@ p sup {
   left: -14px;
 }
 
-.signup-hed-price {
-  color: #ffc830;
-  font-weight: 700;
-  font-size: 2rem;
-}
-
-.signup-special-price {
-  color: #ffc830;
-  font-weight: 700;
-  font-size: 1.5rem;
-  line-height: 1.25;
-  margin-bottom: 1rem;
-}
-
 ul.bulleted-list {
   list-style: disc;
   margin-left: 2rem;
@@ -1973,10 +2040,9 @@ ul.bulleted-list {
     background-repeat: no-repeat;
   }
   .comparison-table tr:last-child td:last-child .button {
-    display: block;
-    margin-top: 1rem;
+    display: inline-block;
   }
-
+  
   .FAQ {
     padding: 0 1.5rem 1.5rem;
   }
@@ -1991,8 +2057,18 @@ ul.bulleted-list {
   }
 
   .comparison-table .signup-button {
-    padding: 0.7em 1em;
+    padding: 0.7em 0.9em;
     font-size: 0.85em;
+    line-height: 0.9;
+    border-radius: 1.0rem;
+  }
+
+  #submit-expert-plan {
+    white-space: normal;
+  }
+
+  .signup-button {
+    border-radius: 1.5rem;
   }
 }
 
