@@ -11,7 +11,7 @@
 <div class="signup-step-1-content" id="billingcycle-tab-container">
     <table class="comparison-table">
         <thead>
-            <tr style="height: 1px">
+            <tr>
                 <th>
                     <div class="h2">Compare Plans</div>
                 </th>
