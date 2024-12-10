@@ -115,7 +115,7 @@
                         <h3 class="hed_sub">Your Footprint, in Context... <em>(Using <a href="https://developers.thegreenwebfoundation.org/co2js/explainer/methodologies-for-calculating-website-carbon/#the-sustainable-web-design-model">Sustainable Web Design</a> Model)</em></h3>
                         <div class="ei_diagnostics ei_diagnostics-context">
                             <ul>
-                            @php ($avgSiteCarbon = 0.6)
+                            @php ($avgSiteCarbon = 0.3)
                             @php ($avgMileCarbon = 404)
                             @php ( $mileCompare = round($avgMileCarbon / $carbon_footprint['sustainable-web-design']))
                             
@@ -134,7 +134,7 @@
                                     <img src="/assets/images/src/env-car.svg" alt="car with exhaust sketch"> 
                                 </li>
                                 <li>
-                                    <span>The median CO2 footprint of the top 1000 websites is <strong>{{ $avgSiteCarbon }} grams per visit</strong>*. This website emits {!! $footCompare !!} per visit. <small>* Source: <a href="https://almanac.httparchive.org/en/2022/">2022 Web Almanac</a></small></span>
+                                    <span>The median CO2 footprint of the top 1000 websites is <strong>{{ $avgSiteCarbon }} grams per visit</strong>*. This website emits {!! $footCompare !!} per visit. <small>* Source: <a href="https://almanac.httparchive.org/en/2024/">2024 Web Almanac</a></small></span>
                                     <img src="/assets/images/src/env-scale.svg" alt="scales with servers in them sketch"> 
                                 </li>
                                 <li>
@@ -250,7 +250,7 @@
 
                                 <h4>Additionally, check out these excellent resources:</h4>
                                 <ul>
-                                    <li><a href="https://almanac.httparchive.org/en/2022/sustainability">2022 Web Almanac: Sustainability</a></li>
+                                    <li><a href="https://almanac.httparchive.org/en/2024/sustainability">2024 Web Almanac: Sustainability</a></li>
                                     <li><a href="https://www.thegreenwebfoundation.org/">Green Web Foundation</a></li>
                                 </ul>
                             </div>
