@@ -73,7 +73,7 @@ class Customer
         $this->next_wpt_plan_id = $options['nextWptPlanId'] ?? null;
         $this->address = null;
 
-        if (!isset($options['creditCardBillingState']) && strlen(trim($options['creditCardBillingState'])) == 0) {
+        if (!isset($options['creditCardBillingState']) || strlen(trim($options['creditCardBillingState'])) == 0) {
             $options['creditCardBillingState'] =  $options['creditCardBillingCountry'];
         }
         
