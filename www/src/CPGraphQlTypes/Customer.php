@@ -74,9 +74,9 @@ class Customer
         $this->address = null;
 
         if (!isset($options['creditCardBillingState']) || strlen(trim($options['creditCardBillingState'])) == 0) {
-            $options['creditCardBillingState'] =  $options['creditCardBillingCountry'];
+            $options['creditCardBillingState'] = $options['creditCardBillingCountry'];
         }
-        
+
         if (
             isset($options['creditCardBillingCountry']) &&
             isset($options['creditCardBillingZip']) &&
