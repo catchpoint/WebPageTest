@@ -798,7 +798,9 @@ final class AccountTest extends TestCase
             'subscriptionPrice' => 10.00,
             'status' => 'ACTIVE',
             'wptPlanName' => '',
-            'monthlyRuns' => 8
+            'monthlyRuns' => 8,
+            'creditCardBillingCountry' => 'US',
+            'creditCardBillingState' => 'US'
         ]);
         $wpt_api_key_list = new ApiKeyList();
         $paid_page_info = new PaidPageInfo($customer, $wpt_api_key_list);
