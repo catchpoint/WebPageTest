@@ -3,10 +3,9 @@
 This is the official repository for the performance-testing code that runs at [webpagetest.org](https://www.webpagetest.org).
 
 - 🥡 [Install your own instance](https://docs.webpagetest.org/private-instances/)
-- 📕 [Documentation](https://github.com/WPO-Foundation/webpagetest-docs)
+- 📕 [Documentation](https://github.com/catchpoint/WebPageTest.docs)
 - 🕒 [Changelog](https://docs.webpagetest.org/change-log)
-- 🌐 [Cross-platform browser agent](https://github.com/WPO-Foundation/wptagent)
-- [WPT website global header repo](https://github.com/WebPageTest/wpt-header) and [documentation](https://wpt-header.netlify.app/)
+- 🌐 [Cross-platform browser agent](https://github.com/catchpoint/WebPageTest.agent)
 - 💤 [REST API](https://docs.webpagetest.org/api/) examples:
   - 🐘 [`/bulktest`](/bulktest/): A PHP command-line tool that can submit a bulk set of tests, gather the results, and aggregate analyses.
   - 🐍 [`/batchtool`](/batchtool/): A Python tool that can submit a bulk set of tests and gather the results.

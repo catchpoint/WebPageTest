@@ -80,7 +80,7 @@ In phase 3 we convert each of the old entry points from `/wpt` to Laravel contro
 
 ### Views
 
-In phase 1 we adopt the Blade templating engine. This is already [under way](https://github.com/WPO-Foundation/webpagetest/pull/2228) and the templates live in `www/resources`
+In phase 1 we adopt the Blade templating engine. This is already [under way](https://github.com/catchpoint/WebPageTest/pull/2228) and the templates live in `www/resources`
 
 In the same phase we convert the prior template work from `www/templates` (which has API similar to Blade) to Blade, so we avoid having things like three competing footers.
 
