@@ -54,8 +54,6 @@ use WebPageTest\Util;
                 && !isset($tests)
                 && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
         ) {
-            $user = !is_null($request_context) ? $request_context->getUser() : null;
-
             // load the secret key (if there is one)
             $secret = GetServerSecret();
             if (!isset($secret)) {
