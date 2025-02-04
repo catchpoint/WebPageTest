@@ -45,6 +45,7 @@ class CPClient
     public ?string $client_id;
     public ?string $client_secret;
     private ?string $access_token;
+    private ?string $host;
     private $handler; // For unit tests
 
     public function __construct(string $host, array $options = [])
@@ -217,7 +218,11 @@ class CPClient
                         'planRenewalDate',
                         'nextBillingDate',
                         'status',
-                        'vatNumber'
+                        'vatNumber',
+                    ]),
+                (new Query('wptIsPreviewEnabled'))
+                    ->setSelectionSet([
+                        'enabled'
                     ])
             ]);
 
@@ -249,6 +254,8 @@ class CPClient
             $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
             $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
             $user->setVatNumber($data['wptCustomer']['vatNumber']);
+
+            $user->setNewPortalExperience($data['wptIsPreviewEnabled']['enabled']);
 
             return $user;
         } catch (GuzzleException $e) {
@@ -1079,5 +1086,30 @@ class CPClient
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         return $results->getData()['wptUpdateSubscriptionPayment'];
+    }
+
+    public function enablePortalPreview(bool $value)
+    {
+        try {
+            $gql = (new Mutation('wptPreviewEnable'))
+                ->setVariables([
+                    new Variable('wptPreviewEnable', 'WptPreviewEnableInputType', true),
+                ])
+                ->setArguments([
+                    'wptPreviewEnableRequest' => '$wptPreviewEnable'
+                ])
+                ->setSelectionSet([
+                    'enabled'
+                ]);
+
+            $variables = [
+                'wptPreviewEnable' => ['enable' => $value]
+            ];
+
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
+            return $results->getData()['wptPreviewEnable']['enabled'];
+        } catch (BaseException $e) {
+            return false;
+        }
     }
 }

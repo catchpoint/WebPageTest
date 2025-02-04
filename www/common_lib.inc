@@ -4037,6 +4037,19 @@ function ReportSaaSTest($test_json, $node_id, $test_id)
     }
 }
 
+/**
+ * Handle redirect in read-only mode
+ */
+function RedirectIfReadOnly()
+{
+    global $request_context;
+
+    if (Util::getSetting('cp_portal_redirect') && Util::getSetting('cp_portal_url') && $request_context->isReadOnly()) {
+        header('Location: ' . Util::getSetting('cp_portal_url'));
+        exit();
+    }
+}
+
 if (!function_exists('str_contains')) {
     function str_contains($haystack, $needle)
     {

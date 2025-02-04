@@ -6,13 +6,20 @@
 chdir('..');
 include 'common.inc';
 
+use WebPageTest\Util;
+
+RedirectIfReadOnly();
+
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
+$is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
+$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 150;
+$hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 $loc = GetDefaultLocation();
 $tid = array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
 $run = array_key_exists('run', $_GET) ? $_GET['run'] : 0;
-$page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
+$page_keywords = array('Video', 'comparison', 'WebPageTest', 'Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 $profiles = null;
 $profile_file = __DIR__ . '/../settings/profiles.ini';
@@ -34,11 +41,12 @@ if (!isset($secret)) {
 
 <!DOCTYPE html>
 <html lang="en-us">
+
 <head>
     <title>WebPageTest - Visual Comparison</title>
     <?php include('head.inc'); ?>
 </head>
-        
+
 <?php
 $homeclass = "feature-cc";
 if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid() && !isset($req_cc)) {
@@ -61,144 +69,148 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
             <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
                 <?php
-                    echo '<input type="hidden" name="vo" value="'.htmlspecialchars($owner).'">';
-                    if (strlen($secret)) {
-                        $hashStr = $secret;
-                        $hashStr .= $_SERVER['HTTP_USER_AGENT'];
-                        $hashStr .= $owner;
+                echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . '">';
+                if (strlen($secret)) {
+                    $hashStr = $secret;
+                    $hashStr .= $_SERVER['HTTP_USER_AGENT'];
+                    $hashStr .= $owner;
 
-                        $now = gmdate('c');
-                        echo '<input type="hidden" name="vd" value="'.$now.'">';
-                        $hashStr .= $now;
+                    $now = gmdate('c');
+                    echo '<input type="hidden" name="vd" value="' . $now . '">';
+                    $hashStr .= $now;
 
-                        $hmac = sha1($hashStr);
-                        echo '<input type="hidden" name="vh" value="'.$hmac.'">';
-                    }
-                ?>
-            <div id="test_box-container" class="home_responsive_test">
-                <?php
-                $currNav = "Visual Comparison";
-                include("testTypesNav.php");
-                ?>
-                <div id="visual_comparison" class="test_box">
-                    <div class="test-box-lede test_main_config">
-                      <div class="test_presets">
-                      <p class="h3">Enter multiple URLs to compare them against each other visually.</p>
-
-
-                      <input type="hidden" id="nextid" value="3">
-                        <div id="urls">
-                            <?php
-                            if ($tid) {
-                                $testPath = './' . GetTestPath($tid);
-                                $pageData = loadAllPageData($testPath);
-                                $url = trim($pageData[1][0]['URL']);
-                                $testInfo = GetTestInfo($tid);
-                                $label = trim($testInfo['label']);
-                                if (strlen($url)) {
-                                    echo '<div id="urldiv0" class="urldiv">';
-                                    echo "<input type=\"hidden\" id=\"tid\" name=\"tid\" value=\"$tid\">";
-                                    echo "<input type=\"hidden\" id=\"run\" name=\"run\" value=\"$run\">";
-                                    echo "<label for=\"tidlabel\">Label</label> <input id=\"tidlabel\" type=\"text\" name=\"tidlabel\" value=\"$label\" > ";
-                                    echo "<label for=\"tidurl\">URL</label> <input id=\"tidurl\" type=\"text\" value=\"$url\" disabled=\"disabled\"> ";
-                                    echo "<a href='#' onClick='return RemoveUrl(\"#urldiv0\");'>Remove</a>";
-                                    echo "</div>\n";
-                                }
-                            }
-                            ?>
-                            <div id="urldiv1" class="urldiv fieldrow">
-                                <label for="label1">Label</label> <input id="label1" type="text" required name="label[1]">
-                                <label for="url1">URL</label> <input id="url1" type="text" required name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}" >
-                                <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
-                            </div>
-                            <div id="urldiv2" class="urldiv fieldrow">
-                                <label for="label2">Label</label> <input id="label2" type="text" required name="label[2]">
-                                <label for="url2">URL</label> <input id="url2" type="text" required name="url[2]" onkeypress="if (event.keyCode == 32) {return false;}" >
-                                <a href='#' onClick='return RemoveUrl("#urldiv2");'>Remove</a>
-                            </div>
-                        </div>
-                        <button class="addBtn" onclick="return AddUrl();">Add URL</button>
-
-                        <ul class="input_fields">
-                        <?php
-                        if (isset($profiles) && is_array($profiles) && count($profiles)) {
-                            echo '<li>';
-                            echo '<label for="profile">Test Configuration:</label>';
-                            echo '<select name="profile" id="profile" onchange="profileChanged()">';
-                            foreach ($profiles as $name => $profile) {
-                                $selected = '';
-                                if ($name == $_COOKIE['testProfile']) {
-                                    $selected = 'selected';
-                                }
-                                echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
-                            }
-                            if (isset($lastGroup)) {
-                                echo "</optgroup>";
-                            }
-                            echo '</select>';
-                            echo '</li>';
-                            echo '<li id="description"></li>';
-                            echo '</ul>';
-                        }
-                        ?>
-
-
-                      <?php if ($is_paid) : ?>
-                          <div>
-                              <label for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
-                          </div>
-                      <?php endif; ?>
-
-                      </div>
-                      <div>
-                        <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
-                    </div>
-
-
-                    </div>
-                    <p class="footnote">For each URL, 3 first-view tests will be run from selected location and the median run will be used for comparison.
-                        If you would like to test with different settings, submit your tests individually from the
-                        <a href="/">main test page</a>.</p>
-                </div>
-
-                <script>
-                <?php
-                  echo "var profiles = " . json_encode($profiles) . ";\n";
-                ?>
-                var wptStorage = window.localStorage || {};
-                if (wptStorage['testrv'] != undefined)
-                  $('#rv').prop('checked', wptStorage['testrv']);
-                var rvChanged = function() {
-                  wptStorage['testrv'] = $('#rv').is(':checked');
+                    $hmac = sha1($hashStr);
+                    echo '<input type="hidden" name="vh" value="' . $hmac . '">';
                 }
+                ?>
+                <div id="test_box-container" class="home_responsive_test">
+                    <?php
+                    $currNav = "Visual Comparison";
+                    include("testTypesNav.php");
+                    ?>
+                    <div id="visual_comparison" class="test_box">
+                        <div class="test-box-lede test_main_config">
+                            <div class="test_presets">
+                                <p class="h3">Enter multiple URLs to compare them against each other visually.</p>
 
-                var profileChanged = function() {
-                  var sel = document.getElementById("profile");
-                  var txt = document.getElementById("description");
-                  var profile = sel.options[sel.selectedIndex].value;
-                  var description = "";
-                  if (profiles[profile] !== undefined) {
-                    var d = new Date();
-                    d.setTime(d.getTime() + (365*24*60*60*1000));
-                    document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
-                    if (profiles[profile]['description'] !== undefined)
-                      description = profiles[profile]['description'];
-                  }
-                  txt.innerHTML = description;
-                };
-                profileChanged();
-                </script>
+
+                                <input type="hidden" id="nextid" value="3">
+                                <div id="urls">
+                                    <?php
+                                    if ($tid) {
+                                        $testPath = './' . GetTestPath($tid);
+                                        $pageData = loadAllPageData($testPath);
+                                        $url = trim($pageData[1][0]['URL']);
+                                        $testInfo = GetTestInfo($tid);
+                                        $label = trim($testInfo['label']);
+                                        if (strlen($url)) {
+                                            echo '<div id="urldiv0" class="urldiv">';
+                                            echo "<input type=\"hidden\" id=\"tid\" name=\"tid\" value=\"$tid\">";
+                                            echo "<input type=\"hidden\" id=\"run\" name=\"run\" value=\"$run\">";
+                                            echo "<label for=\"tidlabel\">Label</label> <input id=\"tidlabel\" type=\"text\" name=\"tidlabel\" value=\"$label\" > ";
+                                            echo "<label for=\"tidurl\">URL</label> <input id=\"tidurl\" type=\"text\" value=\"$url\" disabled=\"disabled\"> ";
+                                            echo "<a href='#' onClick='return RemoveUrl(\"#urldiv0\");'>Remove</a>";
+                                            echo "</div>\n";
+                                        }
+                                    }
+                                    ?>
+                                    <div id="urldiv1" class="urldiv fieldrow">
+                                        <label for="label1">Label</label> <input id="label1" type="text" required name="label[1]">
+                                        <label for="url1">URL</label> <input id="url1" type="text" required name="url[1]" onkeypress="if (event.keyCode == 32) {return false;}">
+                                        <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
+                                    </div>
+                                    <div id="urldiv2" class="urldiv fieldrow">
+                                        <label for="label2">Label</label> <input id="label2" type="text" required name="label[2]">
+                                        <label for="url2">URL</label> <input id="url2" type="text" required name="url[2]" onkeypress="if (event.keyCode == 32) {return false;}">
+                                        <a href='#' onClick='return RemoveUrl("#urldiv2");'>Remove</a>
+                                    </div>
+                                </div>
+                                <button class="addBtn" onclick="return AddUrl();">Add URL</button>
+
+                                <ul class="input_fields">
+                                    <?php
+                                    if (isset($profiles) && is_array($profiles) && count($profiles)) {
+                                        echo '<li>';
+                                        echo '<label for="profile">Test Configuration:</label>';
+                                        echo '<select name="profile" id="profile" onchange="profileChanged()">';
+                                        foreach ($profiles as $name => $profile) {
+                                            $selected = '';
+                                            if ($name == $_COOKIE['testProfile']) {
+                                                $selected = 'selected';
+                                            }
+                                            echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
+                                        }
+                                        if (isset($lastGroup)) {
+                                            echo "</optgroup>";
+                                        }
+                                        echo '</select>';
+                                        echo '</li>';
+                                        echo '<li id="description"></li>';
+                                        echo '</ul>';
+                                    }
+                                    ?>
+
+
+                                    <?php if ($is_paid) : ?>
+                                        <div>
+                                            <label for="private"><input type="checkbox" name="private" id="private" class="checkbox"> Make Test Private <small>Private tests are only visible to your account</small></label>
+                                        </div>
+                                    <?php endif; ?>
+
+                            </div>
+                            <div>
+                                <?php if ($is_logged_in) : ?>
+                                    <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
+                                <?php endif; ?>
+                                <input type="submit" name="submit" value="Start Test &#8594;" class="start_test">
+                            </div>
+
+
+                        </div>
+                        <p class="footnote">For each URL, 3 first-view tests will be run from the selected location and the median run will be used for comparison.
+                            If you would like to test with different settings, submit your tests individually from the
+                            <a href="/">main test page</a>.
+                        </p>
+                    </div>
+
+                    <script>
+                        <?php
+                        echo "var profiles = " . json_encode($profiles) . ";\n";
+                        ?>
+                        var wptStorage = window.localStorage || {};
+                        if (wptStorage['testrv'] != undefined)
+                            $('#rv').prop('checked', wptStorage['testrv']);
+                        var rvChanged = function() {
+                            wptStorage['testrv'] = $('#rv').is(':checked');
+                        }
+
+                        var profileChanged = function() {
+                            var sel = document.getElementById("profile");
+                            var txt = document.getElementById("description");
+                            var profile = sel.options[sel.selectedIndex].value;
+                            var description = "";
+                            if (profiles[profile] !== undefined) {
+                                var d = new Date();
+                                d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+                                document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
+                                if (profiles[profile]['description'] !== undefined)
+                                    description = profiles[profile]['description'];
+                            }
+                            txt.innerHTML = description;
+                        };
+                        profileChanged();
+                    </script>
             </form>
-            </div><!--home_content_contain-->
-        </div><!--home_content-->
+        </div><!--home_content_contain-->
+    </div><!--home_content-->
 
 
 
-        <?php
-        include(__DIR__ . '/../include/home-subsections.inc');
-        ?>
-        <?php include('footer.inc'); ?>
-        </div>
+    <?php
+    include(__DIR__ . '/../include/home-subsections.inc');
+    ?>
+    <?php include('footer.inc'); ?>
+    </div>
 
     <script src="<?php echo $GLOBALS['cdnPath']; ?>/video/videotest.js"></script>
 </body>

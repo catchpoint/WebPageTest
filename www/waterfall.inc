@@ -1718,6 +1718,8 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
 {
     // create the image map (this is for fallback when JavaScript isn't enabled
     // but also gives us the position for each request)
+    global $request_context;
+
     $out = '<map name="waterfall_map_step' . $step . '">';
     $is_mime = (bool)GetSetting('mime_waterfalls', 1);
     if (strpos($waterfall_options, 'mime=1') !== false) {
@@ -1773,6 +1775,12 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         }
     }
 
+    $blockingButton = $request_context->isReadOnly() ? '' :
+        "<span id='blocking-button$stepSuffix'><input type='radio' id='radio6$stepSuffix' value='blocking$stepSuffix' name='radio'/><label for='radio6$stepSuffix'>Request Blocking</label></span>";
+
+    $blockingContent = $request_context->isReadOnly() ? '' :
+        "<div id='blocking$stepSuffix' class='dialog-tab-content request-blocking'></div>";
+
     $out .= <<<EOT
     <div id="request-dialog$stepSuffix" class="jqmDialog">
         <div id="dialog-header$stepSuffix" class="jqmdTC jqDrag">
@@ -1783,7 +1791,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
                 <span id="request-raw-details-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="request-raw-details$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Raw Details</label></span>
                 <span id="response-body-button$stepSuffix"><input type="radio" id="radio5$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio5$stepSuffix">Object</label></span>
-                <span id="blocking-button$stepSuffix"><input type="radio" id="radio6$stepSuffix" value="blocking$stepSuffix" name="radio" /><label for="radio6$stepSuffix">Request Blocking</label></span>
+                $blockingButton
             </div>
         </div>
         <div class="jqmdBC">
@@ -1793,7 +1801,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"><pre><code class="language-http" id="response-headers-code$stepSuffix"></code></pre></div>
                 <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre><code class="language-js" id="request-raw-details-json$stepSuffix"></code></pre></div>
                 <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
-                <div id="blocking$stepSuffix" class="dialog-tab-content request-blocking"></div>
+                $blockingContent
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>

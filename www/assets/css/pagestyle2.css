@@ -5158,13 +5158,14 @@ label.test_preset_profile {
 
 #simplemodal-overlay {
   background-color: #000;
+  z-index: 9999999 !important;
 }
 
 #simplemodal-container {
   background-color: #fff !important;
   padding: 5vh 5vw;
   position: fixed;
-  z-index: 9999999 !important;
+  z-index: 99999999 !important;
   height: 80vh !important;
   width: 80vw !important;
   left: 5vw !important;
@@ -5173,6 +5174,85 @@ label.test_preset_profile {
   overflow: auto !important;
   bottom: 5vh !important;
   border-radius: 1em;
+}
+
+#new-portal-dialog-container {
+  height: 312px !important;
+  max-height: 600px;
+  min-width: 400px;
+  width: 50vw !important;
+  max-width: 600px;
+  background-color: #fff !important;
+  padding: 20px;
+  position: fixed;
+  z-index: 99999999 !important;
+  overflow: auto !important;
+  border-radius: 10px;
+}
+
+#new-portal-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  height: 100%;
+}
+
+#new-portal-dialog .dialog-title {
+  color: #111;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+
+#new-portal-dialog .dialog-body {
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+#new-portal-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#new-portal-dialog .dialog-close-btn {
+  font-size: 1.4rem;
+  width: 1.4em;
+  height: 1.4em;
+  line-height: 1;
+  position: relative;
+  border: none;
+}
+
+#new-portal-dialog .simplemodal-close {
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  margin: 0;
+  font-size: 1.4rem;
+  width: 1.4em;
+  height: 1.4em;
+  line-height: 1;
+  text-indent: -999px;
+}
+
+#new-portal-dialog .simplemodal-close:before,
+#new-portal-dialog .simplemodal-close:after {
+  content: "";
+  height: 1em;
+  width: 0.1em;
+  top: 0.2em;
+  left: 0.65em;
+  background: #777;
+  position: absolute;
+  transform: rotate(-45deg);
+}
+
+#new-portal-dialog .simplemodal-close:after {
+  transform: rotate(45deg);
 }
 
 #simplemodal-container #advanced {

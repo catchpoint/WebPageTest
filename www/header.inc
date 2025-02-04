@@ -213,6 +213,7 @@ if (!EMBED) {
                 'DFW_US_P01' => 'US',
                 'MIA_US_P01' => 'US',
                 'NYC_US_P01' => 'US',
+                'CLE_US_P01' => 'US',
                 'LAX_US_P01' => 'US',
                 'SEA_US_P01' => 'US',
                 'PDX_US_P01' => 'US',
@@ -500,22 +501,6 @@ if (!EMBED) {
                         echo "<li><a href=\"$tabUrl\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" >Request Map<img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
                     }
                 }
-
-                // one dollar sign for every 500KB
-                if (!$lhOnly) {
-                    $dollars = "";
-                    $dollarcount = max(1, min(5, ceil($gradeRunResults->getStepResult(1)->getMetric("bytesIn") / (500 * 1024))));
-                    for ($i = 1; $i <= 5; $i++) {
-                        $dollars .= $i <= $dollarcount ? '$' : '-';
-                    }
-                    if (!$id) {
-                        $id = $testInfo->getId();
-                    }
-                    echo "<li><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world. (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" " .
-                        "href=\"https://whatdoesmysitecost.com/index.php?testID=$id\">Data Cost: $dollars <img src=\"/assets/images/icon-external.svg\" alt=\"\"></a></li>";
-                }
-
-
 
                 echo '</ul></nav></div>';
 
