@@ -406,7 +406,7 @@ $page_description = "Website performance test result$testLabel.";
                                 echo <<<EOT
                                 <details class="experiments_create">
                                     <summary class="grade_header" id="${key}">
-                                        <h3 class="grade_heading grade-${grade}">Create Experiments 12345</h3>
+                                        <h3 class="grade_heading grade-${grade}">Create Experiments</h3>
                                         <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
                                     </summary>
                                     <div class="experiments_bottlenecks">
