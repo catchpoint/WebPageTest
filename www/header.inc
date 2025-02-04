@@ -213,6 +213,7 @@ if (!EMBED) {
                 'DFW_US_P01' => 'US',
                 'MIA_US_P01' => 'US',
                 'NYC_US_P01' => 'US',
+                'CLE_US_P01' => 'US',
                 'LAX_US_P01' => 'US',
                 'SEA_US_P01' => 'US',
                 'PDX_US_P01' => 'US',
