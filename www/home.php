@@ -85,12 +85,8 @@ $is_paid = !is_null($user) && $user->isPaid();
 $is_free = !is_null($user) && $user->isFree();
 $is_anon = is_null($user) || $user->isAnon();
 
-if ($is_free) {
-    $max_runs = Util::getSetting('max_runs_free_user', 1);
-}
-
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
-$remaining_runs =  !is_null($user) ? $user->getRemainingRuns() : 150;
+$remaining_runs =  !is_null($user) ? $user->getRemainingRuns() : 300;
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
 
 $Timers->endTimer('status');
