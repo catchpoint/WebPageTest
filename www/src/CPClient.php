@@ -102,6 +102,11 @@ class CPClient
         return !!$this->access_token;
     }
 
+    public function getHost(): ?string
+    {
+        return $this->host;
+    }
+
     public function login(string $code, string $code_verifier, string $redirect_uri): AuthToken
     {
         if (is_null($this->client_id) || is_null($this->client_secret)) {
@@ -316,19 +321,19 @@ class CPClient
             return new Plan($options);
         }, $results->getData()['wptPlan'] ?? []);
 
-          $current_plans = array_filter($all_plans, function (Plan $plan) {
-              /** This is a bit of a hack for now. These are our approved plans for new
-               * customers to be able to use. We will better handle this from the backend
-               * */
-                return strtolower($plan->getId()) == 'ap5' ||
-                     strtolower($plan->getId()) == 'ap6' ||
-                     strtolower($plan->getId()) == 'ap7' ||
-                     strtolower($plan->getId()) == 'ap8' ||
-                     strtolower($plan->getId()) == 'mp5' ||
-                     strtolower($plan->getId()) == 'mp6' ||
-                     strtolower($plan->getId()) == 'mp7' ||
-                     strtolower($plan->getId()) == 'mp8';
-          });
+        $current_plans = array_filter($all_plans, function (Plan $plan) {
+            /** This is a bit of a hack for now. These are our approved plans for new
+             * customers to be able to use. We will better handle this from the backend
+             * */
+            return strtolower($plan->getId()) == 'ap5' ||
+                strtolower($plan->getId()) == 'ap6' ||
+                strtolower($plan->getId()) == 'ap7' ||
+                strtolower($plan->getId()) == 'ap8' ||
+                strtolower($plan->getId()) == 'mp5' ||
+                strtolower($plan->getId()) == 'mp6' ||
+                strtolower($plan->getId()) == 'mp7' ||
+                strtolower($plan->getId()) == 'mp8';
+        });
         $set = new PlanListSet();
         $set->setAllPlans(new PlanList(...$all_plans));
         $set->setCurrentPlans(new PlanList(...$current_plans));
@@ -1070,18 +1075,18 @@ class CPClient
     public function updatePaymentMethod(string $token, ShippingAddress $address): bool
     {
         $gql = (new Mutation('wptUpdateSubscriptionPayment'))
-        ->setVariables([
-          new Variable('paymentToken', 'String', true),
-          new Variable('shippingAddress', 'ChargifyAddressInputType', true)
-        ])
-        ->setArguments([
-          'paymentToken' => '$paymentToken',
-          'shippingAddress' => '$shippingAddress'
-        ]);
+            ->setVariables([
+                new Variable('paymentToken', 'String', true),
+                new Variable('shippingAddress', 'ChargifyAddressInputType', true)
+            ])
+            ->setArguments([
+                'paymentToken' => '$paymentToken',
+                'shippingAddress' => '$shippingAddress'
+            ]);
 
         $variables = [
-          'paymentToken' => $token,
-          'shippingAddress' => $address->toArray()
+            'paymentToken' => $token,
+            'shippingAddress' => $address->toArray()
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);

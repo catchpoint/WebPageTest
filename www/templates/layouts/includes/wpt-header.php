@@ -50,7 +50,7 @@ if ($id) {
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context)) && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
 $user = !is_null($request_context) ? $request_context->getUser() : null;
 
-if ($request_context->isReadOnly()) {
+if (isset($request_context) && $request_context->isReadOnly()) {
 
 ?>
     <wpt-header style='margin-bottom: -1rem;'>

@@ -275,34 +275,40 @@ final class CPClientTest extends TestCase
 
     public function testGetUser(): void
     {
-        $handler = $this->createMockResponse(200, '{
-            "data": {
-              "userIdentity": {
-                "id": 12345,
-                "activeContact": {
-                  "id": 263425,
-                  "firstName": "Alice",
-                  "lastName": "Bob",
-                  "email": "alicebob@catchpoint.com",
-                  "isWptPaidUser": true,
-                  "isWptAccountVerified": true,
-                  "companyName": null
-                },
-                "levelSummary": {
-                  "levelId": 3,
-                  "isWptEnterpriseClient": false
+        $handler = $this->createMockResponse(
+            200,
+            '{
+                "data": {
+                    "userIdentity": {
+                        "id": 12345,
+                        "activeContact": {
+                            "id": 263425,
+                            "firstName": "Alice",
+                            "lastName": "Bob",
+                            "email": "alicebob@catchpoint.com",
+                            "isWptPaidUser": true,
+                            "isWptAccountVerified": true,
+                            "companyName": null
+                        },
+                        "levelSummary": {
+                            "levelId": 3,
+                            "isWptEnterpriseClient": false
+                        }
+                    },
+                    "wptCustomer": {
+                        "remainingRuns": 300,
+                        "monthlyRuns": 3000,
+                        "subscriptionId": "518235",
+                        "planRenewalDate": "2125-12-25",
+                        "status": "ACTIVE",
+                        "vatNumber": null
+                    },
+                    "wptIsPreviewEnabled": {
+                        "enabled": false
+                    }
                 }
-              },
-              "wptCustomer": {
-                "remainingRuns": 300,
-                "monthlyRuns": 3000,
-                "subscriptionId": "518235",
-                "planRenewalDate": "2125-12-25",
-                "status": "ACTIVE",
-                "vatNumber": null
-              }
-            }
-            }');
+            }'
+        );
         $host = "http://webpagetest.org";
         $client = new CPClient($host, array(
             'auth_client_options' => [
@@ -513,18 +519,18 @@ final class CPClientTest extends TestCase
             }
           }');
 
-          $host = "http://webpagetest.org";
-          $client = new CPClient($host, array(
-              'auth_client_options' => [
-                  'client_id' => '123',
-                  'client_secret' => '345',
-                  'grant_type' => 'these are good to have',
-                  'handler' => $handler
-              ]
-          ));
+        $host = "http://webpagetest.org";
+        $client = new CPClient($host, array(
+            'auth_client_options' => [
+                'client_id' => '123',
+                'client_secret' => '345',
+                'grant_type' => 'these are good to have',
+                'handler' => $handler
+            ]
+        ));
 
-          $plans = $client->getWptPlans();
-          $this->assertEquals(3, count($plans));
+        $plans = $client->getWptPlans();
+        $this->assertEquals(3, count($plans));
     }
 
 
