@@ -155,7 +155,7 @@ class RequestContext
         return $this->environment;
     }
 
-    public function isReadOnly() : bool
+    public function isReadOnly(): bool
     {
         return $this->read_only;
     }
