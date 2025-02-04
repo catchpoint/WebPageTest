@@ -141,12 +141,9 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
 
                 <?php
-                $isSaaSTest = (stripos($id, '_saas_') !== false);
-                $isInstantTest = (stripos($id, '_instant_') !== false);
-                $isAdmin = isset($request_context) && $request_context->getUser()->isAdmin();
                 if (
                     !$headless && gz_is_file("$testPath/testinfo.json")
-                    && (!array_key_exists('published', $test['testinfo']) || (($isSaaSTest || $isInstantTest) && $isAdmin))
+                    && !array_key_exists('published', $test['testinfo'])
                     && ($isOwner || !$test['testinfo']['sensitive'])
                     && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type']))
                 ) {
