@@ -45,6 +45,7 @@ class CPClient
     public ?string $client_id;
     public ?string $client_secret;
     private ?string $access_token;
+    private ?string $host;
     private $handler; // For unit tests
 
     public function __construct(string $host, array $options = [])
@@ -99,6 +100,11 @@ class CPClient
     public function isAuthenticated(): bool
     {
         return !!$this->access_token;
+    }
+
+    public function getHost(): ?string
+    {
+        return $this->host;
     }
 
     public function login(string $code, string $code_verifier, string $redirect_uri): AuthToken
@@ -217,7 +223,11 @@ class CPClient
                         'planRenewalDate',
                         'nextBillingDate',
                         'status',
-                        'vatNumber'
+                        'vatNumber',
+                    ]),
+                (new Query('wptIsPreviewEnabled'))
+                    ->setSelectionSet([
+                        'enabled'
                     ])
             ]);
 
@@ -249,6 +259,8 @@ class CPClient
             $user->setOwnerId($data['userIdentity']['levelSummary']['levelId']);
             $user->setEnterpriseClient(!!$data['userIdentity']['levelSummary']['isWptEnterpriseClient']);
             $user->setVatNumber($data['wptCustomer']['vatNumber']);
+
+            $user->setNewPortalExperience($data['wptIsPreviewEnabled']['enabled']);
 
             return $user;
         } catch (GuzzleException $e) {
@@ -309,19 +321,19 @@ class CPClient
             return new Plan($options);
         }, $results->getData()['wptPlan'] ?? []);
 
-          $current_plans = array_filter($all_plans, function (Plan $plan) {
-              /** This is a bit of a hack for now. These are our approved plans for new
-               * customers to be able to use. We will better handle this from the backend
-               * */
-                return strtolower($plan->getId()) == 'ap5' ||
-                     strtolower($plan->getId()) == 'ap6' ||
-                     strtolower($plan->getId()) == 'ap7' ||
-                     strtolower($plan->getId()) == 'ap8' ||
-                     strtolower($plan->getId()) == 'mp5' ||
-                     strtolower($plan->getId()) == 'mp6' ||
-                     strtolower($plan->getId()) == 'mp7' ||
-                     strtolower($plan->getId()) == 'mp8';
-          });
+        $current_plans = array_filter($all_plans, function (Plan $plan) {
+            /** This is a bit of a hack for now. These are our approved plans for new
+             * customers to be able to use. We will better handle this from the backend
+             * */
+            return strtolower($plan->getId()) == 'ap5' ||
+                strtolower($plan->getId()) == 'ap6' ||
+                strtolower($plan->getId()) == 'ap7' ||
+                strtolower($plan->getId()) == 'ap8' ||
+                strtolower($plan->getId()) == 'mp5' ||
+                strtolower($plan->getId()) == 'mp6' ||
+                strtolower($plan->getId()) == 'mp7' ||
+                strtolower($plan->getId()) == 'mp8';
+        });
         $set = new PlanListSet();
         $set->setAllPlans(new PlanList(...$all_plans));
         $set->setCurrentPlans(new PlanList(...$current_plans));
@@ -1063,21 +1075,46 @@ class CPClient
     public function updatePaymentMethod(string $token, ShippingAddress $address): bool
     {
         $gql = (new Mutation('wptUpdateSubscriptionPayment'))
-        ->setVariables([
-          new Variable('paymentToken', 'String', true),
-          new Variable('shippingAddress', 'ChargifyAddressInputType', true)
-        ])
-        ->setArguments([
-          'paymentToken' => '$paymentToken',
-          'shippingAddress' => '$shippingAddress'
-        ]);
+            ->setVariables([
+                new Variable('paymentToken', 'String', true),
+                new Variable('shippingAddress', 'ChargifyAddressInputType', true)
+            ])
+            ->setArguments([
+                'paymentToken' => '$paymentToken',
+                'shippingAddress' => '$shippingAddress'
+            ]);
 
         $variables = [
-          'paymentToken' => $token,
-          'shippingAddress' => $address->toArray()
+            'paymentToken' => $token,
+            'shippingAddress' => $address->toArray()
         ];
 
         $results = $this->graphql_client->runQuery($gql, true, $variables);
         return $results->getData()['wptUpdateSubscriptionPayment'];
+    }
+
+    public function enablePortalPreview(bool $value)
+    {
+        try {
+            $gql = (new Mutation('wptPreviewEnable'))
+                ->setVariables([
+                    new Variable('wptPreviewEnable', 'WptPreviewEnableInputType', true),
+                ])
+                ->setArguments([
+                    'wptPreviewEnableRequest' => '$wptPreviewEnable'
+                ])
+                ->setSelectionSet([
+                    'enabled'
+                ]);
+
+            $variables = [
+                'wptPreviewEnable' => ['enable' => $value]
+            ];
+
+            $results = $this->graphql_client->runQuery($gql, true, $variables);
+            return $results->getData()['wptPreviewEnable']['enabled'];
+        } catch (BaseException $e) {
+            return false;
+        }
     }
 }

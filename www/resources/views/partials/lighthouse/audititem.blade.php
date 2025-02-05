@@ -4,7 +4,7 @@
             <div class="summary_text">
                 <div>
                     {!! md($audit->title) !!}
-                    @if($audit->relevantExperiment)
+                    @if($audit->relevantExperiment && !$is_read_only)
                         @include('partials.lighthouse.auditExperiment')
                     @endif
                 </div>

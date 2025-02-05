@@ -181,6 +181,10 @@ body.theme-b {
   content: ":";
 }
 
+.breadcrumbs {
+  margin-top: 1rem;
+}
+
 .billing-history {
   display: block;
   padding-top: 2em;
@@ -663,13 +667,13 @@ body.theme-b {
 /**
  * begin signup step 2
  */
-
 .signup-flow-layout * {
   box-sizing: border-box;
 }
 
 .signup-flow-layout body {
   display: block;
+  background-color: #141e33;
 }
 
 .signup-flow-layout header {
@@ -680,6 +684,18 @@ body.theme-b {
 .signup-flow-layout header .logo {
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   padding-bottom: 1.5rem;
+}
+
+
+.signup-flow-layout header ol {
+  height: auto;
+  max-height: 4.5rem;
+  padding-left: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 0;
+  padding-right: 1.5rem;
 }
 
 .signup-flow-layout header ol {
@@ -700,9 +716,18 @@ body.theme-b {
   font-weight: 700;
 }
 
+.signup-flow-layout header ol,
+.signup-flow-layout header .free-plan {
+  height: auto;
+  max-height: 4.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-right: 1.5rem;
+}
+
+
 @media (min-width: 37.5rem) {
   .signup-flow-layout header {
-    padding-left: 30px;
     display: flex;
     justify-content: flex-start;
   }
@@ -713,16 +738,33 @@ body.theme-b {
     margin: 1em 0;
   }
 
-  .signup-flow-layout header ol {
-    margin-left: 0;
-  }
-
+  .signup-flow-layout header ol,
   .signup-flow-layout header .free-plan {
     margin-left: 0;
+    margin-top: 0rem;
+    margin-bottom: 1rem;
   }
 }
 
-@media (min-width: 86.25rem) {
+@media (min-width: 50em) {
+  .signup-flow-layout header ol,
+  .signup-flow-layout header .free-plan {
+    padding-right: 3rem;
+  }
+}
+
+@media (min-width: 86em) {
+
+  .signup-flow-layout header ol,
+  .signup-flow-layout header .free-plan {
+    margin: 0;
+    position: relative;
+    height: 6rem;
+    max-height: 6rem;
+    top: 0.75rem;
+    padding-right: 1rem;
+  }
+
   .signup-flow-layout header ol {
     margin-left: calc(50vw - 43.4375rem);
   }
@@ -927,29 +969,17 @@ a.button {
 /*
  * End signup step 2
  */
-.signup-flow-layout wpt-header,
-.signup-flow-layout header {
-  background: #141e33;
+.signup-flow-layout wpt-header {
+  background-color: #141e33;
 }
+
 .signup-flow-layout header {
-  padding-left: 0;
-  margin-bottom: 0;
-}
-.signup-flow-layout header {
-  padding-left: 0;
   margin-bottom: 0;
 }
 
 .signup-flow-layout header .logo {
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   padding-bottom: 1.5rem;
-}
-
-.signup-flow-layout header ol {
-  padding-left: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
 }
 
 .signup-flow-layout header li {
@@ -976,7 +1006,6 @@ a.button {
 
 @media (min-width: 600px) {
   .signup-flow-layout header {
-    padding-left: 30px;
     display: flex;
     justify-content: flex-start;
   }

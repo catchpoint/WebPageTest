@@ -10,6 +10,8 @@ use WebPageTest\Util;
 use WebPageTest\Util\SettingsFileReader;
 use WebPageTest\Util\Timers;
 
+RedirectIfReadOnly();
+
 $Timers = new Timers();
 // see if we are overriding the max runs
 $max_runs = GetSetting('maxruns', 9);
@@ -76,14 +78,21 @@ $loc = ParseLocations($locations);
 $Timers->endTimer('loc');
 
 $Timers->startTimer('status');
+
 // Is the user a logged in and paid user?
-$is_paid = isset($request_context) && !is_null($request_context->getUser()) && $request_context->getUser()->isPaid();
+$user = isset($request_context) && !is_null($request_context->getUser()) ? $request_context->getUser() : null;
+$is_paid = !is_null($user) && $user->isPaid();
+$is_free = !is_null($user) && $user->isFree();
+$is_anon = is_null($user) || $user->isAnon();
+
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());
-$remaining_runs =  (isset($request_context) && !is_null($request_context->getUser())) ? $request_context->getUser()->getRemainingRuns() : 300;
+$remaining_runs =  !is_null($user) ? $user->getRemainingRuns() : 300;
 $hasNoRunsLeft = $is_logged_in ? (int)$remaining_runs <= 0 : false;
+
 $Timers->endTimer('status');
 
 header('Server-Timing: ' . $Timers->getTimers());
+
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -119,14 +128,14 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
         <div class="home_content">
             <?php
             if (!$headless) {
-                ?>
+            ?>
                 <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this, <?= $remaining_runs; ?>)">
                     <input type="hidden" name="lighthouseTrace" value="1">
                     <input type="hidden" name="lighthouseScreenshots" value="1">
 
                     <?php if (isset($req_cc)) {
                         $ccInputState = " checked ";
-                        ?>
+                    ?>
                         <input type="hidden" name="carbon_control_redirect" value="1">
                     <?php } else {
                         $ccInputState = "";
@@ -275,7 +284,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 <div class="test_presets_easy_checks">
                                                     <div class="fieldrow" id="description"></div>
                                                     <div class="fieldrow">
-                                                            <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>).</small></label>
+                                                        <label for="inc-cc-simple"><input type="checkbox" name="carbon_control" id="inc-cc-simple" <?php echo $ccInputState; ?> class="checkbox"> Run Carbon Control <small>(Experimental: Measures carbon footprint. <em>Chromium browsers only</em>).</small></label>
                                                     </div>
                                                     <div class="fieldrow">
                                                         <label for="rv"><input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()"> Include Repeat View <small>(Loads the page, closes the browser and then loads the page again)</small></label>
@@ -288,17 +297,18 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             let lhSimpleFields = document.querySelector('[for=lighthouse-simple]');
                                                             let ccSimpleField = document.querySelector('[for=inc-cc-simple]');
                                                             let lhSimpleCheck = lhSimpleFields.querySelector('input');
-                                                            function enableDisableLHSimple(){
-                                                              let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
-                                                              if(checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')){
-                                                                  ccSimpleField.style.display = "block";
-                                                                  lhSimpleFields.style.display = "block";
-                                                                  lhSimpleCheck.disabled = false;
-                                                              } else {
-                                                                  ccSimpleField.style.display = "none";
-                                                                  lhSimpleFields.style.display = "none";
-                                                                  lhSimpleCheck.disabled = true;
-                                                              }
+
+                                                            function enableDisableLHSimple() {
+                                                                let checkedPreset = simplePresets.querySelector('input[type=radio]:checked');
+                                                                if (checkedPreset.parentElement.querySelector('img[alt*="chrome"]') || checkedPreset.parentElement.querySelector('img[alt*="edge"]')) {
+                                                                    ccSimpleField.style.display = "block";
+                                                                    lhSimpleFields.style.display = "block";
+                                                                    lhSimpleCheck.disabled = false;
+                                                                } else {
+                                                                    ccSimpleField.style.display = "none";
+                                                                    lhSimpleFields.style.display = "none";
+                                                                    lhSimpleCheck.disabled = true;
+                                                                }
                                                             }
                                                             enableDisableLHSimple();
                                                             simplePresets.addEventListener("click", enableDisableLHSimple);
@@ -402,14 +412,12 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                     <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                                                     <span class="cleared"></span>
                                                 </div>
-
                                             </div>
                                             <div>
                                                 <?php if ($is_logged_in) : ?>
                                                     <small class="test_runs <?= $hasNoRunsLeft  ? 'test_runs-warn' : ''; ?>"><span><?= $remaining_runs; ?> Runs Left</span> | <a href="/account">Upgrade</a></small>
                                                 <?php endif; ?>
                                                 <input type="submit" name="submit" value="Start Test &#8594;" class="start_test" <?= $hasNoRunsLeft ? 'aria-disabled disabled' : ''; ?>>
-
                                             </div>
                                         </li>
                                     </ul>
@@ -549,7 +557,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         ?>
                                                         <label for="viewBoth"><input id="viewBoth" type="radio" name="fvonly" <?php if (!$fvOnly) {
                                                                                                                                     echo 'checked=checked';
-                                                                                                                              } ?> value="0">First View and Repeat View</label>
+                                                                                                                                } ?> value="0">First View and Repeat View</label>
                                                         <label for="viewFirst"><input id="viewFirst" type="radio" name="fvonly" <?php if ($fvOnly) {
                                                                                                                                     echo 'checked=checked';
                                                                                                                                 } ?> value="1">First View Only</label>
@@ -643,11 +651,11 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                         <label for="full_size_video" class="auto_width">
                                                             <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if (GetSetting('fullSizeVideoDefault')) {
                                                                                                                                                     echo 'checked=checked';
-                                                                                                                                              } ?> style="float: left;width: auto;">
+                                                                                                                                                } ?> style="float: left;width: auto;">
                                                             Capture Full Size Video<br>
                                                             <small>Enables full size screenshots in the filmstrip</small>
                                                         </label>
-                                                <?php } ?>
+                                                    <?php } ?>
                                                     <li>
                                                         <label for="time">
                                                             Minimum test duration<br>
@@ -689,7 +697,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                         <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
                                             <ul class="input_fields">
                                                 <li>
-                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced"  <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint.)</small></label>
+                                                    <label for="inc-cc-advanced"><input type="checkbox" name="carbon_control" id="inc-cc-advanced" <?php echo $ccInputState; ?> class="checkbox">Run Carbon Control <small>(Experimental: Measures carbon footprint.)</small></label>
                                                 </li>
                                                 <li>
                                                     <label for="lighthouse-advanced" class="auto_width">
@@ -745,7 +753,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 </li>
                                                 <?php
                                                 if ($admin && GetSetting('wprDesktop')) {
-                                                    ?>
+                                                ?>
                                                     <li>
 
                                                         <label for="wprDesktop" class="auto_width">
@@ -754,10 +762,10 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 if ($admin && GetSetting('wprMobile')) {
-                                                    ?>
+                                                ?>
                                                     <li>
                                                         <label for="wprMobile" class="auto_width">
                                                             <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox">
@@ -765,7 +773,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                                         </label>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 ?>
                                                 <li>
@@ -785,7 +793,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 <?php
                                                 $extensions = SettingsFileReader::getExtensions();
                                                 if ($extensions) {
-                                                    ?>
+                                                ?>
                                                     <li>
                                                         <label for="extensions">
                                                             Enable extension<br>
@@ -799,7 +807,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                             ?>
                                                             <select>
                                                     </li>
-                                                    <?php
+                                                <?php
                                                 }
                                                 ?>
                                             </ul>
@@ -915,10 +923,10 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                                                 </script>
                                             </p>
                                             <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
-                                            if (array_key_exists('spof', $_REQUEST)) {
-                                                echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
-                                            }
-                                            ?></textarea>
+                                                                                                    if (array_key_exists('spof', $_REQUEST)) {
+                                                                                                        echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                                                                                    }
+                                                                                                    ?></textarea>
                                         </div>
 
                                         <div id="custom-metrics" class="test_subbox ui-tabs-hide">
@@ -1002,7 +1010,7 @@ if (!is_null($request_context->getUser()) && $request_context->getUser()->isPaid
                         </div>
                     </div>
                 </form>
-                <?php
+            <?php
                 if (is_file('settings/intro.inc')) {
                     include('settings/intro.inc');
                 }

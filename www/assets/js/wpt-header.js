@@ -15,7 +15,7 @@ class WptHeader extends HTMLElement {
   }
   _init() {
     this.menubtn = this.querySelector(".wptheader_menubtn");
-    this.menu = this.menubtn.closest("details");
+    this.menu = this.menubtn ? this.menubtn.closest("details") : null;
     this.details = this.querySelectorAll("nav details");
     let that = this;
     this.headerLayoutChange = getComputedStyle(
@@ -60,6 +60,10 @@ class WptHeader extends HTMLElement {
     return getComputedStyle(this.menubtn).display;
   }
   updateMenuAttrs(e) {
+    if (!this.menu) {
+      return;
+    }
+
     if (e.matches) {
       this.menu.open = true;
     } else {
@@ -71,3 +75,14 @@ class WptHeader extends HTMLElement {
 if ("customElements" in window) {
   customElements.define("wpt-header", WptHeader);
 }
+
+function OpenNewPortalDialog() {
+  $("#new-portal-dialog").modal({
+    opacity: 80,
+    overlayClose: true,
+    containerId: 'new-portal-dialog-container',
+    minWidth: 500,
+    maxWidth: 500
+  });
+  return false;
+};

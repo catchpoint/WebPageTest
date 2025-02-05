@@ -19,7 +19,7 @@ The reason for failure on WSL2 is because WSL2 does not have the network interfa
 Clone the project
 
 ```bash
-  git clone https://github.com/WPO-Foundation/webpagetest.git
+  git clone https://github.com/catchpoint/WebPageTest.git
 ```
 Go to the project directory
 
@@ -53,7 +53,7 @@ Since the Webpagetest container is packaged with an agent, we first need to stop
   #### ####
 ```
 
-Then follow the guide on how to install Wptagent (https://github.com/WPO-Foundation/wptagent). Once the Agent is working, which can be confirmed by running a local test with...
+Then follow the guide on how to install [Wpt Agent](https://github.com/catchpoint/WebPageTest.agent). Once the Agent is working, which can be confirmed by running a local test with...
 
 ```bash
     python3 wptagent.py -vvvv --xvfb --testurl www.google.com --shaper none #Shaper doesn't work with my instance
@@ -78,7 +78,7 @@ Adjusting Webpagetest Keys? Adjust them here
 `docker/local/wptconfig/keys.ini`
 
 Looking for more information setting up? Check Out 
- - `https://github.com/WPO-Foundation/wptserver-install`
+ - `https://github.com/catchpoint/WebPageTest.server-install`
  - `https://www.robinosborne.co.uk/2021/12/22/automate-your-webpagetest-private-instance-with-terraform-2021-edition/`
 
 

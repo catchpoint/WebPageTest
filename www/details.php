@@ -70,26 +70,18 @@ function createForm($formName, $btnText, $id, $owner, $secret)
     $tab = 'Test Result';
     $subtab = 'Details';
     include 'header.inc';
-
     ?>
 
     <div class="results_main_contain">
         <div class="results_main">
-
-
             <div class="results_and_command">
-
                 <div class="results_header">
                     <h2>Requests Details</h2>
                     <p>Use this page to explore the metric timings and request waterfall for any run of your test.</p>
                 </div>
-
-
             </div>
 
-
             <div id="result" class="results_body">
-
                 <?php
                 echo '<h3 class="hed_sub">Page Performance Metrics <em>(Run ' . $run . ($cached ? ', Repeat View' : '') . ')</em></h3>';
 
@@ -123,7 +115,6 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 }
                 ?>
 
-
                 <?php
                 $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
                 $htmlTable->disableColumns(array(
@@ -138,6 +129,7 @@ function createForm($formName, $btnText, $id, $owner, $secret)
                 ));
                 echo $htmlTable->create(true);
                 ?>
+
                 <?php
                 // Full custom metrics
                 $customPageData = @$pageData[$run][$cached]['custom'];
@@ -245,6 +237,8 @@ function createForm($formName, $btnText, $id, $owner, $secret)
     </div>
     </div>
 
+    <?php if (!$request_context->isReadOnly()): ?>
+
     <div id="requestBlockingSettings" class="inactive">
         <?php
         if (
@@ -262,6 +256,9 @@ function createForm($formName, $btnText, $id, $owner, $secret)
         }
         ?>
     </div>
+
+    <?php endif; ?>
+
     <?php
     if ($isMultistep) {
         echo '<script src="/assets/js/jk-navigation.js"></script>';
@@ -420,8 +417,6 @@ function createForm($formName, $btnText, $id, $owner, $secret)
             handleRequestHash();
         }
 
-
-
         // init existing snippets
         $(document).ready(function() {
             initDetailsTable($(document));
@@ -439,5 +434,4 @@ function createForm($formName, $btnText, $id, $owner, $secret)
     </script>
 
 </body>
-
 </html>

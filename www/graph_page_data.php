@@ -18,7 +18,7 @@ $compTests = explode(',', $tests);
 $testsId = array(); // Test IDs
 $testsLabel = array(); // String labels corresponding to the test IDs.
 // TODO(geening): Handle the same parameters as supported in the filmstrip view.
-// https://github.com/WPO-Foundation/webpagetest/blob/master/www/video/filmstrip.inc.php#L17
+// https://github.com/catchpoint/WebPageTest/blob/master/www/video/filmstrip.inc.php#L17
 foreach ($compTests as $t) {
     $parts = explode('-', $t);
     $testsId[] = $parts[0];

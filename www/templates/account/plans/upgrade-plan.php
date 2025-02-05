@@ -8,7 +8,7 @@
         <h1>Update Plan</h1>
         <?php if ($is_paid) : ?>
             <div class="contact-support-button">
-              <a href="<?= $support_link ?>"><span>Contact Support</span></a>
+                <a href="<?= $support_link ?>"><span>Contact Support</span></a>
             </div>
         <?php endif; ?>
     </div>
@@ -103,7 +103,7 @@
                     </th>
                     <th scope="col" class="expert-plan">
                         <div class="expert-plan-header">
-                            <div class="signup-special-price">Limited-time <br/>special price</div>
+                            <div class="signup-special-price">Limited-time <br />special price</div>
                             <div>
                                 <div class="heading"><span>Expert</span></div>
                                 <span class="upsell">Starting from 10M pageviews (RUM) + 30K runs/month</span>
@@ -253,21 +253,21 @@
                 </tr>
 
                 <?php if (GetSetting('traceroute_enabled')): ?>
-                <tr>
-                    <th scope="col">Traceroute</th>
-                    <td>
-                        <i class="icon check" aria-hidden="true"></i>
-                        <span class="visually-hidden">Yes</span>
-                    </td>
-                    <td>
-                        <i class="icon check" aria-hidden="true"></i>
-                        <span class="visually-hidden">Yes</span>
-                    </td>
-                    <td>
-                        <i class="icon check" aria-hidden="true"></i>
-                        <span class="visually-hidden">Yes</span>
-                    </td>
-                </tr>
+                    <tr>
+                        <th scope="col">Traceroute</th>
+                        <td>
+                            <i class="icon check" aria-hidden="true"></i>
+                            <span class="visually-hidden">Yes</span>
+                        </td>
+                        <td>
+                            <i class="icon check" aria-hidden="true"></i>
+                            <span class="visually-hidden">Yes</span>
+                        </td>
+                        <td>
+                            <i class="icon check" aria-hidden="true"></i>
+                            <span class="visually-hidden">Yes</span>
+                        </td>
+                    </tr>
                 <?php endif; ?>
 
                 <tr>

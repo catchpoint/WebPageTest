@@ -18,10 +18,13 @@ require_once INCLUDES_PATH . '/include/TestResults.php';
 require_once INCLUDES_PATH . '/include/RunResultHtmlTable.php';
 require_once INCLUDES_PATH . '/include/TestResultsHtmlTables.php';
 
+$isReadOnly = $request_context->isReadOnly();
+
 // if this is an experiment itself, we don't want to offer opps on it, so we redirect to the source test's opps page.
 if ($experiment && isset($experimentOriginalExperimentsHref)) {
     header('Location: ' . $experimentOriginalExperimentsHref);
 }
+
 
 $breakdown = array();
 $testComplete = true;
@@ -43,6 +46,7 @@ $page_keywords = array('Results','WebPageTest','Website Speed Test','Page Speed'
 $page_description = "Website performance test result$testLabel.";
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
@@ -60,29 +64,30 @@ $page_description = "Website performance test result$testLabel.";
                 margin-right: 0.4em;
             }
         </style>
-        <?php if (!$testComplete) {
-            $autoRefresh = true;
-            ?>
+        <?php if (!$testComplete): ?>
+        <?php $autoRefresh = true; ?>
+
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
-        <?php } ?>
+
+        <?php endif; ?>
         <?php
         $useScreenshot = true;
         $socialTitle = "WebPageTest Opportunities & Experiments";
         $socialDesc = "Check out these opportunities for improvement identified by WebPageTest";
+        $tab = 'Test Result';
+        $subtab = 'Opportunities & Experiments';
 
-        require_once 'head.inc'; ?>
+        require_once 'head.inc';
+        ?>
     </head>
-    <body class="result result-opportunities <?php if ($req_screenshot) {
-        echo ' screenshot';
-                                             } ?>">
-            <?php
-            $tab = 'Test Result';
-            $subtab = 'Opportunities & Experiments';
+    <body class="result result-opportunities <?php if ($req_screenshot) { echo ' screenshot'; } ?>">
+        <?php
+
             require_once INCLUDES_PATH . '/header.inc';
             ?>
-            <div class="results_main_contain">
+        <div class="results_main_contain">
             <div class="results_main">
 
             <div id="result">
@@ -112,34 +117,28 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
 
 
-            <div id="average">
-
-            <div class="results_and_command">
-                <div class="results_header results_header-experiments">
-                    <h2>Opportunities &amp; Experiments <em class="flag">New</em></h2>
-                    <p>WebPageTest helps identify opportunities to improve a site's experience. Select one or more No-Code Experiments below and submit to test their impact.</p>
-                </div>
-
-
-
-            </div>
+                <div id="average">
+                    <div class="results_and_command">
+                        <div class="results_header results_header-experiments">
+                            <h2>Opportunities &amp; Experiments <em class="flag">New</em></h2>
+                            <p>WebPageTest helps identify opportunities to improve a site's experience. Select one or more No-Code Experiments below and submit to test their impact.</p>
+                        </div>
+                    </div>
 
 
 
                 <?php
-                    $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
-                    $requests = $testStepResult->getRequests();
+                $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
+                $requests = $testStepResult->getRequests();
 
+                include INCLUDES_PATH . '/experiments/common.inc';
+                include INCLUDES_PATH . '/experiments/summary.inc';
 
-                    include INCLUDES_PATH . '/experiments/common.inc';
-
-                    include INCLUDES_PATH . '/experiments/summary.inc';
                 if ($experiment) {
                     $moreExperimentsLink = false;
                     include INCLUDES_PATH . '/experiments/meta.inc';
                 }
                 ?>
-
 
                 <?php
                 if (
@@ -179,15 +178,14 @@ $page_description = "Website performance test result$testLabel.";
                     // used for tracking exp access
                     $expCounter = 0;
 
-
-
                     function observationHTML($parts)
                     {
                         global $expCounter;
                         global $test;
                         global $experiments_paid;
                         global $experiments_logged_in;
-                        $allowedFreeExperimentIds = array('001','020');
+                        global $isReadOnly;
+                        $allowedFreeExperimentIds = [ '001','020' ];
 
                         $bottleneckTitle = $parts["title"];
 
@@ -311,7 +309,9 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= '</details>';
                                     }
                                     if ($exp->expvar) {
-                                        if ($experimentEnabled) {
+                                        if ($isReadOnly) {
+                                            $out .= '</div>';
+                                        } else if ($experimentEnabled) {
                                             $out .= <<<EOT
                                             </div>
                                             <div class="experiment_description_go">
@@ -323,7 +323,9 @@ $page_description = "Website performance test result$testLabel.";
                                         }
                                     }
                                 } elseif ($exp->expvar && !$exp->expval && $exp->expfields) {
-                                    if ($experimentEnabled) {
+                                    if ($isReadOnly) {
+                                        $out .= '</div>';
+                                    } else if ($experimentEnabled) {
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go experiment_description_go-multi">
@@ -349,7 +351,9 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= $upgradeLink;
                                     }
                                 } elseif ($exp->expvar && !$exp->expval && $textinput) {
-                                    if ($experimentEnabled) {
+                                    if ($isReadOnly) {
+                                        $out .= '</div>';
+                                    } else if ($experimentEnabled) {
                                         $placeholderEncodedVal = htmlentities('<script src="https://example.com/test.js"></script>');
                                         $textinputvalue = $exp->textinputvalue ? $exp->textinputvalue : "";
                                         $fullscreenfocus = $exp->fullscreenfocus ? "true" : "false";
@@ -364,7 +368,9 @@ $page_description = "Website performance test result$testLabel.";
                                         $out .= $upgradeLink;
                                     }
                                 } elseif ($exp->expvar && !$exp->expval) {
-                                    if ($experimentEnabled) {
+                                    if ($isReadOnly) {
+                                        $out .= '</div>';
+                                    } else if ($experimentEnabled) {
                                         $out .= <<<EOT
                                         </div>
                                         <div class="experiment_description_go">
@@ -386,12 +392,6 @@ $page_description = "Website performance test result$testLabel.";
                         return $out;
                     }
 
-
-
-
-
-
-
                     // write out the observations HTML
                     foreach ($assessment as $key => $cat) {
                         $grade = $cat["grade"];
@@ -402,36 +402,33 @@ $page_description = "Website performance test result$testLabel.";
                         $bad = $cat["num_recommended"];
                         $good = $opps - $bad;
                         if ($key === "Custom") {
+                            if (!$isReadOnly) {
+                                echo <<<EOT
+                                <details class="experiments_create">
+                                    <summary class="grade_header" id="${key}">
+                                        <h3 class="grade_heading grade-${grade}">Create Experiments</h3>
+                                        <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
+                                    </summary>
+                                    <div class="experiments_bottlenecks">
+                                        <ol>
+                                EOT;
+                                foreach ($cat["opportunities"] as $opportunity) {
+                                    echo observationHTML($opportunity);
+                                }
+                                echo '</ol></div></details>';    
+                            }
+                        } else {
                             echo <<<EOT
-                            <details class="experiments_create">
-                            <summary class="grade_header" id="${key}">
-                                <h3 class="grade_heading grade-${grade}">Create Experiments</h3>
+                            <div class="grade_header" id="${key}">
+                                <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
                                 <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
-                            </summary>
+                            </div>
                             <div class="experiments_bottlenecks">
+                                <p>WebPageTest ran ${opps} diagnostic checks related to this category and found ${bad} opportunities.</p>
                                 <ol>
-
                             EOT;
                             foreach ($cat["opportunities"] as $opportunity) {
                                 echo observationHTML($opportunity);
-                            }
-                            echo '</ol></div></details>';
-                        } else {
-                            echo <<<EOT
-
-                        <div class="grade_header" id="${key}">
-                            <h3 class="grade_heading grade-${grade}">Is it ${key}?</h3>
-                            <p class="grade_summary"><strong>${sentiment}</strong> ${summary}</p>
-                        </div>
-                        <div class="experiments_bottlenecks">
-                            <p>WebPageTest ran ${opps} diagnostic checks related to this category and found ${bad} opportunities.</p>
-                            <ol>
-
-                        EOT;
-
-
-                            foreach ($cat["opportunities"] as $opportunity) {
-                                  echo observationHTML($opportunity);
                             }
                             echo '</ol></div>';
                         }
@@ -440,114 +437,125 @@ $page_description = "Website performance test result$testLabel.";
                     $numRuns = $test['test']['runs'];
                     $fvonly = $test['testinfo']['fvonly'];
 
+                    if (!$isReadOnly) {
+                        ?>
+                        <div class="experiments_foot">
+                            <div>
+                                <p>
+                                    <span class="exps-active"></span>
+                                </p>
+                                <p class="exps-runcount">
+                                    <label>
+                                        Experiment Runs:
+                                        <input type="hidden" name="fvonly" value="'<?php echo $fvonly; ?>'" required="">
+                                        <input type="number" min="1" max="9" class="text short" name="runs" value="<?php echo $numRuns; ?>" required="">
+                                        <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small>
+                                    </label>
+                                </p>
+                            </div>
 
-                    echo '<div class="experiments_foot">
-                    <div><p><span class="exps-active"></span> </p>
-                    <p class="exps-runcount"><label>Experiment Runs: <input type="hidden" name="fvonly" value="' . $fvonly . '" required=""><input type="number" min="1" max="9" class="text short" name="runs" value="' . $numRuns . '" required=""> <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small></label></p>
-                    </div>';
+                            <input type="hidden" name="assessment" value="'<?php echo urlencode(json_encode($assessment, JSON_UNESCAPED_SLASHES)) ?>'">
+                            <input type="submit" value="Re-Run Test with Experiments">
 
-                    echo '<input type="hidden" name="assessment" value="' . urlencode(json_encode($assessment, JSON_UNESCAPED_SLASHES)) . '">';
-
-                    echo '<input type="submit" value="Re-Run Test with Experiments">';
-                    echo "\n</div></div></form>\n";
+                            </div>
+                        </div>
+                        <?php
+                    }
                 }
-                ?>
+            }
 
-
-            <?php } ?>
-
-            <?php require 'footer.inc'; ?>
-        </div>
-        </div>
-        </div>
-        <script type="text/javascript" src="/assets/js/jk-navigation.js"></script>
-        <script type="text/javascript">
-            addJKNavigation("tr.stepResultRow");
-            // collapse later opps
-            document.querySelectorAll("li:not(.experiments_details-bad,.experiments_details-neutral)").forEach(deet => {
-                deet.open = false;
-            });
-        </script>
-
-        <?php
-
-
-        if (!$testComplete) {
-            echo "<script type=\"text/javascript\">\n";
-            echo "var testId = '$id';\n";
+            require 'footer.inc';
             ?>
-            // polyfill performance.now
-            if ("performance" in window == false) {
-                window.performance = {};
-            }
-            Date.now = (Date.now || function () {  // thanks IE8
-              return new Date().getTime();
-            });
-            if ("now" in window.performance == false){
-              var nowOffset = Date.now();
-              if (performance.timing && performance.timing.navigationStart){
-                nowOffset = performance.timing.navigationStart
-              }
-              window.performance.now = function now(){
-                return Date.now() - nowOffset;
-              }
-            }
-            var lastUpdate = window.performance.now();
-            function UpdateStatus(){
-                var now = window.performance.now();
-                var elapsed = now - lastUpdate;
-                lastUpdate = now;
-                if (elapsed < 0 || elapsed > 10000) {
-                  try {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
-                    xhr.onreadystatechange = function() {
-                      if (xhr.readyState != 4)
-                        return;
-                      var reload = false;
-                      if (xhr.status == 200) {
-                          var response = JSON.parse(xhr.responseText);
-                          if (response['statusCode'] != undefined) {
-                              if (response['statusCode'] == 100) {
-                                  if (response['data'] != undefined &&
-                                      availableTests != undefined &&
-                                      response.data['testsCompleted'] != undefined &&
-                                      response.data['testsCompleted'] > availableTests)
-                                      reload = true;
-                              } else
-                                  reload = true;
-                          }
-                      }
-                      if (reload) {
-                          window.location.reload(true);
-                      } else {
-                          setTimeout('UpdateStatus()', 15000);
-                      }
-                    };
-                    xhr.onerror = function() {
-                      setTimeout('UpdateStatus()', 15000);
-                    };
-                    xhr.send();
-                  } catch (err) {
-                      setTimeout('UpdateStatus()', 15000);
-                  }
-                } else {
-                  setTimeout('UpdateStatus()', 15000);
-                }
-            }
-            setTimeout('UpdateStatus()', 15000);
 
+        </div>
+    </div>
+</div>
 
+<script type="text/javascript" src="/assets/js/jk-navigation.js"></script>
 
+<script type="text/javascript">
+    addJKNavigation("tr.stepResultRow");
 
+    // collapse later opps
+    document.querySelectorAll("li:not(.experiments_details-bad,.experiments_details-neutral)").forEach(deet => {
+        deet.open = false;
+    });
+</script>
 
+<?php
+if (!$testComplete):
+?>
 
+<script type="text/javascript">
+    var testId = '<?php echo $id ?>';
 
-          </script>
-            <?php
+    // polyfill performance.now
+    if ("performance" in window == false) {
+        window.performance = {};
+    }
+
+    Date.now = (Date.now || function () {  // thanks IE8
+        return new Date().getTime();
+    });
+
+    if ("now" in window.performance == false){
+        var nowOffset = Date.now();
+        if (performance.timing && performance.timing.navigationStart){
+        nowOffset = performance.timing.navigationStart
         }
-        ?>
+        window.performance.now = function now(){
+        return Date.now() - nowOffset;
+        }
+    }
+    var lastUpdate = window.performance.now();
+    function UpdateStatus(){
+        var now = window.performance.now();
+        var elapsed = now - lastUpdate;
+        lastUpdate = now;
+        if (elapsed < 0 || elapsed > 10000) {
+            try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState != 4)
+                return;
+                var reload = false;
+                if (xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response['statusCode'] != undefined) {
+                        if (response['statusCode'] == 100) {
+                            if (response['data'] != undefined &&
+                                availableTests != undefined &&
+                                response.data['testsCompleted'] != undefined &&
+                                response.data['testsCompleted'] > availableTests)
+                                reload = true;
+                        } else
+                            reload = true;
+                    }
+                }
+                if (reload) {
+                    window.location.reload(true);
+                } else {
+                    setTimeout('UpdateStatus()', 15000);
+                }
+            };
+            xhr.onerror = function() {
+                setTimeout('UpdateStatus()', 15000);
+            };
+            xhr.send();
+            } catch (err) {
+                setTimeout('UpdateStatus()', 15000);
+            }
+        } else {
+            setTimeout('UpdateStatus()', 15000);
+        }
+    }
+    setTimeout('UpdateStatus()', 15000);
+</script>
 
+<?php
+endif;
+?>
 
 <script>
     // dependency fields
@@ -824,9 +832,7 @@ $page_description = "Website performance test result$testLabel.";
             }
         });
     });
-
-
-
 </script>
-    </body>
+
+</body>
 </html>
