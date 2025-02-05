@@ -8,6 +8,8 @@ include 'common.inc';
 
 use WebPageTest\Util;
 
+RedirectIfReadOnly();
+
 $current_user = $request_context->getUser();
 $is_paid = !is_null($current_user) ? $current_user->isPaid() : false;
 $is_logged_in = Util::getSetting('cp_auth') && (!is_null($request_context->getClient()) && $request_context->getClient()->isAuthenticated());

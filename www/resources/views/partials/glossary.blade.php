@@ -60,7 +60,7 @@
             <li>What is checked: Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).
                 80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN.
                 The current list of known CDN's is
-                <a href="https://github.com/WPO-Foundation/wptagent/blob/master/internal/optimization_checks.py#L48">here</a>.
+                <a href="https://github.com/catchpoint/WebPageTest.agent/blob/master/internal/optimization_checks.py#L67">here</a>.
             </li>
         </ul>
     </dd>

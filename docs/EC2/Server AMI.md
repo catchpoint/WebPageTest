@@ -60,9 +60,9 @@ api_key=MyAPIKey
 headless=0
 ```
 
-The full list of settings that can be specified is in [settings.ini.sample](https://github.com/WPO-Foundation/webpagetest/blob/master/www/settings/settings.ini.sample)
+The full list of settings that can be specified is in [settings.ini.sample](https://github.com/catchpoint/WebPageTest/blob/master/www/settings/settings.ini.sample)
 
-EC2 test agent AMIs can be found [here](https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Private%20Instances/ec2_agents.md)
+EC2 test agent AMIs can be found [here](https://github.com/catchpoint/WebPageTest.docs/blob/main/src/private-instances/ec2_agents.md)
 
 Connect to a Windows Test Agent:
 

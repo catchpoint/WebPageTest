@@ -48,7 +48,6 @@ $auditExperiments = [
     "unsized-images" => "012",
     "lcp-lazy-loaded" => "013",
     "meta-viewport" => "009"
-
 ];
 
 $audits = [];
@@ -297,4 +296,5 @@ echo view('pages.lighthouse', [
     'thumbnails' => $thumbnails,
     'treemap' => base64_encode(gzencode(json_encode($treemap))),
     'groupTitles' => $groupTitles,
+    'is_read_only' => $request_context->isReadOnly()
 ]);

@@ -15,10 +15,10 @@ jobs:
           days-before-issue-stale: 730
           days-before-issue-close: 1
           stale-issue-label: "stale"
-          stale-issue-message: > 
+          stale-issue-message: >
             We're in the process of cleaning up issues on this project in order to ensure we're able to stay on top of high priority bugs and feature requests. 
             As a part of this process, we're automatically closing any issues that have had no activity within the last two years, including this one, since the codebase has changed dramatically in that time.
-            If you feel this is still relevant, please [file a new issue](https://github.com/WPO-Foundation/webpagetest/issues/new/choose) using the relevant issue template so we can get it prioritized. 
+            If you feel this is still relevant, please [file a new issue](https://github.com/catchpoint/WebPageTest/issues/new/choose) using the relevant issue template so we can get it prioritized.
             Thanks!
           close-issue-message: " "
           days-before-pr-stale: -1

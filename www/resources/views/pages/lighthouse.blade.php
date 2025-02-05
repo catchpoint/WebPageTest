@@ -75,10 +75,11 @@ if (navigator.clipboard) {
                 </p>
                 <p>For scripted tests, Lighthouse report will only be available on the final step.</p>
             </div>
+            @if (!$is_read_only)
             <div class="opps_note">
                 <p><strong>Did you know?</strong> Lighthouse runs in Chrome and provides a great complementary analysis alongside the many browsers, devices, and locations WebPageTest offers. To see how this site performs in more environments: <a href="/?url={{ $test_url }}">Start a new test</a></p>
-
             </div>
+            @endif
         </div>
         <div class="opportunities_summary">
             <nav class="results_lh_nav">
@@ -140,6 +141,7 @@ if (navigator.clipboard) {
                                 </table>
                             </div>
 
+                            @if (!$is_read_only)
                             <div class="opps_note opps_note-links">
                                 <p><strong>Aiming to improve?</strong>
                                     @if ($lh_only)
@@ -154,6 +156,7 @@ if (navigator.clipboard) {
                                     for suggestions and run No-Code Experiments to see how changes impact this site!
                                 </p>
                             </div>
+                            @endif
 
                             @if (count($thumbnails))
                             <h4>Filmstrip</h4>

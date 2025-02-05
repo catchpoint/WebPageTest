@@ -1392,7 +1392,7 @@ function ParseUserTiming($file, $browser_version, &$layout_shifts, &$page_data)
 }
 
 /**
-* Time To Interactive: https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md
+* Time To Interactive: https://github.com/catchpoint/WebPageTest/blob/master/docs/Metrics/TimeToInteractive.md
 *
 * @param mixed $localPaths
 * @param mixed $startTime

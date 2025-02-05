@@ -22,6 +22,7 @@ class RequestContext
     private string $request_method;
     private string $request_uri;
     private string $host;
+    private bool $read_only;
     private ?BannerMessageManager $banner_message_manager;
     // Should use an enum, TODO
     private string $environment;
@@ -50,6 +51,7 @@ class RequestContext
 
         $this->environment = Environment::$Production;
         $this->api_key_in_use = null;
+        $this->read_only = false;
     }
 
     public function getRaw(): array
@@ -151,6 +153,16 @@ class RequestContext
     public function getEnvironment(): string
     {
         return $this->environment;
+    }
+
+    public function isReadOnly(): bool
+    {
+        return $this->read_only;
+    }
+
+    public function setReadOnly(bool $value)
+    {
+        $this->read_only = $value;
     }
 
     /**

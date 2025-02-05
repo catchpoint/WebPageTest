@@ -565,3 +565,7 @@ if (is_file(SETTINGS_PATH . '/custom_common.inc.php')) {
 }
 
 require_once INCLUDES_PATH . '/experiments/user_access.inc';
+
+$request_context->setReadOnly(
+    !is_null($request_context->getUser()) && $request_context->getUser() && $request_context->getUser()->newPortalExperience()
+);

@@ -13,10 +13,13 @@ class User
     private bool $is_admin;
     private ?string $owner_id;
     private ?string $access_token;
+    private ?string $refresh_token;
     private ?int $user_id;
     private ?int $contact_id;
     private bool $is_paid_cp_client;
+    private bool $new_portal_experience;
     private bool $is_verified;
+    private int $user_priority;
     private bool $is_wpt_enterprise_client;
     private int $remaining_runs;
     private int $monthly_runs;
@@ -38,9 +41,11 @@ class User
         $this->is_admin = false;
         $this->owner_id = "2445"; // owner id of 2445 was for unpaid users
         $this->access_token = null;
+        $this->refresh_token = null;
         $this->user_id = null;
         $this->contact_id = null;
         $this->is_paid_cp_client = false;
+        $this->new_portal_experience = false;
         $this->is_verified = false;
         $this->user_priority = 9; //default to lowest possible priority
         $this->is_wpt_enterprise_client = false;
@@ -87,6 +92,23 @@ class User
     {
         return $this->is_paid_cp_client &&
             ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
+    }
+
+    public function newPortalExperience(): bool
+    {
+        if (
+            ($this->isPaid() && Util::getSetting('cp_portal_enable_pro')) ||
+            ($this->isFree() && Util::getSetting('cp_portal_enable_free'))
+        ) {
+            return $this->new_portal_experience;
+        }
+
+        return false;
+    }
+
+    public function setNewPortalExperience(bool $value)
+    {
+        $this->new_portal_experience = $value;
     }
 
     public function isFree(): bool

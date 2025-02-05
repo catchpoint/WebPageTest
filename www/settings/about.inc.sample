@@ -1,7 +1,7 @@
 <h2>About WebPageTest.org</h2>
 
 <p>WebPageTest is a tool that was originally developed by <a href="http://dev.aol.com/">AOL</a> for use internally and was open-sourced in 2008 under a BSD license.
-The platform is under active development by several companies and community contributors on <a href="https://github.com/WPO-Foundation/webpagetest/">GitHub</a>.
+The platform is under active development by several companies and community contributors on <a href="https://github.com/catchpoint/WebPageTest">GitHub</a>.
 The software is also packaged up periodically and available for <a href="http://www.webpagetest.org/forums/forumdisplay.php?fid=12">download</a> if you would like to run your own
 instance.</p>
 

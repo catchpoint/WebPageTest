@@ -36,6 +36,6 @@ final class RequestContextTest extends TestCase
         $client = new CPClient($host);
         $request = new RequestContext($global_req);
         $request->setClient($client);
-        $this->assertEquals($host, $request->getClient()->host);
+        $this->assertEquals($host, $request->getClient()->getHost());
     }
 }

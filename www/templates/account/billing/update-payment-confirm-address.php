@@ -1,14 +1,15 @@
 <div class="my-account-page page_content">
+    <ul class="breadcrumbs">
+        <li><a href="/account">Account Settings</a></li>
+        <li>Edit Billing Information</li>
+    </ul>
+
     <div class="subhed">
-        <ul class="breadcrumbs">
-            <li><a href="/account">Account Settings</a></li>
-            <li>Edit Billing Information</li>
-        </ul>
+        <h1>Edit Billing Information</h1>
         <div class="contact-support-button">
-          <a href="<?= $support_link ?>"><span>Contact Support</span></a>
+            <a href="<?= $support_link ?>"><span>Contact Support</span></a>
         </div>
     </div>
-    <h1>Edit Billing Information</h1>
     <form action="/account" method="post">
         <div class="plan-billing-container card box">
             <div class="billing-container">
@@ -33,8 +34,8 @@
 
                                 <?php foreach ($state_list as $state) : ?>
                                     <option value="<?= $state['code'] ?>" <?php if ($state['code'] == $state_code) {
-                                        echo 'selected';
-                                                   } ?>>
+                                                                                echo 'selected';
+                                                                            } ?>>
                                         <?= $state['name']; ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -46,8 +47,8 @@
                         <select autocomplete="off" name="country" data-country-selector="selector" required>
                             <?php foreach ($country_list as $country) : ?>
                                 <?php
-                                  $current_code = $country["code"];
-                                  $selected_country = false;
+                                $current_code = $country["code"];
+                                $selected_country = false;
                                 if (isset($country_code) && !is_null($country_code)) {
                                     if ($current_code == $country_code) {
                                         $selected_country = true;
@@ -67,7 +68,7 @@
                     <div class="info-container zipcode">
                         <label for="zipcode">Zip Code</label>
                         <div>
-                          <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
+                            <input type="text" name="zipcode" value="<?= $zipcode ?>" required />
                         </div>
                     </div>
                 </div> <!-- /.billing-info-section -->
@@ -80,21 +81,21 @@
     </form>
     <script defer src="/assets/js/country-list/country-list.js?v=<?= constant('VER_JS_COUNTRY_LIST') ?>"></script>
     <script>
-    (() => {
-        const countryList = <?= $country_list_json_blob ?>;
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", () => {
+        (() => {
+            const countryList = <?= $country_list_json_blob ?>;
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", () => {
+                    const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
+                    const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
+
+                    new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
+                });
+            } else {
                 const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
                 const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
 
                 new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-            });
-        } else {
-            const countrySelectorEl = document.querySelector("[data-country-selector=selector]");
-            const divisionSelectorEl = document.querySelector("[data-country-selector=state-selector]");
-
-            new CountrySelector(countrySelectorEl, divisionSelectorEl, countryList);
-        }
-    })();
+            }
+        })();
     </script>
 </div>

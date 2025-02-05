@@ -185,7 +185,7 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="2b4c", MODE="0666", GROUP="plugdev", OWNER="<
 By far, the easiest way to get the code and keep it up to date is to clone the WebPageTest github repository.
 
 1. ```cd ~```
-2. ```git clone https://github.com/WPO-Foundation/webpagetest.git webpagetest```
+2. ```git clone https://github.com/catchpoint/WebPageTest.git webpagetest```
 3. Test to make sure the python dependencies are working
 	- ```cd webpagetest/agent/js/lib/video```
 	- ```python visualmetrics.py --check```
