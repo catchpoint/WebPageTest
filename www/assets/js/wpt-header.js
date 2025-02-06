@@ -80,9 +80,9 @@ function OpenNewPortalDialog() {
   $("#new-portal-dialog").modal({
     opacity: 80,
     overlayClose: true,
-    containerId: 'new-portal-dialog-container',
+    containerId: "new-portal-dialog-container",
     minWidth: 500,
-    maxWidth: 500
+    maxWidth: 500,
   });
   return false;
-};
+}
