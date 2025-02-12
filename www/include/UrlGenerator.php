@@ -14,25 +14,29 @@ abstract class UrlGenerator
     protected $step;
     protected $baseUrl;
     protected $testId;
+    protected $fp;
 
     protected function __construct($baseUrl, $testId, $run, $cached, $step = 1)
     {
+        global $req_fp;
+
         $this->baseUrl = rtrim(strval($baseUrl), "/");
         $this->testId = $testId;
         $this->run = intval($run);
         $this->cached = $cached ? true : false;
         $this->step = $step;
+        $this->fp = $req_fp;
     }
 
-  /**
-   * @param bool $friendlyUrls If the URL should be friendly (via mod_rewrite) or standard
-   * @param string $baseUrl URL base for the server (like http://my.wpt.server)
-   * @param string $testId ID of the test
-   * @param int $run Run number
-   * @param bool $cached True if cached run, false otherwise
-   * @param int $step The step number (1 by default)
-   * @return FriendlyUrlGenerator|StandardUrlGenerator A UrlGenerator for friendly or standard URLs
-   */
+    /**
+     * @param bool $friendlyUrls If the URL should be friendly (via mod_rewrite) or standard
+     * @param string $baseUrl URL base for the server (like http://my.wpt.server)
+     * @param string $testId ID of the test
+     * @param int $run Run number
+     * @param bool $cached True if cached run, false otherwise
+     * @param int $step The step number (1 by default)
+     * @return FriendlyUrlGenerator|StandardUrlGenerator A UrlGenerator for friendly or standard URLs
+     */
     public static function create($friendlyUrls, $baseUrl, $testId, $run, $cached, $step = 1)
     {
         if ($friendlyUrls) {
@@ -42,49 +46,49 @@ abstract class UrlGenerator
         }
     }
 
-  /**
-   * @param string $page Result page to generate the URL for
-   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
-   * @return string The generated URL
-   */
+    /**
+     * @param string $page Result page to generate the URL for
+     * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+     * @return string The generated URL
+     */
     abstract public function resultPage($page, $extraParams = null);
 
-  /**
-   * @param string $image Image name to generate the thumbnail URL for
-   * @return string The generated URL
-   */
+    /**
+     * @param string $image Image name to generate the thumbnail URL for
+     * @return string The generated URL
+     */
     abstract public function thumbnail($image);
 
-  /**
-   * @param string $image Generated image name to generate the URL for
-   * @return string The generated URL
-   */
+    /**
+     * @param string $image Generated image name to generate the URL for
+     * @return string The generated URL
+     */
     abstract public function generatedImage($image);
 
-  /**
-   * @param bool $connectionView True for a connection view waterfall, false for the normal one.
-   * @param int $width Width of the generated image
-   * @param bool $withMime True if MIME data should be generated, false otherwise
-   * @return string The generated URL
-   */
+    /**
+     * @param bool $connectionView True for a connection view waterfall, false for the normal one.
+     * @param int $width Width of the generated image
+     * @param bool $withMime True if MIME data should be generated, false otherwise
+     * @return string The generated URL
+     */
     abstract public function waterfallImage($connectionView, $width, $withMime);
 
-  /**
-   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
-   * @return string The generated URL
-   */
+    /**
+     * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+     * @return string The generated URL
+     */
     abstract public function resultSummary($extraParams = null);
 
-  /**
-   * @return string The generated URL
-   */
+    /**
+     * @return string The generated URL
+     */
     abstract public function optimizationChecklistImage();
 
-  /**
-   * @param string $file The name of the file to get with the URL
-   * @param string $video If it's a video-related file, this can be set to the corresponding video directory name
-   * @return string The generated URL
-   */
+    /**
+     * @param string $file The name of the file to get with the URL
+     * @param string $video If it's a video-related file, this can be set to the corresponding video directory name
+     * @return string The generated URL
+     */
     public function getFile($file, $video = "")
     {
         $videoParam = $video ? "&video=" . $video : "";
@@ -92,10 +96,10 @@ abstract class UrlGenerator
         return $url;
     }
 
-  /**
-   * @param string $file The name of the file to get with the URL
-   * @return string The generated URL
-   */
+    /**
+     * @param string $file The name of the file to get with the URL
+     * @return string The generated URL
+     */
     public function getGZip($file)
     {
         $compressedParam = (substr($file, -3) == ".gz") ? "&compressed=1" : "";
@@ -103,66 +107,71 @@ abstract class UrlGenerator
         return $url;
     }
 
-  /**
-   * @param string|int $requestNumber The request number to identify the response body
-   * @return string The generated URL
-   */
+    /**
+     * @param string|int $requestNumber The request number to identify the response body
+     * @return string The generated URL
+     */
     public function responseBodyWithRequestNumber($requestNumber)
     {
-        return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&request=" . strval($requestNumber);
+        $fpParam = $this->fp ? "&fp=$this->fp" : "";
+        return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&request=" . strval($requestNumber) . $fpParam;
     }
 
-  /**
-   * @param int $bodyId The body ID to identify the response body
-   * @return string The generated URL
-   */
+    /**
+     * @param int $bodyId The body ID to identify the response body
+     * @return string The generated URL
+     */
     public function responseBodyWithBodyId($bodyId)
     {
-        return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&bodyid=" . strval($bodyId);
+        $fpParam = $this->fp ? "&fp=$this->fp" : "";
+        return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&bodyid=" . strval($bodyId) . $fpParam;
     }
 
-  /**
-   * @param string $end Optional. A specific "end" to use for video creation
-   * @return string The generated URL to create a video
-   */
+    /**
+     * @param string $end Optional. A specific "end" to use for video creation
+     * @return string The generated URL to create a video
+     */
     public function createVideo($end = null)
     {
         $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
         $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
         $tests .= $end ? "-e:$end" : "";
+        $tests .= $this->fp ? "&fp=$this->fp" : "";
         return $this->baseUrl . "/video/view.php?tests=" . $tests;
     }
 
-  /**
-   * @param string $end Optional. A specific "end" to use for filmstrip view
-   * @return string The generated URL for the filmstrip view
-   */
+    /**
+     * @param string $end Optional. A specific "end" to use for filmstrip view
+     * @return string The generated URL for the filmstrip view
+     */
     public function filmstripView($end = null)
     {
         $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
         $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
         $tests .= $end ? "-e:$end" : "";
+        $tests .= $this->fp ? "&fp=$this->fp" : "";
         return $this->baseUrl . "/video/compare.php?tests=" . $tests;
     }
 
 
-   /**
-   * @param string $end Optional. A specific "end" to use for filmstrip view
-   * @return string The generated URL for the filmstrip view
-   */
+    /**
+     * @param string $end Optional. A specific "end" to use for filmstrip view
+     * @return string The generated URL for the filmstrip view
+     */
     public function filmstripImage($end = null)
     {
         $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
         $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
         $tests .= $end ? "-e:$end" : "";
+        $tests .= $this->fp ? "&fp=$this->fp" : "";
         return $this->baseUrl . "/video/filmstrip.php?tests=" . $tests;
     }
 
-  /**
-   * @param string $frame The thumbnail name
-   * @param int $fit Maximum size of the thumbnail
-   * @return string The URL for a thumbnail of the video frame
-   */
+    /**
+     * @param string $frame The thumbnail name
+     * @param int $fit Maximum size of the thumbnail
+     * @return string The URL for a thumbnail of the video frame
+     */
     public function videoFrameThumbnail($frame, $fit, $options = null)
     {
         $file = "video_" . rtrim(strtolower($this->underscorePrefix()), "_") . "/" . $frame;
@@ -173,19 +182,19 @@ abstract class UrlGenerator
         return $url;
     }
 
-  /**
-   * @return string The generated URL to download all video frames
-   */
+    /**
+     * @return string The generated URL to download all video frames
+     */
     public function downloadVideoFrames()
     {
         return $this->baseUrl . "/video/downloadFrames.php?" . $this->urlParams();
     }
 
-  /**
-   * @param string $page Step-independent Result page to generate the URL for
-   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
-   * @return string The generated URL
-   */
+    /**
+     * @param string $page Step-independent Result page to generate the URL for
+     * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+     * @return string The generated URL
+     */
     public function stepDetailPage($page, $extraParams = null)
     {
         $extraParams = $extraParams ? ("&" . $extraParams) : "";
@@ -201,7 +210,8 @@ abstract class UrlGenerator
     protected function urlParams()
     {
         $stepParam = $this->step > 1 ? ("&step=" . $this->step) : "";
-        return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "") . $stepParam;
+        $fpParam = $this->fp ? "&fp=$this->fp" : "";
+        return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "") . $stepParam . $fpParam;
     }
 }
 
@@ -213,6 +223,7 @@ class FriendlyUrlGenerator extends UrlGenerator
         if ($this->cached) {
             $url .= "cached/";
         }
+        $extraParams = $this->prepareExtraParams($extraParams);
         if ($extraParams != null) {
             $url .= "?" . $extraParams;
         }
@@ -241,7 +252,7 @@ class FriendlyUrlGenerator extends UrlGenerator
     {
         $parts = explode("_", $this->testId);
         $testPath = substr($parts[0], 0, 2) . "/" . substr($parts[0], 2, 2) . "/" . substr($parts[0], 4, 2) .
-                "/" . $parts[1];
+            "/" . $parts[1];
         if (sizeof($parts) > 2) {
             $testPath .= "/" . $parts[2];
         }
@@ -251,6 +262,7 @@ class FriendlyUrlGenerator extends UrlGenerator
     public function resultSummary($extraParams = null)
     {
         $url = $this->baseUrl . "/result/" . $this->testId . "/";
+        $extraParams = $this->prepareExtraParams($extraParams);
         if ($extraParams != null) {
             $url .= "?" . $extraParams;
         }
@@ -268,6 +280,17 @@ class FriendlyUrlGenerator extends UrlGenerator
     public function optimizationChecklistImage()
     {
         return $this->generatedImage("optimization");
+    }
+
+    private function prepareExtraParams($extraParams = null)
+    {
+        if (!$this->fp) {
+            return $extraParams;
+        }
+
+        return $extraParams
+            ? ("fp=$this->fp&" . $extraParams)
+            : "fp=$this->fp";
     }
 }
 
@@ -298,6 +321,7 @@ class StandardUrlGenerator extends UrlGenerator
     public function resultSummary($extraParams = null)
     {
         $extraParams = $extraParams ? ("&" . $extraParams) : "";
+        $extraParams .= $this->fp ? "&fp=$this->fp" : "";
         return $this->baseUrl . "/results.php?test=" . $this->testId . $extraParams;
     }
 
