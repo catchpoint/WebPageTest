@@ -42,7 +42,7 @@ if (Util::getSetting('cp_auth')) {
             error_log($e->getMessage());
             $route = "/";
             $message = "There was a problem with you account. Please reach out to customer service." .
-                       "Error number: 2000";
+                "Error number: 2000";
 
             $host = Util::getSetting('host');
             if (Util::getSetting('php_sessions')) {
@@ -65,7 +65,7 @@ if (Util::getSetting('cp_auth')) {
             $message = "";
             if (is_a($e, PortalException::class)) {
                 $message = "There was a problem with you account. Please reach out to customer service." .
-                          "Error number: {$e->getErrorNumber()}";
+                    "Error number: {$e->getErrorNumber()}";
             } else {
                 $message = $e->getMessage();
             }
@@ -375,7 +375,7 @@ if ($supportsAuth && $supportsCPAuth) {
     require_once INCLUDES_PATH . '/common/AttachUser.php';
     require_once INCLUDES_PATH . '/common/AttachSignupClient.php';
     require_once INCLUDES_PATH . '/common/AttachBannerMessageManager.php';
-//    require_once INCLUDES_PATH . '/common/CheckCSRF.php';
+    //    require_once INCLUDES_PATH . '/common/CheckCSRF.php';
 }
 
 // Load the test-specific data
@@ -531,7 +531,7 @@ if (strlen($id)) {
                 $controlTestUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $metaInfo['experiment']['control_id'], 0, 0);
                 $controlTestHref = $controlTestUrlGenerator->resultSummary();
 
-                $experimentResultsHref = "/video/compare.php?tests=" . $id . ',' . $metaInfo['experiment']['control_id'];
+                $experimentResultsHref = "/video/compare.php?tests=" . $id . ',' . $metaInfo['experiment']['control_id'] . ($req_fp ? "&fp=1" : '');
                 $experimentTestHref = "/result/" . $id;
 
                 $experimentOptsUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, 0, 0);
@@ -567,5 +567,6 @@ if (is_file(SETTINGS_PATH . '/custom_common.inc.php')) {
 require_once INCLUDES_PATH . '/experiments/user_access.inc';
 
 $request_context->setReadOnly(
-    !is_null($request_context->getUser()) && $request_context->getUser() && $request_context->getUser()->newPortalExperience()
+    isset($req_fp) ||
+        !is_null($request_context->getUser()) && $request_context->getUser() && $request_context->getUser()->newPortalExperience()
 );
