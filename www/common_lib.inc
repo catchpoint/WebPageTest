@@ -2639,7 +2639,7 @@ function json_response(&$response, $allow_crossorigin = true)
 {
     header("Content-type: application/json; charset=utf-8");
     header("Cache-Control: no-cache, must-revalidate", true);
-    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    header("Expires: " . gmdate("D, d M Y H:i:s", time() + 7 * 24 * 60 * 60) . " GMT");
     if ($allow_crossorigin) {
         header('Access-Control-Allow-Origin: *');
     }
