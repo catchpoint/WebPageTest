@@ -2,7 +2,7 @@
 
 ((window) => {
   class CountrySelector {
-    constructor(selector, subdivisionSelector, isoCompliantJsonBlob) {
+    constructor(selector, subdivisionSelector, isoCompliantJsonBlob, initialCountry, initialState) {
       this.countryList = isoCompliantJsonBlob;
       this.countries = Object.keys(this.countryList).map((code) => {
         return {
@@ -22,9 +22,12 @@
 
       this.countrySelector = selector;
       this.subdivisionSelector = subdivisionSelector;
+      this.countrySelector.value = initialCountry;
 
       // Fill in subdivisions
-      this.fillSubdivision(this.countries[0].code);
+      this.fillSubdivision(initialCountry ?? this.countries[0].code);
+
+      this.subdivisionSelector.value = initialState;
 
       // Attach listener
       this.countrySelector.addEventListener("change", (e) => {
@@ -47,6 +50,7 @@
     }
 
     fillSubdivision(countryCode) {
+      this.subdivisionSelector.value = undefined;
       const divisions = this.getSubdivisions(countryCode);
       const opts = Object.keys(divisions).map((key) => {
         return new Option(divisions[key], key);
