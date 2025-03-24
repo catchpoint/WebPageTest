@@ -10,14 +10,14 @@ $testQueue = array();
 $testInfoJson = null;
 
 /**
-* Get the status of the given test ID (and return the info in an array)
-*
-*/
+ * Get the status of the given test ID (and return the info in an array)
+ *
+ */
 function GetTestStatus($id, $includePosition = true)
 {
     $testServer = GetServerForTest($id);
     if (isset($testServer)) {
-      // Proxy the status through the server that actually owns the test
+        // Proxy the status through the server that actually owns the test
         $pos = $includePosition ? '1' : '0';
         $status = json_decode(http_fetch("{$testServer}testStatus.php?test=$id&pos=$pos"), true);
         if (is_array($status) && isset($status['data'])) {
@@ -30,7 +30,7 @@ function GetTestStatus($id, $includePosition = true)
     }
     $testPath = './' . GetTestPath($id);
 
-  // Fast-path for pending tests when we don't need to know the queue position (avoid test and location locks)
+    // Fast-path for pending tests when we don't need to know the queue position (avoid test and location locks)
     if (file_exists("$testPath/test.scheduled") && !file_exists("$testPath/.archived")) {
         $ret = array('statusCode' => 101, 'statusText' => 'Test pending', 'id' => $id);
         $status = GetSchedulerTestStatus($id);
@@ -47,10 +47,12 @@ function GetTestStatus($id, $includePosition = true)
                     $ret['statusText'] = "Waiting at the front of the queue...";
                 }
             } else {
-                $ret = array('statusCode' => 100,
-                     'statusText' => 'Test just started',
-                     'startTime' => gmdate("m/d/y G:i:s"),
-                     'id' => $id);
+                $ret = array(
+                    'statusCode' => 100,
+                    'statusText' => 'Test just started',
+                    'startTime' => gmdate("m/d/y G:i:s"),
+                    'id' => $id
+                );
             }
         }
         return $ret;
@@ -71,10 +73,12 @@ function GetTestStatus($id, $includePosition = true)
             @unlink("$testPath/test.requeued");
             @unlink("$testPath/test.running");
         } else {
-            $ret = array('statusCode' => 100,
-                  'statusText' => 'Test just started',
-                  'startTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.running")),
-                  'id' => $id);
+            $ret = array(
+                'statusCode' => 100,
+                'statusText' => 'Test just started',
+                'startTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.running")),
+                'id' => $id
+            );
             $testInfoJson = GetTestInfo($id);
             PopulateTestInfoJson($ret, $testInfoJson);
             if ($elapsed == 0) {
@@ -98,10 +102,12 @@ function GetTestStatus($id, $includePosition = true)
             return $ret;
         }
     } elseif (is_file("$testPath/test.complete") || file_exists("$testPath/.archived")) {
-        $ret = array('statusCode' => 200,
-                    'statusText' => 'Test Complete',
-                    'id' => $id,
-                    'completeTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.complete")));
+        $ret = array(
+            'statusCode' => 200,
+            'statusText' => 'Test Complete',
+            'id' => $id,
+            'completeTime' => gmdate("m/d/y G:i:s", filemtime("$testPath/test.complete"))
+        );
         $testInfoJson = GetTestInfo($id);
         PopulateTestInfoJson($ret, $testInfoJson);
         return $ret;
@@ -152,7 +158,7 @@ function GetTestStatus($id, $includePosition = true)
                     }
                     if (
                         (array_key_exists('started', $testInfoJson) &&
-                        $testInfoJson['started']) ||
+                            $testInfoJson['started']) ||
                         isset($test['test']['completeTime'])
                     ) {
                         $ret['startTime'] = isset($test['test']['startTime']) ? $test['test']['startTime'] : $now;
@@ -174,9 +180,9 @@ function GetTestStatus($id, $includePosition = true)
                         } else {
                             $ret['statusCode'] = 100;
                             if ($elapsed == 0) {
-                                    $ret['statusText'] = "Test just started";
+                                $ret['statusText'] = "Test just started";
                             } elseif ($elapsed == 1) {
-                                    $ret['statusText'] = "Test Started $elapsed second ago";
+                                $ret['statusText'] = "Test Started $elapsed second ago";
                             } elseif ($elapsed < 60) {
                                 $ret['statusText'] = "Test Started $elapsed seconds ago";
                             } else {
@@ -241,7 +247,7 @@ function GetTestStatus($id, $includePosition = true)
                             $rvRuns = 0;
                             for ($run = 1; $run <= $runs; $run++) {
                                 if (gz_is_file("$testPath/{$run}_IEWPG.txt") || gz_is_file("$testPath/{$run}_devtools.json.txt")) {
-                                        $fvRuns++;
+                                    $fvRuns++;
                                 }
                                 if (gz_is_file("$testPath/{$run}_Cached_IEWPG.txt") || gz_is_file("$testPath/{$run}_Cached_devtools.json.txt")) {
                                     $rvRuns++;
@@ -261,14 +267,14 @@ function GetTestStatus($id, $includePosition = true)
                                 $ret['statusText'] = "Completed {$ret['testsCompleted']} of {$ret['testsExpected']} tests";
                             }
 
-                    // TODO: Add actual summary-result information
+                            // TODO: Add actual summary-result information
                         }
                     } else {
                         if ($includePosition && array_key_exists('workdir', $testInfoJson)) {
                             $count = FindJobPosition($testInfoJson['location'], $testInfoJson['workdir'], $id);
                             if ($count >= 0) {
-                                    $ret['statusCode'] = 101;
-                                    $ret['behindCount'] = $count;
+                                $ret['statusCode'] = 101;
+                                $ret['behindCount'] = $count;
                                 if ($count > 1) {
                                     $ret['statusText'] = "Waiting behind $count other tests...";
                                 } elseif ($count == 1) {
@@ -286,7 +292,7 @@ function GetTestStatus($id, $includePosition = true)
                                     $ret['statusCode'] = 401;
                                     $ret['statusText'] = 'Test request not found';
 
-                        // Force the test to end - something went Very Wrong (tm)
+                                    // Force the test to end - something went Very Wrong (tm)
                                     $lock = LockTest($id);
                                     if ($lock) {
                                         $testInfoJson = GetTestInfo($id);
@@ -295,7 +301,7 @@ function GetTestStatus($id, $includePosition = true)
                                             $test = file_get_contents("$testPath/testinfo.ini");
                                             $date = gmdate("m/d/y G:i:s", $now);
 
-                            // Update the completion time if it isn't already set
+                                            // Update the completion time if it isn't already set
                                             if (!strpos($test, 'completeTime')) {
                                                 $complete = "[test]\r\ncompleteTime=$date";
                                                 $out = str_replace('[test]', $complete, $test);
@@ -334,10 +340,10 @@ function GetTestStatusText($id)
 }
 
 /**
-* Check the status of a batch test
-*
-* @param mixed $status
-*/
+ * Check the status of a batch test
+ *
+ * @param mixed $status
+ */
 function GetBatchStatus(&$status)
 {
     $dirty = false;
@@ -469,7 +475,7 @@ function array2xml($array, $xml = false)
 
     foreach ($array as $key => $value) {
         if (is_array($value)) {
-           //get children
+            //get children
             array2xml($value, $xml->addChild($key));
         } else {
             $xml->addChild($key, $value);
