@@ -13,7 +13,7 @@ define('SETTINGS_PATH', realpath(WWW_PATH . '/settings/'));
 define('TEMP_DIR', realpath(WWW_PATH . '/tmp/'));
 define('OE_PATH', realpath(WWW_PATH . '/experiments/'));
 
-define('WPT_SALT', '2502');  // used to force assets hash
+define('WPT_SALT', '2503');  // used to force assets hash
 define('VER_WEBPAGETEST', '21.07');   // webpagetest version
 define('VER_TYPOGRAPHY_CSS', @md5_file(ASSETS_PATH . '/css/typography.css') . WPT_SALT);          // version of the typography css file
 define('VER_LAYOUT_CSS', @md5_file(ASSETS_PATH . '/css/layout.css') . WPT_SALT);          // version of the layout css file
