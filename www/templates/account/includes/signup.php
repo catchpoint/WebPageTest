@@ -31,7 +31,7 @@
                     <tr>
                         <th scope="col">Locations</th>
                         <td>30</td>
-                        <td>40 <sup><a href="#fn1" id="ref1">*</a></sup></td>
+                        <td>35+<sup><a href="#fn1" id="ref1">*</a></sup></td>
                     </tr>
 
                     <tr>
