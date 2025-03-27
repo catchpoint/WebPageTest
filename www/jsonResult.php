@@ -62,8 +62,8 @@ if (isset($test['test']['batch']) && $test['test']['batch']) {
 
     if ($ret['statusCode'] == 200) {
         $protocol = getUrlProtocol();
-        $host  = $_SERVER['HTTP_HOST'];
-        $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $host = $_SERVER['HTTP_HOST'];
+        $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $urlStart = "$protocol://$host$uri";
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
@@ -107,14 +107,14 @@ if (isset($test['test']['batch']) && $test['test']['batch']) {
 function getRequestInfoFlags()
 {
     $getFlags = array(
-    "average" => JsonResultGenerator::WITHOUT_AVERAGE,
-    "standard" => JsonResultGenerator::WITHOUT_STDDEV,
-    "median" => JsonResultGenerator::WITHOUT_MEDIAN,
-    "runs" => JsonResultGenerator::WITHOUT_RUNS,
-    "requests" => JsonResultGenerator::WITHOUT_REQUESTS,
-    "console" => JsonResultGenerator::WITHOUT_CONSOLE,
-    "lighthouse" => JsonResultGenerator::WITHOUT_LIGHTHOUSE,
-    "rv" => JsonResultGenerator::WITHOUT_REPEAT_VIEW
+        "average" => JsonResultGenerator::WITHOUT_AVERAGE,
+        "standard" => JsonResultGenerator::WITHOUT_STDDEV,
+        "median" => JsonResultGenerator::WITHOUT_MEDIAN,
+        "runs" => JsonResultGenerator::WITHOUT_RUNS,
+        "requests" => JsonResultGenerator::WITHOUT_REQUESTS,
+        "console" => JsonResultGenerator::WITHOUT_CONSOLE,
+        "lighthouse" => JsonResultGenerator::WITHOUT_LIGHTHOUSE,
+        "rv" => JsonResultGenerator::WITHOUT_REPEAT_VIEW
     );
 
     $infoFlags = array();
