@@ -52,7 +52,7 @@
         }
 
         $opp = [
-            "title" =>  "Several security vulnerabilies were detected by Snyk",
+            "title" =>  "Several security vulnerabilities were detected by Snyk",
             "desc" =>  "Snyk has found $numVulns security vulnerabilit" . ($numVulns > 1 ? "ies" : "y") . ": $num_high high, $num_medium medium, $num_low low.",
             "examples" =>  array(),
             "experiments" =>  array(
@@ -65,7 +65,7 @@
         ];
     } else {
         $opp = [
-            "title" =>  "Zero security vulnerabilies were detected by Snyk",
+            "title" =>  "Zero security vulnerabilities were detected by Snyk",
             "desc" =>  "Snyk has found 0 security vulnerabilities with included packages.",
             "examples" =>  array(),
             "experiments" =>  array(),
