@@ -39,7 +39,9 @@
             <div id="runningHeader" class="box">
                 <?php
                 $status = GetTestStatus($id, true);
-                if ($status['statusCode'] < 400 && (!array_key_exists('startTime', $status) || !$status['startTime'])) {
+                $cp_scheduler = GetSetting('cp_scheduler');
+                $has_scheduler = isset($cp_scheduler) && strlen($cp_scheduler) > 0;
+                if (!$has_scheduler && $status['statusCode'] < 400 && (!array_key_exists('startTime', $status) || !$status['startTime'])) {
                     ?>
                     <form class="cancel_form" action="/cancelTest.php" method="get">
                     <input type="hidden" name="test" value="<?php echo $id;?>">
