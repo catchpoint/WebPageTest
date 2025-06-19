@@ -4,7 +4,6 @@ This is the official repository for the performance-testing code that runs at [w
 
 - 🥡 [Install your own instance](https://docs.webpagetest.org/private-instances/)
 - 📕 [Documentation](https://github.com/catchpoint/WebPageTest.docs)
-- 🕒 [Changelog](https://docs.webpagetest.org/change-log)
 - 🌐 [Cross-platform browser agent](https://github.com/catchpoint/WebPageTest.agent)
 - 💤 [REST API](https://docs.webpagetest.org/api/) examples:
   - 🐘 [`/bulktest`](/bulktest/): A PHP command-line tool that can submit a bulk set of tests, gather the results, and aggregate analyses.
