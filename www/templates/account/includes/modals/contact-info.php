@@ -21,7 +21,7 @@
 <?php if ($is_paid) : ?>
             <div class="section">
                 <label for="vat-number">VAT Number</label>
-                <input name="vat-number" type="text" maxlength=32 pattern="<?= $validation_pattern; ?>" title="Please insert a valid VAT number" value="<?= htmlspecialchars($vat_number); ?>" required <?= $is_verified ? '' :'disabled'; ?>/>
+                <input name="vat-number" type="text" maxlength=32 pattern="<?= $validation_pattern; ?>" title="Please insert a valid VAT number" value="<?= htmlspecialchars($vat_number); ?>"  <?= $is_verified ? '' :'disabled'; ?>/>
             </div>
 <?php endif; ?>
             <div class="section">
