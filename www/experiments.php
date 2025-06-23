@@ -447,7 +447,7 @@ $page_description = "Website performance test result$testLabel.";
                                 <p class="exps-runcount">
                                     <label>
                                         Experiment Runs:
-                                        <input type="hidden" name="fvonly" value="true" required="">
+                                        <input type="hidden" name="fvonly" value="1" required="">
                                         <input type="number" min="1" max="9" class="text short" name="runs" value="<?php echo $numRuns; ?>" required="">
                                         <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for first view</small>
                                     </label>
