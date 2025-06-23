@@ -1090,6 +1090,7 @@ if (!strlen($error) && CheckIp($test) && CheckUrl($test['url']) && CheckRateLimi
                     $test['video'] = 1;
                     $test['label'] = 'Original (Control Run)';
                     $test['metadata'] = json_encode($experimentMetadata);
+                    $test['fvonly'] = 1; // force a first view only test for the experiment and control run
                     $id = CreateTest($test, $test['url']);
 
                     if (isset($id)) {

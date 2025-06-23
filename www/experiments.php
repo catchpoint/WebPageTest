@@ -435,7 +435,7 @@ $page_description = "Website performance test result$testLabel.";
                     }
 
                     $numRuns = $test['test']['runs'];
-                    $fvonly = $test['testinfo']['fvonly'];
+                    // $fvonly = $test['testinfo']['fvonly'];
 
                     if (!$isReadOnly) {
                         ?>
@@ -447,9 +447,9 @@ $page_description = "Website performance test result$testLabel.";
                                 <p class="exps-runcount">
                                     <label>
                                         Experiment Runs:
-                                        <input type="hidden" name="fvonly" value="'<?php echo $fvonly; ?>'" required="">
+                                        <input type="hidden" name="fvonly" value="1" required="">
                                         <input type="number" min="1" max="9" class="text short" name="runs" value="<?php echo $numRuns; ?>" required="">
-                                        <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for each first & repeat view</small>
+                                        <b class="exps-runcount-total"></b> <small>Each experiment run uses 2 test runs (1 experiment, 1 control) for first view</small>
                                     </label>
                                 </p>
                             </div>
