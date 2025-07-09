@@ -90,8 +90,11 @@ class User
 
     public function isPaid(): bool
     {
-        return $this->is_paid_cp_client &&
-            ($this->payment_status == 'ACTIVE' || $this->isPendingCancelation());
+        return $this->is_paid_cp_client && (
+            $this->payment_status == 'ACTIVE' ||
+            $this->payment_status == 'PAST_DUE' ||
+            $this->isPendingCancelation()
+        );
     }
 
     public function newPortalExperience(): bool

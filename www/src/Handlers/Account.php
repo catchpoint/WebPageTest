@@ -971,7 +971,7 @@ class Account
                 'api_keys' => $acct_info->getApiKeys(),
                 'wptCustomer' => $customer,
                 'transactionHistory' => $sub_id ? $request_context->getClient()->getTransactionHistory($sub_id) : null,
-                'status' => $customer->getStatus(),
+                'status' => str_replace('_', ' ', $customer->getStatus()),
                 'billing_frequency' => $customer->getBillingFrequency() == 12 ? "Annually" : "Monthly",
                 'cc_image_url' => "/assets/images/cc-logos/{$customer->getCardType()}.svg",
                 'masked_cc' => $customer->getMaskedCreditCard(),
