@@ -226,6 +226,10 @@ class JsonResultGenerator
      */
     public function runDataArray($testRunResults)
     {
+        if (!$testRunResults) {
+            return [];
+        }
+
         $runInfo = $this->basicRunInfoArray($testRunResults);
         $numSteps = $testRunResults->countSteps();
 
