@@ -215,7 +215,7 @@ $page_description = "Website performance test result$testLabel.";
                                 if ($rvRunResults) {
                                     echo "<a href=\"" . $repeatlink . "\" class=\"result_plot\">Compare Repeat Views</a>";
                                 }
-                                $graphLink = "graph_page_data.php?tests=$id&medianMetric=$median_metric" . ($req_fp ? "&fp=$req_fp" : '');
+                                $graphLink = "/graph_page_data.php?tests=$id&medianMetric=$median_metric" . ($req_fp ? "&fp=$req_fp" : '');
 
                                 echo "<a href='$graphLink' class='result_plot'>Plot Full Results</a>";
                             }
