@@ -42,7 +42,7 @@ RUN ln -fs /usr/share/zoneinfo/$TIMEZONE /etc/localtime && apt install -y \
     ttf-mscorefonts-installer fonts-noto fonts-roboto fonts-open-sans ffmpeg npm sudo curl xvfb
 
 # Get WPTAgent for dependecies
-RUN git clone -b master https://github.com/catchpoint/WebPageTest.agent.git
+RUN git clone -b master https://github.com/catchpoint/WebPageTest.agent.git /wptagent
 
 ### UPDATE FONT CACHE ###
 RUN fc-cache -f -v
