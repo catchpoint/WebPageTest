@@ -3,11 +3,20 @@
 // Use of this source code is governed by the Polyform Shield 1.0.0 license that can be
 // found in the LICENSE.md file.
 require_once('./common_lib.inc');
-require_once('./lib/aws/aws-autoloader.php');
+require_once('../vendor/autoload.php');
+
+/**
+* Ensure the tmp directory exists for EC2 instance data
+*/
+function EC2_EnsureTmpDir() {
+  if (!is_dir('./tmp')) {
+    mkdir('./tmp', 0777, true);
+  }
+}
 
 /**
 * Tests are pending for the given location, start instances as necessary
-* 
+*
 * @param mixed $location
 */
 function EC2_StartInstanceIfNeeded($ami) {
@@ -15,9 +24,12 @@ function EC2_StartInstanceIfNeeded($ami) {
   $needed = false;
   $lock = Lock('ec2-instances', true, 120);
   if ($lock) {
-    $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
-    if (!$instances || !is_array($instances))
-      $instances = array();
+    $instances = array();
+    if (file_exists('./tmp/ec2-instances.dat')) {
+      $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+      if (!$instances || !is_array($instances))
+        $instances = array();
+    }
     if (!isset($instances[$ami]))
       $instances[$ami] = array();
     if (!isset($instances[$ami]['count']) || !is_numeric($instances[$ami]['count']))
@@ -27,18 +39,19 @@ function EC2_StartInstanceIfNeeded($ami) {
     if ($needed) {
       if (EC2_StartInstance($ami)) {
         $instances[$ami]['count']++;
+        EC2_EnsureTmpDir();
         file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
       }
     }
     Unlock($lock);
   } else {
-    EC2LogError("Acquiring lock for ec2-instances"); 
+    EC2LogError("Acquiring lock for ec2-instances");
   }
 }
 
 /**
 * Start an EC2 Agent instance given the AMI
-* 
+*
 * @param mixed $ami
 */
 function EC2_StartInstance($ami) {
@@ -122,7 +135,7 @@ function EC2_StartInstance($ami) {
   } else {
     EC2LogError("Region ($region) or Location ($loc) invalid in EC2_StartInstance");
   }
-  
+
   return $started;
 }
 
@@ -138,7 +151,7 @@ function EC2_StartInstance($ami) {
 * work in the last 15 minutes and are close to an hourly increment of running.
 *
 * https://aws.amazon.com/about-aws/whats-new/2017/10/announcing-amazon-ec2-per-second-billing/
-* 
+*
 */
 function EC2_TerminateIdleInstances() {
   EC2_SendInstancesOffline();
@@ -147,7 +160,7 @@ function EC2_TerminateIdleInstances() {
     $instanceCounts = array();
     $agentCounts = array();
     $locations = EC2_GetTesters();
-    
+
     // Do a first pass to count the number of instances at each location/ami
     foreach($instances as $instance) {
       if (isset($instance['ami'])) {
@@ -184,7 +197,7 @@ function EC2_TerminateIdleInstances() {
         $lastWork = max($idleTerminateMinutes, 99999);   // last job assigned from this location
         $lastCheck = max($idleTerminateMinutes, 99999);  // time since this instance connected (if ever)
         $has_test = false;
-        
+
         foreach ($instance['locations'] as $location) {
           if ($agentCounts[$location]['count'] <= $agentCounts[$location]['min']) {
             $terminate = false;
@@ -203,7 +216,7 @@ function EC2_TerminateIdleInstances() {
             }
           }
         }
-        
+
         // Keep the instance if the location had work in the last
         // EC2.IdleTerminateMinutes and if this instance has checked in recently
         if (!isset($lastCheck)) {
@@ -215,7 +228,7 @@ function EC2_TerminateIdleInstances() {
           // Don't terminate it if the last job was recent
           $terminate = false;
         }
-        
+
         if ($terminate) {
           if (isset($instance['ami']) && $instance['running'])
             $instanceCounts[$instance['ami']]['count']--;
@@ -226,13 +239,16 @@ function EC2_TerminateIdleInstances() {
         }
       }
     }
-    
+
     // update the running instance counts
     $lock = Lock('ec2-instances', true, 120);
     if ($lock) {
-      $counts = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
-      if (!isset($counts) || !is_array($counts))
-        $counts = array();
+      $counts = array();
+      if (file_exists('./tmp/ec2-instances.dat')) {
+        $counts = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+        if (!isset($counts) || !is_array($counts))
+          $counts = array();
+      }
       foreach ($counts as $ami => $count) {
         if (!isset($counts[$ami]))
           $counts[$ami] = array('count' => 0);
@@ -243,6 +259,7 @@ function EC2_TerminateIdleInstances() {
           $counts[$ami] = array('count' => 0);
         $counts[$ami]['count'] = $count['count'];
       }
+      EC2_EnsureTmpDir();
       file_put_contents('./tmp/ec2-instances.dat', json_encode($counts));
       Unlock($lock);
     }
@@ -251,7 +268,7 @@ function EC2_TerminateIdleInstances() {
 
 /**
 * Any excess instances should be marked as offline so that they can go idle and eventually terminate
-* 
+*
 */
 function EC2_SendInstancesOffline() {
   // Mark excess instances as offline so they can go idle
@@ -280,7 +297,7 @@ function EC2_SendInstancesOffline() {
     $locations[$ami]['tests'] = $tests;
     $locations[$ami]['min'] = $min;
   }
-  
+
   foreach ($locations as $ami => $info) {
     // See if we have any online testers that we need to make offline
     $online_target = max($info['min'], intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
@@ -291,7 +308,7 @@ function EC2_SendInstancesOffline() {
         foreach ($testers['testers'] as $tester) {
           if (!isset($tester['offline']) || !$tester['offline'])
             $online++;
-        }  
+        }
         // Leave one instance running, so that it can process any tests that
         // come in before it hits the termination time limit.
         if (($online > 1 ) && ($online > $online_target)) {
@@ -311,14 +328,17 @@ function EC2_SendInstancesOffline() {
 /**
 * Start any instances that may be needed to handle large batches or
 * to keep the minimum instance count for a given location
-* 
+*
 */
 function EC2_StartNeededInstances() {
   $lock = Lock('ec2-instances', true, 120);
   if ($lock) {
-    $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
-    if (!$instances || !is_array($instances))
-      $instances = array();
+    $instances = array();
+    if (file_exists('./tmp/ec2-instances.dat')) {
+      $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+      if (!$instances || !is_array($instances))
+        $instances = array();
+    }
     $locations = EC2_GetAMILocations();
     $scaleFactor = GetSetting('EC2.ScaleFactor');
     if (!$scaleFactor)
@@ -352,13 +372,13 @@ function EC2_StartNeededInstances() {
       $locations[$ami]['min'] = $min;
       $locations[$ami]['max'] = $max;
     }
-    
+
     foreach ($locations as $ami => $info) {
       $count = isset($instances[$ami]['count']) ? $instances[$ami]['count'] : 0;
       $target = $locations[$ami]['tests'] / $scaleFactor;
       $target = min($target, $locations[$ami]['max']);
       $target = max($target, $locations[$ami]['min']);
-      
+
       // See if we have any offline testers that we need to bring online
       $online_target = max($target, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
       foreach ($info['locations'] as $location) {
@@ -380,7 +400,7 @@ function EC2_StartNeededInstances() {
           }
         }
       }
-      
+
       // Start new instances as needed
       if ($count < $target) {
         $needed = $target - $count;
@@ -398,6 +418,7 @@ function EC2_StartNeededInstances() {
       }
     }
 
+    EC2_EnsureTmpDir();
     file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
     Unlock($lock);
   }
@@ -409,7 +430,14 @@ function EC2_DeleteOrphanedVolumes() {
   $secret = GetSetting('ec2_secret');
   if ($key && $secret && GetSetting('ec2_prune_volumes')) {
     try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
+      $ec2 = new \Aws\Ec2\Ec2Client([
+        'version' => 'latest',
+        'region' => 'us-east-1',
+        'credentials' => [
+          'key' => $key,
+          'secret' => $secret
+        ]
+      ]);
       $regions = array();
       $response = $ec2->describeRegions();
       if (isset($response['Regions'])) {
@@ -417,7 +445,14 @@ function EC2_DeleteOrphanedVolumes() {
           $regions[] = $region['RegionName'];
       }
       foreach ($regions as $region) {
-        $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+        $ec2 = new \Aws\Ec2\Ec2Client([
+          'version' => 'latest',
+          'region' => $region,
+          'credentials' => [
+            'key' => $key,
+            'secret' => $secret
+          ]
+        ]);
         $response = $ec2->describeVolumes();
         if (isset($response['Volumes'])) {
           foreach ($response['Volumes'] as $volume) {
@@ -443,7 +478,14 @@ function EC2_GetRunningInstances() {
   if ($key && $secret) {
     $locations = EC2_GetAMILocations();
     try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
+      $ec2 = new \Aws\Ec2\Ec2Client([
+        'version' => 'latest',
+        'region' => 'us-east-1',
+        'credentials' => [
+          'key' => $key,
+          'secret' => $secret
+        ]
+      ]);
       $regions = array();
       $response = $ec2->describeRegions();
       if (isset($response['Regions'])) {
@@ -457,7 +499,14 @@ function EC2_GetRunningInstances() {
     if (isset($regions) && is_array($regions) && count($regions)) {
       foreach ($regions as $region) {
         try {
-          $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+          $ec2 = new \Aws\Ec2\Ec2Client([
+            'version' => 'latest',
+            'region' => $region,
+            'credentials' => [
+              'key' => $key,
+              'secret' => $secret
+            ]
+          ]);
           $response = $ec2->describeInstances();
           if (isset($response['Reservations'])) {
             foreach ($response['Reservations'] as $reservation) {
@@ -518,6 +567,7 @@ function EC2_GetRunningInstances() {
           $amis[$instance['ami']]['count']++;
         }
       }
+      EC2_EnsureTmpDir();
       file_put_contents('./tmp/ec2-instances.dat', json_encode($amis));
       Unlock($lock);
     }
@@ -530,7 +580,14 @@ function EC2_TerminateInstance($region, $id) {
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
     try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+      $ec2 = new \Aws\Ec2\Ec2Client([
+        'version' => 'latest',
+        'region' => $region,
+        'credentials' => [
+          'key' => $key,
+          'secret' => $secret
+        ]
+      ]);
       $ec2->terminateInstances(array('InstanceIds' => array($id)));
       EC2Log("Terminated instance $id in $region");
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
@@ -549,7 +606,14 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
     try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+      $ec2 = new \Aws\Ec2\Ec2Client([
+        'version' => 'latest',
+        'region' => $region,
+        'credentials' => [
+          'key' => $key,
+          'secret' => $secret
+        ]
+      ]);
       $ec2_options = array (
         'ImageId' => $ami,
         'MinCount' => 1,
@@ -580,7 +644,7 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       if ($subnetId) {
         $ec2_options['SubnetId'] = $subnetId;
       }
-	    
+
       //add/modify the KeyName if present in config
       $keyName = GetSetting("EC2.$region.keyName");
       if ($keyName) {

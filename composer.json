@@ -23,6 +23,7 @@
     "build": "composer typecheck && composer format && composer test"
   },
   "require": {
+    "aws/aws-sdk-php": "^3.0",
     "gmostafa/php-graphql-client": "^1.13",
     "google/apiclient": "^2.12.1",
     "guzzlehttp/guzzle": "^7.4",

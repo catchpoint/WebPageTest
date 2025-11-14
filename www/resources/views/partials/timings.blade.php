@@ -44,7 +44,13 @@
                 @foreach ($data as $category => $items)
                     @foreach ($items as $item)
                     <td>
-                        {{ $item }}
+                        @if (is_array($item))
+                            {{ json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}
+                        @elseif (is_object($item))
+                            {{ json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}
+                        @else
+                            {{ $item }}
+                        @endif
                     </td>
                     @endforeach
                 @endforeach

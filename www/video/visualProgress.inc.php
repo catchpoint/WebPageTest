@@ -139,8 +139,8 @@ function GetVisualProgressForStep($localPaths, $startOffset = null)
                 if (isset($visual_progress) && count($visual_progress)) {
                     foreach ($frames['frames'] as $time => &$frame) {
                         $file = pathinfo($frame['file'], PATHINFO_FILENAME);
-                        if (isset($file) && isset($visual_progress[$file])) {
-                            $frame['progress'] = intval(round($visual_progress[$file]));
+                        if (isset($file) && isset($visual_progress[$file]) && is_numeric($visual_progress[$file])) {
+                            $frame['progress'] = intval(round((float)$visual_progress[$file]));
                             if ($frame['progress'] == 100 && !array_key_exists('complete', $frames)) {
                                 $frames['complete'] = $time;
                             }

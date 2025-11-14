@@ -400,7 +400,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         }
     } else {
         // Draw items needed if we're ACTUALLY drawing the chart.
-        $im = imagecreatetruecolor($width, $height);
+        $im = @imagecreatetruecolor($width, $height);
+        if ($im === false || $im === null || (!is_resource($im) && !($im instanceof \GdImage))) {
+            return null;
+        }
 
         // Allocate the colors we will need.
         $white = GetColor($im, 255, 255, 255);
@@ -524,7 +527,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         }
 
         // Draw borders.
-        imagerectangle($im, 0, $top, $width - 1, $top + $data_height - 1, $border_color);
+        if ($im !== false && $im !== null) {
+            imagerectangle($im, 0, $top, $width - 1, $top + $data_height - 1, $border_color);
+        }
         // Draw left/right column divider.
         imageline($im, $data_x, $top, $data_x, $top + $data_height - 1, $border_color);
 
@@ -562,7 +567,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
         if (isset($interactive)) {
             $iTop = $height - $row_height - 1;
-            imagerectangle($im, $data_x, $iTop, $width - 1, $height - 1, $border_color);  // border
+            if ($im !== false && $im !== null) {
+                imagerectangle($im, $data_x, $iTop, $width - 1, $height - 1, $border_color);  // border
+            }
         }
 
         // Draw the time scale.
@@ -902,7 +909,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     }
                 }
                 imagefilledrectangle($im, $iLeft, $iTop, $data_x, $iBottom, $white);
-                imagerectangle($im, 0, $iTop -1, $data_x, $iBottom + 1, $border_color);
+                if ($im !== false && $im !== null) {
+                    imagerectangle($im, 0, $iTop -1, $data_x, $iBottom + 1, $border_color);
+                }
                 if (!$is_thumbnail) {
                     $font_height = imagefontheight($font);
                     $label_y = $iTop + ($row_height / 2) - ($font_height / 2);
@@ -1013,7 +1022,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     );
         }
     }
-    imagerectangle($im, 0, $top, $data_x, $top + $data_height - 1, $border_color);
+    if ($im !== false && $im !== null) {
+        imagerectangle($im, 0, $top, $data_x, $top + $data_height - 1, $border_color);
+    }
 
     // Draw the left-hand column labels.
     if (!$is_image_map) {
@@ -1374,6 +1385,9 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors)
  */
 function DrawPerfLabel($im, $key, $perf, $font, $label_color, $border_color)
 {
+    if ($im === false || $im === null || (!is_resource($im) && !($im instanceof \GdImage))) {
+        return;
+    }
     $x = $perf['x1'];
     $height = $perf['height'];
     $line_y = $perf['y1'] + ($height / 2) - 1;
@@ -1421,6 +1435,9 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color, $border_color)
  */
 function DrawPerfBackground($im, $perf, $data_x, $border_color, $bg_color)
 {
+    if ($im === false || $im === null || (!is_resource($im) && !($im instanceof \GdImage))) {
+        return;
+    }
     $x1 = $perf['x1'];
     $x2 = $perf['x2'];
     $y1 = $perf['y1'];

@@ -17,7 +17,11 @@ $locations = LoadLocationsIni();
 $count = 0;
 $collected = '';
 
-$files = scandir('./tmp');
+$files = array();
+if (is_dir('./tmp') && is_readable('./tmp')) {
+    $scandir_result = scandir('./tmp');
+    $files = $scandir_result ?: [];
+}
 foreach ($files as $file) {
     if (is_dir("./tmp/$file") && preg_match('/testers-(.+)/', $file, $matches)) {
         $loc = $matches[1];

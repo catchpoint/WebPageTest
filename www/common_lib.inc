@@ -2169,8 +2169,14 @@ function LoadJobQueue($workDir, &$queue)
 
             if (!isset($queue) && !GetSetting('beanstalkd')) {
               // build the queue from disk (files will be sortable by the order they were submitted)
-                $files = scandir($workDir);
-                sort($files);
+                $files = array();
+                if (is_dir($workDir) && is_readable($workDir)) {
+                    $scandir_result = scandir($workDir);
+                    if ($scandir_result !== false && is_array($scandir_result)) {
+                        $files = $scandir_result;
+                        sort($files);
+                    }
+                }
 
               // now add them to the various priority queues
                 $queue = array();
@@ -2731,6 +2737,10 @@ function removeLeadingZero($in)
 function SecureDir($path)
 {
     if (GetSetting('no_secure')) {
+        return;
+    }
+
+    if (!is_dir($path) || !is_readable($path)) {
         return;
     }
 

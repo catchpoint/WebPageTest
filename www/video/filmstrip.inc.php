@@ -241,8 +241,8 @@ function LoadTestData()
         }
 
       // Round the end time up based on the selected interval
-        if (isset($test['end']) && $test['end'] > 0) {
-            $test['end'] = ceil($test['end'] / $interval) * $interval;
+        if (isset($test['end']) && is_numeric($test['end']) && $test['end'] > 0) {
+            $test['end'] = ceil((float)$test['end'] / (float)$interval) * (float)$interval;
         }
 
         if (array_key_exists('label', $test) && strlen($test['label'])) {

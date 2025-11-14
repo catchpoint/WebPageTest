@@ -658,8 +658,8 @@ function ScreenShotTable()
         // figure out how many columns there are and the maximum thumbnail size
         $end = 0;
         foreach ($tests as &$test) {
-            if ($test['video']['end'] > $end) {
-                $end = $test['video']['end'];
+            if (isset($test['video']['end']) && is_numeric($test['video']['end']) && $test['video']['end'] > $end) {
+                $end = (float)$test['video']['end'];
             }
         }
         echo '<table id="videoContainer"><tr>';
@@ -668,7 +668,7 @@ function ScreenShotTable()
 
         // the actual video frames
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
-        $filmstrip_end_time = ceil($end / $interval) * $interval;
+        $filmstrip_end_time = is_numeric($end) && is_numeric($interval) && $interval > 0 ? ceil((float)$end / (float)$interval) * (float)$interval : 0;
         $decimals = $interval >= 100 ? 1 : 3;
         $frameCount = 0;
         $ms = 0;
@@ -781,7 +781,7 @@ function ScreenShotTable()
 
             echo "<tr>";
 
-            $testEnd = ceil($test['video']['end'] / $interval) * $interval;
+            $testEnd = isset($test['video']['end']) && is_numeric($test['video']['end']) && is_numeric($interval) && $interval > 0 ? ceil((float)$test['video']['end'] / (float)$interval) * (float)$interval : 0;
             $lastThumb = null;
             $frameCount = 0;
             $progress = null;

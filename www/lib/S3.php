@@ -1880,11 +1880,11 @@ final class S3Request
 	/**
 	* CURL write callback
 	*
-	* @param resource &$curl CURL resource
-	* @param string &$data Data
+	* @param resource $curl CURL resource
+	* @param string $data Data
 	* @return integer
 	*/
-	private function __responseWriteCallback(&$curl, &$data)
+	private function __responseWriteCallback($curl, $data)
 	{
 		if (in_array($this->response->code, array(200, 206)) && $this->fp !== false)
 			return fwrite($this->fp, $data);
@@ -1895,13 +1895,13 @@ final class S3Request
 
 
 	/**
-	* CURL header callback
-	*
-	* @param resource &$curl CURL resource
-	* @param string &$data Data
-	* @return integer
-	*/
-	private function __responseHeaderCallback(&$curl, &$data)
+	 * CURL header callback
+	 *
+	 * @param resource $curl CURL resource
+	 * @param string $data Data
+	 * @return integer
+	 */
+	private function __responseHeaderCallback($curl, $data)
 	{
 		if (($strlen = strlen($data)) <= 2) return $strlen;
 		if (substr($data, 0, 4) == 'HTTP')
@@ -1918,7 +1918,7 @@ final class S3Request
 			elseif ($header == 'Content-Type')
 				$this->response->headers['type'] = $value;
 			elseif ($header == 'ETag')
-				$this->response->headers['hash'] = $value{0} == '"' ? substr($value, 1, -1) : $value;
+				$this->response->headers['hash'] = $value[0] == '"' ? substr($value, 1, -1) : $value;
 			elseif (preg_match('/^x-amz-meta-.*$/', $header))
 				$this->response->headers[$header] = is_numeric($value) ? (int)$value : $value;
 		}
@@ -1935,4 +1935,3 @@ class S3Exception extends Exception {
 		$this->line = $line;
 	}
 }
-

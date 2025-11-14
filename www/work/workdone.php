@@ -212,8 +212,11 @@ if (ValidateTestId($id)) {
             SaveTestInfo($id, $testInfo);
             $testInfo_dirty = false;
             // delete any .test files
-            $files = scandir($testPath);
-            $files = $files ?: [];
+            $files = array();
+            if (is_dir($testPath) && is_readable($testPath)) {
+                $scandir_result = scandir($testPath);
+                $files = $scandir_result ?: [];
+            }
             foreach ($files as $file) {
                 if (preg_match('/.*\.test$/', $file)) {
                     unlink("$testPath/$file");
@@ -379,8 +382,11 @@ function CompressTextFiles($testPath)
 {
 
     global $ini;
-    $f = scandir($testPath);
-    $f = $f ?: [];
+    $f = array();
+    if (is_dir($testPath) && is_readable($testPath)) {
+        $scandir_result = scandir($testPath);
+        $f = $scandir_result ?: [];
+    }
     foreach ($f as $textFile) {
         if ($textFile != 'test.log') {
             logMsg("Checking $textFile\n");
